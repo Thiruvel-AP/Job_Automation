@@ -55,6 +55,27 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS llm_usage (
     provider TEXT, day TEXT, calls INTEGER, PRIMARY KEY (provider, day)
 );
+CREATE TABLE IF NOT EXISTS register_snapshots (
+    day TEXT PRIMARY KEY, csv_url TEXT, path TEXT, rows INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS companies (
+    norm TEXT NOT NULL, town_norm TEXT NOT NULL,
+    register_name TEXT, town TEXT, county TEXT, rating TEXT, route TEXT,
+    first_seen TEXT, last_seen TEXT, removed_on TEXT,
+    ch_number TEXT, ch_name TEXT, ch_status TEXT, sic_codes TEXT, sector TEXT,
+    ch_match TEXT,                    -- exact | town | ambiguous | none
+    public_sector INTEGER DEFAULT 0,
+    ats TEXT, ats_slug TEXT, ats_verified INTEGER, careers_url TEXT,
+    probe_status TEXT,                -- verified | unverified | not_found | error | manual
+    last_probed TEXT,
+    PRIMARY KEY (norm, town_norm)
+);
+CREATE INDEX IF NOT EXISTS ix_companies_sector ON companies(sector);
+
+CREATE TABLE IF NOT EXISTS company_events (
+    norm TEXT, town_norm TEXT, day TEXT, kind TEXT, detail TEXT   -- added | removed | rating
+);
 """
 
 

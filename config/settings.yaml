@@ -1,11 +1,17 @@
 paths:
+  # Everything under data/ is generated, git-ignored, and re-creatable by `careerops init`.
   db: data/careerops.db
-  outputs: data/outputs            # tailored CV/letter PDFs land here, one folder per job
-  excel: data/companies.xlsx       # export view only — SQLite is the source of truth
+  register_dir: data/register             # daily UKVI snapshots: YYYY-MM-DD.csv.gz
+  sponsors_csv: data/register/latest.csv  # most recent register CSV (used by gates)
+  companies_house_dir: data/companies_house  # monthly bulk zips: YYYY-MM/
+  outputs: data/outputs                   # one folder per job: CV.tex/.pdf, Cover_Letter.tex/.pdf, report.json
+  excel: data/exports/companies.xlsx      # export view only — SQLite is the source of truth
+  learning: data/exports/learning_list.md
   preferences: data/feedback/preferences.jsonl
+  browser_profile: data/browser-profile   # Playwright's persistent login state for ATS sites
+  logs: data/logs
   fact_bank: config/profile/fact_bank.yaml
   applicant: config/profile/applicant.yaml
-  sponsors_csv: data/sponsors.csv  # cache of the gov.uk register
 
 sponsors:
   # The register's CSV link changes daily; we scrape the publication page for it.
@@ -13,6 +19,22 @@ sponsors:
   route: Skilled Worker
   fuzzy_threshold: 0.92            # difflib ratio on normalised names
   max_age_days: 3
+
+companies:                         # Track A — sponsor-first company discovery (M2/M3)
+  ch_bulk_page: https://download.companieshouse.gov.uk/en_output.html
+  sponsor_ratings: ["A"]           # A-rated only (B = on a Home Office compliance action plan)
+  sic_allow:                       # SIC 2007 codes; descriptions verified against the ONS condensed list
+    software: [58290, 62011, 62012, 62020, 62030, 62090]
+    data: [63110, 63120]
+    finance: [64191, 64999, 66190]
+    insurance: [65110, 65120]
+    pharma_research: [21200, 72110, 72190, 72200]
+    consulting: [70229]
+    health: [86101, 86900]
+  public_sector_pattern: '\b(nhs|university|council|trust|authority|agency|college|ministry)\b'
+  probe_rate_per_s: 1.0
+  probe_limit_per_run: 300
+  reprobe_after_days: 30
 
 sources:
   greenhouse: []                   # board tokens, e.g. [monzo, deliveroo] — slug in job-boards.greenhouse.io/<slug>

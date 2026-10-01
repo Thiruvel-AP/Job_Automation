@@ -1,12 +1,17 @@
 # crontab -e   (WSL2: run `sudo service cron start` once per boot, or use Windows Task Scheduler → wsl.exe)
-# Paths assume the repo at ~/career-ops with a venv at .venv. Keys live in ~/career-ops/.env.
+# Paths assume the repo at ~/career-ops with a venv at .venv. Keys are read from ~/career-ops/.env automatically.
 
-# Sponsor register: 06:10 every 3rd day
-10 6 */3 * * cd ~/career-ops && set -a && . ./.env && set +a && .venv/bin/careerops sponsors >> data/cron.log 2>&1
+# Register snapshot + diff: daily 06:10 (M1)
+10 6 * * * cd ~/career-ops && .venv/bin/careerops companies --snapshot >> data/logs/cron.log 2>&1
 
-# Discover + tailor + export: 06:40 every 3rd day (cap per run so one batch = one review sitting)
-40 6 */3 * * cd ~/career-ops && set -a && . ./.env && set +a && .venv/bin/careerops run --limit 25 >> data/cron.log 2>&1
+# Companies House bulk join: 08:10 on the 8th (the monthly file lands within ~5 working days of month end) (M2)
+10 8 8 * * cd ~/career-ops && .venv/bin/careerops companies --refresh-ch >> data/logs/cron.log 2>&1
 
-# Review and apply are interactive by design — run them yourself:
-#   careerops review
-#   careerops apply
+# ATS resolution for new/unresolved in-scope companies: daily 06:25 (M3)
+25 6 * * * cd ~/career-ops && .venv/bin/careerops companies --resolve --limit 300 >> data/logs/cron.log 2>&1
+
+# Discover + tailor + export: 06:50 every 3rd day (cap per run so one batch = one review sitting)
+50 6 */3 * * cd ~/career-ops && .venv/bin/careerops run --limit 25 >> data/logs/cron.log 2>&1
+
+# Review, apply and outreach are interactive by design — run them yourself:
+#   careerops review   ·   careerops apply   ·   careerops outreach --id ... --person ... --title ...

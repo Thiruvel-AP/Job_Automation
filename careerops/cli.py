@@ -1,5 +1,7 @@
 """career-ops command line.
 
+  careerops init                create data/ folders and .env (idempotent)
+  careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODOs
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
@@ -10,6 +12,11 @@
   careerops export-prefs        preference log → DPO pairs jsonl
   careerops run                 discover + tailor + export (what cron calls)
   careerops status              counts per status
+
+  Track A (sponsor-first company discovery) — milestones M1–M3, stubs until built:
+  careerops companies --snapshot | --refresh-ch | --resolve | --queue | --set NAME --url URL
+  careerops learning            ranked skills-gap list across all tailored jobs (M4)
+  careerops outreach --id JOB --person NAME --title TITLE   LinkedIn note + follow-up drafts (M4)
 """
 from __future__ import annotations
 
@@ -27,10 +34,12 @@ from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
 from .llm import MockLLM, Router
+from .setup import doctor, init, load_dotenv
 
 
 def _ctx(args):
     s = load_settings(args.config)
+    load_dotenv(s.root / ".env")          # cron-friendly: no `set -a; . .env` needed
     db = DB(s.path("db"))
     return s, db
 
@@ -132,7 +141,7 @@ def cmd_apply(args):
         print(review.summary(job, review.load_report(job)))
         if input("Open application form? [y/N] ").strip().lower() != "y":
             continue
-        r = assist(job, review.load_report(job), applicant, s.root / "data" / "browser-profile")
+        r = assist(job, review.load_report(job), applicant, s.path("browser_profile"))
         if r["confirmation"].lower() == "x":
             db.log(job["id"], "apply", {"aborted": True, **r})
             continue
@@ -175,6 +184,55 @@ def cmd_run(args):
     cmd_export(args)
 
 
+def cmd_init(args):
+    s = load_settings(args.config)
+    made = init(s)
+    DB(s.path("db"))                      # creates the schema
+    print("Created:\n  " + "\n  ".join(made) if made else "Everything already in place.")
+
+
+def cmd_doctor(args):
+    s = load_settings(args.config)
+    load_dotenv(s.root / ".env")
+    checks = doctor(s)
+    for name, ok, hint in checks:
+        print(f"  [{'ok' if ok else '!!'}] {name}" + ("" if ok else f"  → {hint}"))
+    sys.exit(0 if all(ok for _, ok, _ in checks) else 1)
+
+
+def cmd_companies(args):
+    from .discovery import ats, companies_house
+
+    s, db = _ctx(args)
+    if args.snapshot:
+        sponsors.snapshot(db, s)
+    elif args.refresh_ch:
+        print(companies_house.join(db, s, companies_house.download_bulk(s)))
+    elif args.resolve:
+        print(ats.resolve(db, s, limit=args.limit))
+    elif args.set:
+        print(ats.detect(args.url))
+    else:   # --queue (default)
+        raise NotImplementedError("M3 — manual queue listing")
+
+
+def cmd_learning(args):
+    from .tailoring import learning
+
+    _, db = _ctx(args)
+    for g in learning.aggregate(db)[: args.top]:
+        print(f"{g.priority:6.1f}  {g.term}  (in {g.jobs} jobs, required in {g.required_in})")
+
+
+def cmd_outreach(args):
+    from .review import outreach
+
+    s, db = _ctx(args)
+    job = db.job(args.id)
+    out = outreach.draft(dict(job), review.load_report(job), args.person, args.title, args.team, _llm(args, s, db))
+    print(f"NOTE ({len(out.note)} chars):\n{out.note}\n\nFOLLOW-UP:\n{out.message}")
+
+
 def cmd_status(args):
     _, db = _ctx(args)
     for st, n in db.conn.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status ORDER BY 2 DESC"):
@@ -185,7 +243,25 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="careerops", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--config", default=None, help="path to settings.yaml")
     sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("init").set_defaults(fn=cmd_init)
+    sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     sub.add_parser("sponsors").set_defaults(fn=cmd_sponsors)
+    c = sub.add_parser("companies")
+    g = c.add_mutually_exclusive_group()
+    g.add_argument("--snapshot", action="store_true", help="M1: download today's register, diff vs yesterday")
+    g.add_argument("--refresh-ch", action="store_true", help="M2: Companies House bulk join + sector filter")
+    g.add_argument("--resolve", action="store_true", help="M3: probe ATS boards for in-scope companies")
+    g.add_argument("--queue", action="store_true", help="M3: list companies needing a careers URL")
+    g.add_argument("--set", metavar="NAME", help="M3: attach a careers URL to a company")
+    c.add_argument("--url")
+    c.add_argument("--limit", type=int, default=300)
+    c.set_defaults(fn=cmd_companies)
+    lr = sub.add_parser("learning"); lr.add_argument("--top", type=int, default=25); lr.set_defaults(fn=cmd_learning)
+    o = sub.add_parser("outreach")
+    o.add_argument("--id", required=True); o.add_argument("--person", required=True)
+    o.add_argument("--title", required=True); o.add_argument("--team")
+    o.add_argument("--mock", action="store_true")
+    o.set_defaults(fn=cmd_outreach)
     sub.add_parser("discover").set_defaults(fn=cmd_discover)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")
@@ -203,7 +279,11 @@ def main(argv=None):
     e.set_defaults(fn=cmd_export_prefs)
     sub.add_parser("status").set_defaults(fn=cmd_status)
     args = ap.parse_args(argv)
-    args.fn(args)
+    try:
+        args.fn(args)
+    except NotImplementedError as e:
+        print(f"Not built yet: {e}. See docs/IMPLEMENTATION.md.")
+        sys.exit(2)
 
 
 if __name__ == "__main__":

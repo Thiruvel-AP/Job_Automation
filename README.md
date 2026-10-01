@@ -1,7 +1,7 @@
-# career-ops v2
+# career-ops
 
 Local pipeline for UK DS/AI applications: **discover → triage → tailor (fact-bank only) → you review → assisted apply**.
-Design rationale and the diff against the original flowchart: [`docs/PLAN.md`](docs/PLAN.md).
+What & why: [`docs/PLAN.md`](docs/PLAN.md) · how, milestone by milestone: [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md).
 
 ## Setup (WSL2 Ubuntu)
 
@@ -9,10 +9,59 @@ Design rationale and the diff against the original flowchart: [`docs/PLAN.md`](d
 sudo apt install texlive-xetex fonts-crosextra-carlito poppler-utils   # xelatex, Carlito, pdftotext/pdfinfo
 cd ~/career-ops && python3 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]" && playwright install chromium
-cp .env.example .env            # GROQ_API_KEY (console.groq.com), optional ADZUNA_APP_ID/KEY
+careerops init                  # data/ folders + .env from .env.example (idempotent)
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
-pytest -q                       # 28 tests, no network or model needed
+# put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
+careerops doctor                # every line should say [ok]
+pytest -q                       # no network or model needed
 ```
+
+## Project structure
+
+```
+career-ops/
+├── careerops/                    Python package (CLI entry: careerops.cli:main)
+│   ├── cli.py                    every `careerops …` command
+│   ├── config.py · db.py         settings loader · SQLite schema + state machine
+│   ├── setup.py                  `init` (data layout, .env) and `doctor` (toolchain checks)
+│   ├── discovery/                where companies and jobs come from
+│   │   ├── register.py           UKVI sponsor register: download, parse, match · M1 snapshots + diff
+│   │   ├── companies_house.py    M2 bulk join → company no., SIC codes, sector
+│   │   ├── ats.py                M3 slug probe, verification, careers-page detector
+│   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
+│   │   └── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
+│   ├── tailoring/                JD → CV + cover letter
+│   │   ├── scorer.py             weighted ATS score (literal + stemmed), honest ceiling, keywords
+│   │   ├── faithfulness.py       guard: no new numbers, deny-listed tools, unevidenced keywords
+│   │   ├── prompts.py            all LLM prompts in one place
+│   │   ├── tailor.py             analyse → tailor → guard → render → band loop → letter
+│   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
+│   │   └── learning.py           M4 ranked skills-gap list
+│   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
+│   ├── review/                   workflow.py (approve/edit/reject → preferences) · outreach.py (M4)
+│   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
+│   ├── reporting/excel.py        Excel view of SQLite
+│   └── training/rewards.py       Phase 2 GRPO reward functions
+├── config/
+│   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
+│   ├── taxonomy.txt              ATS keyword vocabulary
+│   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml
+├── templates/                    cv.tex.j2 · cover_letter.tex.j2
+├── docs/                         PLAN.md · IMPLEMENTATION.md
+├── scripts/crontab.example
+├── tests/                        mirrors the package; fixtures/<area>/…; no network, no model
+└── data/                         generated, git-ignored — created by `careerops init`
+    ├── careerops.db              jobs · companies · events · LLM quota
+    ├── register/                 YYYY-MM-DD.csv.gz snapshots · latest.csv
+    ├── companies_house/          YYYY-MM/ bulk zips
+    ├── outputs/<company_title_id>/  CV.tex/.pdf · Cover_Letter.tex/.pdf · report.json
+    ├── exports/                  companies.xlsx · learning_list.md
+    ├── feedback/preferences.jsonl   approve/edit/reject log → DPO pairs
+    ├── browser-profile/          Playwright logins for ATS sites
+    └── logs/                     cron.log
+```
+
+Modules marked M1–M4 are stubs with final signatures; their commands print "Not built yet" until each milestone lands.
 
 ## Before the first real run
 
@@ -36,7 +85,7 @@ careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a trunc
 careerops tailor --limit 15        # CV + letter per job → data/outputs/<job>/ (+ report.json)
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
-careerops export                   # data/companies.xlsx
+careerops export                   # data/exports/companies.xlsx
 careerops export-prefs             # your edits → DPO pairs (chosen = yours, rejected = model's)
 ```
 

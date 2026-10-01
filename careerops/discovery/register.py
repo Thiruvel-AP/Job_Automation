@@ -118,3 +118,35 @@ def refresh(db: DB, settings) -> int:
     rows = parse(path, cfg.get("route"))
     db.replace_sponsors(rows)
     return len(rows)
+
+
+# ---------------------------------------------------------------- M1: daily snapshots + diff
+# Spec: docs/IMPLEMENTATION.md §2. Key = (normalise(name), normalise(town)) — name alone collides.
+from dataclasses import dataclass, field  # noqa: E402
+
+
+@dataclass
+class Diff:
+    added: list[tuple[str, str]] = field(default_factory=list)
+    removed: list[tuple[str, str]] = field(default_factory=list)
+    rating_changed: list[tuple[str, str, str, str]] = field(default_factory=list)   # norm, town, old, new
+
+
+def snapshot(db: DB, settings) -> Path | None:
+    """Download today's register if its CSV URL is new; store gzipped under data/register/YYYY-MM-DD.csv.gz."""
+    raise NotImplementedError("M1 — register.snapshot")
+
+
+def load_snapshot(path: Path, route: str | None = "Skilled Worker") -> dict[tuple[str, str], tuple]:
+    """{(norm, town_norm): (register_name, town, county, rating, route)}."""
+    raise NotImplementedError("M1 — register.load_snapshot")
+
+
+def diff(prev: dict, cur: dict) -> Diff:
+    """added = K₂∖K₁, removed = K₁∖K₂, rating_changed = {k ∈ K₁∩K₂ : r₁(k) ≠ r₂(k)}."""
+    raise NotImplementedError("M1 — register.diff")
+
+
+def apply_diff(db: DB, day: str, d: Diff, cur: dict) -> None:
+    """Upsert `companies`, stamp first_seen/last_seen/removed_on, write `company_events`, flag affected jobs."""
+    raise NotImplementedError("M1 — register.apply_diff")
