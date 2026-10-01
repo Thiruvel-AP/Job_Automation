@@ -17,10 +17,10 @@ from pathlib import Path
 
 import yaml
 
-from .db import DB, now
-from .faithfulness import deny_hits
-from .render import page_count, pdf_text, render_cv
-from .scorer import Keyword, score
+from ..db import DB, now
+from ..tailoring.faithfulness import deny_hits
+from ..tailoring.render import page_count, pdf_text, render_cv
+from ..tailoring.scorer import Keyword, score
 
 
 def _log(path: Path, row: dict) -> None:

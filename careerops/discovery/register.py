@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 
-from .db import DB
+from ..db import DB
 
 UA = {"User-Agent": "career-ops/2.0 (personal job search; contact via GitHub)"}
 

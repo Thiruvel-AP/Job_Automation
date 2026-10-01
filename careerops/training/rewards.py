@@ -13,8 +13,8 @@ makes stuffing strictly worse than landing inside the band.
 """
 from __future__ import annotations
 
-from .faithfulness import check
-from .scorer import Keyword, score
+from ..tailoring.faithfulness import check
+from ..tailoring.scorer import Keyword, score
 
 
 def _text(c) -> str:

@@ -20,10 +20,12 @@ import sys
 import traceback
 from pathlib import Path
 
-from . import gates, review, sponsors, sources
+from .discovery import gates, sources
+from .discovery import register as sponsors
+from .review import workflow as review
 from .config import load_settings, load_yaml
 from .db import DB, now
-from .export import export
+from .reporting.excel import export
 from .llm import MockLLM, Router
 
 
@@ -89,7 +91,7 @@ def cmd_add_jd(args):
 
 
 def cmd_tailor(args):
-    from .tailor import tailor_job
+    from .tailoring.tailor import tailor_job
 
     s, db = _ctx(args)
     llm = _llm(args, s, db)
@@ -119,7 +121,7 @@ def cmd_review(args):
 
 
 def cmd_apply(args):
-    from .apply import assist
+    from .apply.assist import assist
 
     s, db = _ctx(args)
     applicant = load_yaml(s.path("applicant"))

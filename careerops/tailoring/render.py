@@ -8,7 +8,8 @@ from pathlib import Path
 
 import jinja2
 
-ROOT = Path(__file__).resolve().parent.parent
+from ..config import ROOT
+
 
 _ESC = {"&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}",
         "~": r"\textasciitilde{}", "^": r"\textasciicircum{}", "\\": r"\textbackslash{}",

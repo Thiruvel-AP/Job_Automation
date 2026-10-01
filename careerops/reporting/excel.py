@@ -9,7 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from .db import DB
+from ..db import DB
 
 COLS = [("Company", "company", 26), ("Title", "title", 38), ("Location", "location", 22), ("Status", "status", 13),
         ("Reason", "reason", 34), ("Flags", "flags", 40), ("Sponsor (register)", "sponsor_name", 30),
