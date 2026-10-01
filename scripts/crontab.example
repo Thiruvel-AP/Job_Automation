@@ -1,0 +1,12 @@
+# crontab -e   (WSL2: run `sudo service cron start` once per boot, or use Windows Task Scheduler → wsl.exe)
+# Paths assume the repo at ~/career-ops with a venv at .venv. Keys live in ~/career-ops/.env.
+
+# Sponsor register: 06:10 every 3rd day
+10 6 */3 * * cd ~/career-ops && set -a && . ./.env && set +a && .venv/bin/careerops sponsors >> data/cron.log 2>&1
+
+# Discover + tailor + export: 06:40 every 3rd day (cap per run so one batch = one review sitting)
+40 6 */3 * * cd ~/career-ops && set -a && . ./.env && set +a && .venv/bin/careerops run --limit 25 >> data/cron.log 2>&1
+
+# Review and apply are interactive by design — run them yourself:
+#   careerops review
+#   careerops apply

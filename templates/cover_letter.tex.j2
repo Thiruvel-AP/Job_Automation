@@ -1,0 +1,27 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\definecolor{navy}{RGB}{20,40,90}
+\pagestyle{empty}
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+\begin{document}
+{\Large\bfseries\color{navy} \VAR{id.name|e}}\\
+\VAR{id.location|e} \;|\; \VAR{id.email|e} \;|\; \VAR{id.phone|e}
+
+\VAR{date|e}
+
+Dear \VAR{company|e} hiring team,
+
+\BLOCK{for p in paragraphs}
+\VAR{p|e}
+
+\BLOCK{endfor}
+Best regards,\\
+\VAR{id.name|e}
+\end{document}

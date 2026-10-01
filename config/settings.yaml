@@ -1,0 +1,71 @@
+paths:
+  db: data/careerops.db
+  outputs: data/outputs            # tailored CV/letter PDFs land here, one folder per job
+  excel: data/companies.xlsx       # export view only — SQLite is the source of truth
+  preferences: data/feedback/preferences.jsonl
+  fact_bank: config/profile/fact_bank.yaml
+  applicant: config/profile/applicant.yaml
+  sponsors_csv: data/sponsors.csv  # cache of the gov.uk register
+
+sponsors:
+  # The register's CSV link changes daily; we scrape the publication page for it.
+  page_url: https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers
+  route: Skilled Worker
+  fuzzy_threshold: 0.92            # difflib ratio on normalised names
+  max_age_days: 3
+
+sources:
+  greenhouse: []                   # board tokens, e.g. [monzo, deliveroo] — slug in job-boards.greenhouse.io/<slug>
+  lever: []                        # site slugs, e.g. [palantir]  — slug in jobs.lever.co/<slug>
+  lever_eu: []                     # jobs.eu.lever.co/<slug>
+  ashby: []                        # e.g. [synthesia] — slug in jobs.ashbyhq.com/<slug>
+  adzuna:
+    enabled: false                 # needs ADZUNA_APP_ID / ADZUNA_APP_KEY env vars (free at developer.adzuna.com)
+    queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
+    pages_per_query: 2
+    max_days_old: 7
+
+gates:
+  title_include: ['data scien', 'machine learning', '\bml\b', '\bai\b', 'applied scien', 'llm', 'nlp', 'genai', 'generative']
+  title_exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead\b', 'director', 'manager', '\bvp\b', 'intern', 'sre', 'reliability']
+  locations_ok: ['united kingdom', '\buk\b', 'england', 'london', 'bristol', 'remote', 'manchester', 'cambridge', 'oxford', 'edinburgh', 'bath', 'cardiff', 'birmingham', 'leeds', 'scotland', 'wales']
+  max_years_required: 3
+  require_sponsor_match: true
+  # (regex, action, reason). action: skip = never apply; flag = still tailor, but review shows the reason in red.
+  jd_rules:
+    - ['without (the need for )?(visa )?sponsorship', skip, 'JD says right to work without sponsorship']
+    - ['(do not|cannot|unable to|not able to) (offer|provide) (visa )?sponsorship', skip, 'JD says no sponsorship']
+    - ['\b(sc|dv|security) clearance\b', flag, 'Clearance mentioned — check residency/eligibility']
+    - ['british (citizen|national)s? only|must be a british', skip, 'Nationality restriction']
+    - ['\bon[- ]call\b', flag, 'On-call duties mentioned']
+    - ['site reliability|\bsre\b|observability ownership', skip, 'SRE-framed role (standing exclusion)']
+    - ['direct reports|line manag(e|ement)|people manag', skip, 'People-management requirement (standing exclusion)']
+
+scoring:
+  band: [0.70, 0.85]
+  max_attempts: 3
+  required_weight: 2.0
+  preferred_weight: 1.0
+  max_pages: 2
+  letter_max_words: 250
+
+llm:
+  # Tried in order; on 429 / 5xx / quota exhausted the router falls through to the next.
+  # All three speak the OpenAI chat-completions dialect.
+  providers:
+    - name: groq
+      base_url: https://api.groq.com/openai/v1
+      api_key_env: GROQ_API_KEY
+      model: openai/gpt-oss-20b    # check console.groq.com/docs/models — free-tier model list changes
+      rpm: 30
+      rpd: 1000
+      json_mode: true
+    - name: ollama
+      base_url: http://localhost:11434/v1
+      api_key_env: null
+      model: qwen2.5:7b-instruct   # ~4.7 GB Q4_K_M, fits the RTX 4060's 8 GB
+      rpm: 1000
+      rpd: 1000000
+      json_mode: true
+  temperature: 0.3
+  timeout_s: 120

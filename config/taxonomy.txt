@@ -1,0 +1,132 @@
+# One ATS keyword per line. Used by the no-LLM keyword extractor and to sanity-check LLM keywords.
+# Single letters (R, Go) are left out on purpose: they false-match too easily. Add your own freely.
+python
+sql
+pyspark
+spark
+pandas
+numpy
+scikit-learn
+sklearn
+pytorch
+tensorflow
+keras
+xgboost
+lightgbm
+hugging face
+transformers
+langchain
+langgraph
+llamaindex
+openai
+aws bedrock
+bedrock
+llm
+llms
+large language models
+generative ai
+genai
+rag
+retrieval augmented generation
+retrieval
+vector database
+embeddings
+prompt engineering
+fine-tuning
+lora
+agents
+agentic
+ai agents
+multi-agent
+tool calling
+function calling
+mcp
+evaluation
+llm evaluation
+guardrails
+hallucination
+nlp
+natural language processing
+computer vision
+deep learning
+machine learning
+statistics
+statistical modelling
+statistical modeling
+hypothesis testing
+experimentation
+a/b testing
+causal inference
+regression
+classification
+clustering
+forecasting
+time series
+anomaly detection
+recommendation
+recommender systems
+feature engineering
+data analysis
+exploratory data analysis
+data visualisation
+data visualization
+data pipelines
+etl
+data modelling
+data modeling
+data quality
+data engineering
+mlops
+model deployment
+model monitoring
+ci/cd
+docker
+kubernetes
+terraform
+aws
+gcp
+azure
+lambda
+s3
+sagemaker
+vertex ai
+databricks
+snowflake
+bigquery
+dbt
+airflow
+postgresql
+mongodb
+fastapi
+flask
+rest api
+apis
+microservices
+git
+github actions
+pytest
+testing
+linux
+react
+typescript
+javascript
+tableau
+power bi
+looker
+streamlit
+mlflow
+production
+scalable
+stakeholders
+communication
+collaboration
+cross-functional
+problem-solving
+end-to-end
+prototyping
+research
+fintech
+financial services
+healthcare
+bioinformatics
+insurance
