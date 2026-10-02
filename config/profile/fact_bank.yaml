@@ -1,22 +1,25 @@
 # FACT BANK — the only source of truth the tailor may draw from.
-# Seeded from facts you have stated before. REVIEW EVERY LINE before the first run:
-# the model can only select and reword what is here, so an error here propagates everywhere.
+# Audited 2026-10-02 against memory and the latest CV source.
+# Lines marked "# CONFIRM" are open questions: answer them before the first run.
+# Lines marked "# FIXED" were TODOs or conflicts in the earlier version.
 #
 # Each bullet:
 #   text:  the canonical wording (already true)
 #   terms: extra keywords this bullet legitimately evidences. A rephrase may introduce
 #          a JD keyword only if it appears in `text` or `terms`.
-# TODO markers = facts not on file; fill them in or delete the line.
 
 identity:
-  name: Thiruvel
+  name: Thiruvel Andagurunathan Pandian          # FIXED: CVs use the full name
   headline: Data Scientist / AI Engineer
-  email: you@example.com          # TODO
-  phone: "+44 7000 000000"        # TODO
+  email: apthiruvel@gmail.com                    # FIXED: from the CV header
+  phone: "+44 7741 016954"                       # FIXED: from the CV header
   location: Bristol, UK
   links:
-    linkedin: https://www.linkedin.com/in/TODO
-    github: https://github.com/TODO
+    linkedin: https://www.linkedin.com/in/thiruvel-a-p/   # FIXED
+    github: https://github.com/Thiruvel-AP                # FIXED
+    portfolio: https://thiruvel-ap.github.io/PersonalPortfolio/
+  # Keep this file OUT of any public repo: it holds a real phone number and email.
+  # Commit an example bank with dummy values instead.
 
 profile_facts:   # raw material for the 3-line profile; the model may only combine these
   - MSc Data Science, University of Bristol (completed 2026)
@@ -28,15 +31,17 @@ profile_facts:   # raw material for the 3-line profile; the model may only combi
 skills:
   Languages: [Python, SQL, R, TypeScript, JavaScript, Swift]
   ML & Stats: [scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, hypothesis testing, ANOVA, bootstrap, PCA]
-  LLMs & Agents: [LangChain, LangGraph, AWS Bedrock, OpenAI API, Hugging Face Transformers, Ollama, RAG, MCP, tool calling, LoRA fine-tuning, LLM evaluation]
-  Data & Cloud: [pandas, NumPy, PostgreSQL, ChromaDB, AWS Lambda, ECR, S3, SQS, DynamoDB, IAM, GCP Cloud Run, Databricks/PySpark (coursework)]
+  LLMs & Agents: [LangChain, LangGraph, Google ADK, AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, MCP, tool calling, LoRA fine-tuning, LLM evaluation]   # FIXED: added Claude API, Google ADK, Gemini/LiteLLM (all in CVs and memory)
+  Data & Cloud: [pandas, NumPy, NLTK, Matplotlib, Seaborn, PostgreSQL, ChromaDB, AWS Lambda, ECR, IAM, GCP Cloud Run, "S3, SQS, DynamoDB (MSc coursework)", Databricks/PySpark (coursework)]   # FIXED: S3/SQS/DynamoDB are from the AWS LSDE coursework, now labelled as such
   Engineering: [FastAPI, Docker, GitHub Actions, pytest, React, Git, MLflow, Streamlit, Tableau]
+  # CONFIRM: your latest CV lists "Kubernetes (AWS EKS)" but this bank denies "kubernetes" and your
+  # confirmed-absent list says Docker only. Pick one. Until you do, it stays OUT of this bank.
 
 experience:
   - id: az
-    title: Data Scientist (MSc dissertation, indirect contract)
+    title: Data Scientist (MSc dissertation, indirect contract)   # CONFIRM: your CV says "Data Scientist / AI Engineer", LinkedIn says "Data Scientist"; use the one a reference-checker would see
     org: AstraZeneca · GeneTraceAI, University of Bristol
-    dates: May 2026 – Present     # as on your LinkedIn; change if the engagement has ended
+    dates: May 2026 – Sep 2026   # CONFIRM: LinkedIn says "Present", your CV says Sep 2026, and the MSc is complete. Set to Present only if the engagement is still live.
     bullets:
       - id: az1
         text: Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
@@ -56,16 +61,21 @@ experience:
       - id: az6
         text: Integrated the agent into a React front end with real-time gene alias enrichment.
         terms: [react, full stack, frontend, javascript]
+      - id: az7                                            # FIXED: on file in memory, missing from the bank
+        text: Managed AWS account governance for the project, including root-user isolation, IAM user and group management and least-privilege policies.
+        terms: [aws, iam, security, governance, access control]
 
   - id: dc180
     title: Data Consultant
     org: 180 Degrees Consulting Bristol
-    dates: Oct 2025 – Dec 2025
+    dates: Oct 2025 – Dec 2025   # CONFIRM: your CV says Sep 2025, memory says ~Oct. Use the start month on your 180DC certificate or LinkedIn.
     bullets:
       - id: dc1
         text: Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.
         terms: [mcp, agentic, agent, python, prototype, stakeholder, client, consulting, ci, postgresql, open-source llm, open-weight]
       - id: dc2
+        # CONFIRM: memory records that you "contributed to the client's production repo" but not which parts you wrote.
+        # Reword this line to name your own share before you rely on it.
         text: The approved design shipped as a TypeScript/Node.js MCP server with OpenAI-based query generation and a Convex database, now in live day-to-day client use; engagement received a 5-star commendation.
         terms: [typescript, node.js, openai, production, client, delivery]
 
@@ -83,6 +93,11 @@ experience:
       - id: fl3
         text: Contributed to a team LoRA fine-tune of a Llama base model for a maths-focused task.
         terms: [fine-tuning, lora, peft, llama, llm]
+      - id: fl4                                            # FIXED: in your CV and memory, missing from the bank
+        # CONFIRM: memory files the Cloud Run RAG system as yours but only says it was "likely" built during the freelance period.
+        # The CV adds "for clients"; that is not in memory, so it is left out here.
+        text: Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run.
+        terms: [rag, retrieval, claude, anthropic, chromadb, gcp, cloud run, rest api, fastapi, docker, production]
 
   - id: avasoft
     title: Software Engineer (SDE Trainee Jan–Jun 2023)
@@ -106,7 +121,7 @@ projects:
   - id: agenticfriend
     name: AgenticFriend — real-time voice assistant
     stack: FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA
-    github: https://github.com/TODO/adk_multi-agent
+    github: https://github.com/Thiruvel-AP/adk_multi-agent        # FIXED
     bullets:
       - id: p_af1
         text: Full-duplex WebSocket voice agent with a rolling VAD state machine for streaming speech-to-text (faster-whisper) and barge-in.
@@ -117,21 +132,30 @@ projects:
   - id: mcpsearch
     name: mcp_searchagent
     stack: FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions
-    github: https://github.com/TODO/mcp_searchagent
+    github: https://github.com/Thiruvel-AP/mcp_searchagent        # FIXED. Rotate the committed credentials before anyone opens this repo.
     bullets:
       - id: p_ms1
         text: MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
         terms: [mcp, search, graphql, postgresql, ci, open-weight, local llm]
+  - id: astrofreud                                                 # FIXED: in your latest CV, missing from the bank
+    name: AstroFreud — LangGraph interview agent
+    stack: Python, LangGraph, DeepFace
+    github: https://github.com/Thiruvel-AP/AstroFreud             # Rotate the committed credentials before anyone opens this repo.
+    bullets:
+      - id: p_as1
+        text: 14-node LangGraph interview pipeline with DeepFace (Facenet512) biometric verification, psycholinguistic five-dimension scoring and emergency email alerting.
+        terms: [langgraph, agentic, multi-step, computer vision, nlp, face verification, workflow]
   - id: coverfit
     name: CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
     stack: FastAPI, pandas, LiteLLM, Pydantic, pytest
-    github: https://github.com/TODO/AIHackathon-Phoenix
+    github: https://github.com/Thiruvel-AP/AIHackathon-Phoenix    # FIXED
     bullets:
       - id: p_cf1
+        # CONFIRM: memory says the dataset is NDA-restricted. The counts below are yours to publish only if the NDA allows it.
         text: Deterministic comparable-company matching over 221 profiles and 1,116 cover lines with a single LLM call for rationale, at ~£0.003 per query and under 3 s.
         terms: [api, fastapi, pandas, llm, cost, latency, insurance, pydantic]
   - id: lloyds
-    name: Lloyd's Banking Group Datathon — 3rd place nationally
+    name: Lloyd's Banking Group Datathon — 3rd place 
     stack: Isolation Forest, ensemble classifiers, MLflow
     github: null
     bullets:
@@ -141,7 +165,7 @@ projects:
   - id: churn
     name: Banking Customer Churn
     stack: R, tidymodels, XGBoost
-    github: null
+    github: https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction
     bullets:
       - id: p_ch1
         text: XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation.
@@ -149,7 +173,7 @@ projects:
   - id: bitcoin
     name: Bitcoin Forecasting
     stack: TensorFlow, LSTM, TensorFlow Serving
-    github: null
+    github: https://github.com/Thiruvel-AP/BitcoinForecasting     # FIXED: link is in memory
     bullets:
       - id: p_bt1
         text: LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, served through a TensorFlow Serving REST API.
@@ -157,24 +181,55 @@ projects:
   - id: gtaigraph
     name: GTAI Graph PoC — cancer cell-line omics graph
     stack: networkx, leidenalg, scikit-learn, RAPIDS cuML
-    github: null
+    github: https://github.com/Thiruvel-AP/GTAI-GraphPOC     # CONFIRM: is this repo public? If so, add the link.
     bullets:
       - id: p_gg1
         text: networkx heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) with k-NN similarity and Leiden community detection (modularity 0.822).
         terms: [graph, network analysis, clustering, bioinformatics, omics, healthcare]
       - id: p_gg2
+        # Your README reports mean test Pearson 0.5449 against train 0.8073 (overfitting) and Leiden lineage purity 0.519,
+        # which does not beat the 54.6% same-lineage share of the k-NN edges. Be ready to say so if asked.
         text: Per-gene protein-prediction models for 11,459 genes (OLS + GPU Random Forest ensemble), with resumable chunked GPU training on a free T4.
         terms: [random forest, regression, gpu, model training, scikit-learn]
+  - id: iata                                                       # FIXED: on file in memory, missing from the bank
+    name: IATA customer-feedback text analytics (MSc team project, team of five)
+    stack: Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN
+    github: https://github.com/Thiruvel-AP/TextAnalytics
+    bullets:
+      - id: p_ia1
+        # Only the parts you authored solo, per your submitted contribution table. Topic modelling and sentiment were NOT solely yours.
+        text: Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets.
+        terms: [nlp, text analytics, clustering, preprocessing, embeddings, root cause analysis, team project]
+  - id: lsde                                                       # FIXED: backs the S3/SQS/DynamoDB skills, now labelled coursework
+    name: Auto-scaled word-frequency pipeline on AWS (MSc coursework)
+    stack: EC2, SQS, S3, DynamoDB, CloudWatch, Auto Scaling
+    github: null
+    bullets:
+      - id: p_ls1
+        text: Built an SQS-driven word-frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on CloudWatch queue alarms, and benchmarked instance configurations.
+        terms: [aws, cloud, data pipeline, auto scaling, distributed, coursework]
+
+  # PLACEHOLDER for the job tool itself. Not active, because nothing about what it does is verified yet.
+  # Needs: the repo README, what runs end to end today, and one measured result (for example fabrication-check pass rate over N JDs).
+  # - id: jobtool
+  #   name: TODO
+  #   github: TODO
+  #   bullets: []
 
 education:
   - degree: MSc Data Science
     org: University of Bristol
-    dates: 2025 – 2026
+    dates: 2025 – 2026          # CONFIRM: final grade not on file; add it if it helps
   - degree: B.E. Electrical and Electronics Engineering
-    org: TODO
-    dates: TODO
+    org: St. Joseph's College of Engineering          # FIXED: from your CV
+    dates: Sep 2019 – Apr 2023                        # FIXED: from your CV
+    note: First Class with Distinction
 
-certifications: []   # TODO
+certifications:                                       # FIXED: was empty. Dates are the ones in memory.
+  - Anthropic MCP certifications (Introductory and Advanced), Jun 2026
+  - AWS Academy Cloud Foundations, Nov 2025
+  - 180 Degrees Consulting Data Science Consultant Certificate, Dec 2025
+  - Bristol PLUS Award, Mar 2026
 
 # Never allowed anywhere in generated text — your confirmed-absent list + standing rules.
 # Matched case-insensitively on word boundaries.
@@ -210,3 +265,15 @@ deny_terms:
   - direct reports
   - career-ops
   - job application automation
+  # Added 2026-10-02 from the confirmed-absent list:
+  - crewai
+  - a2a
+  - gnn
+  - graph neural network
+  - prompt engineering        # use "prompt design"
+  - code generation agent
+  - model routing
+  - upskilling
+  - knowledge sharing
+  - open source contributor
+  # Decide: if the tool goes on your CV, remove "career-ops" and "job application automation" above.
