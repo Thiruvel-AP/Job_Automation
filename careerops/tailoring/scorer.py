@@ -97,34 +97,73 @@ def load_taxonomy() -> list[str]:
     return [l.strip() for l in p.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
 
 
-REQ_HEAD = re.compile(r"(requirement|essential|must|you have|you'll have|you will have|what you.ll need|"
-                      r"qualifications|what we.re looking for|about you|skills and experience)", re.I)
-PREF_HEAD = re.compile(r"(nice to have|desirable|bonus|preferred|a plus|advantageous|ideally)", re.I)
+# Section headings, matched on norm_literal text (lower-case, straight apostrophes). First kind that matches wins:
+# skip before pref so "Perks & bonus" is not a nice-to-have section.
+HEADING_MAX = 60
+SECTION_PHRASES: list[tuple[str, str]] = [
+    ("skip", r"benefits|perks|our perks|why join|life at|(?:our )?(?:hiring|interview) process|our values|diversity|"
+             r"equal opportunit|employment terms|about (?!(?:the )?(?:role|job|position|team)\b|you)"),
+    ("pref", r"nice to have|desirable|bonus|preferred|a plus|advantageous|ideally"),
+    ("req", r"requirements?|essential|must[- ]have|qualifications|what you(?:'ll| will)? (?:need|bring)|"
+            r"what we(?:'re| are) looking for|who you are|about you|your (?:skills|experience|background)|"
+            r"skills and experience"),
+    ("neutral", r"what you(?:'ll| will) do|responsibilities|the role|about the (?:role|job)"),
+]
+_ANCHORED = [(kind, re.compile(r"^(?:" + p + ")")) for kind, p in SECTION_PHRASES]
+_ANYWHERE = [(kind, re.compile(r"\b(?:" + p + ")")) for kind, p in SECTION_PHRASES]
+PREF_HEAD = _ANYWHERE[1][1]
+
+_BULLET = ("-", "•", "*", "·", "–", "—", "▪", "●", "◦")
+_DECOR_LEAD = re.compile(r"^[^\w]+")
+_DECOR_TAIL = re.compile(r"[^\w:.]+$")                  # keep ':' (heading marker) and '.' (sentence marker)
+_HASHTAGS = re.compile(r"^\s*(?:#\w+\s*)+$")
+# Clause boundaries for "X; Y is a plus" — split before also/ideally, but not before a trailing "… is a bonus".
+_CLAUSE = re.compile(r";|—|\s[–-]\s|\(|\s(?=(?:also|ideally)\b)", re.I)
+
+
+def classify_heading(line: str) -> str | None:
+    """'req' | 'pref' | 'neutral' | 'skip' if the line is a section heading, else None.
+    A heading is ≤ HEADING_MAX chars after stripping emoji/decoration, is not a bullet, does not end with '.',
+    and either ends with ':' or starts with a known heading phrase. Unknown ':' headings are neutral."""
+    raw = line.strip()
+    if not raw or raw.startswith(_BULLET):
+        return None
+    text = norm_literal(_DECOR_TAIL.sub("", _DECOR_LEAD.sub("", raw))).strip()
+    if not text or len(text) > HEADING_MAX or text.endswith("."):
+        return None
+    if text.endswith(":"):
+        return next((kind for kind, rx in _ANYWHERE if rx.search(text)), "neutral")
+    return next((kind for kind, rx in _ANCHORED if rx.match(text)), None)
+
+
+def _clauses(line: str, mode: str) -> list[tuple[str, str]]:
+    """(clause, mode) pairs. Under req/neutral, only the clause holding a 'nice to have' phrase becomes pref."""
+    if mode == "pref" or not PREF_HEAD.search(norm_literal(line)):
+        return [(line, mode)]
+    return [(c, "pref" if PREF_HEAD.search(norm_literal(c)) else mode) for c in _CLAUSE.split(line)]
 
 
 def taxonomy_keywords(jd: str, req_w: float = 2.0, pref_w: float = 1.0) -> list[Keyword]:
-    """Scan the JD line by line, tracking whether we are under a 'requirements' or 'nice to have' heading."""
+    """Scan the JD line by line, tracking the current section (req / pref / neutral / skip) from its headings.
+    Keywords in skip sections (benefits, perks, company blurb, hiring process) and hashtag lines are ignored."""
     tax = load_taxonomy()
+    weight = {"req": req_w, "pref": pref_w, "neutral": (req_w + pref_w) / 2}
     mode = "neutral"
     found: dict[str, Keyword] = {}
     for line in jd.splitlines():
-        stripped = line.strip()
-        if len(stripped) < 80 and not stripped.startswith("-"):
-            if PREF_HEAD.search(stripped):
-                mode = "pref"
-            elif REQ_HEAD.search(stripped):
-                mode = "req"
-        if PREF_HEAD.search(stripped):
-            line_mode = "pref"
-        else:
-            line_mode = mode
-        ln = norm_literal(line)
-        for term in tax:
-            if _contains(ln, norm_literal(term)):
-                w = pref_w if line_mode == "pref" else req_w if line_mode == "req" else (req_w + pref_w) / 2
-                prev = found.get(term.lower())
-                if prev is None or w > prev.weight:
-                    found[term.lower()] = Keyword(term, w, line_mode != "pref")
+        kind = classify_heading(line)
+        if kind:
+            mode = kind
+        if mode == "skip" or _HASHTAGS.match(line):
+            continue
+        for clause, clause_mode in _clauses(line, mode):
+            ln = norm_literal(clause)
+            for term in tax:
+                if _contains(ln, norm_literal(term)):
+                    w = weight[clause_mode]
+                    prev = found.get(term.lower())
+                    if prev is None or w > prev.weight:
+                        found[term.lower()] = Keyword(term, w, clause_mode != "pref")
     return list(found.values())
 
 

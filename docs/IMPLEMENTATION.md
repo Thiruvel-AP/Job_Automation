@@ -13,7 +13,7 @@ Companion to [`PLAN.md`](PLAN.md) (what & why). This file is *how*: modules, sig
 | **Resume:** STAR rewrite, JD keywords woven in | `prompts.TAILOR_*` | Bullet shape = *Action verb → what → how (tools) → Result*. Situation/Task compress into the clause "for X / to solve Y". |
 | Result part of STAR | `fact_bank.yaml` → new optional `result:` per bullet | The guard already blocks new numbers, so a Result can only come from `result:`. Bullets without one are listed in review as **"needs a result (yours to supply)"** — never invented. |
 | Prioritise relevant, cut what doesn't earn its spot | `tailor._proposal` + `_shrink` | ✅ selection by relevance; shrink drops lowest-keyword bullets until 2 pages. |
-| ATS 70–85 | `scorer` + band loop | ✅ |
+| ATS 70–85 | `scorer` + band loop | ✅ Keyword weights come from JD sections (`scorer.classify_heading`, M5 1d ✅): required ×2, preferred ×1, before any heading 1.5; benefits/perks/values/hiring-process/"About <company>" sections and hashtag lines are ignored; a "…is a plus" clause is preferred while the rest of its line stays required. |
 | Check memory / ask before altering; no hallucination | fact bank = the memory; `faithfulness.check` | ✅ guard. New: keywords with *partial* evidence (stem match only in `terms`, not in text) become **review questions**: "Is it true you did X in bullet Y?" |
 | "Add all required skills and let me know so I'll keep learning" | **Resolved as:** never added to the CV; written to a per-job and a global **learning list** | Adding an unevidenced skill *is* a hallucination, so the two instructions only reconcile this way. See §5. |
 | Keep the structure | `templates/cv.tex.j2` | ✅ standing order Profile → Skills → Experience → Projects → Education → Certifications. |

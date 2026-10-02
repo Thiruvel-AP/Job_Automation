@@ -82,6 +82,11 @@ Fix:
    Lendable `What we are looking for` → req, `Strong engineering skills and experience building production systems.` → not a heading,
    `Why join us` → skip; Zone & Co `What You'll Bring:` → req, `What You'll Do:` → neutral, `Benefits` → skip.
 
+**Status: ✅ done** (`scorer.classify_heading`, `tests/tailoring/test_sections.py`). Deviations approved by the user:
+(a) skip any `About <X>` heading except role/job/position/team/you, instead of hard-coding `lendable`;
+(b) split clauses on `;`, `—`, ` – `, `(` and before `also`/`ideally` — not before `bonus`, which trails its own clause
+("containerization experience is a bonus"); (c) a `:`-ended heading with no known phrase resets the mode to neutral.
+
 ## Part 2 — Calibration harness: `careerops calibrate`
 
 Input: `data/calibration/manifest.yaml` (git-ignored, written by the user):

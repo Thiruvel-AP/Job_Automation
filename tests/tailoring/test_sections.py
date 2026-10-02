@@ -6,14 +6,11 @@ import pytest
 
 from careerops.tailoring import scorer
 
-M5_1D = pytest.mark.xfail(strict=True, reason="M5 1d — section detection not implemented yet")
-
 
 def kw(jd: str) -> dict[str, scorer.Keyword]:
     return {k.term.lower(): k for k in scorer.taxonomy_keywords(jd)}
 
 
-@M5_1D
 @pytest.mark.parametrize("line, kind", [
     ("What you'll need to succeed", "req"),                                        # Creditspring
     ("Desirable experience:", "pref"),
@@ -33,7 +30,6 @@ def test_classify_heading(line, kind):
     assert scorer.classify_heading(line) == kind
 
 
-@M5_1D
 def test_clause_level_nice_to_have_keeps_rest_required():
     jd = ("What you’ll need:\n"
           "Proficiency in PyTorch, including training loops and standard model fine-tuning workflows; "
@@ -43,14 +39,12 @@ def test_clause_level_nice_to_have_keeps_rest_required():
     assert k["lora"].weight == 1.0 and not k["lora"].required
 
 
-@M5_1D
 def test_clause_split_before_ideally():
     k = kw("Requirements\nStrong SQL, ideally Docker\n")
     assert k["sql"].weight == 2.0
     assert k["docker"].weight == 1.0
 
 
-@M5_1D
 def test_skip_sections_and_hashtags_add_no_keywords():
     jd = ("What you’ll need:\n"
           "Strong Python\n"
@@ -65,7 +59,6 @@ def test_skip_sections_and_hashtags_add_no_keywords():
     assert not {"healthcare", "stakeholders", "llm", "pytorch"} & k.keys()
 
 
-@M5_1D
 def test_lendable_headings_and_mode_reset():
     jd = ("What we are looking for\n"
           "Strong engineering skills and experience building production systems.\n"
@@ -79,7 +72,6 @@ def test_lendable_headings_and_mode_reset():
     assert not {"docker", "kubernetes", "aws"} & k.keys()
 
 
-@M5_1D
 def test_zoneco_bring_is_required_and_benefits_skipped():
     jd = ("What You'll Do:\n"
           "Integrate retrieval into backend applications.\n"
@@ -95,3 +87,8 @@ def test_zoneco_bring_is_required_and_benefits_skipped():
 
 def test_text_before_any_heading_is_neutral():
     assert kw("We use Python and Docker.\n")["python"].weight == 1.5
+
+
+def test_hashtag_line_ignored_outside_skip_section():
+    k = kw("Requirements\nStrong Python\n#machinelearning #LLM #PyTorch\n")
+    assert "python" in k and not {"llm", "pytorch"} & k.keys()
