@@ -78,6 +78,13 @@ CREATE TABLE IF NOT EXISTS company_events (
 );
 """
 
+# Additive columns for databases created before they existed: (table, column, type). Never drop or rename.
+COLUMNS = [
+    ("jobs", "family", "TEXT"),        # M4b role family (data_scientist, ai_engineer, ...)
+    ("jobs", "tier", "INTEGER"),       # M4b priority tier, 1 = highest
+    ("jobs", "ceiling_pre", "REAL"),   # M4b honest ceiling at triage, taxonomy keywords only (no LLM)
+]
+
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -90,6 +97,10 @@ class DB:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA journal_mode=WAL")   # lets discover + tailor crons overlap safely
         self.conn.executescript(SCHEMA)
+        with self.conn:
+            for table, col, typ in COLUMNS:
+                if col not in {r[1] for r in self.conn.execute(f"PRAGMA table_info({table})")}:
+                    self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
 
     # ---- jobs -------------------------------------------------------------
     def upsert_job(self, job: dict[str, Any]) -> bool:
@@ -114,14 +125,16 @@ class DB:
         self.conn.commit()
         return True
 
-    def update_job(self, job_id: str, **fields: Any) -> None:
+    def update_job(self, job_id: str, commit: bool = True, **fields: Any) -> None:
+        """commit=False lets a caller batch many updates inside one `with db.conn:` transaction."""
         for k in ("flags", "keywords"):
             if k in fields and not isinstance(fields[k], str):
                 fields[k] = json.dumps(fields[k])
         fields["updated_at"] = now()
         sets = ", ".join(f"{k}=?" for k in fields)
         self.conn.execute(f"UPDATE jobs SET {sets} WHERE id=?", (*fields.values(), job_id))
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
 
     def jobs(self, status: str | Iterable[str] | None = None, limit: int | None = None) -> list[sqlite3.Row]:
         q, args = "SELECT * FROM jobs", []

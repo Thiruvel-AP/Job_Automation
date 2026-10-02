@@ -47,9 +47,32 @@ sources:
     pages_per_query: 2
     max_days_old: 7
 
+roles:
+  # Lower tier = higher priority. Patterns are case-insensitive regexes on the job TITLE.
+  # Families are tried in tier order, so an ambiguous title ("Data Scientist / ML Engineer") takes the higher tier.
+  # `projects` = preferred fact-bank project ids for that family (a prior for tailoring, not an order);
+  # every id must exist in fact_bank.yaml or triage/tailor stop with a clear error.
+  families:
+    - {name: data_scientist, tier: 1, headline: Data Scientist,
+       title: ['data scien', 'decision scien'],
+       projects: [churn, bitcoin, lloyds, gtaigraph]}
+    - {name: ai_engineer, tier: 1, headline: AI Engineer,
+       title: ['\bai engineer', '\bai/ml engineer', '\b(llm|genai|generative ai) engineer', 'applied ai', '\bai (software )?(engineer|developer)', 'agent(ic)? (ai )?engineer'],
+       projects: [agenticfriend, mcpsearch, coverfit, lloyds]}
+    - {name: ml_engineer, tier: 2, headline: Machine Learning Engineer,
+       title: ['machine learning engineer', '\bml engineer', '\bmlops', 'applied scientist', '\bnlp engineer'],
+       projects: [agenticfriend, bitcoin, gtaigraph, coverfit]}
+    - {name: data_analyst, tier: 3, headline: Data Analyst,
+       title: ['data analyst', 'insights? analyst', 'product analyst', 'analytics engineer', '\bbi analyst', 'business intelligence analyst', 'reporting analyst'],
+       projects: [churn, lloyds, bitcoin, coverfit]}
+  levels:
+    # Junior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
+    exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
+              '\bmanager\b', '\bvp\b', '\b(iii|iv)\b', '\bintern(ship)?\b']
+  floor: 0.70                 # same as scoring.band[0]; jobs whose honest ceiling can't reach it queue last
+  tier3_max_share: 0.20       # tier 3 gets at most 20 % of a run's tailoring slots unless tiers 1–2 run out
+
 gates:
-  title_include: ['data scien', 'machine learning', '\bml\b', '\bai\b', 'applied scien', 'llm', 'nlp', 'genai', 'generative']
-  title_exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead\b', 'director', 'manager', '\bvp\b', 'intern', 'sre', 'reliability']
   locations_ok: ['united kingdom', '\buk\b', 'england', 'london', 'bristol', 'remote', 'manchester', 'cambridge', 'oxford', 'edinburgh', 'bath', 'cardiff', 'birmingham', 'leeds', 'scotland', 'wales']
   max_years_required: 3
   require_sponsor_match: true

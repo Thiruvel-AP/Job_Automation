@@ -4,6 +4,7 @@
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODOs
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
+  careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
   careerops tailor [--limit N]  JD analysis → tailored CV + letter → review queue
   careerops review              approve / edit / reject (logs preference data)
@@ -48,20 +49,58 @@ def _llm(args, s, db):
     return MockLLM() if args.mock else Router(s, db)
 
 
+def _status(v: gates.Verdict) -> str:
+    return "skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "triaged"
+
+
+def _verdict_fields(v: gates.Verdict) -> dict:
+    return {"status": _status(v), "reason": "; ".join(v.reasons) or None, "flags": v.flags,
+            "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score,
+            "family": v.family, "tier": v.tier, "ceiling_pre": v.ceiling_pre}
+
+
 def triage_new(db: DB, s) -> dict[str, int]:
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)                   # fail fast on a renamed project id
     idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
     counts = {"triaged": 0, "skipped": 0, "needs_jd": 0}
     for job in db.jobs("new"):
-        v = gates.triage(dict(job), s, idx)
-        if not v.passed:
-            st = "skipped"
-        elif v.needs_full_jd:
-            st = "needs_jd"
-        else:
-            st = "triaged"
-        db.update_job(job["id"], status=st, reason="; ".join(v.reasons) or None, flags=v.flags,
-                      sponsor_name=v.sponsor_name, sponsor_score=v.sponsor_score)
-        counts[st] += 1
+        f = _verdict_fields(gates.triage(dict(job), s, idx, fb))
+        db.update_job(job["id"], **f)
+        counts[f["status"]] += 1
+    return counts
+
+
+PRE_TAILOR = ("new", "triaged", "skipped", "needs_jd")
+RULES_SKIP = "new rules would skip: "
+
+
+def retriage(db: DB, s) -> dict[str, int]:
+    """Re-run triage on every non-applied job (M4b back-fill of family/tier/ceiling_pre).
+    Pre-tailoring rows get a fresh verdict. Post-tailoring rows keep their status and gain one
+    'new rules would skip: …' flag if today's rules would reject them. `applied` rows are never touched."""
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
+    counts = {"triaged": 0, "skipped": 0, "needs_jd": 0, "post_tailor": 0, "post_tailor_would_skip": 0}
+    with db.conn:
+        for job in db.jobs():
+            if job["status"] == "applied":
+                continue
+            v = gates.triage(dict(job), s, idx, fb)
+            if job["status"] in PRE_TAILOR:
+                f = _verdict_fields(v)
+                db.update_job(job["id"], commit=False, **f)
+                counts[f["status"]] += 1
+                continue
+            flags = [x for x in json.loads(job["flags"] or "[]") if not x.startswith(RULES_SKIP)]
+            if not v.passed:
+                flags.append(RULES_SKIP + "; ".join(v.reasons))
+                counts["post_tailor_would_skip"] += 1
+            db.update_job(job["id"], commit=False, family=v.family, tier=v.tier, ceiling_pre=v.ceiling_pre,
+                          flags=flags)
+            counts["post_tailor"] += 1
+    counts["applied_untouched"] = len(db.jobs("applied"))
     return counts
 
 
@@ -82,6 +121,11 @@ def cmd_discover(args):
         new += db.upsert_job(job)
     print(f"Fetched {seen} postings, {new} new.")
     print("Triage:", triage_new(db, s))
+
+
+def cmd_retriage(args):
+    s, db = _ctx(args)
+    print("Retriage:", retriage(db, s))
 
 
 def cmd_add_jd(args):
@@ -263,6 +307,7 @@ def main(argv=None):
     o.add_argument("--mock", action="store_true")
     o.set_defaults(fn=cmd_outreach)
     sub.add_parser("discover").set_defaults(fn=cmd_discover)
+    sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")
     a.add_argument("--url"); a.add_argument("--location", default="United Kingdom"); a.add_argument("--file")

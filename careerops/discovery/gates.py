@@ -4,7 +4,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from ..tailoring.scorer import ceiling, taxonomy_keywords
 from .register import SponsorIndex
+
+FAMILY_REASON = "title not in target families"
 
 YEARS = re.compile(
     r"(\d{1,2})\s*\+?\s*(?:-|to|–)?\s*(?:\d{1,2})?\s*\+?\s*years?['’]?\s+(?:of\s+)?(?:[\w/&-]+\s+){0,4}?experience",
@@ -20,6 +23,18 @@ class Verdict:
     sponsor_name: str | None = None
     sponsor_score: float = 0.0
     needs_full_jd: bool = False
+    family: str | None = None
+    tier: int | None = None
+    ceiling_pre: float | None = None
+
+
+@dataclass
+class Family:
+    name: str
+    tier: int
+    headline: str
+    title: list[str]
+    projects: list[str]
 
 
 def _any(patterns: list[str], text: str) -> str | None:
@@ -35,16 +50,61 @@ def min_years_required(jd: str) -> int | None:
     return min(found) if found else None
 
 
-def triage(job: dict, settings, sponsors: SponsorIndex | None) -> Verdict:
+# ---------------------------------------------------------------- role families (M4b)
+def load_roles(settings, fb: dict | None = None) -> list[Family]:
+    """Families from `settings.roles`, sorted by tier (stable, so config order breaks ties).
+    With a fact bank, every preferred project id must exist in it — the user may rename ids."""
+    fams = sorted((Family(f["name"], int(f["tier"]), f["headline"], list(f["title"]), list(f.get("projects", [])))
+                   for f in settings["roles"]["families"]), key=lambda f: f.tier)
+    if fb is not None:
+        known = [p["id"] for p in fb.get("projects", [])]
+        for f in fams:
+            for pid in f.projects:
+                if pid not in known:
+                    raise ValueError(f"settings.yaml roles.families[{f.name}].projects: unknown project id '{pid}' "
+                                     f"(fact_bank.yaml has: {', '.join(known)})")
+    return fams
+
+
+def family(settings, name: str | None) -> Family | None:
+    return next((f for f in load_roles(settings) if f.name == name), None)
+
+
+def classify_role(title: str, settings) -> tuple[str, int] | None:
+    """(family, tier) of the first family, in tier order, whose title pattern matches; None if out of scope."""
+    f = next((f for f in load_roles(settings) if _any(f.title, title)), None)
+    return (f.name, f.tier) if f else None
+
+
+def level_excluded(title: str, settings) -> str | None:
+    """The level pattern (senior, lead, intern, ...) that excludes this title, if any."""
+    return _any(settings["roles"]["levels"]["exclude"], title)
+
+
+def pre_ceiling(jd: str, fb: dict, settings) -> float:
+    """Honest ceiling from taxonomy keywords only — no LLM, cheap enough to run at triage to order the queue."""
+    from ..tailoring.tailor import fact_text   # lazy: tailor imports this module
+
+    sc = settings["scoring"]
+    return ceiling(fact_text(fb), taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"]))[0]
+
+
+def triage(job: dict, settings, sponsors: SponsorIndex | None, fb: dict | None = None) -> Verdict:
+    """Rule verdict for one job. With a fact bank, also computes `ceiling_pre`."""
     g = settings["gates"]
     v = Verdict(passed=True)
     title, loc, jd = job.get("title", ""), job.get("location", "") or "", job.get("description", "") or ""
 
-    if not _any(g["title_include"], title):
-        v.reasons.append("title not DS/AI")
-    hit = _any(g["title_exclude"], title)
+    role = classify_role(title, settings)
+    if role is None:
+        v.reasons.append(FAMILY_REASON)
+    else:
+        v.family, v.tier = role
+    hit = level_excluded(title, settings)
     if hit:
-        v.reasons.append(f"title excluded ({hit})")
+        v.reasons.append(f"level excluded ({hit})")
+    if fb is not None and jd:
+        v.ceiling_pre = pre_ceiling(jd, fb, settings)
     if loc and not _any(g["locations_ok"], loc):
         v.reasons.append(f"location '{loc}' not in allow-list")
 
