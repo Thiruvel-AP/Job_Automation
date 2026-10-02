@@ -23,7 +23,7 @@ def test_gate_skips_no_sponsorship(db, settings, job):
 def test_gate_skips_sre_people_mgmt_and_senior(db, settings, job):
     idx = _idx(db, settings)
     j = dict(job, title="Senior AI Engineer")
-    assert any("title excluded" in r for r in gates.triage(j, settings, idx).reasons)
+    assert any("level excluded" in r for r in gates.triage(j, settings, idx).reasons)
     j = dict(job, description=job["description"] + "\nYou will have 3 direct reports.")
     assert not gates.triage(j, settings, idx).passed
     j = dict(job, description=job["description"] + "\nOwn site reliability for the platform.")
