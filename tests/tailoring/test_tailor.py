@@ -31,3 +31,44 @@ def test_letter_rules(tailored):
     assert len(text.split()) <= 250
     assert not text.lower().startswith("i am writing")
     assert "look forward to hearing" not in text.lower()
+
+
+# ---------------------------------------------------------------- A1: every job gets a cover letter
+def _failing_letter_llm():
+    def boom(ctx):
+        raise RuntimeError("provider quota exhausted")
+    return MockLLM({"cover_letter": boom})
+
+
+def test_good_letter_has_status_ok(tailored):
+    rep, _, _ = tailored
+    assert rep["letter"]["status"] == "ok" and rep["letter"]["problems"] == []
+
+
+def test_llm_failure_still_writes_a_letter_marked_fallback(settings, db, job):
+    fb = load_yaml(settings.path("fact_bank"))
+    rep = tailor_job(job, fb, _failing_letter_llm(), settings, settings.path("outputs"))
+    assert Path(rep["letter_pdf"]).exists() and Path(rep["letter_pdf"]).with_suffix(".tex").exists()
+    assert rep["letter"]["status"] == "fallback"
+    assert any("letter LLM failed" in p for p in rep["letter"]["problems"])
+    assert job["company"].lower() in pdf_text(Path(rep["letter_pdf"])).lower()
+
+
+def test_letter_that_breaks_the_rules_twice_is_a_fallback(settings, db, job):
+    fb = load_yaml(settings.path("fact_bank"))
+    rambling = MockLLM({"cover_letter": lambda ctx: {"paragraphs": ["word " * 400]}})
+    rep = tailor_job(job, fb, rambling, settings, settings.path("outputs"))
+    assert rep["letter"]["status"] == "fallback" and Path(rep["letter_pdf"]).exists()
+    assert rambling.calls.count("cover_letter") == 2
+
+
+def test_regenerate_letter_replaces_a_fallback_in_place(settings, db, job):
+    from careerops.tailoring.tailor import regenerate_letter
+    fb = load_yaml(settings.path("fact_bank"))
+    rep = tailor_job(job, fb, _failing_letter_llm(), settings, settings.path("outputs"))
+    name = Path(rep["letter_pdf"]).name
+    rep = regenerate_letter(job, fb, MockLLM(), settings, rep)
+    assert rep["letter"]["status"] == "ok" and rep["letter"]["problems"] == []
+    assert Path(rep["letter_pdf"]).name == name and Path(rep["letter_pdf"]).exists()
+    import json
+    assert json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))["letter"]["status"] == "ok"

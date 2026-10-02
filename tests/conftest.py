@@ -23,6 +23,10 @@ def settings(tmp_path) -> Settings:
     raw = copy.deepcopy(s.raw)
     for k in ("db", "outputs", "excel", "preferences", "sponsors_csv"):
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
+    # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
+    raw["paths"]["applications"] = str(tmp_path / "Companies")
+    raw["paths"]["tmp"] = str(tmp_path / "stage")
+    (tmp_path / "Companies").mkdir()                      # only `careerops init` creates the real one
     raw["paths"]["fact_bank"] = str(ROOT / "config/profile/fact_bank.yaml")
     raw["paths"]["applicant"] = str(ROOT / "config/profile/applicant.yaml")
     shutil.copy(fixture("discovery", "sponsors.csv"), raw["paths"]["sponsors_csv"])

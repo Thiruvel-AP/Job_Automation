@@ -48,3 +48,64 @@ def test_excel_has_tier_columns_sorted_by_post_tailor_key(settings, db, job, tmp
     fams = [ws.cell(r, head.index("Family") + 1).value for r in range(2, 5)]
     pre = [ws.cell(r, head.index("Ceiling (pre)") + 1).value for r in range(2, 5)]
     assert list(zip(tiers, fams, pre)) == [(1, "ai_engineer", 0.70), (3, "data_analyst", 0.80), (1, "ai_engineer", 0.87)]
+
+
+# ---------------------------------------------------------------- A1: fallback letters need a deliberate approval
+def _fallback_job(settings, db, job):
+    from careerops.config import load_yaml
+    from careerops.llm import MockLLM
+    from careerops.tailoring.tailor import tailor_job
+
+    def boom(ctx):
+        raise RuntimeError("provider quota exhausted")
+    fb = load_yaml(settings.path("fact_bank"))
+    rep = tailor_job(job, fb, MockLLM({"cover_letter": boom}), settings, settings.path("outputs"))
+    db.upsert_job(job)
+    db.update_job(job["id"], status="needs_review", out_dir=rep["out_dir"], tier=1, family="ai_engineer")
+    return db.job(job["id"]), rep, fb
+
+
+def test_review_refuses_plain_approve_of_a_fallback_letter(settings, db, job):
+    import pytest
+    row, rep, _ = _fallback_job(settings, db, job)
+    prefs = settings.path("preferences")
+    assert review.letter_status(rep) == "fallback"
+    assert "LETTER IS A FALLBACK — regenerate (l) before approving" in review.summary(row, rep)
+    for confirm in (None, "", "yes", "SEND FALLBACK please"):
+        with pytest.raises(review.FallbackLetterError):
+            review.approve(db, row, rep, prefs, confirm=confirm)
+    assert db.job(job["id"])["status"] == "needs_review" and not prefs.exists()
+
+
+def test_typing_send_fallback_approves_and_is_logged_as_an_event(settings, db, job):
+    row, rep, _ = _fallback_job(settings, db, job)
+    review.approve(db, row, rep, settings.path("preferences"), confirm="send fallback")
+    assert db.job(job["id"])["status"] == "approved"
+    ev = [r["detail"] for r in db.conn.execute("SELECT detail FROM events WHERE job_id=? AND stage='review'", (job["id"],))]
+    assert any("fallback" in d for d in ev)
+
+
+def test_regenerating_the_letter_clears_the_banner_and_allows_a_plain_approve(settings, db, job):
+    from careerops.llm import MockLLM
+    row, rep, fb = _fallback_job(settings, db, job)
+    rep = review.regenerate_letter(db, row, rep, fb, MockLLM(), settings)
+    assert review.letter_status(rep) == "ok" and "LETTER IS A FALLBACK" not in review.summary(db.job(job["id"]), rep)
+    review.approve(db, db.job(job["id"]), rep, settings.path("preferences"))
+    assert db.job(job["id"])["status"] == "approved"
+    assert db.job(job["id"])["letter_score"] is not None
+
+
+def test_old_reports_without_a_letter_status_are_judged_by_their_problems():
+    assert review.letter_status({"letter": {"problems": []}}) == "ok"
+    assert review.letter_status({"letter": {"problems": ["x", "used fallback letter"]}}) == "fallback"
+
+
+def test_interactive_review_asks_for_send_fallback_and_l_regenerates(settings, db, job, monkeypatch, capsys):
+    from careerops.llm import MockLLM
+    row, rep, fb = _fallback_job(settings, db, job)
+    answers = iter(["a", "nope", "l", "a"])                       # approve? refused -> regenerate -> approve
+    prompts = []
+    monkeypatch.setattr("builtins.input", lambda p="": prompts.append(p) or next(answers))
+    review.run(db, settings, fb, make_llm=lambda: MockLLM())
+    assert db.job(job["id"])["status"] == "approved"
+    assert any("send fallback" in p for p in prompts)
