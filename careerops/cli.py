@@ -34,6 +34,7 @@ from .review import workflow as review
 from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
+from .tailoring.queue import order, select_for_run
 from .llm import MockLLM, Router
 from .setup import doctor, init, load_dotenv
 
@@ -149,7 +150,8 @@ def cmd_tailor(args):
     s, db = _ctx(args)
     llm = _llm(args, s, db)
     fb = load_yaml(s.path("fact_bank"))
-    jobs = db.jobs("triaged", limit=args.limit)
+    gates.load_roles(s, fb)
+    jobs = select_for_run(db.jobs("triaged"), args.limit, s)
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if args.mock else ''}.")
     for job in jobs:
         print(f"- {job['company']} | {job['title']}")
@@ -178,7 +180,7 @@ def cmd_apply(args):
 
     s, db = _ctx(args)
     applicant = load_yaml(s.path("applicant"))
-    jobs = [db.job(args.id)] if args.id else db.jobs("approved", limit=args.limit)
+    jobs = [db.job(args.id)] if args.id else order(db.jobs("approved"), s, tailored=True)[: args.limit]
     for job in jobs:
         if job is None:
             continue
@@ -192,12 +194,12 @@ def cmd_apply(args):
         db.update_job(job["id"], status="applied", applied_at=now(), confirmation=r["confirmation"] or None)
         db.log(job["id"], "apply", r)
         print("  marked applied.")
-    export(db, s.path("excel"))
+    export(db, s.path("excel"), floor=s["roles"]["floor"])
 
 
 def cmd_export(args):
     s, db = _ctx(args)
-    n = export(db, s.path("excel"))
+    n = export(db, s.path("excel"), floor=s["roles"]["floor"])
     print(f"Wrote {n} rows to {s.path('excel')}")
 
 

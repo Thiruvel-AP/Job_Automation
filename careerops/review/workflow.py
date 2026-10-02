@@ -19,6 +19,7 @@ import yaml
 
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
+from ..tailoring.queue import order
 from ..tailoring.render import page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
 
@@ -129,7 +130,7 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
 # ---------------------------------------------------------------- interactive loop
 def run(db: DB, settings, fb: dict, limit: int | None = None) -> None:
     prefs = settings.path("preferences")
-    queue = db.jobs("needs_review", limit=limit)
+    queue = order(db.jobs("needs_review"), settings, tailored=True)[:limit]
     print(f"{len(queue)} job(s) waiting for review.")
     for job in queue:
         rep = load_report(job)

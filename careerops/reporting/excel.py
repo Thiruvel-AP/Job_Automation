@@ -10,6 +10,7 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from ..db import DB
+from ..tailoring.queue import queue_key
 
 COLS = [("Company", "company", 26), ("Title", "title", 38), ("Location", "location", 22), ("Status", "status", 13),
         ("Reason", "reason", 34), ("Flags", "flags", 40), ("Sponsor (register)", "sponsor_name", 30),
@@ -24,7 +25,8 @@ FILL = {"applied": "C6EFCE", "approved": "DDEBF7", "needs_review": "FFF2CC", "re
 PCT = {"sponsor_score", "score", "score_stemmed", "ceiling", "letter_score"}
 
 
-def export(db: DB, path: Path) -> int:
+def export(db: DB, path: Path, floor: float = 0.70) -> int:
+    """Rows sorted by the post-tailoring queue key (floor, tier, honest ceiling, freshness)."""
     wb = Workbook()
     ws = wb.active
     ws.title = "Jobs"
@@ -32,7 +34,7 @@ def export(db: DB, path: Path) -> int:
     for cell in ws[1]:
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor="14285A")
-    rows = db.jobs()
+    rows = sorted(db.jobs(), key=lambda r: queue_key(r, floor, tailored=True))
     for r in rows:
         vals = []
         for _, key, _ in COLS:
