@@ -25,12 +25,13 @@ def test_review_edit_approve_reject_and_export(tailored, settings, db, job, tmp_
 
     n = export(db, settings.path("excel"))
     ws = load_workbook(settings.path("excel"))["Jobs"]
-    assert n == 1 and ws["A2"].value == "Northwind Health AI" and ws["D2"].value == "approved"
+    status_col = [c.value for c in ws[1]].index("Status") + 1
+    assert n == 1 and ws["A2"].value == "Northwind Health AI" and ws.cell(2, status_col).value == "approved"
 
 
 def test_review_header_shows_tier_and_family(tailored, db, job):
     rep, _, _ = tailored
-    assert "T1 · AI Engineer" in review.summary(db.job(job["id"]), rep).splitlines()[1]
+    assert "T1 · AI Engineer" in review.summary(db.job(job["id"]), rep).splitlines()[2]   # right under "Company — Title"
 
 
 def test_excel_has_tier_columns_sorted_by_post_tailor_key(settings, db, job, tmp_path):

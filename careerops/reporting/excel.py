@@ -12,17 +12,19 @@ from openpyxl.utils import get_column_letter
 from ..db import DB
 from ..tailoring.queue import queue_key
 
-COLS = [("Company", "company", 26), ("Title", "title", 38), ("Location", "location", 22), ("Status", "status", 13),
+COLS = [("Company", "company", 26), ("Title", "title", 38), ("Tier", "tier", 6), ("Family", "family", 15),
+        ("Location", "location", 22), ("Status", "status", 13),
         ("Reason", "reason", 34), ("Flags", "flags", 40), ("Sponsor (register)", "sponsor_name", 30),
         ("Sponsor match", "sponsor_score", 9), ("ATS literal", "score", 9), ("ATS stemmed", "score_stemmed", 9),
-        ("Honest ceiling", "ceiling", 9), ("Letter", "letter_score", 8), ("Attempts", "attempts", 8),
+        ("Ceiling (pre)", "ceiling_pre", 9), ("Honest ceiling", "ceiling", 9), ("Letter", "letter_score", 8), ("Attempts", "attempts", 8),
         ("Source", "source", 11), ("URL", "url", 40), ("Output folder", "out_dir", 40),
         ("Applied at", "applied_at", 20), ("Confirmation", "confirmation", 20),
         ("First seen", "first_seen", 20), ("Last seen", "last_seen", 20)]
 
 FILL = {"applied": "C6EFCE", "approved": "DDEBF7", "needs_review": "FFF2CC", "rejected": "F8CBAD",
         "skipped": "EDEDED", "needs_jd": "FCE4D6", "error": "F4B084"}
-PCT = {"sponsor_score", "score", "score_stemmed", "ceiling", "letter_score"}
+PCT = {"sponsor_score", "score", "score_stemmed", "ceiling_pre", "ceiling", "letter_score"}
+STATUS_COL = next(i for i, c in enumerate(COLS, 1) if c[1] == "status")
 
 
 def export(db: DB, path: Path, floor: float = 0.70) -> int:
@@ -45,7 +47,7 @@ def export(db: DB, path: Path, floor: float = 0.70) -> int:
         ws.append(vals)
         fill = FILL.get(r["status"])
         if fill:
-            ws.cell(ws.max_row, 4).fill = PatternFill("solid", fgColor=fill)
+            ws.cell(ws.max_row, STATUS_COL).fill = PatternFill("solid", fgColor=fill)
     for i, (_, key, w) in enumerate(COLS, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
         if key in PCT:

@@ -80,14 +80,40 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 ```bash
 careerops sponsors                 # refresh the gov.uk register (cached 3 days)
 careerops discover                 # pull + triage; skipped jobs keep their reason
+careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
-careerops tailor --limit 15        # CV + letter per job → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV + letter per job, in queue order → data/outputs/<job>/ (+ report.json)
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
 careerops export                   # data/exports/companies.xlsx
 careerops export-prefs             # your edits → DPO pairs (chosen = yours, rejected = model's)
+careerops status                   # counts per status, plus a tier × status table
 ```
+
+### Role tiers and queue order
+
+`config/settings.yaml → roles` decides which titles are in scope and in what order they are worked:
+
+| Tier | Family | CV headline |
+|---|---|---|
+| 1 | `data_scientist`, `ai_engineer` | Data Scientist / AI Engineer |
+| 2 | `ml_engineer` | Machine Learning Engineer |
+| 3 | `data_analyst` | Data Analyst |
+
+Junior and mid only: titles matching `roles.levels.exclude` (Senior, Lead, Staff, Principal, Manager, III/IV,
+Intern) are skipped with `level excluded (…)`; titles in no family are skipped with `title not in target families`.
+Each family lists preferred fact-bank project ids — a prior for the tailoring prompt, not an order. If you rename a
+project id in `fact_bank.yaml`, triage and tailor stop with an error naming the stale id.
+
+Every queue (tailor, review, apply, Excel) sorts by
+
+  ( honest ceiling < `roles.floor`,  tier,  −honest ceiling,  −posted/first-seen )
+
+so jobs that can honestly reach 70 % come first, then tier 1 → 3, then best fit, then freshest. The tailor
+queue uses `ceiling_pre` (taxonomy keywords vs the fact bank, computed at triage with no LLM); once a job is
+tailored the LLM-keyword `ceiling` replaces it. `tailor --limit N` gives tier 3 at most
+⌊`tier3_max_share`·N⌋ slots (5 of 25 by default) unless tiers 1–2 run out.
 
 `careerops run --limit 25` (discover + tailor + export) is what `scripts/crontab.example` schedules.
 `--mock` runs the whole thing with a deterministic stand-in model — use it after editing templates or the fact bank.
@@ -97,6 +123,8 @@ careerops export-prefs             # your edits → DPO pairs (chosen = yours, r
 - **ATS literal** — conservative substring match on the PDF's text layer; the 70–85 % band applies to this.
 - **ATS stemmed** — also equates *communicating/communicate*, *modelling/modeling*, *end-to-end/end to end*.
   Literal → stemmed gap = wording, not substance.
+- **T1 · Data Scientist** (second line) — the role tier and family; the CV headline uses the family's.
+- **Flag `new rules would skip: …`** — added by `retriage` to an already-tailored job that today's rules would reject.
 - **Honest ceiling** — best score the fact bank can support. Below 70 % → the loop doesn't waste calls; you decide.
 - **Genuine gaps** — JD keywords with zero evidence. They stay off the page.
 - **Guard blocked** — model claims that were reverted to the canonical bullet (new numbers, deny-listed tools,

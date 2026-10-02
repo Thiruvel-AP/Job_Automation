@@ -8,6 +8,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from ..discovery import gates
 from . import prompts as P
 from .faithfulness import check, deny_hits, numbers
 from .render import page_count, pdf_text, render_cv, render_letter
@@ -66,7 +67,19 @@ def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str]:
 
 
 # ------------------------------------------------------------------ 2. one tailoring attempt
-def _proposal(job, fb, kws, llm, feedback: str) -> dict:
+def role_prior(job: dict, fb: dict, settings) -> tuple[str | None, int | None, str, list[str]]:
+    """(family, tier, CV headline, preferred project ids) for this job. Falls back to classifying the title,
+    then to identity.headline with no prior when the title is out of scope."""
+    fam = gates.family(settings, job.get("family"))
+    if fam is None:
+        role = gates.classify_role(job.get("title", ""), settings)
+        fam = gates.family(settings, role[0]) if role else None
+    if fam is None:
+        return None, None, fb["identity"].get("headline", ""), []
+    return fam.name, fam.tier, fam.headline, list(fam.projects)
+
+
+def _proposal(job, fb, kws, llm, feedback: str, headline: str = "", preferred: list[str] | None = None) -> dict:
     deny = ", ".join(fb.get("deny_terms", []))
     exp_txt = "\n".join(
         f"{e['id']}: {e['title']} @ {e['org']}\n" +
@@ -78,16 +91,18 @@ def _proposal(job, fb, kws, llm, feedback: str) -> dict:
         for p in fb["projects"])
     user = P.TAILOR_USER.format(
         title=job["title"], company=job["company"],
+        preferred=(f"Preferred projects for a {headline} role (use if relevant to the JD): {', '.join(preferred)}"
+                   if preferred else ""),
         keywords="\n".join(f"- {k.term} ({k.weight:g})" for k in kws),
         feedback=feedback, profile_facts="\n".join(f"- {f}" for f in fb["profile_facts"]),
         skills="; ".join(f"{g}: {', '.join(i)}" for g, i in fb["skills"].items()),
         experience=exp_txt, projects=prj_txt)
     ctx = {"keywords": [asdict(k) for k in kws], "experience": fb["experience"], "projects": fb["projects"],
-           "profile_facts": fb["profile_facts"]}
+           "profile_facts": fb["profile_facts"], "preferred_projects": preferred or []}
     return llm.json("tailor_cv", P.TAILOR_SYSTEM.replace("{deny}", deny), user, context=ctx)
 
 
-def _assemble(fb: dict, prop: dict, kws: list[Keyword]) -> tuple[dict, list[str], list[str]]:
+def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "") -> tuple[dict, list[str], list[str]]:
     """Turn a proposal into a render context, applying the faithfulness guard.
     Returns (ctx, violations, warnings). Violating rephrases fall back to canonical text."""
     deny = fb.get("deny_terms", [])
@@ -130,7 +145,7 @@ def _assemble(fb: dict, prop: dict, kws: list[Keyword]) -> tuple[dict, list[str]
 
     hit_terms = {norm_literal(k.term) for k in kws}
     skills = {g: sorted(items, key=lambda s: norm_literal(s) not in hit_terms) for g, items in fb["skills"].items()}
-    ctx = {"id": fb["identity"], "profile": profile, "skills": skills, "experience": experience,
+    ctx = {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile, "skills": skills, "experience": experience,
            "projects": projects, "education": fb.get("education", []),
            "certifications": fb.get("certifications", [])}
     return ctx, violations, warnings
@@ -207,17 +222,19 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
+    family, tier, headline, preferred = role_prior(job, fb, settings)
     kws, hook = analyse(job, llm, settings)
     ceil, gaps = ceiling(fact_text(fb), kws)
     out_dir = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
+                              "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook,
                               "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(out_dir)}
 
     feedback, best = "", None
     for attempt in range(1, sc["max_attempts"] + 1):
-        prop = _proposal(job, fb, kws, llm, feedback)
-        ctx, viol, warn = _assemble(fb, prop, kws)
+        prop = _proposal(job, fb, kws, llm, feedback, headline, preferred)
+        ctx, viol, warn = _assemble(fb, prop, kws, headline)
         pdf = render_cv(ctx, out_dir)
         shrinks = 0
         while page_count(pdf) > sc["max_pages"] and _shrink(ctx, kws):

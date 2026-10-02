@@ -32,7 +32,10 @@ class MockLLM:
                 return sum(k in t for k in kws)
             exp = {e["id"]: [b["id"] for b in sorted(e["bullets"], key=overlap, reverse=True)[:3]]
                    for e in ctx["experience"]}
-            projs = sorted(ctx["projects"], key=lambda p: sum(overlap(b) for b in p["bullets"]), reverse=True)[:3]
+            pref = ctx.get("preferred_projects", [])
+            rank = {pid: i for i, pid in enumerate(pref)}       # ties in overlap → preferred order, then bank order
+            projs = sorted(ctx["projects"], key=lambda p: (-sum(overlap(b) for b in p["bullets"]),
+                                                           rank.get(p["id"], len(pref))))[:3]
             return {"profile": ". ".join(ctx["profile_facts"][:2]) + ".",
                     "experience": exp,
                     "projects": [p["id"] for p in projs],

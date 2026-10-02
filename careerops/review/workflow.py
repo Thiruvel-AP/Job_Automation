@@ -42,6 +42,7 @@ def summary(job, rep: dict) -> str:
     lines = [
         "=" * 78,
         f"{job['company']} — {job['title']}  [{job['location'] or '?'}]",
+        (f"T{rep['tier']} · {rep['headline']}" if rep.get("tier") else "Tier: out of target families"),
         f"{job['url']}",
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})",
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "

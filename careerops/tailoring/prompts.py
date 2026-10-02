@@ -29,6 +29,7 @@ Hard rules:
 - Do not stuff keywords. Natural sentences, past tense, <= 30 words per bullet."""
 
 TAILOR_USER = """TARGET ROLE: {title} at {company}
+{preferred}
 
 JD KEYWORDS (weight 2 = required, 1 = preferred):
 {keywords}

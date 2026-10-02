@@ -283,6 +283,15 @@ def cmd_status(args):
     _, db = _ctx(args)
     for st, n in db.conn.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status ORDER BY 2 DESC"):
         print(f"{st:14s} {n}")
+    rows = list(db.conn.execute("SELECT COALESCE('T' || tier, '-') AS t, status, COUNT(*) FROM jobs GROUP BY 1, 2"))
+    if not rows:
+        return
+    tiers = sorted({r[0] for r in rows}, key=lambda t: (t == "-", t))
+    statuses = sorted({r[1] for r in rows})
+    cell = {(r[0], r[1]): r[2] for r in rows}
+    print("\ntier  " +" ".join(f"{s:>12s}" for s in statuses))
+    for t in tiers:
+        print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
 
 
 def main(argv=None):

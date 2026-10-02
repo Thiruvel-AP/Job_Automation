@@ -19,6 +19,8 @@
 \begin{document}
 {\centering
 {\LARGE\bfseries\color{navy} \VAR{id.name|e}}\\[3pt]
+\BLOCK{if id.headline}{\large\color{navy} \VAR{id.headline|e}}\\[2pt]
+\BLOCK{endif}
 \VAR{id.location|e} \;|\; \VAR{id.email|e} \;|\; \VAR{id.phone|e}\\
 \href{\VAR{id.links.linkedin}}{LinkedIn} \;|\; \href{\VAR{id.links.github}}{GitHub}\par}
 

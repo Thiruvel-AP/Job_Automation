@@ -168,6 +168,30 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
 
 ---
 
+## 5b. M4b — Role tiers, queue order, run quota — **done** (spec: `docs/tasks/M4b-role-tiers.md`)
+
+- `settings.roles` replaces `gates.title_include/title_exclude`: four families in three tiers, junior/mid level
+  exclusion (`intern(ship)?` no longer catches International/Internal), `floor`, `tier3_max_share`.
+- `gates.classify_role(title, settings) -> (family, tier) | None`, `gates.load_roles(settings, fb)` (validates
+  preferred project ids against the fact bank), `gates.pre_ceiling(jd, fb, settings)`.
+- `jobs` gains `family`, `tier`, `ceiling_pre` (additive `ALTER TABLE` via `db.COLUMNS`).
+- `careerops/tailoring/queue.py`: `queue_key`, `order(jobs, settings, tailored=False)`, `select_for_run`.
+  k(j) = (1[c_j < floor], tier_j, −c_j, −posted_or_first_seen_j) with c = `ceiling_pre` for the tailor queue and
+  COALESCE(`ceiling`, `ceiling_pre`) for review / apply / Excel. Quota: tier 3 ≤ ⌊share·N⌋ slots, then fills
+  whatever tiers 1–2 leave empty.
+- `careerops retriage`: pre-tailoring rows get a fresh verdict; `needs_review/approved/rejected/error` keep status,
+  get the three columns and one `new rules would skip: <reason>` flag (replaced, never duplicated, on re-run);
+  `applied` rows are never touched. One transaction.
+- Tailoring: CV headline = family headline (rendered under the name); `TAILOR_USER` carries
+  `Preferred projects for a <headline> role (use if relevant to the JD): <ids>`; MockLLM breaks overlap ties with
+  that list; `report.json` records `family`, `tier`, `headline`.
+- Visibility: `status` tier × status table, Excel `Tier` / `Family` / `Ceiling (pre)` columns, review header
+  `T1 · Data Scientist`.
+- Tests: `tests/discovery/test_roles.py`, `tests/tailoring/test_queue_order.py`, `tests/llm/test_mock.py`,
+  two in `tests/review/test_workflow.py`.
+
+---
+
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 
 **Constraint clash.** Sources disagree on the note limit — 200 characters on free accounts (300 on Premium) per one, 300 for all accounts per another — and free accounts get only ~3–5 personalised notes a month. Five sentences is ~400–600 characters, so it can't fit either way.
