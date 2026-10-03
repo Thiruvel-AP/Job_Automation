@@ -260,6 +260,43 @@ def merge_keywords(*lists: list[Keyword]) -> list[Keyword]:
     return out
 
 
+def drop_contained(kws: list[Keyword]) -> tuple[list[Keyword], list[str]]:
+    """Merge near-duplicates where one keyword's words are wholly inside another's ("customer feedback" inside
+    "customer feedback analysis"): the shorter one stays and takes the heavier weight (required if either was). Matched
+    on stems, whole words only. Any-of keywords ("A or B") are left alone. Returns (keywords in their input order,
+    notes naming each dropped longer keyword)."""
+    stems = {id(k): norm_stem(k.term) for k in kws}
+    kept: list[Keyword] = []
+    notes: list[str] = []
+    gone: set[int] = set()
+    for k in sorted(kws, key=lambda k: (len(stems[id(k)].split()), len(stems[id(k)]))):    # shortest first
+        host = None if k.alts else next((h for h in kept if not h.alts and h is not k and stems[id(h)]
+                                         and _contains(stems[id(k)], stems[id(h)])), None)
+        if host is None:
+            kept.append(k)
+            continue
+        gone.add(id(k))
+        host.weight, host.required = max(host.weight, k.weight), host.required or k.required
+        notes.append(f"dropped '{k.term}' (contains '{host.term}')")
+    return [k for k in kws if id(k) not in gone], notes
+
+
+def jd_frequency(k: Keyword, jd: str) -> int:
+    """How many times the JD says the keyword (any of its words), whole words, case/quote-normalised."""
+    njd = norm_literal(jd)
+    return sum(len(re.findall(r"(?<![\w])" + re.escape(norm_literal(w)) + r"(?![\w])", njd)) for w in k.members())
+
+
+def cap_keywords(kws: list[Keyword], jd: str, limit: int) -> tuple[list[Keyword], list[str]]:
+    """The `limit` most important keywords: by weight, then by how often the JD says them, then input order. The result
+    is in that order (most important first). Returns (keywords, notes naming what was cut)."""
+    freq = {id(k): jd_frequency(k, jd) for k in kws}
+    order = {id(k): i for i, k in enumerate(kws)}
+    ranked = sorted(kws, key=lambda k: (-k.weight, -freq[id(k)], order[id(k)]))
+    cut = ranked[limit:]
+    return ranked[:limit], ([f"capped at {limit}; dropped " + ", ".join(k.term for k in cut)] if cut else [])
+
+
 def in_band(s: float, band: tuple[float, float]) -> str:
     lo, hi = band
     return "below" if s < lo else "above" if s > hi else "in"

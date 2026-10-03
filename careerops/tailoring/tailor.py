@@ -20,8 +20,8 @@ from .rawlog import RawRecorder
 from .shapes import clean_proposal, normalise_keywords, normalise_letter, proposal_usable
 from .textnorm import normalise_json
 from .render import page_count, pdf_text, render_cv, render_letter
-from .scorer import (Keyword, _contains, ceiling, gap_terms, in_band, merge_keywords, norm_literal, norm_stem, score,
-                     taxonomy_keywords)
+from .scorer import (Keyword, _contains, cap_keywords, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
+                     norm_literal, norm_stem, score, taxonomy_keywords)
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
@@ -68,33 +68,44 @@ def clean_team(raw, job: dict) -> str:
     return t if norm_literal(t) in norm_literal(job["description"] or "") else ""
 
 
-# words that name nothing a recruiter's ATS would search for, and degree requirements: never keywords
-GENERIC_WORDS = frozenset({"tasks", "task", "workflows", "workflow", "patterns", "pattern", "skills", "skill", "data",
-                           "techniques", "technique", "experience", "ability", "knowledge", "understanding"})
+# Words that name nothing a recruiter's ATS would search for. A phrase containing any of GENERIC_ANYWHERE is not a
+# keyword ("ML systems", "data quality", "coding tasks"); GENERIC_ALONE only disqualifies a phrase made of nothing else
+# ("data" is out, "data pipelines" stays). Degree requirements are never keywords either.
+GENERIC_ANYWHERE = frozenset({"tasks", "workflows", "features", "approaches", "systems", "frameworks", "patterns",
+                              "skills", "sets", "quality", "generation"})
+GENERIC_ALONE = frozenset({"task", "workflow", "pattern", "skill", "data", "techniques", "technique", "experience",
+                           "ability", "knowledge", "understanding"}) | GENERIC_ANYWHERE
 DEGREE = re.compile(r"\b(degree|bachelor'?s?|master'?s?|msc|bsc|ph\.?d|doctorate|diploma|undergraduate|postgraduate)\b",
                     re.I)
-MAX_KEYWORD_WORDS, MAX_LLM_KEYWORDS = 3, 25
+MAX_KEYWORD_WORDS = 3
 _ALTERNATIVES = re.compile(r"\s+or\s+|\s*,\s*(?:or\s+)?|\s+/\s+", re.I)
+
+
+def _words(phrase: str) -> list[str]:
+    return [w.strip(".,;:()\"'") for w in norm_literal(phrase).split()]
 
 
 def llm_keyword(raw, njd: str, weight: float, required: bool) -> Keyword | None:
     """One keyword from the model's output. "A or B or C" is one any-of keyword; every alternative must appear
-    verbatim in the JD (`njd`, norm_literal'd), be 1-3 words, not be generic ("data", "skills") and not be a
-    degree requirement. None if nothing usable is left."""
+    verbatim in the JD (`njd`, norm_literal'd), be 1-3 words, contain no generic word (GENERIC_ANYWHERE), not be made of
+    generic words only (GENERIC_ALONE) and not be a degree requirement. None if nothing usable is left."""
     t = str(raw).strip()
     parts = [p.strip(" .;:()\"'") for p in (_ALTERNATIVES.split(t) if re.search(r"\bor\b|,|\s/\s", t, re.I) else [t])]
     ok = []
     for p in parts:
-        words = p.split()
-        if (1 < len(p) <= 40 and 1 <= len(words) <= MAX_KEYWORD_WORDS and norm_literal(p) in njd
-                and not all(w.lower() in GENERIC_WORDS for w in words) and not DEGREE.search(p)):
+        words = _words(p)
+        if (1 < len(p) <= 40 and 1 <= len(words) <= MAX_KEYWORD_WORDS and _contains(njd, norm_literal(p))
+                and not GENERIC_ANYWHERE & set(words) and not all(w in GENERIC_ALONE for w in words)
+                and not DEGREE.search(p)):
             ok.append(p)
     return Keyword(ok[0], weight, required, ok[1:]) if ok else None
 
 
 def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[list[Keyword], str, str]:
-    """(keywords, company_hook, team). `team` is "" when the JD names none. Shape problems in the model's answer
-    (keyword objects, odd types) are normalised; what is dropped is appended to `notes` when given."""
+    """(keywords, company_hook, team). `team` is "" when the JD names none. The model only suggests keywords; code
+    enforces the rules: verbatim in the JD, short, nothing generic, near-duplicates merged (the shorter stays), at most
+    scoring.max_keywords kept by weight then JD frequency. Shape problems in the model's answer and every drop are
+    appended to `notes` when given."""
     sc = settings["scoring"]
     jd = job["description"] or ""
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
@@ -113,7 +124,9 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[l
                 k = llm_keyword(t, njd, sc["required_weight"] if req else sc["preferred_weight"], req)
                 if k:                                      # verbatim, short, specific: nothing invented survives
                     llm_kw.append(k)
-        llm_kw = llm_kw[:MAX_LLM_KEYWORDS]
+                elif notes is not None:
+                    notes.append(f"extract_keywords: dropped keyword '{str(t)[:40]}' (not verbatim, too long, generic "
+                                 "or a degree)")
         out = out if isinstance(out, dict) else {}
         hook = str(out.get("company_hook") or "")[:300]
         team = clean_team(out.get("team"), job)
@@ -121,7 +134,10 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[l
         hook = team = ""
         llm_kw = []
         print(f"  keyword LLM failed, using taxonomy only: {e}")
-    kws = merge_keywords(tax, llm_kw)[:70]
+    kws, merged = drop_contained(merge_keywords(tax, llm_kw))
+    kws, capped = cap_keywords(kws, jd, sc["max_keywords"])
+    if notes is not None:
+        notes.extend(f"keywords: {n}" for n in merged + capped)
     return kws, hook, team
 
 

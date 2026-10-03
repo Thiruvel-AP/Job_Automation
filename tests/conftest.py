@@ -134,7 +134,7 @@ def _fabricating_llm():
         return out
 
     def keywords(ctx):
-        return {"required": ["Python", "LLM agents", "made-up keyword not in JD"], "preferred": ["Kubernetes"],
+        return {"required": ["Python", "LLM agents", "made-up keyword not in JD", "Kubernetes"], "preferred": [],
                 "company_hook": "Northwind builds clinical decision-support tools for oncology researchers."}
 
     return MockLLM({"tailor_cv": tailor, "extract_keywords": keywords})

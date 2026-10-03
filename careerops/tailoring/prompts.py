@@ -5,14 +5,16 @@ Return JSON: {"required": [..], "preferred": [..], "company_hook": "..", "team":
 Rules:
 - A keyword is a 1-3 word skill, tool, method or domain NOUN phrase copied VERBATIM from the JD text
   (e.g. "PyTorch", "text analytics", "customer feedback").
-- NEVER generic words: tasks, workflows, patterns, skills, data, techniques, experience, ability, knowledge.
+- NEVER a phrase containing a generic word: tasks, workflows, features, approaches, systems, frameworks, patterns,
+  skills, sets, quality, generation. Never "data", "techniques", "experience", "ability" or "knowledge" on their own.
 - Merge plurals and near-duplicates into ONE keyword: "LLM" (not also "LLMs"), "communication" (not also
   "communication skills").
 - Degree or qualification requirements ("Bachelor's in Computer Science", "MSc", "PhD") are NOT keywords.
 - When the JD offers alternatives ("A or B or C", "A, B or C"), give them as ONE string "A or B or C"; every
   alternative must itself appear verbatim in the JD.
 - "required" = essential/must-have/requirements; "preferred" = nice-to-have/desirable/bonus.
-- At most 25 keywords in total, the most important first. No soft fluff like "passionate" unless the JD lists it as a
+- At most 25 keywords in total, the most important first (code enforces all of these rules afterwards, so a keyword
+  that breaks one is simply dropped). No soft fluff like "passionate" unless the JD lists it as a
   requirement.
 - company_hook: ONE sentence on what the company does or the problem this team solves, using only facts in the JD.
 - team: the name of the team or group the role sits in, copied VERBATIM from the JD (e.g. "AI Accelerator"),

@@ -99,6 +99,7 @@ files:
 scoring:
   band: [0.70, 0.85]
   max_attempts: 3
+  max_keywords: 25            # JD keywords kept (most important by weight, then by how often the JD says them): a short, specific list a one-page CV can honestly hit
   required_weight: 2.0
   preferred_weight: 1.0
   max_pages: 1                # one-page CV (agreed 2026-10-03); the shrink loop drops bullets until it fits

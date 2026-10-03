@@ -10,7 +10,8 @@ from careerops.llm import MockLLM
 from careerops.tailoring import budget, prompts as P, tailor
 from careerops.tailoring.faithfulness import check
 from careerops.tailoring.render import pdf_text
-from careerops.tailoring.scorer import (Keyword, ceiling, merge_keywords, score, taxonomy_keywords)
+from careerops.tailoring.scorer import (Keyword, cap_keywords, ceiling, drop_contained, merge_keywords, score,
+                                        taxonomy_keywords)
 from careerops.tailoring.textnorm import normalise_json, normalise_text
 
 FIX = Path(__file__).resolve().parents[1] / "fixtures" / "tailoring"
@@ -29,17 +30,36 @@ def _kw_llm(required, preferred=(), hook="", team=""):
 # ================================================================== 1. keywords
 def test_keywords_prompt_states_the_new_rules():
     s = P.KEYWORDS_SYSTEM
-    for must in ("1-3 word", "NEVER generic words", "tasks, workflows, patterns, skills, data, techniques",
+    for must in ("1-3 word", "NEVER a phrase containing a generic word",
+                 "tasks, workflows, features, approaches, systems, frameworks, patterns,\n  skills, sets, quality, generation",
                  "Merge plurals", "Degree", "NOT keywords", '"A or B or C"', "At most 25"):
         assert must in s, must
 
 
+NJD = ("we use data, tasks, skills, workflows, techniques and patterns. bachelor's degree in computer science. msc, "
+       "phd in statistics, alpha beta gamma delta. x. ml systems, data quality, coding tasks, product features, "
+       "text generation, feature sets, new approaches, deep learning frameworks, quality assurance.")
+
+
 @pytest.mark.parametrize("raw", ["data", "tasks", "skills", "data skills", "workflows", "techniques", "patterns",
                                  "Bachelor's degree in Computer Science", "MSc", "PhD in statistics",
-                                 "alpha beta gamma delta", "not in the jd at all", "x"])
+                                 "alpha beta gamma delta", "not in the jd at all", "x",
+                                 # a generic word anywhere in the phrase disqualifies it
+                                 "ML systems", "data quality", "coding tasks", "product features", "text generation",
+                                 "feature sets", "new approaches", "deep learning frameworks", "quality assurance"])
 def test_generic_degree_long_and_invented_keywords_are_dropped(raw):
-    njd = "we use data, tasks, skills, workflows, techniques and patterns. bachelor's degree in computer science. msc, phd in statistics, alpha beta gamma delta. x"
-    assert tailor.llm_keyword(raw, njd, 2.0, True) is None
+    assert tailor.llm_keyword(raw, NJD, 2.0, True) is None
+
+
+def test_generic_words_only_disqualify_the_words_the_rules_name():
+    njd = "feature engineering, system design, data pipelines, framework migration, setting up, qualitative research"
+    for ok in ("feature engineering", "system design", "data pipelines", "qualitative research"):
+        assert tailor.llm_keyword(ok, njd, 1.0, False).term == ok
+
+
+def test_a_keyword_must_be_whole_words_verbatim_in_the_jd():
+    assert tailor.llm_keyword("Python", "we like pythonic code", 2.0, True) is None
+    assert tailor.llm_keyword("Python", "we like python code", 2.0, True).term == "Python"
 
 
 def test_a_specific_keyword_that_contains_a_generic_word_is_kept():
@@ -94,16 +114,61 @@ def test_an_any_of_group_absorbs_the_taxonomy_keywords_it_names():
     assert len(merged) == 1 and merged[0].members()[0].lower() == "pytorch" and merged[0].required
 
 
-def test_analyse_keeps_at_most_25_llm_keywords_and_none_of_the_junk(settings, job):
+def test_analyse_keeps_at_most_25_keywords_and_none_of_the_junk(settings, job):
     jd = job["description"] + "\nWe value tasks and data.\nBachelor's degree in Computer Science.\n"
     verbatim = [f"alpha{i}" for i in range(40)]
     j = {**job, "description": jd + " ".join(verbatim)}
     llm = _kw_llm(["data", "tasks", "Bachelor's degree in Computer Science"] + verbatim[:30], ["workflows"])
-    kws, _, _ = tailor.analyse(j, llm, settings)
-    llm_only = [k for k in kws if k.term.startswith("alpha")]
-    assert len(llm_only) == 25
+    notes: list[str] = []
+    kws, _, _ = tailor.analyse(j, llm, settings, notes)
+    assert len(kws) == settings["scoring"]["max_keywords"] == 25            # the total, taxonomy and model together
     assert not {"data", "tasks", "workflows"} & {k.term.lower() for k in kws}
     assert not any("degree" in k.term.lower() for k in kws)
+    assert any(n.startswith("keywords: capped at 25; dropped ") for n in notes)
+
+
+def _kw(term, weight=1.0, required=False, alts=()):
+    return Keyword(term, weight, required, list(alts))
+
+
+def test_a_longer_keyword_that_contains_a_shorter_one_is_merged_into_the_shorter():
+    kws, notes = drop_contained([_kw("customer feedback analysis", 1.0), _kw("customer feedback", 2.0, True),
+                                 _kw("python"), _kw("llm agents"), _kw("LLM", 1.0), _kw("pipelines")])
+    assert [k.term for k in kws] == ["customer feedback", "python", "LLM", "pipelines"]     # input order kept
+    cf = kws[0]
+    assert cf.weight == 2.0 and cf.required                                  # the heavier weight survives the merge
+    assert any("customer feedback analysis" in n and "customer feedback" in n for n in notes)
+    assert any("llm agents" in n for n in notes)
+
+
+def test_containment_is_whole_words_after_stemming_and_leaves_any_of_keywords_alone():
+    kws, _ = drop_contained([_kw("learning"), _kw("deep learning"), _kw("machine learning models"),
+                             _kw("machine learning"), _kw("sql"), _kw("sqlalchemy"), _kw("model"),
+                             _kw("PyTorch", alts=["TensorFlow"]), _kw("PyTorch lightning")])
+    # "sqlalchemy" is not "sql" (whole words); "machine learning models" goes with "learning"; the any-of keyword and
+    # the one that merely shares a word with it both stay
+    assert [k.term for k in kws] == ["learning", "sql", "sqlalchemy", "model", "PyTorch", "PyTorch lightning"]
+
+
+def test_the_cap_keeps_the_heaviest_then_the_most_frequently_said():
+    jd = "sql sql sql python python rust\nairflow go"
+    kws = [_kw("rust", 1.0), _kw("python", 1.0), _kw("sql", 1.0), _kw("airflow", 2.0, True), _kw("go", 1.0)]
+    out, notes = cap_keywords(kws, jd, 3)
+    assert [k.term for k in out] == ["airflow", "sql", "python"]             # weight 2 first, then 3 mentions, then 2
+    assert notes == ["capped at 3; dropped rust, go"]
+    assert cap_keywords(kws, jd, 10)[1] == []                                # nothing cut, nothing to say
+    tie, _ = cap_keywords([_kw("a1"), _kw("b1")], "a1 b1", 2)
+    assert [k.term for k in tie] == ["a1", "b1"]                             # full ties keep input order
+
+
+def test_analyse_merges_containment_duplicates_across_model_and_taxonomy(settings, job):
+    j = _job(job, "Requirements\nExperience with customer feedback analysis and customer feedback. LLM agents in "
+                  "Python; LLM.\n")
+    kws, _, _ = tailor.analyse(j, _kw_llm(["customer feedback", "customer feedback analysis", "LLM agents"]),
+                               settings)
+    terms = [k.term for k in kws]
+    assert "customer feedback" in terms and "customer feedback analysis" not in terms
+    assert "LLM agents" not in terms and any(k.term.lower() == "llm" for k in kws)
 
 
 def test_analyse_normalises_hyphens_before_the_verbatim_check(settings, job):
@@ -442,7 +507,7 @@ def test_the_synonym_only_counts_for_gaps_not_for_the_ats_score_of_the_cv():
 def test_the_report_leaves_parameter_efficient_out_of_genuine_gaps(settings, fb_fixture, job):
     """The Chattermill case: the JD says "parameter-efficient techniques such as LoRA"; a bullet's terms say peft/lora."""
     jd = job["description"] + "\nExposure to parameter-efficient techniques such as LoRA is a plus.\n"
-    llm = _kw_llm(["Python"], ["parameter-efficient"])
+    llm = _kw_llm(["Python", "parameter-efficient"])      # required, so the 25-keyword cap keeps it
     fb = copy.deepcopy(fb_fixture)
     fb["experience"][0]["bullets"][0]["terms"] += ["peft", "lora"]
     rep = tailor.tailor_job({**job, "description": jd}, fb, llm, settings, settings.path("outputs"))
