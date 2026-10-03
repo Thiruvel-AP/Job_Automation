@@ -32,9 +32,21 @@ def _first_text(obj: dict, keys: tuple[str, ...]) -> str | None:
     return next((obj[k].strip() for k in keys if isinstance(obj.get(k), str) and obj[k].strip()), None)
 
 
+def _id_keyed(d: dict) -> bool:
+    """A dict whose keys are the ids ({"az1": [...]}), as opposed to one object describing a single bullet
+    ({"id": "az1", "text": ...}): it names no id/text field itself and has at least one key."""
+    return bool(d) and all(isinstance(k, str) and k.strip() for k in d) and not any(
+        k in d for k in (*_ID_KEYS, *_REPHRASE_KEYS))
+
+
 def _entry_ids(items, notes: list[str], what: str, texts: dict[str, str] | None = None) -> list[str]:
-    """Ids from a list (or a single value) of strings/objects. An object's reworded text goes into `texts[id]`.
-    Anything without an id is dropped, with a note."""
+    """Ids from a list (or a single value) of strings/objects, or from the keys of an object ({"az1": [...]}). An
+    object's reworded text (or an id-keyed object's string value, when it is not just the id again) goes into
+    `texts[id]`. Anything without an id is dropped, with a note."""
+    if isinstance(items, dict) and _id_keyed(items):             # {"az1": [...], "az3": [...]}: the ids are the keys
+        items = [{"id": k, **({"text": v} if isinstance(v, str) and v.strip() and v.strip() != k else {})}
+                 for k, v in items.items()]
+        notes.append(f"{what}: ids were the keys of an object; read them")
     if isinstance(items, (str, dict)):
         items = [items]
     if not isinstance(items, list):

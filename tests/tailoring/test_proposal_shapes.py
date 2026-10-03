@@ -11,6 +11,7 @@ from careerops.llm import MockLLM
 from careerops.reporting.excel import export
 from careerops.tailoring import tailor
 from careerops.tailoring.scorer import Keyword
+from careerops.tailoring.shapes import proposal_usable
 from careerops.tailoring.tailor import clean_proposal, regenerate_letter
 
 CHATTERMILL = (Path(__file__).resolve().parents[1] / "fixtures" / "tailoring" / "jd_chattermill.txt").read_text(
@@ -36,6 +37,38 @@ def test_lists_of_entries_instead_of_maps():
     out, _ = clean_proposal(prop)
     assert out["experience"] == {"ex1": ["a1", "a2"], "ex2": ["b1"]}
     assert out["rephrase"] == {"a1": "new a1", "b1": "new b1"}
+
+
+def test_ids_as_object_keys_are_read():
+    """The Chattermill run's tailor_cv answer (data/outputs/.../llm_raw/tailor_cv-1.json): the bullet ids were the keys
+    of an object, each mapped to a one-element list, and the normaliser dropped every one of them."""
+    prop = {"profile": "P", "experience": {"az": {"az1": ["az1"], "az3": ["az3"], "az4": ["az4"]},
+                                           "dc180": {"dc1": ["dc1"], "dc2": ["dc2"]}},
+            "projects": ["churn", "lloyds"], "rephrase": {}}
+    out, notes = clean_proposal(prop)
+    assert out["experience"] == {"az": ["az1", "az3", "az4"], "dc180": ["dc1", "dc2"]}
+    assert out["projects"] == ["churn", "lloyds"] and any("keys of an object" in n for n in notes)
+    assert proposal_usable(out)
+
+
+def test_id_keyed_objects_work_for_projects_too_and_a_string_value_is_a_rephrase():
+    out, _ = clean_proposal({"experience": {"ex1": {"a1": "Built the LangChain agent with tool calling.",
+                                                    "a2": "a2", "a3": ""}},
+                             "projects": {"p1": [], "p3": None}})
+    assert out["experience"] == {"ex1": ["a1", "a2", "a3"]} and out["projects"] == ["p1", "p3"]
+    assert out["rephrase"] == {"a1": "Built the LangChain agent with tool calling."}   # still guarded downstream
+
+
+def test_an_object_describing_one_bullet_is_not_mistaken_for_an_id_keyed_one():
+    out, _ = clean_proposal({"experience": {"ex1": {"id": "a1", "text": "t"}}, "projects": [{"id": "p1"}]})
+    assert out["experience"] == {"ex1": ["a1"]} and out["rephrase"] == {"a1": "t"}
+    out, _ = clean_proposal({"experience": {"ex1": {"id": 5}, "ex2": {"text": 3}}})      # no usable id: nothing invented
+    assert out["experience"] == {"ex1": [], "ex2": []}
+
+
+def test_id_keyed_ids_are_still_validated_against_the_fact_bank(fb_fixture):
+    out, notes = clean_proposal({"experience": {"ex1": {"a1": ["a1"], "zzz": ["zzz"]}}}, fb_fixture)
+    assert out["experience"] == {"ex1": ["a1"]} and any("unknown bullet id 'zzz'" in n for n in notes)
 
 
 @pytest.mark.parametrize("prop", [{}, {"experience": None, "projects": None, "rephrase": None, "profile": None},
