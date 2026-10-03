@@ -2,27 +2,34 @@
 from careerops.llm import MockLLM
 
 
-def _proj(pid):
-    return {"id": pid, "name": pid, "bullets": [{"id": f"{pid}1", "text": "unrelated work", "terms": []}]}
+FACTS = [{"id": "F1", "text": "MSc Data Science, University of Northfield (completed 2026)"},
+         {"id": "F2", "text": "Production LLM agent work on a clinical research platform"},
+         {"id": "F3", "text": "Background in mobile FinTech engineering before data science"}]
 
 
-def test_tailor_breaks_project_ties_with_preferred_list():
-    ctx = {"keywords": [{"term": "python", "weight": 2, "required": True}], "experience": [],
-           "projects": [_proj(p) for p in ("a", "b", "c", "d")], "profile_facts": ["x"]}
-    assert MockLLM().json("tailor_cv", "", "", ctx)["projects"] == ["a", "b"]
-    ctx["preferred_projects"] = ["d", "c"]
-    assert MockLLM().json("tailor_cv", "", "", ctx)["projects"] == ["d", "c"]
+def test_the_mock_never_selects_and_never_rewords():
+    mock = MockLLM()
+    assert mock.json("rephrase_bullets", "", "", {"bullets": [{"id": "a1", "text": "x", "terms": [], "introduce": ["y"]}]}) == {}
+    try:
+        mock.json("tailor_cv", "", "", {})
+    except Exception as e:
+        assert "no handler for task tailor_cv" in str(e)
+    else:
+        raise AssertionError("the model no longer selects bullets: tailor_cv has no mock answer")
 
 
-def _bullets(prefix, n):
-    return [{"id": f"{prefix}{i}", "text": "work", "terms": []} for i in range(n)]
+def test_the_mock_profile_picks_the_first_two_facts_and_stays_within_45_words():
+    out = MockLLM().json("tailor_profile", "", "", {"facts": FACTS, "headline": "Data Scientist"})
+    assert out["facts"] == ["F1", "F2"]
+    assert out["profile"].startswith("Data Scientist with MSc Data Science") and len(out["profile"].split()) <= 45
+    long = [{"id": "F1", "text": "word " * 80}, FACTS[1]]
+    assert len(MockLLM().json("tailor_profile", "", "", {"facts": long, "headline": "AI Engineer"})["profile"].split()) <= 41
 
 
-def test_tailor_selects_the_one_page_shape_most_recent_three_bullets_the_rest_two():
-    ctx = {"keywords": [], "profile_facts": ["x"], "projects": [],
-           "experience": [{"id": "new", "bullets": _bullets("n", 5)}, {"id": "old", "bullets": _bullets("o", 5)}]}
-    out = MockLLM().json("tailor_cv", "", "", ctx)
-    assert [len(out["experience"][k]) for k in ("new", "old")] == [3, 2]
+def test_the_mock_profile_retry_returns_just_a_profile():
+    out = MockLLM().json("tailor_profile", "", "", {"profile_facts": [f["text"] for f in FACTS], "previous": "x",
+                                                    "problems": ["p"], "headline": "Data Scientist"})
+    assert set(out) == {"profile"} and out["profile"].startswith("Data Scientist with ")
 
 
 def test_keywords_come_back_with_an_empty_team_by_default():

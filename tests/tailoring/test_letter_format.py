@@ -198,8 +198,8 @@ def test_keywords_prompt_asks_for_the_team():
     assert '"team"' in P.KEYWORDS_SYSTEM and "AI Accelerator" in P.KEYWORDS_SYSTEM
 
 
-def test_tailor_prompt_follows_the_user_format():
-    s = P.TAILOR_SYSTEM
-    for must in ("45 words", "exactly 2", "2-4", "1-2", "past-tense", "STAR"):
-        assert must in s, must
-    assert "{headline}" in P.TAILOR_USER
+def test_cv_prompts_and_selection_follow_the_user_format():
+    assert "45 words" in P.PROFILE_SYSTEM and "starting with the HEADLINE" in P.PROFILE_SYSTEM
+    assert "{headline}" in P.PROFILE_USER and "past-tense" in P.REPHRASE_SYSTEM
+    from careerops.tailoring.selection import MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS
+    assert (MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS) == ((2, 4), (1, 2), 2)     # 2-4 / 1-2 bullets, exactly 2 projects

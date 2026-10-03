@@ -26,53 +26,37 @@ Title: {title}
 JOB DESCRIPTION:
 {jd}"""
 
-TAILOR_SYSTEM = """You tailor a ONE-PAGE CV by SELECTING and lightly REWORDING facts from a fixed fact bank. You never add facts.
-Return JSON with ids and plain text only, never LaTeX:
-{"profile": "<1-2 sentences, <= 45 words>",
- "experience": {"<experience id>": ["<bullet id>", ...]},   // every experience id; most relevant bullet first
- "projects": ["<project id>", "<project id>"],              // exactly 2 project ids, most relevant first
- "rephrase": {"<bullet id>": "<reworded bullet>"}}           // optional; only to mirror the JD's wording
-Hard rules:
-- Use only the ids given. Do not invent experience, projects, numbers, tools, clients or outcomes.
-- experience: the most recent entry (listed first) gets 2-4 bullet ids; every other entry gets 1-2.
-- projects: exactly 2 ids. Projects are listed most relevant to the JD first; take them from the top unless a later
-  one is clearly the better fit.
-- profile: 1-2 sentences, <= 45 words, written as "<headline> with ..." where <headline> is the HEADLINE below.
-  Combine only the given profile_facts, skills and the bullets you select. Do not copy phrases from the JD.
-  No years-of-experience claims.
-- Rephrase EVERY selected bullet whose `terms` contain a JD keyword that its text does not already say, so the JD's
-  wording appears in it, within the rules below. Leave a bullet alone if it already uses the JD's wording.
-- A rephrase may only use tools/skills that appear in that bullet's text or its `terms`. Keep every number exactly as written; add none.
-- Rephrase in STAR style, one sentence each: start with a past-tense action verb (Built, Deployed, Designed),
-  name the task and the tool, and end with a result ONLY if the bullet's own text states that result. Never add one.
-- Never mention: {deny}.
-- Prefer the JD's literal wording (e.g. "machine learning models", "data pipelines") where the bullet already supports it.
-- Do not stuff keywords. Natural sentences, <= 30 words per bullet."""
+REPHRASE_SYSTEM = """You reword CV bullets so that they use a job's keywords. You never add a fact.
+Each bullet comes with its TERMS (what it truly evidences) and MAY INTRODUCE (job keywords you may now write in it).
+Return JSON: an object mapping each bullet id you were given to its reworded bullet, e.g. {"az1": "Built ..."}.
+Rules:
+- One sentence per bullet, at most 30 words, starting with a past-tense action verb (Built, Deployed, Designed).
+- Write each MAY INTRODUCE keyword into the sentence, spelt exactly as given, where it fits naturally. Use no other tool,
+  skill or keyword than the ones in that bullet's TEXT or TERMS.
+- Keep every number exactly as written and add none. Add no result, client, employer, sector or outcome the TEXT does not
+  state; end with a result only if the TEXT states it.
+- If a keyword does not fit naturally, return the bullet's TEXT unchanged.
+- Never mention: {deny}."""
 
-TAILOR_USER = """TARGET ROLE: {title} at {company}
+REPHRASE_USER = """TARGET ROLE: {title}
+
+BULLETS:
+{bullets}"""
+
+PROFILE_SYSTEM = """You write the profile line of a CV from exactly two facts about the candidate.
+Return JSON: {"facts": ["F1", "F3"], "profile": "<HEADLINE> with ..."}
+Rules:
+- facts: the ids of the TWO facts in FACTS that matter most for the TARGET ROLE.
+- profile: 1-2 sentences, at most 45 words, starting with the HEADLINE and built only from those two facts.
+  No number, tool, employer, course or outcome that is not in them. No years-of-experience claim.
+  Do not copy phrases from the job description.
+- Never mention: {deny}."""
+
+PROFILE_USER = """TARGET ROLE: {title} at {company}
 HEADLINE: {headline}
-{preferred}
 
-JD KEYWORDS (weight 2 = required, 1 = preferred):
-{keywords}
-{feedback}
-PROFILE FACTS:
-{profile_facts}
-
-SKILLS: {skills}
-
-EXPERIENCE (id: title @ org, then bullets as `bullet_id: text [terms: ...]`):
-{experience}
-
-PROJECTS:
-{projects}"""
-
-FEEDBACK_BELOW = """
-FEEDBACK FROM LAST ATTEMPT: ATS score {score:.0%} is below the {lo:.0%} floor.
-These keywords are genuinely supported by the fact bank but missing or worded differently on the page —
-select the bullets that evidence them and mirror the JD's exact wording: {fixable}
-Do NOT try to cover these (no evidence, they stay as honest gaps): {gaps}
-"""
+FACTS:
+{facts}"""
 
 LETTER_SYSTEM = """You write short cover letters from supplied evidence only.
 Return JSON: {"paragraphs": ["..", "..", ".."]}
@@ -115,12 +99,3 @@ PREVIOUS PROFILE: {previous}
 PROBLEMS FOUND: {problems}
 SOURCE FACTS:
 {source}"""
-
-SCHEMA_RETRY = """
-
-YOUR LAST ANSWER COULD NOT BE USED: it named no valid bullet or project ids. Return EXACTLY this JSON and nothing else,
-with every id a plain string copied from the lists above (never an object):
-{{"profile": "<1-2 sentences>", "experience": {{"<experience id>": ["<bullet id>", "<bullet id>"]}},
- "projects": ["<project id>", "<project id>"], "rephrase": {{"<bullet id>": "<reworded bullet>"}}}}
-Valid experience ids: {experience_ids}
-Valid project ids: {project_ids}"""

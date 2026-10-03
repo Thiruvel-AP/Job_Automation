@@ -13,11 +13,11 @@ from typing import Any, Callable
 from ..apply.naming import file_stem
 from ..discovery import gates
 from . import prompts as P
-from ..llm.pacing import estimate_tokens
-from .budget import bullet_scores, call_limits, fit, rank_projects
+from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
 from .rawlog import RawRecorder
-from .shapes import clean_proposal, normalise_keywords, normalise_letter, proposal_usable
+from .selection import MOST_RECENT_BULLETS, chunks, missing_keywords, select_cv, selected_ids
+from .shapes import normalise_keywords, normalise_letter, normalise_profile, normalise_rephrase
 from .textnorm import normalise_json
 from .render import page_count, pdf_text, render_cv, render_letter
 from .scorer import (Keyword, _contains, cap_keywords, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
@@ -154,66 +154,99 @@ def role_prior(job: dict, fb: dict, settings) -> tuple[str | None, int | None, s
     return fam.name, fam.tier, fam.headline, list(fam.projects)
 
 
-def _tailor_prompt(job, fb: dict, kws: list[Keyword], headline: str, preferred: list[str] | None,
-                   feedback: str) -> tuple[str, str]:
-    """(system, user) for tailor_cv. `fb` may be a reduced view of the fact bank (see budget.py)."""
-    exp_txt = "\n".join(
-        f"{e['id']}: {e['title']} @ {e['org']}\n" +
-        "\n".join(f"  {b['id']}: {b['text']} [terms: {', '.join(b.get('terms', []))}]" for b in e["bullets"])
-        for e in fb["experience"])
-    by_id = {p["id"]: p for p in fb["projects"]}
-    listed = [by_id[i] for i in rank_projects(fb, kws, preferred)]    # most relevant to the JD first
-    prj_txt = "\n".join(
-        f"{p['id']}: {p['name']} ({p.get('stack', '')})\n" +
-        "\n".join(f"  {b['id']}: {b['text']} [terms: {', '.join(b.get('terms', []))}]" for b in p["bullets"])
-        for p in listed)
-    preferred = [p for p in preferred or [] if p in by_id]          # only ids the model can actually see
-    user = P.TAILOR_USER.format(
-        title=job["title"], company=job["company"],
-        headline=headline or fb["identity"].get("headline", ""),
-        preferred=(f"Preferred projects for a {headline} role (a tie-breaker only: pick one over a project that is "
-                   f"equally relevant to the JD, never over a more relevant one): {', '.join(preferred)}"
-                   if preferred else ""),
-        keywords="\n".join(f"- {k.term} ({k.weight:g})" for k in kws),
-        feedback=feedback, profile_facts="\n".join(f"- {f}" for f in fb["profile_facts"]),
-        skills="; ".join(f"{g}: {', '.join(i)}" for g, i in fb["skills"].items()),
-        experience=exp_txt, projects=prj_txt)
-    return P.TAILOR_SYSTEM.replace("{deny}", ", ".join(fb.get("deny_terms", []))), user
+REPHRASE_BATCH = 5            # bullets per rephrase_bullets call: small enough for a small model to follow every rule
+PROFILE_MIN_WORDS, PROFILE_MAX_WORDS = 6, 45     # a profile shorter than a sentence is junk, not a profile
+PROFILE_FACTS = 2
 
 
-class ProposalError(RuntimeError):
-    """The model's CV selection stayed unusable after a retry; the job fails rather than being half-tailored."""
+def _deny_list(fb: dict) -> str:
+    return ", ".join(fb.get("deny_terms", []))
 
 
-def _proposal(job, fb, kws, llm, feedback: str, settings, headline: str = "",
-              preferred: list[str] | None = None) -> tuple[dict, dict]:
-    """(model proposal, prompt meta). Only the bullets most relevant to the JD are sent, so that estimated input +
-    max_tokens stays within llm.max_call_tokens (budget.py); the CV is still assembled from the whole fact bank."""
-    max_tokens, limit = call_limits(settings, "tailor_cv")
-    sent, sent_kws, meta = fit(fb, kws, lambda v, k: _tailor_prompt(job, v, k, headline, preferred, feedback),
-                               max_tokens, limit, int(settings["llm"].get("top_bullets", 14)), preferred)
-    system, user = _tailor_prompt(job, sent, sent_kws, headline, preferred, feedback)
-    ctx = {"keywords": [asdict(k) for k in sent_kws], "experience": sent["experience"], "projects": sent["projects"],
-           "profile_facts": fb["profile_facts"], "preferred_projects": preferred or []}
-    prop = _llm_json(llm, "tailor_cv", system, user, ctx)
-    if not proposal_usable(clean_proposal(prop, fb)[0]):
-        # nothing in it names a real bullet or project: ask once more, spelling out the schema and the valid ids
-        meta["schema_retry"] = True
-        schema = P.SCHEMA_RETRY.format(
-            experience_ids=", ".join(e["id"] for e in sent["experience"]),
-            project_ids=", ".join(p["id"] for p in sent["projects"]))
-        prop = _llm_json(llm, "tailor_cv", system, user + schema, ctx)
-        clean, notes = clean_proposal(prop, fb)
-        if not proposal_usable(clean):
-            raise ProposalError("tailor_cv returned no usable bullet or project ids, even after being told the exact "
-                                "schema. " + ("Dropped: " + "; ".join(notes[:4]) + ". " if notes else "")
-                                + "The model's raw answers are kept in llm_raw/ (see below).")
-    return prop, meta
+# ---- 2a. rephrase: the model rewords bullets in batches, the guard decides what is kept
+def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, cache: dict,
+                      notes: list[str]) -> tuple[dict[str, str], dict]:
+    """Ask for rewordings of the selected bullets that can carry a JD keyword their text lacks (missing_keywords), in
+    batches of REPHRASE_BATCH: each call gets the bullet text, its terms and the keywords it may introduce, and answers
+    {bullet id: new text}. Returns ({bullet id: proposed text}, stats). `cache` maps (bullet id, missing words) to the
+    answer, so a later attempt never pays twice for the same question; a failed batch is not cached and is noted."""
+    bidx = bullet_index(fb)
+    todo = []
+    for bid in selected_ids(fb, sel):
+        miss = tuple(missing_keywords(bidx[bid], kws))
+        if miss:
+            todo.append((bid, miss))
+    fresh = [t for t in todo if t not in cache]
+    stats = {"eligible": len(todo), "asked": len(fresh), "cached": len(todo) - len(fresh), "calls": 0,
+             "failed_calls": 0}
+    system = P.REPHRASE_SYSTEM.replace("{deny}", _deny_list(fb))
+    for batch in chunks(fresh, REPHRASE_BATCH):
+        items = [{"id": bid, "text": bidx[bid]["text"], "terms": list(bidx[bid].get("terms", [])),
+                  "introduce": list(miss)} for bid, miss in batch]
+        lines = "\n".join(f"- id: {i['id']}\n  TEXT: {i['text']}\n  TERMS: {', '.join(i['terms']) or '(none)'}\n"
+                          f"  MAY INTRODUCE: {', '.join(i['introduce'])}" for i in items)
+        stats["calls"] += 1
+        try:
+            out = _llm_json(llm, "rephrase_bullets", system, P.REPHRASE_USER.format(title=job["title"], bullets=lines),
+                            {"bullets": items, "title": job["title"]})
+            got, shape_notes = normalise_rephrase(out, {i["id"] for i in items})
+        except Exception as e:  # noqa: BLE001 — the bullets keep their canonical wording
+            stats["failed_calls"] += 1
+            notes.append(f"rephrase_bullets: batch of {len(batch)} failed ({str(e)[:120]}); canonical wording kept")
+            continue
+        notes.extend(f"rephrase_bullets: {n}" for n in shape_notes)
+        for bid, miss in batch:
+            cache[(bid, miss)] = got.get(bid, "")
+    proposed = {bid: cache[(bid, miss)] for bid, miss in todo
+                if cache.get((bid, miss)) and cache[(bid, miss)].strip() != bidx[bid]["text"]}
+    return proposed, stats
+
+
+def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword]) -> tuple[dict[str, str], list[str],
+                                                                                      list[str]]:
+    """Run every proposed rewording through faithfulness.check against its own bullet (text + terms). Returns
+    (accepted {bullet id: text}, violations, warnings); a rejected rewording simply keeps the canonical bullet."""
+    deny, bidx, vocab = fb.get("deny_terms", []), bullet_index(fb), fact_text(fb)
+    accepted: dict[str, str] = {}
+    violations: list[str] = []
+    warnings: list[str] = []
+    for bid, new in proposed.items():
+        b = bidx[bid]
+        c = check(new, b["text"], b.get("terms", []), deny, kws, vocabulary=vocab)
+        warnings.extend(f"{bid}: {w}" for w in c.warnings)
+        if c.ok:
+            accepted[bid] = new.strip()
+        else:
+            violations.extend(f"{bid}: {v}" for v in c.violations)
+    return accepted, violations, warnings
+
+
+def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
+    """Of the selected bullets that could carry a JD keyword's wording (the bullet's terms evidence it, its text does
+    not say it), how many were reworded? {"eligible", "rephrased", "ratio"}; ratio is None with nothing eligible."""
+    bidx = bullet_index(fb)
+    eligible = rephrased = 0
+    for sec in ("experience", "projects"):
+        for e in ctx[sec]:
+            for bid, text in zip(e["bullet_ids"], e["bullets"]):
+                if missing_keywords(bidx[bid], kws):
+                    eligible += 1
+                    rephrased += text != bidx[bid]["text"]
+    return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
+
+
+# ---- 2b. profile: the model picks two profile_facts and words them; the guard sees those two facts only
+def pick_facts(facts: list[str], kws: list[Keyword], have: list[int], n: int = PROFILE_FACTS) -> list[int]:
+    """`have` (fact indexes the model picked) topped up to `n` with the facts that overlap the JD keywords most
+    (fact-bank order on ties). Code, not model: used when the model picked too few valid facts."""
+    sc = {i: score(f, kws).stemmed for i, f in enumerate(facts)}
+    rest = sorted((i for i in range(len(facts)) if i not in have), key=lambda i: (-sc[i], i))
+    return (list(have) + rest)[:n]
 
 
 def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], str], str]:
     """The one retry a profile that fails the guard gets: the model sees what was wrong and the facts it may use."""
-    deny = ", ".join(fb.get("deny_terms", []))
+    deny = _deny_list(fb)
 
     def retry(previous: str, problems: list[str], source: str) -> str:
         out = _llm_json(llm, "tailor_profile", P.PROFILE_RETRY_SYSTEM.replace("{deny}", deny),
@@ -227,122 +260,120 @@ def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], 
     return retry
 
 
-def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
-    """Of the selected bullets that could carry a JD keyword's wording (the bullet's terms evidence it, its text does
-    not say it), how many were reworded? {"eligible", "rephrased", "ratio"}; ratio is None with nothing eligible."""
-    bidx = bullet_index(fb)
-    eligible = rephrased = 0
-    for sec in ("experience", "projects"):
-        for e in ctx[sec]:
-            for bid, text in zip(e["bullet_ids"], e["bullets"]):
-                b = bidx[bid]
-                lit = norm_literal(b["text"])
-                stems = [norm_stem(t) for t in b.get("terms", [])]
-                if any(any(_contains(s, norm_stem(w)) for s in stems) and not _contains(lit, norm_literal(w))
-                       for k in kws for w in k.members()):
-                    eligible += 1
-                    rephrased += text != b["text"]
-    return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
-
-
-def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "",
-              retry_profile: Callable[[str, list[str], str], str] | None = None) -> tuple[dict, list[str], list[str]]:
-    """Turn a proposal into a render context, applying the faithfulness guard.
-    Returns (ctx, violations, warnings). Violating rephrases fall back to canonical text. A profile that fails the
-    guard is rewritten once by `retry_profile(previous, problems, source)` before profile_facts are used instead."""
+def make_profile(job: dict, fb: dict, kws: list[Keyword], headline: str, llm,
+                 retry: Callable[[str, list[str], str], str] | None = None) -> dict:
+    """The CV profile: the model picks two of `profile_facts` and writes <= 45 words from them; the text is checked
+    against those two facts only (no skills, no bullets). A draft that fails the guard is rewritten once by `retry`,
+    then the two facts themselves are used. Returns {"text", "facts", "violations", "warnings", "retried", "fallback"}."""
+    facts = list(fb["profile_facts"])
     deny = fb.get("deny_terms", [])
-    bidx = bullet_index(fb)
     vocab = fact_text(fb)
-    violations, warnings = [], []
-    prop, notes = clean_proposal(prop, fb)
-    warnings.extend(f"proposal: {n}" for n in notes)
-    rephrase = prop["rephrase"]
+    headline = headline or fb["identity"].get("headline", "")
+    retry = retry or _profile_retrier(llm, fb, headline)
+    warnings: list[str] = []
+    picked: list[int] = []
+    text = ""
+    try:
+        out = _llm_json(llm, "tailor_profile", P.PROFILE_SYSTEM.replace("{deny}", _deny_list(fb)),
+                        P.PROFILE_USER.format(title=job["title"], company=job["company"], headline=headline,
+                                              facts="\n".join(f"F{i}: {f}" for i, f in enumerate(facts, 1))),
+                        {"facts": [{"id": f"F{i}", "text": f} for i, f in enumerate(facts, 1)],
+                         "headline": headline, "title": job["title"],
+                         "keywords": [k.term for k in kws]})
+        picked, text, notes = normalise_profile(out, facts)
+        warnings.extend(f"tailor_profile: {n}" for n in notes)
+    except Exception as e:  # noqa: BLE001 — the code-picked facts are a usable profile
+        warnings.append(f"profile: LLM failed ({str(e)[:120]})")
+    if len(picked) < min(PROFILE_FACTS, len(facts)):
+        picked = pick_facts(facts, kws, picked)
+        warnings.append("profile: facts picked by JD overlap (the model named fewer than two valid ones)")
+    source = headline + ". " + " ".join(facts[i] for i in picked)     # the headline is the user's own role title
 
-    def text_for(bid: str) -> str:
-        b = bidx[bid]
-        new = rephrase.get(bid)
-        if not new or new.strip() == b["text"]:
-            return b["text"]
-        c = check(new, b["text"], b.get("terms", []), deny, kws, vocabulary=vocab)
-        warnings.extend(f"{bid}: {w}" for w in c.warnings)
-        if not c.ok:
-            violations.extend(f"{bid}: {v}" for v in c.violations)
-            return b["text"]
-        return new.strip()
-
-    exp_sel = prop.get("experience") or {}
-    experience = []
-    for e in fb["experience"]:
-        own = {b["id"] for b in e["bullets"]}
-        ids = list(dict.fromkeys(i for i in exp_sel.get(e["id"], []) if i in own))[:4] or [e["bullets"][0]["id"]]
-        experience.append({**e, "bullet_ids": ids, "bullets": [text_for(i) for i in ids]})
-
-    proj_by_id = {p["id"]: p for p in fb["projects"]}
-    pids = [p for p in (prop.get("projects") or []) if p in proj_by_id][:2] or [p["id"] for p in fb["projects"][:2]]
-    projects = [{**proj_by_id[p], "bullet_ids": [b["id"] for b in proj_by_id[p]["bullets"]],
-                 "bullets": [text_for(b["id"]) for b in proj_by_id[p]["bullets"]]} for p in pids]
-
-    profile = (prop.get("profile") or "").strip()
-    # what the profile may draw on: profile_facts + skills + the canonical bullets selected for this CV
-    picked = [bidx[i] for sec in (experience, projects) for e in sec for i in e["bullet_ids"]]
-    src = (" ".join(fb["profile_facts"]) + " " + " ".join(i for v in fb["skills"].values() for i in v) + " "
-           + " ".join(b["text"] for b in picked))
-    terms = [t for b in picked for t in b.get("terms", [])]
-    def profile_problems(text: str) -> list[str]:
-        if not text:
+    def problems(t: str) -> list[str]:
+        if not t:
             return ["no profile"]
-        probs = check(text, src, terms, deny, kws, vocabulary=vocab, max_growth=3.0).violations
-        if re.search(r"\b\d+\+?\s+years?\b", text, re.I):
-            probs = probs + ["years-of-experience claim"]
+        probs = check(t, source, [], deny, kws, vocabulary=vocab, max_growth=3.0).violations
+        if len(t.split()) > PROFILE_MAX_WORDS:
+            probs.append(f"{len(t.split())} words > {PROFILE_MAX_WORDS}")
+        if len(t.split()) < PROFILE_MIN_WORDS:
+            probs.append(f"{len(t.split())} words < {PROFILE_MIN_WORDS}")
+        if re.search(r"\b\d+\+?\s+years?\b", t, re.I):
+            probs.append("years-of-experience claim")
         return probs
 
-    problems = profile_problems(profile)
-    if problems:
-        violations.extend(f"profile: {p}" for p in problems if p != "no profile")
-        retried, again = "", []
-        if retry_profile:
-            try:
-                retried = retry_profile(profile, problems, src).strip()
-            except Exception as e:  # noqa: BLE001 — a failed retry just means the fallback
-                warnings.append(f"profile: retry failed ({e})")
-            again = profile_problems(retried) if retried else []
-            violations.extend(f"profile (retry): {p}" for p in again)
-        if retried and not again:
-            profile = retried
+    violations: list[str] = []
+    retried = fallback = False
+    probs = problems(text)
+    if probs:
+        violations.extend(f"profile: {p}" for p in probs if p != "no profile")
+        newer = ""
+        try:
+            newer = retry(text, probs, "\n".join(facts[i] for i in picked)).strip()
+            retried = True
+        except Exception as e:  # noqa: BLE001 — a failed retry just means the fallback
+            warnings.append(f"profile: retry failed ({str(e)[:120]})")
+        again = problems(newer) if newer else []
+        violations.extend(f"profile (retry): {p}" for p in again if newer)
+        if newer and not again:
+            text = newer
             warnings.append("profile: rewritten once after the guard rejected the first draft")
         else:
-            profile = ". ".join(fb["profile_facts"][:3]) + "."
-            warnings.append("profile: fell back to profile_facts")
+            text = ". ".join(f.rstrip(".") for f in (facts[i] for i in picked)) + "."
+            fallback = True
+            warnings.append("profile: fell back to the picked profile_facts")
+    return {"text": text, "facts": [facts[i] for i in picked], "violations": violations, "warnings": warnings,
+            "retried": retried, "fallback": fallback}
 
+
+# ---- 2c. assemble and fit
+def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list[Keyword], headline: str = "") -> dict:
+    """The render context for a selection: canonical bullet text unless the guard accepted a rewording (`texts`)."""
+    bidx = bullet_index(fb)
+
+    def text(bid: str) -> str:
+        return texts.get(bid) or bidx[bid]["text"]
+
+    experience = []
+    for e in fb["experience"]:
+        ids = sel["experience"].get(e["id"]) or [e["bullets"][0]["id"]]
+        experience.append({**e, "bullet_ids": list(ids), "bullets": [text(i) for i in ids]})
+    by_id = {p["id"]: p for p in fb["projects"]}
+    projects = [{**by_id[p], "bullet_ids": [b["id"] for b in by_id[p]["bullets"]],
+                 "bullets": [text(b["id"]) for b in by_id[p]["bullets"]]} for p in sel["projects"] if p in by_id]
     hit_terms = {norm_literal(w) for k in kws for w in k.members()}
     skills = {g: sorted(items, key=lambda s: norm_literal(s) not in hit_terms) for g, items in fb["skills"].items()}
-    ctx = {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile, "skills": skills, "experience": experience,
-           "projects": projects, "education": fb.get("education", []),
-           "certifications": fb.get("certifications", [])}
-    return ctx, violations, warnings
+    return {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile,
+            "skills": skills, "experience": experience, "projects": projects, "education": fb.get("education", []),
+            "certifications": fb.get("certifications", [])}
 
 
 def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
-    """Drop the least keyword-relevant bullet (never an entry's last one). False if nothing left to drop."""
+    """Drop the least keyword-relevant bullet. An entry keeps its last bullet, and the most recent experience entry
+    keeps two until nothing else can go. False if nothing is left to drop."""
     terms = [[norm_literal(w) for w in k.members()] for k in kws]
-    worst = None
-    for sec in ("projects", "experience"):
-        for e in ctx[sec]:
-            if len(e["bullets"]) <= 1:
-                continue
-            for i, b in enumerate(e["bullets"]):
-                s = sum(any(t in norm_literal(b) for t in group) for group in terms)
-                if worst is None or s < worst[0]:
-                    worst = (s, e, i)
-    if worst is None:
-        if len(ctx["projects"]) > 2:
-            ctx["projects"].pop()
+    first = ctx["experience"][0] if ctx["experience"] else None
+    for strict in (True, False):
+        worst = None
+        for sec in ("projects", "experience"):
+            for e in ctx[sec]:
+                if len(e["bullets"]) <= (MOST_RECENT_BULLETS[0] if strict and e is first else 1):
+                    continue
+                for i, b in enumerate(e["bullets"]):
+                    s = sum(any(t in norm_literal(b) for t in group) for group in terms)
+                    if worst is None or s < worst[0]:
+                        worst = (s, e, i)
+        if worst:
+            _, e, i = worst
+            e["bullets"].pop(i)
+            e["bullet_ids"].pop(i)
             return True
-        return False
-    _, e, i = worst
-    e["bullets"].pop(i)
-    e["bullet_ids"].pop(i)
-    return True
+    return False
+
+
+def _keyword_boost(kws: list[Keyword], fixable: set[str]) -> list[Keyword]:
+    """The keywords with the ones the fact bank evidences but the CV missed counted double when ranking bullets: how a
+    below-band attempt differs from the last (selection is deterministic, so an identical retry would be wasted)."""
+    return [Keyword(k.term, k.weight * 2, k.required, list(k.alts)) if k.term in fixable else k for k in kws]
 
 
 # ------------------------------------------------------------------ 3. cover letter
@@ -596,7 +627,8 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
 
 
 def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) -> dict[str, Any]:
-    """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths."""
+    """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
+    Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
@@ -607,17 +639,23 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
     kws, hook, team = analyse(job, llm, settings, analysis_warnings)
     ceil, gaps = ceiling(fact_text(fb), kws)
     cv_name, letter_name = _names(fb, settings)
+    profile = make_profile(job, fb, kws, headline, llm)         # depends on the facts only, not on the selection
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
                               "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir),
-                              "analysis_warnings": analysis_warnings}
+                              "analysis_warnings": analysis_warnings,
+                              "profile": {k: profile[k] for k in ("facts", "retried", "fallback")}}
 
-    feedback, best = "", None
+    ranking, best, cache = kws, None, {}
     for attempt in range(1, sc["max_attempts"] + 1):
-        llm.attempt = attempt                                    # names this attempt's raw replies (tailor_cv-2.json)
-        prop, prompt = _proposal(job, fb, kws, llm, feedback, settings, headline, preferred)
-        ctx, viol, warn = _assemble(fb, prop, kws, headline, _profile_retrier(llm, fb, headline))
+        llm.attempt = attempt                                    # names this attempt's raw replies (tailor_profile-2.json)
+        sel = select_cv(fb, ranking, preferred)
+        rephrase_notes: list[str] = []
+        proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes)
+        accepted, viol, warn = guard_rephrases(fb, proposed, kws)
+        rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted))
+        ctx = _context(fb, sel, accepted, profile["text"], kws, headline)
         pdf = render_cv(ctx, out_dir, cv_name)
         shrinks = 0
         while page_count(pdf) > sc["max_pages"] and _shrink(ctx, kws):
@@ -639,24 +677,23 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
                             s = score(pdf_text(pdf), kws)
 
         rec = {"attempt": attempt, "score": s.literal, "score_stemmed": s.stemmed, "band": in_band(s.literal, band),
-               "pages": page_count(pdf), "shrinks": shrinks, "reverted": reverted, "violations": viol,
-               "warnings": warn, "wording_misses": s.wording_misses, "misses": s.misses,
-               "prompt": prompt, "proposal": prop, "selection": {e["id"]: e["bullet_ids"] for e in ctx["experience"] + ctx["projects"]},
+               "pages": page_count(pdf), "shrinks": shrinks, "reverted": reverted,
+               "violations": profile["violations"] + viol, "warnings": profile["warnings"] + rephrase_notes + warn,
+               "wording_misses": s.wording_misses, "misses": s.misses, "rephrase": rstats,
+               "proposal": {"selection": sel, "rephrase": proposed, "profile": profile["text"]},
+               "selection": {e["id"]: e["bullet_ids"] for e in ctx["experience"] + ctx["projects"]},
                "profile": ctx["profile"], "rephrase_coverage": rephrase_coverage(ctx, fb, kws)}
         report["attempts"].append(rec)
         if best is None or abs(s.literal - (lo + hi) / 2) < abs(best[0]["score"] - (lo + hi) / 2):
             best = (rec, ctx)
-        if rec["band"] == "in":
+        if rec["band"] != "below" or ceil < lo:
+            break   # in band, or (above: rephrasings already reverted) nothing left to try, or no honest way up
+        # Below the band: count the keywords the fact bank evidences but the CV missed double when ranking, so the next
+        # attempt picks the bullets that carry them. Selection is deterministic; an unchanged one would be wasted quota.
+        fixable = {m for m in s.wording_misses + s.misses if m not in gaps}
+        ranking = _keyword_boost(ranking, fixable)
+        if select_cv(fb, ranking, preferred) == sel:
             break
-        if rec["band"] == "below" and ceil < lo:
-            break   # can't be fixed honestly; don't burn calls
-        if len(report["attempts"]) > 1 and rec["selection"] == report["attempts"][-2]["selection"] \
-                and not prop.get("rephrase") and not report["attempts"][-2]["proposal"].get("rephrase"):
-            break   # model ignored the feedback — another identical attempt is wasted quota
-        if rec["band"] == "below":
-            fixable = [m for m in s.wording_misses + s.misses if m not in gaps]
-            feedback = P.FEEDBACK_BELOW.format(score=s.literal, lo=lo, fixable=", ".join(fixable) or "(none)",
-                                               gaps=", ".join(gaps) or "(none)")
 
     rec, ctx = best
     pdf = render_cv(ctx, out_dir, cv_name)                      # re-render the chosen attempt as the final file
@@ -670,7 +707,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
                   "band": in_band(final_score.literal, band), "pages": page_count(pdf),
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
-        "rephrase_coverage": rec["rephrase_coverage"],
+        "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"],
         "letter": letter, "llm_usage": usage_since(llm, usage_from),
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name), "context": ctx,
     })

@@ -207,3 +207,70 @@ def normalise_letter(out) -> tuple[list[str], list[str]]:
         else:
             notes.append(f"paragraphs: dropped {_short(it)} (no text)")
     return paras, notes
+
+
+def normalise_rephrase(out, allowed: set[str]) -> tuple[dict[str, str], list[str]]:
+    """({bullet id: reworded text}, notes) from a rephrase_bullets answer. The asked-for shape is the flat object
+    {"az1": "Built ..."}; also read: the same inside a wrapper key ("rephrase", "rephrased", "bullets"), a list of
+    {"id", "text"} objects, and an id mapped to an object carrying the text. Ids outside `allowed` (the ids that were
+    sent) and anything that is not text are dropped, with a note."""
+    notes: list[str] = []
+    if not isinstance(out, dict) and not isinstance(out, list):
+        return {}, ["answer was not an object"]
+    if isinstance(out, dict) and len(out) <= 2:
+        for key in ("rephrase", "rephrased", "bullets", "results", "rewrites"):
+            if isinstance(out.get(key), (dict, list)):
+                out = out[key]
+                notes.append(f"answer was wrapped in '{key}'; read it")
+                break
+    if isinstance(out, list):
+        out = {as_id(r): _first_text(r, _REPHRASE_KEYS) for r in out if isinstance(r, dict) and as_id(r)}
+    res: dict[str, str] = {}
+    for bid, text in out.items():
+        if isinstance(text, dict):
+            text = _first_text(text, _REPHRASE_KEYS)
+        if not isinstance(bid, str) or bid not in allowed:
+            notes.append(f"dropped rewrite for '{str(bid)[:30]}' (not a bullet that was sent)")
+        elif not isinstance(text, str) or not text.strip():
+            notes.append(f"{bid}: not text; dropped")
+        else:
+            res[bid] = text.strip()
+    return res, notes
+
+
+_FACT_REF = re.compile(r"^\s*(?:f|fact)?\s*#?(\d+)\s*[.:)]?\s*$", re.I)
+
+
+def normalise_profile(out, facts: list[str]) -> tuple[list[int], str, list[str]]:
+    """(picked fact indexes (0-based, at most 2), profile text, notes) from a tailor_profile answer. Facts may be named
+    by id ("F2", "2", 2) or by their text; anything else is dropped, with a note. Fewer than two valid picks is the
+    caller's to fill."""
+    notes: list[str] = []
+    if not isinstance(out, dict):
+        return [], "", ["answer was not an object"]
+    picks = out.get("facts")
+    if picks is None:
+        picks = out.get("picked") or out.get("profile_facts")
+    if isinstance(picks, (str, int)):
+        picks = re.split(r"\s*[,;]\s*", picks) if isinstance(picks, str) else [picks]
+    idx: list[int] = []
+    for p in picks if isinstance(picks, list) else []:
+        i = None
+        if isinstance(p, dict):
+            p = p.get("id") or p.get("fact") or p.get("text")
+        if isinstance(p, int) and not isinstance(p, bool):
+            i = p - 1
+        elif isinstance(p, str):
+            m = _FACT_REF.match(p)
+            i = int(m.group(1)) - 1 if m else next((n for n, f in enumerate(facts) if f.strip() == p.strip()), None)
+        if i is None or not 0 <= i < len(facts):
+            notes.append(f"facts: dropped {_short(p)} (not one of the facts)")
+        elif i not in idx:
+            idx.append(i)
+    if len(idx) > 2:
+        notes.append("facts: more than two picked; kept the first two")
+    profile = out.get("profile")
+    if profile is not None and not isinstance(profile, str):
+        notes.append("profile: not text; dropped")
+        profile = ""
+    return idx[:2], (profile or "").strip(), notes

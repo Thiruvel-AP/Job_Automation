@@ -121,23 +121,51 @@ def job(jd) -> dict:
 
 
 def _fabricating_llm():
-    """A model that tries to lie: invents a number, a deny-listed tool and an unevidenced keyword."""
-    def tailor(ctx):
-        out = MockLLM().json("tailor_cv", "", "", ctx)
-        out["experience"]["az"] = ["az1", "az3", "az2"]          # make sure the lies are on the page
-        out["rephrase"] = {
-            "az3": "Deployed the agent with Docker and Kubernetes on AWS Lambda, cutting cost 40%.",
-            "az1": "Built a tool-calling LLM agent (LangChain, AWS Bedrock) with agentic workflows for a "
-                   "multi-omics cancer research platform with three tools.",
-        }
-        out["profile"] = "AI engineer with 5 years of production experience in Kubernetes."
+    """A model that tries to lie: rewordings with an invented number and a deny-listed tool, a profile with an invented
+    years-of-experience claim, and a keyword that is not in the JD."""
+    def rephrase(ctx):
+        out = {}
+        for i, b in enumerate(ctx["bullets"]):
+            if i == 0:                                   # the lie: a deny-listed tool and a number the bullet lacks
+                out[b["id"]] = "Deployed the agent with Docker and Kubernetes on AWS Lambda, cutting cost 40%."
+            else:                                        # an honest rewording: the same fact plus the keywords it may take
+                out[b["id"]] = b["text"].rstrip(".") + ", covering " + ", ".join(b["introduce"]) + "."
         return out
+
+    def profile(ctx):
+        return {"facts": ["F1", "F2"], "profile": "AI engineer with 5 years of production experience in Kubernetes."}
 
     def keywords(ctx):
         return {"required": ["Python", "LLM agents", "made-up keyword not in JD", "Kubernetes"], "preferred": [],
                 "company_hook": "Northwind builds clinical decision-support tools for oncology researchers."}
 
-    return MockLLM({"tailor_cv": tailor, "extract_keywords": keywords})
+    return MockLLM({"rephrase_bullets": rephrase, "tailor_profile": profile, "extract_keywords": keywords})
+
+
+BROAD_JD_TERMS = ["Python", "SQL", "pandas", "scikit-learn", "XGBoost", "PyTorch", "LangChain", "Docker", "MLflow",
+                  "pytest", "FastAPI", "AWS", "IAM", "RAG", "MCP", "statistics", "reporting", "communication",
+                  "stakeholders", "documentation", "reproducibility", "evaluation", "forecasting", "SHAP", "R"]
+
+
+@pytest.fixture
+def broad_job(job) -> dict:
+    """A job whose JD names 25 skills that between them overlap nearly every bullet of the fixture fact bank."""
+    return {**job, "description": "Requirements\n" + "\n".join(BROAD_JD_TERMS) + "\n"}
+
+
+@pytest.fixture
+def broad_llm(spy_llm):
+    """A SpyLLM whose keyword answer is exactly those 25 skills (all verbatim in `broad_job`'s JD)."""
+    return spy_llm({"extract_keywords": lambda ctx: {"required": BROAD_JD_TERMS, "preferred": [], "company_hook": "",
+                                                    "team": ""}})
+
+
+@pytest.fixture
+def one_page_run(settings, fb_fixture, broad_job, broad_llm):
+    """The code selection for the broad JD overflows one page, so the shrink loop has work to do."""
+    from careerops.tailoring.render import pdf_text
+    rep = tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"))
+    return rep, pdf_text(Path(rep["cv_pdf"]))
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
-"""The model's JSON is read, not trusted: tailor_cv / extract_keywords / cover_letter answers in unexpected shapes are
-normalised (drops reported in report.json), an unusable tailor_cv answer is retried once and then fails the job with a
-clear error, and every raw reply is kept under llm_raw/ for inspection."""
+"""The model's JSON is read, not trusted: extract_keywords / rephrase_bullets / tailor_profile / cover_letter answers in
+unexpected shapes are normalised (drops reported in report.json), a model that fails or answers garbage never fails the
+job (canonical bullets, the two profile facts, the fallback letter), and every raw reply is kept under llm_raw/."""
 import json
 from pathlib import Path
 
@@ -11,10 +11,6 @@ from careerops.llm import MockLLM
 from careerops.tailoring import tailor
 from careerops.tailoring.rawlog import RawRecorder
 from careerops.tailoring.shapes import (clean_proposal, normalise_keywords, normalise_letter, proposal_usable)
-
-A3_NEW = ("Packaged and deployed the agent as a Docker container on AWS Lambda with ECR image pipelines, IAM execution "
-          "roles and least-privilege policies, replacing a manual copy-and-paste release process.")
-A5_BAD = "Surveyed 14 source datasets and cut review time by 40%."          # an invented number: must be rejected
 
 
 def _final(rep):
@@ -29,60 +25,44 @@ def _run(settings, fb, job, llm):
     return tailor.tailor_job(job, fb, llm, settings, settings.path("outputs"))
 
 
-# ================================================================== (a) id strings
-def test_a_id_strings_work_as_before_and_every_raw_reply_is_saved(settings, fb_fixture, job, spy_llm):
+# ================================================================== raw replies of the new tasks
+def test_a_every_raw_reply_is_saved_as_the_model_sent_it(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep = _run(settings, fb_fixture, job, llm)
     names = sorted(p.name for p in (_final(rep) / "llm_raw").iterdir())
-    assert "extract_keywords-1.json" in names and "cover_letter-1.json" in names
-    assert [n for n in names if n.startswith("tailor_cv-")] == [f"tailor_cv-{i}.json"
-                                                               for i in range(1, len(rep["attempts"]) + 1)]
-    assert not any("proposal" in w for a in rep["attempts"] for w in a["warnings"])
-    raw = json.loads(_raw(rep, "tailor_cv-1.json"))                     # exactly what the model sent
-    assert raw == rep["attempts"][0]["proposal"] and set(raw) >= {"profile", "experience", "projects"}
+    assert {"extract_keywords-1.json", "tailor_profile-1.json", "cover_letter-1.json"} <= set(names)
+    assert not any(n.startswith("tailor_cv") for n in names)                    # the model no longer selects
+    assert "rephrase_bullets-1.json" in names
+    assert json.loads(_raw(rep, "tailor_profile-1.json"))["facts"] == ["F1", "F2"]
     assert json.loads(_raw(rep, "cover_letter-1.json"))["paragraphs"] == rep["letter"]["paragraphs"]
 
 
-# ================================================================== (b) objects with id + rephrase
-def _objects(ctx):
-    out = MockLLM().json("tailor_cv", "", "", ctx)
-    out["experience"] = {"ex1": [{"id": "a1", "text": ctx["experience"][0]["bullets"][0]["text"]},
-                                 {"bullet_id": "a3", "rephrase": A3_NEW},
-                                 {"id": "a5", "rephrase": A5_BAD},
-                                 {"id": "zz9", "rephrase": "a bullet that does not exist"},
-                                 {"note": "no id at all"}],
-                         "ex99": [{"id": "a2"}],                                  # an entry that does not exist
-                         **{e: [{"id": b} for b in ids] for e, ids in out["experience"].items() if e != "ex1"}}
-    out["projects"] = [{"id": p} for p in out["projects"]] + [{"id": "nope"}]
-    return out
+# ================================================================== (b) rephrase answers in unexpected shapes
+def _odd_shape(ctx):
+    """Wrapped in a key, a list of objects, one with an unknown id, one without an id, one reworded with an invented
+    number: every one of them is read or dropped, and what is read is still guarded."""
+    first, *rest = ctx["bullets"]
+    items = [{"id": first["id"], "text": first["text"].rstrip(".") + ", covering " + ", ".join(first["introduce"]) + "."}]
+    if rest:
+        items.append({"id": rest[0]["id"], "rephrased": rest[0]["text"].rstrip(".") + " and cut review time by 40%."})
+    return {"rephrased": items + [{"id": "zz9", "text": "a bullet that does not exist"}, {"note": "no id at all"}]}
 
 
-def test_b_objects_with_id_and_rephrase_are_converted_and_the_rephrase_is_still_checked(settings, fb_fixture, job,
-                                                                                           spy_llm):
-    rep = _run(settings, fb_fixture, job, spy_llm({"tailor_cv": _objects}))
-    ctx = rep["context"]
-    ex1 = ctx["experience"][0]
-    assert ex1["bullet_ids"][:3] == ["a1", "a3", "a5"]
-    texts = dict(zip(ex1["bullet_ids"], ex1["bullets"]))
-    bidx = tailor.bullet_index(fb_fixture)
-    assert texts["a3"] == A3_NEW                                      # the object's rephrase was applied ...
-    assert texts["a5"] == bidx["a5"]["text"] and "40%" not in texts["a5"]    # ... unless the guard rejects it
+def test_b_odd_shapes_are_read_and_the_reworded_text_is_still_checked(settings, fb_fixture, job, spy_llm):
+    rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
     rec = rep["attempts"][0]
-    assert any(v.startswith("a5:") and "new numbers" in v for v in rec["violations"])
-    assert all(len(p["bullet_ids"]) >= 1 for p in ctx["projects"]) and len(ctx["projects"]) == 2
+    assert rec["rephrase"]["accepted"] >= 1 and rec["rephrase"]["blocked"] >= 1
+    assert any("new numbers ['40%']" in v for v in rec["violations"])
+    texts = " ".join(b for e in rep["context"]["experience"] + rep["context"]["projects"] for b in e["bullets"])
+    assert "40%" not in texts and "covering" in texts
 
 
 def test_b_every_drop_is_a_warning_in_report_json(settings, fb_fixture, job, spy_llm):
-    rep = _run(settings, fb_fixture, job, spy_llm({"tailor_cv": _objects}))
+    rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
     saved = json.loads((_final(rep) / "report.json").read_text(encoding="utf-8"))
     warn = saved["attempts"][0]["warnings"]
-    for expected in ("proposal: experience ex1: entries were objects; read their ids",
-                     "proposal: experience ex1: dropped {'note': 'no id at all'} (no id)",
-                     "proposal: dropped unknown bullet id 'zz9' for experience ex1",
-                     "proposal: dropped unknown experience id 'ex99'",
-                     "proposal: dropped unknown project id 'nope'",
-                     "proposal: dropped rephrase for unknown bullet id 'zz9'"):
-        assert expected in warn, expected
+    assert "rephrase_bullets: answer was wrapped in 'rephrased'; read it" in warn
+    assert any(w.startswith("rephrase_bullets: dropped rewrite for 'zz9'") for w in warn)
 
 
 def test_b_clean_proposal_moves_object_text_into_rephrase_but_an_explicit_rephrase_wins(fb_fixture):
@@ -98,69 +78,74 @@ def test_a_bullet_listed_under_the_wrong_entry_is_dropped(fb_fixture):
     assert out["experience"] == {"ex1": ["a1"]} and "dropped unknown bullet id 'b1' for experience ex1" in notes
 
 
-# ================================================================== (c) garbage -> retry -> clear error
+# ================================================================== (c) a model that fails does not fail the job
 GARBAGE = {"profile": "x", "experience": "a1", "projects": 3, "rephrase": 7}
 
 
-def test_c_garbage_is_retried_once_with_the_schema_then_the_job_fails_clearly(settings, fb_fixture, job, spy_llm):
-    llm = spy_llm({"tailor_cv": lambda ctx: GARBAGE})
-    with pytest.raises(tailor.ProposalError) as e:
-        _run(settings, fb_fixture, job, llm)
-    msg = str(e.value)
-    assert "no usable bullet or project ids" in msg and "even after being told the exact schema" in msg
-    assert "raw model answers" in msg
-    calls = [s for s in llm.sent if s["task"] == "tailor_cv"]
-    assert len(calls) == 2                                             # the original call and exactly one retry
-    assert "YOUR LAST ANSWER COULD NOT BE USED" not in calls[0]["user"]
-    retry = calls[1]["user"]
-    assert "YOUR LAST ANSWER COULD NOT BE USED" in retry and "Return EXACTLY this JSON" in retry
-    assert "Valid experience ids: ex1" in retry and "Valid project ids:" in retry and retry.startswith(calls[0]["user"])
+def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback_letter(settings, fb_fixture, job,
+                                                                                      spy_llm):
+    llm = spy_llm({"rephrase_bullets": lambda ctx: GARBAGE, "tailor_profile": lambda ctx: GARBAGE,
+                   "cover_letter": lambda ctx: GARBAGE})
+    rep = _run(settings, fb_fixture, job, llm)
+    bidx = tailor.bullet_index(fb_fixture)
+    for e in rep["context"]["experience"] + rep["context"]["projects"]:
+        assert e["bullets"] == [bidx[i]["text"] for i in e["bullet_ids"]]
+    assert rep["profile"]["fallback"] and len(rep["profile"]["facts"]) == 2
+    assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] == 1
+
+
+def test_c_a_model_that_is_down_for_every_task_still_gets_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):
+    def down(ctx):
+        raise RuntimeError("all providers failed")
+
+    llm = spy_llm({t: down for t in ("extract_keywords", "rephrase_bullets", "tailor_profile", "cover_letter")})
+    rep = _run(settings, fb_fixture, job, llm)
+    assert Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists() and rep["letter"]["status"] == "fallback"
+    assert rep["profile"]["fallback"] and any("LLM failed" in w for w in rep["attempts"][0]["warnings"])
+    assert any("failed (all providers failed); canonical wording kept" in w for w in rep["attempts"][0]["warnings"])
+
+
+def _render_dies(monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("xelatex died")
+
+    monkeypatch.setattr(tailor, "render_cv", boom)
 
 
 def test_c_the_raw_answers_of_a_failed_job_are_kept_next_to_it_and_nothing_half_done_is_left(settings, fb_fixture,
-                                                                                                 job, spy_llm):
+                                                                                                 job, spy_llm,
+                                                                                                 monkeypatch):
     out_root = settings.path("outputs")
-    with pytest.raises(tailor.ProposalError) as e:
-        _run(settings, fb_fixture, job, spy_llm({"tailor_cv": lambda ctx: GARBAGE}))
+    _render_dies(monkeypatch)
+    with pytest.raises(RuntimeError) as e:
+        _run(settings, fb_fixture, job, spy_llm())
     failed = next(p for p in out_root.iterdir() if p.name.endswith(".failed"))
     assert sorted(p.name for p in out_root.iterdir()) == [failed.name]          # no job folder, no .partial
-    raw = {p.name: p.read_text(encoding="utf-8") for p in (failed / "llm_raw").iterdir()}
-    assert set(raw) >= {"tailor_cv-1.json", "tailor_cv-1-2.json", "extract_keywords-1.json"}
-    assert json.loads(raw["tailor_cv-1.json"]) == GARBAGE
+    raw = {p.name for p in (failed / "llm_raw").iterdir()}
+    assert {"extract_keywords-1.json", "tailor_profile-1.json"} <= raw
     assert str(failed / "llm_raw") in str(e.value)
 
 
-def test_c_a_good_answer_after_the_schema_retry_succeeds_and_both_replies_are_kept(settings, fb_fixture, job, spy_llm):
-    calls = []
-
-    def flaky(ctx):
-        calls.append(1)
-        return GARBAGE if len(calls) == 1 else MockLLM().json("tailor_cv", "", "", ctx)
-
-    rep = _run(settings, fb_fixture, job, spy_llm({"tailor_cv": flaky}))
-    assert rep["attempts"][0]["prompt"]["schema_retry"] is True
-    assert json.loads(_raw(rep, "tailor_cv-1.json")) == GARBAGE
-    assert "experience" in json.loads(_raw(rep, "tailor_cv-1-2.json"))
-    assert rep["final"]["pages"] == 1 and not list(settings.path("outputs").glob("*.failed"))
-
-
-def test_c_a_later_success_clears_the_old_failure_folder(settings, fb_fixture, job, spy_llm):
-    with pytest.raises(tailor.ProposalError):
-        _run(settings, fb_fixture, job, spy_llm({"tailor_cv": lambda ctx: GARBAGE}))
+def test_c_a_later_success_clears_the_old_failure_folder(settings, fb_fixture, job, spy_llm, monkeypatch):
+    with monkeypatch.context() as m:
+        _render_dies(m)
+        with pytest.raises(RuntimeError):
+            _run(settings, fb_fixture, job, spy_llm())
+    assert list(settings.path("outputs").glob("*.failed"))
     _run(settings, fb_fixture, job, spy_llm())
     assert not list(settings.path("outputs").glob("*.failed"))
 
 
-def test_c_the_cli_marks_the_job_as_an_error_with_the_clear_message(settings, db, job, monkeypatch, capsys):
+def test_c_the_cli_marks_the_job_as_an_error_with_the_message(settings, db, job, monkeypatch, capsys):
     db.upsert_job(job)
     db.update_job(job["id"], status="triaged", tier=1, ceiling_pre=0.9)
-    llm = MockLLM({"tailor_cv": lambda ctx: GARBAGE})
     monkeypatch.setattr(cli, "_ctx", lambda args: (settings, db))
-    monkeypatch.setattr(cli, "_llm", lambda args, s, d: llm)
+    monkeypatch.setattr(cli, "_llm", lambda args, s, d: MockLLM())
+    _render_dies(monkeypatch)
     cli.main(["tailor", "--limit", "1"])
     row = db.job(job["id"])
-    assert row["status"] == "error" and "no usable bullet or project ids" in row["reason"]
-    assert "ERROR: tailor_cv returned no usable" in capsys.readouterr().out
+    assert row["status"] == "error" and "xelatex died" in row["reason"]
+    assert "ERROR: xelatex died" in capsys.readouterr().out
 
 
 def test_proposal_usable_needs_at_least_one_valid_id(fb_fixture):
@@ -226,13 +211,22 @@ def test_a_letter_in_text_objects_is_accepted_and_the_drops_are_reported(setting
 
 
 # ================================================================== raw logging
-def test_raw_replies_are_saved_per_attempt_with_a_suffix_for_a_second_reply(settings, fb_fixture, job, spy_llm):
-    settings.raw["scoring"]["band"] = [0.0, 0.001]                     # never in band: the loop runs every attempt
-    rep = _run(settings, fb_fixture, job, spy_llm())
-    n = len(rep["attempts"])
-    assert n >= 2
-    assert sorted(p.name for p in (_final(rep) / "llm_raw").glob("tailor_cv-*")) == sorted(
-        f"tailor_cv-{i}.json" for i in range(1, n + 1))
+def test_raw_replies_of_the_rephrase_calls_are_named_by_attempt_with_a_suffix_for_a_second_batch(tmp_path):
+    class Inner:
+        last_raw = '{"a": 1}'
+
+        def json(self, task, system, user, context=None):
+            return {}
+
+    rec = RawRecorder(Inner(), tmp_path)
+    for attempt, calls in ((1, 2), (2, 1)):
+        rec.attempt = attempt
+        for _ in range(calls):
+            rec.json("rephrase_bullets", "s", "u")
+    rec.attempt = None
+    rec.json("tailor_profile", "s", "u")                                # before the loop: numbered by call
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rephrase_bullets-1-2.json", "rephrase_bullets-1.json",
+                                                         "rephrase_bullets-2.json", "tailor_profile-1.json"]
 
 
 def test_the_recorder_saves_a_reply_that_was_not_valid_json_even_though_the_call_raised(tmp_path):
@@ -261,12 +255,13 @@ def test_the_recorder_never_overwrites_and_skips_calls_with_no_reply(tmp_path):
     inner = Inner()
     rec = RawRecorder(inner, tmp_path)
     rec.attempt = 2
-    rec.json("tailor_cv", "s", "u")
-    rec.json("tailor_cv", "s", "u")
-    rec.json("tailor_cv", "s", "u")
+    rec.json("rephrase_bullets", "s", "u")
+    rec.json("rephrase_bullets", "s", "u")
+    rec.json("rephrase_bullets", "s", "u")
     inner.last_raw = None
-    rec.json("tailor_cv", "s", "u")
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["tailor_cv-2-2.json", "tailor_cv-2-3.json", "tailor_cv-2.json"]
+    rec.json("rephrase_bullets", "s", "u")
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rephrase_bullets-2-2.json", "rephrase_bullets-2-3.json",
+                                                         "rephrase_bullets-2.json"]
 
 
 def test_regenerating_a_letter_adds_its_raw_reply_without_touching_the_first(settings, fb_fixture, job, spy_llm):

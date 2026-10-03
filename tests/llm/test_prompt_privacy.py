@@ -5,7 +5,7 @@ from pathlib import Path
 
 from careerops.tailoring.tailor import regenerate_letter, tailor_job
 
-TASKS = {"extract_keywords", "tailor_cv", "cover_letter"}
+TASKS = {"extract_keywords", "tailor_profile", "rephrase_bullets", "cover_letter"}
 
 
 def _private_strings(identity: dict) -> list[str]:

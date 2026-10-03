@@ -22,7 +22,11 @@ def test_tailor_loop_end_to_end(tailored):
     assert "kubernetes" not in text and "40%" not in text and "5 years" not in text
     assert "agentic" in text                                   # evidenced rephrase (az1 terms) survived
     assert rep["ceiling"] < 1.0 and any(g.lower() == "kubernetes" for g in rep["genuine_gaps"])
-    assert llm.calls.count("tailor_cv") == len(rep["attempts"]) <= 3
+    assert "tailor_cv" not in llm.calls                        # code selects the bullets; the model never does
+    assert llm.calls.count("tailor_profile") == 2              # the lying draft and its one retry
+    assert rep["profile"]["fallback"] and rep["context"]["profile"] == ". ".join(rep["profile"]["facts"]) + "."
+    assert 1 <= llm.calls.count("rephrase_bullets") <= 5 * len(rep["attempts"])
+    assert "years-of-experience" in viol                       # the profile guard fired too
 
 
 def test_letter_rules(tailored):

@@ -12,7 +12,7 @@ from .router import LLMError
 
 
 class MockLLM:
-    """Deterministic: picks bullets by keyword overlap, never rephrases. Good enough to test plumbing."""
+    """Deterministic: never rewords a bullet, picks the first two profile facts. Good enough to test plumbing."""
 
     def __init__(self, handlers: dict[str, Callable[[dict], dict]] | None = None):
         self.handlers = handlers or {}
@@ -32,6 +32,12 @@ class MockLLM:
         self.last_raw = json.dumps(out)
         return out
 
+    @staticmethod
+    def _profile(headline: str, facts: list[str]) -> str:
+        """"<headline> with <fact>. <fact>", cut to 40 words so the profile guard (<= 45) always passes."""
+        text = f"{headline} with " + ". ".join(f.rstrip(".") for f in facts)
+        return " ".join(text.split()[:40]).rstrip(".,;") + "."
+
     def _answer(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         self.calls.append(task)
         ctx = context or {}
@@ -40,24 +46,13 @@ class MockLLM:
         if task == "extract_keywords":
             return {"required": ctx.get("fallback_required", []), "preferred": ctx.get("fallback_preferred", []),
                     "company_hook": "", "team": ""}
-        if task == "tailor_cv":
-            kws = [k["term"] for k in ctx["keywords"]]
-            def overlap(b):
-                t = (b["text"] + " " + " ".join(b.get("terms", []))).lower()
-                return sum(k in t for k in kws)
-            # one-page shape: the most recent entry (listed first) keeps 3 bullets, every other entry 2
-            exp = {e["id"]: [b["id"] for b in sorted(e["bullets"], key=overlap, reverse=True)[:3 if i == 0 else 2]]
-                   for i, e in enumerate(ctx["experience"])}
-            pref = ctx.get("preferred_projects", [])
-            rank = {pid: i for i, pid in enumerate(pref)}       # ties in overlap → preferred order, then bank order
-            projs = sorted(ctx["projects"], key=lambda p: (-sum(overlap(b) for b in p["bullets"]),
-                                                           rank.get(p["id"], len(pref))))[:2]
-            return {"profile": ". ".join(ctx["profile_facts"][:2]) + ".",
-                    "experience": exp,
-                    "projects": [p["id"] for p in projs],
-                    "rephrase": {}}
+        if task == "rephrase_bullets":
+            return {}                                          # the mock never rewords: every bullet keeps its text
         if task == "tailor_profile":
-            return {"profile": ". ".join(ctx["profile_facts"][:2]) + "."}
+            if "previous" in ctx:                              # the guard's one retry: just the profile text
+                return {"profile": self._profile(ctx["headline"], ctx["profile_facts"][:2])}
+            facts = ctx["facts"][:2]
+            return {"facts": [f["id"] for f in facts], "profile": self._profile(ctx["headline"], [f["text"] for f in facts])}
         if task == "cover_letter":
             gaps = ctx.get("gaps") or []
             return {"paragraphs": [

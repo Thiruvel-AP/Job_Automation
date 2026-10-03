@@ -8,6 +8,7 @@ import pytest
 
 from careerops.llm import MockLLM
 from careerops.tailoring import budget, prompts as P, tailor
+from careerops.tailoring.selection import select_cv
 from careerops.tailoring.faithfulness import check
 from careerops.tailoring.render import pdf_text
 from careerops.tailoring.scorer import (Keyword, cap_keywords, ceiling, drop_contained, merge_keywords, score,
@@ -212,118 +213,14 @@ def test_iata_ranks_in_the_top_3_projects_for_a_customer_feedback_nlp_jd(setting
     assert "iata" in ranking[:3] and ranking[0] == "iata"
 
 
-def test_ranking_covers_all_bullets_experience_and_projects(fb_fixture, settings, job):
-    kws = _feedback_kws(settings, job)
-    sc = budget.bullet_scores(fb_fixture, kws)
-    every = {b["id"] for sec in ("experience", "projects") for e in fb_fixture[sec] for b in e["bullets"]}
-    assert set(sc) == every
-    ids, _ = budget.select_bullets(fb_fixture, kws, top_n=5)
-    assert any(i in ids for i in ("p1a", "p1b", "p2a", "p3a"))                     # project bullets compete with the rest
-
-
-def test_the_iata_project_is_listed_first_in_the_tailor_prompt_despite_the_family_prior(settings, job, fb_fixture,
-                                                                                          spy_llm):
+def test_the_iata_project_is_chosen_first_in_the_code_selection_despite_the_family_prior(settings, job, fb_fixture):
     fb = _with_iata(fb_fixture)
-    llm = spy_llm()
     kws = _feedback_kws(settings, job)
-    tailor._proposal(_job(job, FEEDBACK_JD), fb, kws, llm, "", settings, "AI Engineer", ["p1", "p2", "p3"])
-    user = next(s["user"] for s in llm.sent if s["task"] == "tailor_cv")
-    listed = re.findall(r"^(p\d|iata): ", user[user.index("PROJECTS:"):], re.M)
-    assert listed[0] == "iata" and "p_ia1:" in user
+    sel = select_cv(fb, kws, ["p1", "p2", "p3"])
+    assert sel["projects"][0] == "iata" and len(sel["projects"]) == 2
 
 
-# ================================================================== 3. rephrase coverage
-def test_tailor_prompt_demands_rephrasing_of_bullets_that_can_carry_a_missed_keyword():
-    s = P.TAILOR_SYSTEM
-    assert "Rephrase EVERY selected bullet whose `terms` contain a JD keyword" in s
-    assert "within the rules below" in s and "most relevant to the JD first" in s
-
-
-def test_rephrase_coverage_is_rephrased_over_eligible(fb_fixture):
-    kws = [Keyword("pytest", 2.0, True), Keyword("docker", 2.0, True)]
-    bidx = tailor.bullet_index(fb_fixture)
-    ctx = {"experience": [{"bullet_ids": ["a3", "a4"], "bullets": [bidx["a3"]["text"], bidx["a4"]["text"]]}],
-           "projects": [{"bullet_ids": ["p1c"], "bullets": [bidx["p1c"]["text"]]}]}
-    # a3: terms say docker, text says Docker literally -> not eligible. a4: terms say pytest, text does not -> eligible.
-    # p1c: terms say pytest, text says "pytest suite" -> not eligible.
-    cov = tailor.rephrase_coverage(ctx, fb_fixture, kws)
-    assert cov == {"eligible": 1, "rephrased": 0, "ratio": 0.0}
-    ctx["experience"][0]["bullets"][1] = "Wrote a three-tier pytest framework across 8 files."
-    assert tailor.rephrase_coverage(ctx, fb_fixture, kws) == {"eligible": 1, "rephrased": 1, "ratio": 1.0}
-
-
-def test_coverage_is_none_when_nothing_is_eligible(fb_fixture):
-    ctx = {"experience": [{"bullet_ids": ["a1"], "bullets": [tailor.bullet_index(fb_fixture)["a1"]["text"]]}],
-           "projects": []}
-    assert tailor.rephrase_coverage(ctx, fb_fixture, [Keyword("zzz", 1.0, False)])["ratio"] is None
-
-
-def test_report_carries_coverage_per_attempt_and_for_the_chosen_one(settings, fb_fixture, job):
-    rep = tailor.tailor_job(job, fb_fixture, MockLLM(), settings, settings.path("outputs"))
-    cov = rep["attempts"][0]["rephrase_coverage"]
-    assert set(cov) == {"eligible", "rephrased", "ratio"}
-    assert rep["rephrase_coverage"] == next(a for a in rep["attempts"]
-                                            if a["attempt"] == rep["final"]["chosen_attempt"])["rephrase_coverage"]
-
-
-# ================================================================== 4. profile retry
-BAD_PROFILE = "AI engineer with 5 years of production experience in Kubernetes."
-GOOD_PROFILE = "Data Scientist with production LLM agent work on a clinical research platform."
-
-
-def _assemble_with(fb, profile, retry):
-    prop = {"profile": profile, "experience": {}, "projects": [], "rephrase": {}}
-    return tailor._assemble(fb, prop, [], "Data Scientist", retry)
-
-
-def test_a_profile_that_fails_the_guard_is_retried_once_with_the_violations(fb_fixture):
-    seen = []
-
-    def retry(previous, problems, source):
-        seen.append((previous, problems, source))
-        return GOOD_PROFILE
-
-    ctx, viol, warn = _assemble_with(fb_fixture, BAD_PROFILE, retry)
-    assert ctx["profile"] == GOOD_PROFILE and len(seen) == 1
-    assert seen[0][0] == BAD_PROFILE and any("kubernetes" in p.lower() for p in seen[0][1])
-    assert any("years-of-experience" in p for p in seen[0][1])
-    assert any("rewritten once" in w for w in warn) and any(v.startswith("profile:") for v in viol)
-
-
-@pytest.mark.parametrize("retry", [lambda p, pr, s: BAD_PROFILE, lambda p, pr, s: "",
-                                   lambda p, pr, s: (_ for _ in ()).throw(RuntimeError("llm down"))])
-def test_profile_facts_are_used_only_after_the_retry_also_fails(fb_fixture, retry):
-    ctx, viol, warn = _assemble_with(fb_fixture, BAD_PROFILE, retry)
-    assert ctx["profile"] == ". ".join(fb_fixture["profile_facts"][:3]) + "."
-    assert any("fell back to profile_facts" in w for w in warn)
-
-
-def test_a_good_profile_is_never_retried(fb_fixture):
-    calls = []
-    ctx, viol, warn = _assemble_with(fb_fixture, GOOD_PROFILE, lambda *a: calls.append(a) or "x")
-    assert ctx["profile"] == GOOD_PROFILE and calls == [] and not any("profile" in w for w in warn)
-
-
-def test_without_a_retrier_the_old_fallback_still_applies(fb_fixture):
-    ctx, _, warn = _assemble_with(fb_fixture, BAD_PROFILE, None)
-    assert ctx["profile"].startswith(fb_fixture["profile_facts"][0])
-
-
-def test_the_retry_call_sees_the_violation_message_in_the_loop(settings, fb_fixture, job, spy_llm):
-    def tailor_cv(ctx):
-        out = MockLLM().json("tailor_cv", "", "", ctx)
-        out["profile"] = BAD_PROFILE
-        return out
-
-    llm = spy_llm({"tailor_cv": tailor_cv, "tailor_profile": lambda ctx: {"profile": GOOD_PROFILE}})
-    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    retry = next(s for s in llm.sent if s["task"] == "tailor_profile")
-    assert "PROBLEMS FOUND:" in retry["user"] and "years-of-experience" in retry["user"]
-    assert BAD_PROFILE in retry["user"] and "SOURCE FACTS:" in retry["user"]
-    assert rep["context"]["profile"] == GOOD_PROFILE
-    assert any("rewritten once" in w for w in rep["attempts"][0]["warnings"])
-    assert [s["task"] for s in llm.sent].count("tailor_profile") == len(rep["attempts"])    # one retry per attempt
-
+# (3. rephrase coverage -> test_rephrase.py, 4. profile -> test_profile_source.py)
 
 # ================================================================== 5. letter
 EV_TEAM = "Contributed to a team of five clustering airline customer feedback with SBERT embeddings and K-Means."
@@ -453,12 +350,7 @@ def test_normalise_json_reaches_every_string():
 def test_llm_text_is_normalised_before_scoring_and_rendering(settings, fb_fixture, job):
     dirty = "Data Scientist with LLM agent work, it’s real work."
 
-    def tailor_cv(ctx):
-        out = MockLLM().json("tailor_cv", "", "", ctx)
-        out["profile"] = dirty
-        return out
-
-    llm = MockLLM({"tailor_cv": tailor_cv,
+    llm = MockLLM({"tailor_profile": lambda ctx: {"facts": ["F1", "F2"], "profile": dirty},
                    "extract_keywords": lambda ctx: {"required": [], "preferred": [], "team": "",
                                                     "company_hook": "Northwind’s tools help “oncology” teams."},
                    "cover_letter": lambda ctx: {"paragraphs": ["It’s the work I do.", "I built a non‑linear agent.",

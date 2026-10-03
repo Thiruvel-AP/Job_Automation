@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-ATTEMPT_TASKS = ("tailor_cv", "tailor_profile")      # named by tailoring attempt: tailor_cv-2.json
+ATTEMPT_TASKS = ("rephrase_bullets",)      # named by tailoring attempt: rephrase_bullets-2.json
 
 
 class RawRecorder:

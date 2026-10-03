@@ -11,8 +11,8 @@ from careerops.llm import MockLLM
 from careerops.reporting.excel import export
 from careerops.tailoring import tailor
 from careerops.tailoring.scorer import Keyword
-from careerops.tailoring.shapes import proposal_usable
-from careerops.tailoring.tailor import clean_proposal, regenerate_letter
+from careerops.tailoring.shapes import clean_proposal, proposal_usable
+from careerops.tailoring.tailor import regenerate_letter
 
 CHATTERMILL = (Path(__file__).resolve().parents[1] / "fixtures" / "tailoring" / "jd_chattermill.txt").read_text(
     encoding="utf-8") + "\nProficiency in PyTorch or TensorFlow.\n"
@@ -83,24 +83,10 @@ def test_garbage_never_raises_and_always_has_the_expected_shape(prop):
     assert all(isinstance(k, str) and isinstance(v, str) for k, v in out["rephrase"].items())
 
 
-def test_assemble_gives_the_same_cv_for_object_shaped_and_id_shaped_proposals(fb_fixture):
-    ids = {"profile": "", "experience": {"ex1": ["a1", "a3"], "ex2": ["b1"]}, "projects": ["p1", "p3"], "rephrase": {}}
-    canon = tailor.bullet_index(fb_fixture)["a1"]["text"]            # an object that just echoes the bullet text
-    objs = {"profile": "", "experience": {"ex1": [{"id": "a1", "text": canon}, {"id": "a3"}], "ex2": [{"id": "b1"}]},
-            "projects": [{"id": "p1"}, {"id": "p3"}], "rephrase": {}}
-    a, _, wa = tailor._assemble(fb_fixture, ids, [], "Data Scientist")
-    b, _, wb = tailor._assemble(fb_fixture, objs, [], "Data Scientist")
-    assert a["experience"] == b["experience"] and a["projects"] == b["projects"]
-    assert not any("proposal" in w for w in wa) and any("proposal: experience ex1" in w for w in wb)
-
-
 # ---------------------------------------------------------------- the whole pipeline with an any-of group
-def _object_shaped(ctx):
-    out = MockLLM().json("tailor_cv", "", "", ctx)
-    out["experience"] = {e: [{"id": i, "text": "ignored"} for i in ids] for e, ids in out["experience"].items()}
-    out["projects"] = [{"id": p, "name": "ignored"} for p in out["projects"]]
-    out["rephrase"] = [{"id": i, "text": t} for i, t in out["rephrase"].items()]
-    return out
+def _list_shaped(ctx):
+    """A rephrase answer in the list-of-objects shape, wrapped in a key, rewording nothing."""
+    return {"rephrased": [{"id": b["id"], "text": b["text"]} for b in ctx["bullets"]]}
 
 
 def _anyof_keywords(ctx):
@@ -111,18 +97,18 @@ def _anyof_keywords(ctx):
 
 @pytest.fixture
 def chattermill_run(settings, fb_fixture, job, spy_llm):
-    llm = spy_llm({"tailor_cv": _object_shaped, "extract_keywords": _anyof_keywords})
+    llm = spy_llm({"rephrase_bullets": _list_shaped, "extract_keywords": _anyof_keywords})
     j = {**job, "company": "Chattermill", "title": "Data Scientist", "description": CHATTERMILL}
     return tailor.tailor_job(j, fb_fixture, llm, settings, settings.path("outputs")), llm, j
 
 
-def test_chattermill_with_any_of_groups_and_object_shaped_answers_tailors_without_crashing(chattermill_run):
+def test_chattermill_with_any_of_groups_and_list_shaped_answers_tailors_without_crashing(chattermill_run):
     rep, llm, _ = chattermill_run
     assert any(set(["PyTorch", "TensorFlow"]) <= set(k["alts"] + [k["term"]]) or
                set(["pytorch", "tensorflow"]) <= {w.lower() for w in k["alts"] + [k["term"]]}
                for k in rep["keywords"])                                    # the any-of group survived merging
     assert rep["final"]["pages"] == 1 and rep["letter"]["pages"] == 1
-    assert any("proposal: experience" in w for w in rep["attempts"][0]["warnings"])        # the shape was noted
+    assert "rephrase_bullets: answer was wrapped in 'rephrased'; read it" in rep["attempts"][0]["warnings"]
 
 
 def test_groups_and_plain_keywords_are_json_everywhere_and_round_trip(chattermill_run):

@@ -89,19 +89,6 @@ def test_letter_header_shows_address_and_falls_back_to_location(fb_fixture, tmp_
 
 
 # ---------------------------------------------------------------- the real loop: shrink to one page
-def _select_everything(ctx):
-    return {"profile": "Data Scientist with LLM agent and forecasting work.",
-            "experience": {e["id"]: [b["id"] for b in e["bullets"]] for e in ctx["experience"]},
-            "projects": [p["id"] for p in ctx["projects"]], "rephrase": {}}
-
-
-@pytest.fixture
-def one_page_run(settings, fb_fixture, job):
-    settings.raw["llm"]["top_bullets"] = 999          # the model sees every bullet, so it can select all of them
-    rep = tailor_job(job, fb_fixture, MockLLM({"tailor_cv": _select_everything}), settings, settings.path("outputs"))
-    return rep, pdf_text(Path(rep["cv_pdf"]))
-
-
 def test_scoring_max_pages_is_one(settings):
     assert settings["scoring"]["max_pages"] == 1
 

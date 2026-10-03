@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from careerops.llm import MockLLM
 from careerops.tailoring import tailor
 from careerops.tailoring.render import RenderError
 
@@ -35,22 +34,21 @@ def test_failed_rerun_leaves_the_earlier_successful_folder_untouched(settings, f
     assert sorted(p.name for p in out.parent.iterdir()) == [out.name, out.name + ".failed"]   # no .partial / .old
 
 
-def test_llm_failure_on_a_later_attempt_also_leaves_it_untouched(settings, fb_fixture, job, spy_llm):
+def test_a_failure_in_a_later_render_also_leaves_it_untouched(settings, fb_fixture, job, spy_llm, monkeypatch):
     rep = _run(settings, fb_fixture, job, spy_llm())
     out = Path(rep["out_dir"])
     (out / "report.json").write_text("OLD REPORT", encoding="utf-8")
-    calls = []
+    real, calls = tailor.render_cv, []
 
-    def flaky(ctx):
+    def flaky(*a, **k):
         calls.append(1)
         if len(calls) > 1:
-            raise RuntimeError("provider down")
-        return MockLLM().json("tailor_cv", "", "", ctx)
+            raise RenderError("xelatex died on the second render")
+        return real(*a, **k)
 
-    # attempt 1 renders; a failing attempt 2 (or the first call raising) must not touch the finished folder
-    settings.raw["scoring"]["band"] = [0.0, 0.001]              # always above the band, so the loop asks for attempt 2
-    with pytest.raises(RuntimeError, match="provider down"):
-        _run(settings, fb_fixture, job, spy_llm({"tailor_cv": flaky}))
+    monkeypatch.setattr(tailor, "render_cv", flaky)             # the first render works, a later one (shrink / final) dies
+    with pytest.raises(RenderError, match="second render"):
+        _run(settings, fb_fixture, job, spy_llm())
     assert (out / "report.json").read_text(encoding="utf-8") == "OLD REPORT"
     assert sorted(p.name for p in out.parent.iterdir()) == [out.name, out.name + ".failed"]
 

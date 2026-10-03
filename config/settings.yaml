@@ -146,16 +146,13 @@ llm:
   # which entry to raise. `default` covers any task not listed.
   max_tokens:
     extract_keywords: 2000
-    tailor_cv: 3000
+    rephrase_bullets: 1200     # <= 5 reworded bullets per call; a reasoning model also spends some of it thinking
     cover_letter: 1500
     tailor_profile: 600
     default: 1000
-  # Ceiling for one call, estimated input + max_tokens: Groq's 8000 TPM minus a margin for the estimate's error.
-  # The tailor prompt sends only the most relevant fact-bank bullets to stay under it (tailoring/budget.py).
-  max_call_tokens: 7500
-  top_bullets: 14             # bullets (by weighted keyword overlap) the tailor prompt carries, plus the best of each experience
-  # Estimated tokens for tailoring one job (keywords + up to 3 CV attempts + letter). Before each job the router checks
-  # today's tokens + this against every provider's tpd; none left -> use the next provider, else stop the run.
+  # Estimated tokens for tailoring one job (keywords + profile + rephrase batches + letter; a below-band retry adds
+  # batches). Before each job the router checks today's tokens + this against every provider's tpd; none left -> use
+  # the next provider, else stop the run.
   job_token_estimate: 20000
   temperature: 0.3
   timeout_s: 120

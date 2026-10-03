@@ -275,28 +275,28 @@ def test_defaults_are_8000_tpm_and_30_rpm_and_null_means_unlimited(settings, db)
 
 def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
     llm = settings["llm"]
-    assert llm["max_tokens"] == {"extract_keywords": 2000, "tailor_cv": 3000, "cover_letter": 1500, "tailor_profile": 600,
-                              "default": 1000}
+    assert llm["max_tokens"] == {"extract_keywords": 2000, "rephrase_bullets": 1200, "cover_letter": 1500,
+                              "tailor_profile": 600, "default": 1000}
     groq = next(p for p in llm["providers"] if p["name"] == "groq")
     assert (groq["tpm"], groq["rpm"], groq["tpd"]) == (8000, 30, 200000)
     assert (groq["reasoning_effort"], groq["include_reasoning"]) == ("low", False)
-    assert (llm["max_call_tokens"], llm["job_token_estimate"]) == (7500, 20000)
+    assert llm["job_token_estimate"] == 20000
 
 
 # ---------------------------------------------------------------- 7. max_tokens per task and usage per call
 def test_each_task_sends_its_own_max_tokens(settings, db, server, fake_time):
     _S.script["/p"] = [_ok()]
     r = _router(settings, db, server, "p")
-    for task in ("extract_keywords", "tailor_cv", "cover_letter", "something_else"):
+    for task in ("extract_keywords", "rephrase_bullets", "cover_letter", "something_else"):
         r.json(task, "s", "u")
-    assert [b["max_tokens"] for b in _hits("p")] == [2000, 3000, 1500, 1000]
+    assert [b["max_tokens"] for b in _hits("p")] == [2000, 1200, 1500, 1000]
 
 
 def test_max_tokens_falls_back_to_a_built_in_default_when_settings_have_none(settings, db, server, fake_time):
     _S.script["/p"] = [_ok()]
     del settings.raw["llm"]["max_tokens"]
     r = _router(settings, db, server, "p")
-    r.json("tailor_cv", "s", "u")
+    r.json("rephrase_bullets", "s", "u")
     assert _hits("p")[0]["max_tokens"] == 1000
 
 
@@ -304,8 +304,8 @@ def test_actual_usage_is_recorded_per_call_and_counted_against_tpd(settings, db,
     use = {"prompt_tokens": 120, "completion_tokens": 30, "total_tokens": 150}
     _S.script["/p"] = [_ok(usage=use)]
     r = _router(settings, db, server, "p", tpd=250)
-    r.json("tailor_cv", "s", "u")
-    assert r.usage == [{"task": "tailor_cv", "provider": "p", "model": "served-model", "max_tokens": 3000,
+    r.json("rephrase_bullets", "s", "u")
+    assert r.usage == [{"task": "rephrase_bullets", "provider": "p", "model": "served-model", "max_tokens": 1200,
                         "est_input_tokens": 1, "prompt_tokens": 120, "completion_tokens": 30, "reasoning_tokens": None, "total_tokens": 150,
                         "finish_reason": "stop"}]
     assert db.llm_tokens_today("p") == 150 and r.providers[0].available()
@@ -379,7 +379,7 @@ def test_reasoning_tokens_are_recorded_when_the_provider_reports_them(settings, 
            "completion_tokens_details": {"reasoning_tokens": 350}}
     _S.script["/p"] = [_ok(usage=use)]
     r = _router(settings, db, server, "p")
-    r.json("tailor_cv", "s", "u")
+    r.json("rephrase_bullets", "s", "u")
     assert r.usage[0]["reasoning_tokens"] == 350 and r.usage[0]["completion_tokens"] == 400
 
 
@@ -476,8 +476,8 @@ def test_the_router_keeps_the_raw_reply_of_an_answer_that_is_not_valid_json(sett
     _S.script["/p"] = [_ok(content="Sure! Here is the CV: {not really json")]
     r = _router(settings, db, server, "p")
     with pytest.raises(LLMError):
-        r.json("tailor_cv", "s", "u")
+        r.json("rephrase_bullets", "s", "u")
     assert r.last_raw == "Sure! Here is the CV: {not really json"
     _S.script["/p"] = [_ok(content='{"a": 1}')]
-    r.json("tailor_cv", "s", "u")
+    r.json("rephrase_bullets", "s", "u")
     assert r.last_raw == '{"a": 1}'
