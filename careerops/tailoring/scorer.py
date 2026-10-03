@@ -92,9 +92,28 @@ def ceiling(fact_text: str, keywords: list[Keyword]) -> tuple[float, list[str]]:
 
 
 # ---------------------------------------------------------------- keyword extraction (no LLM)
-def load_taxonomy() -> list[str]:
+def _taxonomy_rows() -> list[tuple[str, str]]:
+    """(term, category) per taxonomy line; `term | category`, category "" when untagged (a broad skill)."""
     p = ROOT / "config" / "taxonomy.txt"
-    return [l.strip() for l in p.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+    rows = []
+    for l in p.read_text(encoding="utf-8").splitlines():
+        if l.strip() and not l.startswith("#"):
+            term, _, cat = l.partition("|")
+            rows.append((term.strip(), cat.strip().lower()))
+    return rows
+
+
+def load_taxonomy() -> list[str]:
+    return [t for t, _ in _taxonomy_rows()]
+
+
+# categories a candidate can honestly say they have not used; broad skills (statistics, research, ...) never qualify
+GAP_CATEGORIES = frozenset({"tool", "platform", "language", "framework"})
+
+
+def gap_terms() -> set[str]:
+    """norm_literal'd taxonomy terms whose category lets them be named as a gap in the cover letter."""
+    return {norm_literal(t) for t, c in _taxonomy_rows() if c in GAP_CATEGORIES}
 
 
 # Section headings, matched on norm_literal text (lower-case, straight apostrophes). First kind that matches wins:

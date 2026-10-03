@@ -1,0 +1,15 @@
+AI Engineer
+Chattermill
+
+🦸‍♀️ The Role 🦸‍♀️
+You will build LLM features that turn customer feedback into insight.
+
+What you’ll need:
+Strong Python and SQL
+Solid statistical modelling and causal inference skills, with clear communication of results to stakeholders
+
+➕It would be a bonus if you:
+Have experience with LangChain
+
+Our Perks
+Optional private healthcare plan

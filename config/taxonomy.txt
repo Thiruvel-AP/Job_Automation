@@ -1,26 +1,29 @@
 # One ATS keyword per line. Used by the no-LLM keyword extractor and to sanity-check LLM keywords.
 # Single letters (R, Go) are left out on purpose: they false-match too easily. Add your own freely.
-python
-sql
-pyspark
-spark
-pandas
-numpy
-scikit-learn
-sklearn
-pytorch
-tensorflow
-keras
-xgboost
-lightgbm
-hugging face
-transformers
-langchain
-langgraph
-llamaindex
-openai
-aws bedrock
-bedrock
+# Optional `term | category`. Categories: language, framework, platform, tool (things you can truthfully say you
+# have not used). Untagged = a broad skill or domain (statistics, communication, research...). Only the four tagged
+# categories can become a cover-letter GAP; a broad skill is never reported as missing.
+python | language
+sql | language
+pyspark | framework
+spark | framework
+pandas | framework
+numpy | framework
+scikit-learn | framework
+sklearn | framework
+pytorch | framework
+tensorflow | framework
+keras | framework
+xgboost | framework
+lightgbm | framework
+hugging face | framework
+transformers | framework
+langchain | framework
+langgraph | framework
+llamaindex | framework
+openai | platform
+aws bedrock | platform
+bedrock | platform
 llm
 llms
 large language models
@@ -40,7 +43,7 @@ ai agents
 multi-agent
 tool calling
 function calling
-mcp
+mcp | framework
 evaluation
 llm evaluation
 guardrails
@@ -80,41 +83,41 @@ mlops
 model deployment
 model monitoring
 ci/cd
-docker
-kubernetes
-terraform
-aws
-gcp
-azure
-lambda
-s3
-sagemaker
-vertex ai
-databricks
-snowflake
-bigquery
-dbt
-airflow
-postgresql
-mongodb
-fastapi
-flask
+docker | tool
+kubernetes | tool
+terraform | tool
+aws | platform
+gcp | platform
+azure | platform
+lambda | platform
+s3 | platform
+sagemaker | platform
+vertex ai | platform
+databricks | platform
+snowflake | platform
+bigquery | platform
+dbt | tool
+airflow | tool
+postgresql | platform
+mongodb | platform
+fastapi | framework
+flask | framework
 rest api
 apis
 microservices
-git
-github actions
-pytest
+git | tool
+github actions | tool
+pytest | framework
 testing
-linux
-react
-typescript
-javascript
-tableau
-power bi
-looker
-streamlit
-mlflow
+linux | platform
+react | framework
+typescript | language
+javascript | language
+tableau | tool
+power bi | tool
+looker | tool
+streamlit | framework
+mlflow | tool
 production
 scalable
 stakeholders

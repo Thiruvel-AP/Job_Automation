@@ -13,13 +13,16 @@ from ..discovery import gates
 from . import prompts as P
 from .faithfulness import check, deny_hits, numbers
 from .render import page_count, pdf_text, render_cv, render_letter
-from .scorer import Keyword, ceiling, in_band, merge_keywords, norm_literal, score, taxonomy_keywords
+from .scorer import (Keyword, _contains, ceiling, gap_terms, in_band, merge_keywords, norm_literal, score,
+                     taxonomy_keywords)
 
 FALLBACK_MARK = "used fallback letter"
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
 BANNED_CLOSERS = re.compile(r"look forward to hearing from you", re.I)
 # a deny-listed tool may be named in the letter only to say the candidate lacks it
 LACK_WORDS = re.compile(r"\b(not|no|never|yet|without|new to|limited)\b|n't", re.I)
+# the letter may say the candidate lacks something only if it is in GAPS (matched on norm_literal text)
+LACK_CLAIM = re.compile(r"\b(have not|haven't|never used|no experience)\b")
 
 
 # ------------------------------------------------------------------ fact bank helpers
@@ -195,9 +198,12 @@ def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
 
 # ------------------------------------------------------------------ 3. cover letter
 def required_gaps(gaps: list[str], kws: list[Keyword]) -> list[str]:
-    """Required JD keywords the fact bank has no evidence for (the letter may name one of them, plainly)."""
+    """GAPS for the letter: required JD keywords the fact bank has no evidence for, and only tools, platforms,
+    languages and frameworks (taxonomy category). A broad skill (statistics, communication, research) is never a gap:
+    its literal term being absent from the fact bank says nothing about whether the candidate has the skill."""
     required = {k.term for k in kws if k.required}
-    return [g for g in gaps if g in required]
+    eligible = gap_terms()
+    return [g for g in gaps if g in required and norm_literal(g) in eligible]
 
 
 def letter_greeting(settings, company: str, team: str = "") -> str:
@@ -219,6 +225,22 @@ def _deny_problems(text: str, deny: list[str], gaps: list[str]) -> list[str]:
         if d in allowed and all(LACK_WORDS.search(s) for s in sentences if deny_hits(s, [d])):
             continue
         out.append(f"deny-listed '{d}'")
+    return out
+
+
+def _lack_problems(text: str, gaps: list[str]) -> list[str]:
+    """Sentences saying the candidate lacks something. Each must name a term in GAPS and no other tool, platform,
+    language or framework; with GAPS empty every such sentence is a problem."""
+    allowed = [norm_literal(g) for g in gaps]
+    named_elsewhere = gap_terms() - set(allowed)
+    out = []
+    for s in re.split(r"(?<=[.!?])\s+", text):
+        n = norm_literal(s)
+        if not LACK_CLAIM.search(n):
+            continue
+        if any(_contains(n, g) for g in allowed) and not any(_contains(n, t) for t in named_elsewhere):
+            continue
+        out.append(f"claims a gap not in GAPS: '{s.strip()[:60]}'")
     return out
 
 
@@ -258,6 +280,7 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
         if BANNED_CLOSERS.search(text):
             problems.append("banned closer")
         problems += _deny_problems(text, deny, gaps)
+        problems += _lack_problems(text, gaps)
         extra = numbers(text) - numbers(source)
         if extra:
             problems.append(f"new numbers {sorted(extra)}")

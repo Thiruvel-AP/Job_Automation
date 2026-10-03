@@ -1,9 +1,15 @@
 """CV-2: letter greeting/sign-off from settings, the team name, and the optional gap sentence."""
+import re
 from pathlib import Path
+
+import pytest
 
 from careerops.tailoring import prompts as P
 from careerops.tailoring.render import pdf_text
-from careerops.tailoring.tailor import letter_greeting, regenerate_letter, tailor_job
+from careerops.tailoring.scorer import Keyword, gap_terms, norm_literal
+from careerops.tailoring.tailor import _lack_problems, letter_greeting, regenerate_letter, required_gaps, tailor_job
+
+FIX = Path(__file__).resolve().parents[1] / "fixtures" / "tailoring"
 
 JD_NO_GAP = "About the role\nWe build data tools.\n\nRequirements\n- Python\n- LangChain\n"
 JD_GAP = "About the role\nWe build data tools.\n\nRequirements\n- Python\n- Kubernetes\n"
@@ -108,6 +114,76 @@ def test_deny_listed_term_that_is_not_a_gap_is_still_blocked(settings, fb_fixtur
     rep, _ = _run(settings, fb_fixture, job, spy_llm(sneaky), JD_GAP)
     assert rep["letter"]["status"] == "fallback"
     assert any("deny-listed 'terraform'" in p for p in rep["letter"]["problems"])
+
+
+# ---------------------------------------------------------------- gaps are tools, not broad skills (CV-2 item 5)
+CHATTERMILL = (FIX / "jd_chattermill.txt").read_text(encoding="utf-8")
+LIE = {"cover_letter": lambda ctx: {"paragraphs": [
+    "Chattermill turns feedback into insight, which is the work I do.", "I built a tool-calling LLM agent.",
+    "I have not used statistics in production, but I learn quickly.", "Could we talk for twenty minutes?"]}}
+
+
+def test_chattermill_broad_skills_are_not_gaps_so_no_gap_sentence(settings, fb_fixture, job, spy_llm):
+    llm = spy_llm()
+    rep, _ = _run(settings, fb_fixture, job, llm, CHATTERMILL)
+    # the literal terms are missing from the fact bank (the old behaviour called these genuine gaps) ...
+    assert {"statistical modelling", "causal inference"} <= {g.lower() for g in rep["genuine_gaps"]}
+    # ... but they are broad skills, so nothing reaches the letter
+    assert _letter_ctx(llm)["gaps"] == []
+    assert "(none)" in llm.sent[-1]["user"]
+    text = " ".join(rep["letter"]["paragraphs"]).lower()
+    assert not re.search(r"have not|haven't|never used|no experience", text)
+    assert rep["letter"]["status"] == "ok"
+
+
+def test_a_letter_that_says_the_candidate_lacks_statistics_is_rejected(settings, fb_fixture, job, spy_llm):
+    rep, _ = _run(settings, fb_fixture, job, spy_llm(LIE), CHATTERMILL)
+    assert rep["letter"]["status"] == "fallback"
+    assert any("claims a gap not in GAPS" in p and "statistics" in p for p in rep["letter"]["problems"])
+    assert "statistics" not in " ".join(rep["letter"]["paragraphs"]).lower()
+
+
+def test_required_gaps_keeps_only_tools_platforms_languages_frameworks():
+    kws = [Keyword(t, 2.0, True) for t in ("kubernetes", "statistical modelling", "communication", "azure",
+                                           "LLM agents")] + [Keyword("terraform", 1.0, False)]
+    gaps = ["kubernetes", "statistical modelling", "communication", "azure", "LLM agents", "terraform"]
+    assert required_gaps(gaps, kws) == ["kubernetes", "azure"]       # not preferred, not broad, not an LLM-only term
+
+
+@pytest.mark.parametrize("term, cat", [("kubernetes", "tool"), ("azure", "platform"), ("python", "language"),
+                                       ("langchain", "framework")])
+def test_taxonomy_tags_the_gap_eligible_terms(term, cat):
+    assert norm_literal(term) in gap_terms(), cat
+
+
+@pytest.mark.parametrize("term", ["statistics", "communication", "research", "leadership", "machine learning",
+                                  "stakeholders"])
+def test_broad_skills_are_not_gap_eligible(term):
+    assert term not in gap_terms()
+
+
+@pytest.mark.parametrize("sentence", [
+    "I have not used Kubernetes in production yet.",
+    "I haven’t used Kubernetes in production yet.",                  # curly apostrophe
+    "I have never used Kubernetes, but I would pick it up quickly.",
+])
+def test_lack_sentence_naming_a_gap_is_allowed(sentence):
+    assert _lack_problems(sentence, ["kubernetes"]) == []
+
+
+@pytest.mark.parametrize("sentence, gaps", [
+    ("I have not used statistics in production.", []),
+    ("I have not used statistics in production.", ["kubernetes"]),
+    ("I have no experience of research methods.", ["kubernetes"]),
+    ("I have not used Kubernetes or Azure yet.", ["kubernetes"]),    # names a second tool that is not a gap
+    ("I have never used Kubernetes.", []),
+])
+def test_lack_sentence_not_in_gaps_is_rejected(sentence, gaps):
+    assert len(_lack_problems(sentence, gaps)) == 1
+
+
+def test_sentences_without_a_lack_claim_are_never_flagged():
+    assert _lack_problems("I used Azure and statistics daily. Could we talk?", []) == []
 
 
 # ---------------------------------------------------------------- prompt text

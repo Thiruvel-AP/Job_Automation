@@ -73,6 +73,8 @@ Rules:
 - OPTIONAL, and only if GAPS is not "(none)": ONE sentence (<= 25 words) naming one tool from GAPS that the candidate
   lacks, stated plainly ("I have not used X in production yet, ...") with no apology and no excuses.
   If GAPS is "(none)", write no such sentence.
+- NEVER say the candidate lacks, has not used, or has no experience of anything unless it is named in GAPS.
+  Not having a skill spelled out in EVIDENCE is not a gap (coursework and general skills count as experience).
 - Last paragraph: a call to action phrased as a QUESTION, asking for a short call and naming what the candidate
   would walk them through. NEVER "I look forward to hearing from you".
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""
@@ -80,6 +82,6 @@ Rules:
 LETTER_USER = """ROLE: {title} at {company}
 COMPANY HOOK (from JD): {company_hook}
 JD KEYWORDS: {keywords}
-GAPS (required by the JD, absent from the fact bank): {gaps}
+GAPS (required tools/platforms/languages/frameworks, absent from the fact bank): {gaps}
 EVIDENCE:
 {evidence}"""
