@@ -316,6 +316,14 @@ def _names(fb: dict, settings) -> tuple[str, str]:
     return (file_stem(fb["identity"]["name"], "CV", style), file_stem(fb["identity"]["name"], "Cover Letter", style))
 
 
+def usage_since(llm, start: int) -> dict:
+    """Token usage of the LLM calls made since `start` (an index into llm.usage): the calls and their sums.
+    Empty for a model that records none (MockLLM)."""
+    calls = list(getattr(llm, "usage", [])[start:])
+    total = {k: sum(c.get(k) or 0 for c in calls) for k in ("prompt_tokens", "completion_tokens", "total_tokens")}
+    return {"calls": calls, **total}
+
+
 def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     """Re-draft the letter for an already tailored job (review's 'l'). Keeps the file name; rewrites report.json."""
     job = dict(job)
@@ -323,10 +331,14 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     kws = [Keyword(**k) for k in rep["keywords"]]
     chosen = [b for sec in ("experience", "projects") for e in rep["context"][sec] for b in e["bullets"]]
     out_dir = Path(rep["out_dir"])
+    usage_from = len(getattr(llm, "usage", []))
     pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", chosen, llm, settings, out_dir,
                                Path(rep["letter_pdf"]).stem, rep.get("team") or "",
                                required_gaps(rep.get("genuine_gaps") or [], kws))
     rep["letter"], rep["letter_pdf"] = letter, str(pdf)
+    new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
+    rep["llm_usage"] = {"calls": (old.get("calls") or []) + new["calls"],
+                        **{k: (old.get(k) or 0) + new[k] for k in ("prompt_tokens", "completion_tokens", "total_tokens")}}
     (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     return rep
 
@@ -358,6 +370,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
+    usage_from = len(getattr(llm, "usage", []))
     family, tier, headline, preferred = role_prior(job, fb, settings)
     kws, hook, team = analyse(job, llm, settings)
     ceil, gaps = ceiling(fact_text(fb), kws)
@@ -422,7 +435,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
                   "band": in_band(final_score.literal, band), "pages": page_count(pdf),
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
-        "letter": letter,
+        "letter": letter, "llm_usage": usage_since(llm, usage_from),
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name), "context": ctx,
     })
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")

@@ -112,3 +112,16 @@ sql> SELECT COUNT(*) FROM jobs
 sql> SELECT COUNT(*) FROM sponsors
 0
 ```
+
+## Incident 2026-10-03 — a `--mock` run overwrote a real tailored job
+
+`careerops run --mock --limit 1` (the "definition of done" smoke run in `.claude/CLAUDE.md`) uses the real
+`data/careerops.db` and `data/outputs/`; `--mock` swaps only the model. At 19:46 UTC it re-tailored
+`manual:09c87eab303e` (Chattermill | Data Scientist) with `MockLLM`: a `tailor` event with ceiling 1.0 (mock keywords =
+taxonomy only; the real run at 15:59 had ceiling 0.87), score 0.613, and every file in
+`data/outputs/Chattermill_Data_Scientist_09c87eab303e/` replaced by mock output. The 15:59 CV/letter/report.json are
+gone. The job row still carries the mock ceiling/score/letter_score/attempts, because the later real-run failure
+(20:06 UTC, Groq 400 + 429) only set `status='error'`.
+
+Not a test: tests use `tmp_path` and the new guard in `tests/conftest.py` fails any test that opens a path under the real
+`data/`. To clear the mock values: reset the job to `triaged` and run a real `careerops tailor`.

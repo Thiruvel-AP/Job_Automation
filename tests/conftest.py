@@ -1,5 +1,8 @@
 import copy
+import os
 import shutil
+import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -11,6 +14,49 @@ from careerops.llm import MockLLM
 from careerops.tailoring.tailor import tailor_job
 
 FIX = Path(__file__).parent / "fixtures"
+
+# ---- guard: no test may open anything under the real data/ folder (careerops.db, outputs/, exports/ ...) ----------
+# A 2026-10-03 `careerops run --mock` against the real data/ overwrote a real tailored job (see docs/status.md); tests
+# must use tmp_path. An audit hook sees every open() / os.open() / sqlite3.connect(), including ones made in C.
+REAL_DATA = os.path.realpath(ROOT / "data")
+_guard = {"on": False, "hits": []}
+
+
+def _under_real_data(target) -> bool:
+    if isinstance(target, (bytes, str, os.PathLike)):
+        p = os.path.realpath(os.fsdecode(target))
+        return p == REAL_DATA or p.startswith(REAL_DATA + os.sep)
+    return False                                           # an int file descriptor, ":memory:" objects, None
+
+
+def _audit(event, args):
+    if _guard["on"] and event in ("open", "sqlite3.connect") and args and _under_real_data(args[0]):
+        _guard["hits"].append(f"{event}: {os.fsdecode(args[0])}")
+        raise PermissionError(f"test touched the real data/ folder ({event} {os.fsdecode(args[0])}); use tmp_path")
+
+
+sys.addaudithook(_audit)           # audit hooks cannot be removed; the flag above scopes it to running tests
+
+
+@pytest.fixture(autouse=True)
+def no_real_data():
+    """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
+    _guard["hits"].clear()
+    _guard["on"] = True
+    yield
+    _guard["on"] = False
+    hits, _guard["hits"] = list(_guard["hits"]), []
+    if hits:
+        pytest.fail("test opened the real data/ folder:\n  " + "\n  ".join(hits), pytrace=False)
+
+
+@contextmanager
+def real_data_hits():
+    """For the guard's own test: yields the list of hits and lets the probing test pass."""
+    try:
+        yield _guard["hits"]
+    finally:
+        _guard["hits"].clear()                              # expected hits: the probing test is not a failure
 
 
 def fixture(area: str, name: str) -> Path:

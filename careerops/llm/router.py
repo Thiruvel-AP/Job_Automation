@@ -19,7 +19,10 @@ from typing import Any
 import requests
 
 from ..db import DB
+from .pacing import Pacer, estimate_tokens
 
+DEFAULT_TPM, DEFAULT_RPM = 8000, 30     # used when a provider's config names no tpm / rpm (Groq free tier)
+DEFAULT_MAX_TOKENS = 1000               # completion cap for a task with no llm.max_tokens entry and no `default`
 BACKOFF_S = (2, 4, 8)      # waits before the 1st, 2nd and 3rd retry of a 429 that names no Retry-After
 BODY_MAX = 500             # chars of an error response body kept in messages and events; headers are never kept
 
@@ -32,6 +35,14 @@ class LLMError(RuntimeError):
 
 def _sleep(seconds: float) -> None:
     time.sleep(seconds)
+
+
+def _pace_sleep(seconds: float) -> None:      # separate from _sleep so tests can watch retries and pacing apart
+    time.sleep(seconds)
+
+
+def _clock() -> float:
+    return time.time()
 
 
 def extract_json(text: str) -> dict:
@@ -60,40 +71,60 @@ def retry_after_s(r: requests.Response) -> float | None:
 
 
 class Provider:
-    def __init__(self, cfg: dict, db: DB, temperature: float, timeout: int, max_wait: float = 60.0):
+    def __init__(self, cfg: dict, db: DB, temperature: float, timeout: int, max_wait: float = 60.0,
+                 max_tokens: dict | None = None):
         self.cfg, self.db, self.temperature, self.timeout, self.max_wait = cfg, db, temperature, timeout, max_wait
         self.name = cfg["name"]
-        self._last = 0.0
+        self.max_tokens = max_tokens or {}
+        # tpm/rpm default to Groq's free tier when the config names none; null/0 means no limit (e.g. local Ollama)
+        self.pacer = Pacer(cfg.get("tpm", DEFAULT_TPM), cfg.get("rpm", DEFAULT_RPM), clock=lambda: _clock())
         self.json_mode = bool(cfg.get("json_mode"))
         self.json_mode_rejected = False     # set when a 400 on response_format was cured by dropping it
         self.last_model: str | None = None  # model id the server reported in its last good response
+        self.last_usage: dict = {}          # provider-reported token usage and finish_reason of the last good response
 
     def available(self) -> bool:
         env = self.cfg.get("api_key_env")
         if env and not os.environ.get(env):
             return False
+        tpd = self.cfg.get("tpd")
+        if tpd and self.db.llm_tokens_today(self.name) >= tpd:
+            return False
         return self.db.llm_calls_today(self.name) < self.cfg.get("rpd", 10**9)
 
-    def _post(self, body: dict) -> requests.Response:
-        gap = 60.0 / max(self.cfg.get("rpm", 60), 1)
-        wait = self._last + gap - time.time()
+    def max_tokens_for(self, task: str) -> int:
+        return int(self.max_tokens.get(task) or self.max_tokens.get("default") or DEFAULT_MAX_TOKENS)
+
+    def _pace(self, cost: int) -> None:
+        """Sleep until the provider's token/request window admits `cost` tokens. A wait beyond max_wait (a spent daily
+        request budget) is not served: raise as a 429 so the router moves to the next provider."""
+        wait = self.pacer.wait_needed(cost)
+        if wait > self.max_wait:
+            msg = (f"{self.name}: pacing would wait {wait:.0f}s (more than llm.max_retry_wait_s={self.max_wait:.0f}) "
+                   f"before a ~{cost}-token call")
+            self.db.log("", "llm_error", {"provider": self.name, "status": 429, "body": msg})
+            raise LLMError(msg, 429)
         if wait > 0:
-            time.sleep(wait)
+            _pace_sleep(wait + 0.05)
+
+    def _post(self, body: dict, cost: int) -> requests.Response:
+        self._pace(cost)
         headers = {"Content-Type": "application/json"}
         env = self.cfg.get("api_key_env")
         if env:
             headers["Authorization"] = f"Bearer {os.environ[env]}"
-        self._last = time.time()
+        self.pacer.sent(cost)
         r = requests.post(f"{self.cfg['base_url'].rstrip('/')}/chat/completions",
                           headers=headers, json=body, timeout=self.timeout)
+        self.pacer.received(r.headers)
         self.db.llm_count(self.name)
         return r
 
-    def _send(self, body: dict) -> requests.Response:
+    def _send(self, body: dict, cost: int) -> requests.Response:
         """POST, retrying a 429 up to len(BACKOFF_S) times. A Retry-After longer than max_wait (a spent daily quota,
         say) is not waited for: the 429 is returned at once so the router can try the next provider."""
         for i in range(len(BACKOFF_S) + 1):
-            r = self._post(body)
+            r = self._post(body, cost)
             if r.status_code != 429 or i == len(BACKOFF_S):
                 return r
             wait = retry_after_s(r)
@@ -119,19 +150,22 @@ class Provider:
         self.db.log("", "llm_error", detail)
         return f"{self.name}: HTTP {r.status_code}: {body}"
 
-    def chat(self, system: str, user: str) -> str:
+    def chat(self, system: str, user: str, task: str = "", max_tokens: int | None = None) -> str:
+        cap = max_tokens or self.max_tokens_for(task)
         body: dict[str, Any] = {
             "model": self.cfg["model"],
             "temperature": self.temperature,
+            "max_tokens": cap,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         }
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
-        r = self._send(body)
+        cost = estimate_tokens(system, user) + cap            # what Groq admits the call against: input + max_tokens
+        r = self._send(body, cost)
         if r.status_code == 400 and "response_format" in body:
             self._record(r, "retrying without response_format")
             plain = {k: v for k, v in body.items() if k != "response_format"}
-            r = self._send(plain)
+            r = self._send(plain, cost)
             if r.ok:
                 try:
                     extract_json(r.json()["choices"][0]["message"]["content"])
@@ -143,6 +177,14 @@ class Provider:
             raise LLMError(self._record(r), r.status_code)
         data = r.json()
         self.last_model = data.get("model")
+        usage = data.get("usage") or {}
+        self.last_usage = {"max_tokens": cap, "est_input_tokens": cost - cap,
+                           "prompt_tokens": usage.get("prompt_tokens"),
+                           "completion_tokens": usage.get("completion_tokens"),
+                           "total_tokens": usage.get("total_tokens"),
+                           "finish_reason": data["choices"][0].get("finish_reason")}
+        if usage.get("total_tokens"):
+            self.db.llm_add_tokens(self.name, usage["total_tokens"])
         return data["choices"][0]["message"]["content"]
 
 
@@ -150,20 +192,29 @@ class Router:
     def __init__(self, settings, db: DB):
         c = settings["llm"]
         self.providers = [Provider(p, db, c.get("temperature", 0.3), c.get("timeout_s", 120),
-                                   c.get("max_retry_wait_s", 60)) for p in c["providers"]]
+                                   c.get("max_retry_wait_s", 60), c.get("max_tokens")) for p in c["providers"]]
+        self.usage: list[dict] = []     # one entry per answered call; tailor_job copies its slice into report.json
 
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         errors = []
         for p in self.providers:
             if not p.available():
-                errors.append(f"{p.name}: unavailable (no key or daily quota used)")
+                errors.append(f"{p.name}: unavailable (no key, daily request or token quota used)")
                 continue
             for attempt in range(2):
                 try:
-                    return extract_json(p.chat(system, user))
+                    text = p.chat(system, user, task)
+                    self.usage.append({"task": task, "provider": p.name, "model": p.last_model, **p.last_usage})
+                    try:
+                        return extract_json(text)
+                    except LLMError as e:
+                        if p.last_usage.get("finish_reason") == "length":
+                            raise LLMError(f"{p.name}: {task} output cut off at max_tokens={p.last_usage['max_tokens']}"
+                                           f" — raise llm.max_tokens.{task} in settings.yaml") from e
+                        raise
                 except (LLMError, requests.RequestException) as e:
                     errors.append(str(e))
-                    if getattr(e, "status", None) == 429:
-                        break          # quota — already retried with back-off, next provider
+                    if getattr(e, "status", None) == 429 or "output cut off" in str(e):
+                        break          # quota (already backed off) or a cap the same call would hit again: next provider
                     _sleep(2 * (attempt + 1))
         raise LLMError("all providers failed: " + " | ".join(errors))

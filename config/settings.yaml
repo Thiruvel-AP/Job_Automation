@@ -115,6 +115,10 @@ llm:
       base_url: https://api.groq.com/openai/v1
       api_key_env: GROQ_API_KEY
       model: openai/gpt-oss-20b    # check console.groq.com/docs/models — free-tier model list changes
+      # Limits the router paces itself to. Groq's x-ratelimit-* response headers override them while present; these are
+      # used before the first reply and when headers are missing. tpm and rpm default to 8000 and 30 if left out;
+      # null/0 = unlimited. tpd (tokens per day, from console.groq.com/settings/limits) is optional.
+      tpm: 8000
       rpm: 30
       rpd: 1000
       json_mode: true
@@ -122,9 +126,18 @@ llm:
       base_url: http://localhost:11434/v1
       api_key_env: null
       model: qwen2.5:7b-instruct   # ~4.7 GB Q4_K_M, fits the RTX 4060's 8 GB
+      tpm: null                    # local model: no token budget to pace
       rpm: 1000
       rpd: 1000000
       json_mode: true
+  # Completion cap per task. Groq admits a call against the token budget as input + max_tokens, so a tight cap lets
+  # more calls through per minute. A reasoning model spends part of it thinking; if a task is cut off the router says
+  # which entry to raise. `default` covers any task not listed.
+  max_tokens:
+    extract_keywords: 800
+    tailor_cv: 1800
+    cover_letter: 700
+    default: 1000
   temperature: 0.3
   timeout_s: 120
   # A 429 is retried after its Retry-After (else 2 s, 4 s, 8 s). A Retry-After longer than this (a spent daily quota)

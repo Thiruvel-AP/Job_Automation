@@ -92,6 +92,7 @@ COLUMNS = [
     ("jobs", "tier", "INTEGER"),       # M4b priority tier, 1 = highest
     ("jobs", "ceiling_pre", "REAL"),   # M4b honest ceiling at triage, taxonomy keywords only (no LLM)
     ("jobs", "application_dir", "TEXT"),  # A1 archive folder of the latest submission
+    ("llm_usage", "tokens", "INTEGER"),   # M5 provider-reported total tokens per day, for the tpd cap
 ]
 
 
@@ -183,7 +184,17 @@ class DB:
     def llm_count(self, provider: str) -> None:
         day = now()[:10]
         self.conn.execute(
-            "INSERT INTO llm_usage VALUES (?,?,1) ON CONFLICT(provider, day) DO UPDATE SET calls = calls + 1",
+            "INSERT INTO llm_usage (provider, day, calls) VALUES (?,?,1) ON CONFLICT(provider, day) DO UPDATE SET calls = calls + 1",
             (provider, day),
         )
         self.conn.commit()
+
+    def llm_tokens_today(self, provider: str) -> int:
+        day = now()[:10]
+        r = self.conn.execute("SELECT tokens FROM llm_usage WHERE provider=? AND day=?", (provider, day)).fetchone()
+        return (r[0] or 0) if r else 0
+
+    def llm_add_tokens(self, provider: str, tokens: int) -> None:
+        with self.conn:
+            self.conn.execute("UPDATE llm_usage SET tokens = COALESCE(tokens, 0) + ? WHERE provider=? AND day=?",
+                              (int(tokens), provider, now()[:10]))

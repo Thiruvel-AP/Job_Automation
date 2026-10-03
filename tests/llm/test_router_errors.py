@@ -53,10 +53,10 @@ def sleeps(monkeypatch):
     return waited
 
 
-def _router(settings, db, server, *names, json_mode=True):
+def _router(settings, db, server, *names, json_mode=True, **cfg):
     settings.raw["llm"]["providers"] = [
         {"name": n, "base_url": f"{server}/{n}", "api_key_env": "FAKE_KEY", "model": "m", "rpm": 60000, "rpd": 100,
-         "json_mode": json_mode} for n in names]
+         "tpm": 10**9, "json_mode": json_mode, **cfg} for n in names]
     return Router(settings, db)
 
 
@@ -188,3 +188,148 @@ def test_cli_llm_check_prints_no_key_and_exits_by_result(settings, db, server, s
     with pytest.raises(SystemExit) as e:
         cli.main(["llm-check"])
     assert e.value.code == 1                                               # no provider passed
+
+
+# ---------------------------------------------------------------- 6. pacing to the provider's limits
+@pytest.fixture
+def fake_time(monkeypatch):
+    """A clock that only moves when the router sleeps to pace itself."""
+    t = {"now": 1000.0, "slept": []}
+
+    def nap(s):
+        t["slept"].append(round(s, 3))
+        t["now"] += s
+
+    monkeypatch.setattr(router, "_clock", lambda: t["now"])
+    monkeypatch.setattr(router, "_pace_sleep", nap)
+    return t
+
+
+def _ok(headers=None, usage=None, content='{"ok": true}', finish="stop"):
+    body = {"choices": [{"message": {"content": content}, "finish_reason": finish}], "model": "served-model"}
+    if usage:
+        body["usage"] = usage
+    return (200, headers or {}, body)
+
+
+def test_waits_for_the_token_window_named_in_the_response_headers(settings, db, server, fake_time):
+    hdr = {"x-ratelimit-remaining-tokens": "100", "x-ratelimit-reset-tokens": "5.2s",
+           "x-ratelimit-limit-tokens": "8000", "x-ratelimit-remaining-requests": "900",
+           "x-ratelimit-reset-requests": "1m26.4s"}
+    _S.script["/p"] = [_ok(hdr)]
+    r = _router(settings, db, server, "p", tpm=8000)
+    r.json("t", "s", "u")
+    assert fake_time["slept"] == []                       # nothing known yet, and the first call fits
+    r.json("t", "s", "u")                                 # ~1000 tokens asked, 100 left, window resets in 5.2 s
+    assert fake_time["slept"] == [5.25] and len(_hits("p")) == 2
+    r.json("t", "s", "u")                                 # the response to the 2nd call re-armed the window
+    assert fake_time["slept"] == [5.25, 5.25]
+
+
+def test_no_wait_when_the_budget_covers_the_call(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok({"x-ratelimit-remaining-tokens": "7000", "x-ratelimit-reset-tokens": "9s"})]
+    r = _router(settings, db, server, "p", tpm=8000)
+    for _ in range(3):
+        r.json("t", "s", "u")
+    assert fake_time["slept"] == []
+
+
+def test_without_headers_it_paces_to_the_configured_tpm(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok()]
+    r = _router(settings, db, server, "p", tpm=2500)       # each call is estimated at ~1000 (max_tokens) + a few input
+    r.json("t", "s", "u"); r.json("t", "s", "u")
+    assert fake_time["slept"] == []                        # 2 x ~1000 fits in 2500
+    r.json("t", "s", "u")                                  # a third does not: wait for the first to leave the minute
+    assert fake_time["slept"] == [60.05]
+    fake_time["now"] += 61
+    r.json("t", "s", "u")
+    assert fake_time["slept"] == [60.05]                   # a quiet minute resets everything
+
+
+def test_without_headers_it_paces_to_the_configured_rpm(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok()]
+    r = _router(settings, db, server, "p", rpm=2)
+    for _ in range(3):
+        r.json("t", "s", "u")
+    assert fake_time["slept"] == [60.05]
+
+
+def test_a_spent_daily_request_budget_is_not_waited_for_the_router_moves_on(settings, db, server, fake_time):
+    _S.script["/a"] = [_ok({"x-ratelimit-remaining-requests": "0", "x-ratelimit-reset-requests": "2h3m"})]
+    _S.script["/b"] = [_ok()]
+    r = _router(settings, db, server, "a", "b")
+    r.json("t", "s", "u")                                  # served by a; its headers say the day's requests are gone
+    r.json("t", "s", "u")                                  # a is skipped without sleeping 2 hours, b answers
+    assert fake_time["slept"] == [] and len(_hits("a")) == 1 and len(_hits("b")) == 1
+    assert any(e["provider"] == "a" and "pacing would wait 7380s" in e["body"] for e in _events(db))
+
+
+def test_defaults_are_8000_tpm_and_30_rpm_and_null_means_unlimited(settings, db):
+    from careerops.llm.router import Provider
+    base = {"name": "p", "base_url": "http://x", "model": "m"}
+    p = Provider(dict(base), db, 0.3, 10)
+    assert (p.pacer.tpm, p.pacer.rpm) == (8000, 30)
+    q = Provider({**base, "tpm": None, "rpm": 0}, db, 0.3, 10)
+    assert (q.pacer.tpm, q.pacer.rpm) == (None, None) and q.pacer.wait_needed(10**6) == 0.0
+
+
+def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
+    llm = settings["llm"]
+    assert llm["max_tokens"] == {"extract_keywords": 800, "tailor_cv": 1800, "cover_letter": 700, "default": 1000}
+    groq = next(p for p in llm["providers"] if p["name"] == "groq")
+    assert (groq["tpm"], groq["rpm"]) == (8000, 30)
+
+
+# ---------------------------------------------------------------- 7. max_tokens per task and usage per call
+def test_each_task_sends_its_own_max_tokens(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok()]
+    r = _router(settings, db, server, "p")
+    for task in ("extract_keywords", "tailor_cv", "cover_letter", "something_else"):
+        r.json(task, "s", "u")
+    assert [b["max_tokens"] for b in _hits("p")] == [800, 1800, 700, 1000]
+
+
+def test_max_tokens_falls_back_to_a_built_in_default_when_settings_have_none(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok()]
+    del settings.raw["llm"]["max_tokens"]
+    r = _router(settings, db, server, "p")
+    r.json("tailor_cv", "s", "u")
+    assert _hits("p")[0]["max_tokens"] == 1000
+
+
+def test_actual_usage_is_recorded_per_call_and_counted_against_tpd(settings, db, server, fake_time):
+    use = {"prompt_tokens": 120, "completion_tokens": 30, "total_tokens": 150}
+    _S.script["/p"] = [_ok(usage=use)]
+    r = _router(settings, db, server, "p", tpd=250)
+    r.json("tailor_cv", "s", "u")
+    assert r.usage == [{"task": "tailor_cv", "provider": "p", "model": "served-model", "max_tokens": 1800,
+                        "est_input_tokens": 1, "prompt_tokens": 120, "completion_tokens": 30, "total_tokens": 150,
+                        "finish_reason": "stop"}]
+    assert db.llm_tokens_today("p") == 150 and r.providers[0].available()
+    r.json("cover_letter", "s", "u")
+    assert db.llm_tokens_today("p") == 300 and not r.providers[0].available()      # tpd 250 reached
+    with pytest.raises(LLMError, match="unavailable"):
+        r.json("cover_letter", "s", "u")
+
+
+def test_an_answer_cut_off_by_max_tokens_names_the_setting_and_is_not_retried(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok(content='{"required": ["Pyth', finish="length")]
+    r = _router(settings, db, server, "p")
+    with pytest.raises(LLMError) as e:
+        r.json("extract_keywords", "s", "u")
+    assert "cut off at max_tokens=800" in str(e.value) and "llm.max_tokens.extract_keywords" in str(e.value)
+    assert len(_hits("p")) == 1
+
+
+def test_an_old_database_gets_the_tokens_column_and_keeps_its_rows(tmp_path):
+    import sqlite3
+    from careerops.db import DB
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.execute("CREATE TABLE llm_usage (provider TEXT, day TEXT, calls INTEGER, PRIMARY KEY (provider, day))")
+    old.execute("INSERT INTO llm_usage VALUES ('groq', date('now'), 7)")
+    old.commit(); old.close()
+    db = DB(path)
+    assert db.llm_calls_today("groq") == 7 and db.llm_tokens_today("groq") == 0
+    db.llm_count("groq"); db.llm_add_tokens("groq", 40)
+    assert db.llm_calls_today("groq") == 8 and db.llm_tokens_today("groq") == 40

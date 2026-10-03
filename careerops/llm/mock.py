@@ -16,6 +16,7 @@ class MockLLM:
     def __init__(self, handlers: dict[str, Callable[[dict], dict]] | None = None):
         self.handlers = handlers or {}
         self.calls: list[str] = []
+        self.usage: list[dict] = []        # the router records token usage here; the mock never has any
 
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         self.calls.append(task)

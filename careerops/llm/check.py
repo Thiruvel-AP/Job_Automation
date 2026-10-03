@@ -25,7 +25,7 @@ def check_provider(p: Provider) -> dict:
     p.json_mode_rejected = False
     start = time.perf_counter()
     try:
-        text = p.chat(SYSTEM, USER)
+        text = p.chat(SYSTEM, USER, "llm_check", max_tokens=200)   # reasoning models spend part of it thinking
     except LLMError as e:                      # the server answered, with an error status
         out.update(reachable=True, error=str(e), latency_ms=_ms(start))
         return out
