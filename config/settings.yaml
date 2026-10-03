@@ -147,6 +147,7 @@ llm:
     extract_keywords: 2000
     tailor_cv: 3000
     cover_letter: 1500
+    tailor_profile: 600
     default: 1000
   # Ceiling for one call, estimated input + max_tokens: Groq's 8000 TPM minus a margin for the estimate's error.
   # The tailor prompt sends only the most relevant fact-bank bullets to stay under it (tailoring/budget.py).

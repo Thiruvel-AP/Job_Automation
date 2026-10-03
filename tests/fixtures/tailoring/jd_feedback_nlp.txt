@@ -1,0 +1,20 @@
+Applied NLP Engineer, Customer Feedback Analytics
+Reviewly
+
+About the role
+Reviewly turns millions of customer feedback comments into themes and trends. You will build the text analytics behind it, working end-to-end from data to a deployed service.
+
+What you'll do
+- Build text analytics and topic clustering over customer feedback in Python
+- Fine-tune transformer models for sentiment and theme classification
+- Evaluate sentence embeddings (SBERT) and clustering methods such as K-Means or DBSCAN
+- Explain results to non-technical stakeholders with clear communication skills
+
+What you'll need:
+Strong Python and scikit-learn
+Experience with NLP on customer feedback or reviews
+Proficiency in PyTorch or TensorFlow; exposure to parameter-efficient techniques such as LoRA is a plus.
+Bachelor's degree in Computer Science or a related field
+
+Our Perks
+Optional private healthcare plan

@@ -275,7 +275,8 @@ def test_defaults_are_8000_tpm_and_30_rpm_and_null_means_unlimited(settings, db)
 
 def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
     llm = settings["llm"]
-    assert llm["max_tokens"] == {"extract_keywords": 2000, "tailor_cv": 3000, "cover_letter": 1500, "default": 1000}
+    assert llm["max_tokens"] == {"extract_keywords": 2000, "tailor_cv": 3000, "cover_letter": 1500, "tailor_profile": 600,
+                              "default": 1000}
     groq = next(p for p in llm["providers"] if p["name"] == "groq")
     assert (groq["tpm"], groq["rpm"], groq["tpd"]) == (8000, 30, 200000)
     assert (groq["reasoning_effort"], groq["include_reasoning"]) == ("low", False)

@@ -1,0 +1,454 @@
+"""Fixes from the first real run (Chattermill): keyword quality, bullet ranking, rephrase coverage, profile retry,
+letter rules, text normalisation and honest gaps. One section per fix."""
+import copy
+import re
+from pathlib import Path
+
+import pytest
+
+from careerops.llm import MockLLM
+from careerops.tailoring import budget, prompts as P, tailor
+from careerops.tailoring.faithfulness import check
+from careerops.tailoring.render import pdf_text
+from careerops.tailoring.scorer import (Keyword, ceiling, merge_keywords, score, taxonomy_keywords)
+from careerops.tailoring.textnorm import normalise_json, normalise_text
+
+FIX = Path(__file__).resolve().parents[1] / "fixtures" / "tailoring"
+FEEDBACK_JD = (FIX / "jd_feedback_nlp.txt").read_text(encoding="utf-8")
+
+
+def _job(job, jd):
+    return {**job, "title": "Applied NLP Engineer", "company": "Reviewly", "description": jd}
+
+
+def _kw_llm(required, preferred=(), hook="", team=""):
+    return MockLLM({"extract_keywords": lambda ctx: {"required": list(required), "preferred": list(preferred),
+                                                     "company_hook": hook, "team": team}})
+
+
+# ================================================================== 1. keywords
+def test_keywords_prompt_states_the_new_rules():
+    s = P.KEYWORDS_SYSTEM
+    for must in ("1-3 word", "NEVER generic words", "tasks, workflows, patterns, skills, data, techniques",
+                 "Merge plurals", "Degree", "NOT keywords", '"A or B or C"', "At most 25"):
+        assert must in s, must
+
+
+@pytest.mark.parametrize("raw", ["data", "tasks", "skills", "data skills", "workflows", "techniques", "patterns",
+                                 "Bachelor's degree in Computer Science", "MSc", "PhD in statistics",
+                                 "alpha beta gamma delta", "not in the jd at all", "x"])
+def test_generic_degree_long_and_invented_keywords_are_dropped(raw):
+    njd = "we use data, tasks, skills, workflows, techniques and patterns. bachelor's degree in computer science. msc, phd in statistics, alpha beta gamma delta. x"
+    assert tailor.llm_keyword(raw, njd, 2.0, True) is None
+
+
+def test_a_specific_keyword_that_contains_a_generic_word_is_kept():
+    assert tailor.llm_keyword("data analysis", "strong data analysis", 2.0, True).term == "data analysis"
+
+
+def test_alternatives_become_one_any_of_keyword():
+    njd = "proficiency in pytorch or tensorflow, or jax."
+    k = tailor.llm_keyword("PyTorch or TensorFlow or JAX", njd, 2.0, True)
+    assert (k.term, k.alts, k.required, k.weight) == ("PyTorch", ["TensorFlow", "JAX"], True, 2.0)
+    k = tailor.llm_keyword("PyTorch, TensorFlow or JAX", njd, 1.0, False)
+    assert k.members() == ["PyTorch", "TensorFlow", "JAX"]
+    k = tailor.llm_keyword("PyTorch or Keras", njd, 2.0, True)                # Keras is not in the JD: dropped
+    assert k.members() == ["PyTorch"]
+
+
+def test_ci_cd_is_not_split_into_alternatives():
+    assert tailor.llm_keyword("CI/CD", "we use ci/cd daily", 2.0, True).members() == ["CI/CD"]
+
+
+def test_any_of_keyword_hits_when_any_member_appears_and_counts_once():
+    k = Keyword("PyTorch", 2.0, True, ["TensorFlow"])
+    assert score("Trained models in TensorFlow.", [k]).literal == 1.0
+    assert score("Trained models in Keras.", [k]).literal == 0.0
+    assert score("PyTorch and TensorFlow.", [k, Keyword("sql", 2.0, True)]).literal == 0.5      # one keyword, weight 2
+
+
+def test_plurals_and_near_duplicates_merge_into_one_keyword():
+    kws = merge_keywords([Keyword("llm", 2.0, True), Keyword("python", 2.0, True)],
+                         [Keyword("LLMs", 1.0, False), Keyword("communication skills", 1.0, False),
+                          Keyword("communication", 2.0, True), Keyword("large language models", 1.0, False)])
+    terms = [k.term for k in kws]
+    assert terms == ["llm", "python", "communication skills"] or terms == ["llm", "python", "communication"]
+    llm = next(k for k in kws if k.term == "llm")
+    assert set(llm.alts) == {"LLMs", "large language models"} and llm.weight == 2.0 and llm.required
+    comm = kws[-1]
+    assert comm.weight == 2.0 and comm.required and len(kws) == 3
+
+
+def test_taxonomy_keywords_merge_wording_variants():
+    kws = taxonomy_keywords("Requirements\nExperience with LLMs and large language models, plus NLP and natural "
+                            "language processing.\n")
+    terms = {k.term for k in kws}
+    assert len([t for t in terms if t in ("llm", "llms", "large language models")]) == 1
+    assert len([t for t in terms if t in ("nlp", "natural language processing")]) == 1
+
+
+def test_an_any_of_group_absorbs_the_taxonomy_keywords_it_names():
+    tax = taxonomy_keywords("Requirements\nProficiency in PyTorch or TensorFlow.\n")
+    assert {k.term for k in tax} == {"pytorch", "tensorflow"}
+    merged = merge_keywords(tax, [Keyword("PyTorch", 2.0, True, ["TensorFlow"])])
+    assert len(merged) == 1 and merged[0].members()[0].lower() == "pytorch" and merged[0].required
+
+
+def test_analyse_keeps_at_most_25_llm_keywords_and_none_of_the_junk(settings, job):
+    jd = job["description"] + "\nWe value tasks and data.\nBachelor's degree in Computer Science.\n"
+    verbatim = [f"alpha{i}" for i in range(40)]
+    j = {**job, "description": jd + " ".join(verbatim)}
+    llm = _kw_llm(["data", "tasks", "Bachelor's degree in Computer Science"] + verbatim[:30], ["workflows"])
+    kws, _, _ = tailor.analyse(j, llm, settings)
+    llm_only = [k for k in kws if k.term.startswith("alpha")]
+    assert len(llm_only) == 25
+    assert not {"data", "tasks", "workflows"} & {k.term.lower() for k in kws}
+    assert not any("degree" in k.term.lower() for k in kws)
+
+
+def test_analyse_normalises_hyphens_before_the_verbatim_check(settings, job):
+    j = _job(job, "Requirements\nWe build things end-to-end.\n")
+    kws, _, _ = tailor.analyse(j, _kw_llm(["end‑to‑end"]), settings)
+    assert "end-to-end" in [k.term for k in kws]
+
+
+def test_a_keyword_group_member_must_still_be_evidenced_to_be_used(fb_fixture):
+    kw = [Keyword("PyTorch", 2.0, True, ["TensorFlow"])]
+    ok = check("Trained a PyTorch model.", "Trained a PyTorch model.", ["pytorch"], [], kw)
+    bad = check("Trained a TensorFlow model.", "Trained a PyTorch model.", ["pytorch"], [], kw)
+    assert ok.ok and not bad.ok and "TensorFlow" in bad.violations[0]
+
+
+# ================================================================== 2. bullet ranking
+def _with_iata(fb):
+    fb = copy.deepcopy(fb)
+    fb["projects"].append({"id": "iata", "name": "Customer-feedback text analytics (MSc team project)",
+                           "stack": "Python, scikit-learn, SBERT, K-Means, DBSCAN", "github": None, "bullets": [
+        {"id": "p_ia1", "text": "Contributed to a team project clustering airline customer feedback with SBERT "
+                                "embeddings and K-Means, DBSCAN and HAC, comparing cluster quality.",
+         "terms": ["nlp", "text analytics", "customer feedback", "clustering", "sbert", "embeddings", "k-means",
+                   "dbscan", "scikit-learn", "python"]}]})
+    return fb
+
+
+FEEDBACK_KWS = ["customer feedback", "text analytics", "topic clustering", "sentiment", "SBERT", "K-Means", "DBSCAN",
+                "NLP", "PyTorch or TensorFlow", "scikit-learn"]
+
+
+def _feedback_kws(settings, job, fb=None):
+    kws, hook, team = tailor.analyse(_job(job, FEEDBACK_JD), _kw_llm(FEEDBACK_KWS[:8], FEEDBACK_KWS[8:]), settings)
+    return kws
+
+
+def test_iata_ranks_in_the_top_3_projects_for_a_customer_feedback_nlp_jd(settings, job, fb_fixture):
+    fb = _with_iata(fb_fixture)
+    kws = _feedback_kws(settings, job)
+    ranking = budget.rank_projects(fb, kws, preferred=["churn", "p1", "p2", "p3"])     # the family prior favours others
+    assert "iata" in ranking[:3] and ranking[0] == "iata"
+
+
+def test_ranking_covers_all_bullets_experience_and_projects(fb_fixture, settings, job):
+    kws = _feedback_kws(settings, job)
+    sc = budget.bullet_scores(fb_fixture, kws)
+    every = {b["id"] for sec in ("experience", "projects") for e in fb_fixture[sec] for b in e["bullets"]}
+    assert set(sc) == every
+    ids, _ = budget.select_bullets(fb_fixture, kws, top_n=5)
+    assert any(i in ids for i in ("p1a", "p1b", "p2a", "p3a"))                     # project bullets compete with the rest
+
+
+def test_the_iata_project_is_listed_first_in_the_tailor_prompt_despite_the_family_prior(settings, job, fb_fixture,
+                                                                                          spy_llm):
+    fb = _with_iata(fb_fixture)
+    llm = spy_llm()
+    kws = _feedback_kws(settings, job)
+    tailor._proposal(_job(job, FEEDBACK_JD), fb, kws, llm, "", settings, "AI Engineer", ["p1", "p2", "p3"])
+    user = next(s["user"] for s in llm.sent if s["task"] == "tailor_cv")
+    listed = re.findall(r"^(p\d|iata): ", user[user.index("PROJECTS:"):], re.M)
+    assert listed[0] == "iata" and "p_ia1:" in user
+
+
+# ================================================================== 3. rephrase coverage
+def test_tailor_prompt_demands_rephrasing_of_bullets_that_can_carry_a_missed_keyword():
+    s = P.TAILOR_SYSTEM
+    assert "Rephrase EVERY selected bullet whose `terms` contain a JD keyword" in s
+    assert "within the rules below" in s and "most relevant to the JD first" in s
+
+
+def test_rephrase_coverage_is_rephrased_over_eligible(fb_fixture):
+    kws = [Keyword("pytest", 2.0, True), Keyword("docker", 2.0, True)]
+    bidx = tailor.bullet_index(fb_fixture)
+    ctx = {"experience": [{"bullet_ids": ["a3", "a4"], "bullets": [bidx["a3"]["text"], bidx["a4"]["text"]]}],
+           "projects": [{"bullet_ids": ["p1c"], "bullets": [bidx["p1c"]["text"]]}]}
+    # a3: terms say docker, text says Docker literally -> not eligible. a4: terms say pytest, text does not -> eligible.
+    # p1c: terms say pytest, text says "pytest suite" -> not eligible.
+    cov = tailor.rephrase_coverage(ctx, fb_fixture, kws)
+    assert cov == {"eligible": 1, "rephrased": 0, "ratio": 0.0}
+    ctx["experience"][0]["bullets"][1] = "Wrote a three-tier pytest framework across 8 files."
+    assert tailor.rephrase_coverage(ctx, fb_fixture, kws) == {"eligible": 1, "rephrased": 1, "ratio": 1.0}
+
+
+def test_coverage_is_none_when_nothing_is_eligible(fb_fixture):
+    ctx = {"experience": [{"bullet_ids": ["a1"], "bullets": [tailor.bullet_index(fb_fixture)["a1"]["text"]]}],
+           "projects": []}
+    assert tailor.rephrase_coverage(ctx, fb_fixture, [Keyword("zzz", 1.0, False)])["ratio"] is None
+
+
+def test_report_carries_coverage_per_attempt_and_for_the_chosen_one(settings, fb_fixture, job):
+    rep = tailor.tailor_job(job, fb_fixture, MockLLM(), settings, settings.path("outputs"))
+    cov = rep["attempts"][0]["rephrase_coverage"]
+    assert set(cov) == {"eligible", "rephrased", "ratio"}
+    assert rep["rephrase_coverage"] == next(a for a in rep["attempts"]
+                                            if a["attempt"] == rep["final"]["chosen_attempt"])["rephrase_coverage"]
+
+
+# ================================================================== 4. profile retry
+BAD_PROFILE = "AI engineer with 5 years of production experience in Kubernetes."
+GOOD_PROFILE = "Data Scientist with production LLM agent work on a clinical research platform."
+
+
+def _assemble_with(fb, profile, retry):
+    prop = {"profile": profile, "experience": {}, "projects": [], "rephrase": {}}
+    return tailor._assemble(fb, prop, [], "Data Scientist", retry)
+
+
+def test_a_profile_that_fails_the_guard_is_retried_once_with_the_violations(fb_fixture):
+    seen = []
+
+    def retry(previous, problems, source):
+        seen.append((previous, problems, source))
+        return GOOD_PROFILE
+
+    ctx, viol, warn = _assemble_with(fb_fixture, BAD_PROFILE, retry)
+    assert ctx["profile"] == GOOD_PROFILE and len(seen) == 1
+    assert seen[0][0] == BAD_PROFILE and any("kubernetes" in p.lower() for p in seen[0][1])
+    assert any("years-of-experience" in p for p in seen[0][1])
+    assert any("rewritten once" in w for w in warn) and any(v.startswith("profile:") for v in viol)
+
+
+@pytest.mark.parametrize("retry", [lambda p, pr, s: BAD_PROFILE, lambda p, pr, s: "",
+                                   lambda p, pr, s: (_ for _ in ()).throw(RuntimeError("llm down"))])
+def test_profile_facts_are_used_only_after_the_retry_also_fails(fb_fixture, retry):
+    ctx, viol, warn = _assemble_with(fb_fixture, BAD_PROFILE, retry)
+    assert ctx["profile"] == ". ".join(fb_fixture["profile_facts"][:3]) + "."
+    assert any("fell back to profile_facts" in w for w in warn)
+
+
+def test_a_good_profile_is_never_retried(fb_fixture):
+    calls = []
+    ctx, viol, warn = _assemble_with(fb_fixture, GOOD_PROFILE, lambda *a: calls.append(a) or "x")
+    assert ctx["profile"] == GOOD_PROFILE and calls == [] and not any("profile" in w for w in warn)
+
+
+def test_without_a_retrier_the_old_fallback_still_applies(fb_fixture):
+    ctx, _, warn = _assemble_with(fb_fixture, BAD_PROFILE, None)
+    assert ctx["profile"].startswith(fb_fixture["profile_facts"][0])
+
+
+def test_the_retry_call_sees_the_violation_message_in_the_loop(settings, fb_fixture, job, spy_llm):
+    def tailor_cv(ctx):
+        out = MockLLM().json("tailor_cv", "", "", ctx)
+        out["profile"] = BAD_PROFILE
+        return out
+
+    llm = spy_llm({"tailor_cv": tailor_cv, "tailor_profile": lambda ctx: {"profile": GOOD_PROFILE}})
+    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    retry = next(s for s in llm.sent if s["task"] == "tailor_profile")
+    assert "PROBLEMS FOUND:" in retry["user"] and "years-of-experience" in retry["user"]
+    assert BAD_PROFILE in retry["user"] and "SOURCE FACTS:" in retry["user"]
+    assert rep["context"]["profile"] == GOOD_PROFILE
+    assert any("rewritten once" in w for w in rep["attempts"][0]["warnings"])
+    assert [s["task"] for s in llm.sent].count("tailor_profile") == len(rep["attempts"])    # one retry per attempt
+
+
+# ================================================================== 5. letter
+EV_TEAM = "Contributed to a team of five clustering airline customer feedback with SBERT embeddings and K-Means."
+EV_TESTS = "Wrote a three-tier test framework of ~65 tests across 8 files validated across the provider migration."
+
+
+def test_letter_prompt_states_the_new_rules():
+    s = P.LETTER_SYSTEM
+    for must in ('must contain a "?"', "NEVER upgrade the candidate's role", "contributed, shipped, supported or team",
+                 "~65 tests", "scalable, robust, seamless or cutting-edge"):
+        assert must in s, must
+
+
+def test_the_last_paragraph_must_be_a_question():
+    assert _style(["Hook?", "Example.", "I look forward to a call."]) == ["last paragraph is not a call-to-action question"]
+    assert _style(["Hook.", "Example.", "Could we talk for twenty minutes?"]) == []
+
+
+def _style(paras, evidence=("Built a pipeline.",)):
+    return tailor._style_problems(paras, list(evidence))
+
+
+def test_a_letter_may_not_promote_a_contributed_team_bullet_to_built_or_led():
+    q = "Could we talk?"
+    bad = tailor._style_problems(["I built the customer feedback clustering with SBERT embeddings and K-Means.", q],
+                                 [EV_TEAM])
+    assert bad and "upgrades the role: 'built'" in bad[0] and "contributed" in bad[0].lower()
+    assert tailor._style_problems(["I led the SBERT embeddings and K-Means customer feedback clustering.", q],
+                                  [EV_TEAM])
+    ok = tailor._style_problems(["I contributed to a team of five clustering customer feedback with SBERT embeddings "
+                                 "and K-Means.", q], [EV_TEAM])
+    assert ok == []
+
+
+def test_the_role_check_ignores_sentences_about_other_evidence_and_verbs_the_evidence_uses():
+    q = "Could we talk?"
+    other = ["I built a test framework with about 65 tests across 8 files.", q]
+    assert tailor._style_problems(other, [EV_TEAM, EV_TESTS]) == []
+    ev = "Built the SBERT embeddings clustering of customer feedback as part of a team of five."
+    assert tailor._style_problems(["I built the SBERT embeddings clustering of customer feedback.", q], [ev]) == []
+
+
+@pytest.mark.parametrize("sentence, flagged", [("I wrote about 65 tests across 8 files.", False),
+                                               ("I wrote ~65 tests across 8 files.", False),
+                                               ("I wrote roughly 65 tests across 8 files.", False),
+                                               ("I wrote 65 tests across 8 files.", True),
+                                               ("I wrote exactly 65 tests across 8 files.", True)])
+def test_approximations_stay_approximate(sentence, flagged):
+    problems = tailor._style_problems([sentence, "Could we talk?"], [EV_TESTS])
+    assert bool(problems) is flagged
+    if flagged:
+        assert problems == ["drops the approximation '~65'"]
+
+
+@pytest.mark.parametrize("word", ["scalable", "robust", "seamless", "cutting-edge"])
+def test_vague_filler_is_banned_unless_the_evidence_uses_it(word):
+    para = [f"I built {word} systems.", "Could we talk?"]
+    assert tailor._style_problems(para, ["Built a pipeline."]) == [f"vague filler '{word}' is not in the evidence"]
+    assert tailor._style_problems(para, [f"Built a {word} pipeline."]) == []
+
+
+def test_letter_evidence_is_the_selected_bullets_plus_the_top_3_relevant_others(fb_fixture, settings, job):
+    kws = _feedback_kws(settings, job)
+    bidx = tailor.bullet_index(fb_fixture)
+    chosen_ids = {"a1", "b1"}
+    chosen = [bidx[i]["text"] for i in chosen_ids]
+    ev = tailor.letter_evidence(fb_fixture, kws, chosen, chosen_ids)
+    assert ev[:2] == chosen and len(ev) == 5
+    sc = budget.bullet_scores(fb_fixture, kws)
+    extra_ids = [i for i, b in bidx.items() if b["text"] in ev[2:]]
+    assert len(extra_ids) == 3 and not set(extra_ids) & chosen_ids
+    rest = [i for i in sc if i not in chosen_ids and i not in extra_ids]
+    assert min(sc[i] for i in extra_ids) >= max(sc[i] for i in rest)
+
+
+def test_the_letter_prompt_gets_that_evidence(settings, fb_fixture, job, spy_llm):
+    llm = spy_llm()
+    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    ctx = [s["context"] for s in llm.sent if s["task"] == "cover_letter"][-1]
+    chosen = [b for e in rep["context"]["experience"] + rep["context"]["projects"] for b in e["bullets"]]
+    assert ctx["evidence"][:len(chosen)] == chosen and len(ctx["evidence"]) == len(chosen) + 3
+
+
+def _letter_llm(*drafts):
+    drafts = list(drafts)
+    return lambda ctx: {"paragraphs": drafts.pop(0) if len(drafts) > 1 else drafts[0]}
+
+
+GOOD = ["Reviewly turns feedback into themes, which is the work I do.", "I built a tool-calling agent.",
+        "Could we talk for twenty minutes about it?"]
+NO_QUESTION = ["Reviewly turns feedback into themes, which is the work I do.", "I built a tool-calling agent.",
+               "I would welcome a call to discuss it."]
+
+
+def test_a_letter_without_a_closing_question_is_retried_with_feedback_then_accepted(settings, fb_fixture, job,
+                                                                                    spy_llm):
+    llm = spy_llm({"cover_letter": _letter_llm(NO_QUESTION, GOOD)})
+    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    calls = [s for s in llm.sent if s["task"] == "cover_letter"]
+    assert len(calls) == 2 and "YOUR LAST DRAFT BROKE THESE RULES" in calls[1]["user"]
+    assert "last paragraph is not a call-to-action question" in calls[1]["user"]
+    assert rep["letter"]["status"] == "ok" and rep["letter"]["paragraphs"] == GOOD
+
+
+def test_a_letter_still_without_a_question_after_the_retry_is_flagged_and_the_fallback_asks_one(settings, fb_fixture,
+                                                                                                job, spy_llm):
+    llm = spy_llm({"cover_letter": _letter_llm(NO_QUESTION)})
+    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    assert rep["letter"]["status"] == "fallback"
+    assert "last paragraph is not a call-to-action question" in rep["letter"]["problems"]
+    assert rep["letter"]["paragraphs"][-1].endswith("?")                       # the fallback itself obeys the rule
+
+
+# ================================================================== 6. text normalisation
+def test_normalise_text_maps_the_typographic_characters_and_keeps_en_dashes():
+    assert normalise_text("end‑to‑end and non‐linear") == "end-to-end and non-linear"
+    assert normalise_text("‘quote’ “double” it’s") == "'quote' \"double\" it's"
+    assert normalise_text("a b c") == "a b c"
+    assert normalise_text("Jan 2024 – Mar 2025") == "Jan 2024 – Mar 2025"
+
+
+def test_normalise_json_reaches_every_string():
+    out = normalise_json({"a": ["x‑y", {"b": "“hi”"}], "n": 3, "t": True, "k‑ey": "v"})
+    assert out == {"a": ["x-y", {"b": '"hi"'}], "n": 3, "t": True, "k‑ey": "v"}
+
+
+def test_llm_text_is_normalised_before_scoring_and_rendering(settings, fb_fixture, job):
+    dirty = "Data Scientist with LLM agent work, it’s real work."
+
+    def tailor_cv(ctx):
+        out = MockLLM().json("tailor_cv", "", "", ctx)
+        out["profile"] = dirty
+        return out
+
+    llm = MockLLM({"tailor_cv": tailor_cv,
+                   "extract_keywords": lambda ctx: {"required": [], "preferred": [], "team": "",
+                                                    "company_hook": "Northwind’s tools help “oncology” teams."},
+                   "cover_letter": lambda ctx: {"paragraphs": ["It’s the work I do.", "I built a non‑linear agent.",
+                                                                "Could we talk briefly?"]}})
+    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    assert rep["context"]["profile"] == "Data Scientist with LLM agent work, it's real work."
+    assert rep["company_hook"] == 'Northwind\'s tools help "oncology" teams.'
+    assert rep["letter"]["paragraphs"][0] == "It's the work I do." and " " not in rep["letter"]["paragraphs"][2]
+    text = pdf_text(Path(rep["cv_pdf"])) + pdf_text(Path(rep["letter_pdf"]))
+    assert "non-linear agent" in text and not re.search("[‐‑‘’“” ]", text)
+
+
+# ================================================================== 7. genuine gaps
+def _fact_text_with_terms(fb, terms):
+    fb = copy.deepcopy(fb)
+    fb["experience"][0]["bullets"][0]["terms"] = list(fb["experience"][0]["bullets"][0]["terms"]) + terms
+    return tailor.fact_text(fb)
+
+
+def test_parameter_efficient_is_not_a_gap_when_a_bullets_terms_say_peft_or_lora(fb_fixture):
+    kw = [Keyword("parameter-efficient", 1.0, False)]
+    for terms in (["peft"], ["lora"], ["PEFT", "LoRA"]):
+        c, gaps = ceiling(_fact_text_with_terms(fb_fixture, terms), kw)
+        assert gaps == [] and c == 1.0, terms
+    c, gaps = ceiling(_fact_text_with_terms(fb_fixture, []), kw)
+    assert gaps == ["parameter-efficient"] and c == 0.0                    # no evidence anywhere: a genuine gap
+
+
+def test_any_of_alternatives_are_not_gaps_when_one_is_evidenced(fb_fixture):
+    kw = [Keyword("TensorFlow", 2.0, True, ["PyTorch"])]                   # the fact bank has PyTorch only
+    assert ceiling(tailor.fact_text(fb_fixture), kw) == (1.0, [])
+    assert ceiling(tailor.fact_text(fb_fixture), [Keyword("JAX", 2.0, True, ["Keras"])])[1] == ["JAX"]
+
+
+def test_stemming_still_applies_to_gaps(fb_fixture):
+    _, gaps = ceiling(tailor.fact_text(fb_fixture), [Keyword("forecasts", 1.0, False)])
+    assert gaps == []                                                       # "forecasting" is in the bank
+
+
+def test_the_synonym_only_counts_for_gaps_not_for_the_ats_score_of_the_cv():
+    kw = [Keyword("parameter-efficient", 1.0, False)]
+    assert score("Fine-tuned with LoRA.", kw).literal == 0.0                # an ATS looks for the JD's word
+    assert score("Fine-tuned with LoRA.", kw, synonyms=True).literal == 1.0
+
+
+def test_the_report_leaves_parameter_efficient_out_of_genuine_gaps(settings, fb_fixture, job):
+    """The Chattermill case: the JD says "parameter-efficient techniques such as LoRA"; a bullet's terms say peft/lora."""
+    jd = job["description"] + "\nExposure to parameter-efficient techniques such as LoRA is a plus.\n"
+    llm = _kw_llm(["Python"], ["parameter-efficient"])
+    fb = copy.deepcopy(fb_fixture)
+    fb["experience"][0]["bullets"][0]["terms"] += ["peft", "lora"]
+    rep = tailor.tailor_job({**job, "description": jd}, fb, llm, settings, settings.path("outputs"))
+    kw = next(k for k in rep["keywords"] if "parameter-efficient" in [k["term"], *k["alts"]])   # merged with LoRA
+    assert {"lora", "parameter-efficient"} <= {w.lower() for w in [kw["term"], *kw["alts"]]}
+    assert not {"lora", "parameter-efficient"} & {g.lower() for g in rep["genuine_gaps"]}
+    control = tailor.tailor_job({**job, "id": "manual:control", "description": jd}, fb_fixture, llm, settings,
+                                settings.path("outputs"))                   # no peft/lora in this bank: a real gap
+    assert {"lora", "parameter-efficient"} & {g.lower() for g in control["genuine_gaps"]}

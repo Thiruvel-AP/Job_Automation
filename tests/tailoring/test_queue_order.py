@@ -83,8 +83,15 @@ def test_headline_and_prior_reach_prompt_and_report(settings, job):
     rep = tailor_job(dict(job, title="Data Scientist", family="data_scientist", tier=1), fb, llm, settings,
                      settings.path("outputs"))
     prompt = llm.prompts["tailor_cv"][0]
-    assert "Preferred projects for a Data Scientist role (use if relevant to the JD): " \
-           "churn, bitcoin, lloyds, gtaigraph" in prompt
+    assert "HEADLINE: Data Scientist" in prompt
+    # The family's preferred projects are only a tie-breaker: the prompt names them only if they are among the projects
+    # shown (ranked by relevance to the JD), and says so. For this JD none of them may be relevant enough to show.
+    line = next((ln for ln in prompt.splitlines() if ln.startswith("Preferred projects for a Data Scientist role")), "")
+    if line:
+        assert "a tie-breaker only" in line
+        named = [p.strip() for p in line.rsplit(":", 1)[1].split(",")]
+        assert set(named) <= {"churn", "bitcoin", "lloyds", "gtaigraph"}
+        assert all(f"\n{p}: " in prompt for p in named)
     saved = json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))
     assert (saved["family"], saved["tier"], saved["headline"]) == ("data_scientist", 1, "Data Scientist")
     assert rep["context"]["id"]["headline"] == "Data Scientist"

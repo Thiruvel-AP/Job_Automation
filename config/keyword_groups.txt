@@ -1,0 +1,26 @@
+# Wording groups: terms in one line mean the same thing for matching. `term | term | ...`, one group per line.
+#  * Keywords of one group found in a JD are merged into ONE keyword (llm / llms / large language models count once).
+#  * When deciding whether a keyword is a genuine gap (absent from the fact bank), any member of its group found in the
+#    fact bank's text, terms or skills counts as evidence: "parameter-efficient" is not a gap when a bullet's terms
+#    say peft or lora. Groups never widen what the CV or letter may claim; the faithfulness guard still checks each
+#    word as written.
+llm | llms | large language model | large language models
+generative ai | genai | gen ai
+rag | retrieval augmented generation | retrieval-augmented generation
+nlp | natural language processing
+communication | communication skills
+parameter-efficient | peft | lora | qlora
+postgresql | postgres
+statistical modelling | statistical modeling
+fine-tuning | finetuning | fine tuning
+scikit-learn | sklearn
+a/b testing | ab testing | a/b tests
+machine learning | ml
+ci/cd | cicd | continuous integration
+hugging face | huggingface
+agents | ai agents | llm agents
+aws bedrock | bedrock
+power bi | powerbi
+stakeholders | stakeholder management
+embeddings | embedding
+vector database | vector databases | vector db

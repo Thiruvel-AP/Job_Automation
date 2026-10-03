@@ -48,6 +48,8 @@ class MockLLM:
                     "experience": exp,
                     "projects": [p["id"] for p in projs],
                     "rephrase": {}}
+        if task == "tailor_profile":
+            return {"profile": ". ".join(ctx["profile_facts"][:2]) + "."}
         if task == "cover_letter":
             gaps = ctx.get("gaps") or []
             return {"paragraphs": [

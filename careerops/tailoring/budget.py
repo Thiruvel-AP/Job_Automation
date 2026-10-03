@@ -27,21 +27,24 @@ def bullet_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
     return out
 
 
+def _rank_key(sc: dict[str, float], order: dict[str, int], owner: dict[str, str], preferred: list[str] | None):
+    """Rank by JD overlap; only on equal overlap does the role family's preferred project come first."""
+    pref = set(preferred or [])
+    return lambda b: (-sc[b], 0 if owner.get(b) in pref else 1, order[b])
+
+
 def select_bullets(fb: dict, kws: list[Keyword], top_n: int = 14,
                    preferred: list[str] | None = None) -> tuple[list[str], set[str]]:
-    """(ids to send in rank order, ids that may not be dropped). Ties keep fact-bank order. The best bullet of each
-    preferred project (the role family's prior) is sent too, but is the first to go if the budget is tight."""
+    """(ids to send in rank order, ids that may not be dropped). Every bullet, experience and project alike, is ranked
+    by weighted keyword overlap; the family's preferred projects only break ties. Ties otherwise keep fact-bank order."""
     sc = bullet_scores(fb, kws)
     order = {bid: i for i, bid in enumerate(sc)}
-    ranked = sorted(sc, key=lambda b: (-sc[b], order[b]))
+    owner = {b["id"]: p["id"] for p in fb.get("projects", []) for b in p["bullets"]}
+    ranked = sorted(sc, key=_rank_key(sc, order, owner, preferred))
     must: set[str] = set()
     for e in fb.get("experience", []):
         must.add(max((b["id"] for b in e["bullets"]), key=lambda b: (sc[b], -order[b])))
-    owner = {b["id"]: p["id"] for p in fb.get("projects", []) for b in p["bullets"]}
     chosen = set(ranked[:top_n]) | must
-    for p in fb.get("projects", []):
-        if p["id"] in (preferred or []):
-            chosen.add(max((b["id"] for b in p["bullets"]), key=lambda b: (sc[b], -order[b])))
     have = {owner[b] for b in chosen if b in owner}
     for bid in ranked:                                       # the CV needs two projects to pick from
         if len(have) >= min(2, len(fb.get("projects", []))):
@@ -49,6 +52,20 @@ def select_bullets(fb: dict, kws: list[Keyword], top_n: int = 14,
         if bid in owner and owner[bid] not in have:
             chosen.add(bid); must.add(bid); have.add(owner[bid])
     return [b for b in ranked if b in chosen], must
+
+
+def rank_projects(fb: dict, kws: list[Keyword], preferred: list[str] | None = None) -> list[str]:
+    """Project ids, most relevant to the JD first: by the project's best bullet, then by the sum over its bullets;
+    the family's preferred projects only break exact ties."""
+    sc = bullet_scores(fb, kws)
+    pref = list(preferred or [])
+    order = {p["id"]: i for i, p in enumerate(fb.get("projects", []))}
+
+    def key(p):
+        s = [sc[b["id"]] for b in p["bullets"]]
+        return (-max(s, default=0.0), -sum(s), 0 if p["id"] in pref else 1, order[p["id"]])
+
+    return [p["id"] for p in sorted(fb.get("projects", []), key=key)]
 
 
 def view(fb: dict, keep: set[str]) -> dict:

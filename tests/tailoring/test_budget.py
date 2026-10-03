@@ -105,13 +105,26 @@ def test_the_cv_needs_two_projects_so_two_are_always_sent(fb_fixture):
     assert len(v["projects"]) >= 2 and len(v["experience"]) == len(fb_fixture["experience"])
 
 
-def test_a_preferred_project_is_shown_so_the_model_can_use_it(settings, fb_fixture, job, spy_llm):
+def test_preferred_projects_only_break_ties_never_outrank_relevance(fb_fixture):
+    kws = [Keyword("pytorch", 2.0, True)]                         # only p2 matches
+    assert budget.rank_projects(fb_fixture, kws, preferred=["p4", "p3"])[0] == "p2"     # relevance beats the prior
+    none = [Keyword("zzz-no-match", 1.0, False)]                  # all equal: the preferred ones lead, in bank order
+    assert budget.rank_projects(fb_fixture, none, preferred=["p4", "p3"])[:2] == ["p3", "p4"]
+    assert budget.rank_projects(fb_fixture, none)[:2] == ["p1", "p2"]                   # no prior: plain bank order
+    ids, _ = budget.select_bullets(fb_fixture, kws, top_n=3, preferred=["p4"])
+    assert ids.index("p2a") < ids.index("p4a")                     # the match leads; the prior only orders the rest
+
+
+def test_the_prompt_lists_projects_most_relevant_first_and_calls_the_prior_a_tie_breaker(settings, fb_fixture, job,
+                                                                                       spy_llm):
     llm = spy_llm()
-    kws = [Keyword("langchain", 2.0, True)]
+    kws = [Keyword("pytorch", 3.0, True), Keyword("scikit-learn", 1.0, False)]      # p2 matches best, then p1
     tailor._proposal(job, fb_fixture, kws, llm, "", settings, "AI Engineer", ["p4", "ghost"])
     user = _sent(llm)[0]["user"]
-    assert "p4a:" in user and "Preferred projects for a AI Engineer role (use if relevant to the JD): p4" in user
-    assert "ghost" not in user                                    # an id the model cannot see is not suggested
+    projects = user[user.index("PROJECTS:"):]
+    assert projects.index("p2:") < projects.index("p1:")           # p2 matches pytorch, p1 does not
+    assert "a tie-breaker only" in user and "p4" in user.split("tie-breaker only")[1].split("\n")[0]
+    assert "ghost" not in user                                      # an id the model cannot see is not suggested
 
 
 def test_when_still_over_budget_the_lowest_ranked_bullets_go_first_then_keywords(fb_fixture):

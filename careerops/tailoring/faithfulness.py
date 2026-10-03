@@ -48,9 +48,10 @@ def check(new: str, source: str, evidence_terms: list[str], deny: list[str],
         c.violations.append(f"new numbers {sorted(extra)}")
     stem_src, stem_new = norm_stem(src_all), norm_stem(new)
     for k in keywords:
-        ks = norm_stem(k.term)
-        if _contains(stem_new, ks) and not _contains(stem_src, ks):
-            c.violations.append(f"keyword '{k.term}' not evidenced by source")
+        for w in k.members():                            # an any-of alternative is only usable if it is evidenced itself
+            ks = norm_stem(w)
+            if _contains(stem_new, ks) and not _contains(stem_src, ks):
+                c.violations.append(f"keyword '{w}' not evidenced by source")
     if len(new) > max_growth * max(len(source), 40):
         c.violations.append(f"text grew {len(new) / max(len(source), 1):.1f}x — likely padding")
     if vocabulary:

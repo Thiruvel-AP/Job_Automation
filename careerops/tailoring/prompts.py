@@ -3,9 +3,17 @@
 KEYWORDS_SYSTEM = """You extract ATS keywords from job descriptions.
 Return JSON: {"required": [..], "preferred": [..], "company_hook": "..", "team": ".."}
 Rules:
-- Keywords are short skill/tool/domain phrases (1-4 words) copied VERBATIM from the JD text.
+- A keyword is a 1-3 word skill, tool, method or domain NOUN phrase copied VERBATIM from the JD text
+  (e.g. "PyTorch", "text analytics", "customer feedback").
+- NEVER generic words: tasks, workflows, patterns, skills, data, techniques, experience, ability, knowledge.
+- Merge plurals and near-duplicates into ONE keyword: "LLM" (not also "LLMs"), "communication" (not also
+  "communication skills").
+- Degree or qualification requirements ("Bachelor's in Computer Science", "MSc", "PhD") are NOT keywords.
+- When the JD offers alternatives ("A or B or C", "A, B or C"), give them as ONE string "A or B or C"; every
+  alternative must itself appear verbatim in the JD.
 - "required" = essential/must-have/requirements; "preferred" = nice-to-have/desirable/bonus.
-- 10-40 keywords total. No soft fluff like "passionate" unless the JD lists it as a requirement.
+- At most 25 keywords in total, the most important first. No soft fluff like "passionate" unless the JD lists it as a
+  requirement.
 - company_hook: ONE sentence on what the company does or the problem this team solves, using only facts in the JD.
 - team: the name of the team or group the role sits in, copied VERBATIM from the JD (e.g. "AI Accelerator"),
   or "" if the JD names none. Never the company name, never a guess."""
@@ -25,10 +33,13 @@ Return JSON with ids and plain text only, never LaTeX:
 Hard rules:
 - Use only the ids given. Do not invent experience, projects, numbers, tools, clients or outcomes.
 - experience: the most recent entry (listed first) gets 2-4 bullet ids; every other entry gets 1-2.
-- projects: exactly 2 ids.
+- projects: exactly 2 ids. Projects are listed most relevant to the JD first; take them from the top unless a later
+  one is clearly the better fit.
 - profile: 1-2 sentences, <= 45 words, written as "<headline> with ..." where <headline> is the HEADLINE below.
   Combine only the given profile_facts, skills and the bullets you select. Do not copy phrases from the JD.
   No years-of-experience claims.
+- Rephrase EVERY selected bullet whose `terms` contain a JD keyword that its text does not already say, so the JD's
+  wording appears in it, within the rules below. Leave a bullet alone if it already uses the JD's wording.
 - A rephrase may only use tools/skills that appear in that bullet's text or its `terms`. Keep every number exactly as written; add none.
 - Rephrase in STAR style, one sentence each: start with a past-tense action verb (Built, Deployed, Designed),
   name the task and the tool, and end with a result ONLY if the bullet's own text states that result. Never add one.
@@ -75,8 +86,12 @@ Rules:
   If GAPS is "(none)", write no such sentence.
 - NEVER say the candidate lacks, has not used, or has no experience of anything unless it is named in GAPS.
   Not having a skill spelled out in EVIDENCE is not a gap (coursework and general skills count as experience).
-- Last paragraph: a call to action phrased as a QUESTION, asking for a short call and naming what the candidate
-  would walk them through. NEVER "I look forward to hearing from you".
+- Last paragraph: a call to action phrased as a QUESTION (it must contain a "?"), asking for a short call and naming
+  what the candidate would walk them through. NEVER "I look forward to hearing from you".
+- NEVER upgrade the candidate's role. If an EVIDENCE line says contributed, shipped, supported or team (team project,
+  team of five), do not write delivered, built, led, owned or designed for it; say "contributed to" or "as part of a
+  team". Keep approximations as written ("~65 tests" stays "about 65 tests", never "65").
+- No vague filler: never write scalable, robust, seamless or cutting-edge unless EVIDENCE uses the word.
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""
 
 LETTER_USER = """ROLE: {title} at {company}
@@ -85,3 +100,16 @@ JD KEYWORDS: {keywords}
 GAPS (required tools/platforms/languages/frameworks, absent from the fact bank): {gaps}
 EVIDENCE:
 {evidence}"""
+
+PROFILE_RETRY_SYSTEM = """You rewrite ONE CV profile so that it passes a faithfulness check. Return JSON: {"profile": ".."}
+Rules:
+- 1-2 sentences, <= 45 words, written as "<HEADLINE> with ...".
+- Use only the SOURCE FACTS below. No numbers, tools, employers or outcomes that are not in them.
+- No years-of-experience claims. Do not copy phrases from the job description.
+- Fix every problem listed. Never mention: {deny}."""
+
+PROFILE_RETRY_USER = """HEADLINE: {headline}
+PREVIOUS PROFILE: {previous}
+PROBLEMS FOUND: {problems}
+SOURCE FACTS:
+{source}"""
