@@ -97,6 +97,7 @@ def _select_everything(ctx):
 
 @pytest.fixture
 def one_page_run(settings, fb_fixture, job):
+    settings.raw["llm"]["top_bullets"] = 999          # the model sees every bullet, so it can select all of them
     rep = tailor_job(job, fb_fixture, MockLLM({"tailor_cv": _select_everything}), settings, settings.path("outputs"))
     return rep, pdf_text(Path(rep["cv_pdf"]))
 

@@ -18,6 +18,12 @@ class MockLLM:
         self.calls: list[str] = []
         self.usage: list[dict] = []        # the router records token usage here; the mock never has any
 
+    def begin_job(self, est_tokens: int) -> list[str]:    # a mock has no token budget
+        return ["mock"]
+
+    def end_job(self) -> None:
+        pass
+
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         self.calls.append(task)
         ctx = context or {}

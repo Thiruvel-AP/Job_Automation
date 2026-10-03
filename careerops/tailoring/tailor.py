@@ -13,11 +13,13 @@ from typing import Any
 from ..apply.naming import file_stem
 from ..discovery import gates
 from . import prompts as P
+from .budget import call_limits, fit
 from .faithfulness import check, deny_hits, numbers
 from .render import page_count, pdf_text, render_cv, render_letter
 from .scorer import (Keyword, _contains, ceiling, gap_terms, in_band, merge_keywords, norm_literal, score,
                      taxonomy_keywords)
 
+USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
 BANNED_CLOSERS = re.compile(r"look forward to hearing from you", re.I)
@@ -98,8 +100,9 @@ def role_prior(job: dict, fb: dict, settings) -> tuple[str | None, int | None, s
     return fam.name, fam.tier, fam.headline, list(fam.projects)
 
 
-def _proposal(job, fb, kws, llm, feedback: str, headline: str = "", preferred: list[str] | None = None) -> dict:
-    deny = ", ".join(fb.get("deny_terms", []))
+def _tailor_prompt(job, fb: dict, kws: list[Keyword], headline: str, preferred: list[str] | None,
+                   feedback: str) -> tuple[str, str]:
+    """(system, user) for tailor_cv. `fb` may be a reduced view of the fact bank (see budget.py)."""
     exp_txt = "\n".join(
         f"{e['id']}: {e['title']} @ {e['org']}\n" +
         "\n".join(f"  {b['id']}: {b['text']} [terms: {', '.join(b.get('terms', []))}]" for b in e["bullets"])
@@ -108,6 +111,8 @@ def _proposal(job, fb, kws, llm, feedback: str, headline: str = "", preferred: l
         f"{p['id']}: {p['name']} ({p.get('stack', '')})\n" +
         "\n".join(f"  {b['id']}: {b['text']} [terms: {', '.join(b.get('terms', []))}]" for b in p["bullets"])
         for p in fb["projects"])
+    shown = {p["id"] for p in fb["projects"]}
+    preferred = [p for p in preferred or [] if p in shown]          # only ids the model can actually see
     user = P.TAILOR_USER.format(
         title=job["title"], company=job["company"],
         headline=headline or fb["identity"].get("headline", ""),
@@ -117,9 +122,20 @@ def _proposal(job, fb, kws, llm, feedback: str, headline: str = "", preferred: l
         feedback=feedback, profile_facts="\n".join(f"- {f}" for f in fb["profile_facts"]),
         skills="; ".join(f"{g}: {', '.join(i)}" for g, i in fb["skills"].items()),
         experience=exp_txt, projects=prj_txt)
-    ctx = {"keywords": [asdict(k) for k in kws], "experience": fb["experience"], "projects": fb["projects"],
+    return P.TAILOR_SYSTEM.replace("{deny}", ", ".join(fb.get("deny_terms", []))), user
+
+
+def _proposal(job, fb, kws, llm, feedback: str, settings, headline: str = "",
+              preferred: list[str] | None = None) -> tuple[dict, dict]:
+    """(model proposal, prompt meta). Only the bullets most relevant to the JD are sent, so that estimated input +
+    max_tokens stays within llm.max_call_tokens (budget.py); the CV is still assembled from the whole fact bank."""
+    max_tokens, limit = call_limits(settings, "tailor_cv")
+    sent, sent_kws, meta = fit(fb, kws, lambda v, k: _tailor_prompt(job, v, k, headline, preferred, feedback),
+                               max_tokens, limit, int(settings["llm"].get("top_bullets", 14)), preferred)
+    system, user = _tailor_prompt(job, sent, sent_kws, headline, preferred, feedback)
+    ctx = {"keywords": [asdict(k) for k in sent_kws], "experience": sent["experience"], "projects": sent["projects"],
            "profile_facts": fb["profile_facts"], "preferred_projects": preferred or []}
-    return llm.json("tailor_cv", P.TAILOR_SYSTEM.replace("{deny}", deny), user, context=ctx)
+    return llm.json("tailor_cv", system, user, context=ctx), meta
 
 
 def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "") -> tuple[dict, list[str], list[str]]:
@@ -320,7 +336,7 @@ def usage_since(llm, start: int) -> dict:
     """Token usage of the LLM calls made since `start` (an index into llm.usage): the calls and their sums.
     Empty for a model that records none (MockLLM)."""
     calls = list(getattr(llm, "usage", [])[start:])
-    total = {k: sum(c.get(k) or 0 for c in calls) for k in ("prompt_tokens", "completion_tokens", "total_tokens")}
+    total = {k: sum(c.get(k) or 0 for c in calls) for k in USAGE_SUMS}
     return {"calls": calls, **total}
 
 
@@ -338,7 +354,7 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     rep["letter"], rep["letter_pdf"] = letter, str(pdf)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     rep["llm_usage"] = {"calls": (old.get("calls") or []) + new["calls"],
-                        **{k: (old.get(k) or 0) + new[k] for k in ("prompt_tokens", "completion_tokens", "total_tokens")}}
+                        **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS}}
     (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     return rep
 
@@ -382,7 +398,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
 
     feedback, best = "", None
     for attempt in range(1, sc["max_attempts"] + 1):
-        prop = _proposal(job, fb, kws, llm, feedback, headline, preferred)
+        prop, prompt = _proposal(job, fb, kws, llm, feedback, settings, headline, preferred)
         ctx, viol, warn = _assemble(fb, prop, kws, headline)
         pdf = render_cv(ctx, out_dir, cv_name)
         shrinks = 0
@@ -407,7 +423,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
         rec = {"attempt": attempt, "score": s.literal, "score_stemmed": s.stemmed, "band": in_band(s.literal, band),
                "pages": page_count(pdf), "shrinks": shrinks, "reverted": reverted, "violations": viol,
                "warnings": warn, "wording_misses": s.wording_misses, "misses": s.misses,
-               "proposal": prop, "selection": {e["id"]: e["bullet_ids"] for e in ctx["experience"] + ctx["projects"]},
+               "prompt": prompt, "proposal": prop, "selection": {e["id"]: e["bullet_ids"] for e in ctx["experience"] + ctx["projects"]},
                "profile": ctx["profile"]}
         report["attempts"].append(rec)
         if best is None or abs(s.literal - (lo + hi) / 2) < abs(best[0]["score"] - (lo + hi) / 2):

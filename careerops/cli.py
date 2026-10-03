@@ -42,7 +42,7 @@ from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
 from .tailoring.queue import order, select_for_run
-from .llm import MockLLM, Router
+from .llm import BudgetExhausted, MockLLM, Router
 from .setup import doctor, init, load_dotenv
 
 
@@ -175,8 +175,19 @@ def cmd_tailor(args):
     gates.load_roles(s, fb)
     jobs = select_for_run(db.jobs("triaged"), args.limit, s)
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if args.mock else ''}.")
-    for job in jobs:
+    est = s["llm"].get("job_token_estimate", 20000)
+    for n, job in enumerate(jobs):
         print(f"- {job['company']} | {job['title']}")
+        try:
+            using = llm.begin_job(est)       # daily token budget check: never start a job that can't be finished
+        except BudgetExhausted as e:
+            print(f"  STOP: not enough daily LLM token budget for a whole job (~{est:,} tokens): {e}\n"
+                  f"  {len(jobs) - n} job(s) left untouched in 'triaged'. Nothing was half-tailored. Re-run after the "
+                  "budget resets (00:00 UTC) or start Ollama.")
+            break
+        names = [p.name for p in getattr(llm, "providers", [])]
+        if names and set(using) != set(names):
+            print(f"  daily token budget: this job uses {', '.join(using)} only")
         try:
             rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"))
             f = rep["final"]
@@ -189,10 +200,16 @@ def cmd_tailor(args):
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s), letter {letter_pages} page(s)"
                   + (f"  !! expected {s['scoring']['max_pages']} and 1" if over else ""))
+            u = rep["llm_usage"]
+            if u["calls"]:
+                print(f"  LLM tokens: {u['total_tokens']:,} (prompt {u['prompt_tokens']:,}, completion "
+                      f"{u['completion_tokens']:,}, of which reasoning {u['reasoning_tokens']:,}) in {len(u['calls'])} calls")
         except Exception as e:  # noqa: BLE001 — one bad job must not kill the cron run
             db.update_job(job["id"], status="error", reason=str(e)[:500])
             db.log(job["id"], "error", traceback.format_exc())
             print(f"  ERROR: {e}")
+        finally:
+            llm.end_job()
 
 
 def cmd_review(args):
@@ -369,8 +386,22 @@ def cmd_outreach(args):
     print(f"NOTE ({len(out.note)} chars):\n{out.note}\n\nFOLLOW-UP:\n{out.message}")
 
 
+def llm_usage_lines(s, db: DB) -> list[str]:
+    """Per provider: tokens and requests used today against tpd / rpd (the router's own count, UTC day)."""
+    out = []
+    for p in s["llm"]["providers"]:
+        tok, req = db.llm_tokens_today(p["name"]), db.llm_calls_today(p["name"])
+        tpd, rpd = p.get("tpd"), p.get("rpd")
+        t = f"{tok:,} / {tpd:,} tokens ({tok / tpd:.0%})" if tpd else f"{tok:,} tokens (no tpd set)"
+        r = f"{req:,} / {rpd:,} requests" if rpd else f"{req:,} requests"
+        out.append(f"  {p['name']:8s} {t:34s} {r}")
+    return out
+
+
 def cmd_status(args):
-    _, db = _ctx(args)
+    s, db = _ctx(args)
+    print("LLM usage today (UTC):")
+    print("\n".join(llm_usage_lines(s, db)) + "\n")
     for st, n in db.conn.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status ORDER BY 2 DESC"):
         print(f"{st:14s} {n}")
     rows = list(db.conn.execute("SELECT COALESCE('T' || tier, '-') AS t, status, COUNT(*) FROM jobs GROUP BY 1, 2"))

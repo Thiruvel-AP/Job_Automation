@@ -13,6 +13,7 @@ careerops init                  # data/ folders + .env from .env.example (idempo
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
 # put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
 careerops doctor                # every line should say [ok]
+careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
 careerops llm-check             # one tiny request per LLM provider: reachable, model, latency, JSON, json_mode (never prints keys)
 pytest -q                       # no network or model needed
 ```

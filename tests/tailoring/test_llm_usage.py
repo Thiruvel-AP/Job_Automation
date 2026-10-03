@@ -36,7 +36,8 @@ def test_only_this_jobs_calls_are_counted_when_the_llm_is_shared(settings, fb_fi
 
 def test_a_model_that_records_no_usage_gives_empty_totals(settings, fb_fixture, job, spy_llm):
     rep = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, settings.path("outputs"))
-    assert rep["llm_usage"] == {"calls": [], "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    assert rep["llm_usage"] == {"calls": [], "prompt_tokens": 0, "completion_tokens": 0, "reasoning_tokens": 0,
+                              "total_tokens": 0}
 
 
 def test_regenerating_the_letter_adds_its_call_to_the_jobs_usage(settings, fb_fixture, job):

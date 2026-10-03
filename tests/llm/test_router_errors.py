@@ -275,9 +275,11 @@ def test_defaults_are_8000_tpm_and_30_rpm_and_null_means_unlimited(settings, db)
 
 def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
     llm = settings["llm"]
-    assert llm["max_tokens"] == {"extract_keywords": 800, "tailor_cv": 1800, "cover_letter": 700, "default": 1000}
+    assert llm["max_tokens"] == {"extract_keywords": 2000, "tailor_cv": 3000, "cover_letter": 1500, "default": 1000}
     groq = next(p for p in llm["providers"] if p["name"] == "groq")
-    assert (groq["tpm"], groq["rpm"]) == (8000, 30)
+    assert (groq["tpm"], groq["rpm"], groq["tpd"]) == (8000, 30, 200000)
+    assert (groq["reasoning_effort"], groq["include_reasoning"]) == ("low", False)
+    assert (llm["max_call_tokens"], llm["job_token_estimate"]) == (7500, 20000)
 
 
 # ---------------------------------------------------------------- 7. max_tokens per task and usage per call
@@ -286,7 +288,7 @@ def test_each_task_sends_its_own_max_tokens(settings, db, server, fake_time):
     r = _router(settings, db, server, "p")
     for task in ("extract_keywords", "tailor_cv", "cover_letter", "something_else"):
         r.json(task, "s", "u")
-    assert [b["max_tokens"] for b in _hits("p")] == [800, 1800, 700, 1000]
+    assert [b["max_tokens"] for b in _hits("p")] == [2000, 3000, 1500, 1000]
 
 
 def test_max_tokens_falls_back_to_a_built_in_default_when_settings_have_none(settings, db, server, fake_time):
@@ -302,8 +304,8 @@ def test_actual_usage_is_recorded_per_call_and_counted_against_tpd(settings, db,
     _S.script["/p"] = [_ok(usage=use)]
     r = _router(settings, db, server, "p", tpd=250)
     r.json("tailor_cv", "s", "u")
-    assert r.usage == [{"task": "tailor_cv", "provider": "p", "model": "served-model", "max_tokens": 1800,
-                        "est_input_tokens": 1, "prompt_tokens": 120, "completion_tokens": 30, "total_tokens": 150,
+    assert r.usage == [{"task": "tailor_cv", "provider": "p", "model": "served-model", "max_tokens": 3000,
+                        "est_input_tokens": 1, "prompt_tokens": 120, "completion_tokens": 30, "reasoning_tokens": None, "total_tokens": 150,
                         "finish_reason": "stop"}]
     assert db.llm_tokens_today("p") == 150 and r.providers[0].available()
     r.json("cover_letter", "s", "u")
@@ -317,7 +319,7 @@ def test_an_answer_cut_off_by_max_tokens_names_the_setting_and_is_not_retried(se
     r = _router(settings, db, server, "p")
     with pytest.raises(LLMError) as e:
         r.json("extract_keywords", "s", "u")
-    assert "cut off at max_tokens=800" in str(e.value) and "llm.max_tokens.extract_keywords" in str(e.value)
+    assert "cut off at max_tokens=2000" in str(e.value) and "llm.max_tokens.extract_keywords" in str(e.value)
     assert len(_hits("p")) == 1
 
 
@@ -333,3 +335,136 @@ def test_an_old_database_gets_the_tokens_column_and_keeps_its_rows(tmp_path):
     assert db.llm_calls_today("groq") == 7 and db.llm_tokens_today("groq") == 0
     db.llm_count("groq"); db.llm_add_tokens("groq", 40)
     assert db.llm_calls_today("groq") == 8 and db.llm_tokens_today("groq") == 40
+
+
+# ---------------------------------------------------------------- reasoning parameters (gpt-oss)
+def _body_for(settings, db, server, fake_time, model, **cfg):
+    _S.script["/p"] = [_ok()]
+    r = _router(settings, db, server, "p", model=model, **cfg)
+    r.json("t", "s", "u")
+    return _hits("p")[-1]
+
+
+def test_gpt_oss_gets_low_reasoning_effort_and_no_reasoning_text_by_default(settings, db, server, fake_time):
+    body = _body_for(settings, db, server, fake_time, "openai/gpt-oss-20b")
+    assert body["reasoning_effort"] == "low" and body["include_reasoning"] is False
+
+
+def test_explicit_reasoning_settings_win(settings, db, server, fake_time):
+    body = _body_for(settings, db, server, fake_time, "openai/gpt-oss-20b", reasoning_effort="medium",
+                     include_reasoning=True)
+    assert body["reasoning_effort"] == "medium" and body["include_reasoning"] is True
+
+
+def test_other_models_get_neither_parameter_unless_configured(settings, db, server, fake_time):
+    body = _body_for(settings, db, server, fake_time, "qwen2.5:7b-instruct")
+    assert "reasoning_effort" not in body and "include_reasoning" not in body
+    body = _body_for(settings, db, server, fake_time, "qwen2.5:7b-instruct", reasoning_effort="high")
+    assert body["reasoning_effort"] == "high" and "include_reasoning" not in body
+
+
+def test_the_shipped_groq_provider_sends_both(settings, db, server, fake_time):
+    groq = dict(next(p for p in settings["llm"]["providers"] if p["name"] == "groq"))
+    _S.script["/g"] = [_ok()]
+    settings.raw["llm"]["providers"] = [{**groq, "base_url": f"{server}/g", "api_key_env": "FAKE_KEY", "rpm": 60000,
+                                         "tpm": 10**9}]
+    Router(settings, db).json("t", "s", "u")
+    body = _hits("g")[0]
+    assert body["reasoning_effort"] == "low" and body["include_reasoning"] is False and body["model"] == groq["model"]
+
+
+def test_reasoning_tokens_are_recorded_when_the_provider_reports_them(settings, db, server, fake_time):
+    use = {"prompt_tokens": 100, "completion_tokens": 400, "total_tokens": 500,
+           "completion_tokens_details": {"reasoning_tokens": 350}}
+    _S.script["/p"] = [_ok(usage=use)]
+    r = _router(settings, db, server, "p")
+    r.json("tailor_cv", "s", "u")
+    assert r.usage[0]["reasoning_tokens"] == 350 and r.usage[0]["completion_tokens"] == 400
+
+
+# ---------------------------------------------------------------- daily token budget before a job
+def _spend(db, name, tokens):
+    db.llm_count(name)
+    db.llm_add_tokens(name, tokens)
+
+
+def test_a_job_is_not_started_when_it_would_not_fit_in_the_daily_budget(settings, db, server, fake_time):
+    from careerops.llm import BudgetExhausted
+    _S.script["/a"] = [_ok()]
+    r = _router(settings, db, server, "a", tpd=100_000)
+    _spend(db, "a", 85_000)
+    with pytest.raises(BudgetExhausted) as e:
+        r.begin_job(20_000)
+    assert "a: 85,000 of 100,000 tokens used today, 15,000 left, a job needs ~20,000" in str(e.value)
+    assert r.begin_job(15_000) == ["a"]                      # exactly what is left is fine
+    assert _hits("a") == []                                  # checking the budget costs no request
+
+
+def test_the_next_provider_takes_the_job_when_the_first_budget_is_spent(settings, db, server, fake_time):
+    _S.script["/a"] = [_ok()]
+    _S.script["/b"] = [_ok()]
+    r = _router(settings, db, server, "a", "b", tpd=100_000)
+    r.providers[1].cfg["tpd"] = None                         # b (a local model) has no daily cap
+    _spend(db, "a", 95_000)
+    assert r.begin_job(20_000) == ["b"]
+    for _ in range(3):
+        r.json("t", "s", "u")
+    assert _hits("a") == [] and len(_hits("b")) == 3          # the whole job went to b, none to a
+    r.end_job()
+    _spend(db, "a", 0)                                        # the next job starts afresh
+    assert r.begin_job(1_000) == ["a", "b"]
+
+
+def test_a_budget_stop_leaves_every_job_untouched_and_says_why(settings, db, server, fake_time, monkeypatch, capsys):
+    from careerops.tailoring import tailor as tailor_mod
+    _S.script["/a"] = [_ok()]
+    r = _router(settings, db, server, "a", tpd=50_000)
+    _spend(db, "a", 40_000)
+    for i in (1, 2):
+        db.upsert_job({"id": f"gh:x:{i}", "source": "greenhouse", "company": f"Co{i}", "title": "AI Engineer",
+                       "location": "London, UK", "url": "u", "apply_url": "u", "description": "d" * 900})
+        db.update_job(f"gh:x:{i}", status="triaged", tier=1, ceiling_pre=0.9)
+    called = []
+    monkeypatch.setattr(tailor_mod, "tailor_job", lambda *a, **k: called.append(a) or (_ for _ in ()).throw(
+        AssertionError("a job must not start with no budget")))
+    monkeypatch.setattr(cli, "_ctx", lambda args: (settings, db))
+    monkeypatch.setattr(cli, "_llm", lambda args, s, d: r)
+    cli.main(["tailor", "--limit", "2"])
+    out = capsys.readouterr().out
+    assert called == [] and "STOP" in out and "Nothing was half-tailored" in out
+    assert "a: 40,000 of 50,000 tokens used today" in out and "2 job(s) left untouched" in out
+    assert [j["status"] for j in db.jobs()] == ["triaged", "triaged"]
+    assert not list(settings.path("outputs").glob("*"))                       # no folder, not even a partial one
+    assert db.conn.execute("SELECT COUNT(*) FROM events WHERE stage='error'").fetchone()[0] == 0
+
+
+def test_a_job_that_fits_is_started_and_the_budget_gate_is_released_after_it(settings, db, server, fake_time,
+                                                                             monkeypatch, capsys):
+    from careerops.tailoring import tailor as tailor_mod
+    r = _router(settings, db, server, "a", tpd=500_000)
+    db.upsert_job({"id": "gh:x:1", "source": "greenhouse", "company": "Co", "title": "AI Engineer",
+                   "location": "London, UK", "url": "u", "apply_url": "u", "description": "d" * 900})
+    db.update_job("gh:x:1", status="triaged", tier=1, ceiling_pre=0.9)
+    seen = []
+    monkeypatch.setattr(tailor_mod, "tailor_job", lambda *a, **k: seen.append(r._allowed) or (_ for _ in ()).throw(
+        RuntimeError("stub")))
+    monkeypatch.setattr(cli, "_ctx", lambda args: (settings, db))
+    monkeypatch.setattr(cli, "_llm", lambda args, s, d: r)
+    cli.main(["tailor", "--limit", "1"])
+    assert seen == [{"a"}] and r._allowed is None                             # gated during the job, open after
+    assert db.job("gh:x:1")["status"] == "error"                              # the stub's failure is an ordinary error
+
+
+# ---------------------------------------------------------------- careerops status: tokens today vs tpd
+def test_status_shows_tokens_and_requests_used_today_against_the_limits(settings, db, monkeypatch, capsys):
+    settings.raw["llm"]["providers"] = [
+        {"name": "groq", "base_url": "x", "model": "m", "tpd": 200_000, "rpd": 1000},
+        {"name": "ollama", "base_url": "x", "model": "m", "rpd": 1_000_000}]
+    _spend(db, "groq", 12_345)
+    db.llm_count("groq")
+    monkeypatch.setattr(cli, "_ctx", lambda args: (settings, db))
+    cli.main(["status"])
+    out = capsys.readouterr().out
+    assert "LLM usage today" in out
+    assert "groq" in out and "12,345 / 200,000 tokens (6%)" in out and "2 / 1,000 requests" in out
+    assert "ollama" in out and "0 tokens (no tpd set)" in out

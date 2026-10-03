@@ -120,11 +120,18 @@ llm:
       model: openai/gpt-oss-20b    # check console.groq.com/docs/models — free-tier model list changes
       # Limits the router paces itself to. Groq's x-ratelimit-* response headers override them while present; these are
       # used before the first reply and when headers are missing. tpm and rpm default to 8000 and 30 if left out;
-      # null/0 = unlimited. tpd (tokens per day, from console.groq.com/settings/limits) is optional.
+      # null/0 = unlimited. tpd = tokens per day: a job is not started if its estimated cost no longer fits.
+      # Free tier per Groq docs: 30 RPM, 1K RPD, 8K TPM, 200K TPD (console.groq.com/settings/limits).
       tpm: 8000
       rpm: 30
       rpd: 1000
+      tpd: 200000
       json_mode: true
+      # gpt-oss is a reasoning model: hidden reasoning tokens count against max_tokens. "low" keeps them small and
+      # include_reasoning: false drops the reasoning text from the reply. Both are sent in the request body; they
+      # default to low/false for any gpt-oss model, and to not sent for other models.
+      reasoning_effort: low
+      include_reasoning: false
     - name: ollama
       base_url: http://localhost:11434/v1
       api_key_env: null
@@ -137,10 +144,17 @@ llm:
   # more calls through per minute. A reasoning model spends part of it thinking; if a task is cut off the router says
   # which entry to raise. `default` covers any task not listed.
   max_tokens:
-    extract_keywords: 800
-    tailor_cv: 1800
-    cover_letter: 700
+    extract_keywords: 2000
+    tailor_cv: 3000
+    cover_letter: 1500
     default: 1000
+  # Ceiling for one call, estimated input + max_tokens: Groq's 8000 TPM minus a margin for the estimate's error.
+  # The tailor prompt sends only the most relevant fact-bank bullets to stay under it (tailoring/budget.py).
+  max_call_tokens: 7500
+  top_bullets: 14             # bullets (by weighted keyword overlap) the tailor prompt carries, plus the best of each experience
+  # Estimated tokens for tailoring one job (keywords + up to 3 CV attempts + letter). Before each job the router checks
+  # today's tokens + this against every provider's tpd; none left -> use the next provider, else stop the run.
+  job_token_estimate: 20000
   temperature: 0.3
   timeout_s: 120
   # A 429 is retried after its Retry-After (else 2 s, 4 s, 8 s). A Retry-After longer than this (a spent daily quota)
