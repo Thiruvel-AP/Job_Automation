@@ -469,3 +469,15 @@ def test_status_shows_tokens_and_requests_used_today_against_the_limits(settings
     assert "LLM usage today" in out
     assert "groq" in out and "12,345 / 200,000 tokens (6%)" in out and "2 / 1,000 requests" in out
     assert "ollama" in out and "0 tokens (no tpd set)" in out
+
+
+# ---------------------------------------------------------------- the raw reply is kept, even when it is not JSON
+def test_the_router_keeps_the_raw_reply_of_an_answer_that_is_not_valid_json(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok(content="Sure! Here is the CV: {not really json")]
+    r = _router(settings, db, server, "p")
+    with pytest.raises(LLMError):
+        r.json("tailor_cv", "s", "u")
+    assert r.last_raw == "Sure! Here is the CV: {not really json"
+    _S.script["/p"] = [_ok(content='{"a": 1}')]
+    r.json("tailor_cv", "s", "u")
+    assert r.last_raw == '{"a": 1}'

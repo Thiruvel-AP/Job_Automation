@@ -16,6 +16,8 @@ from . import prompts as P
 from ..llm.pacing import estimate_tokens
 from .budget import bullet_scores, call_limits, fit, rank_projects
 from .faithfulness import check, deny_hits, numbers
+from .rawlog import RawRecorder
+from .shapes import clean_proposal, normalise_keywords, normalise_letter, proposal_usable
 from .textnorm import normalise_json
 from .render import page_count, pdf_text, render_cv, render_letter
 from .scorer import (Keyword, _contains, ceiling, gap_terms, in_band, merge_keywords, norm_literal, norm_stem, score,
@@ -90,8 +92,9 @@ def llm_keyword(raw, njd: str, weight: float, required: bool) -> Keyword | None:
     return Keyword(ok[0], weight, required, ok[1:]) if ok else None
 
 
-def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str, str]:
-    """(keywords, company_hook, team). `team` is "" when the JD names none."""
+def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[list[Keyword], str, str]:
+    """(keywords, company_hook, team). `team` is "" when the JD names none. Shape problems in the model's answer
+    (keyword objects, odd types) are normalised; what is dropped is appended to `notes` when given."""
     sc = settings["scoring"]
     jd = job["description"] or ""
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
@@ -102,13 +105,17 @@ def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str, str]:
                         P.KEYWORDS_USER.format(company=job["company"], title=job["title"], jd=jd[:12000]),
                         context={"fallback_required": [], "fallback_preferred": []})
         njd = norm_literal(jd)
-        for req, key in ((True, "required"), (False, "preferred")):
-            for t in out.get(key, []) or []:
+        required, preferred, kw_notes = normalise_keywords(out)
+        if notes is not None:
+            notes.extend(f"extract_keywords: {n}" for n in kw_notes)
+        for req, terms in ((True, required), (False, preferred)):
+            for t in terms:
                 k = llm_keyword(t, njd, sc["required_weight"] if req else sc["preferred_weight"], req)
                 if k:                                      # verbatim, short, specific: nothing invented survives
                     llm_kw.append(k)
         llm_kw = llm_kw[:MAX_LLM_KEYWORDS]
-        hook = str(out.get("company_hook", ""))[:300]
+        out = out if isinstance(out, dict) else {}
+        hook = str(out.get("company_hook") or "")[:300]
         team = clean_team(out.get("team"), job)
     except Exception as e:  # noqa: BLE001 — taxonomy keywords alone are a usable fallback
         hook = team = ""
@@ -158,6 +165,10 @@ def _tailor_prompt(job, fb: dict, kws: list[Keyword], headline: str, preferred: 
     return P.TAILOR_SYSTEM.replace("{deny}", ", ".join(fb.get("deny_terms", []))), user
 
 
+class ProposalError(RuntimeError):
+    """The model's CV selection stayed unusable after a retry; the job fails rather than being half-tailored."""
+
+
 def _proposal(job, fb, kws, llm, feedback: str, settings, headline: str = "",
               preferred: list[str] | None = None) -> tuple[dict, dict]:
     """(model proposal, prompt meta). Only the bullets most relevant to the JD are sent, so that estimated input +
@@ -168,7 +179,20 @@ def _proposal(job, fb, kws, llm, feedback: str, settings, headline: str = "",
     system, user = _tailor_prompt(job, sent, sent_kws, headline, preferred, feedback)
     ctx = {"keywords": [asdict(k) for k in sent_kws], "experience": sent["experience"], "projects": sent["projects"],
            "profile_facts": fb["profile_facts"], "preferred_projects": preferred or []}
-    return _llm_json(llm, "tailor_cv", system, user, ctx), meta
+    prop = _llm_json(llm, "tailor_cv", system, user, ctx)
+    if not proposal_usable(clean_proposal(prop, fb)[0]):
+        # nothing in it names a real bullet or project: ask once more, spelling out the schema and the valid ids
+        meta["schema_retry"] = True
+        schema = P.SCHEMA_RETRY.format(
+            experience_ids=", ".join(e["id"] for e in sent["experience"]),
+            project_ids=", ".join(p["id"] for p in sent["projects"]))
+        prop = _llm_json(llm, "tailor_cv", system, user + schema, ctx)
+        clean, notes = clean_proposal(prop, fb)
+        if not proposal_usable(clean):
+            raise ProposalError("tailor_cv returned no usable bullet or project ids, even after being told the exact "
+                                "schema. " + ("Dropped: " + "; ".join(notes[:4]) + ". " if notes else "")
+                                + "The model's raw answers are kept in llm_raw/ (see below).")
+    return prop, meta
 
 
 def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], str], str]:
@@ -205,60 +229,6 @@ def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
     return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
 
 
-_ID_KEYS = ("id", "bullet_id", "project_id", "experience_id", "ref")
-
-
-def _as_id(x) -> str | None:
-    """An id as the model may write it: the id string, or an object carrying it ({"id": "a1", "text": ...})."""
-    if isinstance(x, str):
-        return x.strip() or None
-    if isinstance(x, dict):
-        for k in _ID_KEYS:
-            if isinstance(x.get(k), str) and x[k].strip():
-                return x[k].strip()
-    return None
-
-
-def _id_list(x, notes: list[str], what: str) -> list[str]:
-    items = x if isinstance(x, list) else [x] if isinstance(x, (str, dict)) else []
-    out = [i for i in map(_as_id, items) if i]
-    if len(out) != len(items) or any(not isinstance(i, str) for i in items):
-        notes.append(f"{what}: not every entry was an id string; objects were read by their id, the rest ignored")
-    return out
-
-
-def clean_proposal(prop) -> tuple[dict, list[str]]:
-    """The model's tailor_cv answer in the shape _assemble expects: experience {entry id: [bullet ids]}, projects
-    [ids], rephrase {bullet id: text}, profile str. Models sometimes answer with bullet objects instead of ids, a list
-    of entries instead of a map, or numbers where text belongs; whatever cannot be read is ignored (and noted), never
-    a crash. Returns (proposal, notes)."""
-    notes: list[str] = []
-    if not isinstance(prop, dict):
-        return {"profile": "", "experience": {}, "projects": [], "rephrase": {}}, ["answer was not an object"]
-    exp, experience = prop.get("experience"), {}
-    if isinstance(exp, list):                                   # [{"id": "ex1", "bullets": [...]}, ...]
-        exp = {_as_id(e): e.get("bullets") or e.get("bullet_ids") or e.get("ids") or []
-               for e in exp if isinstance(e, dict) and _as_id(e)}
-    for eid, ids in (exp.items() if isinstance(exp, dict) else []):
-        if isinstance(eid, str):
-            experience[eid] = _id_list(ids, notes, f"experience {eid}")
-    projects = _id_list(prop.get("projects") or [], notes, "projects")
-    reph, rephrase = prop.get("rephrase"), {}
-    if isinstance(reph, list):                                  # [{"id": "a1", "text": "..."}, ...]
-        reph = {_as_id(r): r.get("text") or r.get("rephrased") or r.get("bullet") for r in reph
-                if isinstance(r, dict) and _as_id(r)}
-    for bid, text in (reph.items() if isinstance(reph, dict) else []):
-        if isinstance(bid, str) and isinstance(text, str):
-            rephrase[bid] = text
-        else:
-            notes.append(f"rephrase {bid}: not text, ignored")
-    profile = prop.get("profile")
-    if profile is not None and not isinstance(profile, str):
-        notes.append("profile: not text, ignored")
-        profile = ""
-    return {"profile": profile or "", "experience": experience, "projects": projects, "rephrase": rephrase}, notes
-
-
 def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "",
               retry_profile: Callable[[str, list[str], str], str] | None = None) -> tuple[dict, list[str], list[str]]:
     """Turn a proposal into a render context, applying the faithfulness guard.
@@ -268,7 +238,7 @@ def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "",
     bidx = bullet_index(fb)
     vocab = fact_text(fb)
     violations, warnings = [], []
-    prop, notes = clean_proposal(prop)
+    prop, notes = clean_proposal(prop, fb)
     warnings.extend(f"proposal: {n}" for n in notes)
     rephrase = prop["rephrase"]
 
@@ -471,7 +441,8 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
 
 
 def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
-            gaps: list[str] | None = None, chosen_ids: set[str] | None = None) -> tuple[list[str], list[str]]:
+            gaps: list[str] | None = None, chosen_ids: set[str] | None = None,
+            notes: list[str] | None = None) -> tuple[list[str], list[str]]:
     deny = fb.get("deny_terms", [])
     gaps = (gaps or [])[:6]
     # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
@@ -492,7 +463,9 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
                                      gaps=", ".join(gaps) or "(none)",
                                      evidence="\n".join(f"- {e}" for e in evidence)) + feedback,
                 {"company": job["company"], "title": job["title"], "evidence": evidence, "gaps": gaps})
-            paras = [p.strip() for p in out.get("paragraphs", []) if isinstance(p, str) and p.strip()]
+            paras, letter_notes = normalise_letter(out)
+            if notes is not None:
+                notes.extend(m for m in (f"cover_letter: {n}" for n in letter_notes) if m not in notes)
         except Exception as e:  # noqa: BLE001
             problems.append(f"letter LLM failed: {e}")
             break
@@ -528,13 +501,15 @@ def _make_letter(job, fb, kws, hook, chosen: list[str], llm, settings, out_dir: 
                  team: str = "", gaps: list[str] | None = None, chosen_ids: set[str] | None = None):
     """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
     deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
-    paras, problems = _letter(job, fb, kws, hook, chosen, llm, settings, gaps, chosen_ids)
+    notes: list[str] = []
+    paras, problems = _letter(job, fb, kws, hook, chosen, llm, settings, gaps, chosen_ids, notes)
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
                          "date": date.today().strftime("%d %B %Y"),
                          "greeting": letter_greeting(settings, job["company"], team),
                          "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
     return pdf, {"paragraphs": paras, "problems": problems, "score": score(pdf_text(pdf), kws).literal,
-                 "pages": page_count(pdf), "status": "fallback" if FALLBACK_MARK in problems else "ok"}
+                 "pages": page_count(pdf), "status": "fallback" if FALLBACK_MARK in problems else "ok",
+                 "notes": notes}
 
 
 def _names(fb: dict, settings) -> tuple[str, str]:
@@ -558,6 +533,7 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     kws = [Keyword(**k) for k in rep["keywords"]]
     chosen = [b for sec in ("experience", "projects") for e in rep["context"][sec] for b in e["bullets"]]
     out_dir = Path(rep["out_dir"])
+    llm = RawRecorder(llm, out_dir / "llm_raw")                 # keeps the model's raw reply next to the first draft's
     usage_from = len(getattr(llm, "usage", []))
     ids = {i for sec in ("experience", "projects") for e in rep["context"][sec] for i in e.get("bullet_ids", [])}
     pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", chosen, llm, settings, out_dir,
@@ -587,8 +563,18 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
             os.replace(final, old)
         os.replace(work, final)
         shutil.rmtree(old, ignore_errors=True)
+        shutil.rmtree(final.with_name(final.name + ".failed"), ignore_errors=True)    # superseded by this success
         return report
-    except BaseException:
+    except BaseException as exc:
+        # The staging folder goes, the earlier successful folder stays. But the model's raw answers are what you need
+        # to see why a job failed, so they are kept in <job>.failed/llm_raw and the error says where.
+        raw = work / "llm_raw"
+        if raw.is_dir():
+            failed = final.with_name(final.name + ".failed")
+            shutil.rmtree(failed, ignore_errors=True)
+            shutil.copytree(raw, failed / "llm_raw")
+            if isinstance(exc, Exception) and exc.args and isinstance(exc.args[0], str):
+                exc.args = (f"{exc.args[0]} [raw model answers: {failed / 'llm_raw'}]", *exc.args[1:])
         shutil.rmtree(work, ignore_errors=True)
         raise
 
@@ -598,18 +584,22 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
+    llm = RawRecorder(llm, out_dir / "llm_raw")                 # every raw model reply is kept for inspection
     usage_from = len(getattr(llm, "usage", []))
     family, tier, headline, preferred = role_prior(job, fb, settings)
-    kws, hook, team = analyse(job, llm, settings)
+    analysis_warnings: list[str] = []
+    kws, hook, team = analyse(job, llm, settings, analysis_warnings)
     ceil, gaps = ceiling(fact_text(fb), kws)
     cv_name, letter_name = _names(fb, settings)
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
-                              "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir)}
+                              "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir),
+                              "analysis_warnings": analysis_warnings}
 
     feedback, best = "", None
     for attempt in range(1, sc["max_attempts"] + 1):
+        llm.attempt = attempt                                    # names this attempt's raw replies (tailor_cv-2.json)
         prop, prompt = _proposal(job, fb, kws, llm, feedback, settings, headline, preferred)
         ctx, viol, warn = _assemble(fb, prop, kws, headline, _profile_retrier(llm, fb, headline))
         pdf = render_cv(ctx, out_dir, cv_name)

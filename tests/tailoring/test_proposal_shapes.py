@@ -52,7 +52,8 @@ def test_garbage_never_raises_and_always_has_the_expected_shape(prop):
 
 def test_assemble_gives_the_same_cv_for_object_shaped_and_id_shaped_proposals(fb_fixture):
     ids = {"profile": "", "experience": {"ex1": ["a1", "a3"], "ex2": ["b1"]}, "projects": ["p1", "p3"], "rephrase": {}}
-    objs = {"profile": "", "experience": {"ex1": [{"id": "a1", "text": "x"}, {"id": "a3"}], "ex2": [{"id": "b1"}]},
+    canon = tailor.bullet_index(fb_fixture)["a1"]["text"]            # an object that just echoes the bullet text
+    objs = {"profile": "", "experience": {"ex1": [{"id": "a1", "text": canon}, {"id": "a3"}], "ex2": [{"id": "b1"}]},
             "projects": [{"id": "p1"}, {"id": "p3"}], "rephrase": {}}
     a, _, wa = tailor._assemble(fb_fixture, ids, [], "Data Scientist")
     b, _, wb = tailor._assemble(fb_fixture, objs, [], "Data Scientist")
@@ -120,10 +121,10 @@ def test_the_letter_can_be_regenerated_and_the_excel_view_exported(chattermill_r
     assert ws.cell(2, 1).value == "Chattermill" and ws.cell(2, 6).value == "needs_review"
 
 
-def test_a_model_that_answers_every_task_with_odd_shapes_still_gets_a_cv(settings, fb_fixture, job, spy_llm):
-    llm = spy_llm({"tailor_cv": lambda ctx: {"profile": ["x"], "experience": "a1", "projects": 3, "rephrase": 7},
-                   "extract_keywords": lambda ctx: {"required": [{"term": "Python"}, 5, None, ["x"]],
+def test_odd_keyword_and_letter_shapes_still_get_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):
+    llm = spy_llm({"extract_keywords": lambda ctx: {"required": [{"term": "Python"}, 5, None, ["x"]],
                                                     "preferred": "SQL", "company_hook": 3, "team": ["x"]},
-                   "cover_letter": lambda ctx: {"paragraphs": [{"text": "x"}, None, "Fine?"]}})
+                   "cover_letter": lambda ctx: {"paragraphs": [{"text": "Fine opening."}, None, "Could we talk?"]}})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     assert rep["final"]["pages"] == 1 and Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists()
+    assert rep["analysis_warnings"] and rep["letter"]["notes"]

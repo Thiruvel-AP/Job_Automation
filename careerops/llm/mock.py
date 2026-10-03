@@ -5,6 +5,7 @@ without a model. Handlers can be overridden per task (tests use this to simulate
 """
 from __future__ import annotations
 
+import json
 from typing import Callable
 
 from .router import LLMError
@@ -17,6 +18,7 @@ class MockLLM:
         self.handlers = handlers or {}
         self.calls: list[str] = []
         self.usage: list[dict] = []        # the router records token usage here; the mock never has any
+        self.last_raw: str | None = None   # JSON text of the last answer, as a model would have returned it
 
     def begin_job(self, est_tokens: int) -> list[str]:    # a mock has no token budget
         return ["mock"]
@@ -25,6 +27,12 @@ class MockLLM:
         pass
 
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
+        self.last_raw = None
+        out = self._answer(task, system, user, context)
+        self.last_raw = json.dumps(out)
+        return out
+
+    def _answer(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         self.calls.append(task)
         ctx = context or {}
         if task in self.handlers:

@@ -113,3 +113,12 @@ PREVIOUS PROFILE: {previous}
 PROBLEMS FOUND: {problems}
 SOURCE FACTS:
 {source}"""
+
+SCHEMA_RETRY = """
+
+YOUR LAST ANSWER COULD NOT BE USED: it named no valid bullet or project ids. Return EXACTLY this JSON and nothing else,
+with every id a plain string copied from the lists above (never an object):
+{{"profile": "<1-2 sentences>", "experience": {{"<experience id>": ["<bullet id>", "<bullet id>"]}},
+ "projects": ["<project id>", "<project id>"], "rephrase": {{"<bullet id>": "<reworded bullet>"}}}}
+Valid experience ids: {experience_ids}
+Valid project ids: {project_ids}"""

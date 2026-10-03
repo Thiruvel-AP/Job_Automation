@@ -215,6 +215,7 @@ class Router:
                                    c.get("max_retry_wait_s", 60), c.get("max_tokens")) for p in c["providers"]]
         self.usage: list[dict] = []     # one entry per answered call; tailor_job copies its slice into report.json
         self._allowed: set[str] | None = None   # providers the current job may use (set by begin_job)
+        self.last_raw: str | None = None        # the reply text of the last answered call, kept even if it was not valid JSON
 
     def begin_job(self, est_tokens: int) -> list[str]:
         """Check the daily token budgets before a job starts, so a job is never begun that cannot be finished.
@@ -241,6 +242,7 @@ class Router:
 
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         errors = []
+        self.last_raw = None
         for p in self.providers:
             if self._allowed is not None and p.name not in self._allowed:
                 errors.append(f"{p.name}: skipped for this job (daily token budget)")
@@ -251,6 +253,7 @@ class Router:
             for attempt in range(2):
                 try:
                     text = p.chat(system, user, task)
+                    self.last_raw = text
                     self.usage.append({"task": task, "provider": p.name, "model": p.last_model, **p.last_usage})
                     try:
                         return extract_json(text)

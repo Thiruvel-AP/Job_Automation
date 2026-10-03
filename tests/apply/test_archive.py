@@ -662,7 +662,7 @@ def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(sett
     out = Path(rep["out_dir"])
     assert Path(rep["cv_pdf"]).name == "Ada Quincy Lovelace CV.pdf"
     assert Path(rep["letter_pdf"]).name == "Ada Quincy Lovelace Cover Letter.pdf"
-    assert sorted(p.name for p in out.iterdir()) == sorted(
+    assert sorted(p.name for p in out.iterdir() if p.name != "llm_raw") == sorted(      # llm_raw: the model's raw replies
         ["Ada Quincy Lovelace CV.pdf", "Ada Quincy Lovelace CV.tex", "Ada Quincy Lovelace Cover Letter.pdf",
          "Ada Quincy Lovelace Cover Letter.tex", "report.json"])            # no cv.pdf / letter.pdf left behind
     page = FakePage(("input", "file", "Resume / CV"), ("input", "file", "Cover letter"))
