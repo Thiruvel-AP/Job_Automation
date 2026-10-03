@@ -33,6 +33,30 @@ def settings(tmp_path) -> Settings:
     return Settings(raw=raw, root=ROOT)
 
 
+class SpyLLM(MockLLM):
+    """MockLLM that keeps every prompt and context it was sent, so tests can assert on what would leave the machine."""
+
+    def __init__(self, handlers=None):
+        super().__init__(handlers)
+        self.sent: list[dict] = []
+
+    def json(self, task, system, user, context=None):
+        self.sent.append({"task": task, "system": system, "user": user, "context": context or {}})
+        return super().json(task, system, user, context)
+
+
+@pytest.fixture
+def spy_llm():
+    """The SpyLLM class: `llm = spy_llm({"cover_letter": handler})`, then read `llm.sent`."""
+    return SpyLLM
+
+
+@pytest.fixture
+def fb_fixture() -> dict:
+    """Fictional fact bank (tests/fixtures/tailoring/fact_bank_fixture.yaml). CV-2 tests use this, never the real one."""
+    return load_yaml(fixture("tailoring", "fact_bank_fixture.yaml"))
+
+
 @pytest.fixture
 def db(settings) -> DB:
     return DB(settings.path("db"))

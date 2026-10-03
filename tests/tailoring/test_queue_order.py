@@ -89,4 +89,6 @@ def test_headline_and_prior_reach_prompt_and_report(settings, job):
     assert (saved["family"], saved["tier"], saved["headline"]) == ("data_scientist", 1, "Data Scientist")
     assert rep["context"]["id"]["headline"] == "Data Scientist"
     lines = [ln.strip() for ln in pdf_text(Path(rep["cv_pdf"])).splitlines() if ln.strip()]
-    assert lines[1] == "Data Scientist"                        # headline sits under the name
+    # CV-2: the user's one-page layout has no headline line (header = name, contact line, links); the
+    # headline reaches the page as the first words of the model's profile ("<headline> with ...").
+    assert lines[0] == fb["identity"]["name"]
