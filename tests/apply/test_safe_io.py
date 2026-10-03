@@ -63,6 +63,8 @@ DESTRUCTIVE_ATTRS = {"unlink", "rmdir", "rmtree", "remove", "removedirs", "renam
 ALLOWED = {
     ("tailoring/render.py", "compile_tex"): "xelatex aux/log files in data/outputs/<job>",
     ("tailoring/render.py", "_finalise"): "rename cv.pdf -> '<name> CV.pdf' inside data/outputs/<job>",
+    ("tailoring/tailor.py", "tailor_job"): "builds data/outputs/<job>.partial, swaps it in on success, removes "
+                                           ".partial/.old; out_root is paths.outputs, never paths.applications",
     ("apply/archive.py", "_remove_staging"): "deletes data/tmp/archive-*; refuses anything outside paths.tmp",
 }
 

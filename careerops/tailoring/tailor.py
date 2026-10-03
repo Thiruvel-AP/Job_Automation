@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 from dataclasses import asdict
 from datetime import date
 from pathlib import Path
@@ -331,18 +333,39 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
 
 # ------------------------------------------------------------------ 4. the loop
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, Any]:
+    """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
+    in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
+    earlier successful output folder exactly as it was."""
+    final = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
+    work = final.with_name(final.name + ".partial")
+    shutil.rmtree(work, ignore_errors=True)
+    try:
+        report = _tailor(job, fb, llm, settings, work, final)
+        old = final.with_name(final.name + ".old")
+        shutil.rmtree(old, ignore_errors=True)
+        if final.exists():
+            os.replace(final, old)
+        os.replace(work, final)
+        shutil.rmtree(old, ignore_errors=True)
+        return report
+    except BaseException:
+        shutil.rmtree(work, ignore_errors=True)
+        raise
+
+
+def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) -> dict[str, Any]:
+    """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths."""
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
     family, tier, headline, preferred = role_prior(job, fb, settings)
     kws, hook, team = analyse(job, llm, settings)
     ceil, gaps = ceiling(fact_text(fb), kws)
-    out_dir = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
     cv_name, letter_name = _names(fb, settings)
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
-                              "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(out_dir)}
+                              "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir)}
 
     feedback, best = "", None
     for attempt in range(1, sc["max_attempts"] + 1):
@@ -400,7 +423,7 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
         "letter": letter,
-        "cv_pdf": str(pdf), "letter_pdf": str(letter_pdf), "context": ctx,
+        "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name), "context": ctx,
     })
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report

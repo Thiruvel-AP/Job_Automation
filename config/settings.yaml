@@ -127,3 +127,6 @@ llm:
       json_mode: true
   temperature: 0.3
   timeout_s: 120
+  # A 429 is retried after its Retry-After (else 2 s, 4 s, 8 s). A Retry-After longer than this (a spent daily quota)
+  # is not waited for; the router goes straight to the next provider.
+  max_retry_wait_s: 60

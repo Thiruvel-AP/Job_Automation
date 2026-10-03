@@ -2,6 +2,7 @@
 
   careerops init                create data/ folders and .env (idempotent)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
+  careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
@@ -306,6 +307,16 @@ def cmd_doctor(args):
     sys.exit(0 if all(ok for _, ok, _ in checks) else 1)
 
 
+def cmd_llm_check(args):
+    from .llm import check
+
+    s, db = _ctx(args)
+    rows = check.check_all(Router(s, db))
+    for r in rows:
+        print("\n".join(check.format_row(r)))
+    sys.exit(0 if any(r["ok"] for r in rows) else 1)
+
+
 def cmd_companies(args):
     from .discovery import ats, companies_house
 
@@ -368,6 +379,8 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init").set_defaults(fn=cmd_init)
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    sub.add_parser("llm-check", help="one tiny request per LLM provider: reachable, model, latency, JSON, json_mode"
+                   ).set_defaults(fn=cmd_llm_check)
     sub.add_parser("sponsors").set_defaults(fn=cmd_sponsors)
     c = sub.add_parser("companies")
     g = c.add_mutually_exclusive_group()

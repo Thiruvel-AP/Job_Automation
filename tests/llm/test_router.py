@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
 
-from careerops.llm import LLMError, Router
+from careerops.llm import LLMError, Router, router
 
 
 class _H(BaseHTTPRequestHandler):
@@ -39,6 +39,7 @@ def _router(settings, db, providers):
 
 
 def test_fallback_on_429_and_quota(settings, db, server, monkeypatch):
+    monkeypatch.setattr(router, "_sleep", lambda s: None)       # the 429 is retried with back-off first
     monkeypatch.setenv("FAKE_KEY", "sk-test")
     _H.seen.clear()
     r = _router(settings, db, [
@@ -47,11 +48,12 @@ def test_fallback_on_429_and_quota(settings, db, server, monkeypatch):
     ])
     out = r.json("t", "sys", "user")
     assert out == {"ok": True, "model": "small"}
-    first, second = _H.seen[0], _H.seen[1]
+    first, second = _H.seen[0], _H.seen[-1]          # groq's first try, then the ollama fallback (3 retries between)
+    assert len(_H.seen) == 5
     assert first[0] == "/limited/chat/completions" and first[1] == "Bearer sk-test"
     assert first[2]["response_format"] == {"type": "json_object"}
     assert second[1] is None
-    assert db.llm_calls_today("groq") == 1 and db.llm_calls_today("ollama") == 1
+    assert db.llm_calls_today("groq") == 4 and db.llm_calls_today("ollama") == 1   # 1 try + 3 back-off retries
 
 
 def test_missing_key_and_exhausted_quota(settings, db, server, monkeypatch):
