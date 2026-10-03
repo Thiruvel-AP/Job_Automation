@@ -32,6 +32,10 @@ def env() -> jinja2.Environment:
         trim_blocks=True, lstrip_blocks=True, autoescape=False, undefined=jinja2.StrictUndefined,
     )
     e.filters["e"] = latex_escape
+    # a URL inside \href{...}: hyperref needs % and # escaped
+    e.filters["urlesc"] = lambda u: str(u).replace("%", r"\%").replace("#", r"\#")
+    # what a reader sees for a link: no scheme, no "www.", no trailing slash
+    e.filters["urlshow"] = lambda u: re.sub(r"^https?://(www\.)?", "", str(u)).rstrip("/")
     return e
 
 

@@ -98,7 +98,7 @@ scoring:
   max_attempts: 3
   required_weight: 2.0
   preferred_weight: 1.0
-  max_pages: 2
+  max_pages: 1                # one-page CV (agreed 2026-10-03); the shrink loop drops bullets until it fits
   letter_max_words: 250
 
 letter:

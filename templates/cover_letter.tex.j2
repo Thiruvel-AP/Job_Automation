@@ -1,27 +1,49 @@
 \documentclass[11pt,a4paper]{article}
+\#{ Layout copied from the user's own cover letter (agreed 2026-10-03). Only fact-bank values and the
+   checked letter paragraphs are inserted. Optional values are read with .get or "is defined". }
 \usepackage{fontspec}
 \setmainfont{Carlito}
-\usepackage[margin=2.2cm]{geometry}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
 \usepackage{xcolor}
-\usepackage{textcomp}
-\definecolor{navy}{RGB}{20,40,90}
-\pagestyle{empty}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
 % no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
 \hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{8pt}
+
 \begin{document}
-{\Large\bfseries\color{navy} \VAR{id.name|e}}\\
-\VAR{id.location|e} \;|\; \VAR{id.email|e} \;|\; \VAR{id.phone|e}
+\raggedright
+\pagestyle{empty}
 
-\VAR{date|e}
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{\VAR{id.name|e}}}\\[0.2cm]
+    \VAR{id.get('address', id.location)|e} \\
+    \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \ $|$ \ \VAR{id.phone|e}\BLOCK{endif} \\
+    \BLOCK{for k in ['linkedin', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\BLOCK{if k == 'linkedin'}LinkedIn\BLOCK{else}Portfolio\BLOCK{endif}}\BLOCK{if not loop.last} \ $|$ \ \BLOCK{endif}\BLOCK{endfor}
 
-Dear \VAR{company|e} hiring team,
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+\VAR{(greeting if greeting is defined else 'Dear ' ~ company ~ ' hiring team')|e},
 
 \BLOCK{for p in paragraphs}
 \VAR{p|e}
 
 \BLOCK{endfor}
-Best regards,\\
+\vspace{0.5cm}
+
+\VAR{(signoff if signoff is defined else 'Kind regards')|e},
+
 \VAR{id.name|e}
+
 \end{document}

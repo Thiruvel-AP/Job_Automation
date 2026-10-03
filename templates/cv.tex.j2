@@ -1,60 +1,95 @@
-\documentclass[10.5pt,a4paper]{article}
+\documentclass[a4paper,10pt]{article}
+\#{ One-page layout copied from the user's own CV (agreed 2026-10-03). Only fact-bank values are inserted.
+   Optional fields are read with .get, so a missing one is skipped, never an error. }
 \usepackage{fontspec}
 \setmainfont{Carlito}
-\usepackage[margin=1.6cm]{geometry}
-\usepackage{xcolor}
-\usepackage{enumitem}
+\usepackage[margin=0.55in, top=0.45in, bottom=0.45in]{geometry}
 \usepackage{titlesec}
-\usepackage[hidelinks]{hyperref}
-\usepackage{textcomp}
-\definecolor{navy}{RGB}{20,40,90}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% headings 11pt on a 10.5pt body (the 10pt class would otherwise make them smaller than the text)
+\titleformat{\section}{\color{headernavy}\fontsize{11}{13}\selectfont\bfseries}{}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+\titlespacing{\section}{0pt}{6pt}{3pt}
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.2em, partopsep=0pt, parsep=0.5pt}
 \pagestyle{empty}
-% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
-\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
 \setlength{\parindent}{0pt}
-\titleformat{\section}{\large\bfseries\color{navy}}{}{0pt}{}[\vspace{-6pt}{\color{navy}\rule{\linewidth}{0.6pt}}]
-\titlespacing*{\section}{0pt}{9pt}{4pt}
-\setlist[itemize]{leftmargin=1.1em,itemsep=1pt,topsep=2pt,parsep=0pt}
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+
+% entry heading: org (left) dates (right) / role (left) location (right)
+\newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
 
 \begin{document}
-{\centering
-{\LARGE\bfseries\color{navy} \VAR{id.name|e}}\\[3pt]
-\BLOCK{if id.headline}{\large\color{navy} \VAR{id.headline|e}}\\[2pt]
-\BLOCK{endif}
-\VAR{id.location|e} \;|\; \VAR{id.email|e} \;|\; \VAR{id.phone|e}\\
-\href{\VAR{id.links.linkedin}}{LinkedIn} \;|\; \href{\VAR{id.links.github}}{GitHub}\par}
+\fontsize{10.5}{12.6}\selectfont
 
-\section*{Profile}
+% ---------------- HEADER ----------------
+\begin{center}
+  {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
+  \VAR{id.location|e} \,$|$\, \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \,$|$\, \href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\\[1pt]
+  \BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\VAR{id.links[k]|urlshow|e}}\BLOCK{if not loop.last} \,$|$\, \BLOCK{endif}\BLOCK{endfor}\BLOCK{if id.get('status_line')}\\[1pt]
+  \VAR{id.status_line|map('e')|join(' \\,$|$\\, ')}\BLOCK{endif}
+
+\end{center}
+
+% ---------------- PROFILE ----------------
+\section{Profile}
 \VAR{profile|e}
 
-\section*{Skills}
-\BLOCK{for group, items in skills.items()}
-\textbf{\VAR{group|e}:} \VAR{items|join(', ')|e}\\
-\BLOCK{endfor}
-
-\section*{Work Experience}
+% ---------------- EXPERIENCE ----------------
+\section{Experience}
 \BLOCK{for e in experience}
-\textbf{\VAR{e.title|e}} \hfill \VAR{e.dates|e}\\
-\textit{\VAR{e.org|e}}
+\BLOCK{if not loop.first}
+\vspace{3pt}
+\BLOCK{endif}
+\entry{\VAR{e.org|e}}{\VAR{e.dates|e}}{\VAR{e.title|e}}{\VAR{e.get('location', '')|e}}
 \begin{itemize}
-\BLOCK{for b in e.bullets}  \item \VAR{b|e}
-\BLOCK{endfor}\end{itemize}
+\BLOCK{for b in e.bullets}
+  \item \VAR{b|e}
+\BLOCK{endfor}
+\end{itemize}
 \BLOCK{endfor}
 
-\section*{Projects}
+% ---------------- PROJECTS ----------------
+\section{Projects}
 \BLOCK{for p in projects}
-\textbf{\VAR{p.name|e}} \BLOCK{if p.github}(\href{\VAR{p.github}}{GitHub})\BLOCK{endif} \hfill \textit{\VAR{p.stack|e}}
+\noindent\textbf{\VAR{p.name|e}}\BLOCK{if p.get('stack')} -- \textit{\VAR{p.stack|e}}\BLOCK{endif} \hfill \BLOCK{if p.get('award')}\textit{\VAR{p.award|e}}\BLOCK{elif p.get('github')}\href{\VAR{p.github|urlesc}}{GitHub}\BLOCK{endif}
+
 \begin{itemize}
-\BLOCK{for b in p.bullets}  \item \VAR{b|e}
-\BLOCK{endfor}\end{itemize}
+\BLOCK{for b in p.bullets}
+  \item \VAR{b|e}
+\BLOCK{endfor}
+\end{itemize}
 \BLOCK{endfor}
 
-\section*{Education}
+% ---------------- SKILLS ----------------
+\section{Skills}
+\BLOCK{for group, items in skills.items()}
+\textbf{\VAR{group|e}:} \VAR{items|map('e')|join(', ')}\BLOCK{if not loop.last}\\\BLOCK{endif}
+
+\BLOCK{endfor}
+
+% ---------------- EDUCATION ----------------
+\section{Education}
 \BLOCK{for ed in education}
-\textbf{\VAR{ed.degree|e}}, \VAR{ed.org|e} \hfill \VAR{ed.dates|e}\\
+\BLOCK{if not loop.first}
+\vspace{2pt}
+\BLOCK{endif}
+\textbf{\VAR{ed.degree|e}}, \VAR{ed.org|e} \hfill \textbf{\VAR{ed.dates|e}}\BLOCK{if ed.get('details')}\\ \textit{\VAR{ed.details|e}}\BLOCK{endif}\BLOCK{if ed.get('grade') or ed.get('note')}\\ \textit{\VAR{(ed.get('grade') or ed.get('note'))|e}}\BLOCK{endif}\par
 \BLOCK{endfor}
 \BLOCK{if certifications}
-\section*{Certifications}
-\VAR{certifications|join('; ')|e}
+
+% ---------------- CERTIFICATIONS ----------------
+\section{Certifications \& Awards}
+\VAR{certifications|map('e')|join(' \\,$|$\\, ')}
 \BLOCK{endif}
+
 \end{document}
