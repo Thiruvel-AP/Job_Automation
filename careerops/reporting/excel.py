@@ -18,6 +18,7 @@ COLS = [("Company", "company", 26), ("Title", "title", 38), ("Tier", "tier", 6),
         ("Sponsor match", "sponsor_score", 9), ("ATS literal", "score", 9), ("ATS stemmed", "score_stemmed", 9),
         ("Ceiling (pre)", "ceiling_pre", 9), ("Honest ceiling", "ceiling", 9), ("Letter", "letter_score", 8), ("Attempts", "attempts", 8),
         ("Source", "source", 11), ("URL", "url", 40), ("Output folder", "out_dir", 40),
+        ("Application folder", "application_dir", 44),
         ("Applied at", "applied_at", 20), ("Confirmation", "confirmation", 20),
         ("First seen", "first_seen", 20), ("Last seen", "last_seen", 20)]
 
@@ -43,6 +44,8 @@ def export(db: DB, path: Path, floor: float = 0.70) -> int:
             v = r[key]
             if key == "flags":
                 v = " | ".join(json.loads(v or "[]"))
+            elif key == "application_dir" and r["status"] != "applied":
+                v = None                                   # only applied rows have an archive folder to show
             vals.append(v)
         ws.append(vals)
         fill = FILL.get(r["status"])

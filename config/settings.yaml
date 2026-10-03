@@ -12,6 +12,10 @@ paths:
   logs: data/logs
   fact_bank: config/profile/fact_bank.yaml
   applicant: config/profile/applicant.yaml
+  # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
+  # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
+  applications: /mnt/d/Professional/UK/Companies
+  tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
 
 sponsors:
   # The register's CSV link changes daily; we scrape the publication page for it.
@@ -86,6 +90,9 @@ gates:
     - ['site reliability|\bsre\b|observability ownership', skip, 'SRE-framed role (standing exclusion)']
     - ['direct reports|line manag(e|ement)|people manag', skip, 'People-management requirement (standing exclusion)']
 
+files:
+  name_style: full   # full = identity.name, short = first word of identity.name (CV / cover-letter file names)
+
 scoring:
   band: [0.70, 0.85]
   max_attempts: 3
@@ -93,6 +100,12 @@ scoring:
   preferred_weight: 1.0
   max_pages: 2
   letter_max_words: 250
+
+letter:
+  # {company} = job company; {team} = " <team name>" when the JD names one (leading space included), else "".
+  greeting: "Hi {company}{team} team"
+  greeting_fallback: "Dear {company} hiring team"     # used when the JD names no team
+  signoff: "With regards"
 
 llm:
   # Tried in order; on 429 / 5xx / quota exhausted the router falls through to the next.

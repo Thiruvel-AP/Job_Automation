@@ -1,6 +1,7 @@
 """LaTeX rendering (xelatex + Carlito) and post-compile checks: page count and extracted text."""
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -66,9 +67,23 @@ def pdf_text(pdf: Path) -> str:
     return subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout
 
 
-def render_cv(ctx: dict, out_dir: Path, stem: str = "CV") -> Path:
-    return compile_tex(env().get_template("cv.tex.j2").render(**ctx), out_dir, stem)
+def _finalise(out_dir: Path, stem: str, final_name: str | None) -> Path:
+    """Rename <stem>.tex/.pdf to '<final_name>.tex/.pdf' inside out_dir (the working copy, never the archive).
+    xelatex only ever sees the fixed stem, so a name with spaces never reaches it."""
+    if not final_name:
+        return out_dir / f"{stem}.pdf"
+    for ext in (".tex", ".pdf"):
+        os.replace(out_dir / f"{stem}{ext}", out_dir / f"{final_name}{ext}")
+    return out_dir / f"{final_name}.pdf"
 
 
-def render_letter(ctx: dict, out_dir: Path, stem: str = "Cover_Letter") -> Path:
-    return compile_tex(env().get_template("cover_letter.tex.j2").render(**ctx), out_dir, stem)
+def render_cv(ctx: dict, out_dir: Path, final_name: str | None = None) -> Path:
+    """Compile as cv.tex, then rename to `final_name` (e.g. 'Ada Lovelace CV') so the file a recruiter sees is
+    already the final one. Returns the PDF path."""
+    compile_tex(env().get_template("cv.tex.j2").render(**ctx), out_dir, "cv")
+    return _finalise(out_dir, "cv", final_name)
+
+
+def render_letter(ctx: dict, out_dir: Path, final_name: str | None = None) -> Path:
+    compile_tex(env().get_template("cover_letter.tex.j2").render(**ctx), out_dir, "letter")
+    return _finalise(out_dir, "letter", final_name)

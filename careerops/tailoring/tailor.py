@@ -8,14 +8,18 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from ..apply.naming import file_stem
 from ..discovery import gates
 from . import prompts as P
 from .faithfulness import check, deny_hits, numbers
 from .render import page_count, pdf_text, render_cv, render_letter
 from .scorer import Keyword, ceiling, in_band, merge_keywords, norm_literal, score, taxonomy_keywords
 
+FALLBACK_MARK = "used fallback letter"
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
 BANNED_CLOSERS = re.compile(r"look forward to hearing from you", re.I)
+# a deny-listed tool may be named in the letter only to say the candidate lacks it
+LACK_WORDS = re.compile(r"\b(not|no|never|yet|without|new to|limited)\b|n't", re.I)
 
 
 # ------------------------------------------------------------------ fact bank helpers
@@ -40,11 +44,20 @@ def slug(s: str) -> str:
 
 
 # ------------------------------------------------------------------ 1. JD analysis
-def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str]:
+def clean_team(raw, job: dict) -> str:
+    """The team name the model found, only if the JD really contains it (a model may not invent one)."""
+    t = re.sub(r"\s+", " ", str(raw or "")).strip(" .,:;")
+    if not t or len(t) > 40 or norm_literal(t) == norm_literal(job["company"]):
+        return ""
+    return t if norm_literal(t) in norm_literal(job["description"] or "") else ""
+
+
+def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str, str]:
+    """(keywords, company_hook, team). `team` is "" when the JD names none."""
     sc = settings["scoring"]
     jd = job["description"] or ""
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
-    hook = ""
+    hook = team = ""
     llm_kw: list[Keyword] = []
     try:
         out = llm.json("extract_keywords", P.KEYWORDS_SYSTEM,
@@ -58,12 +71,13 @@ def analyse(job: dict, llm, settings) -> tuple[list[Keyword], str]:
                 if 1 < len(t) <= 40 and norm_literal(t) in njd:
                     llm_kw.append(Keyword(t, sc["required_weight"] if req else sc["preferred_weight"], req))
         hook = str(out.get("company_hook", ""))[:300]
+        team = clean_team(out.get("team"), job)
     except Exception as e:  # noqa: BLE001 — taxonomy keywords alone are a usable fallback
-        hook = ""
+        hook = team = ""
         llm_kw = []
         print(f"  keyword LLM failed, using taxonomy only: {e}")
     kws = merge_keywords(tax, llm_kw)[:70]
-    return kws, hook
+    return kws, hook, team
 
 
 # ------------------------------------------------------------------ 2. one tailoring attempt
@@ -91,6 +105,7 @@ def _proposal(job, fb, kws, llm, feedback: str, headline: str = "", preferred: l
         for p in fb["projects"])
     user = P.TAILOR_USER.format(
         title=job["title"], company=job["company"],
+        headline=headline or fb["identity"].get("headline", ""),
         preferred=(f"Preferred projects for a {headline} role (use if relevant to the JD): {', '.join(preferred)}"
                    if preferred else ""),
         keywords="\n".join(f"- {k.term} ({k.weight:g})" for k in kws),
@@ -131,13 +146,17 @@ def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "") -> t
         experience.append({**e, "bullet_ids": ids, "bullets": [text_for(i) for i in ids]})
 
     proj_by_id = {p["id"]: p for p in fb["projects"]}
-    pids = [p for p in (prop.get("projects") or []) if p in proj_by_id][:4] or [p["id"] for p in fb["projects"][:3]]
+    pids = [p for p in (prop.get("projects") or []) if p in proj_by_id][:2] or [p["id"] for p in fb["projects"][:2]]
     projects = [{**proj_by_id[p], "bullet_ids": [b["id"] for b in proj_by_id[p]["bullets"]],
                  "bullets": [text_for(b["id"]) for b in proj_by_id[p]["bullets"]]} for p in pids]
 
     profile = (prop.get("profile") or "").strip()
-    src = " ".join(fb["profile_facts"]) + " " + " ".join(i for v in fb["skills"].values() for i in v)
-    c = check(profile, src, [], deny, kws, vocabulary=vocab, max_growth=3.0) if profile else None
+    # what the profile may draw on: profile_facts + skills + the canonical bullets selected for this CV
+    picked = [bidx[i] for sec in (experience, projects) for e in sec for i in e["bullet_ids"]]
+    src = (" ".join(fb["profile_facts"]) + " " + " ".join(i for v in fb["skills"].values() for i in v) + " "
+           + " ".join(b["text"] for b in picked))
+    terms = [t for b in picked for t in b.get("terms", [])]
+    c = check(profile, src, terms, deny, kws, vocabulary=vocab, max_growth=3.0) if profile else None
     if not profile or not c.ok or re.search(r"\b\d+\+?\s+years?\b", profile, re.I):
         if c and not c.ok:
             violations.extend(f"profile: {v}" for v in c.violations)
@@ -175,8 +194,40 @@ def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
 
 
 # ------------------------------------------------------------------ 3. cover letter
-def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings) -> tuple[list[str], list[str]]:
+def required_gaps(gaps: list[str], kws: list[Keyword]) -> list[str]:
+    """Required JD keywords the fact bank has no evidence for (the letter may name one of them, plainly)."""
+    required = {k.term for k in kws if k.required}
+    return [g for g in gaps if g in required]
+
+
+def letter_greeting(settings, company: str, team: str = "") -> str:
+    """'Hi <company> <team> team' when the JD names a team, else 'Dear <company> hiring team' (settings → letter)."""
+    cfg = settings["letter"]
+    team = team.strip()
+    if team:
+        return cfg["greeting"].format(company=company, team=f" {team}")
+    return cfg["greeting_fallback"].format(company=company)
+
+
+def _deny_problems(text: str, deny: list[str], gaps: list[str]) -> list[str]:
+    """Deny-listed terms in the letter. One that is also a required gap may appear, but only in sentences that say
+    the candidate lacks it ('I have not used X yet'); any other mention, or any other deny-listed term, is a problem."""
+    allowed = {d for g in gaps for d in deny_hits(g, deny)}
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    out = []
+    for d in deny_hits(text, deny):
+        if d in allowed and all(LACK_WORDS.search(s) for s in sentences if deny_hits(s, [d])):
+            continue
+        out.append(f"deny-listed '{d}'")
+    return out
+
+
+def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
+            gaps: list[str] | None = None) -> tuple[list[str], list[str]]:
     deny = fb.get("deny_terms", [])
+    gaps = (gaps or [])[:6]
+    # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
+    named_ok = {d for g in gaps for d in deny_hits(g, deny)}
     max_words = settings["scoring"]["letter_max_words"]
     evidence = chosen_bullets[:5]
     source = " ".join(evidence + fb["profile_facts"]) + " " + hook + " " + job["description"]
@@ -185,24 +236,28 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings) -> tup
         try:
             out = llm.json(
                 "cover_letter",
-                P.LETTER_SYSTEM.replace("{max_words}", str(max_words)).replace("{deny}", ", ".join(deny)),
+                P.LETTER_SYSTEM.replace("{max_words}", str(max_words))
+                .replace("{deny}", ", ".join(d for d in deny if d not in named_ok)),
                 P.LETTER_USER.format(title=job["title"], company=job["company"], company_hook=hook or "(none)",
                                      keywords=", ".join(k.term for k in kws[:20]),
+                                     gaps=", ".join(gaps) or "(none)",
                                      evidence="\n".join(f"- {e}" for e in evidence)),
-                context={"company": job["company"], "title": job["title"], "evidence": evidence})
+                context={"company": job["company"], "title": job["title"], "evidence": evidence, "gaps": gaps})
             paras = [p.strip() for p in out.get("paragraphs", []) if p and p.strip()]
         except Exception as e:  # noqa: BLE001
             problems.append(f"letter LLM failed: {e}")
             break
         text = " ".join(paras)
         problems = []
+        if not text.strip():
+            problems.append("empty letter")
         if len(text.split()) > max_words:
             problems.append(f"{len(text.split())} words > {max_words}")
         if paras and BANNED_OPENERS.search(paras[0]):
             problems.append("banned opener")
         if BANNED_CLOSERS.search(text):
             problems.append("banned closer")
-        problems += [f"deny-listed '{d}'" for d in deny_hits(text, deny)]
+        problems += _deny_problems(text, deny, gaps)
         extra = numbers(text) - numbers(source)
         if extra:
             problems.append(f"new numbers {sorted(extra)}")
@@ -214,7 +269,41 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings) -> tup
         " ".join(evidence[:2]),
         f"I would welcome a short call to discuss where I could contribute first on the {job['title']} team.",
     ]
-    return fallback, problems + ["used fallback letter"]
+    return [p for p in fallback if p.strip()], problems + [FALLBACK_MARK]
+
+
+def _make_letter(job, fb, kws, hook, chosen: list[str], llm, settings, out_dir: Path, final_name: str,
+                 team: str = "", gaps: list[str] | None = None):
+    """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
+    deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
+    paras, problems = _letter(job, fb, kws, hook, chosen, llm, settings, gaps)
+    pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
+                         "date": date.today().strftime("%d %B %Y"),
+                         "greeting": letter_greeting(settings, job["company"], team),
+                         "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
+    return pdf, {"paragraphs": paras, "problems": problems, "score": score(pdf_text(pdf), kws).literal,
+                 "pages": page_count(pdf), "status": "fallback" if FALLBACK_MARK in problems else "ok"}
+
+
+def _names(fb: dict, settings) -> tuple[str, str]:
+    """Final file stems for the CV and the letter: '<name> CV', '<name> Cover Letter' (files.name_style)."""
+    style = settings["files"]["name_style"]
+    return (file_stem(fb["identity"]["name"], "CV", style), file_stem(fb["identity"]["name"], "Cover Letter", style))
+
+
+def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
+    """Re-draft the letter for an already tailored job (review's 'l'). Keeps the file name; rewrites report.json."""
+    job = dict(job)
+    job["description"] = job.get("description") or ""
+    kws = [Keyword(**k) for k in rep["keywords"]]
+    chosen = [b for sec in ("experience", "projects") for e in rep["context"][sec] for b in e["bullets"]]
+    out_dir = Path(rep["out_dir"])
+    pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", chosen, llm, settings, out_dir,
+                               Path(rep["letter_pdf"]).stem, rep.get("team") or "",
+                               required_gaps(rep.get("genuine_gaps") or [], kws))
+    rep["letter"], rep["letter_pdf"] = letter, str(pdf)
+    (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    return rep
 
 
 # ------------------------------------------------------------------ 4. the loop
@@ -223,22 +312,23 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
     band = tuple(sc["band"])
     lo, hi = band
     family, tier, headline, preferred = role_prior(job, fb, settings)
-    kws, hook = analyse(job, llm, settings)
+    kws, hook, team = analyse(job, llm, settings)
     ceil, gaps = ceiling(fact_text(fb), kws)
     out_dir = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
+    cv_name, letter_name = _names(fb, settings)
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
-                              "keywords": [asdict(k) for k in kws], "company_hook": hook,
+                              "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
                               "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(out_dir)}
 
     feedback, best = "", None
     for attempt in range(1, sc["max_attempts"] + 1):
         prop = _proposal(job, fb, kws, llm, feedback, headline, preferred)
         ctx, viol, warn = _assemble(fb, prop, kws, headline)
-        pdf = render_cv(ctx, out_dir)
+        pdf = render_cv(ctx, out_dir, cv_name)
         shrinks = 0
         while page_count(pdf) > sc["max_pages"] and _shrink(ctx, kws):
-            pdf = render_cv(ctx, out_dir)
+            pdf = render_cv(ctx, out_dir, cv_name)
             shrinks += 1
         s = score(pdf_text(pdf), kws)
 
@@ -252,7 +342,7 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
                         if e["bullets"][i] != bidx[bid]["text"] and s.literal > hi:
                             e["bullets"][i] = bidx[bid]["text"]
                             reverted.append(bid)
-                            pdf = render_cv(ctx, out_dir)
+                            pdf = render_cv(ctx, out_dir, cv_name)
                             s = score(pdf_text(pdf), kws)
 
         rec = {"attempt": attempt, "score": s.literal, "score_stemmed": s.stemmed, "band": in_band(s.literal, band),
@@ -276,19 +366,17 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
                                                gaps=", ".join(gaps) or "(none)")
 
     rec, ctx = best
-    pdf = render_cv(ctx, out_dir)                      # re-render the chosen attempt as the final file
+    pdf = render_cv(ctx, out_dir, cv_name)                      # re-render the chosen attempt as the final file
     final_score = score(pdf_text(pdf), kws)
     chosen = [b for e in ctx["experience"] + ctx["projects"] for b in e["bullets"]]
-    paras, letter_problems = _letter(job, fb, kws, hook, chosen, llm, settings)
-    letter_pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
-                                "date": date.today().strftime("%d %B %Y")}, out_dir)
+    letter_pdf, letter = _make_letter(job, fb, kws, hook, chosen, llm, settings, out_dir, letter_name, team,
+                                      required_gaps(gaps, kws))
     report.update({
         "final": {"score": final_score.literal, "score_stemmed": final_score.stemmed,
                   "band": in_band(final_score.literal, band), "pages": page_count(pdf),
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
-        "letter": {"paragraphs": paras, "problems": letter_problems,
-                   "score": score(pdf_text(letter_pdf), kws).literal},
+        "letter": letter,
         "cv_pdf": str(pdf), "letter_pdf": str(letter_pdf), "context": ctx,
     })
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")

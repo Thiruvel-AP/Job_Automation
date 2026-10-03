@@ -1,14 +1,16 @@
 """career-ops command line.
 
   careerops init                create data/ folders and .env (idempotent)
-  careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODOs
+  careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
   careerops tailor [--limit N]  JD analysis → tailored CV + letter → review queue
   careerops review              approve / edit / reject (logs preference data)
-  careerops apply               open approved jobs' forms, fill basics, you submit
+  careerops apply [--no-letter] open approved jobs' forms, fill basics, you submit; then archive what was sent
+  careerops mark-applied --id JOB [--ref REF] [--date YYYY-MM-DD] [--no-letter]
+                                archive + mark an application you made outside the assist
   careerops export              write the Excel view
   careerops export-prefs        preference log → DPO pairs jsonl
   careerops run                 discover + tailor + export (what cron calls)
@@ -26,8 +28,11 @@ import hashlib
 import json
 import sys
 import traceback
+from datetime import date
 from pathlib import Path
 
+from .apply.archive import mark_applied_unarchived, preflight, record_application
+from .apply.errors import ArchiveError, ArchiveIncomplete
 from .discovery import gates, sources
 from .discovery import register as sponsors
 from .review import workflow as review
@@ -162,8 +167,11 @@ def cmd_tailor(args):
                           score=f["score"], score_stemmed=f["score_stemmed"], letter_score=rep["letter"]["score"],
                           attempts=len(rep["attempts"]), out_dir=rep["out_dir"])
             db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"]})
+            cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
+            over = cv_pages > s["scoring"]["max_pages"] or letter_pages != 1
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
-                  f"→ {f['band']} band, {f['pages']} page(s)")
+                  f"→ {f['band']} band | CV {cv_pages} page(s), letter {letter_pages} page(s)"
+                  + (f"  !! expected {s['scoring']['max_pages']} and 1" if over else ""))
         except Exception as e:  # noqa: BLE001 — one bad job must not kill the cron run
             db.update_job(job["id"], status="error", reason=str(e)[:500])
             db.log(job["id"], "error", traceback.format_exc())
@@ -172,7 +180,30 @@ def cmd_tailor(args):
 
 def cmd_review(args):
     s, db = _ctx(args)
-    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit)
+    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db))
+
+
+def _fail(msg: str) -> None:
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def _archive(db: DB, s, job, rep: dict, confirmation: str | None, applied_on, no_letter: bool) -> bool:
+    """Archive a submitted application and mark it applied. True if fully archived; problems are printed."""
+    try:
+        res = record_application(db, s, job, rep, confirmation=confirmation, applied_on=applied_on,
+                                 no_letter=no_letter)
+    except ArchiveIncomplete as e:
+        print(f"  APPLIED, but the archive is incomplete — finish by hand: {e}", file=sys.stderr)
+        return False
+    except ArchiveError as e:                      # refused before writing; the application itself was submitted
+        mark_applied_unarchived(db, job, confirmation, str(e), applied_on)
+        print(f"  APPLIED, but NOT archived: {e}", file=sys.stderr)
+        return False
+    print(f"  marked applied; archived to {res.folder}")
+    for f in res.flags:
+        print(f"  FLAG: {f}")
+    return True
 
 
 def cmd_apply(args):
@@ -181,20 +212,49 @@ def cmd_apply(args):
     s, db = _ctx(args)
     applicant = load_yaml(s.path("applicant"))
     jobs = [db.job(args.id)] if args.id else order(db.jobs("approved"), s, tailored=True)[: args.limit]
+    failures = 0
     for job in jobs:
         if job is None:
             continue
-        print(review.summary(job, review.load_report(job)))
+        rep = review.load_report(job)
+        try:                                       # refuse before a form is opened: letter, right files, root, paths
+            preflight(db, s, job, rep, no_letter=args.no_letter)
+        except ArchiveError as e:
+            print(f"  REFUSED {job['id']}: {e}", file=sys.stderr)
+            failures += 1
+            continue
+        print(review.summary(job, rep))
         if input("Open application form? [y/N] ").strip().lower() != "y":
             continue
-        r = assist(job, review.load_report(job), applicant, s.path("browser_profile"))
+        r = assist(job, rep, applicant, s.path("browser_profile"))
         if r["confirmation"].lower() == "x":
             db.log(job["id"], "apply", {"aborted": True, **r})
             continue
-        db.update_job(job["id"], status="applied", applied_at=now(), confirmation=r["confirmation"] or None)
         db.log(job["id"], "apply", r)
-        print("  marked applied.")
+        if not _archive(db, s, job, rep, r["confirmation"] or None, None, args.no_letter):
+            failures += 1
     export(db, s.path("excel"), floor=s["roles"]["floor"])
+    if failures:
+        sys.exit(1)
+
+
+def cmd_mark_applied(args):
+    """Record an application made outside the assist (by hand, by email, on a portal Playwright can't drive)."""
+    s, db = _ctx(args)
+    job = db.job(args.id)
+    if job is None:
+        _fail(f"no such job: {args.id}")
+    if not job["out_dir"] or not (Path(job["out_dir"]) / "report.json").exists():
+        _fail(f"{args.id} has no tailored CV/letter (run `careerops tailor` first)")
+    rep = review.load_report(job)
+    try:
+        preflight(db, s, job, rep, applied_on=args.date, no_letter=args.no_letter)
+    except ArchiveError as e:                      # nothing submitted by us, nothing changed: just refuse
+        _fail(str(e))
+    ok = _archive(db, s, job, rep, args.ref or None, args.date, args.no_letter)
+    export(db, s.path("excel"), floor=s["roles"]["floor"])
+    if not ok:
+        sys.exit(1)
 
 
 def cmd_export(args):
@@ -292,6 +352,14 @@ def cmd_status(args):
     print("\ntier  " +" ".join(f"{s:>12s}" for s in statuses))
     for t in tiers:
         print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
+    archived = list(db.conn.execute(
+        "SELECT c.folder, COUNT(*) AS n FROM archive_index r JOIN archive_index c ON c.kind='company' "
+        "AND c.folder = CASE WHEN instr(r.folder, '/') > 0 THEN substr(r.folder, 1, instr(r.folder, '/') - 1) "
+        "ELSE r.folder END WHERE r.kind='role' GROUP BY c.folder ORDER BY n DESC, c.folder LIMIT 10"))
+    if archived:                                   # one row per submission (resubmissions in vN count too)
+        print("\nArchived applications (top 10 companies):")
+        for company, n in archived:
+            print(f"  {n:3d}  {company}")
 
 
 def main(argv=None):
@@ -328,8 +396,17 @@ def main(argv=None):
         t.add_argument("--limit", type=int, default=10)
         t.add_argument("--mock", action="store_true", help="deterministic MockLLM, no API calls")
         t.set_defaults(fn=fn)
-    r = sub.add_parser("review"); r.add_argument("--limit", type=int); r.set_defaults(fn=cmd_review)
-    p = sub.add_parser("apply"); p.add_argument("--id"); p.add_argument("--limit", type=int); p.set_defaults(fn=cmd_apply)
+    r = sub.add_parser("review"); r.add_argument("--limit", type=int)
+    r.add_argument("--mock", action="store_true", help="MockLLM for the letter-regenerate key, no API calls")
+    r.set_defaults(fn=cmd_review)
+    p = sub.add_parser("apply"); p.add_argument("--id"); p.add_argument("--limit", type=int)
+    p.add_argument("--no-letter", action="store_true", help="go ahead although the cover-letter PDF is missing")
+    p.set_defaults(fn=cmd_apply)
+    ma = sub.add_parser("mark-applied", help="archive + mark an application made outside the assist")
+    ma.add_argument("--id", required=True); ma.add_argument("--ref", help="confirmation / reference")
+    ma.add_argument("--date", type=date.fromisoformat, metavar="YYYY-MM-DD", help="date applied (default: today)")
+    ma.add_argument("--no-letter", action="store_true", help="go ahead although the cover-letter PDF is missing")
+    ma.set_defaults(fn=cmd_mark_applied)
     sub.add_parser("export").set_defaults(fn=cmd_export)
     e = sub.add_parser("export-prefs"); e.add_argument("--out", default="data/feedback/dpo_pairs.jsonl")
     e.set_defaults(fn=cmd_export_prefs)

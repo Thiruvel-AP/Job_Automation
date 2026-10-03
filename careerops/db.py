@@ -76,6 +76,14 @@ CREATE INDEX IF NOT EXISTS ix_companies_sector ON companies(sector);
 CREATE TABLE IF NOT EXISTS company_events (
     norm TEXT, town_norm TEXT, day TEXT, kind TEXT, detail TEXT   -- added | removed | rating
 );
+
+-- A1: folders of the append-only archive that the pipeline created or adopted. Lives here, never as marker files in
+-- the user's tree. `folder` is relative to paths.applications, '/'-separated ("Lendable", "Lendable/AI Engineer/v2").
+CREATE TABLE IF NOT EXISTS archive_index (
+    folder TEXT PRIMARY KEY,
+    kind TEXT CHECK(kind IN ('company','role')),
+    company_key TEXT, job_id TEXT, created_at TEXT
+);
 """
 
 # Additive columns for databases created before they existed: (table, column, type). Never drop or rename.
@@ -83,6 +91,7 @@ COLUMNS = [
     ("jobs", "family", "TEXT"),        # M4b role family (data_scientist, ai_engineer, ...)
     ("jobs", "tier", "INTEGER"),       # M4b priority tier, 1 = highest
     ("jobs", "ceiling_pre", "REAL"),   # M4b honest ceiling at triage, taxonomy keywords only (no LLM)
+    ("jobs", "application_dir", "TEXT"),  # A1 archive folder of the latest submission
 ]
 
 

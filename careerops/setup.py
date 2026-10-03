@@ -8,7 +8,8 @@ from pathlib import Path
 
 import requests
 
-DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs")
+# `applications` is the user's archive root: init creates it only if missing and never touches existing contents.
+DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp")
 FILE_PARENTS = ("db", "excel", "learning", "preferences")
 
 

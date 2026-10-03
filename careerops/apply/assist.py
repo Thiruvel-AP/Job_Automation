@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from .guard import check_job_files
+
 LABEL_JS = """el => {
   const bits = [];
   if (el.id) { const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`); if (l) bits.push(l.innerText); }
@@ -27,8 +29,15 @@ def _matches(label: str, patterns: list[str]) -> bool:
     return any(re.search(p, label, re.I) for p in patterns)
 
 
-def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None) -> dict:
-    """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields."""
+def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
+              letter_text: str | None = None, job=None) -> dict:
+    """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
+
+    With `job`, the wrong-file guard runs first: nothing is uploaded unless the CV and letter belong to that job.
+    A cover-letter file field gets the letter PDF; a cover-letter text box gets `letter_text` (when still empty).
+    """
+    if job is not None:
+        check_job_files(job, cv_pdf, letter_pdf)
     report = {"filled": [], "manual": [], "uploaded": [], "required_empty": []}
     never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
 
@@ -47,6 +56,14 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None)
                 el.set_input_files(cv_pdf); report["uploaded"].append(f"{short} ← CV")
             else:
                 report["manual"].append(f"file: {short}")
+            continue
+
+        if letter_text and typ == "textarea" and re.search(r"cover\s*letter", label, re.I):
+            # Before the never_fill check on purpose: 'cover letter' is in never_fill so that a *question* about
+            # one is left to the user, but the letter text is ours and was reviewed.
+            if not (el.input_value() or "").strip():
+                el.fill(letter_text)
+                report["filled"].append(f"{short} = cover letter text")
             continue
 
         if _matches(label, never):
@@ -74,6 +91,10 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
     from playwright.sync_api import sync_playwright
 
     url = job["apply_url"] or job["url"]
+    cv = rep.get("cv_pdf")
+    letter = rep.get("letter_pdf") if rep.get("letter_pdf") and Path(rep["letter_pdf"]).is_file() else None
+    check_job_files(job, cv, letter)                       # refuse before a browser even opens
+    letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
     with sync_playwright() as pw:
         ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
@@ -85,7 +106,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
                     a.click()
                     page.wait_for_timeout(2500)
                     break
-        r = fill_page(page, applicant, rep.get("cv_pdf"), rep.get("letter_pdf"))
+        r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job)
         print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
         print(f"YOU ANSWER (orange): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
         print("\nReview everything in the browser and press Submit yourself.")

@@ -22,6 +22,21 @@ from ..tailoring.faithfulness import deny_hits
 from ..tailoring.queue import order
 from ..tailoring.render import page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
+from ..tailoring.tailor import FALLBACK_MARK, regenerate_letter as _regenerate_letter
+
+CONFIRM_FALLBACK = "send fallback"
+
+
+class FallbackLetterError(RuntimeError):
+    """Approving a job whose cover letter is the deterministic fallback needs a deliberate `send fallback`."""
+
+
+def letter_status(rep: dict) -> str:
+    """'ok' or 'fallback'. Reports written before A1 have no status: judge them by their recorded problems."""
+    letter = rep.get("letter") or {}
+    if letter.get("status"):
+        return letter["status"]
+    return "fallback" if FALLBACK_MARK in (letter.get("problems") or []) else "ok"
 
 
 def _log(path: Path, row: dict) -> None:
@@ -49,6 +64,8 @@ def summary(job, rep: dict) -> str:
         f"| band: {f['band']} | pages {f['pages']} | attempts {len(rep['attempts'])}",
         f"Letter score {rep['letter']['score']:.0%}" + (f" | letter issues: {rep['letter']['problems']}" if rep['letter']['problems'] else ""),
     ]
+    if letter_status(rep) == "fallback":
+        lines.append("LETTER IS A FALLBACK — regenerate (l) before approving")
     if flags:
         lines.append("FLAGS: " + " | ".join(flags))
     if rep["genuine_gaps"]:
@@ -79,12 +96,25 @@ def open_file(p: str) -> None:
 
 
 # ---------------------------------------------------------------- decisions (also used by tests)
-def approve(db: DB, job, rep: dict, prefs: Path) -> None:
+def approve(db: DB, job, rep: dict, prefs: Path, confirm: str | None = None) -> None:
+    """A fallback letter is approved only with confirm == 'send fallback' (logged as an event)."""
+    if letter_status(rep) == "fallback":
+        if (confirm or "").strip() != CONFIRM_FALLBACK:
+            raise FallbackLetterError(f"the cover letter is a fallback; regenerate it, or type '{CONFIRM_FALLBACK}'")
+        db.log(job["id"], "review", {"approved_fallback_letter": True, "problems": rep["letter"].get("problems", [])})
     _log(prefs, {"kind": "approve", "job_id": job["id"], "keywords": rep["keywords"],
                  "selection": rep["attempts"][rep["final"]["chosen_attempt"] - 1]["selection"],
                  "score": rep["final"]["score"]})
     db.update_job(job["id"], status="approved")
     db.log(job["id"], "review", "approved")
+
+
+def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings) -> dict:
+    """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log."""
+    rep = _regenerate_letter(job, fb, llm, settings, rep)
+    db.update_job(job["id"], letter_score=rep["letter"]["score"])
+    db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"]})
+    return rep
 
 
 def reject(db: DB, job, rep: dict, prefs: Path, reason: str) -> None:
@@ -120,7 +150,7 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
         _log(prefs, {"kind": "edit_pair", "job_id": job["id"], "bullet_id": "profile", "source": fb["profile_facts"],
                      "keywords": rep["keywords"], "chosen": edited["profile"].strip(), "rejected": ctx["profile"]})
         ctx["profile"] = edited["profile"].strip()
-    pdf = render_cv(ctx, Path(rep["out_dir"]))
+    pdf = render_cv(ctx, Path(rep["out_dir"]), Path(rep["cv_pdf"]).stem)      # keep the CV's final file name
     s = score(pdf_text(pdf), kws)
     rep["final"].update({"score": s.literal, "score_stemmed": s.stemmed, "pages": page_count(pdf), "edited": True})
     (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
@@ -129,7 +159,7 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
 
 
 # ---------------------------------------------------------------- interactive loop
-def run(db: DB, settings, fb: dict, limit: int | None = None) -> None:
+def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None) -> None:
     prefs = settings.path("preferences")
     queue = order(db.jobs("needs_review"), settings, tailored=True)[:limit]
     print(f"{len(queue)} job(s) waiting for review.")
@@ -137,11 +167,30 @@ def run(db: DB, settings, fb: dict, limit: int | None = None) -> None:
         rep = load_report(job)
         print(summary(job, rep))
         while True:
-            c = input("[a]pprove  [e]dit  [r]eject  [o]pen PDFs  [s]kip  [q]uit > ").strip().lower()
+            c = input("[a]pprove  [e]dit  [r]eject  [l]etter regenerate  [o]pen PDFs  [s]kip  [q]uit > ").strip().lower()
             if c == "o":
                 open_file(rep["cv_pdf"]); open_file(rep["letter_pdf"])
             elif c == "a":
-                approve(db, job, rep, prefs); break
+                confirm = None
+                if letter_status(rep) == "fallback":
+                    confirm = input(f"Letter is a FALLBACK. Type '{CONFIRM_FALLBACK}' to approve anyway: ")
+                try:
+                    approve(db, job, rep, prefs, confirm=confirm)
+                except FallbackLetterError as e:
+                    print(f"  NOT approved: {e}")
+                    continue
+                break
+            elif c == "l":
+                if make_llm is None:
+                    print("  no LLM available for this run")
+                    continue
+                try:
+                    rep = regenerate_letter(db, job, rep, fb, make_llm(), settings)
+                except Exception as e:  # noqa: BLE001  (provider errors, xelatex errors: report, keep the old letter)
+                    print(f"  letter NOT regenerated: {e}")
+                    continue
+                job = db.job(job["id"])
+                print(summary(job, rep))
             elif c == "r":
                 reject(db, job, rep, prefs, input("reason: ").strip() or "unspecified"); break
             elif c == "e":
