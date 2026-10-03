@@ -16,6 +16,9 @@ paths:
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
+  # `--mock` runs redirect every path above that points at generated data (db, outputs, excel, archive, ...) under
+  # this folder, so a mock run cannot touch real jobs. fact_bank and applicant stay read-only. Safe to delete.
+  mock_root: data/mock
 
 sponsors:
   # The register's CSV link changes daily; we scrape the publication page for it.

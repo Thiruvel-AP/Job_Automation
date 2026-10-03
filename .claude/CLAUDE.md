@@ -9,7 +9,7 @@ What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · curre
 - Tests: `pytest -q` — must stay green; run before every commit
 - One area: `pytest -q tests/discovery`
 - Toolchain check: `careerops doctor` · data folders: `careerops init`
-- Whole pipeline without a model or network: `careerops run --mock --limit 3`
+- Whole pipeline without a model or network: `careerops run --mock --limit 3` (isolated: `data/mock/`, one seeded fixture job; real data untouched)
 
 ## Layout rules
 - Package code by pipeline stage: `careerops/{discovery,tailoring,llm,review,apply,reporting,training}/`.
@@ -47,6 +47,9 @@ What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · curre
 
 ## Definition of done for any task
 1. `pytest -q` green (count the new tests in your summary).
-2. `careerops run --mock --limit 1` still completes.
+2. `careerops run --mock --limit 1` still completes, and says it tailored the seeded fixture job (`Tailoring 1 job(s)`).
+   `--mock` runs on its own data root (`data/mock/`, own `careerops.db` and `outputs/`, no network) and never opens the
+   real `data/careerops.db` or `data/outputs/`. Never verify work by running a command without `--mock` against the real
+   `data/` (live `discover`/`tailor`/`retriage`), and never point `--config` at real paths for a smoke run.
 3. Docs updated where behaviour changed (`README.md` commands, `docs/IMPLEMENTATION.md` status).
 4. Summary to the user: what changed, how it was verified, anything left unverified (e.g. needs a live network run).

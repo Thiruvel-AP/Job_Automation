@@ -118,6 +118,9 @@ tailored the LLM-keyword `ceiling` replaces it. `tailor --limit N` gives tier 3 
 
 `careerops run --limit 25` (discover + tailor + export) is what `scripts/crontab.example` schedules.
 `--mock` runs the whole thing with a deterministic stand-in model — use it after editing templates or the fact bank.
+It is fully isolated: its own database and outputs under `data/mock/` (`paths.mock_root`), no network, and one seeded
+fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. `data/mock/` is safe to delete.
+`careerops review --mock` after a mock run reviews that mock job.
 
 ## What the review screen tells you
 

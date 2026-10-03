@@ -37,6 +37,7 @@ from .apply.errors import ArchiveError, ArchiveIncomplete
 from .discovery import gates, sources
 from .discovery import register as sponsors
 from .review import workflow as review
+from . import mockroot
 from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
@@ -48,8 +49,23 @@ from .setup import doctor, init, load_dotenv
 def _ctx(args):
     s = load_settings(args.config)
     load_dotenv(s.root / ".env")          # cron-friendly: no `set -a; . .env` needed
-    db = DB(s.path("db"))
-    return s, db
+    if getattr(args, "mock", False):
+        # --mock never opens the real DB, outputs, exports or archive: it gets its own data root and one seeded job
+        s = mockroot.mock_settings(s)
+        mockroot.ensure_dirs(s)
+        db = DB(s.path("db"))
+        # `run` and `tailor` start from a freshly seeded job, once per process (`run` calls tailor, then export);
+        # `review --mock` after `run --mock` must see the tailored job, so it never reseeds.
+        if getattr(args, "cmd", None) in ("run", "tailor") and not getattr(args, "_mock_seeded", False):
+            args._mock_seeded = True
+            print(f"MOCK data root {mockroot.mock_root(s)} — real data/ is not touched.")
+            status = mockroot.seed(db, lambda d: triage_new(d, s))
+            if status != "triaged":
+                reason = db.job(mockroot.SEED_JOB_ID)["reason"]
+                raise SystemExit(f"mock seed job is '{status}' after triage ({reason}); "
+                                 "today's rules reject the fixture JD")
+        return s, db
+    return s, DB(s.path("db"))
 
 
 def _llm(args, s, db):
@@ -286,7 +302,10 @@ def cmd_export_prefs(args):
 
 
 def cmd_run(args):
-    cmd_discover(args)
+    if args.mock:
+        print("Discovery skipped under --mock (no network); using the seeded fixture job.")
+    else:
+        cmd_discover(args)
     cmd_tailor(args)
     cmd_export(args)
 
