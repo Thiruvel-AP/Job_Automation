@@ -205,6 +205,60 @@ def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
     return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
 
 
+_ID_KEYS = ("id", "bullet_id", "project_id", "experience_id", "ref")
+
+
+def _as_id(x) -> str | None:
+    """An id as the model may write it: the id string, or an object carrying it ({"id": "a1", "text": ...})."""
+    if isinstance(x, str):
+        return x.strip() or None
+    if isinstance(x, dict):
+        for k in _ID_KEYS:
+            if isinstance(x.get(k), str) and x[k].strip():
+                return x[k].strip()
+    return None
+
+
+def _id_list(x, notes: list[str], what: str) -> list[str]:
+    items = x if isinstance(x, list) else [x] if isinstance(x, (str, dict)) else []
+    out = [i for i in map(_as_id, items) if i]
+    if len(out) != len(items) or any(not isinstance(i, str) for i in items):
+        notes.append(f"{what}: not every entry was an id string; objects were read by their id, the rest ignored")
+    return out
+
+
+def clean_proposal(prop) -> tuple[dict, list[str]]:
+    """The model's tailor_cv answer in the shape _assemble expects: experience {entry id: [bullet ids]}, projects
+    [ids], rephrase {bullet id: text}, profile str. Models sometimes answer with bullet objects instead of ids, a list
+    of entries instead of a map, or numbers where text belongs; whatever cannot be read is ignored (and noted), never
+    a crash. Returns (proposal, notes)."""
+    notes: list[str] = []
+    if not isinstance(prop, dict):
+        return {"profile": "", "experience": {}, "projects": [], "rephrase": {}}, ["answer was not an object"]
+    exp, experience = prop.get("experience"), {}
+    if isinstance(exp, list):                                   # [{"id": "ex1", "bullets": [...]}, ...]
+        exp = {_as_id(e): e.get("bullets") or e.get("bullet_ids") or e.get("ids") or []
+               for e in exp if isinstance(e, dict) and _as_id(e)}
+    for eid, ids in (exp.items() if isinstance(exp, dict) else []):
+        if isinstance(eid, str):
+            experience[eid] = _id_list(ids, notes, f"experience {eid}")
+    projects = _id_list(prop.get("projects") or [], notes, "projects")
+    reph, rephrase = prop.get("rephrase"), {}
+    if isinstance(reph, list):                                  # [{"id": "a1", "text": "..."}, ...]
+        reph = {_as_id(r): r.get("text") or r.get("rephrased") or r.get("bullet") for r in reph
+                if isinstance(r, dict) and _as_id(r)}
+    for bid, text in (reph.items() if isinstance(reph, dict) else []):
+        if isinstance(bid, str) and isinstance(text, str):
+            rephrase[bid] = text
+        else:
+            notes.append(f"rephrase {bid}: not text, ignored")
+    profile = prop.get("profile")
+    if profile is not None and not isinstance(profile, str):
+        notes.append("profile: not text, ignored")
+        profile = ""
+    return {"profile": profile or "", "experience": experience, "projects": projects, "rephrase": rephrase}, notes
+
+
 def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "",
               retry_profile: Callable[[str, list[str], str], str] | None = None) -> tuple[dict, list[str], list[str]]:
     """Turn a proposal into a render context, applying the faithfulness guard.
@@ -214,7 +268,9 @@ def _assemble(fb: dict, prop: dict, kws: list[Keyword], headline: str = "",
     bidx = bullet_index(fb)
     vocab = fact_text(fb)
     violations, warnings = [], []
-    rephrase = prop.get("rephrase") or {}
+    prop, notes = clean_proposal(prop)
+    warnings.extend(f"proposal: {n}" for n in notes)
+    rephrase = prop["rephrase"]
 
     def text_for(bid: str) -> str:
         b = bidx[bid]
@@ -436,7 +492,7 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
                                      gaps=", ".join(gaps) or "(none)",
                                      evidence="\n".join(f"- {e}" for e in evidence)) + feedback,
                 {"company": job["company"], "title": job["title"], "evidence": evidence, "gaps": gaps})
-            paras = [p.strip() for p in out.get("paragraphs", []) if p and p.strip()]
+            paras = [p.strip() for p in out.get("paragraphs", []) if isinstance(p, str) and p.strip()]
         except Exception as e:  # noqa: BLE001
             problems.append(f"letter LLM failed: {e}")
             break
