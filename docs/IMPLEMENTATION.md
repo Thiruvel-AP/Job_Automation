@@ -12,12 +12,12 @@ Companion to [`PLAN.md`](PLAN.md) (what & why). This file is *how*: modules, sig
 |---|---|---|
 | **Resume:** STAR rewrite, JD keywords woven in | `prompts.TAILOR_*` | Bullet shape = *Action verb → what → how (tools) → Result*. Situation/Task compress into the clause "for X / to solve Y". |
 | Result part of STAR | `fact_bank.yaml` → new optional `result:` per bullet | The guard already blocks new numbers, so a Result can only come from `result:`. Bullets without one are listed in review as **"needs a result (yours to supply)"** — never invented. |
-| Prioritise relevant, cut what doesn't earn its spot | `tailor._proposal` + `_shrink` | ✅ selection by relevance; shrink drops lowest-keyword bullets until 2 pages. |
+| Prioritise relevant, cut what doesn't earn its spot | `tailor._proposal` + `_shrink` | ✅ selection by relevance; shrink drops lowest-keyword bullets until `scoring.max_pages` (1, CV-2) pages. |
 | ATS 70–85 | `scorer` + band loop | ✅ Keyword weights come from JD sections (`scorer.classify_heading`, M5 1d ✅): required ×2, preferred ×1, before any heading 1.5; benefits/perks/values/hiring-process/"About <company>" sections and hashtag lines are ignored; a "…is a plus" clause is preferred while the rest of its line stays required. |
 | Check memory / ask before altering; no hallucination | fact bank = the memory; `faithfulness.check` | ✅ guard. New: keywords with *partial* evidence (stem match only in `terms`, not in text) become **review questions**: "Is it true you did X in bullet Y?" |
 | "Add all required skills and let me know so I'll keep learning" | **Resolved as:** never added to the CV; written to a per-job and a global **learning list** | Adding an unevidenced skill *is* a hallucination, so the two instructions only reconcile this way. See §5. |
-| Keep the structure | `templates/cv.tex.j2` | ✅ standing order Profile → Skills → Experience → Projects → Education → Certifications. |
-| Strict 2 A4 pages | `render.page_count` + `_shrink` | ✅ |
+| Keep the structure | `templates/cv.tex.j2` | ✅ CV-2: the user's own one-page layout — Profile → Experience → Projects → Skills → Education → Certifications & Awards. |
+| One A4 page (CV) and one page (letter) | `render.page_count` + `_shrink`; `careerops tailor/run` prints both page counts | ✅ CV-2 (`scoring.max_pages: 1`; was 2) |
 | Output only the LaTeX | `data/outputs/<job>/CV.tex` (+ PDF) | Learning list and questions go to `report.json`/review, not into the CV. |
 | **Cover letter:** company from JD, ask if missing | gates + new status `needs_company` | Agency/unnamed employer (e.g. Adzuna "Recruiter", JD says "our client") → held until you name it. |
 | Hook, <250 words, no "I am writing to apply", specific CTA, human tone | `tailor._letter` | ✅ checks. New: hook must reference `company_hook` noun phrase; CTA must name a concrete next step (regex for call/chat/demo/walk-through + timeframe). |
@@ -191,6 +191,16 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
   two in `tests/review/test_workflow.py`.
 
 ---
+
+## 5c. CV-2 — the user's one-page CV and cover-letter format — **done**
+
+- Templates `templates/cv.tex.j2`, `templates/cover_letter.tex.j2` are the user's own layouts; Jinja filters `urlesc` / `urlshow` (`render.env`) escape and shorten link URLs. `identity.address` (optional) is read by the letter template only.
+- `settings.yaml`: `scoring.max_pages: 1`; `letter: {greeting, greeting_fallback, signoff}`. `tailor.letter_greeting` picks "Hi {company}{team} team" when the JD names a team (`KEYWORDS_SYSTEM` returns `team`; kept only if it appears verbatim in the JD), else "Dear {company} hiring team".
+- `TAILOR_SYSTEM`: profile 1–2 sentences ≤ 45 words starting "<headline> with …"; exactly 2 projects (code cap 4 → 2); most recent experience 2–4 bullets, others 1–2; STAR-style rephrases. The profile is checked against profile_facts + skills + the bullets selected for this CV (still fact-bank only).
+- `LETTER_SYSTEM`: 3–4 paragraphs, < 250 words; hook ≤ 45 words; two examples from EVIDENCE; optional ≤ 25-word sentence naming a **required** keyword the fact bank lacks (`GAPS`), only if there is one; CTA as a question. A deny-listed term may appear in the letter only when it is itself a required gap and the sentence says it is lacking ("I have not used X yet").
+- Contact details (address, email, phone, links) never appear in a prompt: `tests/llm/test_prompt_privacy.py`.
+- `careerops doctor` counts `# CONFIRM` markers like TODOs (`setup.fact_bank_open_items`).
+- The user's header has no headline line, so the family headline (M4b) now reaches the page only as the first words of the profile.
 
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 

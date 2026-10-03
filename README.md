@@ -65,7 +65,7 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 
 ## Before the first real run
 
-1. **Fact bank** — `config/profile/fact_bank.yaml`. Seeded from facts you've stated; fill every `TODO`, delete anything untrue.
+1. **Fact bank** — `config/profile/fact_bank.yaml`. Seeded from facts you've stated; fill every `TODO`, answer every `# CONFIRM` (`careerops doctor` counts both), delete anything untrue.
    Each bullet's `terms` list is what that bullet is *allowed* to claim when reworded. If a JD keyword shows up as a
    "genuine gap" but you really have it (e.g. *prompt engineering*, *CI/CD* aren't written anywhere yet), add it to the
    right bullet's `terms` — that is the only way it can ever appear on a CV.

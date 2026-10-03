@@ -24,26 +24,31 @@ class MockLLM:
             return self.handlers[task](ctx)
         if task == "extract_keywords":
             return {"required": ctx.get("fallback_required", []), "preferred": ctx.get("fallback_preferred", []),
-                    "company_hook": ""}
+                    "company_hook": "", "team": ""}
         if task == "tailor_cv":
             kws = [k["term"] for k in ctx["keywords"]]
             def overlap(b):
                 t = (b["text"] + " " + " ".join(b.get("terms", []))).lower()
                 return sum(k in t for k in kws)
-            exp = {e["id"]: [b["id"] for b in sorted(e["bullets"], key=overlap, reverse=True)[:3]]
-                   for e in ctx["experience"]}
+            # one-page shape: the most recent entry (listed first) keeps 3 bullets, every other entry 2
+            exp = {e["id"]: [b["id"] for b in sorted(e["bullets"], key=overlap, reverse=True)[:3 if i == 0 else 2]]
+                   for i, e in enumerate(ctx["experience"])}
             pref = ctx.get("preferred_projects", [])
             rank = {pid: i for i, pid in enumerate(pref)}       # ties in overlap → preferred order, then bank order
             projs = sorted(ctx["projects"], key=lambda p: (-sum(overlap(b) for b in p["bullets"]),
-                                                           rank.get(p["id"], len(pref))))[:3]
+                                                           rank.get(p["id"], len(pref))))[:2]
             return {"profile": ". ".join(ctx["profile_facts"][:2]) + ".",
                     "experience": exp,
                     "projects": [p["id"] for p in projs],
                     "rephrase": {}}
         if task == "cover_letter":
+            gaps = ctx.get("gaps") or []
             return {"paragraphs": [
                 f"{ctx['company']} is hiring a {ctx['title']}, and my recent work maps directly onto it.",
                 ctx["evidence"][0] if ctx["evidence"] else "",
+                # optional gap sentence: one required tool the candidate lacks, stated plainly, no apology
+                *([f"I have not used {gaps[0]} in production yet, and I would pick it up quickly "
+                   f"alongside the tools I already use."] if gaps else []),
                 "Could we find twenty minutes next week to talk about where I could contribute first?",
             ]}
         raise LLMError(f"MockLLM has no handler for task {task}")

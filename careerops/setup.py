@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 
 import requests
+
+# An open item in the fact bank: a TODO, or a `# CONFIRM` marker. The header's prose about the marker is quoted
+# ("# CONFIRM"), so a marker directly followed by a quote is not an item.
+OPEN_ITEM = re.compile(r'TODO|#\s*CONFIRM\b(?!")')
 
 # `applications` is the user's archive root: init creates it only if missing and never touches existing contents.
 DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp")
@@ -57,6 +62,11 @@ def init(settings) -> list[str]:
     return made
 
 
+def fact_bank_open_items(path: Path) -> int:
+    """How many TODO / `# CONFIRM` markers the fact bank still holds; -1 if the file is missing."""
+    return len(OPEN_ITEM.findall(path.read_text(encoding="utf-8"))) if path.exists() else -1
+
+
 def doctor(settings) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs."""
     checks: list[tuple[str, bool, str]] = []
@@ -83,7 +93,7 @@ def doctor(settings) -> list[tuple[str, bool, str]]:
             except requests.RequestException:
                 up = False
             checks.append((f"{prov['name']} at {prov['base_url']}", up, f"start it, then: ollama pull {prov['model']}"))
-    fb = settings.path("fact_bank")
-    todos = fb.read_text(encoding="utf-8").count("TODO") if fb.exists() else -1
-    checks.append((f"fact bank TODOs ({todos})", todos == 0, "fill or delete every TODO in fact_bank.yaml"))
+    todos = fact_bank_open_items(settings.path("fact_bank"))
+    checks.append((f"fact bank open items ({todos})", todos == 0,
+                   "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))
     return checks
