@@ -1,0 +1,45 @@
+jd: cal-trainline
+frozen: '2026-10-04'
+jd_sha1: b0cf76035389
+served_by:
+- groq/openai/gpt-oss-20b
+company_hook: Trainline empowers greener travel choices by connecting millions of travellers to the best-value rail and coach
+  journeys through its mobile app, website and B2B partner channels.
+team: ''
+notes:
+- 'extract_keywords: dropped keyword ''analytics to support business decisions'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''communicate insight'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''AI to responsibly accelerate coding'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''basic automation of day-to-day work proc'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''modern data transformation workflows'' (not verbatim, too long, generic or a degree)'
+keywords:
+- term: data visualisation
+  weight: 2.0
+  required: true
+- term: large datasets
+  weight: 2.0
+  required: true
+- term: Power BI
+  weight: 2.0
+  required: true
+- term: Python
+  weight: 2.0
+  required: true
+- term: SQL
+  weight: 2.0
+  required: true
+- term: structure analytical work
+  weight: 2.0
+  required: true
+- term: Tableau
+  weight: 2.0
+  required: true
+- term: healthcare
+  weight: 1.5
+  required: true
+- term: insurance
+  weight: 1.5
+  required: true
+- term: DBT
+  weight: 1.0
+  required: false

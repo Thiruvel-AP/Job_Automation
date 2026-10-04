@@ -1,0 +1,84 @@
+jd: cal-quantcast
+frozen: '2026-10-04'
+jd_sha1: 82441b41d9bb
+served_by:
+- groq/openai/gpt-oss-20b
+company_hook: Quantcast builds AI-powered advertising technology that optimizes digital ad auctions in real time, delivering
+  measurable outcomes for marketers worldwide.
+team: Modeling team
+notes: []
+keywords:
+- term: LLMs
+  weight: 2.0
+  required: true
+  alts:
+  - llm
+- term: NLP
+  weight: 2.0
+  required: true
+- term: clustering
+  weight: 2.0
+  required: true
+- term: Java
+  weight: 2.0
+  required: true
+- term: Python
+  weight: 2.0
+  required: true
+- term: statistics
+  weight: 2.0
+  required: true
+- term: classification
+  weight: 2.0
+  required: true
+- term: concurrent algorithms
+  weight: 2.0
+  required: true
+- term: data structures
+  weight: 2.0
+  required: true
+- term: distributed system
+  weight: 2.0
+  required: true
+- term: hypothesis testing
+  weight: 2.0
+  required: true
+- term: NumPy
+  weight: 2.0
+  required: true
+- term: Pandas
+  weight: 2.0
+  required: true
+- term: probability
+  weight: 2.0
+  required: true
+- term: PyTorch
+  weight: 2.0
+  required: true
+- term: ranking
+  weight: 2.0
+  required: true
+- term: regression
+  weight: 2.0
+  required: true
+- term: Scikit-learn
+  weight: 2.0
+  required: true
+- term: XGBoost
+  weight: 2.0
+  required: true
+- term: machine learning
+  weight: 1.5
+  required: true
+- term: production
+  weight: 1.5
+  required: true
+- term: research
+  weight: 1.5
+  required: true
+- term: scalable
+  weight: 1.5
+  required: true
+- term: testing
+  weight: 1.5
+  required: true

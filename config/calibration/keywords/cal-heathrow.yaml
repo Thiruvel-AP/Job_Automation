@@ -1,0 +1,89 @@
+jd: cal-heathrow
+frozen: '2026-10-04'
+jd_sha1: 13c240824c14
+served_by:
+- groq/openai/gpt-oss-20b
+company_hook: Heathrow Airport Holdings develops analytical models and data science solutions to improve airport operations
+  and inform business decisions.
+team: ''
+notes:
+- 'extract_keywords: dropped keyword ''statistical models'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''machine learning models'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''R'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''data science investment proposals'' (not verbatim, too long, generic or a degree)'
+keywords:
+- term: machine learning
+  weight: 2.0
+  required: true
+- term: airport operations
+  weight: 2.0
+  required: true
+- term: data governance
+  weight: 2.0
+  required: true
+- term: data science methods
+  weight: 2.0
+  required: true
+- term: data science solutions
+  weight: 2.0
+  required: true
+- term: analytical bias
+  weight: 2.0
+  required: true
+- term: business decisions
+  weight: 2.0
+  required: true
+- term: cloud-based analytics tools
+  weight: 2.0
+  required: true
+- term: data analysis
+  weight: 2.0
+  required: true
+- term: data protection
+  weight: 2.0
+  required: true
+- term: expected benefits
+  weight: 2.0
+  required: true
+- term: measurable outcomes
+  weight: 2.0
+  required: true
+- term: measures of success
+  weight: 2.0
+  required: true
+- term: model performance
+  weight: 2.0
+  required: true
+- term: model risk
+  weight: 2.0
+  required: true
+- term: predictive models
+  weight: 2.0
+  required: true
+- term: Python
+  weight: 2.0
+  required: true
+- term: security requirements
+  weight: 2.0
+  required: true
+- term: SQL
+  weight: 2.0
+  required: true
+- term: statistical methods
+  weight: 2.0
+  required: true
+- term: statistical modelling
+  weight: 2.0
+  required: true
+- term: data quality
+  weight: 1.5
+  required: true
+- term: mcp
+  weight: 1.5
+  required: true
+- term: complex organisation
+  weight: 1.0
+  required: false
+- term: specialist suppliers
+  weight: 1.0
+  required: false
