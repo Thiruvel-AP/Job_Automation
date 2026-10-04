@@ -154,7 +154,11 @@ llm:
   # batches). Before each job the router checks today's tokens + this against every provider's tpd; none left -> use
   # the next provider, else stop the run.
   job_token_estimate: 20000
-  temperature: 0.3
+  # Every task runs at temperature 0 with a fixed seed: a small model that is asked the same question should answer the
+  # same way, so a calibration run (careerops calibrate) measures the prompts, not the dice. A provider entry may set its
+  # own `seed` (null = send none, for a provider that rejects it).
+  temperature: 0
+  seed: 7
   timeout_s: 120
   # A 429 is retried after its Retry-After (else 2 s, 4 s, 8 s). A Retry-After longer than this (a spent daily quota)
   # is not waited for; the router goes straight to the next provider.

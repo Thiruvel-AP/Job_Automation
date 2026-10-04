@@ -204,6 +204,9 @@ def cmd_tailor(args):
             if u["calls"]:
                 print(f"  LLM tokens: {u['total_tokens']:,} (prompt {u['prompt_tokens']:,}, completion "
                       f"{u['completion_tokens']:,}, of which reasoning {u['reasoning_tokens']:,}) in {len(u['calls'])} calls")
+                for task, t in u["by_task"].items():
+                    per_call = "/".join(f"{n:,}" if n is not None else "?" for n in t["prompt_tokens_per_call"])
+                    print(f"    {task}: {t['calls']} call(s), prompt tokens {per_call}, total {t['total_tokens']:,}")
         except Exception as e:  # noqa: BLE001 — one bad job must not kill the cron run
             db.update_job(job["id"], status="error", reason=str(e)[:500])
             db.log(job["id"], "error", traceback.format_exc())

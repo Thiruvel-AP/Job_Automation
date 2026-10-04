@@ -574,12 +574,26 @@ def _names(fb: dict, settings) -> tuple[str, str]:
     return (file_stem(fb["identity"]["name"], "CV", style), file_stem(fb["identity"]["name"], "Cover Letter", style))
 
 
+def usage_by_task(calls: list[dict]) -> dict[str, dict]:
+    """Per task: the number of calls, the summed token usage and each call's prompt tokens in call order (what the
+    provider reported, else our estimate), so a prompt that has grown too big for the per-minute budget shows up."""
+    out: dict[str, dict] = {}
+    for c in calls:
+        t = out.setdefault(c.get("task") or "?", {"calls": 0, **{k: 0 for k in USAGE_SUMS}, "prompt_tokens_per_call": []})
+        t["calls"] += 1
+        for k in USAGE_SUMS:
+            t[k] += c.get(k) or 0
+        t["prompt_tokens_per_call"].append(c["prompt_tokens"] if c.get("prompt_tokens") is not None
+                                           else c.get("est_input_tokens"))
+    return out
+
+
 def usage_since(llm, start: int) -> dict:
-    """Token usage of the LLM calls made since `start` (an index into llm.usage): the calls and their sums.
-    Empty for a model that records none (MockLLM)."""
+    """Token usage of the LLM calls made since `start` (an index into llm.usage): the calls, their sums and the same per
+    task. Empty for a model that records none (MockLLM)."""
     calls = list(getattr(llm, "usage", [])[start:])
     total = {k: sum(c.get(k) or 0 for c in calls) for k in USAGE_SUMS}
-    return {"calls": calls, **total}
+    return {"calls": calls, **total, "by_task": usage_by_task(calls)}
 
 
 def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
@@ -596,8 +610,9 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
                                required_gaps(rep.get("genuine_gaps") or [], kws))
     rep["letter"], rep["letter_pdf"] = letter, str(pdf)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
-    rep["llm_usage"] = {"calls": (old.get("calls") or []) + new["calls"],
-                        **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS}}
+    calls = (old.get("calls") or []) + new["calls"]
+    rep["llm_usage"] = {"calls": calls, **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS},
+                        "by_task": usage_by_task(calls)}
     (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     return rep
 

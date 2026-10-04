@@ -481,3 +481,38 @@ def test_the_router_keeps_the_raw_reply_of_an_answer_that_is_not_valid_json(sett
     _S.script["/p"] = [_ok(content='{"a": 1}')]
     r.json("rephrase_bullets", "s", "u")
     assert r.last_raw == '{"a": 1}'
+
+
+# ---------------------------------------------------------------- 8. temperature 0 and a seed for every task
+def test_settings_run_every_task_at_temperature_zero_with_a_seed(settings):
+    assert settings["llm"]["temperature"] == 0 and settings["llm"]["seed"] == 7
+
+
+def test_every_request_carries_temperature_zero_and_the_seed(settings, db, server, fake_time):
+    _S.script["/p"] = [_ok()]
+    r = _router(settings, db, server, "p")
+    for task in ("extract_keywords", "rephrase_bullets", "tailor_profile", "cover_letter"):
+        r.json(task, "s", "u")
+    assert [(b["temperature"], b["seed"]) for b in _hits("p")] == [(0, 7)] * 4
+
+
+def test_a_provider_may_set_its_own_seed_or_none_at_all(settings, db, server, fake_time):
+    _S.script["/a"] = _S.script["/b"] = [_ok()]
+    settings.raw["llm"]["providers"] = [
+        {"name": "a", "base_url": f"{server}/a", "api_key_env": "FAKE_KEY", "model": "m", "tpm": 10**9, "seed": 99},
+        {"name": "b", "base_url": f"{server}/b", "api_key_env": "FAKE_KEY", "model": "m", "tpm": 10**9, "seed": None}]
+    r = Router(settings, db)
+    r.json("t", "s", "u")                                         # provider a answers
+    assert _hits("a")[0]["seed"] == 99
+    r.providers = r.providers[1:]
+    r.json("t", "s", "u")
+    assert "seed" not in _hits("b")[0] and _hits("b")[0]["temperature"] == 0
+
+
+def test_without_a_seed_in_settings_none_is_sent_and_the_temperature_default_is_unchanged(settings, db, server,
+                                                                                         fake_time):
+    _S.script["/p"] = [_ok()]
+    del settings.raw["llm"]["seed"]
+    del settings.raw["llm"]["temperature"]
+    _router(settings, db, server, "p").json("t", "s", "u")
+    assert "seed" not in _hits("p")[0] and _hits("p")[0]["temperature"] == 0.3

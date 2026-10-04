@@ -76,8 +76,9 @@ def retry_after_s(r: requests.Response) -> float | None:
 
 class Provider:
     def __init__(self, cfg: dict, db: DB, temperature: float, timeout: int, max_wait: float = 60.0,
-                 max_tokens: dict | None = None):
+                 max_tokens: dict | None = None, seed: int | None = None):
         self.cfg, self.db, self.temperature, self.timeout, self.max_wait = cfg, db, temperature, timeout, max_wait
+        self.seed = seed                    # sent as `seed` when set: the same prompt then gives the same answer (best effort)
         self.name = cfg["name"]
         self.max_tokens = max_tokens or {}
         # tpm/rpm default to Groq's free tier when the config names none; null/0 means no limit (e.g. local Ollama)
@@ -172,6 +173,8 @@ class Provider:
             "max_tokens": cap,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         }
+        if self.seed is not None:
+            body["seed"] = self.seed
         if self.json_mode:
             body["response_format"] = {"type": "json_object"}
         if self.reasoning_effort:
@@ -211,8 +214,10 @@ class Provider:
 class Router:
     def __init__(self, settings, db: DB):
         c = settings["llm"]
+        # a provider's own `seed` (null = never send one) wins over llm.seed
         self.providers = [Provider(p, db, c.get("temperature", 0.3), c.get("timeout_s", 120),
-                                   c.get("max_retry_wait_s", 60), c.get("max_tokens")) for p in c["providers"]]
+                                   c.get("max_retry_wait_s", 60), c.get("max_tokens"), p.get("seed", c.get("seed")))
+                          for p in c["providers"]]
         self.usage: list[dict] = []     # one entry per answered call; tailor_job copies its slice into report.json
         self._allowed: set[str] | None = None   # providers the current job may use (set by begin_job)
         self.last_raw: str | None = None        # the reply text of the last answered call, kept even if it was not valid JSON
