@@ -282,26 +282,35 @@ def test_vague_filler_is_banned_unless_the_evidence_uses_it(word):
     assert tailor._style_problems(para, [f"Built a {word} pipeline."]) == []
 
 
-def test_letter_evidence_is_the_selected_bullets_plus_the_top_3_relevant_others(fb_fixture, settings, job):
-    kws = _feedback_kws(settings, job)
+def test_letter_evidence_is_the_two_best_cv_bullets_from_different_entries(fb_fixture):
+    kws = [Keyword("langchain", 2.0, True), Keyword("docker", 2.0, True)]
     bidx = tailor.bullet_index(fb_fixture)
-    chosen_ids = {"a1", "b1"}
-    chosen = [bidx[i]["text"] for i in chosen_ids]
-    ev = tailor.letter_evidence(fb_fixture, kws, chosen, chosen_ids)
-    assert ev[:2] == chosen and len(ev) == 5
-    sc = budget.bullet_scores(fb_fixture, kws)
-    extra_ids = [i for i, b in bidx.items() if b["text"] in ev[2:]]
-    assert len(extra_ids) == 3 and not set(extra_ids) & chosen_ids
-    rest = [i for i in sc if i not in chosen_ids and i not in extra_ids]
-    assert min(sc[i] for i in extra_ids) >= max(sc[i] for i in rest)
+    ev = tailor.letter_evidence(fb_fixture, kws, {"a1", "a3", "b1"})     # a1 and a3 tie (same entry); b1 is the other entry
+    assert [e["id"] for e in ev] == ["a1", "b1"]
+    assert ev[0] == {"id": "a1", "text": bidx["a1"]["text"], "terms": bidx["a1"]["terms"]}   # canonical bank text
+    same = tailor.letter_evidence(fb_fixture, kws, {"a1", "a3"})            # nothing from another entry: take the next best
+    assert [e["id"] for e in same] == ["a1", "a3"]
+    assert [e["id"] for e in tailor.letter_evidence(fb_fixture, kws, {"a3"})] == ["a3"]
 
 
-def test_the_letter_prompt_gets_that_evidence(settings, fb_fixture, job, spy_llm):
+def test_letter_evidence_only_comes_from_the_bullets_on_the_cv(fb_fixture):
+    kws = [Keyword("langchain", 2.0, True)]                                # a1 is the best bullet in the whole bank
+    ids = [e["id"] for e in tailor.letter_evidence(fb_fixture, kws, {"b1", "b2", "c1"})]
+    assert "a1" not in ids and len(ids) == 2 and set(ids) <= {"b1", "b2", "c1"}
+
+
+def test_the_letter_prompt_gets_exactly_those_two_bullets_the_hook_and_nothing_else(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    ctx = [s["context"] for s in llm.sent if s["task"] == "cover_letter"][-1]
-    chosen = [b for e in rep["context"]["experience"] + rep["context"]["projects"] for b in e["bullets"]]
-    assert ctx["evidence"][:len(chosen)] == chosen and len(ctx["evidence"]) == len(chosen) + 3
+    call = [s for s in llm.sent if s["task"] == "cover_letter"][-1]
+    bidx = tailor.bullet_index(fb_fixture)
+    ev = rep["letter"]["evidence"]
+    cv_ids = {i for e in rep["context"]["experience"] + rep["context"]["projects"] for i in e["bullet_ids"]}
+    assert len(ev) == 2 and {e["id"] for e in ev} <= cv_ids
+    assert call["context"]["evidence"] == [bidx[e["id"]]["text"] for e in ev]
+    assert "JD KEYWORDS" not in call["user"] and "COMPANY HOOK" in call["user"] and "GAPS" in call["user"]
+    for e in ev:
+        assert e["text"] in call["user"]
 
 
 def _letter_llm(*drafts):

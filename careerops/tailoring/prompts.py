@@ -58,22 +58,24 @@ HEADLINE: {headline}
 FACTS:
 {facts}"""
 
-LETTER_SYSTEM = """You write short cover letters from supplied evidence only.
+LETTER_SYSTEM = """You write short cover letters from two pieces of evidence only.
 Return JSON: {"paragraphs": ["..", "..", ".."]}
 Rules:
 - 3-4 paragraphs, under {max_words} words in total. Confident, plain, human. British English. First person.
 - Paragraph 1, the hook (<= 45 words): tie the company's problem (COMPANY HOOK) to the candidate's own work.
   NEVER open with "I am writing to apply" or "I am excited".
-- Then two concrete examples taken ONLY from EVIDENCE (one paragraph, or one each). Keep numbers exactly; add none.
-  Never describe a metric as measured unless EVIDENCE contains the measurement
+- Then the two EVIDENCE lines as concrete examples (one paragraph, or one each), each using only what its own line
+  says. Keep numbers exactly; add none. Never describe a metric as measured unless EVIDENCE contains the measurement
   (e.g. do not write "hallucination rate" unless EVIDENCE reports one).
+- Name no client, employer, sector, product, tool or capability that is not in EVIDENCE or COMPANY HOOK. Never invent
+  who the work was for ("for a fintech client" is a lie unless EVIDENCE says so).
 - OPTIONAL, and only if GAPS is not "(none)": ONE sentence (<= 25 words) naming one tool from GAPS that the candidate
-  lacks, stated plainly ("I have not used X in production yet, ...") with no apology and no excuses.
+  lacks, stated plainly ("I have not used X yet, ...") with no apology and no excuses.
   If GAPS is "(none)", write no such sentence.
 - NEVER say the candidate lacks, has not used, or has no experience of anything unless it is named in GAPS.
   Not having a skill spelled out in EVIDENCE is not a gap (coursework and general skills count as experience).
-- Last paragraph: a call to action phrased as a QUESTION (it must contain a "?"), asking for a short call and naming
-  what the candidate would walk them through. NEVER "I look forward to hearing from you".
+- Last paragraph: a call to action phrased as a QUESTION (it must contain a "?" and end on it), asking for a short call
+  and naming what the candidate would walk them through. NEVER "I look forward to hearing from you".
 - NEVER upgrade the candidate's role. If an EVIDENCE line says contributed, shipped, supported or team (team project,
   team of five), do not write delivered, built, led, owned or designed for it; say "contributed to" or "as part of a
   team". Keep approximations as written ("~65 tests" stays "about 65 tests", never "65").
@@ -82,7 +84,6 @@ Rules:
 
 LETTER_USER = """ROLE: {title} at {company}
 COMPANY HOOK (from JD): {company_hook}
-JD KEYWORDS: {keywords}
 GAPS (required tools/platforms/languages/frameworks, absent from the fact bank): {gaps}
 EVIDENCE:
 {evidence}"""

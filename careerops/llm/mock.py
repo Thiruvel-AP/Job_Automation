@@ -59,7 +59,7 @@ class MockLLM:
                 f"{ctx['company']} is hiring a {ctx['title']}, and my recent work maps directly onto it.",
                 ctx["evidence"][0] if ctx["evidence"] else "",
                 # optional gap sentence: one required tool the candidate lacks, stated plainly, no apology
-                *([f"I have not used {gaps[0]} in production yet, and I would pick it up quickly "
+                *([f"I have not used {gaps[0]} yet, and I would pick it up quickly "
                    f"alongside the tools I already use."] if gaps else []),
                 "Could we find twenty minutes next week to talk about where I could contribute first?",
             ]}

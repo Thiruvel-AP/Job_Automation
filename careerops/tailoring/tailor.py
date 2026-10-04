@@ -15,6 +15,7 @@ from ..discovery import gates
 from . import prompts as P
 from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
+from .grounding import grounding_problems
 from .rawlog import RawRecorder
 from .selection import MOST_RECENT_BULLETS, chunks, missing_keywords, select_cv, selected_ids
 from .shapes import normalise_keywords, normalise_letter, normalise_profile, normalise_rephrase
@@ -443,16 +444,20 @@ def _content_words(s: str) -> set[str]:
     return {w for w in re.findall(r"[a-z][a-z0-9+#-]{4,}", norm_literal(s)) if w not in _STOP}
 
 
-def letter_evidence(fb: dict, kws: list[Keyword], chosen: list[str], chosen_ids: set[str] | None = None,
-                    extra: int = 3) -> list[str]:
-    """The bullets the CV selected plus the `extra` fact-bank bullets most relevant to the JD that it did not."""
+def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = None) -> list[dict]:
+    """The two bullets the letter is written from, chosen in code from the bullets on the CV: the one overlapping the JD
+    most, then the best of the rest from a different entry (two lines about one job read as one example). Canonical
+    fact-bank text, as [{"id", "text", "terms"}]; fewer than two when the CV has fewer bullets."""
     sc = bullet_scores(fb, kws)
-    order = {b: i for i, b in enumerate(sc)}
     bidx = bullet_index(fb)
-    taken = set(chosen_ids or ())
-    more = [bidx[b]["text"] for b in sorted(sc, key=lambda b: (-sc[b], order[b]))
-            if b not in taken and bidx[b]["text"] not in chosen][:extra]
-    return list(chosen) + more
+    owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
+    order = {b: i for i, b in enumerate(sc)}
+    pool = [b for b in sc if not chosen_ids or b in chosen_ids]
+    ranked = sorted(pool, key=lambda b: (-sc[b], order[b]))
+    picked = ranked[:1]
+    if len(ranked) > 1:
+        picked.append(next((b for b in ranked[1:] if owner[b] != owner[ranked[0]]), ranked[1]))
+    return [{"id": b, "text": bidx[b]["text"], "terms": list(bidx[b].get("terms", []))} for b in picked]
 
 
 def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
@@ -460,7 +465,7 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
     keeps approximations approximate and uses no filler word the evidence does not use."""
     out = []
     text = " ".join(paras)
-    if paras and "?" not in paras[-1]:
+    if paras and not paras[-1].rstrip().endswith("?"):
         out.append("last paragraph is not a call-to-action question")
     ev_all = norm_literal("\n".join(evidence))
     for w in VAGUE_WORDS:
@@ -487,16 +492,19 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
     return list(dict.fromkeys(out))
 
 
-def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
-            gaps: list[str] | None = None, chosen_ids: set[str] | None = None,
+def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[str] | None = None,
             notes: list[str] | None = None) -> tuple[list[str], list[str]]:
+    """The cover letter from the company hook, the two evidence bullets and the optional GAPS. A draft is checked (length,
+    banned phrases, deny list, claimed gaps, role upgrades, numbers, and every sentence against its own evidence bullet
+    and the JD) and retried once with its problems listed; a second failure is the deterministic fallback, flagged."""
     deny = fb.get("deny_terms", [])
     gaps = (gaps or [])[:6]
     # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
     named_ok = {d for g in gaps for d in deny_hits(g, deny)}
     max_words = settings["scoring"]["letter_max_words"]
-    evidence = letter_evidence(fb, kws, chosen_bullets, chosen_ids)
-    source = " ".join(evidence + fb["profile_facts"]) + " " + hook + " " + job["description"]
+    texts = [e["text"] for e in evidence]
+    source = " ".join(texts) + " " + hook + " " + job["description"]
+    named = f"{job['company']} {job['title']}"
     problems: list[str] = []
     feedback = ""
     for _ in range(2):
@@ -506,10 +514,10 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
                 P.LETTER_SYSTEM.replace("{max_words}", str(max_words))
                 .replace("{deny}", ", ".join(d for d in deny if d not in named_ok)),
                 P.LETTER_USER.format(title=job["title"], company=job["company"], company_hook=hook or "(none)",
-                                     keywords=", ".join(k.term for k in kws[:20]),
                                      gaps=", ".join(gaps) or "(none)",
-                                     evidence="\n".join(f"- {e}" for e in evidence)) + feedback,
-                {"company": job["company"], "title": job["title"], "evidence": evidence, "gaps": gaps})
+                                     evidence="\n".join(f"- {e}" for e in texts)) + feedback,
+                {"company": job["company"], "title": job["title"], "company_hook": hook, "evidence": texts,
+                 "gaps": gaps})
             paras, letter_notes = normalise_letter(out)
             if notes is not None:
                 notes.extend(m for m in (f"cover_letter: {n}" for n in letter_notes) if m not in notes)
@@ -528,7 +536,8 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
             problems.append("banned closer")
         problems += _deny_problems(text, deny, gaps)
         problems += _lack_problems(text, gaps)
-        problems += _style_problems(paras, evidence)
+        problems += _style_problems(paras, texts)
+        problems += grounding_problems(paras, evidence, job["description"], hook, named, gaps)
         extra = numbers(text) - numbers(source)
         if extra:
             problems.append(f"new numbers {sorted(extra)}")
@@ -538,25 +547,25 @@ def _letter(job, fb, kws, hook, chosen_bullets: list[str], llm, settings,
     # deterministic fallback — always honest, never great; review will show why
     fallback = [
         f"{job['company']}'s {job['title']} role sits close to the work I have been doing most recently.",
-        " ".join(evidence[:2]),
+        " ".join(texts[:2]),
         f"Could we find twenty minutes to talk about where I could contribute first on the {job['title']} team?",
     ]
     return [p for p in fallback if p.strip()], problems + [FALLBACK_MARK]
 
 
-def _make_letter(job, fb, kws, hook, chosen: list[str], llm, settings, out_dir: Path, final_name: str,
-                 team: str = "", gaps: list[str] | None = None, chosen_ids: set[str] | None = None):
+def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_dir: Path, final_name: str,
+                 team: str = "", gaps: list[str] | None = None):
     """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
     deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
     notes: list[str] = []
-    paras, problems = _letter(job, fb, kws, hook, chosen, llm, settings, gaps, chosen_ids, notes)
+    paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes)
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
                          "date": date.today().strftime("%d %B %Y"),
                          "greeting": letter_greeting(settings, job["company"], team),
                          "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
     return pdf, {"paragraphs": paras, "problems": problems, "score": score(pdf_text(pdf), kws).literal,
                  "pages": page_count(pdf), "status": "fallback" if FALLBACK_MARK in problems else "ok",
-                 "notes": notes}
+                 "notes": notes, "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
 
 
 def _names(fb: dict, settings) -> tuple[str, str]:
@@ -578,14 +587,13 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     job = dict(job)
     job["description"] = job.get("description") or ""
     kws = [Keyword(**k) for k in rep["keywords"]]
-    chosen = [b for sec in ("experience", "projects") for e in rep["context"][sec] for b in e["bullets"]]
     out_dir = Path(rep["out_dir"])
     llm = RawRecorder(llm, out_dir / "llm_raw")                 # keeps the model's raw reply next to the first draft's
     usage_from = len(getattr(llm, "usage", []))
     ids = {i for sec in ("experience", "projects") for e in rep["context"][sec] for i in e.get("bullet_ids", [])}
-    pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", chosen, llm, settings, out_dir,
-                               Path(rep["letter_pdf"]).stem, rep.get("team") or "",
-                               required_gaps(rep.get("genuine_gaps") or [], kws), ids)
+    pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", letter_evidence(fb, kws, ids), llm,
+                               settings, out_dir, Path(rep["letter_pdf"]).stem, rep.get("team") or "",
+                               required_gaps(rep.get("genuine_gaps") or [], kws))
     rep["letter"], rep["letter_pdf"] = letter, str(pdf)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     rep["llm_usage"] = {"calls": (old.get("calls") or []) + new["calls"],
@@ -698,10 +706,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
     rec, ctx = best
     pdf = render_cv(ctx, out_dir, cv_name)                      # re-render the chosen attempt as the final file
     final_score = score(pdf_text(pdf), kws)
-    chosen = [b for e in ctx["experience"] + ctx["projects"] for b in e["bullets"]]
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
-    letter_pdf, letter = _make_letter(job, fb, kws, hook, chosen, llm, settings, out_dir, letter_name, team,
-                                      required_gaps(gaps, kws), chosen_ids)
+    letter_pdf, letter = _make_letter(job, fb, kws, hook, letter_evidence(fb, kws, chosen_ids), llm, settings, out_dir,
+                                      letter_name, team, required_gaps(gaps, kws))
     report.update({
         "final": {"score": final_score.literal, "score_stemmed": final_score.stemmed,
                   "band": in_band(final_score.literal, band), "pages": page_count(pdf),
