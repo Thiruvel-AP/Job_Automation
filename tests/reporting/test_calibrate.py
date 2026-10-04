@@ -220,13 +220,13 @@ def test_the_run_announces_its_token_estimate_and_warns_when_the_day_cannot_cove
         name = "p"
 
         def tokens_left(self):
-            return 25_000
+            return 15_000
 
     llm = BudgetLLM(5)
     llm.providers = [Prov()]
     logs = []
     _run(settings, db, fb, manifest, tmp_path / "cal", llm, stamp="s", log=logs.append, limit=1)
-    assert "Calibrating 1 JD(s), about 20,000 tokens" in logs[0] and "25,000 left today" in logs[0]
+    assert "Calibrating 1 JD(s), about 10,000 tokens" in logs[0] and "15,000 left today" in logs[0]
     logs.clear()
     _run(settings, db, fb, manifest, tmp_path / "cal2", llm, stamp="s2", log=logs.append)
     assert any("more than today's budget" in m for m in logs)
@@ -467,3 +467,79 @@ def test_the_command_exits_1_when_a_jd_errors_or_the_budget_ran_out(config, mani
     with pytest.raises(SystemExit) as e:
         cli.main(["--config", str(config), "calibrate", "--mock", "--manifest", str(manifest)])
     assert e.value.code == 1 and "STOP" in capsys.readouterr().out
+
+
+# ================================================================== --provider and the provider/model record
+def _served_llm(providers, pinned=None):
+    """A MockLLM that records, as the Router does, which provider and model answered each call (cycling `providers`)."""
+    class P:
+        def __init__(self, name):
+            self.name, self.cfg = name, {"model": f"{name}-model"}
+
+        def tokens_left(self):
+            return None
+
+    class Served(MockLLM):
+        def __init__(self):
+            super().__init__()
+            self.providers, self.pinned, self.n = [P(n) for n in providers], pinned, 0
+
+        def json(self, task, system, user, context=None):
+            out = super().json(task, system, user, context)
+            name = providers[self.n % len(providers)]
+            self.n += 1
+            self.usage.append({"task": task, "provider": name, "model": f"{name}-served", "prompt_tokens": 100,
+                               "completion_tokens": 10, "total_tokens": 110})
+            return out
+
+    return Served()
+
+
+def test_the_report_records_the_provider_and_model_that_served_every_call(settings, db, fb, manifest, tmp_path):
+    res = _run(settings, db, fb, manifest, tmp_path / "cal", _served_llm(["ollama"], pinned="ollama"), stamp="s", limit=1)
+    row = res["rows"][0]
+    assert row["usage"]["served_by"] == ["ollama/ollama-served"]
+    assert row["usage"]["calls"] > 0
+    assert all(t["served_by"] == ["ollama/ollama-served"] for t in row["usage"]["by_task"].values())
+    md = res["report"].read_text(encoding="utf-8")
+    assert "Provider: ollama only (--provider: no fallback)" in md
+    assert "Served every call: ollama/ollama-served" in md and "MIXED" not in md
+    assert "| served by |" in md and "| ollama/ollama-served |" in md
+    data = json.loads(res["json"].read_text(encoding="utf-8"))
+    assert data["meta"]["pinned"] == "ollama" and data["meta"]["providers"] == ["ollama (ollama-model)"]
+
+
+def test_an_unpinned_run_that_fell_back_is_flagged_as_mixed(settings, db, fb, manifest, tmp_path):
+    res = _run(settings, db, fb, manifest, tmp_path / "cal", _served_llm(["groq", "ollama"]), stamp="s", limit=1)
+    assert res["rows"][0]["usage"]["served_by"] == ["groq/groq-served", "ollama/ollama-served"]
+    md = res["report"].read_text(encoding="utf-8")
+    assert "Provider: groq (groq-model), ollama (ollama-model) (fallback in this order)" in md
+    assert "MIXED providers" in md
+
+
+def test_a_mock_run_names_no_provider(run):
+    md = run[0]["report"].read_text(encoding="utf-8")
+    assert "Provider: MockLLM (fallback" in md and "Served every call: –" in md
+
+
+def test_calibrate_provider_builds_a_pinned_router(config, manifest, monkeypatch):
+    got = {}
+
+    def fake(settings, db, llm, fb, manifest, out, **kw):
+        got["llm"] = llm
+        return {"report": "r", "json": "j", "rubric": "u", "aggregates": {"errors": 0, "not_run": 0}}
+
+    monkeypatch.setattr(cal, "calibrate", fake)
+    cli.main(["--config", str(config), "calibrate", "--provider", "ollama", "--manifest", str(manifest)])
+    assert [p.name for p in got["llm"].providers] == ["ollama"] and got["llm"].pinned == "ollama"
+    cli.main(["--config", str(config), "calibrate", "--manifest", str(manifest)])
+    assert [p.name for p in got["llm"].providers] == ["groq", "ollama"] and got["llm"].pinned is None
+
+
+def test_calibrate_provider_rejects_an_unknown_name_and_mock(config, manifest, capsys):
+    with pytest.raises(SystemExit) as e:
+        cli.main(["--config", str(config), "calibrate", "--provider", "gemini", "--manifest", str(manifest)])
+    assert e.value.code == 1 and "no LLM provider named 'gemini'; configured: groq, ollama" in capsys.readouterr().err
+    with pytest.raises(SystemExit) as e:
+        cli.main(["--config", str(config), "calibrate", "--mock", "--provider", "ollama"])
+    assert e.value.code == 1 and "--provider" in capsys.readouterr().err

@@ -97,12 +97,24 @@ def job_for(entry: dict) -> dict:
             "url": entry.get("url", ""), "apply_url": entry.get("url", ""), "description": jd}
 
 
+def served_by(calls: list[dict]) -> list[str]:
+    """Every provider/model that answered one of these calls, in the order they first did."""
+    out: list[str] = []
+    for c in calls:
+        s = f"{c.get('provider') or '?'}/{c.get('model') or '?'}"
+        if s not in out:
+            out.append(s)
+    return out
+
+
 def _usage(rep: dict) -> dict:
     u = rep.get("llm_usage") or {}
     by = {t: {"calls": v["calls"], "prompt_tokens": v["prompt_tokens"], "total_tokens": v["total_tokens"],
-              "max_prompt": max([n for n in v["prompt_tokens_per_call"] if n is not None], default=None)}
+              "max_prompt": max([n for n in v["prompt_tokens_per_call"] if n is not None], default=None),
+              "served_by": served_by([c for c in u.get("calls") or [] if (c.get("task") or "?") == t])}
           for t, v in (u.get("by_task") or {}).items()}
     return {"calls": len(u.get("calls") or []), "total_tokens": u.get("total_tokens", 0),
+            "served_by": served_by(u.get("calls") or []),
             "prompt_tokens": u.get("prompt_tokens", 0), "completion_tokens": u.get("completion_tokens", 0),
             "max_prompt": max([t["max_prompt"] for t in by.values() if t["max_prompt"] is not None], default=None),
             "by_task": by}
@@ -234,25 +246,30 @@ def _selection(sel: dict) -> str:
 
 def _row_line(r: dict) -> str:
     if r["status"] != "ok":
-        return f"| {r['id']} | {r['status']} | | | | | | | | | | {r.get('error', '')[:60]} |"
+        return f"| {r['id']} | {r['status']} | | | | | | | | | | | {r.get('error', '')[:60]} |"
     cov = r["rephrase"]["coverage"]
     return (f"| {r['id']} | T{r['triage']['tier'] or '-'} | {r['keywords']['n']} | {pct(r['ceiling'])} | "
             f"{pct(r['final']['literal'])} ({r['final']['band']}) | "
             f"{cov['rephrased']}/{cov['eligible']} | {r['rephrase']['blocked']}/{r['rephrase']['proposed']} | "
             f"{len(r['violations'])} | {r['letter']['status']} | {r['usage']['calls']} | "
-            f"{r['usage']['total_tokens']:,} | {r['seconds']:.0f} |")
+            f"{r['usage']['total_tokens']:,} | {r['seconds']:.0f} | {', '.join(r['usage'].get('served_by', [])) or '–'} |")
 
 
 def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | None = None) -> str:
     g, b, c = agg["guard"], agg["band"], agg["cost"]
-    out = [f"# Calibration report {meta['stamp']}", "",
+    served = list(dict.fromkeys(s for r in rows if r["status"] == "ok" for s in r["usage"].get("served_by", [])))
+    pinned = (f"Provider: {meta['pinned']} only (--provider: no fallback)" if meta.get("pinned")
+              else "Provider: " + (", ".join(meta.get("providers") or []) or "MockLLM") + " (fallback in this order)")
+    out = [f"# Calibration report {meta['stamp']}", "", pinned,
+           f"Served every call: {', '.join(served) or '–'}" + (" · MIXED providers" if len({s.split('/')[0] for s in served}) > 1
+                                                           else ""), "",
            f"Model(s): {', '.join(meta['models'])} · temperature {meta['temperature']} · seed {meta['seed']} · "
            f"band {meta['band'][0]:.0%}-{meta['band'][1]:.0%} · {agg['ok']} of {agg['jobs']} JD(s) measured"
            + (f" · {agg['not_run']} not run (daily token budget)" if agg["not_run"] else "")
            + (f" · {agg['errors']} error(s)" if agg["errors"] else ""), "",
            "## Per JD", "",
            "| id | tier | kw | ceiling | final (band) | rephrased/eligible | blocked/proposed | violations | letter | "
-           "calls | tokens | s |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "calls | tokens | s | served by |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     out += [_row_line(r) for r in rows]
     rho = agg["rank"]
     out += ["", "## Aggregates", "", "| Metric | Value | Target |", "|---|---|---|",
@@ -303,7 +320,7 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
                 f"- letter: {r['letter']['status']}, score {pct(r['letter']['score'])}, evidence "
                 f"{', '.join(r['letter']['evidence']) or '–'}; problems: " + (" | ".join(r["letter"]["problems"]) or "none"),
                 f"- tokens: {r['usage']['total_tokens']:,} in {r['usage']['calls']} calls; "
-                + ", ".join(f"{t} {v['calls']}× (largest prompt {v['max_prompt']})"
+                + ", ".join(f"{t} {v['calls']}× (largest prompt {v['max_prompt']}; {', '.join(v.get('served_by', [])) or '–'})"
                             for t, v in r["usage"]["by_task"].items())]
         extras = [f"manual {pct(r['manual_ats'], 1)}" if r.get("manual_ats") is not None else "",
                   f"reference {pct(r['reference'], 1)}" if r.get("reference") is not None else "",
@@ -460,7 +477,7 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
     outputs = out_dir / "runs" / stamp / "outputs"
     gates.load_roles(settings, fb)                                  # a renamed project id fails here, not per JD
     idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
-    est = settings["llm"].get("job_token_estimate", 20000)
+    est = settings["llm"].get("job_token_estimate", 10000)
     left = [p.tokens_left() for p in getattr(llm, "providers", []) if p.tokens_left() is not None]
     log(f"Calibrating {len(entries)} JD(s), about {len(entries) * est:,} tokens "
         f"(llm.job_token_estimate {est:,} each)" + (f"; {max(left):,} left today on the provider with most room"
@@ -500,7 +517,8 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
         rows.append(row)
     agg = aggregates(rows, settings)
     providers = getattr(llm, "providers", None)
-    meta = {"stamp": stamp, "band": settings["scoring"]["band"], "temperature": settings["llm"].get("temperature"),
+    meta = {"stamp": stamp, "pinned": getattr(llm, "pinned", None),
+            "providers": [f"{p.name} ({p.cfg.get('model', p.name)})" for p in providers] if providers else [], "band": settings["scoring"]["band"], "temperature": settings["llm"].get("temperature"),
             "seed": settings["llm"].get("seed"), "max_keywords": settings["scoring"].get("max_keywords"),
             "models": [p.cfg.get("model", p.name) for p in providers] if providers else ["MockLLM"],
             "manifest": str(manifest)}

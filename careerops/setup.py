@@ -74,6 +74,46 @@ def fact_bank_open_items(path: Path) -> int:
     return len(OPEN_ITEM.findall(path.read_text(encoding="utf-8"))) if path.exists() else -1
 
 
+OLLAMA_DEFAULT_CTX = 4096      # what Ollama loads a model with when its Modelfile sets no num_ctx
+
+
+def _ollama_num_ctx(show: dict) -> int:
+    """The context a model is loaded with, from /api/show's `parameters` text ("num_ctx   8192" per line)."""
+    m = re.search(r"^\s*num_ctx\s+(\d+)", show.get("parameters") or "", re.M)
+    return int(m.group(1)) if m else OLLAMA_DEFAULT_CTX
+
+
+def ollama_checks(prov: dict) -> list[tuple[str, bool, str]]:
+    """Doctor lines for a local Ollama provider: the server answers, the configured model is built (listed in
+    /api/tags) and its num_ctx reaches the provider's `context_tokens`. A later check is skipped when an earlier one
+    failed, since it could not say anything."""
+    name, model = prov["name"], prov["model"]
+    host = prov["base_url"].rstrip("/").removesuffix("/v1")
+    create = f"ollama create {model} -f config/ollama/Modelfile"
+    try:
+        tags = requests.get(host + "/api/tags", timeout=2)
+        tags.raise_for_status()
+        listed = [m.get("name") or m.get("model") or "" for m in tags.json().get("models", [])]
+    except (requests.RequestException, ValueError):
+        return [(f"{name} at {prov['base_url']}", False, f"start it (ollama serve), then: {create}")]
+    out = [(f"{name} at {prov['base_url']}", True, "")]
+    wanted = {model, model + ":latest"} if ":" not in model else {model}
+    have = bool(wanted & set(listed))
+    out.append((f"{name} model {model} is built", have, create))
+    want_ctx = prov.get("context_tokens")
+    if not have or not want_ctx:
+        return out
+    try:
+        r = requests.post(host + "/api/show", json={"model": model}, timeout=5)
+        r.raise_for_status()
+        ctx = _ollama_num_ctx(r.json())
+    except (requests.RequestException, ValueError):
+        return out + [(f"{name} num_ctx of {model}", False, f"/api/show failed; rebuild it: {create}")]
+    return out + [(f"{name} num_ctx {ctx} >= context_tokens {want_ctx}", ctx >= want_ctx,
+                   f"the model loads with {ctx}, so a longer prompt is cut off silently; set `PARAMETER num_ctx "
+                   f"{want_ctx}` in config/ollama/Modelfile, then: {create}")]
+
+
 def doctor(settings) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs."""
     checks: list[tuple[str, bool, str]] = []
@@ -95,11 +135,7 @@ def doctor(settings) -> list[tuple[str, bool, str]]:
         if env:
             checks.append((f"{prov['name']} key ({env})", bool(os.environ.get(env)), f"add {env}=... to .env"))
         else:
-            try:
-                up = requests.get(prov["base_url"].replace("/v1", "") + "/api/tags", timeout=2).ok
-            except requests.RequestException:
-                up = False
-            checks.append((f"{prov['name']} at {prov['base_url']}", up, f"start it, then: ollama pull {prov['model']}"))
+            checks += ollama_checks(prov)
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

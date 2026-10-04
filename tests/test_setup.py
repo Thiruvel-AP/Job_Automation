@@ -84,3 +84,97 @@ def test_init_creates_the_calibration_folders_and_leaves_what_is_in_them_alone(s
     assert [m for m in init(settings) if "calibration" in m] == []                    # idempotent
     assert (cal / "jds" / "x.txt").read_text(encoding="utf-8") == "my JD"
     assert (cal / "manifest.yaml").read_text(encoding="utf-8") == "- id: a\n"
+
+
+# ---------------------------------------------------------------- local Ollama: the model is built and its context is big enough
+class _Resp:
+    def __init__(self, data, status=200):
+        self.data, self.status = data, status
+
+    def raise_for_status(self):
+        if self.status >= 400:
+            import requests
+            raise requests.HTTPError(str(self.status))
+
+    def json(self):
+        return self.data
+
+
+OLLAMA = {"name": "ollama", "base_url": "http://localhost:11434/v1", "api_key_env": None, "model": "qwen2.5-7b-8k",
+          "context_tokens": 8192}
+CREATE = "ollama create qwen2.5-7b-8k -f config/ollama/Modelfile"
+
+
+def _ollama(monkeypatch, models=("qwen2.5-7b-8k:latest",), parameters="num_ctx                        8192\n"):
+    """Fake Ollama: GET /api/tags lists `models`; POST /api/show reports `parameters`. Returns the requests made."""
+    asked = []
+
+    def get(url, timeout):
+        asked.append(("GET", url))
+        return _Resp({"models": [{"name": m, "model": m} for m in models]})
+
+    def post(url, json, timeout):
+        asked.append(("POST", url, json))
+        return _Resp({"parameters": parameters, "model_info": {"qwen2.context_length": 32768}})
+
+    monkeypatch.setattr("careerops.setup.requests.get", get)
+    monkeypatch.setattr("careerops.setup.requests.post", post)
+    return asked
+
+
+def test_doctor_passes_a_built_model_with_enough_context(monkeypatch):
+    from careerops.setup import ollama_checks
+    asked = _ollama(monkeypatch)
+    checks = ollama_checks(OLLAMA)
+    assert [ok for _, ok, _ in checks] == [True, True, True]
+    assert ("GET", "http://localhost:11434/api/tags") in asked
+    assert ("POST", "http://localhost:11434/api/show", {"model": "qwen2.5-7b-8k"}) in asked
+    assert any("num_ctx 8192 >= context_tokens 8192" in name for name, _, _ in checks)
+
+
+def test_doctor_flags_a_model_that_is_not_listed_and_says_how_to_build_it(monkeypatch):
+    from careerops.setup import ollama_checks
+    asked = _ollama(monkeypatch, models=("qwen2.5:7b-instruct", "llama3:latest"))   # the base model is not enough
+    bad = [(n, h) for n, ok, h in ollama_checks(OLLAMA) if not ok]
+    assert len(bad) == 1 and "qwen2.5-7b-8k" in bad[0][0] and bad[0][1] == CREATE
+    assert not any(a[0] == "POST" for a in asked)                 # nothing to ask /api/show about
+
+
+def test_doctor_flags_a_num_ctx_below_context_tokens(monkeypatch):
+    from careerops.setup import ollama_checks
+    _ollama(monkeypatch, parameters="num_ctx                        4096\nstop                           <|im_end|>\n")
+    bad = [(n, h) for n, ok, h in ollama_checks(OLLAMA) if not ok]
+    assert len(bad) == 1 and "num_ctx 4096 >= context_tokens 8192" in bad[0][0] and CREATE in bad[0][1]
+
+
+def test_doctor_treats_a_model_with_no_num_ctx_as_ollamas_4096_default(monkeypatch):
+    from careerops.setup import ollama_checks
+    _ollama(monkeypatch, parameters="stop                           <|im_end|>\n")
+    bad = [n for n, ok, _ in ollama_checks(OLLAMA) if not ok]
+    assert bad == ["ollama num_ctx 4096 >= context_tokens 8192"]
+
+
+def test_doctor_accepts_a_larger_num_ctx_and_an_explicit_tag(monkeypatch):
+    from careerops.setup import ollama_checks
+    _ollama(monkeypatch, models=("qwen2.5-7b-8k:v2",), parameters="num_ctx 16384\n")
+    assert all(ok for _, ok, _ in ollama_checks({**OLLAMA, "model": "qwen2.5-7b-8k:v2"}))
+
+
+def test_doctor_reports_a_server_that_does_not_answer(monkeypatch):
+    import requests
+    from careerops.setup import ollama_checks
+
+    def down(url, timeout):
+        raise requests.ConnectionError("refused")
+
+    monkeypatch.setattr("careerops.setup.requests.get", down)
+    checks = ollama_checks(OLLAMA)
+    assert len(checks) == 1 and checks[0][1] is False and CREATE in checks[0][2]
+
+
+def test_doctor_runs_the_ollama_checks_for_a_provider_without_a_key(settings, monkeypatch):
+    from careerops.setup import doctor
+    _ollama(monkeypatch, models=())
+    settings.raw["llm"]["providers"] = [OLLAMA]
+    names = [(n, ok) for n, ok, _ in doctor(settings) if "ollama" in n]
+    assert names == [("ollama at http://localhost:11434/v1", True), ("ollama model qwen2.5-7b-8k is built", False)]

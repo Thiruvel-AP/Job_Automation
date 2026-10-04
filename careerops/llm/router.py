@@ -4,6 +4,10 @@ HTTP errors keep their status and (truncated) body in the LLMError and in an `ev
 provider's Retry-After, else 2 s, 4 s, 8 s, before the router falls through to the next provider; a 400 on a request
 carrying `response_format` is retried once without it.
 
+A request is never sent to a provider whose `context_tokens` it would overflow (estimated input + max_tokens): that
+provider is skipped, the reason is logged, and the next one is tried. `Router(only=name)` pins every call to one provider
+with no fallback.
+
 The deterministic stand-in for tests and `--mock` runs lives in `mock.py`.
 """
 from __future__ import annotations
@@ -110,6 +114,19 @@ class Provider:
     def max_tokens_for(self, task: str) -> int:
         return int(self.max_tokens.get(task) or self.max_tokens.get("default") or DEFAULT_MAX_TOKENS)
 
+    def overflow(self, system: str, user: str, task: str) -> str | None:
+        """Why this request cannot go to this provider: its estimated input + completion cap exceeds `context_tokens`
+        (a server that truncates a long prompt gives a wrong answer without saying so). None when it fits, or when the
+        provider names no context size."""
+        limit = self.cfg.get("context_tokens")
+        if not limit:
+            return None
+        need = estimate_tokens(system, user) + self.max_tokens_for(task)
+        if need <= limit:
+            return None
+        return (f"{self.name}: skipped, {task} needs ~{need:,} tokens (input ~{need - self.max_tokens_for(task):,} + "
+                f"max_tokens {self.max_tokens_for(task):,}) but its context is {limit:,}")
+
     def _pace(self, cost: int) -> None:
         """Sleep until the provider's token/request window admits `cost` tokens. A wait beyond max_wait (a spent daily
         request budget) is not served: raise as a 429 so the router moves to the next provider."""
@@ -212,12 +229,21 @@ class Provider:
 
 
 class Router:
-    def __init__(self, settings, db: DB):
+    def __init__(self, settings, db: DB, only: str | None = None):
+        """`only` pins every call to the provider of that name: the others are not even built, so nothing can fall back
+        to them. Raises ValueError, naming the configured providers, if there is no such provider."""
         c = settings["llm"]
+        self.db = db
         # a provider's own `seed` (null = never send one) wins over llm.seed
         self.providers = [Provider(p, db, c.get("temperature", 0.3), c.get("timeout_s", 120),
                                    c.get("max_retry_wait_s", 60), c.get("max_tokens"), p.get("seed", c.get("seed")))
                           for p in c["providers"]]
+        self.pinned = only
+        if only is not None:
+            self.providers = [p for p in self.providers if p.name == only]
+            if not self.providers:
+                raise ValueError(f"no LLM provider named {only!r}; configured: "
+                                 + ", ".join(p["name"] for p in c["providers"]))
         self.usage: list[dict] = []     # one entry per answered call; tailor_job copies its slice into report.json
         self._allowed: set[str] | None = None   # providers the current job may use (set by begin_job)
         self.last_raw: str | None = None        # the reply text of the last answered call, kept even if it was not valid JSON
@@ -255,11 +281,17 @@ class Router:
             if not p.available():
                 errors.append(f"{p.name}: unavailable (no key, daily request or token quota used)")
                 continue
+            too_big = p.overflow(system, user, task)
+            if too_big:
+                self.db.log("", "llm_skip", {"provider": p.name, "task": task, "reason": too_big})
+                errors.append(too_big)
+                continue
             for attempt in range(2):
                 try:
                     text = p.chat(system, user, task)
                     self.last_raw = text
-                    self.usage.append({"task": task, "provider": p.name, "model": p.last_model, **p.last_usage})
+                    self.usage.append({"task": task, "provider": p.name, "model": p.last_model or p.cfg.get("model"),
+                                       **p.last_usage})
                     try:
                         return extract_json(text)
                     except LLMError as e:

@@ -280,7 +280,7 @@ def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
     groq = next(p for p in llm["providers"] if p["name"] == "groq")
     assert (groq["tpm"], groq["rpm"], groq["tpd"]) == (8000, 30, 200000)
     assert (groq["reasoning_effort"], groq["include_reasoning"]) == ("low", False)
-    assert llm["job_token_estimate"] == 20000
+    assert llm["job_token_estimate"] == 10000
 
 
 # ---------------------------------------------------------------- 7. max_tokens per task and usage per call
@@ -420,7 +420,7 @@ def test_a_budget_stop_leaves_every_job_untouched_and_says_why(settings, db, ser
     from careerops.tailoring import tailor as tailor_mod
     _S.script["/a"] = [_ok()]
     r = _router(settings, db, server, "a", tpd=50_000)
-    _spend(db, "a", 40_000)
+    _spend(db, "a", 45_000)
     for i in (1, 2):
         db.upsert_job({"id": f"gh:x:{i}", "source": "greenhouse", "company": f"Co{i}", "title": "AI Engineer",
                        "location": "London, UK", "url": "u", "apply_url": "u", "description": "d" * 900})
@@ -433,7 +433,7 @@ def test_a_budget_stop_leaves_every_job_untouched_and_says_why(settings, db, ser
     cli.main(["tailor", "--limit", "2"])
     out = capsys.readouterr().out
     assert called == [] and "STOP" in out and "Nothing was half-tailored" in out
-    assert "a: 40,000 of 50,000 tokens used today" in out and "2 job(s) left untouched" in out
+    assert "a: 45,000 of 50,000 tokens used today" in out and "2 job(s) left untouched" in out
     assert [j["status"] for j in db.jobs()] == ["triaged", "triaged"]
     assert not list(settings.path("outputs").glob("*"))                       # no folder, not even a partial one
     assert db.conn.execute("SELECT COUNT(*) FROM events WHERE stage='error'").fetchone()[0] == 0

@@ -11,6 +11,7 @@ cd ~/career-ops && python3 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]" && playwright install chromium
 careerops init                  # data/ folders + .env from .env.example (idempotent)
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
+ollama create qwen2.5-7b-8k -f config/ollama/Modelfile   # same model with an 8192-token context (Ollama's default is 4096)
 # put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
 careerops doctor                # every line should say [ok]
 careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
@@ -108,6 +109,7 @@ selection, violations, letter status, tokens and seconds, then the aggregates. I
 careerops calibrate --limit 3                      # a few JDs, to stay inside the 200K tokens a day
 careerops calibrate --compare data/calibration/report-<earlier>.md   # before/after next to the new run
 careerops calibrate --only cal-heathrow cal-quantcast
+careerops calibrate --provider ollama              # pin every call to one provider (no fallback); the report names the provider and model per call
 careerops calibrate --summarise                    # merge the filled data/calibration/rubric.csv into the latest report
 careerops calibrate --mock                         # no model, own data root: checks the plumbing
 ```

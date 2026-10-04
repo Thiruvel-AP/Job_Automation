@@ -120,6 +120,10 @@ llm:
       base_url: https://api.groq.com/openai/v1
       api_key_env: GROQ_API_KEY
       model: openai/gpt-oss-20b    # check console.groq.com/docs/models — free-tier model list changes
+      # Context window in tokens (prompt + completion). Before each request the router estimates input + max_tokens; a
+      # request that would not fit is not sent to this provider (it goes to the next, or fails with the reason).
+      # 131072 per Groq's model docs; its 8K TPM limit is separate and already paced by tpm below.
+      context_tokens: 131072
       # Limits the router paces itself to. Groq's x-ratelimit-* response headers override them while present; these are
       # used before the first reply and when headers are missing. tpm and rpm default to 8000 and 30 if left out;
       # null/0 = unlimited. tpd = tokens per day: a job is not started if its estimated cost no longer fits.
@@ -137,7 +141,12 @@ llm:
     - name: ollama
       base_url: http://localhost:11434/v1
       api_key_env: null
-      model: qwen2.5:7b-instruct   # ~4.7 GB Q4_K_M, fits the RTX 4060's 8 GB
+      # Built from config/ollama/Modelfile (FROM qwen2.5:7b-instruct, num_ctx 8192): `ollama create qwen2.5-7b-8k -f
+      # config/ollama/Modelfile`. The OpenAI /v1 endpoint cannot set num_ctx and Ollama's default is 4096, so the
+      # context lives in the Modelfile. ~4.7 GB Q4_K_M, fits the RTX 4060's 8 GB at 100% GPU. `careerops doctor` checks
+      # the model exists and that its num_ctx is at least context_tokens.
+      model: qwen2.5-7b-8k
+      context_tokens: 8192         # must equal the Modelfile's num_ctx; Ollama silently truncates a longer prompt
       tpm: null                    # local model: no token budget to pace
       rpm: 1000
       rpd: 1000000
@@ -153,8 +162,9 @@ llm:
     default: 1000
   # Estimated tokens for tailoring one job (keywords + profile + rephrase batches + letter; a below-band retry adds
   # batches). Before each job the router checks today's tokens + this against every provider's tpd; none left -> use
-  # the next provider, else stop the run.
-  job_token_estimate: 20000
+  # the next provider, else stop the run. 10000: calibration round 1 measured a mean of 6,911 and a max of 8,378
+  # tokens per JD.
+  job_token_estimate: 10000
   # Every task runs at temperature 0 with a fixed seed: a small model that is asked the same question should answer the
   # same way, so a calibration run (careerops calibrate) measures the prompts, not the dice. A provider entry may set its
   # own `seed` (null = send none, for a provider that rejects it).

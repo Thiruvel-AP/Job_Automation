@@ -3,7 +3,7 @@
   careerops init                create data/ folders and .env (idempotent)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
-  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--summarise]
+  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--summarise]
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
@@ -71,7 +71,12 @@ def _ctx(args):
 
 
 def _llm(args, s, db):
-    return MockLLM() if args.mock else Router(s, db)
+    if args.mock:
+        return MockLLM()
+    try:
+        return Router(s, db, only=getattr(args, "provider", None))
+    except ValueError as e:
+        _fail(str(e))
 
 
 def _status(v: gates.Verdict) -> str:
@@ -177,7 +182,7 @@ def cmd_tailor(args):
     gates.load_roles(s, fb)
     jobs = select_for_run(db.jobs("triaged"), args.limit, s)
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if args.mock else ''}.")
-    est = s["llm"].get("job_token_estimate", 20000)
+    est = s["llm"].get("job_token_estimate", 10000)
     for n, job in enumerate(jobs):
         print(f"- {job['company']} | {job['title']}")
         try:
@@ -365,6 +370,8 @@ def cmd_calibrate(args):
     # --mock moves every generated-data path (reports included) under data/mock; the manifest stays where the user keeps it
     manifest = Path(args.manifest) if args.manifest else load_settings(args.config).path("calibration") / "manifest.yaml"
     out = Path(args.out) if args.out else s.path("calibration")
+    if args.provider and args.mock:
+        _fail("--provider pins a real provider; --mock uses no provider")
     try:
         if args.summarise:
             print(f"Merged the rubric into {cal.summarise(out)}")
@@ -463,6 +470,8 @@ def main(argv=None):
     ca.add_argument("--only", nargs="+", metavar="ID", help="just these manifest ids")
     ca.add_argument("--limit", type=int, help="at most N JDs (the daily token budget is the usual reason)")
     ca.add_argument("--compare", metavar="REPORT", help="an earlier report-<stamp>.md (or .json): show before/after")
+    ca.add_argument("--provider", metavar="NAME", help="use only this llm.providers entry (e.g. ollama): no fallback, "
+                    "so a run cannot mix providers; the report records which provider and model served every call")
     ca.add_argument("--summarise", action="store_true", help="merge the filled-in rubric.csv into the latest report")
     ca.add_argument("--mock", action="store_true", help="deterministic MockLLM and an isolated data root, no API calls")
     ca.set_defaults(fn=cmd_calibrate)
