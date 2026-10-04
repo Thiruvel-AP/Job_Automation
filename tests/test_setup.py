@@ -64,3 +64,23 @@ def test_fact_bank_check_is_clean_without_markers_and_negative_without_a_file(tm
 def test_fixture_fact_bank_has_no_open_items():
     from conftest import fixture
     assert fact_bank_open_items(fixture("tailoring", "fact_bank_fixture.yaml")) == 0
+
+
+# ---------------------------------------------------------------- M5: the calibration folder
+def test_settings_name_the_calibration_folder(settings):
+    from careerops.config import load_settings
+    assert load_settings().raw["paths"]["calibration"] == "data/calibration"
+
+
+def test_init_creates_the_calibration_folders_and_leaves_what_is_in_them_alone(settings, tmp_path):
+    for k in ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs"):
+        settings.raw["paths"][k] = str(tmp_path / "data" / k)
+    cal = settings.path("calibration")
+    assert not cal.exists()
+    made = init(settings)
+    assert (cal / "jds").is_dir() and (cal / "reference").is_dir() and any("jds" in m for m in made)
+    (cal / "jds" / "x.txt").write_text("my JD", encoding="utf-8")
+    (cal / "manifest.yaml").write_text("- id: a\n", encoding="utf-8")
+    assert [m for m in init(settings) if "calibration" in m] == []                    # idempotent
+    assert (cal / "jds" / "x.txt").read_text(encoding="utf-8") == "my JD"
+    assert (cal / "manifest.yaml").read_text(encoding="utf-8") == "- id: a\n"

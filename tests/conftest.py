@@ -72,6 +72,7 @@ def settings(tmp_path) -> Settings:
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")
     raw["paths"]["tmp"] = str(tmp_path / "stage")
+    raw["paths"]["calibration"] = str(tmp_path / "calibration")
     (tmp_path / "Companies").mkdir()                      # only `careerops init` creates the real one
     raw["paths"]["fact_bank"] = str(ROOT / "config/profile/fact_bank.yaml")
     raw["paths"]["applicant"] = str(ROOT / "config/profile/applicant.yaml")

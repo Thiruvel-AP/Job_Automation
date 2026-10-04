@@ -14,7 +14,9 @@ import requests
 OPEN_ITEM = re.compile(r'TODO|#\s*CONFIRM\b(?!")')
 
 # `applications` is the user's archive root: init creates it only if missing and never touches existing contents.
-DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp")
+DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp",
+             "calibration")
+CALIBRATION_SUBDIRS = ("jds", "reference")      # inside paths.calibration; init adds them, never touches what is in them
 FILE_PARENTS = ("db", "excel", "learning", "preferences")
 
 
@@ -47,6 +49,11 @@ def init(settings) -> list[str]:
     made = []
     for key in DATA_DIRS:
         p = settings.path(key)
+        if not p.exists():
+            p.mkdir(parents=True, exist_ok=True)
+            made.append(_show(p, settings.root))
+    for sub in CALIBRATION_SUBDIRS:
+        p = settings.path("calibration") / sub
         if not p.exists():
             p.mkdir(parents=True, exist_ok=True)
             made.append(_show(p, settings.root))

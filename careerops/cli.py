@@ -3,6 +3,8 @@
   careerops init                create data/ folders and .env (idempotent)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
+  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--summarise]
+                                tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
@@ -356,6 +358,27 @@ def cmd_llm_check(args):
     sys.exit(0 if any(r["ok"] for r in rows) else 1)
 
 
+def cmd_calibrate(args):
+    from .reporting import calibrate as cal
+
+    s, db = _ctx(args)
+    # --mock moves every generated-data path (reports included) under data/mock; the manifest stays where the user keeps it
+    manifest = Path(args.manifest) if args.manifest else load_settings(args.config).path("calibration") / "manifest.yaml"
+    out = Path(args.out) if args.out else s.path("calibration")
+    try:
+        if args.summarise:
+            print(f"Merged the rubric into {cal.summarise(out)}")
+            return
+        res = cal.calibrate(s, db, _llm(args, s, db), load_yaml(s.path("fact_bank")), manifest, out, only=args.only,
+                            limit=args.limit, compare_to=Path(args.compare) if args.compare else None)
+    except cal.ManifestError as e:
+        _fail(str(e))
+    print(f"Wrote {res['report']}\n      {res['json']}\n      {res['rubric']} (rate the CVs and letters, then "
+          "`careerops calibrate --summarise`)")
+    if res["aggregates"]["errors"] or res["aggregates"]["not_run"]:
+        sys.exit(1)
+
+
 def cmd_companies(args):
     from .discovery import ats, companies_house
 
@@ -434,6 +457,15 @@ def main(argv=None):
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     sub.add_parser("llm-check", help="one tiny request per LLM provider: reachable, model, latency, JSON, json_mode"
                    ).set_defaults(fn=cmd_llm_check)
+    ca = sub.add_parser("calibrate", help="tailor the calibration JDs with the real model and measure the result")
+    ca.add_argument("--manifest", help="default: <paths.calibration>/manifest.yaml")
+    ca.add_argument("--out", help="folder for report-<stamp>.md/.json, rubric.csv and runs/ (default: paths.calibration)")
+    ca.add_argument("--only", nargs="+", metavar="ID", help="just these manifest ids")
+    ca.add_argument("--limit", type=int, help="at most N JDs (the daily token budget is the usual reason)")
+    ca.add_argument("--compare", metavar="REPORT", help="an earlier report-<stamp>.md (or .json): show before/after")
+    ca.add_argument("--summarise", action="store_true", help="merge the filled-in rubric.csv into the latest report")
+    ca.add_argument("--mock", action="store_true", help="deterministic MockLLM and an isolated data root, no API calls")
+    ca.set_defaults(fn=cmd_calibrate)
     sub.add_parser("sponsors").set_defaults(fn=cmd_sponsors)
     c = sub.add_parser("companies")
     g = c.add_mutually_exclusive_group()
