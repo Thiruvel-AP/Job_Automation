@@ -28,7 +28,7 @@ real model output is judged, so the deliverable is **evidence**, not features.
 
 ## Part 1 — Readiness tooling (read-only towards the user's profile)
 
-### 1-pre. Calibration folder
+### 1-pre. Calibration folder  (✅ `paths.calibration`, `setup.CALIBRATION_SUBDIRS`, `tests/test_setup.py`)
 Add `calibration: data/calibration` to `config/settings.yaml → paths` (comment: "M5 calibration JDs, manifest, reports")
 and to `DATA_DIRS` in `careerops/setup.py` so `careerops init` creates `data/calibration/jds/`. Code reads it via
 `settings.path("calibration")`, never a hard-coded path. If the user already created the folder by hand, `init` must
@@ -88,6 +88,13 @@ Fix:
 ("containerization experience is a bonus"); (c) a `:`-ended heading with no known phrase resets the mode to neutral.
 
 ## Part 2 — Calibration harness: `careerops calibrate`
+
+**Status: ✅ built (`careerops/reporting/calibrate.py`, `tests/reporting/test_calibrate.py`); not run live yet.** Differences from
+the text below: jobs are plain dicts (no row in the jobs table, no `calibration` source in the DB) and the CVs go to
+`<calibration>/runs/<stamp>/outputs/`, so a calibration run cannot disturb the real queue or `data/outputs/`; the DB is read for the
+sponsor index and holds the router's token counters; `questions` / `needs_result` are not in `report.json`, so they are not reported;
+extra flags `--only`, `--limit`, `--compare REPORT`, `--out`, `--mock`; the report also gets a `.json` sidecar for `--compare`.
+The manifest now lists seven JDs (heathrow, quantcast = the tier-2 slot, trainline = the tier-3 slot were added).
 
 Input: `data/calibration/manifest.yaml` (git-ignored, written by the user):
 ```yaml

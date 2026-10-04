@@ -36,13 +36,15 @@ career-ops/
 │   │   ├── scorer.py             weighted ATS score (literal + stemmed), honest ceiling, keywords
 │   │   ├── faithfulness.py       guard: no new numbers, deny-listed tools, unevidenced keywords
 │   │   ├── prompts.py            all LLM prompts in one place
-│   │   ├── tailor.py             analyse → tailor → guard → render → band loop → letter
+│   │   ├── selection.py          which bullets and projects go on the CV (code, not the model)
+│   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
+│   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · outreach.py (M4)
 │   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
-│   ├── reporting/excel.py        Excel view of SQLite
+│   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
 │   └── training/rewards.py       Phase 2 GRPO reward functions
 ├── config/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
@@ -91,6 +93,23 @@ careerops apply                    # fills basics + uploads PDFs, YOU press subm
 careerops export                   # data/exports/companies.xlsx
 careerops export-prefs             # your edits → DPO pairs (chosen = yours, rejected = model's)
 careerops status                   # counts per status, plus a tier × status table
+careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
+```
+
+### Calibration
+
+`data/calibration/manifest.yaml` lists the JDs you tailored by hand (`id`, `company`, `title`, `jd_file`; optional `manual_ats`,
+`reference_cv`, `outcome`). `careerops calibrate` tailors each with the configured model, at temperature 0 and a fixed seed, and writes
+`data/calibration/report-<stamp>.md` (+ `.json`): per JD the keywords, ceiling, final score, rephrase coverage, guard blocks,
+selection, violations, letter status, tokens and seconds, then the aggregates. It touches neither the jobs table nor `data/outputs/`
+(CVs go under `data/calibration/runs/<stamp>/`) and stops, leaving the rest unmeasured, when the day's Groq tokens cannot cover another JD.
+
+```bash
+careerops calibrate --limit 3                      # a few JDs, to stay inside the 200K tokens a day
+careerops calibrate --compare data/calibration/report-<earlier>.md   # before/after next to the new run
+careerops calibrate --only cal-heathrow cal-quantcast
+careerops calibrate --summarise                    # merge the filled data/calibration/rubric.csv into the latest report
+careerops calibrate --mock                         # no model, own data root: checks the plumbing
 ```
 
 ### Role tiers and queue order
