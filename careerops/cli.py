@@ -3,7 +3,7 @@
   careerops init                create data/ folders and .env (idempotent)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
-  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--summarise]
+  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--freeze-keywords] [--summarise]
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
@@ -174,7 +174,7 @@ def cmd_add_jd(args):
 
 
 def cmd_tailor(args):
-    from .tailoring.tailor import tailor_job
+    from .tailoring.tailor import letter_summary, tailor_job
 
     s, db = _ctx(args)
     llm = _llm(args, s, db)
@@ -204,6 +204,8 @@ def cmd_tailor(args):
             db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"]})
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
             over = cv_pages > s["scoring"]["max_pages"] or letter_pages != 1
+            if rep["letter"]["status"] != "ok":
+                print(f"  letter {letter_summary(rep['letter'])}")
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s), letter {letter_pages} page(s)"
                   + (f"  !! expected {s['scoring']['max_pages']} and 1" if over else ""))
@@ -376,6 +378,13 @@ def cmd_calibrate(args):
         if args.summarise:
             print(f"Merged the rubric into {cal.summarise(out)}")
             return
+        if args.freeze_keywords:
+            res = cal.freeze_keywords(s, _llm(args, s, db), manifest, out, only=args.only, limit=args.limit)
+            print(f"Froze {len(res['written'])} JD(s)" + (f"; {len(res['errors'])} not frozen" if res["errors"] else "")
+                  + f". Every later `careerops calibrate` reads them from {out / cal.KEYWORDS_DIR}.")
+            if res["errors"]:
+                sys.exit(1)
+            return
         res = cal.calibrate(s, db, _llm(args, s, db), load_yaml(s.path("fact_bank")), manifest, out, only=args.only,
                             limit=args.limit, compare_to=Path(args.compare) if args.compare else None)
     except cal.ManifestError as e:
@@ -472,6 +481,8 @@ def main(argv=None):
     ca.add_argument("--compare", metavar="REPORT", help="an earlier report-<stamp>.md (or .json): show before/after")
     ca.add_argument("--provider", metavar="NAME", help="use only this llm.providers entry (e.g. ollama): no fallback, "
                     "so a run cannot mix providers; the report records which provider and model served every call")
+    ca.add_argument("--freeze-keywords", action="store_true", help="extract each JD's keywords once and write "
+                    "<calibration>/keywords/<id>.yaml (no tailoring); later runs read them instead of extracting")
     ca.add_argument("--summarise", action="store_true", help="merge the filled-in rubric.csv into the latest report")
     ca.add_argument("--mock", action="store_true", help="deterministic MockLLM and an isolated data root, no API calls")
     ca.set_defaults(fn=cmd_calibrate)

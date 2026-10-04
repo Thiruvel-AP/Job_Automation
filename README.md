@@ -109,6 +109,7 @@ selection, violations, letter status, tokens and seconds, then the aggregates. I
 careerops calibrate --limit 3                      # a few JDs, to stay inside the 200K tokens a day
 careerops calibrate --compare data/calibration/report-<earlier>.md   # before/after next to the new run
 careerops calibrate --only cal-heathrow cal-quantcast
+careerops calibrate --freeze-keywords --provider groq   # extract each JD's keywords once -> data/calibration/keywords/<id>.yaml; later runs reuse them (same ceilings across runs and providers)
 careerops calibrate --provider ollama              # pin every call to one provider (no fallback); the report names the provider and model per call
 careerops calibrate --summarise                    # merge the filled data/calibration/rubric.csv into the latest report
 careerops calibrate --mock                         # no model, own data root: checks the plumbing

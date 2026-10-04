@@ -26,6 +26,7 @@ from .scorer import (Keyword, _contains, cap_keywords, ceiling, drop_contained, 
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
+LLM_FAILED = "LLM call failed"             # in analyse's notes when only the taxonomy keywords could be used
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
 BANNED_CLOSERS = re.compile(r"look forward to hearing from you", re.I)
 # a deny-listed tool may be named in the letter only to say the candidate lacks it
@@ -102,11 +103,19 @@ def llm_keyword(raw, njd: str, weight: float, required: bool) -> Keyword | None:
     return Keyword(ok[0], weight, required, ok[1:]) if ok else None
 
 
-def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[list[Keyword], str, str]:
+def analyse(job: dict, llm, settings, notes: list[str] | None = None,
+            frozen: dict | None = None) -> tuple[list[Keyword], str, str]:
     """(keywords, company_hook, team). `team` is "" when the JD names none. The model only suggests keywords; code
     enforces the rules: verbatim in the JD, short, nothing generic, near-duplicates merged (the shorter stays), at most
     scoring.max_keywords kept by weight then JD frequency. Shape problems in the model's answer and every drop are
-    appended to `notes` when given."""
+    appended to `notes` when given. `frozen` ({"keywords": [Keyword], "company_hook", "team", "notes", "date"}, see
+    reporting.calibrate.load_frozen) is the result of an earlier analysis: it is returned as it is, with no model call,
+    so the keywords (and so the ceiling) are the same on every run and with every provider."""
+    if frozen is not None:
+        if notes is not None:
+            notes.append(f"keywords: frozen ({frozen.get('date')}), extract_keywords not called")
+            notes.extend(frozen.get("notes") or [])
+        return list(frozen["keywords"]), frozen.get("company_hook") or "", frozen.get("team") or ""
     sc = settings["scoring"]
     jd = job["description"] or ""
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
@@ -135,6 +144,8 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None) -> tuple[l
         hook = team = ""
         llm_kw = []
         print(f"  keyword LLM failed, using taxonomy only: {e}")
+        if notes is not None:
+            notes.append(f"extract_keywords: {LLM_FAILED} ({str(e)[:120]}); taxonomy keywords only")
     kws, merged = drop_contained(merge_keywords(tax, llm_kw))
     kws, capped = cap_keywords(kws, jd, sc["max_keywords"])
     if notes is not None:
@@ -342,10 +353,36 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
     projects = [{**by_id[p], "bullet_ids": [b["id"] for b in by_id[p]["bullets"]],
                  "bullets": [text(b["id"]) for b in by_id[p]["bullets"]]} for p in sel["projects"] if p in by_id]
     hit_terms = {norm_literal(w) for k in kws for w in k.members()}
-    skills = {g: sorted(items, key=lambda s: norm_literal(s) not in hit_terms) for g, items in fb["skills"].items()}
+    skills = {g: sorted(items, key=lambda s: norm_literal(s) not in hit_terms)
+              for g, items in dedupe_skills(fb["skills"]).items()}
     return {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile,
             "skills": skills, "experience": experience, "projects": projects, "education": fb.get("education", []),
             "certifications": fb.get("certifications", [])}
+
+
+def dedupe_skills(skills: dict[str, list[str]]) -> dict[str, list[str]]:
+    """The skill groups without case-insensitive repeats, within a group and across groups: the first occurrence stays
+    ("Python" in Languages keeps it; "python" in Tools goes). A group left empty is dropped."""
+    seen: set[str] = set()
+    out: dict[str, list[str]] = {}
+    for group, items in skills.items():
+        kept = []
+        for s in items:
+            key = " ".join(str(s).split()).casefold()
+            if key not in seen:
+                seen.add(key)
+                kept.append(s)
+        if kept:
+            out[group] = kept
+    return out
+
+
+def letter_summary(letter: dict) -> str:
+    """"ok", or "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text."""
+    if letter.get("status") == "ok":
+        return "ok"
+    why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
+    return f"{letter.get('status')} ({why[0] if why else 'no reason recorded'})"
 
 
 def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
@@ -618,7 +655,7 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
 
 
 # ------------------------------------------------------------------ 4. the loop
-def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, Any]:
+def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
     earlier successful output folder exactly as it was."""
@@ -626,7 +663,7 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
     work = final.with_name(final.name + ".partial")
     shutil.rmtree(work, ignore_errors=True)
     try:
-        report = _tailor(job, fb, llm, settings, work, final)
+        report = _tailor(job, fb, llm, settings, work, final, frozen)
         old = final.with_name(final.name + ".old")
         shutil.rmtree(old, ignore_errors=True)
         if final.exists():
@@ -649,7 +686,8 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path) -> dict[str, 
         raise
 
 
-def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) -> dict[str, Any]:
+def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
+            frozen: dict | None = None) -> dict[str, Any]:
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
@@ -659,7 +697,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path) 
     usage_from = len(getattr(llm, "usage", []))
     family, tier, headline, preferred = role_prior(job, fb, settings)
     analysis_warnings: list[str] = []
-    kws, hook, team = analyse(job, llm, settings, analysis_warnings)
+    kws, hook, team = analyse(job, llm, settings, analysis_warnings, frozen)
     ceil, gaps = ceiling(fact_text(fb), kws)
     cv_name, letter_name = _names(fb, settings)
     profile = make_profile(job, fb, kws, headline, llm)         # depends on the facts only, not on the selection

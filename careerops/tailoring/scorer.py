@@ -260,11 +260,29 @@ def merge_keywords(*lists: list[Keyword]) -> list[Keyword]:
     return out
 
 
+# Head words that add nothing a recruiter's ATS would search for: "retrieval pipelines" is just "retrieval".
+GENERIC_HEADS = frozenset({"pipelines", "systems", "frameworks", "tasks", "approaches", "workflows", "features",
+                           "architectures", "loops"})
+
+
+def _generic_extension(stem: str, host_stems: list[str]) -> str | None:
+    """The kept term (as a stem) that `stem` is made of plus generic head words only, else None. Whole words only."""
+    heads = {norm_stem(h) for h in GENERIC_HEADS}
+    for h in sorted(host_stems, key=len, reverse=True):
+        if not h or not _contains(stem, h):
+            continue
+        rest = re.sub(r"(?<![\w])" + re.escape(h) + r"(?![\w])", " ", stem, count=1).split()
+        if rest and all(w in heads for w in rest):
+            return h
+    return None
+
+
 def drop_contained(kws: list[Keyword]) -> tuple[list[Keyword], list[str]]:
     """Merge near-duplicates where one keyword's words are wholly inside another's ("customer feedback" inside
     "customer feedback analysis"): the shorter one stays and takes the heavier weight (required if either was). Matched
-    on stems, whole words only. Any-of keywords ("A or B") are left alone. Returns (keywords in their input order,
-    notes naming each dropped longer keyword)."""
+    on stems, whole words only. An any-of keyword ("A or B") is never dropped and, as a host, only absorbs a longer term
+    that is one of its words plus generic head words alone (GENERIC_HEADS: "retrieval pipelines" next to "RAG or
+    retrieval"). Returns (keywords in their input order, notes naming each dropped longer keyword and why)."""
     stems = {id(k): norm_stem(k.term) for k in kws}
     kept: list[Keyword] = []
     notes: list[str] = []
@@ -272,12 +290,19 @@ def drop_contained(kws: list[Keyword]) -> tuple[list[Keyword], list[str]]:
     for k in sorted(kws, key=lambda k: (len(stems[id(k)].split()), len(stems[id(k)]))):    # shortest first
         host = None if k.alts else next((h for h in kept if not h.alts and h is not k and stems[id(h)]
                                          and _contains(stems[id(k)], stems[id(h)])), None)
+        if host is None and not k.alts:                       # an any-of host: only generic head words may be shed
+            for h in kept:
+                if h.alts and (found := _generic_extension(stems[id(k)], [norm_stem(m) for m in h.members()])):
+                    host = h
+                    notes.append(f"dropped '{k.term}' (contains '{found}' plus only generic head words)")
+                    break
+        elif host is not None:
+            notes.append(f"dropped '{k.term}' (contains '{host.term}')")
         if host is None:
             kept.append(k)
             continue
         gone.add(id(k))
         host.weight, host.required = max(host.weight, k.weight), host.required or k.required
-        notes.append(f"dropped '{k.term}' (contains '{host.term}')")
     return [k for k in kws if id(k) not in gone], notes
 
 

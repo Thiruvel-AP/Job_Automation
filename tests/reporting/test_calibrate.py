@@ -543,3 +543,126 @@ def test_calibrate_provider_rejects_an_unknown_name_and_mock(config, manifest, c
     with pytest.raises(SystemExit) as e:
         cli.main(["--config", str(config), "calibrate", "--mock", "--provider", "ollama"])
     assert e.value.code == 1 and "--provider" in capsys.readouterr().err
+
+
+# ================================================================== frozen keywords, and the letter's reason in the summary
+def _kw_llm(required, preferred=(), **kw):
+    """A MockLLM whose extract_keywords answer is fixed; `.calls` shows whether extraction was asked for."""
+    return MockLLM({"extract_keywords": lambda ctx: {"required": list(required), "preferred": list(preferred),
+                                                     "company_hook": "clinical decision support", "team": "", **kw}})
+
+
+def _freeze(settings, llm, manifest, out, **kw):
+    kw.setdefault("log", lambda m: None)
+    return cal.freeze_keywords(settings, llm, manifest, out, **kw)
+
+
+def test_freezing_writes_term_weight_required_per_jd(settings, manifest, tmp_path):
+    out = tmp_path / "cal"
+    res = _freeze(settings, _kw_llm(["LangChain", "multi-omics"]), manifest, out, only=["cal-northwind"])
+    path = out / "keywords" / "cal-northwind.yaml"
+    assert res["written"] == [path] and res["errors"] == {} and not (out / "keywords" / "cal-sales.yaml").exists()
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    by_term = {k["term"]: k for k in data["keywords"]}
+    assert set(by_term["LangChain"]) == {"term", "weight", "required"}
+    assert by_term["LangChain"]["required"] is True and by_term["LangChain"]["weight"] == 2.0
+    assert by_term["multi-omics"]["required"] is True and by_term["multi-omics"]["weight"] == 2.0   # not a taxonomy term
+    assert all({"term", "weight", "required"} <= set(k) <= {"term", "weight", "required", "alts"} for k in data["keywords"])
+    assert data["frozen"] and data["company_hook"] == "clinical decision support"
+
+
+def test_a_frozen_file_overrides_extraction_and_the_header_says_so(settings, db, fb, manifest, tmp_path):
+    out = tmp_path / "cal"
+    _freeze(settings, _kw_llm(["LangChain"]), manifest, out, only=["cal-northwind"])
+    frozen = yaml.safe_load((out / "keywords" / "cal-northwind.yaml").read_text(encoding="utf-8"))
+    llm = _kw_llm(["multi-omics"])                                # what extraction would say now: not used
+    res = _run(settings, db, fb, manifest, out, llm, stamp="s", only=["cal-northwind"])
+    assert "extract_keywords" not in llm.calls
+    assert res["rows"][0]["keywords"]["terms"] == [k["term"] for k in frozen["keywords"]]
+    assert "multi-omics" not in res["rows"][0]["keywords"]["terms"]
+    assert res["rows"][0]["keywords"]["frozen"] == frozen["frozen"]
+    md = res["report"].read_text(encoding="utf-8")
+    assert f"keywords: frozen ({frozen['frozen']})" in md and "extract_keywords not called" in md
+    assert json.loads(res["json"].read_text(encoding="utf-8"))["meta"]["keywords"]["mode"] == "frozen"
+
+
+def test_ceilings_are_identical_across_runs_whatever_the_model_would_extract(settings, db, fb, manifest, tmp_path):
+    out = tmp_path / "cal"
+    _freeze(settings, _kw_llm(["LangChain"]), manifest, out, only=["cal-northwind"])
+    a = _run(settings, db, fb, manifest, out, _kw_llm(["multi-omics"]), stamp="a", only=["cal-northwind"])
+    b = _run(settings, db, fb, manifest, out, _kw_llm(["clinical decision-support"]), stamp="b", only=["cal-northwind"])
+    assert a["rows"][0]["ceiling"] == b["rows"][0]["ceiling"] and a["rows"][0]["keywords"] == b["rows"][0]["keywords"]
+
+
+def test_without_frozen_files_extraction_is_live_and_the_header_says_so(settings, db, fb, manifest, tmp_path):
+    llm = _kw_llm(["multi-omics"])
+    res = _run(settings, db, fb, manifest, tmp_path / "cal", llm, stamp="s", only=["cal-northwind"])
+    assert "multi-omics" in res["rows"][0]["keywords"]["terms"]            # what live extraction gives, unlike a frozen run
+    assert "extract_keywords" in llm.calls and "keywords: live" in res["report"].read_text(encoding="utf-8")
+
+
+def test_a_run_with_some_frozen_files_is_marked_mixed(settings, db, fb, manifest, tmp_path):
+    out = tmp_path / "cal"
+    _freeze(settings, _kw_llm(["LangChain"]), manifest, out, only=["cal-northwind"])
+    res = _run(settings, db, fb, manifest, out, _kw_llm(["Python"]), stamp="s")
+    assert "keywords: mixed, frozen for 1 of 2 JD(s)" in res["report"].read_text(encoding="utf-8")
+
+
+def test_a_failed_extraction_is_not_frozen(settings, manifest, tmp_path):
+    def boom(ctx):
+        raise RuntimeError("provider down")
+
+    res = _freeze(settings, MockLLM({"extract_keywords": boom}), manifest, tmp_path / "cal", only=["cal-northwind"])
+    assert res["written"] == [] and "cal-northwind" in res["errors"] and "provider down" in res["errors"]["cal-northwind"]
+    assert not (tmp_path / "cal" / "keywords" / "cal-northwind.yaml").exists()
+
+
+def test_a_jd_changed_after_freezing_is_extracted_live_with_a_warning(settings, db, fb, manifest, tmp_path):
+    out = tmp_path / "cal"
+    _freeze(settings, _kw_llm(["LangChain"]), manifest, out, only=["cal-northwind"])
+    jd = yaml.safe_load(manifest.read_text(encoding="utf-8"))[0]["jd_file"]
+    Path(jd).write_text(Path(jd).read_text(encoding="utf-8") + "\nWe also use Kubernetes.\n", encoding="utf-8")
+    llm, logs = _kw_llm(["multi-omics"]), []
+    res = _run(settings, db, fb, manifest, out, llm, stamp="s", only=["cal-northwind"], log=logs.append)
+    assert "extract_keywords" in llm.calls and "multi-omics" in res["rows"][0]["keywords"]["terms"] and res["rows"][0]["keywords"]["frozen"] is None
+    assert any("JD changed since its keywords were frozen" in m for m in logs)
+
+
+def test_a_broken_frozen_file_is_a_manifest_error_naming_it(settings, db, fb, manifest, tmp_path):
+    out = tmp_path / "cal"
+    (out / "keywords").mkdir(parents=True)
+    (out / "keywords" / "cal-northwind.yaml").write_text("keywords: [oops]\n", encoding="utf-8")
+    res = _run(settings, db, fb, manifest, out, MockLLM(), stamp="s", only=["cal-northwind"])
+    assert res["rows"][0]["status"] == "error" and "not a frozen keyword file" in res["rows"][0]["error"]
+
+
+def test_the_dropped_keywords_are_listed_with_their_reason_in_the_report(settings, db, fb, manifest, tmp_path):
+    llm = _kw_llm(["retrieval", "Docker"], ["retrieval pipelines"])
+    jd = yaml.safe_load(manifest.read_text(encoding="utf-8"))[0]["jd_file"]
+    Path(jd).write_text(Path(jd).read_text(encoding="utf-8") + "\nWe use retrieval and retrieval pipelines.\n", encoding="utf-8")
+    res = _run(settings, db, fb, manifest, tmp_path / "cal", llm, stamp="s", only=["cal-northwind"])
+    assert "keywords: dropped 'retrieval pipelines' (contains 'retrieval')" in res["rows"][0]["keywords"]["notes"]
+    assert "  - keywords: dropped 'retrieval pipelines' (contains 'retrieval')" in res["report"].read_text(encoding="utf-8")
+
+
+def test_the_summary_line_gives_the_letters_rejection_reason(settings, db, fb, manifest, tmp_path):
+    lying = MockLLM({"cover_letter": lambda ctx: {"paragraphs": [
+        "Northwind builds tools I already work on.", "I cut latency by 9876 percent across the platform.",
+        "Could we talk for twenty minutes?"]}})
+    logs = []
+    res = _run(settings, db, fb, manifest, tmp_path / "cal", lying, stamp="s", only=["cal-northwind"], log=logs.append)
+    letter = res["rows"][0]["letter"]
+    assert letter["status"] == "fallback" and letter["problems"][0] != "used fallback letter"
+    assert any(f"letter fallback ({letter['problems'][0]})" in m for m in logs)
+    assert f"letter: fallback ({letter['problems'][0]})" in res["report"].read_text(encoding="utf-8")
+
+
+def test_the_command_freezes_keywords_and_a_later_run_uses_them(config, manifest, tmp_path, capsys):
+    cli.main(["--config", str(config), "calibrate", "--mock", "--freeze-keywords", "--manifest", str(manifest),
+              "--only", "cal-northwind"])
+    out = capsys.readouterr().out
+    kw = tmp_path / "mockroot" / "calibration" / "keywords" / "cal-northwind.yaml"
+    assert "Froze 1 JD(s)" in out and kw.is_file() and not (tmp_path / "calibration" / "keywords").exists()
+    cli.main(["--config", str(config), "calibrate", "--mock", "--manifest", str(manifest), "--only", "cal-northwind"])
+    report = sorted((tmp_path / "mockroot" / "calibration").glob("report-*.md"))[-1].read_text(encoding="utf-8")
+    assert "keywords: frozen (" in report
