@@ -1,6 +1,7 @@
 """SQLite state store. One row per job posting; `status` is the pipeline state machine.
 
 new -> skipped | triaged -> needs_review -> approved | rejected -> applied
+triaged -> letter_pending -> needs_review   (CV built; the letter waits for the one provider allowed to write it)
 """
 from __future__ import annotations
 

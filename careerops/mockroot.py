@@ -36,7 +36,8 @@ def mock_settings(s: Settings) -> Settings:
         try:
             rel = p.relative_to(data)            # data/exports/x.xlsx -> <mock>/exports/x.xlsx
         except ValueError:
-            rel = Path("applications") if key == "applications" else Path(p.name)   # outside data/: never reuse it
+            # outside data/: never reuse it (the frozen keyword lists are config, so they get their own mock folder)
+            rel = {"applications": Path("applications"), "frozen_keywords": Path("keywords")}.get(key, Path(p.name))
         raw["paths"][key] = str((root / rel))
     return Settings(raw=raw, root=s.root)
 

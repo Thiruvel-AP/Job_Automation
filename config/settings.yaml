@@ -17,6 +17,11 @@ paths:
   applications: /mnt/d/Professional/UK/Companies
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
   calibration: data/calibration           # M5 calibration JDs, manifest, reports (careerops calibrate)
+  # Frozen keyword lists, one <jd-id>.yaml per calibration JD (`careerops calibrate --freeze-keywords`). They are
+  # hand-curated INPUTS that decide every later run's ceilings, so they live under config/ and are tracked in git, not in
+  # data/ with the runtime output. `calibrate` reads them whenever the folder exists and refuses to run if a JD's file
+  # is missing; `--mock` redirects this folder under mock_root like every other generated path.
+  frozen_keywords: config/calibration/keywords
   # `--mock` runs redirect every path above that points at generated data (db, outputs, excel, archive, ...) under
   # this folder, so a mock run cannot touch real jobs. fact_bank and applicant stay read-only. Safe to delete.
   mock_root: data/mock
@@ -110,6 +115,10 @@ letter:
   # {company} = job company; {team} = " <team name>" when the JD names one (leading space included), else "".
   greeting: "Hi {company}{team} team"
   greeting_fallback: "Dear {company} hiring team"     # used when the JD names no team
+  # The closing question is written here, never by the model: a small model's call to action was the most common reason a
+  # letter was rejected. {team} = the team name the JD gives (no leading space).
+  closing: "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?"
+  closing_fallback: "Could we find twenty minutes to talk about where I could contribute first at {company}?"     # no team named
   signoff: "With regards"
 
 llm:
@@ -165,6 +174,14 @@ llm:
   # the next provider, else stop the run. 10000: calibration round 1 measured a mean of 6,911 and a max of 8,378
   # tokens per JD.
   job_token_estimate: 10000
+  # Tasks that may only run on the named providers. cover_letter is written by Groq's model alone: the local model's
+  # letters were not fit to send. When none of the named providers can take the call (no key, daily budget spent, rate
+  # limited) the CV is still built and the job waits as status `letter_pending` until `careerops tailor` finds the budget
+  # back; no other provider ever writes the letter. Tasks not listed here use every provider, in order.
+  task_providers:
+    cover_letter: [groq]
+  # Tokens a letter alone needs (one cover_letter call, with its retry), for finishing a `letter_pending` job.
+  letter_token_estimate: 3000
   # Every task runs at temperature 0 with a fixed seed: a small model that is asked the same question should answer the
   # same way, so a calibration run (careerops calibrate) measures the prompts, not the dice. A provider entry may set its
   # own `seed` (null = send none, for a provider that rejects it).

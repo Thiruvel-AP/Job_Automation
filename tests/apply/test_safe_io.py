@@ -65,6 +65,8 @@ ALLOWED = {
     ("tailoring/render.py", "_finalise"): "rename cv.pdf -> '<name> CV.pdf' inside data/outputs/<job>",
     ("tailoring/tailor.py", "tailor_job"): "builds data/outputs/<job>.partial, swaps it in on success, removes "
                                            ".partial/.old; out_root is paths.outputs, never paths.applications",
+    ("tailoring/tailor.py", "_discard"): "the only rmtree in tailoring: <job>.partial/.old/.failed directly inside the "
+                                         "outputs folder, anything else raises",
     ("apply/archive.py", "_remove_staging"): "deletes data/tmp/archive-*; refuses anything outside paths.tmp",
 }
 

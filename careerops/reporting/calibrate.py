@@ -9,8 +9,11 @@ seconds. It writes `report-<stamp>.md` (+ a `.json` sidecar that `--compare` rea
 columns for the human review.
 
 Keywords can be frozen (`--freeze-keywords`): the extraction result for each JD is written once to
-`<calibration>/keywords/<jd-id>.yaml`, and every later run reads those files instead of calling extract_keywords, so
-ceilings are identical across runs and providers. The report header says whether the keywords were frozen or live.
+`<paths.frozen_keywords>/<jd-id>.yaml` (config/calibration/keywords, tracked in git: they are curated inputs, not runtime
+output), and every later run reads those files instead of calling extract_keywords, so ceilings are identical across runs
+and providers. If that folder exists, every JD of the run must have its file (otherwise the run refuses to start); if it
+does not exist the run is live. The report header says which, with the files' modification time. Nothing in this module
+deletes anything: reports, runs and the rubric are only ever created or extended.
 
 Nothing here touches the jobs table or `data/outputs/`: jobs are plain dicts and the CVs go under
 `<calibration>/runs/<stamp>/outputs/`. The DB is used only for the sponsor index (read) and the router's token counters.
@@ -97,36 +100,47 @@ def load_manifest(path: Path, root: Path) -> list[dict]:
 
 
 # ------------------------------------------------------------------ frozen keywords
-KEYWORDS_DIR = "keywords"
-
-
-def frozen_path(out_dir: Path, entry_id: str) -> Path:
-    return out_dir / KEYWORDS_DIR / f"{entry_id}.yaml"
+def frozen_path(kdir: Path, entry_id: str) -> Path:
+    return kdir / f"{entry_id}.yaml"
 
 
 def jd_digest(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
 
 
-def load_frozen(path: Path, entry: dict) -> tuple[dict | None, str]:
-    """(frozen analysis, warning). The analysis is {"keywords": [Keyword], "company_hook", "team", "notes", "date"} for
-    `tailor_job(frozen=...)`; None when there is no file, or when the JD changed since it was frozen (the warning says
-    so: terms that are no longer in the JD must not be scored). Raises ManifestError for a file that cannot be read."""
-    if not path.is_file():
-        return None, ""
+def load_frozen(path: Path, entry: dict) -> dict:
+    """The frozen analysis in `path` for `tailor_job(frozen=...)`: {"keywords": [Keyword], "company_hook", "team",
+    "notes", "date"} where `date` is the file's modification time. Raises ManifestError for a file that cannot be read
+    or whose JD has changed since it was frozen (its terms may no longer be in the JD: re-freeze with --force)."""
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
         kws = [Keyword(str(k["term"]), float(k["weight"]), bool(k["required"]), [str(a) for a in k.get("alts") or []])
                for k in raw["keywords"]]
-        date_, digest = str(raw["frozen"]), raw.get("jd_sha1")
+        digest = raw.get("jd_sha1")
+        mtime = datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
     except (OSError, yaml.YAMLError, KeyError, TypeError, ValueError, AttributeError) as e:
-        raise ManifestError(f"{path}: not a frozen keyword file ({type(e).__name__}: {e}); delete it or re-run "
-                            "`careerops calibrate --freeze-keywords`") from e
+        raise ManifestError(f"{path}: not a frozen keyword file ({type(e).__name__}: {e}); fix it, or re-freeze with "
+                            "`careerops calibrate --freeze-keywords --force --only <id>`") from e
     if digest and digest != jd_digest(jd_text(entry["_jd_path"])):
-        return None, (f"{entry['id']}: the JD changed since its keywords were frozen on {date_}; extracting live. "
-                      "Re-run `careerops calibrate --freeze-keywords` to freeze the new JD.")
+        raise ManifestError(f"{path}: the JD of {entry['id']} changed since its keywords were frozen; re-freeze with "
+                            f"`careerops calibrate --freeze-keywords --force --only {entry['id']}`")
     return {"keywords": kws, "company_hook": raw.get("company_hook") or "", "team": raw.get("team") or "",
-            "notes": list(raw.get("notes") or []), "date": date_}, ""
+            "notes": list(raw.get("notes") or []), "date": mtime}
+
+
+def load_all_frozen(kdir: Path, entries: list[dict]) -> dict[str, dict]:
+    """{jd id: frozen analysis} for every entry when `kdir` exists; {} (live extraction) when it does not. A folder that
+    exists but lacks a JD's file is an error, not a silent switch to live extraction for that JD: that is how two runs end
+    up with different keywords and ceilings."""
+    if not kdir.is_dir():
+        return {}
+    missing = [e["id"] for e in entries if not frozen_path(kdir, e["id"]).is_file()]
+    if missing:
+        raise ManifestError(f"{kdir} exists but has no frozen keywords for: {', '.join(missing)}. Freeze them with "
+                            f"`careerops calibrate --freeze-keywords --only {' '.join(missing)}`; or restore the files "
+                            "(git checkout config/calibration/keywords) if they were lost. Not falling back to live "
+                            "extraction: the run would not be comparable.")
+    return {e["id"]: load_frozen(frozen_path(kdir, e["id"]), e) for e in entries}
 
 
 def select_entries(manifest: Path, settings: Settings, only: list[str] | None, limit: int | None) -> list[dict]:
@@ -139,18 +153,24 @@ def select_entries(manifest: Path, settings: Settings, only: list[str] | None, l
     return entries[:limit] if limit else entries
 
 
-def freeze_keywords(settings: Settings, llm, manifest: Path, out_dir: Path, *, only: list[str] | None = None,
-                    limit: int | None = None, log: Callable[[str], None] = print) -> dict:
+def freeze_keywords(settings: Settings, llm, manifest: Path, kdir: Path, *, only: list[str] | None = None,
+                    limit: int | None = None, force: bool = False, log: Callable[[str], None] = print) -> dict:
     """Extract the keywords of each calibration JD once (one extract_keywords call per JD, no tailoring) and write
-    `<out_dir>/keywords/<id>.yaml`: term, weight, required (and `alts`), the company hook and team the same call gave,
-    the notes naming every dropped term, and the provider/model that answered. An existing file is replaced. A JD whose
+    `<kdir>/<id>.yaml`: term, weight, required (and `alts`), the company hook and team the same call gave, the notes
+    naming every dropped term, and the provider/model that answered. A file that already exists is never overwritten
+    unless `force` (those lists are curated; checked before the model is called, so no quota is spent on it). A JD whose
     extraction failed (the model call errored, so only taxonomy keywords were left) is reported and not written: a
     degraded list must not be frozen. Returns {"written": [paths], "errors": {id: why}}."""
     entries = select_entries(manifest, settings, only, limit)
-    (out_dir / KEYWORDS_DIR).mkdir(parents=True, exist_ok=True)
+    kdir.mkdir(parents=True, exist_ok=True)
     written, errors = [], {}
-    log(f"Freezing keywords for {len(entries)} JD(s) into {out_dir / KEYWORDS_DIR}")
+    log(f"Freezing keywords for {len(entries)} JD(s) into {kdir}")
     for entry in entries:
+        path = frozen_path(kdir, entry["id"])
+        if path.exists() and not force:
+            errors[entry["id"]] = f"{path.name} already exists; pass --force to replace it"
+            log(f"- {entry['id']}: NOT frozen: {errors[entry['id']]}")
+            continue
         job, notes, start = job_for(entry), [], len(getattr(llm, "usage", []))
         kws, hook, team = analyse(job, llm, settings, notes)
         failed = [n for n in notes if LLM_FAILED in n]
@@ -163,7 +183,6 @@ def freeze_keywords(settings: Settings, llm, manifest: Path, out_dir: Path, *, o
                 "company_hook": hook, "team": team, "notes": notes,
                 "keywords": [{"term": k.term, "weight": k.weight, "required": k.required,
                               **({"alts": k.alts} if k.alts else {})} for k in kws]}
-        path = frozen_path(out_dir, entry["id"])
         path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=120), encoding="utf-8")
         written.append(path)
         log(f"- {entry['id']}: {len(kws)} keywords ({sum(k.required for k in kws)} required) -> {path.name}"
@@ -227,6 +246,7 @@ def measure(entry: dict, verdict: gates.Verdict, rep: dict, seconds: float, sett
         "selection": chosen["selection"], "violations": chosen["violations"],
         "profile": rep.get("profile") or {},
         "letter": {"status": rep["letter"]["status"], "problems": rep["letter"]["problems"],
+                   "reason": rep["letter"].get("reason"),
                    "score": rep["letter"]["score"], "pages": rep["letter"]["pages"],
                    "evidence": [e["id"] for e in rep["letter"].get("evidence", [])]},
         "usage": _usage(rep), "seconds": round(seconds, 1),
@@ -307,7 +327,8 @@ def aggregates(rows: list[dict], settings: Settings) -> dict:
                                    default=None)},
         "rephrase": {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None},
         "letters": {"ok": sum(r["letter"]["status"] == "ok" for r in ok),
-                    "fallback": sum(r["letter"]["status"] != "ok" for r in ok)},
+                    "fallback": sum(r["letter"]["status"] == "fallback" for r in ok),
+                    "pending": sum(r["letter"]["status"] == "pending" for r in ok)},
         "violations": sum(len(r["violations"]) for r in ok),
         "keywords_per_job": _mean(r["keywords"]["n"] for r in ok),
         "mean_final": _mean(r["final"]["literal"] for r in ok), "mean_ceiling": _mean(r["ceiling"] for r in ok),
@@ -340,11 +361,9 @@ def _row_line(r: dict) -> str:
 
 def _keywords_line(k: dict | None) -> str:
     k = k or {"mode": "live", "dates": []}
-    dates = ", ".join(k["dates"])
     if k["mode"] == "frozen":
-        return f"keywords: frozen ({dates})"
-    if k["mode"] == "mixed":
-        return f"keywords: mixed, frozen for {k['frozen']} of {k['jobs']} JD(s) ({dates}), live for the rest"
+        d = k["dates"]
+        return f"keywords: frozen ({d[0] if len(set(d)) == 1 else d[0] + ' to ' + d[-1]})"
     return "keywords: live"
 
 
@@ -374,7 +393,8 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
             f"| Rephrase coverage | {agg['rephrase']['rephrased']}/{agg['rephrase']['eligible']} "
             f"({pct(agg['rephrase']['ratio'])}) | report |",
             f"| Keywords per JD | {num(agg['keywords_per_job'])} | ≤ {meta['max_keywords']} |",
-            f"| Letters | {agg['letters']['ok']} ok, {agg['letters']['fallback']} fallback | all ok |",
+            f"| Letters | {agg['letters']['ok']} ok, {agg['letters']['fallback']} fallback, "
+            f"{agg['letters'].get('pending', 0)} pending (no provider may write them) | all ok |",
             f"| Violations (chosen attempts) | {agg['violations']} | report |",
             f"| Mean final / ceiling | {pct(agg['mean_final'])} / {pct(agg['mean_ceiling'])} | |",
             f"| Manual agreement | mean absolute difference to manual {pct(agg['manual']['mean_abs_diff'], 1)} over "
@@ -542,7 +562,8 @@ def summarise(cal_dir: Path) -> Path:
         ("zero false claims (CV and letter)", bool(rated) and not _yn(rated, RUBRIC_COLUMNS[1], "Y")
          and not _yn(rated, RUBRIC_COLUMNS[4], "Y")),
         ("band hit rate ≥ 3 of 4 in-scope JDs", a["band"]["rate"] is not None and a["band"]["rate"] >= 0.75),
-        ("no letter with rule problems", a["letters"]["fallback"] == 0 and a["ok"] > 0),
+        ("no letter with rule problems", a["letters"]["fallback"] == 0 and a["letters"].get("pending", 0) == 0
+         and a["ok"] > 0),
         ("would_send = Y for at least 3 JDs", _yn(rated, RUBRIC_COLUMNS[6], "Y") >= 3)]
     lines += ["", "Exit criteria (M5): " + "; ".join(f"{'✓' if ok else '✗'} {name}" for name, ok in checks), ""]
     text = report.read_text(encoding="utf-8")
@@ -554,12 +575,13 @@ def summarise(cal_dir: Path) -> Path:
 # ------------------------------------------------------------------ the run
 def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Path, *, only: list[str] | None = None,
               limit: int | None = None, compare_to: Path | None = None, stamp: str | None = None,
-              log: Callable[[str], None] = print) -> dict:
+              log: Callable[[str], None] = print, keywords_dir: Path | None = None) -> dict:
     """Run the manifest and write the report. `llm` is the Router (or a MockLLM); `db` is read for the sponsor index
     and, through the Router, holds the daily token counters. Returns {"report", "json", "rubric", "rows",
     "aggregates"}. The run stops early, marking the rest `skipped_budget`, when no provider has the daily tokens for
     another job."""
     entries = select_entries(manifest, settings, only, limit)
+    frozen = load_all_frozen(keywords_dir or settings.path("frozen_keywords"), entries)    # refuses before any model call
     previous = load_previous(compare_to) if compare_to else None
     stamp = stamp or datetime.now().strftime("%Y%m%d-%H%M%S")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -592,12 +614,10 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
             continue
         t0 = time.monotonic()
         try:
-            frozen, warning = load_frozen(frozen_path(out_dir, entry["id"]), entry)
-            if warning:
-                log(f"  WARNING: {warning}")
-            rep = tailor_job(job, fb, llm, settings, outputs, frozen)
+            fz = frozen.get(entry["id"])
+            rep = tailor_job(job, fb, llm, settings, outputs, fz)
             row = measure(entry, verdict, rep, time.monotonic() - t0, settings)
-            row["keywords"]["frozen"] = frozen["date"] if frozen else None
+            row["keywords"]["frozen"] = fz["date"] if fz else None
             f = row["final"]
             log(f"  ceiling {pct(row['ceiling'])} final {pct(f['literal'])} ({f['band']}), letter "
                 f"{letter_summary(row['letter'])}, {row['usage']['calls']} calls, {row['usage']['total_tokens']:,} tokens, "
@@ -611,10 +631,7 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
     agg = aggregates(rows, settings)
     providers = getattr(llm, "providers", None)
     ran = [r for r in rows if r["status"] == "ok"]
-    n_frozen = sum(bool(r["keywords"].get("frozen")) for r in ran)
-    kw_meta = {"mode": "live" if not n_frozen else "frozen" if n_frozen == len(ran) else "mixed",
-               "dates": sorted({r["keywords"]["frozen"] for r in ran if r["keywords"].get("frozen")}),
-               "frozen": n_frozen, "jobs": len(ran)}
+    kw_meta = {"mode": "frozen" if frozen else "live", "dates": sorted(f["date"] for f in frozen.values())}
     meta = {"stamp": stamp, "keywords": kw_meta, "pinned": getattr(llm, "pinned", None),
             "providers": [f"{p.name} ({p.cfg.get('model', p.name)})" for p in providers] if providers else [], "band": settings["scoring"]["band"], "temperature": settings["llm"].get("temperature"),
             "seed": settings["llm"].get("seed"), "max_keywords": settings["scoring"].get("max_keywords"),

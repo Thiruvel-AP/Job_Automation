@@ -31,8 +31,11 @@ def _team(name):
 
 # ---------------------------------------------------------------- greeting
 def test_settings_carry_the_letter_block(settings):
-    assert settings["letter"] == {"greeting": "Hi {company}{team} team",
-                                  "greeting_fallback": "Dear {company} hiring team", "signoff": "With regards"}
+    assert settings["letter"] == {
+        "greeting": "Hi {company}{team} team", "greeting_fallback": "Dear {company} hiring team",
+        "closing": "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?",
+        "closing_fallback": "Could we find twenty minutes to talk about where I could contribute first at {company}?",
+        "signoff": "With regards"}
 
 
 def test_greeting_uses_the_team_when_there_is_one_and_the_fallback_when_not(settings):

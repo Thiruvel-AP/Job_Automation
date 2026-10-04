@@ -34,6 +34,7 @@ def server():
 
 
 def _router(settings, db, providers):
+    settings.raw["llm"]["task_providers"] = {}          # routing is tested in test_router_routing.py
     settings.raw["llm"]["providers"] = providers
     return Router(settings, db)
 

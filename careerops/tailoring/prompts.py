@@ -74,8 +74,8 @@ Rules:
   If GAPS is "(none)", write no such sentence.
 - NEVER say the candidate lacks, has not used, or has no experience of anything unless it is named in GAPS.
   Not having a skill spelled out in EVIDENCE is not a gap (coursework and general skills count as experience).
-- Last paragraph: a call to action phrased as a QUESTION (it must contain a "?" and end on it), asking for a short call
-  and naming what the candidate would walk them through. NEVER "I look forward to hearing from you".
+- Write NO closing call to action, no question, no sign-off line: the closing question is added after your paragraphs.
+  NEVER "I look forward to hearing from you".
 - NEVER upgrade the candidate's role. If an EVIDENCE line says contributed, shipped, supported or team (team project,
   team of five), do not write delivered, built, led, owned or designed for it; say "contributed to" or "as part of a
   team". Keep approximations as written ("~65 tests" stays "about 65 tests", never "65").

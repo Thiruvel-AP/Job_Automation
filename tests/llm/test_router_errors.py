@@ -54,6 +54,7 @@ def sleeps(monkeypatch):
 
 
 def _router(settings, db, server, *names, json_mode=True, **cfg):
+    settings.raw["llm"]["task_providers"] = {}          # routing is tested in test_router_routing.py
     settings.raw["llm"]["providers"] = [
         {"name": n, "base_url": f"{server}/{n}", "api_key_env": "FAKE_KEY", "model": "m", "rpm": 60000, "rpd": 100,
          "tpm": 10**9, "json_mode": json_mode, **cfg} for n in names]

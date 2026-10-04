@@ -16,7 +16,7 @@ OPEN_ITEM = re.compile(r'TODO|#\s*CONFIRM\b(?!")')
 # `applications` is the user's archive root: init creates it only if missing and never touches existing contents.
 DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp",
              "calibration")
-CALIBRATION_SUBDIRS = ("jds", "reference", "keywords")      # inside paths.calibration; init adds them, never touches what is in them
+CALIBRATION_SUBDIRS = ("jds", "reference")      # inside paths.calibration; init adds them, never touches what is in them
 FILE_PARENTS = ("db", "excel", "learning", "preferences")
 
 

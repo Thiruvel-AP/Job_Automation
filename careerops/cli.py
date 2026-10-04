@@ -3,7 +3,7 @@
   careerops init                create data/ folders and .env (idempotent)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
-  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--freeze-keywords] [--summarise]
+  careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--freeze-keywords [--force]] [--summarise]
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            refresh the gov.uk sponsor register
   careerops discover            pull jobs from configured boards, triage with rule gates
@@ -173,6 +173,41 @@ def cmd_add_jd(args):
     print("Triage:", triage_new(db, s))
 
 
+def _finish_letters(db: DB, s, fb: dict, llm) -> None:
+    """Write the letters of jobs waiting as `letter_pending` (their CV is done; the provider allowed to write letters had
+    no budget). Each is tried in turn; one that still cannot be written stays pending, untouched. A letter is never
+    written by a provider the task excludes, so this either succeeds on the right one or waits."""
+    from .review.workflow import load_report
+    from .tailoring.tailor import letter_summary, regenerate_letter
+
+    waiting = db.jobs("letter_pending")
+    if not waiting:
+        return
+    est = s["llm"].get("letter_token_estimate", 3000)
+    print(f"{len(waiting)} job(s) waiting for a letter.")
+    for job in waiting:
+        print(f"- {job['company']} | {job['title']}")
+        try:
+            llm.begin_job(est)
+        except BudgetExhausted as e:
+            print(f"  STOP: no provider has the daily budget for a letter (~{est:,} tokens): {e}\n"
+                  "  the remaining jobs stay letter_pending; re-run after the budget resets (00:00 UTC).")
+            return
+        try:
+            rep = regenerate_letter(dict(job), fb, llm, s, load_report(job))
+            if rep["letter"]["status"] == "pending":
+                print(f"  still pending: {letter_summary(rep['letter'])}")
+                continue
+            db.update_job(job["id"], status="needs_review", letter_score=rep["letter"]["score"])
+            db.log(job["id"], "tailor", {"letter": rep["letter"]["status"], "finished_pending_letter": True})
+            print(f"  letter {letter_summary(rep['letter'])} -> needs_review")
+        except Exception as e:  # noqa: BLE001 — one job must not stop the others
+            db.log(job["id"], "error", traceback.format_exc())
+            print(f"  letter NOT written: {e}")
+        finally:
+            llm.end_job()
+
+
 def cmd_tailor(args):
     from .tailoring.tailor import letter_summary, tailor_job
 
@@ -180,6 +215,7 @@ def cmd_tailor(args):
     llm = _llm(args, s, db)
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
+    _finish_letters(db, s, fb, llm)
     jobs = select_for_run(db.jobs("triaged"), args.limit, s)
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if args.mock else ''}.")
     est = s["llm"].get("job_token_estimate", 10000)
@@ -198,16 +234,20 @@ def cmd_tailor(args):
         try:
             rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"))
             f = rep["final"]
-            db.update_job(job["id"], status="needs_review", keywords=rep["keywords"], ceiling=rep["ceiling"],
-                          score=f["score"], score_stemmed=f["score_stemmed"], letter_score=rep["letter"]["score"],
-                          attempts=len(rep["attempts"]), out_dir=rep["out_dir"])
-            db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"]})
+            pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
+            db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
+                          ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
+                          letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"])
+            db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"],
+                                         "letter": rep["letter"]["status"]})
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
-            over = cv_pages > s["scoring"]["max_pages"] or letter_pages != 1
-            if rep["letter"]["status"] != "ok":
+            over = cv_pages > s["scoring"]["max_pages"] or (letter_pages != 1 and not pending)
+            if rep["letter"]["status"] == "fallback":
                 print(f"  letter {letter_summary(rep['letter'])}")
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
-                  f"→ {f['band']} band | CV {cv_pages} page(s), letter {letter_pages} page(s)"
+                  f"→ {f['band']} band | CV {cv_pages} page(s), "
+                  + (f"letter {letter_summary(rep['letter'])}: the job waits as letter_pending" if pending
+                     else f"letter {letter_pages} page(s)")
                   + (f"  !! expected {s['scoring']['max_pages']} and 1" if over else ""))
             u = rep["llm_usage"]
             if u["calls"]:
@@ -379,9 +419,11 @@ def cmd_calibrate(args):
             print(f"Merged the rubric into {cal.summarise(out)}")
             return
         if args.freeze_keywords:
-            res = cal.freeze_keywords(s, _llm(args, s, db), manifest, out, only=args.only, limit=args.limit)
+            kdir = s.path("frozen_keywords")
+            res = cal.freeze_keywords(s, _llm(args, s, db), manifest, kdir, only=args.only, limit=args.limit,
+                                      force=args.force)
             print(f"Froze {len(res['written'])} JD(s)" + (f"; {len(res['errors'])} not frozen" if res["errors"] else "")
-                  + f". Every later `careerops calibrate` reads them from {out / cal.KEYWORDS_DIR}.")
+                  + f". Every later `careerops calibrate` reads them from {kdir}.")
             if res["errors"]:
                 sys.exit(1)
             return
@@ -482,7 +524,9 @@ def main(argv=None):
     ca.add_argument("--provider", metavar="NAME", help="use only this llm.providers entry (e.g. ollama): no fallback, "
                     "so a run cannot mix providers; the report records which provider and model served every call")
     ca.add_argument("--freeze-keywords", action="store_true", help="extract each JD's keywords once and write "
-                    "<calibration>/keywords/<id>.yaml (no tailoring); later runs read them instead of extracting")
+                    "config/calibration/keywords/<id>.yaml (no tailoring); later runs read them instead of extracting. "
+                    "Never overwrites an existing file unless --force")
+    ca.add_argument("--force", action="store_true", help="with --freeze-keywords: replace an existing frozen file")
     ca.add_argument("--summarise", action="store_true", help="merge the filled-in rubric.csv into the latest report")
     ca.add_argument("--mock", action="store_true", help="deterministic MockLLM and an isolated data root, no API calls")
     ca.set_defaults(fn=cmd_calibrate)

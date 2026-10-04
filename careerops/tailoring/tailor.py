@@ -12,10 +12,12 @@ from typing import Any, Callable
 
 from ..apply.naming import file_stem
 from ..discovery import gates
+from ..llm.router import TaskUnavailable
 from . import prompts as P
 from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
 from .grounding import grounding_problems
+from .jdtext import strip_benefits
 from .rawlog import RawRecorder
 from .selection import MOST_RECENT_BULLETS, chunks, missing_keywords, select_cv, selected_ids
 from .shapes import normalise_keywords, normalise_letter, normalise_profile, normalise_rephrase
@@ -117,7 +119,9 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None,
             notes.extend(frozen.get("notes") or [])
         return list(frozen["keywords"]), frozen.get("company_hook") or "", frozen.get("team") or ""
     sc = settings["scoring"]
-    jd = job["description"] or ""
+    jd, cut = strip_benefits(job["description"] or "")           # the employer's perks are not the role's keywords
+    if cut and notes is not None:
+        notes.append(f"keywords: {cut}")
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
     hook = team = ""
     llm_kw: list[Keyword] = []
@@ -381,6 +385,8 @@ def letter_summary(letter: dict) -> str:
     """"ok", or "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text."""
     if letter.get("status") == "ok":
         return "ok"
+    if letter.get("status") == "pending":
+        return f"pending ({letter.get('reason') or 'no provider for it'})"
     why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
     return f"{letter.get('status')} ({why[0] if why else 'no reason recorded'})"
 
@@ -431,6 +437,12 @@ def letter_greeting(settings, company: str, team: str = "") -> str:
     if team:
         return cfg["greeting"].format(company=company, team=f" {team}")
     return cfg["greeting_fallback"].format(company=company)
+
+
+def letter_closing(settings, company: str, team: str = "") -> str:
+    """The closing question, written from the settings template and never by the model (settings -> letter)."""
+    cfg, team = settings["letter"], team.strip()
+    return cfg["closing"].format(company=company, team=team) if team else cfg["closing_fallback"].format(company=company)
 
 
 def _deny_problems(text: str, deny: list[str], gaps: list[str]) -> list[str]:
@@ -530,10 +542,12 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
 
 
 def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[str] | None = None,
-            notes: list[str] | None = None) -> tuple[list[str], list[str]]:
-    """The cover letter from the company hook, the two evidence bullets and the optional GAPS. A draft is checked (length,
-    banned phrases, deny list, claimed gaps, role upgrades, numbers, and every sentence against its own evidence bullet
-    and the JD) and retried once with its problems listed; a second failure is the deterministic fallback, flagged."""
+            notes: list[str] | None = None, team: str = "") -> tuple[list[str], list[str]]:
+    """The cover letter from the company hook, the two evidence bullets and the optional GAPS. The model writes the body;
+    the closing question is added here from settings (`letter_closing`). A draft is checked (length, banned phrases, deny
+    list, claimed gaps, role upgrades, numbers, and every sentence against its own evidence bullet and the JD) and retried
+    once with its problems listed; a second failure is the deterministic fallback, flagged. Raises TaskUnavailable when
+    no provider the task is restricted to can take it: the caller keeps the job waiting."""
     deny = fb.get("deny_terms", [])
     gaps = (gaps or [])[:6]
     # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
@@ -542,6 +556,7 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     texts = [e["text"] for e in evidence]
     source = " ".join(texts) + " " + hook + " " + job["description"]
     named = f"{job['company']} {job['title']}"
+    closing = letter_closing(settings, job["company"], team)
     problems: list[str] = []
     feedback = ""
     for _ in range(2):
@@ -555,15 +570,21 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
                                      evidence="\n".join(f"- {e}" for e in texts)) + feedback,
                 {"company": job["company"], "title": job["title"], "company_hook": hook, "evidence": texts,
                  "gaps": gaps})
-            paras, letter_notes = normalise_letter(out)
+            body, letter_notes = normalise_letter(out)
+            if body and body[-1].rstrip().endswith("?"):       # the model wrote its own closing question: ours replaces it
+                body = body[:-1]
+                letter_notes.append("dropped the model's own closing question; the template closing is used")
             if notes is not None:
                 notes.extend(m for m in (f"cover_letter: {n}" for n in letter_notes) if m not in notes)
+        except TaskUnavailable:
+            raise
         except Exception as e:  # noqa: BLE001
             problems.append(f"letter LLM failed: {e}")
             break
+        paras = [*body, closing]
         text = " ".join(paras)
         problems = []
-        if not text.strip():
+        if not " ".join(body).strip():
             problems.append("empty letter")
         if len(text.split()) > max_words:
             problems.append(f"{len(text.split())} words > {max_words}")
@@ -574,7 +595,7 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         problems += _deny_problems(text, deny, gaps)
         problems += _lack_problems(text, gaps)
         problems += _style_problems(paras, texts)
-        problems += grounding_problems(paras, evidence, job["description"], hook, named, gaps)
+        problems += grounding_problems(body, evidence, job["description"], hook, named, gaps)    # the model's words only
         extra = numbers(text) - numbers(source)
         if extra:
             problems.append(f"new numbers {sorted(extra)}")
@@ -585,7 +606,7 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     fallback = [
         f"{job['company']}'s {job['title']} role sits close to the work I have been doing most recently.",
         " ".join(texts[:2]),
-        f"Could we find twenty minutes to talk about where I could contribute first on the {job['title']} team?",
+        closing,
     ]
     return [p for p in fallback if p.strip()], problems + [FALLBACK_MARK]
 
@@ -595,7 +616,12 @@ def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_di
     """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
     deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
     notes: list[str] = []
-    paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes)
+    try:
+        paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes, team)
+    except TaskUnavailable as e:        # no provider may write it now: no letter, no fallback, the job waits
+        return None, {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "pending",
+                      "reason": str(e)[:300], "notes": notes,
+                      "evidence": [{"id": x["id"], "text": x["text"]} for x in evidence]}
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
                          "date": date.today().strftime("%d %B %Y"),
                          "greeting": letter_greeting(settings, job["company"], team),
@@ -642,10 +668,11 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     llm = RawRecorder(llm, out_dir / "llm_raw")                 # keeps the model's raw reply next to the first draft's
     usage_from = len(getattr(llm, "usage", []))
     ids = {i for sec in ("experience", "projects") for e in rep["context"][sec] for i in e.get("bullet_ids", [])}
+    stem = Path(rep["letter_pdf"]).stem if rep.get("letter_pdf") else _names(fb, settings)[1]    # none while pending
     pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", letter_evidence(fb, kws, ids), llm,
-                               settings, out_dir, Path(rep["letter_pdf"]).stem, rep.get("team") or "",
+                               settings, out_dir, stem, rep.get("team") or "",
                                required_gaps(rep.get("genuine_gaps") or [], kws))
-    rep["letter"], rep["letter_pdf"] = letter, str(pdf)
+    rep["letter"], rep["letter_pdf"] = letter, str(pdf) if pdf else None
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
     rep["llm_usage"] = {"calls": calls, **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS},
@@ -655,22 +682,36 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
 
 
 # ------------------------------------------------------------------ 4. the loop
+STAGING_SUFFIXES = (".partial", ".old", ".failed")
+
+
+def _discard(path: Path, root: Path) -> None:
+    """Delete a folder this module owns: a sibling of a job folder named <job>.partial / .old / .failed, directly inside
+    `root` (the outputs folder). It is the only deletion in the tailoring package besides xelatex's own aux files, and it
+    refuses anything else (a symlink, a folder outside `root`, a name that is not a staging name), so no other folder
+    can ever be removed through it."""
+    p, r = path.absolute(), root.absolute()
+    if p.parent != r or p.suffix not in STAGING_SUFFIXES or p.is_symlink():
+        raise RuntimeError(f"refusing to delete {path}: not a staging folder directly inside {root}")
+    shutil.rmtree(p, ignore_errors=True)
+
+
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
     earlier successful output folder exactly as it was."""
     final = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
     work = final.with_name(final.name + ".partial")
-    shutil.rmtree(work, ignore_errors=True)
+    _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
         report = _tailor(job, fb, llm, settings, work, final, frozen)
         old = final.with_name(final.name + ".old")
-        shutil.rmtree(old, ignore_errors=True)
+        _discard(old, out_root)
         if final.exists():
             os.replace(final, old)
         os.replace(work, final)
-        shutil.rmtree(old, ignore_errors=True)
-        shutil.rmtree(final.with_name(final.name + ".failed"), ignore_errors=True)    # superseded by this success
+        _discard(old, out_root)                                 # the output this one replaces
+        _discard(final.with_name(final.name + ".failed"), out_root)    # superseded by this success
         return report
     except BaseException as exc:
         # The staging folder goes, the earlier successful folder stays. But the model's raw answers are what you need
@@ -678,11 +719,11 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
         raw = work / "llm_raw"
         if raw.is_dir():
             failed = final.with_name(final.name + ".failed")
-            shutil.rmtree(failed, ignore_errors=True)
+            _discard(failed, out_root)
             shutil.copytree(raw, failed / "llm_raw")
             if isinstance(exc, Exception) and exc.args and isinstance(exc.args[0], str):
                 exc.args = (f"{exc.args[0]} [raw model answers: {failed / 'llm_raw'}]", *exc.args[1:])
-        shutil.rmtree(work, ignore_errors=True)
+        _discard(work, out_root)
         raise
 
 
@@ -769,7 +810,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
         "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"],
         "letter": letter, "llm_usage": usage_since(llm, usage_from),
-        "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name), "context": ctx,
+        "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name) if letter_pdf else None,
+        "context": ctx,
     })
     (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report

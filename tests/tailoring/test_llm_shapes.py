@@ -34,7 +34,9 @@ def test_a_every_raw_reply_is_saved_as_the_model_sent_it(settings, fb_fixture, j
     assert not any(n.startswith("tailor_cv") for n in names)                    # the model no longer selects
     assert "rephrase_bullets-1.json" in names
     assert json.loads(_raw(rep, "tailor_profile-1.json"))["facts"] == ["F1", "F2"]
-    assert json.loads(_raw(rep, "cover_letter-1.json"))["paragraphs"] == rep["letter"]["paragraphs"]
+    raw = json.loads(_raw(rep, "cover_letter-1.json"))["paragraphs"]            # exactly what the model sent ...
+    assert rep["letter"]["paragraphs"][:-1] == raw[:-1]                          # ... its body is kept as sent
+    assert rep["letter"]["paragraphs"][-1].endswith("?") and rep["letter"]["paragraphs"][-1] != raw[-1]   # its closing is ours
 
 
 # ================================================================== (b) rephrase answers in unexpected shapes
@@ -206,8 +208,11 @@ def test_a_letter_in_text_objects_is_accepted_and_the_drops_are_reported(setting
             "Could we talk for twenty minutes?"]
     llm = spy_llm({"cover_letter": lambda ctx: {"paragraphs": [{"text": good[0]}, good[1], None, {"text": good[2]}]}})
     rep = _run(settings, fb_fixture, job, llm)
-    assert rep["letter"]["paragraphs"] == good and rep["letter"]["status"] == "ok"
-    assert rep["letter"]["notes"] == ["cover_letter: paragraphs: dropped None (no text)"]
+    assert rep["letter"]["paragraphs"] == good[:2] + [
+        "Could we find twenty minutes to talk about where I could contribute first at Northwind Health AI?"]
+    assert rep["letter"]["status"] == "ok"
+    assert rep["letter"]["notes"] == ["cover_letter: paragraphs: dropped None (no text)",
+                                      "cover_letter: dropped the model's own closing question; the template closing is used"]
 
 
 # ================================================================== raw logging

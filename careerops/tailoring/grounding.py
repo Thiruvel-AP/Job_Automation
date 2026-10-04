@@ -28,8 +28,9 @@ CAPABILITY_WORDS = ("production", "real-time", "large-scale", "at scale", "end-t
 MATCH_WORDS = 3                      # content words a sentence must share with a bullet to count as written from it
 _STOP = frozenset("with that this from have been into their over using used which what when where while also about "
                   "than then them they were will would could should your more most such each some team".split())
-_WORD = re.compile(r"[A-Za-z][A-Za-z0-9&'+#./-]*")
-_PRONOUN = re.compile(r"^I('m|'ve|'d|'ll)?$")
+_WORD = re.compile(r"[A-Za-z][A-Za-z0-9&'’+#./-]*")
+_POSSESSIVE = re.compile(r"['’]s$", re.I)          # "Chattermill's" names Chattermill; the 's is not part of the name
+_PRONOUN = re.compile(r"^I(['’]m|['’]ve|['’]d|['’]ll)?$")
 
 
 def sentences(text: str) -> list[str]:
@@ -44,7 +45,7 @@ def _names(sentence: str) -> list[str]:
     """Proper nouns in a sentence: acronyms and CamelCase names anywhere, other capitalised words except the first."""
     out = []
     for i, m in enumerate(_WORD.finditer(sentence)):
-        w = m.group(0).strip(".'-/&")
+        w = _POSSESSIVE.sub("", m.group(0).strip(".'’-/&"))
         if len(w) < 2 or _PRONOUN.match(w):
             continue
         camel = any(c.isupper() for c in w[1:]) and not w.isupper()

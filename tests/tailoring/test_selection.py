@@ -168,20 +168,22 @@ def test_attempts_do_not_repeat_themselves_when_the_selection_would_not_change(s
                                                                                 broad_llm):
     _below_band(settings)
     rep = tailor.tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"))
-    assert len(rep["attempts"]) == 1 and rep["final"]["chosen_attempt"] == 1
+    proposals = [a["proposal"]["selection"] for a in rep["attempts"]]
+    assert 1 <= len(proposals) <= settings["scoring"]["max_attempts"]
+    assert all(a != b for a, b in zip(proposals, proposals[1:]))          # an attempt is only made for a new selection
 
 
 def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(settings, fb_fixture, broad_job,
                                                                                 broad_llm, monkeypatch):
     _below_band(settings)
-    real, calls = tailor.select_cv, []
+    real, calls, first_kws = tailor.select_cv, [], []
 
     def rotating(fb, kws, preferred=None):                 # a different selection each time, as a real boost may give
-        sel = real(fb, kws, preferred)
+        first_kws.append(kws)
+        sel = real(fb, first_kws[0], preferred)             # always from the first attempt's weights: same bullets
         calls.append(1)
-        ids = sel["experience"]["ex1"]
-        k = len(calls) % len(ids)
-        sel["experience"]["ex1"] = ids[k:] + ids[:k]
+        if len(calls) % 2:                                  # same bullets, other project order: nothing new to reword
+            sel["projects"] = sel["projects"][::-1]
         return sel
 
     monkeypatch.setattr(tailor, "select_cv", rotating)

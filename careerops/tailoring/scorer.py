@@ -260,13 +260,14 @@ def merge_keywords(*lists: list[Keyword]) -> list[Keyword]:
     return out
 
 
-# Head words that add nothing a recruiter's ATS would search for: "retrieval pipelines" is just "retrieval".
+# Head words that add nothing a recruiter's ATS would search for: "retrieval pipelines" is just "retrieval". Only these
+# may be shed; "hypothesis testing" and "statistical modelling" are not "testing" and "modelling".
 GENERIC_HEADS = frozenset({"pipelines", "systems", "frameworks", "tasks", "approaches", "workflows", "features",
-                           "architectures", "loops"})
+                           "architectures", "loops", "environments"})
 
 
 def _generic_extension(stem: str, host_stems: list[str]) -> str | None:
-    """The kept term (as a stem) that `stem` is made of plus generic head words only, else None. Whole words only."""
+    """The host (as a stem) that `stem` is made of plus generic head words only, else None. Whole words only."""
     heads = {norm_stem(h) for h in GENERIC_HEADS}
     for h in sorted(host_stems, key=len, reverse=True):
         if not h or not _contains(stem, h):
@@ -278,31 +279,30 @@ def _generic_extension(stem: str, host_stems: list[str]) -> str | None:
 
 
 def drop_contained(kws: list[Keyword]) -> tuple[list[Keyword], list[str]]:
-    """Merge near-duplicates where one keyword's words are wholly inside another's ("customer feedback" inside
-    "customer feedback analysis"): the shorter one stays and takes the heavier weight (required if either was). Matched
-    on stems, whole words only. An any-of keyword ("A or B") is never dropped and, as a host, only absorbs a longer term
-    that is one of its words plus generic head words alone (GENERIC_HEADS: "retrieval pipelines" next to "RAG or
-    retrieval"). Returns (keywords in their input order, notes naming each dropped longer keyword and why)."""
+    """Fold a longer keyword into a shorter one when the extra words are only generic heads (GENERIC_HEADS: "retrieval
+    pipelines" into "retrieval", also into the any-of keyword "RAG or retrieval"): the shorter one stays and takes the
+    heavier weight (required if either was). Any other extra word makes it a different keyword and both stay
+    ("hypothesis testing" next to "testing", "statistical modelling" next to "modelling"). Matched on stems, whole words
+    only; an any-of keyword is never folded into another. Returns (keywords in their input order, notes naming each
+    dropped keyword and why)."""
     stems = {id(k): norm_stem(k.term) for k in kws}
     kept: list[Keyword] = []
     notes: list[str] = []
     gone: set[int] = set()
-    for k in sorted(kws, key=lambda k: (len(stems[id(k)].split()), len(stems[id(k)]))):    # shortest first
-        host = None if k.alts else next((h for h in kept if not h.alts and h is not k and stems[id(h)]
-                                         and _contains(stems[id(k)], stems[id(h)])), None)
-        if host is None and not k.alts:                       # an any-of host: only generic head words may be shed
+    for k in sorted(kws, key=lambda k: (len(stems[id(k)].split()), len(stems[id(k)]), k.term)):    # shortest first
+        host, found = None, None
+        if not k.alts:
             for h in kept:
-                if h.alts and (found := _generic_extension(stems[id(k)], [norm_stem(m) for m in h.members()])):
+                found = _generic_extension(stems[id(k)], [norm_stem(m) for m in h.members()])
+                if found:
                     host = h
-                    notes.append(f"dropped '{k.term}' (contains '{found}' plus only generic head words)")
                     break
-        elif host is not None:
-            notes.append(f"dropped '{k.term}' (contains '{host.term}')")
         if host is None:
             kept.append(k)
             continue
         gone.add(id(k))
         host.weight, host.required = max(host.weight, k.weight), host.required or k.required
+        notes.append(f"dropped '{k.term}' (contains '{host.term}' plus only generic head words)")
     return [k for k in kws if id(k) not in gone], notes
 
 
@@ -313,11 +313,11 @@ def jd_frequency(k: Keyword, jd: str) -> int:
 
 
 def cap_keywords(kws: list[Keyword], jd: str, limit: int) -> tuple[list[Keyword], list[str]]:
-    """The `limit` most important keywords: by weight, then by how often the JD says them, then input order. The result
-    is in that order (most important first). Returns (keywords, notes naming what was cut)."""
+    """The `limit` most important keywords: what is cut is the lowest weight first, then the least often said in the JD,
+    then (a full tie) the later in the alphabet. The input order never decides: the same keywords in another order give
+    the same cut. The result is most important first. Returns (keywords, notes naming what was cut)."""
     freq = {id(k): jd_frequency(k, jd) for k in kws}
-    order = {id(k): i for i, k in enumerate(kws)}
-    ranked = sorted(kws, key=lambda k: (-k.weight, -freq[id(k)], order[id(k)]))
+    ranked = sorted(kws, key=lambda k: (-k.weight, -freq[id(k)], norm_literal(k.term)))
     cut = ranked[limit:]
     return ranked[:limit], ([f"capped at {limit}; dropped " + ", ".join(k.term for k in cut)] if cut else [])
 

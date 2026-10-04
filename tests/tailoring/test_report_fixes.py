@@ -132,22 +132,28 @@ def _kw(term, weight=1.0, required=False, alts=()):
     return Keyword(term, weight, required, list(alts))
 
 
-def test_a_longer_keyword_that_contains_a_shorter_one_is_merged_into_the_shorter():
-    kws, notes = drop_contained([_kw("customer feedback analysis", 1.0), _kw("customer feedback", 2.0, True),
+def test_a_longer_keyword_is_merged_into_the_shorter_only_when_the_extra_words_are_generic_heads():
+    kws, notes = drop_contained([_kw("customer feedback systems", 1.0), _kw("customer feedback", 2.0, True),
                                  _kw("python"), _kw("llm agents"), _kw("LLM", 1.0), _kw("pipelines")])
-    assert [k.term for k in kws] == ["customer feedback", "python", "LLM", "pipelines"]     # input order kept
+    assert [k.term for k in kws] == ["customer feedback", "python", "llm agents", "LLM", "pipelines"]   # input order kept
     cf = kws[0]
     assert cf.weight == 2.0 and cf.required                                  # the heavier weight survives the merge
-    assert any("customer feedback analysis" in n and "customer feedback" in n for n in notes)
-    assert any("llm agents" in n for n in notes)
+    assert notes == ["dropped 'customer feedback systems' (contains 'customer feedback' plus only generic head words)"]
+
+
+def test_hypothesis_testing_and_statistical_modelling_survive_next_to_the_shorter_terms():
+    kws, notes = drop_contained([_kw("hypothesis testing", 2.0), _kw("testing", 1.0), _kw("statistical modelling", 2.0),
+                                 _kw("modelling", 1.0), _kw("customer feedback analysis"), _kw("customer feedback")])
+    assert {k.term for k in kws} == {"hypothesis testing", "testing", "statistical modelling", "modelling",
+                                     "customer feedback analysis", "customer feedback"} and notes == []
 
 
 def test_containment_is_whole_words_after_stemming_and_leaves_any_of_keywords_alone():
-    kws, _ = drop_contained([_kw("learning"), _kw("deep learning"), _kw("machine learning models"),
-                             _kw("machine learning"), _kw("sql"), _kw("sqlalchemy"), _kw("model"),
-                             _kw("PyTorch", alts=["TensorFlow"]), _kw("PyTorch lightning")])
-    # "sqlalchemy" is not "sql" (whole words); "machine learning models" goes with "learning"; the any-of keyword and
-    # the one that merely shares a word with it both stay
+    kws, _ = drop_contained([_kw("learning"), _kw("learning systems"), _kw("sql"), _kw("sqlalchemy"), _kw("model"),
+                             _kw("models workflows"), _kw("PyTorch", alts=["TensorFlow"]), _kw("PyTorch lightning"),
+                             _kw("PyTorch frameworks")])
+    # "sqlalchemy" is not "sql" (whole words); "models workflows" folds into "model" after stemming; "PyTorch
+    # frameworks" folds into the any-of keyword, but "PyTorch lightning" (a real extra word) stays
     assert [k.term for k in kws] == ["learning", "sql", "sqlalchemy", "model", "PyTorch", "PyTorch lightning"]
 
 
@@ -156,20 +162,22 @@ def test_the_cap_keeps_the_heaviest_then_the_most_frequently_said():
     kws = [_kw("rust", 1.0), _kw("python", 1.0), _kw("sql", 1.0), _kw("airflow", 2.0, True), _kw("go", 1.0)]
     out, notes = cap_keywords(kws, jd, 3)
     assert [k.term for k in out] == ["airflow", "sql", "python"]             # weight 2 first, then 3 mentions, then 2
-    assert notes == ["capped at 3; dropped rust, go"]
+    assert notes == ["capped at 3; dropped go, rust"]                        # a full tie: the later in the alphabet goes
     assert cap_keywords(kws, jd, 10)[1] == []                                # nothing cut, nothing to say
-    tie, _ = cap_keywords([_kw("a1"), _kw("b1")], "a1 b1", 2)
-    assert [k.term for k in tie] == ["a1", "b1"]                             # full ties keep input order
+    tie, _ = cap_keywords([_kw("b1"), _kw("a1")], "a1 b1", 2)
+    assert [k.term for k in tie] == ["a1", "b1"]                             # full ties are ordered by term, not by input
 
 
 def test_analyse_merges_containment_duplicates_across_model_and_taxonomy(settings, job):
-    j = _job(job, "Requirements\nExperience with customer feedback analysis and customer feedback. LLM agents in "
-                  "Python; LLM.\n")
-    kws, _, _ = tailor.analyse(j, _kw_llm(["customer feedback", "customer feedback analysis", "LLM agents"]),
-                               settings)
+    j = _job(job, "Requirements\nExperience with customer feedback pipelines and customer feedback analysis. LLM agents "
+                  "in Python; LLM.\n")
+    kws, _, notes = tailor.analyse(j, _kw_llm(["customer feedback", "customer feedback pipelines",
+                                               "customer feedback analysis", "LLM agents"]), settings)
     terms = [k.term for k in kws]
-    assert "customer feedback" in terms and "customer feedback analysis" not in terms
-    assert "LLM agents" not in terms and any(k.term.lower() == "llm" for k in kws)
+    assert "customer feedback" in terms and "customer feedback pipelines" not in terms     # a generic head: folded
+    assert "customer feedback analysis" in terms                                            # a real extra word: kept
+    assert any("LLM agents" in k.members() for k in kws)                                    # (merged with "agents")
+    assert any(k.term.lower() == "llm" for k in kws)
 
 
 def test_analyse_normalises_hyphens_before_the_verbatim_check(settings, job):
@@ -229,7 +237,7 @@ EV_TESTS = "Wrote a three-tier test framework of ~65 tests across 8 files valida
 
 def test_letter_prompt_states_the_new_rules():
     s = P.LETTER_SYSTEM
-    for must in ('must contain a "?"', "NEVER upgrade the candidate's role", "contributed, shipped, supported or team",
+    for must in ("Write NO closing call to action", "NEVER upgrade the candidate's role", "contributed, shipped, supported or team",
                  "~65 tests", "scalable, robust, seamless or cutting-edge"):
         assert must in s, must
 
@@ -324,23 +332,36 @@ NO_QUESTION = ["Reviewly turns feedback into themes, which is the work I do.", "
                "I would welcome a call to discuss it."]
 
 
-def test_a_letter_without_a_closing_question_is_retried_with_feedback_then_accepted(settings, fb_fixture, job,
-                                                                                    spy_llm):
-    llm = spy_llm({"cover_letter": _letter_llm(NO_QUESTION, GOOD)})
-    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    calls = [s for s in llm.sent if s["task"] == "cover_letter"]
-    assert len(calls) == 2 and "YOUR LAST DRAFT BROKE THESE RULES" in calls[1]["user"]
-    assert "last paragraph is not a call-to-action question" in calls[1]["user"]
-    assert rep["letter"]["status"] == "ok" and rep["letter"]["paragraphs"] == GOOD
-
-
-def test_a_letter_still_without_a_question_after_the_retry_is_flagged_and_the_fallback_asks_one(settings, fb_fixture,
-                                                                                                job, spy_llm):
+def test_the_closing_question_is_written_by_code_so_a_draft_without_one_is_accepted(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _letter_llm(NO_QUESTION)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    assert len([s for s in llm.sent if s["task"] == "cover_letter"]) == 1           # nothing to retry
+    assert "closing" not in P.LETTER_USER.lower() and "closing question" in P.LETTER_SYSTEM
+    assert rep["letter"]["status"] == "ok"
+    assert rep["letter"]["paragraphs"] == NO_QUESTION + [tailor.letter_closing(settings, job["company"])]
+    assert rep["letter"]["paragraphs"][-1] == ("Could we find twenty minutes to talk about where I could contribute "
+                                               "first at Northwind Health AI?")
+
+
+def test_a_question_the_model_wrote_is_replaced_by_the_template_closing_naming_the_team(settings, fb_fixture, job,
+                                                                                        spy_llm):
+    jd = job["description"] + "\nYou will join our AI Accelerator group.\n"
+    llm = spy_llm({"cover_letter": _letter_llm(GOOD),
+                   "extract_keywords": lambda ctx: {"required": [], "preferred": [], "company_hook": "Reviewly",
+                                                    "team": "AI Accelerator"}})
+    rep = tailor.tailor_job({**job, "description": jd}, fb_fixture, llm, settings, settings.path("outputs"))
+    assert rep["letter"]["paragraphs"][:-1] == GOOD[:-1] and GOOD[-1] not in rep["letter"]["paragraphs"]
+    assert rep["letter"]["paragraphs"][-1] == ("Could we find twenty minutes to talk about where I could contribute first "
+                                               "on the AI Accelerator team at Northwind Health AI?")
+    assert "cover_letter: dropped the model's own closing question; the template closing is used" in rep["letter"]["notes"]
+
+
+def test_the_fallback_letter_ends_on_the_same_template_closing(settings, fb_fixture, job, spy_llm):
+    lying = ["Reviewly turns feedback into themes.", "I cut latency by 9876 percent across the platform."]
+    rep = tailor.tailor_job(job, fb_fixture, spy_llm({"cover_letter": _letter_llm(lying)}), settings,
+                            settings.path("outputs"))
     assert rep["letter"]["status"] == "fallback"
-    assert "last paragraph is not a call-to-action question" in rep["letter"]["problems"]
-    assert rep["letter"]["paragraphs"][-1].endswith("?")                       # the fallback itself obeys the rule
+    assert rep["letter"]["paragraphs"][-1] == tailor.letter_closing(settings, job["company"])
 
 
 # ================================================================== 6. text normalisation

@@ -4,6 +4,10 @@ HTTP errors keep their status and (truncated) body in the LLMError and in an `ev
 provider's Retry-After, else 2 s, 4 s, 8 s, before the router falls through to the next provider; a 400 on a request
 carrying `response_format` is retried once without it.
 
+A task listed in `llm.task_providers` (cover_letter: [groq]) runs only on those providers. When none of them can take
+the call (no key, daily budget spent, rate limited, context too small) the router raises TaskUnavailable instead of
+falling through to another provider: the caller keeps the work for later.
+
 A request is never sent to a provider whose `context_tokens` it would overflow (estimated input + max_tokens): that
 provider is skipped, the reason is logged, and the next one is tried. `Router(only=name)` pins every call to one provider
 with no fallback.
@@ -33,6 +37,11 @@ BODY_MAX = 500             # chars of an error response body kept in messages an
 
 class BudgetExhausted(RuntimeError):
     """No provider can take a whole job within its daily token budget (tpd); raised before the job starts."""
+
+
+class TaskUnavailable(RuntimeError):
+    """A task restricted to certain providers (llm.task_providers) has none that can take it right now. Not an error in the
+    model's answer: the work should wait (a job becomes `letter_pending`), never go to a provider the task excludes."""
 
 
 class LLMError(RuntimeError):
@@ -239,6 +248,7 @@ class Router:
                                    c.get("max_retry_wait_s", 60), c.get("max_tokens"), p.get("seed", c.get("seed")))
                           for p in c["providers"]]
         self.pinned = only
+        self.task_providers: dict[str, list[str]] = {t: list(n) for t, n in (c.get("task_providers") or {}).items()}
         if only is not None:
             self.providers = [p for p in self.providers if p.name == only]
             if not self.providers:
@@ -274,7 +284,12 @@ class Router:
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
         errors = []
         self.last_raw = None
+        only = self.task_providers.get(task)          # None: any provider may take this task
+        failed_for_real = False                        # an answer that was wrong, not a provider that was unavailable
         for p in self.providers:
+            if only is not None and p.name not in only:
+                errors.append(f"{p.name}: {task} is restricted to {', '.join(only)}")
+                continue
             if self._allowed is not None and p.name not in self._allowed:
                 errors.append(f"{p.name}: skipped for this job (daily token budget)")
                 continue
@@ -302,6 +317,11 @@ class Router:
                 except (LLMError, requests.RequestException) as e:
                     errors.append(str(e))
                     if getattr(e, "status", None) == 429 or "output cut off" in str(e):
+                        failed_for_real = failed_for_real or "output cut off" in str(e)
                         break          # quota (already backed off) or a cap the same call would hit again: next provider
+                    failed_for_real = True
                     _sleep(2 * (attempt + 1))
+        if only is not None and not failed_for_real:
+            raise TaskUnavailable(f"{task} can only run on {', '.join(only)}, and none can take it now: "
+                                  + " | ".join(errors))
         raise LLMError("all providers failed: " + " | ".join(errors))

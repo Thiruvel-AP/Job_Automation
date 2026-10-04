@@ -98,6 +98,7 @@ def _anyof_keywords(ctx):
 @pytest.fixture
 def chattermill_run(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"rephrase_bullets": _list_shaped, "extract_keywords": _anyof_keywords})
+    settings.raw["scoring"]["max_keywords"] = 60              # no cap: the cap cuts by weight and frequency, not by arrival
     j = {**job, "company": "Chattermill", "title": "Data Scientist", "description": CHATTERMILL}
     return tailor.tailor_job(j, fb_fixture, llm, settings, settings.path("outputs")), llm, j
 

@@ -13,18 +13,19 @@ def test_retrieval_pipelines_collapses_into_retrieval():
     kws, notes = drop_contained([Keyword("retrieval pipelines", 2, True), Keyword("retrieval", 1, False)])
     assert [k.term for k in kws] == ["retrieval"]
     assert kws[0].required and kws[0].weight == 2                   # the kept term takes the heavier weight
-    assert notes == ["dropped 'retrieval pipelines' (contains 'retrieval')"]
+    assert notes == ["dropped 'retrieval pipelines' (contains 'retrieval' plus only generic head words)"]
 
 
 def test_it_also_collapses_when_the_kept_term_is_an_any_of_keyword():
-    # "retrieval" was merged with "RAG" into one any-of keyword; the plain containment rule leaves those alone
+    # "retrieval" was merged with "RAG" into one any-of keyword
     kws, notes = drop_contained([Keyword("retrieval pipelines", 2, True), Keyword("retrieval", 1, False, ["RAG"])])
     assert [k.term for k in kws] == ["retrieval"] and kws[0].alts == ["RAG"] and kws[0].required
     assert notes == ["dropped 'retrieval pipelines' (contains 'retrieval' plus only generic head words)"]
 
 
 def test_every_generic_head_word_collapses_and_each_drop_is_reported():
-    heads = ["pipelines", "systems", "frameworks", "tasks", "approaches", "workflows", "features", "architectures", "loops"]
+    heads = ["pipelines", "systems", "frameworks", "tasks", "approaches", "workflows", "features", "architectures", "loops",
+             "environments"]
     kws, notes = drop_contained([Keyword("search", 1, False, ["lookup"])] + [Keyword(f"search {h}", 1, False) for h in heads])
     assert [k.term for k in kws] == ["search"] and len(notes) == len(heads)
     assert all("generic head words" in n for n in notes)

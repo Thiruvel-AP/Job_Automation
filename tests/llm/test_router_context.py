@@ -48,6 +48,7 @@ def _router(settings, db, server, groq_ctx=None, ollama_ctx=None, only=None):
     def prov(n, ctx):
         return {"name": n, "base_url": f"{server}/{n}", "api_key_env": None, "model": f"{n}-model", "rpm": 60000,
                 "rpd": 1000, "tpm": 10**9, "json_mode": True, "context_tokens": ctx}
+    settings.raw["llm"]["task_providers"] = {}          # routing is tested in test_router_routing.py
     settings.raw["llm"]["providers"] = [prov("groq", groq_ctx), prov("ollama", ollama_ctx)]
     return Router(settings, db, only=only)
 
