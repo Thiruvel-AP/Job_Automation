@@ -342,6 +342,16 @@ def test_mark_applied_archives_without_the_assist_and_date_controls_the_folder(s
     assert load_workbook(settings.path("excel"))["Jobs"].max_row == 3          # export refreshed
 
 
+def test_mark_applied_logs_an_applied_outcome_dated_like_the_application_once(settings, db, make_job, tmp_path,
+                                                                             monkeypatch):
+    make_job("gh:o:1", company="Lendable", title="Data Scientist")
+    run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "gh:o:1", "--date", "2026-03-05")
+    rows = [tuple(r) for r in db.conn.execute("SELECT job_id, event, on_date, source FROM outcomes")]
+    assert rows == [("gh:o:1", "applied", "2026-03-05", "mark-applied")]
+    run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "gh:o:1", "--date", "2026-03-09")   # a resubmission
+    assert db.conn.execute("SELECT COUNT(*) FROM outcomes WHERE job_id='gh:o:1'").fetchone()[0] == 1
+
+
 def test_mark_applied_unknown_job_or_untailored_job_exits_1(settings, db, make_job, tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as e:
         run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "nope:1")

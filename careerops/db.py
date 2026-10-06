@@ -78,6 +78,17 @@ CREATE TABLE IF NOT EXISTS company_events (
     norm TEXT, town_norm TEXT, day TEXT, kind TEXT, detail TEXT   -- added | removed | rating
 );
 
+-- Outcome log: what happened after each application. 'no_response' is never stored: it is computed when reporting.
+CREATE TABLE IF NOT EXISTS outcomes (
+    job_id TEXT NOT NULL,
+    event TEXT NOT NULL CHECK(event IN ('applied','acknowledged','screen','interview','offer','rejected','withdrawn')),
+    on_date TEXT,                     -- YYYY-MM-DD the event happened
+    note TEXT,
+    source TEXT,                      -- manual | mark-applied | archive
+    created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_outcomes_job ON outcomes(job_id);
+
 -- A1: folders of the append-only archive that the pipeline created or adopted. Lives here, never as marker files in
 -- the user's tree. `folder` is relative to paths.applications, '/'-separated ("Lendable", "Lendable/AI Engineer/v2").
 CREATE TABLE IF NOT EXISTS archive_index (

@@ -15,7 +15,13 @@
   careerops apply [--no-letter] open approved jobs' forms, fill basics, you submit; then archive what was sent
   careerops mark-applied --id JOB [--ref REF] [--date YYYY-MM-DD] [--no-letter]
                                 archive + mark an application you made outside the assist
-  careerops export              write the Excel view
+  careerops outcome --id JOB --event applied|acknowledged|screen|interview|offer|rejected|withdrawn [--date D] [--note T]
+                                log what happened after an application (mark-applied logs 'applied' itself)
+  careerops outcomes [--import-archive [--apply]]
+                                the funnel applied -> any reply -> screen -> interview -> offer with 95% Wilson
+                                intervals, split by role family, tier, cv_pages, sponsor_match; --import-archive lists
+                                the archive folders as approximate 'applied' events (dry run; --apply writes the DB only)
+  careerops export              write the Excel view (Jobs, Summary, Outcomes)
   careerops export-prefs        preference log → DPO pairs jsonl
   careerops run                 discover + tailor + export (what cron calls)
   careerops status              counts per status
@@ -355,6 +361,47 @@ def cmd_mark_applied(args):
         sys.exit(1)
 
 
+def cmd_outcome(args):
+    """Log what happened after an application (screen, interview, offer, rejection ...). Nothing is sent anywhere."""
+    from .reporting import outcomes
+
+    s, db = _ctx(args)
+    if db.job(args.id) is None:
+        _fail(f"no such job: {args.id}")
+    day = args.date or date.today()
+    if outcomes.record(db, args.id, args.event, day, args.note or "", "manual"):
+        print(f"Logged {args.event} for {args.id} on {day.isoformat()}.")
+    else:
+        print(f"Already logged: {args.event} for {args.id} on {day.isoformat()}.")
+
+
+def cmd_outcomes(args):
+    """The funnel (applied -> any reply -> screen -> interview -> offer), or, with --import-archive, the read-only backfill
+    from the archive: a dry run listing what would be added, unless --apply (which writes to the database only)."""
+    from .reporting import outcomes
+
+    s, db = _ctx(args)
+    if args.apply and not args.import_archive:
+        _fail("--apply goes with --import-archive")
+    if args.import_archive:
+        try:
+            props, skipped = outcomes.propose_from_archive(db, s.path("applications"))
+        except outcomes.OutcomeError as e:
+            _fail(str(e))
+        if skipped:
+            print(f"{len(skipped)} folder(s) already have a job and are skipped.")
+        for p in props:
+            print(f"  {p.company} / {p.role}: applied ~{p.applied_on.isoformat()} (folder date, approximate)")
+        if args.apply:
+            print(f"Imported {outcomes.apply_proposals(db, props)} application(s) into the database "
+                  "(the archive was only listed).")
+        else:
+            print(f"Dry run: {len(props)} application(s) would be imported. Re-run with --apply to write them to the "
+                  "database (the archive itself is never written).")
+        return
+    print(outcomes.format_report(outcomes.build_report(db)))
+
+
 def cmd_export(args):
     s, db = _ctx(args)
     n = export(db, s.path("excel"), floor=s["roles"]["floor"])
@@ -582,6 +629,21 @@ def main(argv=None):
     ma.add_argument("--date", type=date.fromisoformat, metavar="YYYY-MM-DD", help="date applied (default: today)")
     ma.add_argument("--no-letter", action="store_true", help="go ahead although the cover-letter PDF is missing")
     ma.set_defaults(fn=cmd_mark_applied)
+    ou = sub.add_parser("outcome", help="log what happened after an application")
+    ou.add_argument("--id", required=True, help="job id")
+    ou.add_argument("--event", required=True, choices=["applied", "acknowledged", "screen", "interview", "offer",
+                                                       "rejected", "withdrawn"])
+    ou.add_argument("--date", type=date.fromisoformat, metavar="YYYY-MM-DD", help="when it happened (default: today)")
+    ou.add_argument("--note", help="free text")
+    ou.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
+    ou.set_defaults(fn=cmd_outcome)
+    os_ = sub.add_parser("outcomes", help="the application funnel with 95%% Wilson intervals; --import-archive backfills")
+    os_.add_argument("--import-archive", action="store_true", help="list <paths.applications>/<Company>/<Role> folders and "
+                     "propose manual jobs + 'applied' events dated by folder mtime (dry run)")
+    os_.add_argument("--apply", action="store_true", help="with --import-archive: write the proposals to the database "
+                     "(never to the archive)")
+    os_.add_argument("--mock", action="store_true", help="use the isolated data/mock database and archive")
+    os_.set_defaults(fn=cmd_outcomes)
     sub.add_parser("export").set_defaults(fn=cmd_export)
     e = sub.add_parser("export-prefs"); e.add_argument("--out", default="data/feedback/dpo_pairs.jsonl")
     e.set_defaults(fn=cmd_export_prefs)

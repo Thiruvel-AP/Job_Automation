@@ -3,6 +3,7 @@ making a spreadsheet the database)."""
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -11,6 +12,7 @@ from openpyxl.utils import get_column_letter
 
 from ..db import DB
 from ..tailoring.queue import queue_key
+from .outcomes import applied_jobs
 
 COLS = [("Company", "company", 26), ("Title", "title", 38), ("Tier", "tier", 6), ("Family", "family", 15),
         ("Location", "location", 22), ("Status", "status", 13),
@@ -66,6 +68,31 @@ def export(db: DB, path: Path, floor: float = 0.70) -> int:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
     for k, v in sorted(counts.items()):
         st.append([k, v])
+    _outcomes_sheet(wb, db)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
     return len(rows)
+
+
+OUTCOME_COLS = [("Company", 26), ("Title", 38), ("Applied on", 12), ("Status", 13), ("Days since applied", 10),
+                ("Events", 50), ("Role family", 15), ("Tier", 6), ("CV pages", 9), ("Sponsor match", 13),
+                ("Approximate date", 10), ("Job ID", 34)]
+
+
+def _outcomes_sheet(wb: Workbook, db: DB) -> None:
+    """One row per applied job: where it got to (offer / interview / screen / replied / rejected / withdrawn, else
+    no_response after 28 days or pending), every event with its date, and what the funnel report splits on."""
+    ws = wb.create_sheet("Outcomes")
+    ws.append([c[0] for c in OUTCOME_COLS])
+    for cell in ws[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="14285A")
+    today = datetime.now(timezone.utc).date()
+    for a in sorted(applied_jobs(db), key=lambda a: a.applied_on, reverse=True):
+        events = " | ".join(f"{e} {d.isoformat()}" for e, d in sorted(a.events.items(), key=lambda kv: kv[1]))
+        ws.append([a.company, a.title, a.applied_on.isoformat(), a.status(today), (today - a.applied_on).days, events,
+                   a.family, a.tier, a.cv_pages, a.sponsor_match, "yes" if a.approximate else "", a.job_id])
+    for i, (_, w) in enumerate(OUTCOME_COLS, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions

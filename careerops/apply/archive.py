@@ -20,6 +20,7 @@ from itertools import count
 from pathlib import Path
 
 from ..db import DB, now
+from ..reporting.outcomes import record_applied
 from .errors import ArchiveError, ArchiveIncomplete, ArchiveRootMissing, LetterMissing
 from .guard import check_job_files
 from .naming import folder_key, id6, safe_name
@@ -266,6 +267,7 @@ def record_application(db: DB, settings, job, rep: dict, *, confirmation: str | 
             db.conn.execute("INSERT OR REPLACE INTO archive_index VALUES (?,?,?,?,?)",
                             (rel, kind, plan.key, jid, now()))
         db.update_job(job["id"], commit=False, **fields)
+        record_applied(db, job["id"], plan.day)
         db.conn.execute("INSERT INTO events VALUES (?,?,?,?)",
                         (job["id"], now(), "archive", json.dumps(detail, default=str)))
     if failure is not None:
@@ -283,5 +285,6 @@ def mark_applied_unarchived(db: DB, job, confirmation: str | None, reason: str,
     with db.conn:
         db.update_job(job["id"], commit=False, status="applied", applied_at=applied_at, confirmation=confirmation,
                       flags=_merge_flags(job.get("flags"), [f"Archive refused: {reason} — archive by hand"]))
+        record_applied(db, job["id"], applied_at[:10])
         db.conn.execute("INSERT INTO events VALUES (?,?,?,?)",
                         (job["id"], now(), "archive", json.dumps({"refused": reason})))
