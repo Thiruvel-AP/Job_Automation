@@ -120,3 +120,17 @@ def test_the_cli_prints_the_banner_when_summarising_a_stale_rubric(tmp_path, set
     cfg.write_text(yaml.safe_dump(settings.raw), encoding="utf-8")
     cli.main(["--config", str(cfg), "calibrate", "--summarise", "--out", str(tmp_path)])
     assert BANNER in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------- needs_result in a calibration run
+def test_a_calibration_run_records_the_bullets_without_a_result_in_report_json_the_row_and_the_log(
+        settings, db, fb, manifest, tmp_path):
+    log = []
+    res = _run(settings, db, fb, manifest, tmp_path / "out", only=["cal-northwind"], log=log.append)
+    row = res["rows"][0]
+    rep = json.loads((Path(row["out_dir"]) / "report.json").read_text(encoding="utf-8"))
+    assert "needs_result" in rep and [b["id"] for b in rep["needs_result"]] == row["needs_result"]
+    bank = {b["id"]: b for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
+    assert row["needs_result"] and all(not str(bank[i].get("result") or "").strip() for i in row["needs_result"])
+    line = next(l for l in log if "bullet(s) need a result" in l)
+    assert f"{len(row['needs_result'])} bullet(s) need a result" in line

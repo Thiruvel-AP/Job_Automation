@@ -250,6 +250,7 @@ def measure(entry: dict, verdict: gates.Verdict, rep: dict, seconds: float, sett
                    "reason": rep["letter"].get("reason"),
                    "score": rep["letter"]["score"], "pages": rep["letter"]["pages"], "retry": rep["letter"].get("retry") or {},
                    "evidence": [e["id"] for e in rep["letter"].get("evidence", [])]},
+        "needs_result": [b["id"] for b in rep.get("needs_result") or []],      # CV bullets with no `result:` in the bank
         "usage": _usage(rep), "seconds": round(seconds, 1),
         "manual_ats": entry.get("manual_ats"), "reference": reference, "outcome": entry.get("outcome"),
         "out_dir": rep["out_dir"],
@@ -669,7 +670,8 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
             row["keywords"]["frozen"] = fz["date"] if fz else None
             f = row["final"]
             log(f"  ceiling {pct(row['ceiling'])} final {pct(f['literal'])} ({f['band']}), letter "
-                f"{letter_summary(row['letter'])}, {row['usage']['calls']} calls, {row['usage']['total_tokens']:,} tokens, "
+                f"{letter_summary(row['letter'])}, {len(row['needs_result'])} bullet(s) need a result, "
+                f"{row['usage']['calls']} calls, {row['usage']['total_tokens']:,} tokens, "
                 f"{row['seconds']:.0f} s")
         except Exception as e:  # noqa: BLE001 — one JD failing must not lose the others' measurements
             row = stub(entry, "error", f"{type(e).__name__}: {e}"[:400], time.monotonic() - t0)

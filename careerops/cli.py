@@ -150,6 +150,9 @@ def cmd_sponsors(args):
     except sponsors.RegisterFormatError as e:
         _fail(str(e))
     print(sponsors.summary_line(snap, db))
+    where = str(snap.path) if snap else (db.conn.execute(
+        "SELECT path FROM register_snapshots ORDER BY day DESC LIMIT 1").fetchone() or [None])[0]
+    print(f"Snapshots are stored in {s.path('register_dir')}" + (f" (latest: {where})" if where else ""))
 
 
 def cmd_discover(args):

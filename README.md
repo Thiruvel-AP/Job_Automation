@@ -134,7 +134,7 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
   render a denied core skill.
 - **Bullets** — chosen in code by greedy marginal keyword gain (ties to the more recent entry): newest entry 4–5, the others
   3–4 (`scoring.cv_bullets`), 3 projects with 2–3 bullets each. A bullet whose words overlap a chosen one (Jaccard ≥ 0.6) is
-  never added. Then bullets are added until page 2 is at least `scoring.min_fill_page2` (0.80) full, measured from the PDF
+  never added. Then bullets are added until page 2 is at least `scoring.min_fill_page2` (0.65) full, measured from the PDF
   (y of the last text line on page 2 over the text area), or none are left: more experience bullets and more bullets of the
   three projects first; a 4th project only with `scoring.cv_fill_extra_projects: true` (off: the CV never shows more than 3).
   The shrink step runs only when the CV is over 2 pages. `cv_pages` and `page2_fill` go into `report.json` and the `jobs` table;
@@ -195,7 +195,8 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 ## What the review screen tells you
 
 - **ATS literal** — conservative substring match on the PDF's text layer; the 70–85 % band applies to this.
-- **ATS stemmed** — also equates *communicating/communicate*, *modelling/modeling*, *end-to-end/end to end*.
+- **ATS stemmed** — also equates *communicating/communicate*, *modelling/modeling*, *end-to-end/end to end*,
+  *classifier/classification*, *visualisation/visualization*.
   Literal → stemmed gap = wording, not substance.
 - **T1 · Data Scientist** (second line) — the role tier and family; the CV headline uses the family's.
 - **Flag `new rules would skip: …`** — added by `retriage` to an already-tailored job that today's rules would reject.

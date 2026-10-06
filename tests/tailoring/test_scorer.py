@@ -35,3 +35,12 @@ def test_ceiling_reports_genuine_gaps(jd):
     c, gaps = ceiling(fact_text(fb), taxonomy_keywords(jd))
     assert "kubernetes" in [g.lower() for g in gaps]     # confirmed-absent → honest gap
     assert 0.7 < c < 1.0
+
+
+def test_classifier_classification_and_visualisation_share_a_stem_family_in_the_stemmed_view_only():
+    assert norm_stem("classifiers") == norm_stem("classification")
+    assert len({norm_stem(w) for w in ("visualisation", "visualization", "visualise", "visualize", "visualising")}) == 1
+    kws = [Keyword("classifier", 1, True), Keyword("visualization", 1, True)]
+    s = score("Built classification models and visualisation dashboards.", kws)
+    assert s.literal == 0.0 and s.stemmed == 1.0                  # the literal score is untouched
+    assert set(s.wording_misses) == {"classifier", "visualization"}

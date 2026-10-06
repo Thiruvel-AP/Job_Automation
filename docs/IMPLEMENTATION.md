@@ -39,7 +39,7 @@ link, stop if that link (or its date) is already in `register_snapshots`, else d
 and diff against the register as `companies` holds it. `apply_diff(db, day, d, cur, *, snapshot=None)` is one transaction:
 the first snapshot writes one `baseline` event; later ones `added` / `readded` / `removed` / `rating`, stamp
 first_seen / last_seen / removed_on, flag in-play jobs of a removed or downgraded sponsor, and insert the
-`register_snapshots` row (`snapshot` = (day, csv_url, path, rows), the one addition to the agreed signature). A day already
+`register_snapshots` row (`snapshot` = (day, csv_url, path, rows), the one addition to the agreed signature). `careerops sponsors` also prints the folder (`paths.register_dir` = `data/register`) and the latest file. A day already
 recorded is a no-op. Not built from the task file: `latest.csv`, the `sponsors` table refresh and `register.prune` (nothing in
 `discovery/` may move or delete files, see `tests/test_deletions.py`).
 **Sponsor check in triage:** `register.CompanyIndex` (the `companies` rows not removed) matches case, punctuation,
@@ -226,7 +226,7 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
 ## 5d. Two full pages, outcome log, calibration fix round — **done** (2026-10-06; none of it run live)
 
 **Two pages.** `templates/cv2.tex.j2` is the default (`cv.tex.j2` only with `--one-page`). `scoring.max_pages: 2`,
-`min_fill_page2: 0.80`: `render.page2_fill` reads the rendered PDF (`pdftotext -bbox`, y of the lowest word on page 2 over
+`min_fill_page2: 0.65` (the reference 2-page CV fills ~70% of page 2 and all experience bullets are already used, so a higher floor would need filler): `render.page2_fill` reads the rendered PDF (`pdftotext -bbox`, y of the lowest word on page 2 over
 the text area, `CV2_MARGIN_PT` must match the template's geometry). `selection.select_cv(fb, kws, preferred, skills, layout)`
 is greedy marginal gain with `Layout`s (`ONE_PAGE` 2-4 / 1-2 / 2 projects; `TWO_PAGE` from `scoring.cv_bullets`: 4-5 newest,
 3-4 others, 3 projects x 2-3 bullets), skips a bullet whose token Jaccard with a chosen one is >= `bullet_dedupe_jaccard`

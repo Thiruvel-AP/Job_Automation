@@ -108,7 +108,7 @@ scoring:
   required_weight: 2.0
   preferred_weight: 1.0
   max_pages: 2                # two full pages by default (recruiters respond to a 2-page CV); the shrink loop runs only above this. `--one-page` forces 1 with the old template
-  min_fill_page2: 0.80        # page 2 must be at least this full (y of its last text line / text-area height, measured from the PDF); bullets are added until it is, or run out
+  min_fill_page2: 0.65        # page 2 must be at least this full (y of its last text line / text-area height, measured from the PDF); bullets are added until it is, or run out. The reference 2-page CV fills ~70% of page 2 and all experience bullets are already used, so a higher floor would need filler
   cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
     most_recent: [4, 5]       # the first (newest) entry
     other: [3, 4]             # every other entry; an entry with fewer bullets in the fact bank just shows them all

@@ -1,15 +1,11 @@
-# Basics the apply assistant may type into forms. Everything here is copied verbatim.
-# Questions NOT answered here (visa/right to work, sponsorship, salary, notice period,
-# EEO/diversity, criminal record, "why us") are never filled by the bot — they are
-# highlighted on the page for you to answer.
 first_name: Thiruvel
-last_name: TODO
-email: you@example.com
-phone: "+44 7000 000000"
-location: Bristol, United Kingdom
-linkedin: https://www.linkedin.com/in/TODO
-github: https://github.com/TODO
-website: ""
+last_name: Andagurunathan Pandian
+email: apthiruvel@example.com
+phone: "+44 07741016954"
+location: BS34 5JW, number 7 Donns, Bristol, United Kingdom
+linkedin: https://www.linkedin.com/in/thiruvel-a-p/
+github: https://github.com/thiruvel-AP
+website: https://thiruvel-ap.github.io/PersonalPortfolio/
 
 # Label regexes → field key above. Matched case-insensitively against <label>, aria-label, placeholder, name.
 label_map:
@@ -26,3 +22,13 @@ label_map:
 never_fill: ['sponsor', 'visa', 'right to work', 'work authori[sz]ation', 'salary', 'compensation',
              'notice', 'gender', 'ethnic', 'disab', 'veteran', 'criminal', 'convict', 'pronoun',
              'sexual', 'religio', 'nationality', 'citizenship', 'clearance', 'why do you want', 'cover letter']
+
+visa:
+  summary: >-
+    I have completed my MSc in Data Science at the University of Bristol and am moving onto the UK Graduate visa
+    (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship
+    and am flexible on how we arrange it.
+  answers:
+    sponsorship_now: "No"
+    sponsorship_future: "Yes"
+    right_to_work_now: "Yes"

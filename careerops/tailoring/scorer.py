@@ -27,6 +27,10 @@ def norm_literal(text: str) -> str:
 _SUFFIX = re.compile(r"(isations?|izations?|ising|izing|ised|ized|ise|ize|ations?|ing|ed|es|s|ive|ly|ment)$")
 
 
+# stems the suffix rules leave apart that a recruiter reads as one word (stemmed view only; the literal view never uses this)
+_FAMILY = {"classifier": "classific"}                # classifier(s) ~ classification(s); visualis/ization(s)/e/ing already share "visual"
+
+
 def _stem(tok: str) -> str:
     if len(tok) <= 4 or not tok.isalpha():
         return tok
@@ -35,7 +39,8 @@ def _stem(tok: str) -> str:
     if s != tok and s.endswith("ll"):
         s = s[:-1]                                   # British doubling: modelling → model, travelled → travel
     s = s[:-1] if s.endswith("e") and len(s) > 4 else s
-    return s if len(s) >= 3 else tok
+    s = s if len(s) >= 3 else tok
+    return _FAMILY.get(s, s)
 
 
 def norm_stem(text: str) -> str:

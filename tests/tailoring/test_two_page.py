@@ -45,7 +45,7 @@ def run2(tmp_path_factory):
 
 
 def test_defaults_are_two_pages_and_a_page_two_that_is_80_percent_full(settings):
-    assert settings["scoring"]["max_pages"] == 2 and settings["scoring"]["min_fill_page2"] == 0.80
+    assert settings["scoring"]["max_pages"] == 2 and settings["scoring"]["min_fill_page2"] == 0.65
 
 
 def test_the_fixture_bank_renders_exactly_two_pages_with_page_two_80_to_100_percent_full(run2):

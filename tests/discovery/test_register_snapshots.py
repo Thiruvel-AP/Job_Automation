@@ -339,4 +339,11 @@ def test_careerops_sponsors_prints_the_summary_line_and_a_second_run_says_unchan
     cli.main(["--config", str(cfg), "sponsors"])
     assert "2026-10-01: 12 Skilled Worker sponsors · +2 added · −1 removed · 1 rating changes" in capsys.readouterr().out
     cli.main(["--config", str(cfg), "sponsors"])
-    assert "Register unchanged (already have 2026-10-01)" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "Register unchanged (already have 2026-10-01)" in out
+    assert f"Snapshots are stored in {tmp_path / 'reg'}" in out and "2026-10-01.csv.gz" in out    # says where, also when unchanged
+
+
+def test_the_shipped_snapshot_location_is_data_register_dated_csv_gz():
+    shipped = yaml.safe_load((Path(__file__).resolve().parents[2] / "config" / "settings.yaml").read_text(encoding="utf-8"))
+    assert shipped["paths"]["register_dir"] == "data/register"                  # M1: data/register/YYYY-MM-DD.csv.gz
