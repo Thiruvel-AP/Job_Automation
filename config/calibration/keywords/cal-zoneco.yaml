@@ -3,14 +3,18 @@ frozen: '2026-10-04'
 jd_sha1: 1da9ed26993c
 served_by:
 - groq/openai/gpt-oss-20b
-company_hook: Zone & Co builds an ERP-native AI platform that automates, connects, and scales financial workflows directly
-  within Oracle NetSuite, delivering real-time financial intelligence to finance teams worldwide.
+company_hook: Zone & Co builds an ERP-native AI platform that automates, connects,
+  and scales financial workflows directly within Oracle NetSuite, delivering real-time
+  financial intelligence to finance teams worldwide.
 team: ''
 notes:
 - 'keywords: cut the benefits section ''Benefits'' (9 characters) before extraction'
-- 'extract_keywords: dropped keyword ''2+ years of software engineering experie'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''relational (SQL) databases'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''deploying AI systems in production envir'' (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''2+ years of software engineering experie''
+  (not verbatim, too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''relational (SQL) databases'' (not verbatim,
+  too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''deploying AI systems in production envir''
+  (not verbatim, too long, generic or a degree)'
 keywords:
 - term: azure
   weight: 2.0
@@ -56,16 +60,10 @@ keywords:
 - term: non-relational databases
   weight: 2.0
   required: true
-- term: problem-solving
-  weight: 2.0
-  required: true
 - term: sql
   weight: 2.0
   required: true
 - term: data quality
-  weight: 1.5
-  required: true
-- term: end-to-end
   weight: 1.5
   required: true
 - term: experimentation
@@ -75,8 +73,5 @@ keywords:
   weight: 1.5
   required: true
 - term: research
-  weight: 1.5
-  required: true
-- term: scalable
   weight: 1.5
   required: true

@@ -3,23 +3,36 @@ frozen: '2026-10-04'
 jd_sha1: 122ef44b65eb
 served_by:
 - groq/openai/gpt-oss-20b
-company_hook: Chattermill builds a Customer Experience Intelligence platform that continuously analyses explicit and implicit
-  customer feedback for large brands such as Uber, Amazon, Wise, and HelloFresh.
+company_hook: Chattermill builds a Customer Experience Intelligence platform that
+  continuously analyses explicit and implicit customer feedback for large brands such
+  as Uber, Amazon, Wise, and HelloFresh.
 team: Data Science team
 notes:
 - 'keywords: cut the benefits section ''Our Perks'' (2851 characters) before extraction'
-- 'extract_keywords: dropped keyword ''LLM-powered features'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''reranking systems'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''insight generation'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''evaluation frameworks'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''test sets'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''generative tasks'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''embedding-based approaches'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''NLP tasks'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''fine-tuning workflows'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''agentic patterns'' (not verbatim, too long, generic or a degree)'
-- 'keywords: dropped ''retrieval pipelines'' (contains ''retrieval'' plus only generic head words)'
-- 'keywords: capped at 25; dropped transformer architectures, llm, data pipelines, evaluation, research, machine learning'
+- 'extract_keywords: dropped keyword ''LLM-powered features'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''reranking systems'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''insight generation'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''evaluation frameworks'' (not verbatim, too
+  long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''test sets'' (not verbatim, too long, generic
+  or a degree)'
+- 'extract_keywords: dropped keyword ''generative tasks'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''embedding-based approaches'' (not verbatim,
+  too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''NLP tasks'' (not verbatim, too long, generic
+  or a degree)'
+- 'extract_keywords: dropped keyword ''fine-tuning workflows'' (not verbatim, too
+  long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''agentic patterns'' (not verbatim, too long,
+  generic or a degree)'
+- 'keywords: dropped ''retrieval pipelines'' (contains ''retrieval'' plus only generic
+  head words)'
+- 'keywords: capped at 25; dropped transformer architectures, llm, data pipelines,
+  evaluation, research, machine learning'
 keywords:
 - term: extraction
   weight: 2.0
@@ -36,9 +49,6 @@ keywords:
 - term: reranking
   weight: 2.0
   required: true
-- term: search
-  weight: 2.0
-  required: true
 - term: agentic
   weight: 2.0
   required: true
@@ -46,9 +56,6 @@ keywords:
   weight: 2.0
   required: true
 - term: communication
-  weight: 2.0
-  required: true
-- term: custom models
   weight: 2.0
   required: true
 - term: embeddings
@@ -63,9 +70,6 @@ keywords:
 - term: LoRA
   weight: 2.0
   required: true
-- term: metrics
-  weight: 2.0
-  required: true
 - term: model serving
   weight: 2.0
   required: true
@@ -76,9 +80,6 @@ keywords:
   weight: 2.0
   required: true
 - term: pytorch
-  weight: 2.0
-  required: true
-- term: real-world text data
   weight: 2.0
   required: true
 - term: semantic search
@@ -94,5 +95,17 @@ keywords:
   weight: 2.0
   required: true
 - term: training loops
+  weight: 2.0
+  required: true
+- term: llm
+  weight: 2.0
+  required: true
+- term: machine learning
+  weight: 2.0
+  required: true
+- term: evaluation
+  weight: 2.0
+  required: true
+- term: data pipelines
   weight: 2.0
   required: true

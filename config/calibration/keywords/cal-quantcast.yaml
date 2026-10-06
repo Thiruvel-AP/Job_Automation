@@ -3,8 +3,8 @@ frozen: '2026-10-04'
 jd_sha1: 82441b41d9bb
 served_by:
 - groq/openai/gpt-oss-20b
-company_hook: Quantcast builds AI-powered advertising technology that optimizes digital ad auctions in real time, delivering
-  measurable outcomes for marketers worldwide.
+company_hook: Quantcast builds AI-powered advertising technology that optimizes digital
+  ad auctions in real time, delivering measurable outcomes for marketers worldwide.
 team: Modeling team
 notes: []
 keywords:
@@ -71,12 +71,6 @@ keywords:
   weight: 1.5
   required: true
 - term: production
-  weight: 1.5
-  required: true
-- term: research
-  weight: 1.5
-  required: true
-- term: scalable
   weight: 1.5
   required: true
 - term: testing

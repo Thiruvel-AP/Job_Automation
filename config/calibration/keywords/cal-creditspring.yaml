@@ -3,21 +3,30 @@ frozen: '2026-10-04'
 jd_sha1: 00fca5349f8f
 served_by:
 - groq/openai/gpt-oss-20b
-company_hook: Creditspring offers subscription-based short-term financial products to improve members' financial stability
-  and resilience.
+company_hook: Creditspring offers subscription-based short-term financial products
+  to improve members' financial stability and resilience.
 team: Underwriting - Credit risk data science
 notes:
-- 'extract_keywords: dropped keyword ''data drift'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''open banking data providers'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''product and lending strategies'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''supervised machine learning stack'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''manipulating data'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''merging data'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''cleaning data'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''communication skills'' (not verbatim, too long, generic or a degree)'
-- 'keywords: capped at 25; dropped scikit-learn, sql, stakeholders, statistical inference, tooling, validation, production,
-  testing, lending, open banking data, agentic, Agentic AI, aws, cloud data stacks, credit bureau, decisioning SaaS platforms,
-  event driven architecture, fintech, github, regulated sectors, research, ruby on rails, web applications'
+- 'extract_keywords: dropped keyword ''data drift'' (not verbatim, too long, generic
+  or a degree)'
+- 'extract_keywords: dropped keyword ''open banking data providers'' (not verbatim,
+  too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''product and lending strategies'' (not verbatim,
+  too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''supervised machine learning stack'' (not verbatim,
+  too long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''manipulating data'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''merging data'' (not verbatim, too long, generic
+  or a degree)'
+- 'extract_keywords: dropped keyword ''cleaning data'' (not verbatim, too long, generic
+  or a degree)'
+- 'extract_keywords: dropped keyword ''communication skills'' (not verbatim, too long,
+  generic or a degree)'
+- 'keywords: capped at 25; dropped scikit-learn, sql, stakeholders, statistical inference,
+  tooling, validation, production, testing, lending, open banking data, agentic, Agentic
+  AI, aws, cloud data stacks, credit bureau, decisioning SaaS platforms, event driven
+  architecture, fintech, github, regulated sectors, research, ruby on rails, web applications'
 keywords:
 - term: machine learning
   weight: 2.0
@@ -28,36 +37,13 @@ keywords:
 - term: feature engineering
   weight: 2.0
   required: true
-- term: machine learning models
-  weight: 2.0
-  required: true
 - term: monitoring performance
   weight: 2.0
   required: true
 - term: python
   weight: 2.0
   required: true
-- term: SME
-  weight: 2.0
-  required: true
-  alts:
-  - retail lending
-- term: acquisition
-  weight: 2.0
-  required: true
-- term: alt-datasources
-  weight: 2.0
-  required: true
-- term: checking data
-  weight: 2.0
-  required: true
-- term: commercial awareness
-  weight: 2.0
-  required: true
 - term: communication
-  weight: 2.0
-  required: true
-- term: credit reference agencies
   weight: 2.0
   required: true
 - term: credit risk analytics
@@ -69,13 +55,7 @@ keywords:
 - term: data pipelines
   weight: 2.0
   required: true
-- term: external API feeds
-  weight: 2.0
-  required: true
 - term: gradient boosting techniques
-  weight: 2.0
-  required: true
-- term: infrastructure
   weight: 2.0
   required: true
 - term: jupyter
@@ -94,5 +74,29 @@ keywords:
   weight: 2.0
   required: true
 - term: regression
+  weight: 2.0
+  required: true
+- term: scikit-learn
+  weight: 2.0
+  required: true
+- term: sql
+  weight: 2.0
+  required: true
+- term: stakeholders
+  weight: 2.0
+  required: true
+- term: statistical inference
+  weight: 2.0
+  required: true
+- term: production
+  weight: 2.0
+  required: true
+- term: testing
+  weight: 2.0
+  required: true
+- term: aws
+  weight: 2.0
+  required: true
+- term: fintech
   weight: 2.0
   required: true

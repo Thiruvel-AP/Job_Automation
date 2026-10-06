@@ -3,16 +3,22 @@ frozen: '2026-10-04'
 jd_sha1: 5c489763b5a3
 served_by:
 - groq/openai/gpt-oss-20b
-company_hook: Lendable builds fintech technology to give customers instant credit and savings solutions, rebuilding core consumer
-  finance products and expanding into UK and US markets.
+company_hook: Lendable builds fintech technology to give customers instant credit
+  and savings solutions, rebuilding core consumer finance products and expanding into
+  UK and US markets.
 team: ''
 notes:
 - 'keywords: cut the benefits section ''Why join us'' (90 characters) before extraction'
-- 'extract_keywords: dropped keyword ''engineering skills'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''production systems'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''LLMs in real workflows'' (not verbatim, too long, generic or a degree)'
-- 'extract_keywords: dropped keyword ''agent workflows'' (not verbatim, too long, generic or a degree)'
-- 'keywords: dropped ''retrieval pipelines'' (contains ''retrieval'' plus only generic head words)'
+- 'extract_keywords: dropped keyword ''engineering skills'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''production systems'' (not verbatim, too long,
+  generic or a degree)'
+- 'extract_keywords: dropped keyword ''LLMs in real workflows'' (not verbatim, too
+  long, generic or a degree)'
+- 'extract_keywords: dropped keyword ''agent workflows'' (not verbatim, too long,
+  generic or a degree)'
+- 'keywords: dropped ''retrieval pipelines'' (contains ''retrieval'' plus only generic
+  head words)'
 keywords:
 - term: llms
   weight: 2.0
