@@ -108,7 +108,15 @@ scoring:
   max_keywords: 25            # JD keywords kept (most important by weight, then by how often the JD says them): a short, specific list a one-page CV can honestly hit
   required_weight: 2.0
   preferred_weight: 1.0
-  max_pages: 1                # one-page CV (agreed 2026-10-03); the shrink loop drops bullets until it fits
+  max_pages: 2                # two full pages by default (recruiters respond to a 2-page CV); the shrink loop runs only above this. `--one-page` forces 1 with the old template
+  min_fill_page2: 0.80        # page 2 must be at least this full (y of its last text line / text-area height, measured from the PDF); bullets are added until it is, or run out
+  cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
+    most_recent: [4, 5]       # the first (newest) entry
+    other: [3, 4]             # every other entry; an entry with fewer bullets in the fact bank just shows them all
+  cv_projects: 3              # projects on the two-page CV
+  cv_project_bullets: [2, 3]  # [min, max] bullets per project (a project with fewer shows them all)
+  max_skill_groups: 5         # grouped skill rows besides the pinned `skills.core` row; the groups least relevant to the JD are left off
+  bullet_dedupe_jaccard: 0.6  # a bullet whose word-set overlap (Jaccard) with an already chosen bullet reaches this is not added
   letter_max_words: 250
 
 letter:

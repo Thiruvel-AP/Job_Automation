@@ -71,6 +71,41 @@ def pdf_text(pdf: Path) -> str:
     return subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout
 
 
+# The text area of templates/cv2.tex.j2 (geometry margin=0.6in on A4); change both together. The one-page template is
+# never measured: its page count is all that matters.
+CV2_MARGIN_PT = 0.6 * 72
+_PAGE = re.compile(r'<page width="([\d.]+)" height="([\d.]+)">(.*?)</page>', re.S)
+_YMAX = re.compile(r'yMax="([\d.]+)"')
+
+
+def last_line_fills(pdf: Path, margin_pt: float = CV2_MARGIN_PT) -> list[float]:
+    """Per page: how far down the text area the last text line reaches, 0.0 (nothing below the top margin) to 1.0 (the
+    bottom margin). Measured from the rendered PDF (pdftotext -bbox: y of the lowest word, in points), never from
+    character counts. One entry per page that has any words; a blank page has no entry, so the list may be shorter than
+    the page count."""
+    xml = subprocess.run(["pdftotext", "-bbox", str(pdf), "-"], capture_output=True, text=True).stdout
+    out = []
+    for m in _PAGE.finditer(xml):
+        height, body = float(m.group(2)), m.group(3)
+        ys = [float(y) for y in _YMAX.findall(body)]
+        if ys:
+            area = height - 2 * margin_pt
+            out.append(min(max((max(ys) - margin_pt) / area, 0.0), 1.0))
+    return out
+
+
+def page2_fill(pdf: Path, pages: int | None = None) -> float:
+    """How full page 2 is (see `last_line_fills`): 0.0 for a one-page CV, 1.0 once there is a third page, so
+    "fill >= min_fill_page2" is only ever true of a CV that really has two pages."""
+    pages = page_count(pdf) if pages is None else pages
+    if pages < 2:
+        return 0.0
+    if pages > 2:
+        return 1.0
+    fills = last_line_fills(pdf)
+    return fills[1] if len(fills) > 1 else 0.0
+
+
 def _finalise(out_dir: Path, stem: str, final_name: str | None) -> Path:
     """Rename <stem>.tex/.pdf to '<final_name>.tex/.pdf' inside out_dir (the working copy, never the archive).
     xelatex only ever sees the fixed stem, so a name with spaces never reaches it."""
@@ -81,10 +116,11 @@ def _finalise(out_dir: Path, stem: str, final_name: str | None) -> Path:
     return out_dir / f"{final_name}.pdf"
 
 
-def render_cv(ctx: dict, out_dir: Path, final_name: str | None = None) -> Path:
+def render_cv(ctx: dict, out_dir: Path, final_name: str | None = None, one_page: bool = False) -> Path:
     """Compile as cv.tex, then rename to `final_name` (e.g. 'Ada Lovelace CV') so the file a recruiter sees is
-    already the final one. Returns the PDF path."""
-    compile_tex(env().get_template("cv.tex.j2").render(**ctx), out_dir, "cv")
+    already the final one. Two-page template (cv2.tex.j2) by default, the one-page cv.tex.j2 with `one_page`.
+    Returns the PDF path."""
+    compile_tex(env().get_template("cv.tex.j2" if one_page else "cv2.tex.j2").render(**ctx), out_dir, "cv")
     return _finalise(out_dir, "cv", final_name)
 
 

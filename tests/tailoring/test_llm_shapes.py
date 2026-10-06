@@ -93,7 +93,7 @@ def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback
     for e in rep["context"]["experience"] + rep["context"]["projects"]:
         assert e["bullets"] == [bidx[i]["text"] for i in e["bullet_ids"]]
     assert rep["profile"]["fallback"] and len(rep["profile"]["facts"]) == 2
-    assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] == 1
+    assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] <= settings["scoring"]["max_pages"]
 
 
 def test_c_a_model_that_is_down_for_every_task_still_gets_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):

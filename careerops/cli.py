@@ -9,7 +9,8 @@
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
-  careerops tailor [--limit N]  JD analysis → tailored CV + letter → review queue
+  careerops tailor [--limit N] [--one-page]
+                                JD analysis → tailored CV (two full pages; --one-page for one) + letter → review queue
   careerops review              approve / edit / reject (logs preference data)
   careerops apply [--no-letter] open approved jobs' forms, fill basics, you submit; then archive what was sent
   careerops mark-applied --id JOB [--ref REF] [--date YYYY-MM-DD] [--no-letter]
@@ -232,23 +233,29 @@ def cmd_tailor(args):
         if names and set(using) != set(names):
             print(f"  daily token budget: this job uses {', '.join(using)} only")
         try:
-            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"))
+            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), one_page=getattr(args, "one_page", False))
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
                           ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
-                          letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"])
+                          letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"],
+                          cv_pages=rep["cv_pages"], page2_fill=rep["page2_fill"])
             db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"],
                                          "letter": rep["letter"]["status"]})
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
-            over = cv_pages > s["scoring"]["max_pages"] or (letter_pages != 1 and not pending)
+            max_pages = 1 if rep["one_page"] else s["scoring"]["max_pages"]
+            short = (not rep["one_page"] and max_pages == 2
+                     and rep["page2_fill"] < s["scoring"]["min_fill_page2"])     # the bullets ran out before page 2 filled
+            over = cv_pages > max_pages or (letter_pages != 1 and not pending)
             if rep["letter"]["status"] == "fallback":
                 print(f"  letter {letter_summary(rep['letter'])}")
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
-                  f"→ {f['band']} band | CV {cv_pages} page(s), "
+                  f"→ {f['band']} band | CV {cv_pages} page(s)"
+                  + (f", page 2 {rep['page2_fill']:.0%} full" + (" (fact bank has no more bullets to add)" if short else "")
+                     if not rep["one_page"] else "") + ", "
                   + (f"letter {letter_summary(rep['letter'])}: the job waits as letter_pending" if pending
                      else f"letter {letter_pages} page(s)")
-                  + (f"  !! expected {s['scoring']['max_pages']} and 1" if over else ""))
+                  + (f"  !! expected {max_pages} and 1" if over else ""))
             u = rep["llm_usage"]
             if u["calls"]:
                 print(f"  LLM tokens: {u['total_tokens']:,} (prompt {u['prompt_tokens']:,}, completion "
@@ -557,6 +564,7 @@ def main(argv=None):
         t = sub.add_parser(name)
         t.add_argument("--limit", type=int, default=10)
         t.add_argument("--mock", action="store_true", help="deterministic MockLLM, no API calls")
+        t.add_argument("--one-page", action="store_true", help="one-page CV with the old template (default: two full pages)")
         t.set_defaults(fn=fn)
     r = sub.add_parser("review"); r.add_argument("--limit", type=int)
     r.add_argument("--mock", action="store_true", help="MockLLM for the letter-regenerate key, no API calls")

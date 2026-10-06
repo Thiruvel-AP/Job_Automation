@@ -164,9 +164,9 @@ def broad_llm(spy_llm):
 
 @pytest.fixture
 def one_page_run(settings, fb_fixture, broad_job, broad_llm):
-    """The code selection for the broad JD overflows one page, so the shrink loop has work to do."""
+    """`--one-page`: the code selection for the broad JD overflows one page, so the shrink loop has work to do."""
     from careerops.tailoring.render import pdf_text
-    rep = tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"))
+    rep = tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"), one_page=True)
     return rep, pdf_text(Path(rep["cv_pdf"]))
 
 

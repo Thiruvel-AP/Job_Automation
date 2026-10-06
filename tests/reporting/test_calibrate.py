@@ -121,7 +121,7 @@ def test_every_jd_is_tailored_whatever_triage_said_and_the_verdict_is_recorded(r
 def test_a_row_carries_everything_the_report_promises(run):
     north = run[0]["rows"][0]
     assert north["keywords"]["n"] == len(north["keywords"]["terms"]) <= 25
-    assert 0 < north["ceiling"] <= 1 and 0 <= north["final"]["literal"] <= 1 and north["final"]["pages"] == 1
+    assert 0 < north["ceiling"] <= 1 and 0 <= north["final"]["literal"] <= 1 and north["final"]["pages"] <= 2
     assert north["final"]["band"] in ("below", "in", "above") and north["attempts"] >= 1
     assert set(north["rephrase"]) == {"proposed", "accepted", "blocked", "calls", "coverage"}
     assert set(north["rephrase"]["coverage"]) == {"eligible", "rephrased", "ratio"}

@@ -146,7 +146,7 @@ def test_an_invention_that_survives_the_retry_is_flagged_and_the_letter_is_the_f
     text = " ".join(letter["paragraphs"])
     assert "fintech" not in text and letter["paragraphs"][-1].endswith("?")
     assert all(e["text"] in text for e in letter["evidence"])                 # the fallback quotes the evidence
-    assert rep["final"]["pages"] == 1 and letter["pages"] == 1
+    assert rep["final"]["pages"] <= settings["scoring"]["max_pages"] and letter["pages"] == 1
 
 
 def test_the_evidence_ids_are_in_the_report_and_survive_a_regenerated_letter(settings, fb_fixture, job, spy_llm):

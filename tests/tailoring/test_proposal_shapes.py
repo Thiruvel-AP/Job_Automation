@@ -108,7 +108,7 @@ def test_chattermill_with_any_of_groups_and_list_shaped_answers_tailors_without_
     assert any(set(["PyTorch", "TensorFlow"]) <= set(k["alts"] + [k["term"]]) or
                set(["pytorch", "tensorflow"]) <= {w.lower() for w in k["alts"] + [k["term"]]}
                for k in rep["keywords"])                                    # the any-of group survived merging
-    assert rep["final"]["pages"] == 1 and rep["letter"]["pages"] == 1
+    assert rep["final"]["pages"] <= 2 and rep["letter"]["pages"] == 1
     assert "rephrase_bullets: answer was wrapped in 'rephrased'; read it" in rep["attempts"][0]["warnings"]
 
 
@@ -146,5 +146,5 @@ def test_odd_keyword_and_letter_shapes_still_get_a_cv_and_a_letter(settings, fb_
                                                     "preferred": "SQL", "company_hook": 3, "team": ["x"]},
                    "cover_letter": lambda ctx: {"paragraphs": [{"text": "Fine opening."}, None, "Could we talk?"]}})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert rep["final"]["pages"] == 1 and Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists()
+    assert rep["final"]["pages"] <= settings["scoring"]["max_pages"] and Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists()
     assert rep["analysis_warnings"] and rep["letter"]["notes"]

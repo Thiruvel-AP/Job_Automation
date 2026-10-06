@@ -1,0 +1,383 @@
+# Fictional fact bank for the two-page tests: fact_bank_fixture.yaml plus a pinned `skills.core`, extra skill rows
+# (one repeating a core skill in another case) and enough bullets that a CV can fill two pages. Never the real bank.
+
+identity:
+  name: Ada Lovelace
+  headline: Data Scientist / AI Engineer
+  email: ada.lovelace@example.org
+  phone: +44 7700 900123
+  location: Bristol, UK
+  address: 12 Analytical Row, Bristol BS1 4XX
+  links:
+    linkedin: https://www.linkedin.com/in/ada-lovelace-test/
+    github: https://github.com/ada-lovelace-test
+    portfolio: https://ada-lovelace-test.example.org/portfolio#top
+profile_facts:
+- MSc Data Science, University of Northfield (completed 2026)
+- Production LLM agent work on a clinical research platform
+- Background in mobile FinTech engineering before data science
+skills:
+  core:
+  - Python
+  - pandas
+  - NumPy
+  - Docker
+  Languages:
+  - Python
+  - SQL
+  - R
+  - TypeScript
+  ML & Stats:
+  - scikit-learn
+  - XGBoost
+  - PyTorch
+  - hypothesis testing
+  - bootstrap
+  LLMs & Agents:
+  - LangChain
+  - LangGraph
+  - AWS Bedrock
+  - RAG
+  - MCP
+  - tool calling
+  - LLM evaluation
+  Data & Cloud:
+  - pandas
+  - NumPy
+  - PostgreSQL
+  - AWS Lambda
+  - ECR
+  - IAM
+  Engineering:
+  - FastAPI
+  - Docker
+  - GitHub Actions
+  - pytest
+  - React
+  - Git
+  - MLflow
+  Mobile & Web:
+  - Swift
+  - SwiftUI
+  - React
+  - REST APIs
+  Visualisation:
+  - Matplotlib
+  - Tableau
+  - python
+experience:
+- id: ex1
+  title: Data Scientist (MSc dissertation)
+  org: Northwind Research Lab, University of Northfield
+  dates: May 2026 – Sep 2026
+  location: Bristol, UK
+  bullets:
+  - id: a1
+    text: Built a tool-calling LLM agent (LangChain, AWS Bedrock) for a multi-omics cancer research platform, with three tools
+      for gene alias resolution, scoring-methodology explanation and dataset lookup, used by the whole research team.
+    terms:
+    - llm
+    - agent
+    - agentic
+    - langchain
+    - bedrock
+    - aws
+    - tool calling
+    - python
+  - id: a2
+    text: Designed a deterministic guard architecture with live API resolution and a local 19,213-gene parquet fallback behind
+      circuit breakers, so answers stay reproducible during upstream outages.
+    terms:
+    - guardrails
+    - reliability
+    - apis
+    - data quality
+    - resilience
+  - id: a3
+    text: Deployed the agent as a Docker container on AWS Lambda with ECR image pipelines, IAM execution roles and least-privilege
+      policies, replacing a manual copy-and-paste release process.
+    terms:
+    - docker
+    - aws lambda
+    - serverless
+    - deployment
+    - mlops
+    - cloud
+    - iam
+    - production
+  - id: a4
+    text: Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated
+      across the LLM provider migration from one hosted model to AWS Bedrock.
+    terms:
+    - testing
+    - evaluation
+    - pytest
+    - integration testing
+    - llm evaluation
+    - quality
+  - id: a5
+    text: Surveyed and explored 14 heterogeneous source datasets, owning the identity-spine datasets and setting metadata
+      boundaries for downstream analysis by three other students.
+    terms:
+    - eda
+    - exploratory data analysis
+    - data analysis
+    - data integration
+    - metadata
+  - id: a6
+    text: Integrated the agent into a React front end that shows gene alias enrichment as the researcher types, after two
+      rounds of usability sessions with lab members.
+    terms:
+    - react
+    - frontend
+    - javascript
+  - id: a7
+    text: Managed the project's cloud account governance, including root-user isolation, IAM user and group management and
+      least-privilege policies.
+    terms:
+    - aws
+    - iam
+    - security
+    - governance
+- id: ex2
+  title: Data Consultant
+  org: Bristol Pro Bono Consulting
+  dates: Oct 2025 – Dec 2025
+  location: Bristol, UK
+  bullets:
+  - id: b1
+    text: Cleaned and joined donor, event and survey exports with pandas and SQL, and delivered a reporting notebook that
+      the charity's trustees reused for their quarterly review.
+    terms:
+    - pandas
+    - sql
+    - data cleaning
+    - reporting
+    - python
+    - stakeholders
+  - id: b2
+    text: Presented segmentation findings to non-technical stakeholders and agreed three follow-up analyses in a single workshop.
+    terms:
+    - communication
+    - stakeholders
+    - segmentation
+    - presentation
+  - id: b3
+    text: Documented every data source and assumption in a shared handbook so the next student team could continue without
+      a handover meeting.
+    terms:
+    - documentation
+    - handover
+    - data governance
+  - id: b4
+    text: Built a small segmentation of 4,200 donors with k-means in scikit-learn and agreed the three groups worth a tailored
+      campaign with the trustees.
+    terms:
+    - clustering
+    - scikit-learn
+    - segmentation
+    - python
+- id: ex3
+  title: Mobile Software Engineer
+  org: Harbour Pay Ltd
+  dates: Jul 2023 – Aug 2024
+  location: Chennai, India
+  bullets:
+  - id: c1
+    text: Built payment-flow screens in Swift for a FinTech iOS app, with unit tests that cut regressions found in release
+      testing.
+    terms:
+    - swift
+    - ios
+    - mobile
+    - fintech
+    - unit testing
+  - id: c2
+    text: Integrated REST APIs and tracked crash reports, fixing the top three crash causes across two releases.
+    terms:
+    - rest api
+    - apis
+    - debugging
+    - monitoring
+  - id: c3
+    text: Wrote the offline-first data layer for the app with Core Data and background synchronisation, keeping records available
+      on weak connections.
+    terms:
+    - data persistence
+    - synchronisation
+    - mobile
+  - id: c4
+    text: Delivered eight reusable SwiftUI components that sped up the screens other engineers built across two concurrent
+      releases.
+    terms:
+    - swiftui
+    - component library
+    - software engineering
+- id: ex4
+  title: Research Assistant
+  org: University of Northfield, Department of Statistics
+  dates: Jun 2022 - Sep 2022
+  location: Northfield, UK
+  bullets:
+  - id: d1
+    text: Cleaned and merged three years of survey responses in R and wrote reproducible scripts so that the department could
+      regenerate every table in the final report.
+    terms:
+    - r
+    - data cleaning
+    - reproducibility
+    - reporting
+  - id: d2
+    text: Fitted mixed-effects models to repeated measurements and summarised the effect sizes in plain language for the supervising
+      professor.
+    terms:
+    - statistics
+    - modelling
+    - communication
+  - id: d3
+    text: Produced the department's weekly enrolment dashboard in Tableau from three source systems, replacing a spreadsheet
+      that took half a day to refresh.
+    terms:
+    - tableau
+    - dashboards
+    - reporting
+    - data visualisation
+projects:
+- id: p1
+  name: Customer churn prediction
+  stack: Python, scikit-learn, XGBoost
+  github: https://github.com/ada-lovelace-test/churn#readme
+  bullets:
+  - id: p1a
+    text: Built a churn classifier with scikit-learn and XGBoost on 7,043 customer records, comparing models with stratified
+      cross-validation and tuning the decision threshold for recall.
+    terms:
+    - machine learning
+    - classification
+    - scikit-learn
+    - xgboost
+    - model evaluation
+    - python
+  - id: p1b
+    text: Explained predictions with SHAP values and wrote up the three strongest churn drivers for a non-technical reader.
+    terms:
+    - explainability
+    - shap
+    - communication
+  - id: p1c
+    text: Packaged the final model behind a small FastAPI service with a pytest suite and a Docker image.
+    terms:
+    - fastapi
+    - docker
+    - pytest
+    - deployment
+  - id: p1d
+    text: Tracked every training run in MLflow so that the chosen model could be reproduced from a single commit and parameter
+      file.
+    terms:
+    - mlflow
+    - experiment tracking
+    - reproducibility
+- id: p2
+  name: Banking datathon
+  stack: Python, PyTorch, LSTM
+  award: 3rd place, national datathon
+  bullets:
+  - id: p2a
+    text: Built an LSTM forecaster in PyTorch for transaction volumes and benchmarked it against a seasonal baseline, with
+      a rolling-origin evaluation.
+    terms:
+    - pytorch
+    - lstm
+    - forecasting
+    - time series
+    - deep learning
+  - id: p2b
+    text: Presented the approach and its limits to a panel of industry judges in a ten-minute pitch.
+    terms:
+    - presentation
+    - communication
+    - stakeholders
+  - id: p2c
+    text: Versioned experiments with MLflow so the team could reproduce every leaderboard run.
+    terms:
+    - mlflow
+    - experiment tracking
+    - reproducibility
+  - id: p2d
+    text: Wrote the data-preparation module that turned raw transaction logs into weekly features, with unit tests for each
+      transformation.
+    terms:
+    - feature engineering
+    - data preparation
+    - unit testing
+    - python
+- id: p3
+  name: Agentic study buddy
+  stack: LangGraph, AWS Bedrock, MCP
+  github: https://github.com/ada-lovelace-test/study-buddy
+  bullets:
+  - id: p3a
+    text: Built a LangGraph study assistant that plans, calls tools over MCP and cites the lecture notes it retrieved with
+      RAG.
+    terms:
+    - langgraph
+    - mcp
+    - rag
+    - agentic
+    - llm
+    - tool calling
+  - id: p3b
+    text: Added an evaluation harness that replays twenty saved questions after every prompt change.
+    terms:
+    - evaluation
+    - llm evaluation
+    - regression testing
+- id: p4
+  name: Graph question answering proof of concept
+  stack: Python, PostgreSQL, Streamlit
+  github: null
+  bullets:
+  - id: p4a
+    text: Built a Streamlit proof of concept that answers questions over a PostgreSQL knowledge graph and shows the query
+      it ran.
+    terms:
+    - streamlit
+    - postgresql
+    - sql
+    - knowledge graph
+    - python
+- id: p5
+  name: Energy usage anomaly detector
+  stack: Python, scikit-learn, Isolation Forest
+  github: https://github.com/ada-lovelace-test/energy
+  bullets:
+  - id: p5a
+    text: Flagged unusual half-hourly meter readings with an Isolation Forest and tuned the contamination rate against labelled
+      faults.
+    terms:
+    - anomaly detection
+    - scikit-learn
+    - time series
+  - id: p5b
+    text: Wrote a short notebook that explains each flagged reading to a facilities manager in plain language.
+    terms:
+    - communication
+    - reporting
+    - stakeholders
+education:
+- degree: MSc Data Science
+  org: University of Northfield
+  dates: 2025 – 2026
+  details: Distinction-level dissertation on LLM agents for research data
+- degree: B.E. Electrical and Electronics Engineering
+  org: St. Joseph's College of Engineering
+  dates: Sep 2019 – Apr 2023
+  note: First Class with Distinction
+certifications:
+- AWS Academy Cloud Foundations, Nov 2025
+- Master's Prize for Applied Data Science, Mar 2026
+deny_terms:
+- kubernetes
+- terraform
+- dbt

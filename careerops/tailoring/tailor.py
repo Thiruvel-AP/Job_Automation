@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import shutil
@@ -19,10 +20,12 @@ from .faithfulness import check, deny_hits, numbers
 from .grounding import grounding_problems
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
-from .selection import MOST_RECENT_BULLETS, chunks, missing_keywords, select_cv, selected_ids
+from .selection import (JACCARD, ONE_PAGE, Layout, chunks, fill_order, layout_from, missing_keywords, select_cv,
+                        selected_ids)
+from .skills import CORE_LABEL, core_skills, cv_skills, dedupe_skills   # noqa: F401 — dedupe_skills is re-exported
 from .shapes import normalise_keywords, normalise_letter, normalise_profile, normalise_rephrase
 from .textnorm import normalise_json
-from .render import page_count, pdf_text, render_cv, render_letter
+from .render import CV2_MARGIN_PT, last_line_fills, page2_fill, page_count, pdf_text, render_cv, render_letter
 from .scorer import (Keyword, _contains, cap_keywords, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
                      norm_literal, norm_stem, score, taxonomy_keywords)
 
@@ -180,6 +183,13 @@ def _deny_list(fb: dict) -> str:
 
 
 # ---- 2a. rephrase: the model rewords bullets in batches, the guard decides what is kept
+def unused_result(bullet: dict) -> str:
+    """The bullet's optional `result:` when its text does not already say it, else ''. Never invented: it is only what
+    the user wrote in the fact bank."""
+    res = " ".join(str(bullet.get("result") or "").split())
+    return "" if not res or norm_literal(res).rstrip(".") in norm_literal(bullet["text"]) else res
+
+
 def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, cache: dict,
                       notes: list[str]) -> tuple[dict[str, str], dict]:
     """Ask for rewordings of the selected bullets that can carry a JD keyword their text lacks (missing_keywords), in
@@ -190,7 +200,7 @@ def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, c
     todo = []
     for bid in selected_ids(fb, sel):
         miss = tuple(missing_keywords(bidx[bid], kws))
-        if miss:
+        if miss or unused_result(bidx[bid]):          # a result the user supplied may be worked in, even with no keyword
             todo.append((bid, miss))
     fresh = [t for t in todo if t not in cache]
     stats = {"eligible": len(todo), "asked": len(fresh), "cached": len(todo) - len(fresh), "calls": 0,
@@ -198,9 +208,11 @@ def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, c
     system = P.REPHRASE_SYSTEM.replace("{deny}", _deny_list(fb))
     for batch in chunks(fresh, REPHRASE_BATCH):
         items = [{"id": bid, "text": bidx[bid]["text"], "terms": list(bidx[bid].get("terms", [])),
-                  "introduce": list(miss)} for bid, miss in batch]
+                  "introduce": list(miss), **({"result": unused_result(bidx[bid])} if unused_result(bidx[bid]) else {})}
+                 for bid, miss in batch]
         lines = "\n".join(f"- id: {i['id']}\n  TEXT: {i['text']}\n  TERMS: {', '.join(i['terms']) or '(none)'}\n"
-                          f"  MAY INTRODUCE: {', '.join(i['introduce'])}" for i in items)
+                          f"  MAY INTRODUCE: {', '.join(i['introduce']) or '(none)'}"
+                          + (f"\n  RESULT: {i['result']}" if i.get("result") else "") for i in items)
         stats["calls"] += 1
         try:
             out = _llm_json(llm, "rephrase_bullets", system, P.REPHRASE_USER.format(title=job["title"], bullets=lines),
@@ -228,7 +240,10 @@ def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword]) -> t
     warnings: list[str] = []
     for bid, new in proposed.items():
         b = bidx[bid]
-        c = check(new, b["text"], b.get("terms", []), deny, kws, vocabulary=vocab)
+        # the bullet's own `result:` (the user's measured outcome) is evidence for this bullet only: its numbers are not
+        # new numbers here, and no other bullet's result counts
+        c = check(new, (b["text"] + " " + str(b.get("result") or "")).strip(), b.get("terms", []), deny, kws,
+                  vocabulary=vocab)
         warnings.extend(f"{bid}: {w}" for w in c.warnings)
         if c.ok:
             accepted[bid] = new.strip()
@@ -342,8 +357,10 @@ def make_profile(job: dict, fb: dict, kws: list[Keyword], headline: str, llm,
 
 
 # ---- 2c. assemble and fit
-def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list[Keyword], headline: str = "") -> dict:
-    """The render context for a selection: canonical bullet text unless the guard accepted a rewording (`texts`)."""
+def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list[Keyword], headline: str = "",
+             skills: dict[str, list[str]] | None = None) -> dict:
+    """The render context for a selection: canonical bullet text unless the guard accepted a rewording (`texts`).
+    `skills` = the rows to show (`cv_skills`); default every row, `core` first."""
     bidx = bullet_index(fb)
 
     def text(bid: str) -> str:
@@ -354,31 +371,17 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
         ids = sel["experience"].get(e["id"]) or [e["bullets"][0]["id"]]
         experience.append({**e, "bullet_ids": list(ids), "bullets": [text(i) for i in ids]})
     by_id = {p["id"]: p for p in fb["projects"]}
-    projects = [{**by_id[p], "bullet_ids": [b["id"] for b in by_id[p]["bullets"]],
-                 "bullets": [text(b["id"]) for b in by_id[p]["bullets"]]} for p in sel["projects"] if p in by_id]
-    hit_terms = {norm_literal(w) for k in kws for w in k.members()}
-    skills = {g: sorted(items, key=lambda s: norm_literal(s) not in hit_terms)
-              for g, items in dedupe_skills(fb["skills"]).items()}
+    chosen = sel.get("project_bullets") or {}
+    projects = []
+    for p in sel["projects"]:
+        if p in by_id:
+            ids = list(chosen.get(p) or [b["id"] for b in by_id[p]["bullets"]])
+            projects.append({**by_id[p], "bullet_ids": ids, "bullets": [text(i) for i in ids]})
+    if skills is None:
+        skills = cv_skills(fb, kws)[0]
     return {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile,
             "skills": skills, "experience": experience, "projects": projects, "education": fb.get("education", []),
             "certifications": fb.get("certifications", [])}
-
-
-def dedupe_skills(skills: dict[str, list[str]]) -> dict[str, list[str]]:
-    """The skill groups without case-insensitive repeats, within a group and across groups: the first occurrence stays
-    ("Python" in Languages keeps it; "python" in Tools goes). A group left empty is dropped."""
-    seen: set[str] = set()
-    out: dict[str, list[str]] = {}
-    for group, items in skills.items():
-        kept = []
-        for s in items:
-            key = " ".join(str(s).split()).casefold()
-            if key not in seen:
-                seen.add(key)
-                kept.append(s)
-        if kept:
-            out[group] = kept
-    return out
 
 
 def letter_summary(letter: dict) -> str:
@@ -391,16 +394,21 @@ def letter_summary(letter: dict) -> str:
     return f"{letter.get('status')} ({why[0] if why else 'no reason recorded'})"
 
 
-def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
-    """Drop the least keyword-relevant bullet. An entry keeps its last bullet, and the most recent experience entry
-    keeps two until nothing else can go. False if nothing is left to drop."""
+def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE) -> bool:
+    """Drop the least keyword-relevant bullet. While anything else can go, the newest experience entry keeps
+    `layout.first[0]` bullets, the other entries `layout.other[0]` and a project `layout.project_bullets[0]` (one page:
+    2 / 1 / 1); then every entry may fall to its last bullet. False if nothing is left to drop."""
     terms = [[norm_literal(w) for w in k.members()] for k in kws]
     first = ctx["experience"][0] if ctx["experience"] else None
+    floor_proj = layout.project_bullets[0] if layout.project_bullets else 1
     for strict in (True, False):
         worst = None
         for sec in ("projects", "experience"):
             for e in ctx[sec]:
-                if len(e["bullets"]) <= (MOST_RECENT_BULLETS[0] if strict and e is first else 1):
+                floor = 1
+                if strict:
+                    floor = floor_proj if sec == "projects" else layout.first[0] if e is first else layout.other[0]
+                if len(e["bullets"]) <= max(1, floor):
                     continue
                 for i, b in enumerate(e["bullets"]):
                     s = sum(any(t in norm_literal(b) for t in group) for group in terms)
@@ -412,6 +420,84 @@ def _shrink(ctx: dict, kws: list[Keyword]) -> bool:
             e["bullet_ids"].pop(i)
             return True
     return False
+
+
+# ---- 2d. two pages: keep adding bullets until page 2 is full enough
+LEADING_PT = 13.2                                  # the 11pt body of cv2.tex.j2
+LINE_SHARE = LEADING_PT / (841.89 - 2 * CV2_MARGIN_PT)     # one text line as a share of the text area
+CHARS_PER_LINE = 92                                # a bullet line of the 11pt body, to guess how big a bullet is
+
+
+def _bullet_share(text: str) -> float:
+    """A guess of the share of a page's text area one bullet takes. It only sizes the batch to render; the rendered PDF
+    decides whether the page is full."""
+    return max(1, math.ceil(len(text) / CHARS_PER_LINE)) * LINE_SHARE
+
+
+def _used(pdf: Path, pages: int) -> float:
+    """Pages used so far: whole pages before the last, plus how far down the last one the text reaches."""
+    fills = last_line_fills(pdf)
+    return (pages - 1) + (fills[pages - 1] if len(fills) >= pages else 0.0)
+
+
+def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rerender: Callable[[], tuple[Path, int]],
+               min_fill: float, skip: set[str] | None = None) -> dict:
+    """Add bullets from `order` (selection.fill_order) until page 2 is at least `min_fill` full or the bullets run out,
+    never past two pages. Each round adds as many bullets as the size guess says it needs, renders, and if that tipped the
+    CV onto a third page takes them back, last first (those bullets are not tried again). `rerender()` renders `ctx` and
+    returns (pdf, pages). Returns {"added", "rejected_overflow", "renders", "reached"}."""
+    bidx = bullet_index(fb)
+    owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
+    present = {i for sec in ("experience", "projects") for e in ctx[sec] for i in e["bullet_ids"]}
+    queue = [b for b in order if b not in present and b not in (skip or set())]
+    stats = {"added": [], "rejected_overflow": [], "renders": 0, "reached": False}
+    target = 1.0 + min_fill
+
+    projects_by_id = {p["id"]: p for p in fb["projects"]}
+
+    def entry(bid: str) -> dict:
+        found = next((e for sec in ("experience", "projects") for e in ctx[sec] if e.get("id") == owner[bid]), None)
+        if found is None:                                 # a bullet of a project not on the CV yet brings its heading
+            found = {**projects_by_id[owner[bid]], "bullet_ids": [], "bullets": []}
+            ctx["projects"].append(found)
+        return found
+
+    pdf, pages = rerender()
+    stats["renders"] += 1
+    used = _used(pdf, pages) if pages <= 2 else 3.0
+    while queue and used < target and pages <= 2:
+        batch, est = [], used
+        for bid in list(queue):
+            share = _bullet_share(texts.get(bid) or bidx[bid]["text"])
+            if est + share > 2.0:
+                continue                                  # would not fit even by the guess: a shorter one may
+            batch.append(bid)
+            est += share
+            if est >= target:
+                break
+        if not batch:
+            break
+        queue = [q for q in queue if q not in batch]
+        for bid in batch:
+            e = entry(bid)
+            e["bullet_ids"].append(bid)
+            e["bullets"].append(texts.get(bid) or bidx[bid]["text"])
+        pdf, pages = rerender()
+        stats["renders"] += 1
+        while pages > 2 and batch:                        # overshot onto a third page: take the last one back
+            bid = batch.pop()
+            e = entry(bid)
+            e["bullet_ids"].pop()
+            e["bullets"].pop()
+            if not e["bullet_ids"]:                       # a project added only by this bullet goes with it
+                ctx["projects"][:] = [p for p in ctx["projects"] if p is not e]
+            stats["rejected_overflow"].append(bid)
+            pdf, pages = rerender()
+            stats["renders"] += 1
+        stats["added"] += batch
+        used = _used(pdf, pages) if pages <= 2 else 3.0
+    stats["reached"] = pages == 2 and page2_fill(pdf, pages) >= min_fill
+    return stats
 
 
 def _keyword_boost(kws: list[Keyword], fixable: set[str]) -> list[Keyword]:
@@ -631,6 +717,15 @@ def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_di
                  "notes": notes, "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
 
 
+def needs_result(fb: dict, ctx: dict) -> list[dict]:
+    """The bullets on this CV that have no `result:` in the fact bank, for the user to fill in (never invented):
+    [{"id", "entry", "text"}], in CV order."""
+    bidx = bullet_index(fb)
+    return [{"id": bid, "entry": e.get("org") or e.get("name"), "text": bidx[bid]["text"]}
+            for sec in ("experience", "projects") for e in ctx[sec] for bid in e["bullet_ids"]
+            if not str(bidx[bid].get("result") or "").strip()]
+
+
 def _names(fb: dict, settings) -> tuple[str, str]:
     """Final file stems for the CV and the letter: '<name> CV', '<name> Cover Letter' (files.name_style)."""
     style = settings["files"]["name_style"]
@@ -696,7 +791,8 @@ def _discard(path: Path, root: Path) -> None:
     shutil.rmtree(p, ignore_errors=True)
 
 
-def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None) -> dict[str, Any]:
+def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
+               one_page: bool = False) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
     earlier successful output folder exactly as it was."""
@@ -704,7 +800,7 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
     work = final.with_name(final.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
-        report = _tailor(job, fb, llm, settings, work, final, frozen)
+        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page)
         old = final.with_name(final.name + ".old")
         _discard(old, out_root)
         if final.exists():
@@ -728,41 +824,59 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
 
 
 def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
-            frozen: dict | None = None) -> dict[str, Any]:
+            frozen: dict | None = None, one_page: bool = False) -> dict[str, Any]:
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
     band = tuple(sc["band"])
     lo, hi = band
+    one_page = one_page or sc["max_pages"] <= 1                  # --one-page, or a settings file that asks for one page
+    max_pages = 1 if one_page else sc["max_pages"]
+    layout = ONE_PAGE if one_page else layout_from(settings)
     llm = RawRecorder(llm, out_dir / "llm_raw")                 # every raw model reply is kept for inspection
     usage_from = len(getattr(llm, "usage", []))
     family, tier, headline, preferred = role_prior(job, fb, settings)
     analysis_warnings: list[str] = []
     kws, hook, team = analyse(job, llm, settings, analysis_warnings, frozen)
     ceil, gaps = ceiling(fact_text(fb), kws)
+    skills, dropped_groups = cv_skills(fb, kws, None if one_page else sc["max_skill_groups"])
     cv_name, letter_name = _names(fb, settings)
     profile = make_profile(job, fb, kws, headline, llm)         # depends on the facts only, not on the selection
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
                               "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir),
-                              "analysis_warnings": analysis_warnings,
+                              "analysis_warnings": analysis_warnings, "one_page": one_page,
+                              "skills": {"core": core_skills(fb), "rows": list(skills), "dropped_groups": dropped_groups},
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")}}
 
+    jac = sc["bullet_dedupe_jaccard"]
     ranking, best, cache = kws, None, {}
     for attempt in range(1, sc["max_attempts"] + 1):
         llm.attempt = attempt                                    # names this attempt's raw replies (tailor_profile-2.json)
-        sel = select_cv(fb, ranking, preferred)
+        sel = select_cv(fb, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac)
         rephrase_notes: list[str] = []
         proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes)
         accepted, viol, warn = guard_rephrases(fb, proposed, kws)
         rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted))
-        ctx = _context(fb, sel, accepted, profile["text"], kws, headline)
-        pdf = render_cv(ctx, out_dir, cv_name)
+        ctx = _context(fb, sel, accepted, profile["text"], kws, headline, skills)
+
+        def rerender() -> tuple[Path, int]:
+            out = render_cv(ctx, out_dir, cv_name, one_page)
+            return out, page_count(out)
+
+        pdf, pages = rerender()
         shrinks = 0
-        while page_count(pdf) > sc["max_pages"] and _shrink(ctx, kws):
-            pdf = render_cv(ctx, out_dir, cv_name)
+        while pages > max_pages and _shrink(ctx, kws, layout):
+            pdf, pages = rerender()
             shrinks += 1
+        fill: dict = {"added": [], "rejected_overflow": [], "renders": 0, "reached": None}
+        # two pages: when nothing had to be shrunk away, keep adding bullets until page 2 is full enough (or none are left)
+        fill_on = not one_page and max_pages == 2 and shrinks == 0
+        order = fill_order(fb, ranking, sel, skills, jac) if fill_on else []
+        if fill_on:
+            fill = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"])
+            pdf, pages = rerender()
         s = score(pdf_text(pdf), kws)
 
         # Above the band: revert rephrasings (most keyword-dense first) until back in band.
@@ -775,11 +889,20 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                         if e["bullets"][i] != bidx[bid]["text"] and s.literal > hi:
                             e["bullets"][i] = bidx[bid]["text"]
                             reverted.append(bid)
-                            pdf = render_cv(ctx, out_dir, cv_name)
+                            pdf, pages = rerender()
                             s = score(pdf_text(pdf), kws)
+            if reverted and fill_on:                           # shorter wording may have left page 2 short again
+                more = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"],
+                                  skip=set(fill["rejected_overflow"]))
+                fill = {"added": fill["added"] + more["added"],
+                        "rejected_overflow": fill["rejected_overflow"] + more["rejected_overflow"],
+                        "renders": fill["renders"] + more["renders"], "reached": more["reached"]}
+                pdf, pages = rerender()
+                s = score(pdf_text(pdf), kws)
 
         rec = {"attempt": attempt, "score": s.literal, "score_stemmed": s.stemmed, "band": in_band(s.literal, band),
-               "pages": page_count(pdf), "shrinks": shrinks, "reverted": reverted,
+               "pages": pages, "page2_fill": page2_fill(pdf, pages), "fill": fill, "shrinks": shrinks,
+               "reverted": reverted,
                "violations": profile["violations"] + viol, "warnings": profile["warnings"] + rephrase_notes + warn,
                "wording_misses": s.wording_misses, "misses": s.misses, "rephrase": rstats,
                "proposal": {"selection": sel, "rephrase": proposed, "profile": profile["text"]},
@@ -794,20 +917,24 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         # attempt picks the bullets that carry them. Selection is deterministic; an unchanged one would be wasted quota.
         fixable = {m for m in s.wording_misses + s.misses if m not in gaps}
         ranking = _keyword_boost(ranking, fixable)
-        if select_cv(fb, ranking, preferred) == sel:
+        if select_cv(fb, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac) == sel:
             break
 
     rec, ctx = best
-    pdf = render_cv(ctx, out_dir, cv_name)                      # re-render the chosen attempt as the final file
+    pdf = render_cv(ctx, out_dir, cv_name, one_page)            # re-render the chosen attempt as the final file
     final_score = score(pdf_text(pdf), kws)
+    cv_pages = page_count(pdf)
+    fill_final = page2_fill(pdf, cv_pages)
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
     letter_pdf, letter = _make_letter(job, fb, kws, hook, letter_evidence(fb, kws, chosen_ids), llm, settings, out_dir,
                                       letter_name, team, required_gaps(gaps, kws))
     report.update({
         "final": {"score": final_score.literal, "score_stemmed": final_score.stemmed,
-                  "band": in_band(final_score.literal, band), "pages": page_count(pdf),
+                  "band": in_band(final_score.literal, band), "pages": cv_pages, "page2_fill": fill_final,
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
+        "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"],
+        "needs_result": needs_result(fb, ctx),
         "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"],
         "letter": letter, "llm_usage": usage_since(llm, usage_from),
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name) if letter_pdf else None,

@@ -20,7 +20,7 @@ import yaml
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
 from ..tailoring.queue import order
-from ..tailoring.render import page_count, pdf_text, render_cv
+from ..tailoring.render import page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
 from ..tailoring.tailor import FALLBACK_MARK, regenerate_letter as _regenerate_letter
 
@@ -61,13 +61,17 @@ def summary(job, rep: dict) -> str:
         f"{job['url']}",
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})",
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
-        f"| band: {f['band']} | pages {f['pages']} | attempts {len(rep['attempts'])}",
+        f"| band: {f['band']} | pages {f['pages']}"
+        + (f" (page 2 {f['page2_fill']:.0%} full)" if f.get("page2_fill") else "") + f" | attempts {len(rep['attempts'])}",
         f"Letter score {rep['letter']['score']:.0%}" + (f" | letter issues: {rep['letter']['problems']}" if rep['letter']['problems'] else ""),
     ]
     if letter_status(rep) == "fallback":
         lines.append("LETTER IS A FALLBACK — regenerate (l) before approving")
     if flags:
         lines.append("FLAGS: " + " | ".join(flags))
+    if rep.get("needs_result"):
+        lines.append(f"Needs a result (yours to supply in fact_bank.yaml, never invented): "
+                     f"{', '.join(n['id'] for n in rep['needs_result'])}")
     if rep["genuine_gaps"]:
         lines.append("Genuine gaps (no evidence, left out): " + ", ".join(rep["genuine_gaps"][:25]))
     if f["wording_misses"]:
@@ -150,9 +154,13 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
         _log(prefs, {"kind": "edit_pair", "job_id": job["id"], "bullet_id": "profile", "source": fb["profile_facts"],
                      "keywords": rep["keywords"], "chosen": edited["profile"].strip(), "rejected": ctx["profile"]})
         ctx["profile"] = edited["profile"].strip()
-    pdf = render_cv(ctx, Path(rep["out_dir"]), Path(rep["cv_pdf"]).stem)      # keep the CV's final file name
+    pdf = render_cv(ctx, Path(rep["out_dir"]), Path(rep["cv_pdf"]).stem,     # keep the CV's final file name and layout
+                    bool(rep.get("one_page")))
     s = score(pdf_text(pdf), kws)
-    rep["final"].update({"score": s.literal, "score_stemmed": s.stemmed, "pages": page_count(pdf), "edited": True})
+    pages = page_count(pdf)
+    rep["final"].update({"score": s.literal, "score_stemmed": s.stemmed, "pages": pages,
+                         "page2_fill": page2_fill(pdf, pages), "edited": True})
+    rep["cv_pages"], rep["page2_fill"] = pages, rep["final"]["page2_fill"]
     (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     db.update_job(job["id"], score=s.literal, score_stemmed=s.stemmed)
     return warnings

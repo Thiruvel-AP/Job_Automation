@@ -114,6 +114,22 @@ def ollama_checks(prov: dict) -> list[tuple[str, bool, str]]:
                    f"{want_ctx}` in config/ollama/Modelfile, then: {create}")]
 
 
+def core_skill_checks(path: Path) -> list[tuple[str, bool, str]]:
+    """Doctor lines for `skills.core` in the fact bank (read only): one failing line per core skill that is on
+    deny_terms or that no bullet, term or other skill row mentions; one passing line when all are fine."""
+    from .config import load_yaml
+    from .tailoring.skills import core_skill_problems, core_skills
+
+    if not path.exists():
+        return [("core skills", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    problems = core_skill_problems(fb)
+    if problems:
+        return [(p, False, "fix skills.core, deny_terms or the evidence in fact_bank.yaml (the pipeline never edits it)")
+                for p in problems]
+    return [(f"core skills ({len(core_skills(fb))}) all evidenced and none denied", True, "")]
+
+
 def doctor(settings) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs."""
     checks: list[tuple[str, bool, str]] = []
@@ -136,6 +152,7 @@ def doctor(settings) -> list[tuple[str, bool, str]]:
             checks.append((f"{prov['name']} key ({env})", bool(os.environ.get(env)), f"add {env}=... to .env"))
         else:
             checks += ollama_checks(prov)
+    checks += core_skill_checks(settings.path("fact_bank"))
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

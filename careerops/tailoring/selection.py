@@ -4,23 +4,63 @@ selection is made here and the model is only asked to reword (rephrase batches) 
   * bullets are picked greedily by marginal gain: each step takes the bullet whose keywords add the most weight that no
     selected bullet and no skill already covers (a bullet repeating what is covered adds nothing, however many keywords it
     has); ties go to the more recent entry, then to the bullet with more weighted overlap
-  * the most recent experience entry keeps 2-4 bullets, every other entry 1-2; an entry stops early when nothing is left
-    to gain, but never drops below its minimum
-  * exactly 2 projects, picked the same way (a project's gain is the union of its bullets); the role family's preferred
+  * a bullet whose words overlap an already selected bullet too much (token Jaccard >= `jaccard`, 0.6) is never added
+  * how many bullets an entry gets is a `Layout`: TWO_PAGE (newest entry 4-5, the others 3-4, 3 projects with 2-3 bullets
+    each) or ONE_PAGE (newest 2-4, the others 1-2, exactly 2 projects with all their bullets). An entry stops early when
+    nothing is left to gain, but never drops below its minimum (an entry with fewer bullets shows them all)
+  * projects are picked the same way (a project's gain is the union of its bullets); the role family's preferred
     projects only break exact ties
-  * the shrink loop in tailor.py then drops the least relevant bullets until the CV fits scoring.max_pages
+  * `fill_order` lists the bullets still unused, best first, for the two-page loop that keeps adding until page 2 is full
+  * the shrink loop in tailor.py drops the least relevant bullets when the CV is over the page limit
 """
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
 from typing import Iterator, Sequence, TypeVar
 
 from .budget import bullet_scores, rank_projects
 from .scorer import Keyword, _contains, norm_literal, norm_stem
 
-MOST_RECENT_BULLETS = (2, 4)        # (min, max) bullets of the first (most recent) experience entry
-OTHER_BULLETS = (1, 2)              # (min, max) bullets of every other experience entry
+MOST_RECENT_BULLETS = (2, 4)        # (min, max) bullets of the first (most recent) experience entry, one-page layout
+OTHER_BULLETS = (1, 2)              # (min, max) bullets of every other experience entry, one-page layout
 PROJECTS = 2
+JACCARD = 0.6
 T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class Layout:
+    """How many bullets and projects a CV holds. `project_bullets` None = every bullet of a chosen project."""
+    first: tuple[int, int]
+    other: tuple[int, int]
+    projects: int
+    project_bullets: tuple[int, int] | None = None
+
+
+ONE_PAGE = Layout(MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS, None)
+TWO_PAGE = Layout((4, 5), (3, 4), 3, (2, 3))
+
+
+def layout_from(settings) -> Layout:
+    """The two-page layout from settings (scoring.cv_bullets / cv_projects / cv_project_bullets)."""
+    sc = settings["scoring"]
+    cb = sc["cv_bullets"]
+    return Layout(tuple(cb["most_recent"]), tuple(cb["other"]), int(sc["cv_projects"]), tuple(sc["cv_project_bullets"]))
+
+
+def tokens(text: str) -> frozenset[str]:
+    return frozenset(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def jaccard(a: str, b: str) -> float:
+    ta, tb = tokens(a), tokens(b)
+    return len(ta & tb) / len(ta | tb) if ta | tb else 0.0
+
+
+def near_duplicate(text: str, chosen: Sequence[str], limit: float = JACCARD) -> bool:
+    """True if `text` has token Jaccard similarity >= `limit` with any text in `chosen`."""
+    return any(jaccard(text, c) >= limit for c in chosen)
 
 
 def _hits(text: str, kws: list[Keyword]) -> frozenset[int]:
@@ -36,63 +76,142 @@ def bullet_hits(fb: dict, kws: list[Keyword]) -> dict[str, frozenset[int]]:
             for sec in ("experience", "projects") for e in fb.get(sec, []) for b in e["bullets"]}
 
 
-def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None) -> dict:
-    """{"experience": {entry id: [bullet ids, in the order picked]}, "projects": [project ids, in the order picked]}.
-    Every experience entry is listed (a CV shows the whole work history); `fb["experience"]` is newest first."""
-    sc = bullet_scores(fb, kws)
-    hits = bullet_hits(fb, kws)
-    weight = [k.weight for k in kws]
-    skills = " ".join(s for items in (fb.get("skills") or {}).values() for s in items)
-    covered = set(_hits(skills, kws))                       # the whole skills section is always on the CV
+def skills_text(skills: dict | None) -> str:
+    return " ".join(s for items in (skills or {}).values() for s in items)
 
-    def gain(ids: Sequence[str]) -> float:
-        new = set().union(*(hits[i] for i in ids)) - covered if ids else set()
-        return sum(weight[i] for i in new)
 
+class _Picker:
+    """The state shared by selection and fill: what the keywords, skills and chosen bullets already cover."""
+
+    def __init__(self, fb: dict, kws: list[Keyword], skills: dict | None, jaccard_limit: float):
+        self.fb, self.kws, self.limit = fb, kws, jaccard_limit
+        self.sc = bullet_scores(fb, kws)
+        self.hits = bullet_hits(fb, kws)
+        self.weight = [k.weight for k in kws]
+        self.text = {b["id"]: b["text"] for sec in ("experience", "projects") for e in fb.get(sec, []) for b in e["bullets"]}
+        self.order = {b: i for i, b in enumerate(self.sc)}               # fact-bank order: the last tie-break
+        self.covered = set(_hits(skills_text(skills), kws))              # the skills section is always on the CV
+        self.chosen: list[str] = []
+
+    def gain(self, ids: Sequence[str]) -> float:
+        new = set().union(*(self.hits[i] for i in ids)) - self.covered if ids else set()
+        return sum(self.weight[i] for i in new)
+
+    def dup(self, bid: str) -> bool:
+        return near_duplicate(self.text[bid], [self.text[c] for c in self.chosen], self.limit)
+
+    def take(self, bid: str) -> None:
+        self.chosen.append(bid)
+        self.covered |= self.hits[bid]
+
+
+def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, skills: dict | None = None,
+              layout: Layout = ONE_PAGE, jaccard_limit: float = JACCARD) -> dict:
+    """{"experience": {entry id: [bullet ids, in the order picked]}, "projects": [project ids, in the order picked],
+    "project_bullets": {project id: [bullet ids]}}. Every experience entry is listed (a CV shows the whole work
+    history); `fb["experience"]` is newest first. `skills` is the skills section the CV will show (default: the fact
+    bank's own): its keywords need no bullet."""
+    skills = fb.get("skills") if skills is None else skills
+    pk = _Picker(fb, kws, skills, jaccard_limit)
     entries = [(n, e["id"], [b["id"] for b in e["bullets"]]) for n, e in enumerate(fb["experience"])]
     picked: dict[str, list[str]] = {eid: [] for _, eid, _ in entries}
-    bounds = {eid: (MOST_RECENT_BULLETS if n == 0 else OTHER_BULLETS) for n, eid, _ in entries}
-    order = {b: i for i, b in enumerate(sc)}                 # fact-bank order: the last tie-break
+    bounds = {eid: (layout.first if n == 0 else layout.other) for n, eid, _ in entries}
 
     def best(pool: list[tuple[int, str, str]]) -> tuple[int, str, str]:
         # most gain; then the more recent entry; then more weighted overlap; then fact-bank order
-        return min(pool, key=lambda c: (-gain([c[2]]), c[0], -sc[c[2]], order[c[2]]))
+        return min(pool, key=lambda c: (-pk.gain([c[2]]), c[0], -pk.sc[c[2]], pk.order[c[2]]))
 
     def pool() -> list[tuple[int, str, str]]:
         return [(n, eid, b) for n, eid, ids in entries for b in ids
-                if b not in picked[eid] and len(picked[eid]) < bounds[eid][1]]
+                if b not in picked[eid] and len(picked[eid]) < bounds[eid][1] and not pk.dup(b)]
 
     while (cand := pool()):                                  # 1. take bullets while they still add something
         n, eid, b = best(cand)
-        if gain([b]) <= 0:
+        if pk.gain([b]) <= 0:
             break
         picked[eid].append(b)
-        covered |= hits[b]
+        pk.take(b)
     for n, eid, ids in entries:                              # 2. an entry below its minimum is topped up (gain or not)
         while len(picked[eid]) < max(1, bounds[eid][0]):
-            rest = [(n, eid, b) for b in ids if b not in picked[eid]]
+            rest = [(n, eid, b) for b in ids if b not in picked[eid] and not pk.dup(b)]
             if not rest:
                 break
             _, _, b = best(rest)
             picked[eid].append(b)
-            covered |= hits[b]
+            pk.take(b)
+        if not picked[eid] and ids:                          # a CV lists every job: even a lone near-duplicate stays
+            picked[eid].append(ids[0])
+            pk.take(ids[0])
 
     ranked = rank_projects(fb, kws, preferred)               # the old order: best bullet, sum, preferred, fact bank
     rank = {p: i for i, p in enumerate(ranked)}
     own = {p["id"]: [b["id"] for b in p["bullets"]] for p in fb.get("projects", [])}
     projects: list[str] = []
-    while len(projects) < min(PROJECTS, len(own)):
-        pid = min((p for p in own if p not in projects), key=lambda p: (-gain(own[p]), rank[p]))
+    while len(projects) < min(layout.projects, len(own)):
+        pid = min((p for p in own if p not in projects), key=lambda p: (-pk.gain(own[p]), rank[p]))
         projects.append(pid)
-        covered |= set().union(*(hits[b] for b in own[pid])) if own[pid] else set()
-    return {"experience": picked, "projects": projects}
+        pk.covered |= set().union(*(pk.hits[b] for b in own[pid])) if own[pid] else set()
+    # bullets of each project: the whole project (one page), or 2-3 of them by marginal gain (two pages)
+    project_bullets: dict[str, list[str]] = {}
+    pk2 = _Picker(fb, kws, skills, jaccard_limit)
+    pk2.chosen = [b for ids in picked.values() for b in ids]
+    pk2.covered |= set().union(*(pk2.hits[b] for b in pk2.chosen)) if pk2.chosen else set()
+    for pid in projects:
+        if layout.project_bullets is None:
+            project_bullets[pid] = list(own[pid])
+            continue
+        lo, hi = layout.project_bullets
+        got: list[str] = []
+        left = [b for b in own[pid]]
+        while left and len(got) < hi:
+            cand = [b for b in left if not pk2.dup(b)]
+            if not cand:
+                break
+            b = min(cand, key=lambda x: (-pk2.gain([x]), -pk2.sc[x], pk2.order[x]))
+            if len(got) >= lo and pk2.gain([b]) <= 0:
+                break
+            got.append(b)
+            left = [x for x in left if x != b]
+            pk2.take(b)
+        if not got and own[pid]:
+            got.append(own[pid][0])
+            pk2.take(own[pid][0])
+        project_bullets[pid] = got
+    return {"experience": picked, "projects": projects, "project_bullets": project_bullets}
+
+
+def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = None,
+               jaccard_limit: float = JACCARD) -> list[str]:
+    """The bullets a selection has not used, in the order the two-page loop should add them while page 2 is not full:
+    experience bullets of any entry, the remaining bullets of the chosen projects and, once those are used, bullets of
+    further projects; each step the one adding the most keyword weight nobody covers yet, then the more recent entry
+    (experience, chosen projects, other projects), more weighted overlap, fact-bank order. A bullet that nearly repeats a chosen one (or an earlier fill) is left out for good."""
+    skills = fb.get("skills") if skills is None else skills
+    pk = _Picker(fb, kws, skills, jaccard_limit)
+    used = selected_ids(fb, sel)
+    for b in used:
+        pk.take(b)
+    pool = [(n, 0, b["id"]) for n, e in enumerate(fb["experience"]) for b in e["bullets"] if b["id"] not in used]
+    pool += [(n, 1 if p["id"] in sel["projects"] else 2, b["id"]) for n, p in enumerate(fb.get("projects", []))
+             for b in p["bullets"] if b["id"] not in used]       # unchosen projects last: they bring their own heading
+    out: list[str] = []
+    while pool:
+        pool = [c for c in pool if not pk.dup(c[2])]
+        if not pool:
+            break
+        n, sec, b = min(pool, key=lambda c: (-pk.gain([c[2]]), c[1], c[0], -pk.sc[c[2]], pk.order[c[2]]))
+        pool = [c for c in pool if c[2] != b]
+        out.append(b)
+        pk.take(b)
+    return out
 
 
 def selected_ids(fb: dict, sel: dict) -> list[str]:
     """Bullet ids of a selection in CV order: experience entries as listed, then each chosen project's bullets."""
     own = {p["id"]: [b["id"] for b in p["bullets"]] for p in fb["projects"]}
+    chosen = sel.get("project_bullets") or {}
     return [i for e in fb["experience"] for i in sel["experience"].get(e["id"], [])] + \
-           [i for p in sel["projects"] for i in own.get(p, [])]
+           [i for p in sel["projects"] for i in chosen.get(p, own.get(p, []))]
 
 
 def missing_keywords(bullet: dict, kws: list[Keyword]) -> list[str]:

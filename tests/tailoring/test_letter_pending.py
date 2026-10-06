@@ -19,7 +19,7 @@ def _no_letter(ctx):
 def test_the_cv_is_built_and_the_letter_is_pending_not_a_fallback(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _no_letter})
     rep = tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert Path(rep["cv_pdf"]).is_file() and rep["final"]["pages"] == 1
+    assert Path(rep["cv_pdf"]).is_file() and rep["final"]["pages"] <= settings["scoring"]["max_pages"]
     assert rep["letter"]["status"] == "pending" and rep["letter"]["reason"] == WHY
     assert rep["letter_pdf"] is None and rep["letter"]["pages"] == 0 and rep["letter"]["score"] is None
     assert not list(Path(rep["out_dir"]).glob("*Cover Letter*"))                  # no letter file of any kind

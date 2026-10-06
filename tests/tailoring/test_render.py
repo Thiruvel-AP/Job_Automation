@@ -89,11 +89,11 @@ def test_letter_header_shows_address_and_falls_back_to_location(fb_fixture, tmp_
 
 
 # ---------------------------------------------------------------- the real loop: shrink to one page
-def test_scoring_max_pages_is_one(settings):
-    assert settings["scoring"]["max_pages"] == 1
+def test_scoring_max_pages_is_two_by_default(settings):
+    assert settings["scoring"]["max_pages"] == 2        # one page only with `--one-page` (tests/tailoring/test_two_page.py)
 
 
-def test_fixture_cv_overflows_then_the_shrink_loop_brings_it_to_one_page(one_page_run):
+def test_fixture_cv_overflows_then_the_shrink_loop_brings_it_to_one_page(one_page_run):      # --one-page
     rep, _ = one_page_run
     assert max(a["shrinks"] for a in rep["attempts"]) >= 1, "fixture is too short to exercise the shrink loop"
     assert rep["final"]["pages"] == 1 and page_count(Path(rep["cv_pdf"])) == 1

@@ -1,0 +1,100 @@
+\documentclass[a4paper,11pt]{article}
+\#{ Two-page layout (default since 2026-10-06): the look of cv.tex.j2 at 11pt Carlito with 0.6in margins and bold uppercase
+   navy headings with a rule. Order: Profile, Skills, Experience, Projects, Education, Certifications. The margin below is
+   repeated in render.CV2_MARGIN_PT, which turns a PDF's last text line into the page-2 fill: change both together.
+   Only fact-bank values are inserted; optional fields are read with .get, so a missing one is skipped, never an error. }
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{needspace}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+\titleformat{\section}{\color{headernavy}\fontsize{12}{14.4}\selectfont\bfseries}{}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+\titlespacing{\section}{0pt}{9pt}{4pt}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=1.2em, partopsep=0pt, parsep=1pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+
+% entry heading: org (left) dates (right) / role (left) location (right); never alone at the foot of a page
+\newcommand{\entry}[4]{\needspace{4\baselineskip}\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
+
+\begin{document}
+\fontsize{11}{13.2}\selectfont
+
+% ---------------- HEADER ----------------
+\begin{center}
+  {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
+  \VAR{id.location|e} \,$|$\, \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \,$|$\, \href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\\[1pt]
+  \BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\VAR{id.links[k]|urlshow|e}}\BLOCK{if not loop.last} \,$|$\, \BLOCK{endif}\BLOCK{endfor}\BLOCK{if id.get('status_line')}\\[1pt]
+  \VAR{id.status_line|map('e')|join(' \\,$|$\\, ')}\BLOCK{endif}
+
+\end{center}
+
+% ---------------- PROFILE ----------------
+\section{Profile}
+\VAR{profile|e}
+
+% ---------------- SKILLS ----------------
+\section{Skills}
+\BLOCK{for group, items in skills.items()}
+\textbf{\VAR{group|e}:} \VAR{items|map('e')|join(', ')}\BLOCK{if not loop.last}\\[2pt]\BLOCK{endif}
+
+\BLOCK{endfor}
+
+% ---------------- EXPERIENCE ----------------
+\section{Experience}
+\BLOCK{for e in experience}
+\BLOCK{if not loop.first}
+\vspace{4pt}
+\BLOCK{endif}
+\entry{\VAR{e.org|e}}{\VAR{e.dates|e}}{\VAR{e.title|e}}{\VAR{e.get('location', '')|e}}
+\begin{itemize}
+\BLOCK{for b in e.bullets}
+  \item \VAR{b|e}
+\BLOCK{endfor}
+\end{itemize}
+\BLOCK{endfor}
+
+% ---------------- PROJECTS ----------------
+\section{Projects}
+\BLOCK{for p in projects}
+\BLOCK{if not loop.first}
+\vspace{3pt}
+\BLOCK{endif}
+\needspace{3\baselineskip}\noindent\textbf{\VAR{p.name|e}}\BLOCK{if p.get('stack')} -- \textit{\VAR{p.stack|e}}\BLOCK{endif} \hfill \BLOCK{if p.get('award')}\textit{\VAR{p.award|e}}\BLOCK{elif p.get('github')}\href{\VAR{p.github|urlesc}}{GitHub}\BLOCK{endif}
+
+\begin{itemize}
+\BLOCK{for b in p.bullets}
+  \item \VAR{b|e}
+\BLOCK{endfor}
+\end{itemize}
+\BLOCK{endfor}
+
+% ---------------- EDUCATION ----------------
+\section{Education}
+\BLOCK{for ed in education}
+\BLOCK{if not loop.first}
+\vspace{3pt}
+\BLOCK{endif}
+\textbf{\VAR{ed.degree|e}}, \VAR{ed.org|e} \hfill \textbf{\VAR{ed.dates|e}}\BLOCK{if ed.get('details')}\\ \textit{\VAR{ed.details|e}}\BLOCK{endif}\BLOCK{if ed.get('grade') or ed.get('note')}\\ \textit{\VAR{(ed.get('grade') or ed.get('note'))|e}}\BLOCK{endif}\par
+\BLOCK{endfor}
+\BLOCK{if certifications}
+
+% ---------------- CERTIFICATIONS ----------------
+\section{Certifications \& Awards}
+\VAR{certifications|map('e')|join(' \\,$|$\\, ')}
+\BLOCK{endif}
+
+\end{document}

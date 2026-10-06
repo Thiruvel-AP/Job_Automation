@@ -34,7 +34,9 @@ Rules:
 - Write each MAY INTRODUCE keyword into the sentence, spelt exactly as given, where it fits naturally. Use no other tool,
   skill or keyword than the ones in that bullet's TEXT or TERMS.
 - Keep every number exactly as written and add none. Add no result, client, employer, sector or outcome the TEXT does not
-  state; end with a result only if the TEXT states it.
+  state; end with a result only if the TEXT states it or the bullet has a RESULT line.
+- A RESULT line is a measured outcome the candidate supplied: you may end the sentence with it (at most 35 words then),
+  copying its numbers exactly. Use no number that is not in TEXT or RESULT.
 - If a keyword does not fit naturally, return the bullet's TEXT unchanged.
 - Never mention: {deny}."""
 

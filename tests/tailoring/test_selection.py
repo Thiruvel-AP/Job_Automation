@@ -9,7 +9,9 @@ import pytest
 from careerops.tailoring import budget, selection, tailor
 from careerops.tailoring.render import page_count, pdf_text
 from careerops.tailoring.scorer import Keyword
-from careerops.tailoring.selection import MOST_RECENT_BULLETS, OTHER_BULLETS, missing_keywords, select_cv, selected_ids
+from careerops.tailoring.selection import (MOST_RECENT_BULLETS, OTHER_BULLETS, layout_from, missing_keywords, select_cv,
+                                           selected_ids)
+from careerops.tailoring.skills import cv_skills
 
 
 def _kws(*terms, weight=2.0):
@@ -111,8 +113,10 @@ def test_the_model_is_never_asked_to_select_and_the_cv_follows_the_code_selectio
     assert "tailor_cv" not in [s["task"] for s in llm.sent]
     kws = [tailor.Keyword(**k) for k in rep["keywords"]]
     first = rep["attempts"][0]
-    assert first["proposal"]["selection"] == select_cv(fb_fixture, kws)    # the family's project ids are not in this bank
-    assert len(rep["context"]["projects"]) == 2
+    assert first["proposal"]["selection"] == select_cv(                    # the family's project ids are not in this bank
+        fb_fixture, kws, skills=cv_skills(fb_fixture, kws, settings["scoring"]["max_skill_groups"])[0],
+        layout=layout_from(settings), jaccard_limit=settings["scoring"]["bullet_dedupe_jaccard"])
+    assert len(first["proposal"]["selection"]["projects"]) == settings["scoring"]["cv_projects"] == 3
     saved = json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))
     assert saved["attempts"][0]["selection"] == first["selection"]
 
@@ -153,8 +157,8 @@ def test_a_below_band_attempt_ranks_the_next_one_with_the_missed_keywords_counte
     _below_band(settings)
     seen = []
     real = tailor.select_cv
-    monkeypatch.setattr(tailor, "select_cv", lambda fb, kws, pref=None: seen.append({k.term: k.weight for k in kws})
-                        or real(fb, kws, pref))
+    monkeypatch.setattr(tailor, "select_cv", lambda fb, kws, pref=None, **kw: seen.append({k.term: k.weight for k in kws})
+                        or real(fb, kws, pref, **kw))
     rep = tailor.tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"))
     first = rep["attempts"][0]
     assert first["band"] == "below" and first["misses"]
@@ -178,9 +182,9 @@ def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(s
     _below_band(settings)
     real, calls, first_kws = tailor.select_cv, [], []
 
-    def rotating(fb, kws, preferred=None):                 # a different selection each time, as a real boost may give
+    def rotating(fb, kws, preferred=None, **kw):           # a different selection each time, as a real boost may give
         first_kws.append(kws)
-        sel = real(fb, first_kws[0], preferred)             # always from the first attempt's weights: same bullets
+        sel = real(fb, first_kws[0], preferred, **kw)       # always from the first attempt's weights: same bullets
         calls.append(1)
         if len(calls) % 2:                                  # same bullets, other project order: nothing new to reword
             sel["projects"] = sel["projects"][::-1]
