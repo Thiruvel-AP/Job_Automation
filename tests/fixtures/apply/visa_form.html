@@ -1,0 +1,25 @@
+<!doctype html>
+<html><body>
+<h1>Apply: Data Scientist</h1>
+<form id="application">
+  <label for="first_name">First Name *</label><input id="first_name" name="first_name" required>
+  <label for="free">Please describe your visa or immigration status</label><textarea id="free" name="visa_status"></textarea>
+  <label for="future">Will you now or in the future require visa sponsorship? *</label>
+  <select id="future" name="future"><option value=""></option><option>Yes</option><option>No</option></select>
+  <label for="now">Do you currently require sponsorship to work in the UK?</label>
+  <select id="now" name="now"><option value=""></option><option>Yes</option><option>No</option></select>
+  <fieldset id="rtw_group"><legend>Do you currently have the right to work in the UK?</legend>
+    <label><input type="radio" name="rtw" value="yes"> Yes</label>
+    <label><input type="radio" name="rtw" value="no"> No</label></fieldset>
+  <fieldset id="future_group"><legend>Will you require sponsorship in the future?</legend>
+    <label><input type="radio" name="fut_radio" value="yes"> Yes</label>
+    <label><input type="radio" name="fut_radio" value="no"> No</label></fieldset>
+  <label for="unclear">Do you have the right to work in the UK?</label>
+  <select id="unclear" name="unclear"><option value=""></option><option>Yes</option><option>No</option></select>
+  <label for="share">Right to work share code</label><input id="share" name="share_code">
+  <label for="salary">Salary expectations</label><input id="salary" name="salary">
+  <label for="nat">Nationality</label><input id="nat" name="nationality">
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); document.body.dataset.submitted = '1'; });</script>
+</body></html>

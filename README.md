@@ -78,7 +78,25 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
    (`job-boards.greenhouse.io/<slug>`, `jobs.lever.co/<slug>`, `jobs.ashbyhq.com/<slug>`). Your 80-company sponsor
    tracker is the obvious seed list.
 3. **Gates** — title/seniority/location regexes and the JD rules (no-sponsorship, SRE, line management, clearance).
-4. **Applicant basics** — `config/profile/applicant.yaml`. Visa, salary, EEO and "why us" are deliberately never filled.
+4. **Applicant basics** — `config/profile/applicant.yaml`. Salary, EEO and "why us" are deliberately never filled; visa
+   questions are answered from the `visa:` block (below), only when they are recognisable.
+
+   ```yaml
+   visa:
+     summary: >-            # free-text visa/right-to-work boxes get this verbatim
+       I am on the UK Graduate visa and won't need sponsorship for 2 years; afterwards I'd welcome Skilled Worker sponsorship.
+     answers:               # Yes/No and dropdown questions, by type; quote them ("Yes"/"No"), or write "ask" to leave one to you
+       sponsorship_now: "No"          # "require sponsorship?" / "... currently ..."
+       sponsorship_future: "Yes"      # "now or in the future" / "in the future"
+       right_to_work_now: "Yes"       # "currently/now have the right to work"
+   ```
+
+   A field is a visa field when its label mentions *right to work, visa, sponsor, immigration, work permit, work
+   authorisation* or *share code*. Every one is outlined magenta and printed as `CHECK VISA ANSWER: <question> -> <value or
+   EMPTY>`. A question whose type is unclear (e.g. "Do you have the right to work?" with no *now/currently*), a value of
+   `ask` and any share-code box are left empty for you. Every other `never_fill` label stays empty and orange. Nothing is
+   submitted. `careerops doctor` fails on an `@example.com/.org/.net` email, a `+44 0…` phone and a `location` with a UK
+   postcode.
 
 ## Daily use
 

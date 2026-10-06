@@ -199,4 +199,5 @@ def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(s
     first, later = rep["attempts"][0]["rephrase"], rep["attempts"][1:]
     assert first["asked"] == first["eligible"] > 0 and first["calls"] >= 1
     assert all(a["rephrase"]["asked"] == 0 and a["rephrase"]["cached"] == a["rephrase"]["eligible"] for a in later)
-    assert tasks.count("rephrase_bullets") == first["calls"]               # nothing was asked twice
+    wording_calls = sum((a.get("wording") or {}).get("calls", 0) for a in rep["attempts"])   # the wording pass shares the task name
+    assert tasks.count("rephrase_bullets") == first["calls"] + wording_calls                # nothing was asked twice

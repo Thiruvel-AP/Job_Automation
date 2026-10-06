@@ -130,6 +130,32 @@ def core_skill_checks(path: Path) -> list[tuple[str, bool, str]]:
     return [(f"core skills ({len(core_skills(fb))}) all evidenced and none denied", True, "")]
 
 
+PLACEHOLDER_DOMAINS = ("example.com", "example.org", "example.net")
+UK_POSTCODE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.I)
+
+
+def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
+    """Doctor lines for applicant.yaml (read only): the email is not on a placeholder domain, a UK phone is not written
+    "+44 0..." (the trunk 0 is dropped after +44), and `location` is a place, not an address with a postcode (the CV and
+    forms must not carry a street address). One line per check, so each failure says what to change."""
+    from .config import load_yaml
+
+    if not path.exists():
+        return [("applicant.yaml", False, f"not found: {path}")]
+    a = load_yaml(path) or {}
+    email, phone, loc = (str(a.get(k) or "").strip() for k in ("email", "phone", "location"))
+    domain = email.rpartition("@")[2].lower()
+    bad_domain = domain in PLACEHOLDER_DOMAINS or domain.endswith(tuple("." + d for d in PLACEHOLDER_DOMAINS))
+    return [
+        (f"applicant email is not on a placeholder domain ({email or 'empty'})", bool(email) and not bad_domain,
+         "applicant.yaml `email` must be your real address, not @example.com/.org/.net"),
+        (f"applicant phone has no 0 after +44 ({phone or 'empty'})", not re.match(r"\+44[\s\-().]*0", phone),
+         "write the UK number as +44 7xxx xxxxxx (drop the leading 0), in applicant.yaml `phone`"),
+        (f"applicant location is not a street address ({loc or 'empty'})", not UK_POSTCODE.search(loc),
+         "use the city only (e.g. `Bristol, United Kingdom`) in applicant.yaml `location`; no postcode or street"),
+    ]
+
+
 def doctor(settings) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs."""
     checks: list[tuple[str, bool, str]] = []
@@ -153,6 +179,7 @@ def doctor(settings) -> list[tuple[str, bool, str]]:
         else:
             checks += ollama_checks(prov)
     checks += core_skill_checks(settings.path("fact_bank"))
+    checks += applicant_checks(settings.path("applicant"))
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

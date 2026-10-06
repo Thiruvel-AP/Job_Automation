@@ -22,11 +22,79 @@ LABEL_JS = """el => {
   return bits.join(' | ');
 }"""
 
+# The group's question for a radio button, whose own label is only its option ("Yes").
+QUESTION_JS = """el => {
+  const g = el.closest('fieldset, [role=radiogroup], [role=group]');
+  if (g) {
+    const l = g.querySelector('legend'); if (l) return l.innerText;
+    const lb = g.getAttribute('aria-labelledby');
+    if (lb) { const n = document.getElementById(lb.split(' ')[0]); if (n) return n.innerText; }
+    return g.getAttribute('aria-label') || g.innerText.slice(0, 200);
+  }
+  const p = el.closest('div,li,p'); return p ? p.innerText.slice(0, 200) : '';
+}"""
+
+# A field is a visa question when its label says so. These are answered from applicant.yaml -> visa, never from never_fill.
+VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
+VISA_COLOUR = "3px solid magenta"
 APPLY_BUTTON = re.compile(r"^\s*(apply( for this job| now)?|i'?m interested)\s*$", re.I)
 
 
 def _matches(label: str, patterns: list[str]) -> bool:
     return any(re.search(p, label, re.I) for p in patterns)
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def classify_visa(question: str) -> str | None:
+    """Which applicant.yaml `visa.answers` key a Yes/No or dropdown visa question asks for; None when unclear (then it is
+    left empty). "now or in the future" / "future" -> sponsorship_future; sponsorship now / currently / require ->
+    sponsorship_now; "currently"/"now" + "right to work" -> right_to_work_now."""
+    q = question.lower()
+    if "share code" in q:
+        return None
+    if "right to work" in q:
+        return "right_to_work_now" if re.search(r"\b(currently|now)\b", q) else None
+    if "sponsor" in q:
+        if "future" in q:
+            return "sponsorship_future"
+        if re.search(r"\b(now|currently|at this time|at present|require|need)\b", q):
+            return "sponsorship_now"
+    return None
+
+
+def visa_value(applicant: dict, kind: str | None) -> str | None:
+    """The configured answer for `kind`; None when there is no such answer or it is "ask" (the user answers it)."""
+    v = ((applicant.get("visa") or {}).get("answers") or {}).get(kind) if kind else None
+    v = ("Yes" if v else "No") if isinstance(v, bool) else str(v).strip() if v is not None else ""
+    return None if not v or v.lower() == "ask" else v
+
+
+def _answer_visa(el, typ: str, question: str, applicant: dict) -> str | None:
+    """Fill one visa field from the visa block; returns what it now holds, None when it is left empty. Free text gets
+    `visa.summary` (a share-code box is left empty: it wants the code, not prose). Yes/No and dropdowns get the
+    classified answer; radios are picked within their group."""
+    visa = applicant.get("visa") or {}
+    if typ in ("text", "textarea", "search", ""):
+        if "share code" in question.lower():
+            return None
+        summary = _norm(visa.get("summary") or "")
+        if summary and not (el.input_value() or "").strip():
+            el.fill(summary)
+        return _norm(el.input_value() or "") or None
+    value = visa_value(applicant, classify_visa(question))
+    if value is None:
+        return None
+    want = value.lower()
+    if typ == "select":
+        for o in el.query_selector_all("option"):
+            if _norm(o.inner_text()).lower() == want or (o.get_attribute("value") or "").lower() == want:
+                el.select_option(label=o.inner_text())
+                return value
+        return None
+    return None
 
 
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
@@ -38,7 +106,8 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     """
     if job is not None:
         check_job_files(job, cv_pdf, letter_pdf)
-    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": []}
+    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": []}
+    seen_groups: set = set()
     never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
 
     for el in page.query_selector_all("input, textarea, select"):
@@ -48,6 +117,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             continue
         label = (el.evaluate(LABEL_JS) or "").strip()
         short = label.split("|")[0].strip()[:60] or typ
+        question = _norm(el.evaluate(QUESTION_JS) if typ == "radio" else label.split("|")[0]).rstrip(" *")   # no "required" star
 
         if typ == "file":
             if re.search(r"cover", label, re.I) and letter_pdf:
@@ -64,6 +134,32 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             if not (el.input_value() or "").strip():
                 el.fill(letter_text)
                 report["filled"].append(f"{short} = cover letter text")
+            continue
+
+        if VISA_FIELD.search(f"{question} {label}"):
+            # Before never_fill on purpose: visa/sponsor/right-to-work are in never_fill so that an unrecognised variant is
+            # left to the user, but a recognised one is answered from the visa block. Every one is highlighted and printed.
+            if typ == "radio":
+                name = el.get_attribute("name")
+                if name and name in seen_groups:
+                    continue                                   # the rest of a group already answered
+                seen_groups.add(name)
+                group = page.query_selector_all(f'input[type=radio][name="{name}"]') if name else [el]
+                value = visa_value(applicant, classify_visa(question))
+                done = None
+                for r in group:
+                    r.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
+                    opt = _norm((r.evaluate(LABEL_JS) or "").split("|")[0]).lower()
+                    if value and done is None and value.lower() in (opt, (r.get_attribute("value") or "").lower()):
+                        r.check()
+                        done = value
+                held = done
+            else:
+                el.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
+                held = _answer_visa(el, typ, question, applicant)
+            print(f"CHECK VISA ANSWER: {question[:150]} -> {held or 'EMPTY'}")
+            report["visa"].append({"question": question, "value": held})
+            report["filled" if held else "manual"].append(f"{short} = visa" if held else short)
             continue
 
         if _matches(label, never):
@@ -108,7 +204,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
                     break
         r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job)
         print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
-        print(f"YOU ANSWER (orange): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
+        print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
         print("\nReview everything in the browser and press Submit yourself.")
         conf = input("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
         ctx.close()

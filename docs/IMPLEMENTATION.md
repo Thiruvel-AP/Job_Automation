@@ -279,3 +279,10 @@ Inputs are what you supply (name, title, team); nothing is scraped from LinkedIn
 | 7 | Package → you run M5 live | all | your first real review sitting |
 
 **Sprint done =** all tests green (existing 28 + new), `run --mock` end-to-end on fixtures, README updated, zip delivered.
+
+### Fix round: assist visa answers + applicant doctor checks
+`apply/assist.py`: a field whose label matches `VISA_FIELD` is answered from `applicant.yaml → visa` before `never_fill` is
+consulted (free text ← `visa.summary`; Yes/No, dropdown or radio group ← `visa.answers[sponsorship_now | sponsorship_future |
+right_to_work_now]` by `classify_visa`; unclear type, `ask` or a share-code box → left empty). Each is outlined magenta and printed as
+`CHECK VISA ANSWER: <question> -> <value or EMPTY>`; `fill_page` returns them under `report["visa"]`. Other `never_fill` matches are
+unchanged. `setup.applicant_checks` adds three `careerops doctor` lines: placeholder email domain, `+44` followed by 0, a UK postcode in `location`.

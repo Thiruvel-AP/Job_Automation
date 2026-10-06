@@ -26,7 +26,8 @@ def test_fill_page_never_submits(tmp_path):
             assert page.input_value("#email") == "t@example.com"
             assert page.input_value("#salary") == ""                       # never_fill
             assert any("Cover" in u for u in r["uploaded"]) and any("Resume" in u for u in r["uploaded"])
-            assert any("sponsorship" in m for m in r["manual"])
+            assert page.input_value("#visa") == "Yes"                       # visa block: "now or in the future" -> sponsorship_future
+            assert [v["value"] for v in r["visa"]] == ["Yes"]               # and it is reported, not left in `manual`
             assert page.evaluate("document.body.dataset.submitted") is None  # not submitted
             browser.close()
     except Exception as e:  # browser binaries missing in this environment
