@@ -5,7 +5,7 @@
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
   careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--freeze-keywords [--force]] [--summarise]
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
-  careerops sponsors            refresh the gov.uk sponsor register
+  careerops sponsors            download the gov.uk sponsor register if its link changed, diff it against the last one
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
@@ -86,14 +86,15 @@ def _status(v: gates.Verdict) -> str:
 
 def _verdict_fields(v: gates.Verdict) -> dict:
     return {"status": _status(v), "reason": "; ".join(v.reasons) or None, "flags": v.flags,
-            "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score,
+            "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score, "sponsor_match": v.sponsor_match,
+            "sponsor_route": v.sponsor_route, "sponsor_rating": v.sponsor_rating,
             "family": v.family, "tier": v.tier, "ceiling_pre": v.ceiling_pre}
 
 
 def triage_new(db: DB, s) -> dict[str, int]:
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)                   # fail fast on a renamed project id
-    idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
+    idx = sponsors.load_index(db)
     counts = {"triaged": 0, "skipped": 0, "needs_jd": 0}
     for job in db.jobs("new"):
         f = _verdict_fields(gates.triage(dict(job), s, idx, fb))
@@ -112,7 +113,7 @@ def retriage(db: DB, s) -> dict[str, int]:
     'new rules would skip: …' flag if today's rules would reject them. `applied` rows are never touched."""
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
-    idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
+    idx = sponsors.load_index(db)
     counts = {"triaged": 0, "skipped": 0, "needs_jd": 0, "post_tailor": 0, "post_tailor_would_skip": 0}
     with db.conn:
         for job in db.jobs():
@@ -129,7 +130,8 @@ def retriage(db: DB, s) -> dict[str, int]:
                 flags.append(RULES_SKIP + "; ".join(v.reasons))
                 counts["post_tailor_would_skip"] += 1
             db.update_job(job["id"], commit=False, family=v.family, tier=v.tier, ceiling_pre=v.ceiling_pre,
-                          flags=flags)
+                          flags=flags, sponsor_match=v.sponsor_match, sponsor_route=v.sponsor_route,
+                          sponsor_rating=v.sponsor_rating)
             counts["post_tailor"] += 1
     counts["applied_untouched"] = len(db.jobs("applied"))
     return counts
@@ -137,8 +139,11 @@ def retriage(db: DB, s) -> dict[str, int]:
 
 def cmd_sponsors(args):
     s, db = _ctx(args)
-    n = sponsors.refresh(db, s)
-    print(f"Loaded {n} Skilled Worker sponsor name variants.")
+    try:
+        snap = sponsors.take_snapshot(db, s)
+    except sponsors.RegisterFormatError as e:
+        _fail(str(e))
+    print(sponsors.summary_line(snap, db))
 
 
 def cmd_discover(args):
@@ -449,7 +454,7 @@ def cmd_companies(args):
 
     s, db = _ctx(args)
     if args.snapshot:
-        sponsors.snapshot(db, s)
+        cmd_sponsors(args)
     elif args.refresh_ch:
         print(companies_house.join(db, s, companies_house.download_bulk(s)))
     elif args.resolve:

@@ -30,7 +30,25 @@ Companion to [`PLAN.md`](PLAN.md) (what & why). This file is *how*: modules, sig
 
 ---
 
-## 2. M1 — Register snapshots + diff
+## 2. M1 — Register snapshots + diff — **done** (2026-10-06; live GOV.UK download not yet run)
+
+`careerops sponsors` (also `companies --snapshot`) calls `register.take_snapshot`: fetch the publication page, find the CSV
+link, stop if that link (or its date) is already in `register_snapshots`, else download, read the **header from the file**
+(`register.EXPECTED_FIELDS`: organisation, town, county, rating, route are located by their words; a missing one raises
+`RegisterFormatError` naming it and the header seen, before anything is saved), store `data/register/YYYY-MM-DD.csv.gz`
+and diff against the register as `companies` holds it. `apply_diff(db, day, d, cur, *, snapshot=None)` is one transaction:
+the first snapshot writes one `baseline` event; later ones `added` / `readded` / `removed` / `rating`, stamp
+first_seen / last_seen / removed_on, flag in-play jobs of a removed or downgraded sponsor, and insert the
+`register_snapshots` row (`snapshot` = (day, csv_url, path, rows), the one addition to the agreed signature). A day already
+recorded is a no-op. Not built from the task file: `latest.csv`, the `sponsors` table refresh and `register.prune` (nothing in
+`discovery/` may move or delete files, see `tests/test_deletions.py`).
+**Sponsor check in triage:** `register.CompanyIndex` (the `companies` rows not removed) matches case, punctuation,
+Ltd/Limited/PLC/LLP, `&`/`and` and both sides of `T/A`; `jobs.sponsor_match` = `exact` | `fuzzy(0.95)` | `none` (a fuzzy match
+is never stored as exact), with `sponsor_route` and `sponsor_rating`. `none` adds the flag "Not on sponsor register" and the job
+stays `triaged` (it used to be skipped); "Sponsor register not loaded" only when no snapshot exists (`register.load_index`).
+
+Original spec:
+
 
 **Files:** `careerops/sponsors.py` (extend), `careerops/db.py` (schema), `tests/test_register.py`, fixtures `register_d1.csv`, `register_d2.csv`.
 

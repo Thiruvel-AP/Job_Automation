@@ -31,7 +31,9 @@ def test_schema_has_track_a_tables(db: DB):
     assert {"jobs", "sponsors", "companies", "company_events", "register_snapshots", "llm_usage"} <= names
 
 
-@pytest.mark.parametrize("argv", [["companies", "--snapshot"], ["companies", "--resolve"], ["learning"]])
+# `companies --snapshot` is built (M1, tests/discovery/test_register_snapshots.py, with HTTP mocked); running it here would
+# reach the real GOV.UK site.
+@pytest.mark.parametrize("argv", [["companies", "--resolve"], ["learning"]])
 def test_unbuilt_milestones_fail_cleanly(argv, settings, tmp_path, monkeypatch, capsys):
     cfg = tmp_path / "settings.yaml"
     import yaml

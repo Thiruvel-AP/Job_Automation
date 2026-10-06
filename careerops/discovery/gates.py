@@ -5,9 +5,10 @@ import re
 from dataclasses import dataclass, field
 
 from ..tailoring.scorer import ceiling, taxonomy_keywords
-from .register import SponsorIndex
+from .register import CompanyIndex, SponsorIndex
 
 FAMILY_REASON = "title not in target families"
+NOT_ON_REGISTER = "Not on sponsor register"
 
 YEARS = re.compile(
     r"(\d{1,2})\s*\+?\s*(?:-|to|–)?\s*(?:\d{1,2})?\s*\+?\s*years?['’]?\s+(?:of\s+)?(?:[\w/&-]+\s+){0,4}?experience",
@@ -22,6 +23,9 @@ class Verdict:
     flags: list[str] = field(default_factory=list)     # warnings shown at review
     sponsor_name: str | None = None
     sponsor_score: float = 0.0
+    sponsor_match: str | None = None       # exact | fuzzy(0.95) | none; None = the register is not loaded
+    sponsor_route: str | None = None
+    sponsor_rating: str | None = None
     needs_full_jd: bool = False
     family: str | None = None
     tier: int | None = None
@@ -89,7 +93,7 @@ def pre_ceiling(jd: str, fb: dict, settings) -> float:
     return ceiling(fact_text(fb), taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"]))[0]
 
 
-def triage(job: dict, settings, sponsors: SponsorIndex | None, fb: dict | None = None) -> Verdict:
+def triage(job: dict, settings, sponsors: "CompanyIndex | SponsorIndex | None", fb: dict | None = None) -> Verdict:
     """Rule verdict for one job. With a fact bank, also computes `ceiling_pre`."""
     g = settings["gates"]
     v = Verdict(passed=True)
@@ -116,13 +120,16 @@ def triage(job: dict, settings, sponsors: SponsorIndex | None, fb: dict | None =
     if yrs is not None and yrs > g.get("max_years_required", 3):
         v.flags.append(f"JD asks for {yrs}+ years' experience")
 
-    if sponsors is not None and len(sponsors):
-        name, score, method = sponsors.match(job.get("company", ""), settings["sponsors"].get("fuzzy_threshold", 0.92))
-        v.sponsor_name, v.sponsor_score = name, score
-        if name is None and g.get("require_sponsor_match", True):
-            v.reasons.append("employer not on Skilled Worker sponsor register")
-        elif method in ("fuzzy", "prefix"):
-            v.flags.append(f"Sponsor match is {method} ({score:.2f}): '{name}' — verify it is the same entity")
+    # An employer off the register is flagged for the reviewer, never skipped: the register lags, and a name can differ.
+    if sponsors is not None:
+        m = sponsors.lookup(job.get("company", ""), settings["sponsors"].get("fuzzy_threshold", 0.92))
+        v.sponsor_name, v.sponsor_score, v.sponsor_match = m.name, m.score, m.label
+        v.sponsor_route, v.sponsor_rating = m.route, m.rating
+        if m.method == "none":
+            if g.get("require_sponsor_match", True):
+                v.flags.append(NOT_ON_REGISTER)
+        elif m.method == "fuzzy":
+            v.flags.append(f"Sponsor match is fuzzy ({m.score:.2f}): '{m.name}' — verify it is the same entity")
     elif g.get("require_sponsor_match", True):
         v.flags.append("Sponsor register not loaded — sponsorship unchecked")
 

@@ -36,7 +36,8 @@ def test_gate_flags_years_and_unsponsored_company(db, settings, job):
     v = gates.triage(j, settings, idx)
     assert v.passed and any("5+ years" in f for f in v.flags)
     j = dict(job, company="Not A Sponsor Ltd")
-    assert not gates.triage(j, settings, idx).passed
+    v = gates.triage(j, settings, idx)
+    assert v.passed and gates.NOT_ON_REGISTER in v.flags               # flagged for the reviewer, never skipped
 
 
 def test_truncated_jd_needs_full_text(db, settings, job):

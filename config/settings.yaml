@@ -30,8 +30,7 @@ sponsors:
   # The register's CSV link changes daily; we scrape the publication page for it.
   page_url: https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers
   route: Skilled Worker
-  fuzzy_threshold: 0.92            # difflib ratio on normalised names
-  max_age_days: 3
+  fuzzy_threshold: 0.92            # difflib ratio on normalised names; a match below 1.0 is stored as fuzzy(score), never as exact
 
 companies:                         # Track A — sponsor-first company discovery (M2/M3)
   ch_bulk_page: https://download.companieshouse.gov.uk/en_output.html
@@ -88,7 +87,7 @@ roles:
 gates:
   locations_ok: ['united kingdom', '\buk\b', 'england', 'london', 'bristol', 'remote', 'manchester', 'cambridge', 'oxford', 'edinburgh', 'bath', 'cardiff', 'birmingham', 'leeds', 'scotland', 'wales']
   max_years_required: 3
-  require_sponsor_match: true
+  require_sponsor_match: true      # flag (never skip) a job whose employer is not on the sponsor register, or when no register snapshot exists
   # (regex, action, reason). action: skip = never apply; flag = still tailor, but review shows the reason in red.
   jd_rules:
     - ['without (the need for )?(visa )?sponsorship', skip, 'JD says right to work without sponsorship']

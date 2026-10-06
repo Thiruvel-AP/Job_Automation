@@ -587,7 +587,7 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
     out_dir.mkdir(parents=True, exist_ok=True)
     outputs = out_dir / "runs" / stamp / "outputs"
     gates.load_roles(settings, fb)                                  # a renamed project id fails here, not per JD
-    idx = sponsors.SponsorIndex(db) if db.sponsor_count() else None
+    idx = sponsors.load_index(db)
     est = settings["llm"].get("job_token_estimate", 10000)
     left = [p.tokens_left() for p in getattr(llm, "providers", []) if p.tokens_left() is not None]
     log(f"Calibrating {len(entries)} JD(s), about {len(entries) * est:,} tokens "

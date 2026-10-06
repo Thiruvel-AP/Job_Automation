@@ -94,6 +94,9 @@ COLUMNS = [
     ("jobs", "ceiling_pre", "REAL"),   # M4b honest ceiling at triage, taxonomy keywords only (no LLM)
     ("jobs", "application_dir", "TEXT"),  # A1 archive folder of the latest submission
     ("llm_usage", "tokens", "INTEGER"),   # M5 provider-reported total tokens per day, for the tpd cap
+    ("jobs", "sponsor_match", "TEXT"),    # M1 how the employer matched the register: exact | fuzzy(0.95) | none
+    ("jobs", "sponsor_route", "TEXT"),     # the matched sponsor's route (Skilled Worker, ...)
+    ("jobs", "sponsor_rating", "TEXT"),    # the matched sponsor's rating letter (A / B)
     ("jobs", "cv_pages", "INTEGER"),      # pages of the tailored CV (2 by default, 1 with --one-page)
     ("jobs", "page2_fill", "REAL"),       # how full page 2 is, 0-1, from the rendered PDF (0 for a one-page CV)
 ]
