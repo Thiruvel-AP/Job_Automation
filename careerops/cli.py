@@ -475,7 +475,11 @@ def cmd_calibrate(args):
         _fail("--provider pins a real provider; --mock uses no provider")
     try:
         if args.summarise:
-            print(f"Merged the rubric into {cal.summarise(out)}")
+            stale = cal.rubric_predates_run(out)
+            merged = cal.summarise(out)
+            if stale:
+                print(cal.STALE_BANNER)
+            print(f"Merged the rubric into {merged}")
             return
         if args.freeze_keywords:
             kdir = s.path("frozen_keywords")

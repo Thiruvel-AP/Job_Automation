@@ -33,6 +33,29 @@ _POSSESSIVE = re.compile(r"['’]s$", re.I)          # "Chattermill's" names Cha
 _PRONOUN = re.compile(r"^I(['’]m|['’]ve|['’]d|['’]ll)?$")
 
 
+FILLER_WORDS = ("scalable", "robust", "seamless", "cutting-edge")     # filler: only if the evidence itself says it
+_REJECTED = re.compile(r"^'([^']+)' \((?:name|sector|client|capability)\)|^vague filler '([^']+)'|^deny-listed '([^']+)'")
+
+
+def avoid_words(evidence: list[dict], jd: str, hook: str = "", extra: str = "") -> list[str]:
+    """The filler and capability words the grounding guard rejects when nothing the letter may draw on says them: the ones
+    ("real-time", "end-to-end", "scalable", "robust", ...) in neither the evidence bullets (text + terms), the job
+    description, the company hook nor `extra`. The letter prompt lists them as words not to use."""
+    allowed = norm_literal(" ".join([*(e["text"] + " " + " ".join(e.get("terms", [])) for e in evidence), jd, hook, extra]))
+    return [w for w in (*CAPABILITY_WORDS, *FILLER_WORDS) if not _has(allowed, w)]
+
+
+def rejected_words(problems: list[str]) -> list[str]:
+    """The words and names a letter's problems name: from "'real-time' (capability) is in neither ...", "vague filler
+    'scalable' ..." and "deny-listed 'x'". Other problems (length, opener, numbers) name no word."""
+    out = []
+    for p in problems:
+        m = _REJECTED.match(p)
+        if m:
+            out.append(next(g for g in m.groups() if g))
+    return list(dict.fromkeys(out))
+
+
 def sentences(text: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
 

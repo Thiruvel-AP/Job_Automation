@@ -181,11 +181,13 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
 
 
 def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = None,
-               jaccard_limit: float = JACCARD) -> list[str]:
+               jaccard_limit: float = JACCARD, extra_projects: bool = False) -> list[str]:
     """The bullets a selection has not used, in the order the two-page loop should add them while page 2 is not full:
-    experience bullets of any entry, the remaining bullets of the chosen projects and, once those are used, bullets of
-    further projects; each step the one adding the most keyword weight nobody covers yet, then the more recent entry
-    (experience, chosen projects, other projects), more weighted overlap, fact-bank order. A bullet that nearly repeats a chosen one (or an earlier fill) is left out for good."""
+    experience bullets of any entry and the remaining bullets of the (at most 3) chosen projects, each step the one adding
+    the most keyword weight nobody covers yet, then the more recent entry (experience before projects), more weighted
+    overlap, fact-bank order. Bullets of a project that is not on the CV come only after every bullet of the chosen
+    projects and of the experience is used, and only with `extra_projects` (scoring.cv_fill_extra_projects, off by
+    default: the CV never shows more than 3 projects). A bullet that nearly repeats a chosen one (or an earlier fill) is left out for good."""
     skills = fb.get("skills") if skills is None else skills
     pk = _Picker(fb, kws, skills, jaccard_limit)
     used = selected_ids(fb, sel)
@@ -193,13 +195,14 @@ def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = No
         pk.take(b)
     pool = [(n, 0, b["id"]) for n, e in enumerate(fb["experience"]) for b in e["bullets"] if b["id"] not in used]
     pool += [(n, 1 if p["id"] in sel["projects"] else 2, b["id"]) for n, p in enumerate(fb.get("projects", []))
-             for b in p["bullets"] if b["id"] not in used]       # unchosen projects last: they bring their own heading
+             for b in p["bullets"] if b["id"] not in used and (extra_projects or p["id"] in sel["projects"])]
     out: list[str] = []
     while pool:
         pool = [c for c in pool if not pk.dup(c[2])]
         if not pool:
             break
-        n, sec, b = min(pool, key=lambda c: (-pk.gain([c[2]]), c[1], c[0], -pk.sc[c[2]], pk.order[c[2]]))
+        # a project outside the chosen three (sec 2) is never preferred, whatever its gain, to a bullet of the chosen ones
+        n, sec, b = min(pool, key=lambda c: (c[1] == 2, -pk.gain([c[2]]), c[1], c[0], -pk.sc[c[2]], pk.order[c[2]]))
         pool = [c for c in pool if c[2] != b]
         out.append(b)
         pk.take(b)

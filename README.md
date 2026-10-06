@@ -83,15 +83,21 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 ## Daily use
 
 ```bash
-careerops sponsors                 # refresh the gov.uk register (cached 3 days)
+careerops sponsors                 # gov.uk register: download only if its link changed, store data/register/YYYY-MM-DD.csv.gz, diff vs the last snapshot
 careerops discover                 # pull + triage; skipped jobs keep their reason
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
-careerops tailor --limit 15        # CV + letter per job, in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + letter per job, in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
-careerops export                   # data/exports/companies.xlsx
+careerops mark-applied --id JOB    # an application made outside the assist: archive it and log 'applied'
+careerops outcome --id JOB --event screen --date 2026-10-12 --note "phone"   # applied|acknowledged|screen|interview|offer|rejected|withdrawn
+careerops outcomes                 # the funnel applied → any reply → screen → interview → offer: counts, rates, 95% Wilson intervals
+careerops outcomes --import-archive          # DRY RUN: list <paths.applications>/<Company>/<Role> as approximate 'applied' events
+careerops outcomes --import-archive --apply  # write them to the database only (the archive is only listed, never written)
+careerops export                   # data/exports/companies.xlsx (Jobs, Summary, Outcomes)
 careerops export-prefs             # your edits → DPO pairs (chosen = yours, rejected = model's)
 careerops status                   # counts per status, plus a tier × status table
 careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
@@ -102,7 +108,7 @@ careerops calibrate                # tailor the calibration JDs with the real mo
 `data/calibration/manifest.yaml` lists the JDs you tailored by hand (`id`, `company`, `title`, `jd_file`; optional `manual_ats`,
 `reference_cv`, `outcome`). `careerops calibrate` tailors each with the configured model, at temperature 0 and a fixed seed, and writes
 `data/calibration/report-<stamp>.md` (+ `.json`): per JD the keywords, ceiling, final score, rephrase coverage, guard blocks,
-selection, violations, letter status, tokens and seconds, then the aggregates. It touches neither the jobs table nor `data/outputs/`
+selection, violations, letter status (and whether it needed its one retry, with the words it was rejected for), pages and page-2 fill, the wording pass, tokens and seconds, then the aggregates. A JD whose employer is not on the sponsor register is flagged in the log line and the report and still tailored. It touches neither the jobs table nor `data/outputs/`
 (CVs go under `data/calibration/runs/<stamp>/`) and stops, leaving the rest unmeasured, when the day's Groq tokens cannot cover another JD.
 
 ```bash
@@ -112,9 +118,49 @@ careerops calibrate --only cal-heathrow cal-quantcast
 careerops calibrate --freeze-keywords --provider groq   # extract each JD's keywords once -> config/calibration/keywords/<id>.yaml (tracked in git; never overwrites without --force)
                                                        # every later run reads them: same ceilings across runs and providers; a missing file fails the run
 careerops calibrate --provider ollama              # pin every call to one provider (no fallback); the report names the provider and model per call
-careerops calibrate --summarise                    # merge the filled data/calibration/rubric.csv into the latest report
+careerops calibrate --summarise                    # merge the filled data/calibration/rubric.csv into the latest report; a rubric saved before the run prints "RUBRIC PREDATES THIS RUN" and the grade-based criteria are not ticked
 careerops calibrate --mock                         # no model, own data root: checks the plumbing
 ```
+
+### The two-page CV
+
+Every CV is two full A4 pages (`templates/cv2.tex.j2`: 11pt Carlito, 0.6in margins, navy uppercase headings with a rule).
+Order: Profile → Skills → Experience → Projects → Education → Certifications & Awards.
+
+- **Skills** — `skills.core` in `fact_bank.yaml` is the first row ("Core"), in your order, and is never dropped. A skill
+  appears once (case-insensitive, first row wins); the other groups list every skill with the JD's first; at most
+  `scoring.max_skill_groups` (5) of them, the groups the JD matches least are left off. `careerops doctor` fails, naming the
+  skill, if a core skill is on `deny_terms` or no bullet / skill row / project stack mentions it literally; the CV refuses to
+  render a denied core skill.
+- **Bullets** — chosen in code by greedy marginal keyword gain (ties to the more recent entry): newest entry 4–5, the others
+  3–4 (`scoring.cv_bullets`), 3 projects with 2–3 bullets each. A bullet whose words overlap a chosen one (Jaccard ≥ 0.6) is
+  never added. Then bullets are added until page 2 is at least `scoring.min_fill_page2` (0.80) full, measured from the PDF
+  (y of the last text line on page 2 over the text area), or none are left: more experience bullets and more bullets of the
+  three projects first; a 4th project only with `scoring.cv_fill_extra_projects: true` (off: the CV never shows more than 3).
+  The shrink step runs only when the CV is over 2 pages. `cv_pages` and `page2_fill` go into `report.json` and the `jobs` table;
+  the tailor line says when the fact bank ran out of bullets before page 2 filled.
+- **Results** — give a bullet an optional `result:` in the fact bank (a measured outcome). The rephrase step may work it in;
+  its numbers count as evidence for that bullet only. `report.json → needs_result` lists the bullets on that CV that have none
+  (yours to fill in, never invented).
+- **Wording pass** — after rephrasing, a keyword the CV has only in another form ("prototyped" for "prototyping") gets its
+  exact form in the one bullet that carries its stem; the guard checks it like any rephrase and it is kept only if the score
+  does not drop.
+
+### Sponsor register
+
+`careerops sponsors` reads the gov.uk page, finds the CSV link and downloads only if the link (or its date) is new; the file
+is stored as `data/register/YYYY-MM-DD.csv.gz` with a `register_snapshots` row. Column names come from the file's own header
+(a missing field stops the run, naming it). `companies` / `company_events` record added, removed, readded and rating changes
+(one transaction; a same-day rerun does nothing); jobs of a sponsor that lost its licence or dropped from A get a flag.
+Triage matches a job's company against the register (case, punctuation, Ltd/Limited/PLC/LLP, `&`/`and`, both sides of `T/A`)
+and stores `sponsor_match` = `exact` | `fuzzy(0.95)` | `none` plus route and rating. **Not on the register is a flag
+("Not on sponsor register"), never a skip.** "Register not loaded" appears only when no snapshot exists.
+
+### Outcomes
+
+`mark-applied` (and `apply`) log an `applied` event; add the rest with `careerops outcome`. `careerops outcomes` prints the funnel
+split by role family, tier, CV pages and sponsor match. A job applied more than 28 days ago with nothing logged since counts as
+`no_response` in the report (computed, never stored). `--import-archive` is read-only on the archive: it only lists folders.
 
 ### Role tiers and queue order
 
@@ -162,7 +208,7 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 
 | Verified (tests / local run) | Not verifiable from the build sandbox — check on first live run |
 |---|---|
-| Sponsor CSV parsing, T/A splitting, exact/fuzzy/prefix matching | gov.uk page still exposes the CSV link in the same form |
+| Register snapshots, diff, T/A and Ltd/PLC matching, exact/fuzzy/none (mocked HTTP, fixture CSVs) | the live gov.uk download: link still found, header fields as expected, a real day-to-day diff |
 | Greenhouse/Lever parsers on recorded payload shapes | Ashby field names (coded defensively) |
 | Gates, scorer, stemming, line-wrap/quote normalisation | Groq model id + free-tier caps (change often) |
 | Faithfulness guard blocks invented numbers/tools/keywords | Real-LLM output quality on your JDs |

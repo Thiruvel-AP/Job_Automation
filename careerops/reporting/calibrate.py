@@ -239,15 +239,16 @@ def measure(entry: dict, verdict: gates.Verdict, rep: dict, seconds: float, sett
                      "notes": rep.get("analysis_warnings") or [], "frozen": None},
         "ceiling": rep["ceiling"], "gaps": rep["genuine_gaps"],
         "final": {"literal": final["score"], "stemmed": final["score_stemmed"], "band": final["band"],
-                  "pages": final["pages"], "misses": final["misses"], "wording_misses": final["wording_misses"]},
-        "attempts": len(rep["attempts"]),
+                  "pages": final["pages"], "page2_fill": final.get("page2_fill"), "misses": final["misses"],
+                  "wording_misses": final["wording_misses"]},
+        "attempts": len(rep["attempts"]), "wording": chosen.get("wording") or {},
         "rephrase": {**{k: chosen["rephrase"].get(k, 0) for k in ("proposed", "accepted", "blocked", "calls")},
                      "coverage": rep["rephrase_coverage"]},
         "selection": chosen["selection"], "violations": chosen["violations"],
         "profile": rep.get("profile") or {},
         "letter": {"status": rep["letter"]["status"], "problems": rep["letter"]["problems"],
                    "reason": rep["letter"].get("reason"),
-                   "score": rep["letter"]["score"], "pages": rep["letter"]["pages"],
+                   "score": rep["letter"]["score"], "pages": rep["letter"]["pages"], "retry": rep["letter"].get("retry") or {},
                    "evidence": [e["id"] for e in rep["letter"].get("evidence", [])]},
         "usage": _usage(rep), "seconds": round(seconds, 1),
         "manual_ats": entry.get("manual_ats"), "reference": reference, "outcome": entry.get("outcome"),
@@ -350,13 +351,30 @@ def _selection(sel: dict) -> str:
 
 def _row_line(r: dict) -> str:
     if r["status"] != "ok":
-        return f"| {r['id']} | {r['status']} | | | | | | | | | | | {r.get('error', '')[:60]} |"
+        return f"| {r['id']} | {r['status']} | | | | | | | | | | | | | {r.get('error', '')[:60]} |"
     cov = r["rephrase"]["coverage"]
     return (f"| {r['id']} | T{r['triage']['tier'] or '-'} | {r['keywords']['n']} | {pct(r['ceiling'])} | "
-            f"{pct(r['final']['literal'])} ({r['final']['band']}) | "
+            f"{pct(r['final']['literal'])} ({r['final']['band']}) | {r['final']['pages']} | "
+            f"{pct(r['final'].get('page2_fill'))} | "
             f"{cov['rephrased']}/{cov['eligible']} | {r['rephrase']['blocked']}/{r['rephrase']['proposed']} | "
             f"{len(r['violations'])} | {r['letter']['status']} | {r['usage']['calls']} | "
             f"{r['usage']['total_tokens']:,} | {r['seconds']:.0f} | {', '.join(r['usage'].get('served_by', [])) or '–'} |")
+
+
+def _wording_line(w: dict | None) -> list[str]:
+    if not w or not w.get("terms"):
+        return []
+    return [f"- wording pass: {len(w['terms'])} keyword(s) in another form ({', '.join(w['terms'])}); "
+            f"{len(w.get('accepted') or [])} bullet(s) rewritten, {len(w.get('blocked') or [])} blocked by the guard"
+            + (f", no bullet carries {', '.join(w['unplaced'])}" if w.get("unplaced") else "")
+            + ("" if w.get("kept") is not False else "; reverted (score or page count got worse)")]
+
+
+def _retry_line(r: dict | None) -> list[str]:
+    if not r or not r.get("count"):
+        return []
+    words = ", ".join(r.get("rejected_words") or []) or "no single word"
+    return [f"- letter retry: the first draft was rejected ({words}); retried once naming them; outcome: {r.get('outcome')}"]
 
 
 def _keywords_line(k: dict | None) -> str:
@@ -381,8 +399,8 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
            + (f" · {agg['not_run']} not run (daily token budget)" if agg["not_run"] else "")
            + (f" · {agg['errors']} error(s)" if agg["errors"] else ""), "",
            "## Per JD", "",
-           "| id | tier | kw | ceiling | final (band) | rephrased/eligible | blocked/proposed | violations | letter | "
-           "calls | tokens | s | served by |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "| id | tier | kw | ceiling | final (band) | pages | page 2 fill | rephrased/eligible | blocked/proposed | "
+           "violations | letter | calls | tokens | s | served by |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     out += [_row_line(r) for r in rows]
     rho = agg["rank"]
     out += ["", "## Aggregates", "", "| Metric | Value | Target |", "|---|---|---|",
@@ -429,12 +447,14 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
                 f"missed: {', '.join(r['final']['misses']) or '–'}; wording only: "
                 f"{', '.join(r['final']['wording_misses']) or '–'}; genuine gaps: {', '.join(r['gaps']) or '–'}",
                 f"- selection: {json.dumps(r['selection'])}",
+                *_wording_line(r.get("wording")),
                 f"- profile facts: {len(r['profile'].get('facts', []))} picked"
                 + (", retried" if r["profile"].get("retried") else "")
                 + (", fell back to the facts" if r["profile"].get("fallback") else ""),
                 f"- violations ({len(r['violations'])}): " + (" | ".join(r["violations"]) or "none"),
                 f"- letter: {letter_summary(r['letter'])}, score {pct(r['letter']['score'])}, evidence "
                 f"{', '.join(r['letter']['evidence']) or '–'}; problems: " + (" | ".join(r["letter"]["problems"]) or "none"),
+                *_retry_line(r["letter"].get("retry")),
                 f"- tokens: {r['usage']['total_tokens']:,} in {r['usage']['calls']} calls; "
                 + ", ".join(f"{t} {v['calls']}× (largest prompt {v['max_prompt']}; {', '.join(v.get('served_by', [])) or '–'})"
                             for t, v in r["usage"]["by_task"].items())]
@@ -536,8 +556,33 @@ def _yn(rows: list[dict], col: str, want: str) -> int:
     return sum((r.get(col) or "").strip().upper() == want for r in rows)
 
 
+STALE_BANNER = "RUBRIC PREDATES THIS RUN — grades are not for these outputs"
+# criteria that depend on grades: not ticked or crossed when the rubric is older than the run
+GRADED = ("zero false claims (CV and letter)", "would_send = Y for at least 3 JDs")
+
+
+def rubric_predates_run(cal_dir: Path, report: Path | None = None) -> bool:
+    """True if rubric.csv is older than the run its grades would be applied to: its mtime is before the run started (the
+    report's stamp), or it has not been saved since the run itself last wrote it (the run records that mtime in the
+    sidecar). Either way the grades were given to some earlier outputs."""
+    report = report or latest_report(cal_dir)
+    rubric = cal_dir / "rubric.csv"
+    if report is None or not rubric.is_file():
+        return False
+    meta = json.loads(report.with_suffix(".json").read_text(encoding="utf-8")).get("meta", {})
+    m = rubric.stat().st_mtime
+    try:
+        started = datetime.strptime(str(meta.get("stamp")), "%Y%m%d-%H%M%S").timestamp()
+    except ValueError:
+        started = None
+    at_run = meta.get("rubric_mtime_at_run")
+    return (started is not None and m < started) or (at_run is not None and m <= float(at_run))
+
+
 def summarise(cal_dir: Path) -> Path:
-    """Merge the filled-in rubric into the latest report (replacing an earlier merge) and return that report's path."""
+    """Merge the filled-in rubric into the latest report (replacing an earlier merge) and return that report's path.
+    A rubric older than the run gets the RUBRIC PREDATES THIS RUN banner above the table and its grade-based exit
+    criteria are neither ticked nor crossed."""
     report = latest_report(cal_dir)
     if report is None:
         raise ManifestError(f"no report-*.md in {cal_dir}; run `careerops calibrate` first")
@@ -549,7 +594,9 @@ def summarise(cal_dir: Path) -> Path:
     data = json.loads(report.with_suffix(".json").read_text(encoding="utf-8"))
     by_id = {r["id"]: r for r in data["rows"]}
     rated = [r for r in rows if r["id"] in by_id]
-    lines = [RUBRIC_MARK, "", f"## Rubric ({len(rated)} of {len(by_id)} JD(s) rated)", "",
+    stale = rubric_predates_run(cal_dir, report)
+    lines = [RUBRIC_MARK, "", *([f"**{STALE_BANNER}**", ""] if stale else []),
+             f"## Rubric ({len(rated)} of {len(by_id)} JD(s) rated)", "",
              "| id | final | letter | CV false claim | CV relevance | CV readability | letter false claim | "
              "letter tone | would send | notes |", "|---|---|---|---|---|---|---|---|---|---|"]
     for r in rated:
@@ -565,7 +612,8 @@ def summarise(cal_dir: Path) -> Path:
         ("no letter with rule problems", a["letters"]["fallback"] == 0 and a["letters"].get("pending", 0) == 0
          and a["ok"] > 0),
         ("would_send = Y for at least 3 JDs", _yn(rated, RUBRIC_COLUMNS[6], "Y") >= 3)]
-    lines += ["", "Exit criteria (M5): " + "; ".join(f"{'✓' if ok else '✗'} {name}" for name, ok in checks), ""]
+    mark = lambda name, ok: "– (not assessed: rubric predates this run)" if stale and name in GRADED else "✓" if ok else "✗"
+    lines += ["", "Exit criteria (M5): " + "; ".join(f"{mark(name, ok)} {name}" for name, ok in checks), ""]
     text = report.read_text(encoding="utf-8")
     text = text.split(RUBRIC_MARK)[0].rstrip() + "\n\n" + "\n".join(lines)
     report.write_text(text, encoding="utf-8")
@@ -604,7 +652,8 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
         job = job_for(entry)
         verdict = gates.triage(job, settings, idx, fb)
         log(f"- {entry['id']} ({entry['company']} | {entry['title']}): triage "
-            f"{'passed' if verdict.passed else 'would skip: ' + '; '.join(verdict.reasons)}")
+            f"{'passed' if verdict.passed else 'would skip: ' + '; '.join(verdict.reasons)}"
+            + "".join(f" (flag: {f})" for f in verdict.flags if f.startswith(("Not on sponsor", "Sponsor"))))
         try:
             llm.begin_job(est)
         except BudgetExhausted as e:
@@ -637,12 +686,13 @@ def calibrate(settings: Settings, db, llm, fb: dict, manifest: Path, out_dir: Pa
             "seed": settings["llm"].get("seed"), "max_keywords": settings["scoring"].get("max_keywords"),
             "models": [p.cfg.get("model", p.name) for p in providers] if providers else ["MockLLM"],
             "manifest": str(manifest)}
+    rubric = out_dir / "rubric.csv"
+    write_rubric(rubric, [e["id"] for e in load_manifest(manifest, settings.root)])
+    meta["rubric_mtime_at_run"] = rubric.stat().st_mtime       # unchanged later = the grades were not given to these outputs
     md = render_report(meta, rows, agg, compare_lines(previous, rows, agg) if previous else None)
     report = out_dir / f"report-{stamp}.md"
     report.write_text(md, encoding="utf-8")
     sidecar = report.with_suffix(".json")
     sidecar.write_text(json.dumps({"meta": meta, "rows": rows, "aggregates": agg}, indent=2, default=str),
                        encoding="utf-8")
-    rubric = out_dir / "rubric.csv"
-    write_rubric(rubric, [e["id"] for e in load_manifest(manifest, settings.root)])
     return {"report": report, "json": sidecar, "rubric": rubric, "rows": rows, "aggregates": agg}

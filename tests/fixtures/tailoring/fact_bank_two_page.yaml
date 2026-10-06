@@ -1,5 +1,6 @@
 # Fictional fact bank for the two-page tests: fact_bank_fixture.yaml plus a pinned `skills.core`, extra skill rows
-# (one repeating a core skill in another case) and enough bullets that a CV can fill two pages. Never the real bank.
+# (one repeating a core skill in another case) and enough bullets that three projects and the experience fill two pages.
+# Never the real bank.
 
 identity:
   name: Ada Lovelace
@@ -139,6 +140,20 @@ experience:
     - iam
     - security
     - governance
+  - id: a8
+    text: Presented the agent's design and its limits to the lab's steering group and agreed the three datasets to add next
+      quarter.
+    terms:
+    - presentation
+    - stakeholders
+    - communication
+  - id: a9
+    text: Wrote the onboarding notes that let two new students run the agent's test framework on their own laptops within
+      an afternoon.
+    terms:
+    - documentation
+    - onboarding
+    - testing
 - id: ex2
   title: Data Consultant
   org: Bristol Pro Bono Consulting
@@ -177,6 +192,13 @@ experience:
     - scikit-learn
     - segmentation
     - python
+  - id: b5
+    text: Trained two volunteers to refresh the reporting notebook each term, with a one-page checklist of the steps and the
+      checks.
+    terms:
+    - documentation
+    - training
+    - reporting
 - id: ex3
   title: Mobile Software Engineer
   org: Harbour Pay Ltd
@@ -213,6 +235,19 @@ experience:
     - swiftui
     - component library
     - software engineering
+  - id: c5
+    text: Paired with the backend team to agree the response format of the payment API before the screens were built.
+    terms:
+    - api
+    - collaboration
+    - mobile
+  - id: c6
+    text: Triaged reviewer feedback from the store listing each release and turned the three most common requests into tickets
+      for the team.
+    terms:
+    - prioritisation
+    - product
+    - mobile
 - id: ex4
   title: Research Assistant
   org: University of Northfield, Department of Statistics
@@ -242,6 +277,13 @@ experience:
     - dashboards
     - reporting
     - data visualisation
+  - id: d4
+    text: Presented the survey findings to the department's teaching committee with plots that showed each effect size and
+      its interval.
+    terms:
+    - presentation
+    - visualisation
+    - statistics
 projects:
 - id: p1
   name: Customer churn prediction
@@ -278,6 +320,12 @@ projects:
     - mlflow
     - experiment tracking
     - reproducibility
+  - id: p1e
+    text: Compared the tuned model with a logistic-regression baseline and reported where the extra complexity paid for itself.
+    terms:
+    - baseline
+    - model evaluation
+    - classification
 - id: p2
   name: Banking datathon
   stack: Python, PyTorch, LSTM
@@ -333,6 +381,18 @@ projects:
     - evaluation
     - llm evaluation
     - regression testing
+  - id: p3c
+    text: Wrote a regression suite that replays recorded study sessions and fails when an answer loses its citation.
+    terms:
+    - testing
+    - regression testing
+    - evaluation
+  - id: p3d
+    text: Cached retrieved lecture chunks per course so repeated questions answer in under two seconds on a laptop.
+    terms:
+    - caching
+    - latency
+    - retrieval
 - id: p4
   name: Graph question answering proof of concept
   stack: Python, PostgreSQL, Streamlit
@@ -347,6 +407,19 @@ projects:
     - sql
     - knowledge graph
     - python
+  - id: p4b
+    text: Added a sidebar that lists the sources behind each answer so a reader can check them against the graph.
+    terms:
+    - provenance
+    - explainability
+    - streamlit
+  - id: p4c
+    text: Seeded the PostgreSQL graph from three public CSV exports with a repeatable load script and a row-count check.
+    terms:
+    - data loading
+    - postgresql
+    - sql
+    - data quality
 - id: p5
   name: Energy usage anomaly detector
   stack: Python, scikit-learn, Isolation Forest
@@ -365,6 +438,12 @@ projects:
     - communication
     - reporting
     - stakeholders
+  - id: p5c
+    text: Compared three contamination rates on a held-out week and recorded the trade-off between missed faults and false
+      alarms.
+    terms:
+    - model evaluation
+    - anomaly detection
 education:
 - degree: MSc Data Science
   org: University of Northfield

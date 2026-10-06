@@ -17,7 +17,7 @@ from ..llm.router import TaskUnavailable
 from . import prompts as P
 from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
-from .grounding import grounding_problems
+from .grounding import FILLER_WORDS, avoid_words, grounding_problems, rejected_words
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
 from .selection import (JACCARD, ONE_PAGE, Layout, chunks, fill_order, layout_from, missing_keywords, select_cv,
@@ -250,6 +250,81 @@ def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword]) -> t
         else:
             violations.extend(f"{bid}: {v}" for v in c.violations)
     return accepted, violations, warnings
+
+
+def wording_targets(ctx: dict, kws: list[Keyword], wording_misses: list[str]) -> tuple[dict[str, list[str]], list[str]]:
+    """For each wording miss (a keyword the CV has in substance, stemmed, but not in the JD's own form), the ONE bullet on
+    the CV, first in CV order, whose text carries the keyword's stem without its exact form. Returns
+    ({bullet id: [exact forms to write]}, [terms no bullet carries: the stem is only in the skills or the profile])."""
+    by_term = {k.term: k for k in kws}
+    plan: dict[str, list[str]] = {}
+    unplaced: list[str] = []
+    for term in wording_misses:
+        k = by_term.get(term)
+        hit = None
+        for sec in ("experience", "projects"):
+            for e in ctx[sec]:
+                for bid, text in zip(e["bullet_ids"], e["bullets"]):
+                    lit, stm = norm_literal(text), norm_stem(text)
+                    for w in (k.members() if k else [term]):
+                        if not _contains(lit, norm_literal(w)) and _contains(stm, norm_stem(w)):
+                            hit = hit or (bid, w)
+        if hit:
+            plan.setdefault(hit[0], []).append(hit[1])
+        else:
+            unplaced.append(term)
+    return plan, unplaced
+
+
+def wording_pass(job: dict, fb: dict, ctx: dict, kws: list[Keyword], wording_misses: list[str], llm, cache: dict,
+                 notes: list[str]) -> dict:
+    """After rephrasing: for each wording miss, ask the model to rewrite the one bullet that carries the keyword's stem so
+    it uses the JD's exact form ("prompts", "prototyping"), in batches of REPHRASE_BATCH like any rephrase. Every rewrite
+    goes through `guard_rephrases` against its canonical bullet; an accepted one replaces the bullet's text in `ctx`.
+    Returns {"terms", "asked", "calls", "accepted": [ids], "blocked": [ids], "unplaced": [terms]}."""
+    plan, unplaced = wording_targets(ctx, kws, wording_misses)
+    stats: dict = {"terms": list(wording_misses), "asked": len(plan), "calls": 0, "accepted": [], "blocked": [],
+                   "unplaced": unplaced}
+    if unplaced:
+        notes.append("wording: no bullet carries the stem of " + ", ".join(unplaced) + " (skills or profile only)")
+    if not plan:
+        return stats
+    bidx = bullet_index(fb)
+    current = {bid: text for sec in ("experience", "projects") for e in ctx[sec] for bid, text in
+               zip(e["bullet_ids"], e["bullets"])}
+    system = P.REPHRASE_SYSTEM.replace("{deny}", _deny_list(fb))
+    proposed: dict[str, str] = {}
+    todo = [(bid, tuple(forms)) for bid, forms in plan.items()]
+    for batch in chunks([t for t in todo if ("wording", t[0], t[1], current[t[0]]) not in cache], REPHRASE_BATCH):
+        items = [{"id": bid, "text": current[bid], "terms": list(bidx[bid].get("terms", [])), "introduce": list(forms),
+                  "exact_form": list(forms)} for bid, forms in batch]
+        lines = "\n".join(f"- id: {i['id']}\n  TEXT: {i['text']}\n  TERMS: {', '.join(i['terms']) or '(none)'}\n"
+                          f"  MAY INTRODUCE: {', '.join(i['introduce'])}\n"
+                          f"  EXACT FORM: {', '.join(i['exact_form'])}" for i in items)
+        stats["calls"] += 1
+        try:
+            out = _llm_json(llm, "rephrase_bullets", system, P.REPHRASE_USER.format(title=job["title"], bullets=lines),
+                            {"bullets": items, "title": job["title"]})
+            got, shape_notes = normalise_rephrase(out, {i["id"] for i in items})
+        except Exception as e:  # noqa: BLE001 — the bullets keep their wording
+            notes.append(f"wording: batch of {len(batch)} failed ({str(e)[:120]}); wording kept")
+            continue
+        notes.extend(f"wording: {n}" for n in shape_notes)
+        for bid, forms in batch:
+            cache[("wording", bid, forms, current[bid])] = got.get(bid, "")
+    for bid, forms in todo:
+        new = cache.get(("wording", bid, forms, current[bid]), "")
+        if new and new.strip() != current[bid]:
+            proposed[bid] = new
+    accepted, _viol, _warn = guard_rephrases(fb, proposed, kws)
+    stats["accepted"] = sorted(accepted)
+    stats["blocked"] = sorted(set(proposed) - set(accepted))
+    for sec in ("experience", "projects"):
+        for e in ctx[sec]:
+            for i, bid in enumerate(e["bullet_ids"]):
+                if bid in accepted:
+                    e["bullets"][i] = accepted[bid]
+    return stats
 
 
 def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
@@ -560,7 +635,7 @@ def _lack_problems(text: str, gaps: list[str]) -> list[str]:
     return out
 
 
-VAGUE_WORDS = ("scalable", "robust", "seamless", "cutting-edge")      # filler: only if the evidence itself says it
+VAGUE_WORDS = FILLER_WORDS      # filler: only if the evidence itself says it
 # evidence that does not say "I built / led it": contributed, shipped, or work done as part of a team
 WEAK_ROLE = re.compile(r"\b(contribut\w*|shipped|team (?:project|of \w+|effort)|(?:as )?part of (?:a|the) team|in a team)\b",
                        re.I)
@@ -628,12 +703,15 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
 
 
 def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[str] | None = None,
-            notes: list[str] | None = None, team: str = "") -> tuple[list[str], list[str]]:
+            notes: list[str] | None = None, team: str = "",
+            retry: dict | None = None) -> tuple[list[str], list[str]]:
     """The cover letter from the company hook, the two evidence bullets and the optional GAPS. The model writes the body;
     the closing question is added here from settings (`letter_closing`). A draft is checked (length, banned phrases, deny
     list, claimed gaps, role upgrades, numbers, and every sentence against its own evidence bullet and the JD) and retried
-    once with its problems listed; a second failure is the deterministic fallback, flagged. Raises TaskUnavailable when
-    no provider the task is restricted to can take it: the caller keeps the job waiting."""
+    once, naming the words it was rejected for; a second failure is the deterministic fallback, flagged. The prompt lists
+    the filler and capability words nothing supports under AVOID. `retry` (when given) is filled in: {"count",
+    "rejected_words", "first_problems", "outcome"}, and `notes` says the retry happened. Raises TaskUnavailable when no
+    provider the task is restricted to can take it: the caller keeps the job waiting."""
     deny = fb.get("deny_terms", [])
     gaps = (gaps or [])[:6]
     # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
@@ -645,17 +723,20 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     closing = letter_closing(settings, job["company"], team)
     problems: list[str] = []
     feedback = ""
-    for _ in range(2):
+    retry = retry if retry is not None else {}
+    retry.update({"count": 0, "rejected_words": [], "first_problems": [], "outcome": "first draft"})
+    avoid = avoid_words(evidence, job["description"], hook, f"{named} {' '.join(gaps)}")
+    for attempt in range(2):
         try:
             out = _llm_json(
                 llm, "cover_letter",
                 P.LETTER_SYSTEM.replace("{max_words}", str(max_words))
                 .replace("{deny}", ", ".join(d for d in deny if d not in named_ok)),
                 P.LETTER_USER.format(title=job["title"], company=job["company"], company_hook=hook or "(none)",
-                                     gaps=", ".join(gaps) or "(none)",
+                                     gaps=", ".join(gaps) or "(none)", avoid=", ".join(avoid) or "(none)",
                                      evidence="\n".join(f"- {e}" for e in texts)) + feedback,
                 {"company": job["company"], "title": job["title"], "company_hook": hook, "evidence": texts,
-                 "gaps": gaps})
+                 "gaps": gaps, "avoid": avoid})
             body, letter_notes = normalise_letter(out)
             if body and body[-1].rstrip().endswith("?"):       # the model wrote its own closing question: ours replaces it
                 body = body[:-1]
@@ -686,8 +767,17 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         if extra:
             problems.append(f"new numbers {sorted(extra)}")
         if not problems:
+            retry["outcome"] = "ok after retry" if attempt else "first draft"
             return paras, []
-        feedback = "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems)
+        words = rejected_words(problems)
+        if attempt == 0:                                       # the one retry: say which words the check rejected
+            retry.update({"count": 1, "rejected_words": words, "first_problems": list(problems)})
+            if notes is not None:
+                notes.append("cover_letter: first draft rejected (" + "; ".join(problems)[:200] + "); retried once"
+                             + (f", naming: {', '.join(words)}" if words else ""))
+        feedback = ((f"\n\nThe check rejected these words as unsupported: {', '.join(words)}. Do NOT use them." if words else "")
+                    + "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems))
+    retry["outcome"] = "fallback" if retry["count"] else retry["outcome"]
     # deterministic fallback — always honest, never great; review will show why
     fallback = [
         f"{job['company']}'s {job['title']} role sits close to the work I have been doing most recently.",
@@ -702,8 +792,9 @@ def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_di
     """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
     deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
     notes: list[str] = []
+    retry: dict = {}
     try:
-        paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes, team)
+        paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes, team, retry)
     except TaskUnavailable as e:        # no provider may write it now: no letter, no fallback, the job waits
         return None, {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "pending",
                       "reason": str(e)[:300], "notes": notes,
@@ -714,7 +805,7 @@ def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_di
                          "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
     return pdf, {"paragraphs": paras, "problems": problems, "score": score(pdf_text(pdf), kws).literal,
                  "pages": page_count(pdf), "status": "fallback" if FALLBACK_MARK in problems else "ok",
-                 "notes": notes, "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
+                 "notes": notes, "retry": retry, "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
 
 
 def needs_result(fb: dict, ctx: dict) -> list[dict]:
@@ -873,11 +964,31 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         fill: dict = {"added": [], "rejected_overflow": [], "renders": 0, "reached": None}
         # two pages: when nothing had to be shrunk away, keep adding bullets until page 2 is full enough (or none are left)
         fill_on = not one_page and max_pages == 2 and shrinks == 0
-        order = fill_order(fb, ranking, sel, skills, jac) if fill_on else []
+        order = (fill_order(fb, ranking, sel, skills, jac, bool(sc.get("cv_fill_extra_projects")))
+                 if fill_on else [])
         if fill_on:
             fill = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"])
             pdf, pages = rerender()
         s = score(pdf_text(pdf), kws)
+
+        # Wording pass: a keyword the CV has only in another form ("prototyped" for "prototyping") gets its exact form in
+        # the one bullet that carries its stem. Kept only if the CV still fits and no keyword was lost.
+        wording: dict = {"terms": list(s.wording_misses), "asked": 0, "calls": 0, "accepted": [], "blocked": [],
+                         "unplaced": [], "kept": None}
+        if s.wording_misses:
+            before = [list(e["bullets"]) for sec in ("experience", "projects") for e in ctx[sec]]
+            wording.update(wording_pass(job, fb, ctx, kws, s.wording_misses, llm, cache, rephrase_notes))
+            if wording["accepted"]:
+                pdf, pages = rerender()
+                s2 = score(pdf_text(pdf), kws)
+                wording["kept"] = s2.literal >= s.literal and pages <= max_pages
+                if wording["kept"]:
+                    s = s2
+                else:
+                    for e, old in zip([e for sec in ("experience", "projects") for e in ctx[sec]], before):
+                        e["bullets"][:] = old
+                    pdf, pages = rerender()
+                    rephrase_notes.append("wording: the exact-form rewrites lowered the score or added a page; reverted")
 
         # Above the band: revert rephrasings (most keyword-dense first) until back in band.
         reverted = []
@@ -902,7 +1013,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
 
         rec = {"attempt": attempt, "score": s.literal, "score_stemmed": s.stemmed, "band": in_band(s.literal, band),
                "pages": pages, "page2_fill": page2_fill(pdf, pages), "fill": fill, "shrinks": shrinks,
-               "reverted": reverted,
+               "reverted": reverted, "wording": wording,
                "violations": profile["violations"] + viol, "warnings": profile["warnings"] + rephrase_notes + warn,
                "wording_misses": s.wording_misses, "misses": s.misses, "rephrase": rstats,
                "proposal": {"selection": sel, "rephrase": proposed, "profile": profile["text"]},

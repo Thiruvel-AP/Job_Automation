@@ -59,6 +59,18 @@ def test_the_fixture_bank_renders_exactly_two_pages_with_page_two_80_to_100_perc
     assert rep["attempts"][-1]["page2_fill"] == pytest.approx(fill)
 
 
+def test_the_fixture_cv_shows_three_projects_and_fills_page_two_from_their_bullets_not_a_fourth_project(run2):
+    rep, fb, s = run2
+    projects = rep["context"]["projects"]
+    assert len(projects) == s["scoring"]["cv_projects"] == 3
+    assert all(len(p["bullet_ids"]) >= 2 for p in projects)
+    assert rep["fill"]["reached"] is True and rep["page2_fill"] >= s["scoring"]["min_fill_page2"]
+    owner = {b["id"]: p["id"] for p in fb["projects"] for b in p["bullets"]}
+    assert {owner[b] for b in rep["fill"]["added"] if b in owner} <= {p["id"] for p in projects}     # no 4th project
+    first = rep["attempts"][-1]["proposal"]["selection"]
+    assert all(2 <= len(first["project_bullets"][p]) <= 3 for p in first["projects"])               # selection: 2-3 each
+
+
 def test_page_two_fill_comes_from_the_rendered_pdf_not_from_character_counts(run2):
     rep, _, _ = run2
     pdf = Path(rep["cv_pdf"])

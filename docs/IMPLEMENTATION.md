@@ -21,7 +21,7 @@ Companion to [`PLAN.md`](PLAN.md) (what & why). This file is *how*: modules, sig
 | Check memory / ask before altering; no hallucination | fact bank = the memory; `faithfulness.check` | ✅ guard. New: keywords with *partial* evidence (stem match only in `terms`, not in text) become **review questions**: "Is it true you did X in bullet Y?" |
 | "Add all required skills and let me know so I'll keep learning" | **Resolved as:** never added to the CV; written to a per-job and a global **learning list** | Adding an unevidenced skill *is* a hallucination, so the two instructions only reconcile this way. See §5. |
 | Keep the structure | `templates/cv.tex.j2` | ✅ CV-2: the user's own one-page layout — Profile → Experience → Projects → Skills → Education → Certifications & Awards. |
-| One A4 page (CV) and one page (letter) | `render.page_count` + `_shrink`; `careerops tailor/run` prints both page counts | ✅ CV-2 (`scoring.max_pages: 1`; was 2) |
+| Two A4 pages (CV, since 2026-10-06; `--one-page` for one) and one page (letter) | `render.page_count` + `render.page2_fill` + `tailor.fill_page2` + `_shrink`; `careerops tailor/run` prints both page counts and page-2 fill | ✅ §5d (`scoring.max_pages: 2`; CV-2 was 1) |
 | Output only the LaTeX | `data/outputs/<job>/CV.tex` (+ PDF) | Learning list and questions go to `report.json`/review, not into the CV. |
 | **Cover letter:** company from JD, ask if missing | gates + new status `needs_company` | Agency/unnamed employer (e.g. Adzuna "Recruiter", JD says "our client") → held until you name it. |
 | Hook, <250 words, no "I am writing to apply", specific CTA, human tone | `tailor._letter` | ✅ checks. New: hook must reference `company_hook` noun phrase; CTA must name a concrete next step (regex for call/chat/demo/walk-through + timeframe). |
@@ -222,6 +222,37 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
 - Contact details (address, email, phone, links) never appear in a prompt: `tests/llm/test_prompt_privacy.py`.
 - `careerops doctor` counts `# CONFIRM` markers like TODOs (`setup.fact_bank_open_items`).
 - The user's header has no headline line, so the family headline (M4b) now reaches the page only as the first words of the profile.
+
+## 5d. Two full pages, outcome log, calibration fix round — **done** (2026-10-06; none of it run live)
+
+**Two pages.** `templates/cv2.tex.j2` is the default (`cv.tex.j2` only with `--one-page`). `scoring.max_pages: 2`,
+`min_fill_page2: 0.80`: `render.page2_fill` reads the rendered PDF (`pdftotext -bbox`, y of the lowest word on page 2 over
+the text area, `CV2_MARGIN_PT` must match the template's geometry). `selection.select_cv(fb, kws, preferred, skills, layout)`
+is greedy marginal gain with `Layout`s (`ONE_PAGE` 2-4 / 1-2 / 2 projects; `TWO_PAGE` from `scoring.cv_bullets`: 4-5 newest,
+3-4 others, 3 projects x 2-3 bullets), skips a bullet whose token Jaccard with a chosen one is >= `bullet_dedupe_jaccard`
+(0.6) and returns `project_bullets`. `selection.fill_order` lists unused bullets (experience and the chosen projects' bullets by
+gain; bullets of a 4th project only with `cv_fill_extra_projects`, default false); `tailor.fill_page2` adds them in batches
+sized by a line-count guess, renders, takes back what tipped the CV onto page 3, until page 2 is full or none are left; shrink
+runs only above `max_pages` and the fill is skipped after a shrink. `tailoring/skills.py`: `skills.core` pinned first row,
+case-insensitive dedupe, JD-first order, at most `max_skill_groups` other rows; `core_skill_problems` (doctor: deny-listed, or
+not literally mentioned elsewhere in the bank); `cv_skills` raises for a denied core skill. A bullet's optional `result:` is
+sent to rephrase (`RESULT:` line, `unused_result`) and evidences its own numbers in `guard_rephrases`; `report["needs_result"]`
+lists CV bullets without one. `report.json`: `one_page`, `cv_pages`, `page2_fill`, `fill`, `skills`; `jobs.cv_pages/page2_fill`.
+**Wording pass** (`tailor.wording_pass`): per wording miss, the one CV bullet carrying the keyword's stem is re-asked with an
+`EXACT FORM:` line, guarded like any rephrase, kept only if the literal score does not drop and the CV still fits.
+**Letter:** the prompt lists `grounding.avoid_words` (filler and capability words nothing supports) under AVOID; a rejected
+draft is retried once with `grounding.rejected_words` named; `report["letter"]["retry"]` = {count, rejected_words,
+first_problems, outcome}.
+
+**Outcome log.** `outcomes` table; `reporting/outcomes.py`: `record`, `record_applied` (called inside the transaction of
+`archive.record_application` / `mark_applied_unarchived`), `wilson`, `applied_jobs`, `funnel`, `build_report` (splits family /
+tier / cv pages / sponsor match; `no_response` after 28 days is computed), `propose_from_archive` / `apply_proposals` (listing
+and stat only; writes the DB only). CLI `outcome`, `outcomes [--import-archive [--apply]]`; Excel "Outcomes" sheet.
+
+**Calibrate.** Per-JD table gains `pages` and `page 2 fill`; the triage log line shows `(flag: Not on sponsor register)`;
+the sidecar records `rubric_mtime_at_run` and `--summarise` prints `RUBRIC PREDATES THIS RUN — grades are not for these outputs`
+(rubric older than the run, or not saved since the run wrote it) above the table, leaving the false-claim and would_send
+criteria unticked.
 
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 

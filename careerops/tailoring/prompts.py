@@ -37,6 +37,8 @@ Rules:
   state; end with a result only if the TEXT states it or the bullet has a RESULT line.
 - A RESULT line is a measured outcome the candidate supplied: you may end the sentence with it (at most 35 words then),
   copying its numbers exactly. Use no number that is not in TEXT or RESULT.
+- An EXACT FORM line names a keyword the TEXT already says in another form (the TEXT has "prototyped", the keyword is
+  "prototyping"): rewrite the sentence so it contains the keyword in exactly that form, and change nothing else.
 - If a keyword does not fit naturally, return the bullet's TEXT unchanged.
 - Never mention: {deny}."""
 
@@ -82,11 +84,14 @@ Rules:
   team of five), do not write delivered, built, led, owned or designed for it; say "contributed to" or "as part of a
   team". Keep approximations as written ("~65 tests" stays "about 65 tests", never "65").
 - No vague filler: never write scalable, robust, seamless or cutting-edge unless EVIDENCE uses the word.
+- AVOID lists words the check rejects because nothing you were given says them. Never write them, nor a synonym that
+  claims the same thing.
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""
 
 LETTER_USER = """ROLE: {title} at {company}
 COMPANY HOOK (from JD): {company_hook}
 GAPS (required tools/platforms/languages/frameworks, absent from the fact bank): {gaps}
+AVOID (do not use these words, the evidence does not support them): {avoid}
 EVIDENCE:
 {evidence}"""
 
