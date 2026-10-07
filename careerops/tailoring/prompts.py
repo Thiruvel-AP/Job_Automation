@@ -1,7 +1,7 @@
 """Prompts. Kept separate so you can iterate on wording without touching control flow."""
 
 KEYWORDS_SYSTEM = """You extract ATS keywords from job descriptions.
-Return JSON: {"required": [..], "preferred": [..], "company_hook": "..", "team": ".."}
+Return JSON: {"required": [..], "preferred": [..], "context_terms": [..], "company_hook": "..", "team": ".."}
 Rules:
 - A keyword is a 1-3 word skill, tool, method or domain NOUN phrase copied VERBATIM from the JD text
   (e.g. "PyTorch", "text analytics", "customer feedback").
@@ -16,6 +16,9 @@ Rules:
 - At most 25 keywords in total, the most important first (code enforces all of these rules afterwards, so a keyword
   that breaks one is simply dropped). No soft fluff like "passionate" unless the JD lists it as a
   requirement.
+- context_terms: names of teams, product areas and organisational units in the JD, copied VERBATIM, that are NOT
+  skills ("Growth", "Payments", "product squad", "data science teams"), and phrases about how the company works rather
+  than a skill ("data discipline", "engineering culture", "growth mindset"). Never put these in required or preferred.
 - company_hook: ONE sentence on what the company does or the problem this team solves, using only facts in the JD.
 - team: the name of the team or group the role sits in, copied VERBATIM from the JD (e.g. "AI Accelerator"),
   or "" if the JD names none. Never the company name, never a guess."""
@@ -71,7 +74,7 @@ Rules:
   NEVER open with "I am writing to apply" or "I am excited". The company half may use COMPANY HOOK; the half about the
   candidate's work ("... mirrors my work on ...") may use only words from the EVIDENCE lines, no other capability.
 - Then the two EVIDENCE lines as concrete examples (one paragraph, or one each), each using only what its own line
-  says. Keep numbers exactly; add none. Never describe a metric as measured unless EVIDENCE contains the measurement
+  says. The hook draws on one EVIDENCE line and paragraph 2 on the OTHER: never tell the same line twice. Keep numbers exactly; add none. Never describe a metric as measured unless EVIDENCE contains the measurement
   (e.g. do not write "hallucination rate" unless EVIDENCE reports one).
 - Name no client, employer, sector, product, tool or capability that is not in EVIDENCE or COMPANY HOOK. Never invent
   who the work was for ("for a fintech client" is a lie unless EVIDENCE says so).
@@ -90,6 +93,8 @@ Rules:
   efficient and "exactly what I built".
 - AVOID lists words the check rejects because nothing you were given says them. Never write them, nor a synonym that
   claims the same thing.
+- NEVER praise the work with a qualifier that EVIDENCE does not use. Banned unless EVIDENCE has the exact word: {qualifiers}.
+  Describe what was built with the facts in EVIDENCE, not with adjectives or adverbs.
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""
 
 LETTER_USER = """ROLE: {title} at {company}

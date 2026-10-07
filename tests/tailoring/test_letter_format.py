@@ -44,6 +44,7 @@ def test_greeting_uses_the_team_when_there_is_one_and_the_fallback_when_not(sett
     assert letter_greeting(settings, "Lendable", "") == "Dear Lendable hiring team"
 
 
+@pytest.mark.slow
 def test_letter_without_a_team_says_dear_hiring_team_and_signs_off_from_settings(settings, fb_fixture, job, spy_llm):
     rep, _ = _run(settings, fb_fixture, job, spy_llm())
     text = pdf_text(Path(rep["letter_pdf"]))
@@ -51,6 +52,7 @@ def test_letter_without_a_team_says_dear_hiring_team_and_signs_off_from_settings
     assert "With regards," in text and "Kind regards" not in text
 
 
+@pytest.mark.slow
 def test_letter_with_a_team_named_in_the_jd_says_hi_team(settings, fb_fixture, job, spy_llm):
     jd = job["description"] + "\nYou will join the AI Accelerator group.\n"
     rep, _ = _run(settings, fb_fixture, job, spy_llm(_team(" AI Accelerator")), jd)
@@ -58,12 +60,14 @@ def test_letter_with_a_team_named_in_the_jd_says_hi_team(settings, fb_fixture, j
     assert "Hi Northwind Health AI AI Accelerator team," in pdf_text(Path(rep["letter_pdf"]))
 
 
+@pytest.mark.slow
 def test_a_team_the_jd_never_mentions_is_dropped(settings, fb_fixture, job, spy_llm):
     rep, _ = _run(settings, fb_fixture, job, spy_llm(_team("Phantom Squad")))
     assert rep["team"] == ""
     assert "Dear Northwind Health AI hiring team," in pdf_text(Path(rep["letter_pdf"]))
 
 
+@pytest.mark.slow
 def test_regenerated_letter_keeps_the_team_greeting(settings, fb_fixture, job, spy_llm):
     jd = job["description"] + "\nYou will join the AI Accelerator group.\n"
     llm = spy_llm(_team("AI Accelerator"))
@@ -73,6 +77,7 @@ def test_regenerated_letter_keeps_the_team_greeting(settings, fb_fixture, job, s
 
 
 # ---------------------------------------------------------------- gaps
+@pytest.mark.slow
 def test_no_gap_sentence_when_gaps_is_empty(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep, _ = _run(settings, fb_fixture, job, llm, JD_NO_GAP)
@@ -83,6 +88,7 @@ def test_no_gap_sentence_when_gaps_is_empty(settings, fb_fixture, job, spy_llm):
     assert len(rep["letter"]["paragraphs"]) == 3 and rep["letter"]["status"] == "ok"
 
 
+@pytest.mark.slow
 def test_a_required_gap_reaches_the_prompt_and_gets_one_short_plain_sentence(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep, _ = _run(settings, fb_fixture, job, llm, JD_GAP)
@@ -95,12 +101,14 @@ def test_a_required_gap_reaches_the_prompt_and_gets_one_short_plain_sentence(set
     assert rep["letter"]["status"] == "ok" and rep["letter"]["problems"] == []
 
 
+@pytest.mark.slow
 def test_only_required_gaps_are_passed(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep, _ = _run(settings, fb_fixture, job, llm, "Requirements\n- Python\n\nNice to have\n- Kubernetes\n")
     assert "kubernetes" in rep["genuine_gaps"] and _letter_ctx(llm)["gaps"] == []
 
 
+@pytest.mark.slow
 def test_deny_listed_gap_term_is_still_blocked_when_the_letter_claims_it(settings, fb_fixture, job, spy_llm):
     lying = {"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I have run Kubernetes clusters in production for two years.",
@@ -110,6 +118,7 @@ def test_deny_listed_gap_term_is_still_blocked_when_the_letter_claims_it(setting
     assert any("deny-listed 'kubernetes'" in p for p in rep["letter"]["problems"])
 
 
+@pytest.mark.slow
 def test_deny_listed_term_that_is_not_a_gap_is_still_blocked(settings, fb_fixture, job, spy_llm):
     sneaky = {"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I have not yet used Terraform, but I learn quickly.",
@@ -126,11 +135,14 @@ LIE = {"cover_letter": lambda ctx: {"paragraphs": [
     "I have not used statistics in production, but I learn quickly.", "Could we talk for twenty minutes?"]}}
 
 
+@pytest.mark.slow
 def test_chattermill_broad_skills_are_not_gaps_so_no_gap_sentence(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep, _ = _run(settings, fb_fixture, job, llm, CHATTERMILL)
-    # the literal terms are missing from the fact bank (the old behaviour called these genuine gaps) ...
-    assert {"statistical modelling", "causal inference"} <= {g.lower() for g in rep["genuine_gaps"]}
+    # the literal terms are missing from the fact bank; each is either a genuine gap or, when a neighbour term is there,
+    # `possible evidence` for the user to judge (never counted, never claimed) ...
+    missing = {g.lower() for g in rep["genuine_gaps"]} | {g.lower() for g in rep["possible_evidence"]}
+    assert {"statistical modelling", "causal inference"} <= missing
     # ... but they are broad skills, so nothing reaches the letter
     assert _letter_ctx(llm)["gaps"] == []
     assert "(none)" in llm.sent[-1]["user"]
@@ -139,6 +151,7 @@ def test_chattermill_broad_skills_are_not_gaps_so_no_gap_sentence(settings, fb_f
     assert rep["letter"]["status"] == "ok"
 
 
+@pytest.mark.slow
 def test_a_letter_that_says_the_candidate_lacks_statistics_is_rejected(settings, fb_fixture, job, spy_llm):
     rep, _ = _run(settings, fb_fixture, job, spy_llm(LIE), CHATTERMILL)
     assert rep["letter"]["status"] == "fallback"

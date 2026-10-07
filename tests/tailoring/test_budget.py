@@ -1,12 +1,16 @@
 """Every model call stays well inside the provider's per-minute budget (Groq free tier: 8K TPM, admitted as estimated
 input + max_tokens), however large the fact bank is: code selects the bullets and the rephrase calls carry <= 5 of them,
 so the size of the bank never reaches a prompt."""
+import pytest
 import copy
 
 from careerops.llm.pacing import estimate_tokens
 from careerops.tailoring import tailor
 
 LIMIT = 7500                         # Groq's 8000 TPM minus a margin for the estimate's error
+
+
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
 def _cost(call, settings):

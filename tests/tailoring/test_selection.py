@@ -107,6 +107,7 @@ def test_chunks_split_in_order_into_batches_of_at_most_n():
 
 
 # ---------------------------------------------------------------- in the pipeline
+@pytest.mark.slow
 def test_the_model_is_never_asked_to_select_and_the_cv_follows_the_code_selection(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
@@ -121,6 +122,7 @@ def test_the_model_is_never_asked_to_select_and_the_cv_follows_the_code_selectio
     assert saved["attempts"][0]["selection"] == first["selection"]
 
 
+@pytest.mark.slow
 def test_two_runs_of_one_job_choose_the_same_bullets(settings, fb_fixture, job, spy_llm):
     a = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, settings.path("outputs"))["context"]
     b = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, settings.path("outputs"))["context"]
@@ -128,6 +130,7 @@ def test_two_runs_of_one_job_choose_the_same_bullets(settings, fb_fixture, job, 
     assert ids(a) == ids(b)
 
 
+@pytest.mark.slow
 def test_the_shrink_loop_brings_the_selection_to_one_page(one_page_run):
     rep, _ = one_page_run
     assert max(a["shrinks"] for a in rep["attempts"]) >= 1, "fixture is too short to exercise the shrink loop"
@@ -151,6 +154,7 @@ def _below_band(settings):
     settings.raw["scoring"]["band"] = [0.95, 1.0]           # the broad-JD CV scores ~0.83: below, with a ceiling of 1.0
 
 
+@pytest.mark.slow
 def test_a_below_band_attempt_ranks_the_next_one_with_the_missed_keywords_counted_double(settings, fb_fixture,
                                                                                             broad_job, broad_llm,
                                                                                             monkeypatch):
@@ -168,6 +172,7 @@ def test_a_below_band_attempt_ranks_the_next_one_with_the_missed_keywords_counte
     assert all(seen[1][t] == seen[0][t] for t in seen[0] if t not in first["misses"] + first["wording_misses"])
 
 
+@pytest.mark.slow
 def test_attempts_do_not_repeat_themselves_when_the_selection_would_not_change(settings, fb_fixture, broad_job,
                                                                                 broad_llm):
     _below_band(settings)
@@ -177,6 +182,7 @@ def test_attempts_do_not_repeat_themselves_when_the_selection_would_not_change(s
     assert all(a != b for a, b in zip(proposals, proposals[1:]))          # an attempt is only made for a new selection
 
 
+@pytest.mark.slow
 def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(settings, fb_fixture, broad_job,
                                                                                 broad_llm, monkeypatch):
     _below_band(settings)

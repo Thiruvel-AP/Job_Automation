@@ -17,6 +17,9 @@ DESTRUCTIVE = {"rmtree", "unlink", "remove", "rmdir", "removedirs", "move", "ren
 ALLOWED = {
     ("apply/archive.py", "shutil.rmtree"): (1, "_remove_staging: a folder under paths.tmp that this run staged; refuses "
                                                "anything not strictly inside it and anything in or under the archive"),
+    ("apply/live.py", "shutil.move"): (1, "_move: a JD .txt between the folders under paths.jds (inbox -> done / rejected) to a "
+                                          "name that does not exist yet; refuses any path in or under the archive root"),
+    ("apply/live.py", "os.replace"): (1, "State.save: swaps in paths.live/state.json.tmp, a file this run just wrote"),
     ("tailoring/render.py", ".unlink"): (1, "xelatex's own .aux/.log/.out next to the PDF it just built in this run's work folder"),
     ("tailoring/render.py", "os.replace"): (1, "renames this run's cv.pdf/cv.tex to their final names inside the same work folder"),
     ("tailoring/tailor.py", "shutil.rmtree"): (1, "_discard: <job>.partial/.old/.failed directly inside the outputs folder, "
@@ -86,6 +89,7 @@ def test_discard_refuses_everything_else(tmp_path, rel):
     assert (out / "sub" / "Acme.partial").is_dir()
 
 
+@pytest.mark.slow
 def test_a_tailoring_run_leaves_every_other_folder_in_the_outputs_alone_and_replaces_only_its_own(settings, fb_fixture,
                                                                                                    job, spy_llm):
     out = settings.path("outputs")

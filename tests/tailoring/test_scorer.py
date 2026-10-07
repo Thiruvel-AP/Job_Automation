@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from careerops.config import ROOT, load_yaml
+from careerops.config import load_yaml
 from careerops.tailoring.scorer import Keyword, ceiling, norm_stem, score, taxonomy_keywords
 from careerops.tailoring.tailor import fact_text
 
@@ -30,8 +30,8 @@ def test_taxonomy_weights_by_section(jd):
     assert kws["kubernetes"].weight == 1.0 and not kws["kubernetes"].required
 
 
-def test_ceiling_reports_genuine_gaps(jd):
-    fb = load_yaml(ROOT / "config/profile/fact_bank.yaml")
+def test_ceiling_reports_genuine_gaps(jd, settings):
+    fb = load_yaml(settings.path("fact_bank"))             # the fictional profile: it has no Kubernetes, whatever the real bank gains
     c, gaps = ceiling(fact_text(fb), taxonomy_keywords(jd))
     assert "kubernetes" in [g.lower() for g in gaps]     # confirmed-absent → honest gap
     assert 0.7 < c < 1.0

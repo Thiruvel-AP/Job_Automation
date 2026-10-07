@@ -3,7 +3,7 @@ across all rows, and the other groups are ordered by the JD. Also the fact-bank 
 from __future__ import annotations
 
 from .faithfulness import deny_hits
-from .scorer import Keyword, _contains, norm_literal
+from .scorer import Keyword, has_literal, norm_literal
 from .selection import _hits
 
 CORE_KEY = "core"            # the fact-bank key the user maintains
@@ -51,11 +51,13 @@ def _bank_text_without_core(fb: dict) -> str:
 
 def core_skill_problems(fb: dict) -> list[str]:
     """What is wrong with `skills.core`, one message naming each skill: on the deny list, or mentioned nowhere else in
-    the fact bank (other skill rows, bullets and their terms, project stacks, profile facts) so nothing evidences it."""
+    the fact bank (other skill rows, bullets and their terms, project stacks, profile facts) so nothing evidences it.
+    Matching is the scorer's literal view (`has_literal`): singular and plural are one term in both directions, so "llm"
+    evidences "LLMs" and "api" evidences "APIs"; the suffix stemmer is not used, it would let "plots" evidence "Plotly"."""
     problems = core_deny_problems(fb)
     lit = norm_literal(_bank_text_without_core(fb))
     for s in core_skills(fb):
-        if not _contains(lit, norm_literal(s)):                 # literal: "Plotly" is not evidenced by a bank that says "plots"
+        if not has_literal(lit, norm_literal(s)):               # "Plotly" is not evidenced by a bank that says "plots"
             problems.append(f"core skill '{s}' appears nowhere else in the fact bank (no bullet, term or skill row evidences it)")
     return problems
 

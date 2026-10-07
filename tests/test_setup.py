@@ -174,6 +174,7 @@ def test_doctor_reports_a_server_that_does_not_answer(monkeypatch):
     assert len(checks) == 1 and checks[0][1] is False and CREATE in checks[0][2]
 
 
+@pytest.mark.slow
 def test_doctor_runs_the_ollama_checks_for_a_provider_without_a_key(settings, monkeypatch):
     from careerops.setup import doctor
     _ollama(monkeypatch, models=())

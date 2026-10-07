@@ -14,12 +14,14 @@ from careerops.llm import MockLLM
 from careerops.tailoring.tailor import tailor_job
 
 FIX = Path(__file__).parent / "fixtures"
+PROFILE_FIX = FIX / "profile"          # fictional fact_bank.yaml + applicant.yaml: what every test uses as "the profile"
 
 # ---- guard: no test may open anything under the real data/ folder (careerops.db, outputs/, exports/ ...) ----------
 # A 2026-10-03 `careerops run --mock` against the real data/ overwrote a real tailored job (see docs/status.md); tests
 # must use tmp_path. An audit hook sees every open() / os.open() / sqlite3.connect(), including ones made in C.
 REAL_DATA = os.path.realpath(ROOT / "data")
-_guard = {"on": False, "hits": []}
+REAL_PROFILE = tuple(os.path.realpath(ROOT / "config" / "profile" / n) for n in ("fact_bank.yaml", "applicant.yaml"))
+_guard = {"on": False, "hits": [], "profile_hits": [], "heavy": []}
 
 
 def _under_real_data(target) -> bool:
@@ -29,25 +31,70 @@ def _under_real_data(target) -> bool:
     return False                                           # an int file descriptor, ":memory:" objects, None
 
 
+def _is_real_profile(target) -> bool:
+    return isinstance(target, (bytes, str, os.PathLike)) and os.path.realpath(os.fsdecode(target)) in REAL_PROFILE
+
+
+def _heavy(event, args) -> str | None:
+    """What a subprocess is, if it is the kind that makes a test slow and memory-hungry: xelatex (PDF rendering) or the
+    Playwright driver (Chromium)."""
+    if event != "subprocess.Popen" or len(args) < 2 or not args[1]:
+        return None
+    exe = os.path.basename(os.fsdecode(args[1][0])).lower()
+    if exe.startswith("xelatex"):
+        return "xelatex"
+    return "playwright" if "playwright" in " ".join(os.fsdecode(a) for a in args[1][:2]).lower() else None
+
+
 def _audit(event, args):
+    if _guard["on"] and event == "subprocess.Popen":
+        kind = _heavy(event, args)
+        if kind and kind not in _guard["heavy"]:
+            _guard["heavy"].append(kind)
     if _guard["on"] and event in ("open", "sqlite3.connect") and args and _under_real_data(args[0]):
         _guard["hits"].append(f"{event}: {os.fsdecode(args[0])}")
         raise PermissionError(f"test touched the real data/ folder ({event} {os.fsdecode(args[0])}); use tmp_path")
+    if _guard["on"] and event == "open" and args and _is_real_profile(args[0]):
+        _guard["profile_hits"].append(f"{event}: {os.fsdecode(args[0])}")
+        raise PermissionError(f"test read the real profile ({os.fsdecode(args[0])}); use tests/fixtures/profile/")
 
 
 sys.addaudithook(_audit)           # audit hooks cannot be removed; the flag above scopes it to running tests
 
 
 @pytest.fixture(autouse=True)
+def slow_tests_are_marked(request):
+    """A test that runs xelatex or drives Chromium must carry @pytest.mark.slow, so `pytest -m "not slow"` stays a light
+    run (under ~2 GB RAM) however many PDFs the rest of the suite renders. Set CAREEROPS_SLOW_LOG=<file> to append the
+    offenders' node ids to a file instead of failing (how the markers were first found)."""
+    _guard["heavy"].clear()
+    yield
+    heavy, _guard["heavy"] = list(_guard["heavy"]), []
+    if heavy and request.node.get_closest_marker("slow") is None:
+        log = os.environ.get("CAREEROPS_SLOW_LOG")
+        if log:
+            with open(log, "a", encoding="utf-8") as f:
+                f.write(request.node.nodeid + "\n")
+        else:
+            pytest.fail(f"this test runs {' and '.join(heavy)}: mark it @pytest.mark.slow (or the module pytestmark)",
+                        pytrace=False)
+
+
+@pytest.fixture(autouse=True)
 def no_real_data():
     """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
     _guard["hits"].clear()
+    _guard["profile_hits"].clear()
     _guard["on"] = True
     yield
     _guard["on"] = False
     hits, _guard["hits"] = list(_guard["hits"]), []
+    profile_hits, _guard["profile_hits"] = list(_guard["profile_hits"]), []
     if hits:
         pytest.fail("test opened the real data/ folder:\n  " + "\n  ".join(hits), pytrace=False)
+    if profile_hits:
+        pytest.fail("test read the real fact bank / applicant (config/profile/); use tests/fixtures/profile/:\n  "
+                    + "\n  ".join(profile_hits), pytrace=False)
 
 
 @contextmanager
@@ -59,6 +106,15 @@ def real_data_hits():
         _guard["hits"].clear()                              # expected hits: the probing test is not a failure
 
 
+@contextmanager
+def real_profile_hits():
+    """For the guard's own test: yields the list of real-profile reads and lets the probing test pass."""
+    try:
+        yield _guard["profile_hits"]
+    finally:
+        _guard["profile_hits"].clear()
+
+
 def fixture(area: str, name: str) -> Path:
     return FIX / area / name
 
@@ -67,7 +123,7 @@ def fixture(area: str, name: str) -> Path:
 def settings(tmp_path) -> Settings:
     s = load_settings()
     raw = copy.deepcopy(s.raw)
-    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir"):   # register_dir: M1 writes snapshots
+    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")
@@ -75,8 +131,10 @@ def settings(tmp_path) -> Settings:
     raw["paths"]["calibration"] = str(tmp_path / "calibration")
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords
     (tmp_path / "Companies").mkdir()                      # only `careerops init` creates the real one
-    raw["paths"]["fact_bank"] = str(ROOT / "config/profile/fact_bank.yaml")
-    raw["paths"]["applicant"] = str(ROOT / "config/profile/applicant.yaml")
+    # A fictional profile, never the user's real one (config/profile/): the real bank changes as the user adds skills
+    # (it gained Kubernetes), and tests about gaps and guards must not move with it.
+    raw["paths"]["fact_bank"] = str(PROFILE_FIX / "fact_bank.yaml")
+    raw["paths"]["applicant"] = str(PROFILE_FIX / "applicant.yaml")
     shutil.copy(fixture("discovery", "sponsors.csv"), raw["paths"]["sponsors_csv"])
     return Settings(raw=raw, root=ROOT)
 

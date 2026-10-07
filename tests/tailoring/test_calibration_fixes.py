@@ -1,5 +1,6 @@
 """Calibration fixes: keyword collapse on generic head words, skills de-duplicated on the CV, and the reason a letter fell
 back. (Frozen keyword files are tested in tests/reporting/test_calibrate.py.) No network, no model."""
+import pytest
 import copy
 from pathlib import Path
 
@@ -43,6 +44,7 @@ def test_dedupe_skills_is_case_insensitive_within_and_across_groups_and_keeps_th
     assert out == {"Languages": ["Python", "SQL"], "Tools": ["Docker", "Git"]}          # "Again" is empty: dropped
 
 
+@pytest.mark.slow
 def test_a_skill_listed_twice_renders_once_on_the_cv(settings, fb_fixture, job, spy_llm):
     fb = copy.deepcopy(fb_fixture)
     fb["skills"]["Languages"] += ["Zorblax", "ZORBLAX"]

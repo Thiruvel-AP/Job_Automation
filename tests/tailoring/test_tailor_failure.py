@@ -7,6 +7,9 @@ from careerops.tailoring import tailor
 from careerops.tailoring.render import RenderError
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 def _files(folder):
     return {str(p.relative_to(folder)): p.read_bytes() for p in sorted(folder.rglob("*")) if p.is_file()}
 

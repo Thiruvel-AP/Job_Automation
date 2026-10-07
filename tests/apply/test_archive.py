@@ -664,6 +664,7 @@ def _fixture_fb(settings, name):
     return {**fb, "identity": {**fb["identity"], "name": name}}
 
 
+@pytest.mark.slow
 def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(settings, db, job):
     fb = _fixture_fb(settings, "Ada Quincy Lovelace")
     db.upsert_job(job)
@@ -685,6 +686,7 @@ def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(sett
     assert res.folder == settings.path("applications") / "Northwind Health AI" / "AI Engineer"
 
 
+@pytest.mark.slow
 def test_real_pdfs_short_style_uses_first_word_of_the_identity(settings, db, job):
     settings.raw["files"]["name_style"] = "short"
     fb = _fixture_fb(settings, "Ada Quincy Lovelace")
@@ -693,6 +695,7 @@ def test_real_pdfs_short_style_uses_first_word_of_the_identity(settings, db, job
     assert Path(rep["cv_pdf"]).name == "Ada CV.pdf" and Path(rep["letter_pdf"]).name == "Ada Cover Letter.pdf"
 
 
+@pytest.mark.slow
 def test_real_pdfs_identity_with_slash_and_colon_is_sanitised(settings, db, job):
     fb = _fixture_fb(settings, "Ada/Q: Lovelace")
     db.upsert_job(job)

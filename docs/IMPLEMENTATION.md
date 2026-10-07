@@ -254,6 +254,66 @@ the sidecar records `rubric_mtime_at_run` and `--summarise` prints `RUBRIC PREDA
 (rubric older than the run, or not saved since the run wrote it) above the table, leaving the false-claim and would_send
 criteria unticked.
 
+## 5e. `careerops live` — interactive batch over a JD inbox — **done** (2026-10-07; tested with fakes and MockLLM, never run live)
+
+`careerops live [--max N] [--dry-run] [--mock]`: for each `.txt` in `paths.jds/inbox` (name order) validate → archive snapshot →
+`discovery.manual.add_jd` (returns the job id; no stdout parsing) → `manual.triage_job` (that job only) → `cli.tailor_jobs` for that
+id → `workflow.review_job` for that id (approve / edit / skip, + open PDFs, regenerate letter, quit) → unless `--dry-run`: preflight,
+"Open the application form?", the existing `assist` (never submits), every `CHECK VISA ANSWER` line printed, "Did YOU submit the
+form? [y/N]" → `y` only: `_archive` (= mark-applied) → second snapshot → compare → JD to `done/<id>-<name>`. `--yes` is refused.
+Code: `apply/live.py` (the loop; the costly steps are `Hooks` that take a job id, so tests inject fakes), `apply/snapshot.py`
+(`take` = os.walk + lstat, `compare` → removed / modified / stray; a folder's own size and mtime are ignored since adding a child
+changes them; the one allowed addition is the job's `application_dir` pair `<Company>/<Role>`), `discovery/manual.py`
+(`read_jd`: missing, < 500 bytes or non-UTF-8 → `JDError`, one line; `add-jd --file` uses it too), `cli.tailor_jobs` (the loop
+`tailor` uses, now shared), `tailor --id JOB`. New settings `paths.jds`, `paths.live`. State: `paths.live/state.json`, keyed by the JD
+file's sha256: a started job keeps its id, a finished one is skipped; a rerun resumes by DB status (triaged → tailor,
+needs_review → review, approved → apply). Exit codes: 0, 1 (daily LLM budget spent, job stays `triaged`), 2 (unreadable state
+file), 3 (archive changed: JD not filed, nothing further processed), 130 (Ctrl-C / EOF). Statuses it adds: `skipped` after a
+review skip (the job keeps its `out_dir`; `retriage` now treats a `skipped` row with an `out_dir` as post-tailoring so it is
+not reset to `triaged`) and `ready_not_submitted` (declined to open the form, or "did you submit" was not `y`).
+`add_jd` refuses (`JobExists`) a JD whose job id already exists past triage, so a repeat never resets tailored or applied work.
+`tests/test_deletions.py` lists the two file operations in `apply/live.py` (the JD move inside `paths.jds`, the state swap).
+**Not verified:** a real assist/browser session and a real Groq tailoring run inside `live`.
+
+## 5f. Live-run fixes (2026-10-07) — context terms, possible evidence, three letter drafts
+
+**Context terms** (`tailoring/context_terms.py`): `analyse` (the one place keywords are made, for live tailoring and for
+`calibrate --freeze-keywords` alike) sets team / product-area / org names aside before the cap: `split_context` = organisational noun
+as the last word (squad, team, collective, guild, tribe, chapter, pod, department ...), a name in a list of three or more capitalised
+names in the JD ("Borrowing, Growth, Payments, Fincrime, Wealth, or Core"), the model's `context_terms` (verbatim in the JD), or the
+team's own name; a taxonomy term is never context. They are out of the score's numerator and denominator and the ceiling;
+`report["context_terms"]` = [{term, weight, required, why}], a `keywords: 'X' is context (...)` note each, frozen files carry
+`context_terms`, the review screen has a "Context terms" line. Monzo (manual:de99f0a98229): 19 stored keywords -> 10 scored + 9 context.
+**Possible evidence** (`tailoring/families.py`, `config/evidence_families.txt`): a gap with a family member in the fact bank moves from
+`genuine_gaps` to `report["possible_evidence"]` {term: [{via, where}]} and is shown as "Possible evidence — you decide". Not counted
+in the ceiling or the CV, and not a letter gap. Matching is on stems and plural-stripped words (the stemmer maps experiment and
+experiments differently).
+**Letter** (`tailor._letter`, `LETTER_ATTEMPTS = 3`): a rejected draft is retried with every rejected word so far
+(`Do not use 'X' unless it appears in the evidence bullets.`) and the full problem texts; `retry` = {count (retries), rejected_words,
+first_problems, failures: [{attempt, problems}], outcome}; the review screen prints "Letter draft N rejected: ..." per failure.
+The Monzo run fell back because the retry named only 'integrated' and the model then wrote 'specialised'. `llm.letter_token_estimate`
+is 5000 (three drafts). Earlier items re-confirmed: `org_label` ("in my freelance AI/ML work", "at AstraZeneca"),
+`llm.max_tokens.cover_letter: 3000`, hook and paragraph 2 from different evidence bullets (`grounding.repeated_evidence_problems`).
+`careerops live --retailor` sends a started job (not applied) back to `triaged` and tailors it again.
+
+## 5g. Fixture profile, doctor plural match, qualifier repair, generic head words (2026-10-08)
+
+**Tests never read your profile.** `settings` points `paths.fact_bank` / `paths.applicant` at `tests/fixtures/profile/` (a fictional
+Ada Lovelace, no Kubernetes; project ids match `settings.yaml roles.families` so `load_roles` accepts it). `conftest` audit-hooks
+`open()` of the real `config/profile/*.yaml` (a swallowed error still fails the test in teardown) and
+`tests/test_no_real_profile.py` fails if any test source spells that path. `test_ceiling_reports_genuine_gaps` and
+`test_tailor_loop_end_to_end` now run on the fixture. **Slow marker:** a test that runs xelatex or the Playwright driver must be
+`@pytest.mark.slow` (the conftest fails it otherwise; `CAREEROPS_SLOW_LOG=<file>` lists offenders instead); `pytest -m "not slow"` is the light run.
+**Doctor:** `skills.core_skill_problems` matches with the scorer's literal view (`has_literal`: singular/plural in both directions,
+"llm" evidences "LLMs", "api" evidences "APIs"); the suffix stemmer is deliberately not used (it would let "plots" evidence "Plotly").
+**Letter qualifiers** (`tailoring/qualifiers.py`): if every problem of a draft is `'<w>' (claim)` or `vague filler '<w>'` with `<w>` in
+`QUALIFIER_LIST`, the words are deleted from the body (not from the template closing), the whole `draft_problems` check re-runs, and the edit
+is accepted only if it passes; `only_removed` verifies deletion-only (a/an aside), and a qualifier inside a skill name ("deep learning"), after
+a copula ("is robust") or whose removal leaves a dangling article/conjunction/doubled word is not touched. `report.letter.retry.removed` +
+`outcome` "qualifiers removed[ after retry]"; the review screen prints `Letter removed: ...`. `LETTER_SYSTEM` lists the qualifiers up front
+({qualifiers}, minus the words the evidence uses). **Generic head words:** `context_terms.FRAMING_HEADS` (discipline, culture, mindset, ethos)
+and `X function` after a unit word (data, analytics, business ...) make a term context, never a gap.
+
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 
 **Constraint clash.** Sources disagree on the note limit — 200 characters on free accounts (300 on Premium) per one, 300 for all accounts per another — and free accounts get only ~3–5 personalised notes a month. Five sentences is ~400–600 characters, so it can't fit either way.

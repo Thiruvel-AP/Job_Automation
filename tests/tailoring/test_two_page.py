@@ -88,6 +88,7 @@ def test_page_two_fill_comes_from_the_rendered_pdf_not_from_character_counts(run
     assert 0.85 <= first <= 1.0 and second == pytest.approx(page2_fill(pdf))
 
 
+@pytest.mark.slow
 def test_a_one_page_cv_has_no_page_two(tmp_path, fb_fixture):
     tex = env().get_template("cv.tex.j2").render(
         id={"name": "A B", "location": "X", "email": "a@b.c"}, profile="p", skills={"Languages": ["Python"]},
@@ -104,6 +105,7 @@ def test_the_cv_starts_with_profile_then_skills_experience_projects_education_ce
     assert [text.index(h) for h in heads] == sorted(text.index(h) for h in heads)
 
 
+@pytest.mark.slow
 def test_cv2_template_compiles_with_only_the_required_fields(tmp_path):
     ctx = {"id": {"name": "Min Imal", "location": "Bristol, UK", "email": "min@example.org"}, "profile": "Data scientist.",
            "skills": {"Core": ["Python"]}, "experience": [{"org": "Acme", "dates": "2025", "title": "Analyst",
@@ -224,6 +226,7 @@ def test_at_most_five_other_rows_the_least_jd_relevant_group_goes(run2):
     assert len(dropped) == 2 and "Core" in rows
 
 
+@pytest.mark.slow
 def test_core_skills_survive_the_shrink_step(settings, broad_job, broad_llm):
     fb = load_yaml(FIX / "fact_bank_two_page.yaml")
     rep = tailor.tailor_job(broad_job, fb, broad_llm, settings, settings.path("outputs"), one_page=True)
@@ -257,6 +260,31 @@ def test_core_skill_that_is_denied_or_evidenced_nowhere_fails_doctor_and_names_t
     assert core_skill_problems(ghost) == [bad[0][0]]
 
 
+def _bank_with_core(core, evidence):
+    """A one-bullet bank whose only mention of the skills is `evidence` (terms of that bullet); core is the pinned row."""
+    return {"skills": {"core": core}, "deny_terms": [],
+            "experience": [{"id": "e", "title": "T", "org": "O", "bullets": [
+                {"id": "e1", "text": "Built things.", "terms": evidence}]}], "projects": []}
+
+
+def test_core_skill_check_takes_plural_and_singular_as_one_term_in_both_directions():
+    """The doctor false alarm: core 'LLMs' / 'APIs' were reported as evidenced nowhere though the bank says llm / api."""
+    plural_core = _bank_with_core(["LLMs", "APIs", "Prompts"], ["llm", "api", "prompt"])
+    assert core_skill_problems(plural_core) == []
+    singular_core = _bank_with_core(["LLM", "API", "Prompt"], ["llms", "apis", "prompts"])
+    assert core_skill_problems(singular_core) == []
+
+
+def test_core_skill_check_is_still_a_true_negative_for_a_skill_the_bank_never_says(tmp_path):
+    fb = _bank_with_core(["LLMs", "Plotly", "Kafka"], ["llm", "plots", "kafkaesque"])
+    problems = core_skill_problems(fb)
+    assert len(problems) == 2 and "'Plotly'" in problems[0] and "'Kafka'" in problems[1]     # plots != Plotly, a longer word != Kafka
+    assert all("nowhere" in p for p in problems)
+    p = tmp_path / "bank.yaml"
+    p.write_text(yaml.safe_dump(fb), encoding="utf-8")
+    assert [c[0] for c in core_skill_checks(p)] == problems and not any(ok for _, ok, _ in core_skill_checks(p))
+
+
 def test_the_cv_refuses_to_render_a_denied_core_skill(settings, job):
     fb = load_yaml(FIX / "fact_bank_two_page.yaml")
     fb["skills"]["core"].append("Terraform")
@@ -265,6 +293,7 @@ def test_the_cv_refuses_to_render_a_denied_core_skill(settings, job):
 
 
 # ---------------------------------------------------------------- --one-page
+@pytest.mark.slow
 def test_one_page_flag_renders_one_page_with_the_old_template_and_layout(settings, fb_fixture, job):
     rep = tailor.tailor_job(job, fb_fixture, MockLLM(), settings, settings.path("outputs"), one_page=True)
     assert rep["one_page"] is True and rep["cv_pages"] == rep["final"]["pages"] == 1

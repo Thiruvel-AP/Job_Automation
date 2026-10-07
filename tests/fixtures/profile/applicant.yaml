@@ -1,0 +1,35 @@
+# Fictional applicant for tests (same shape as config/profile/applicant.yaml). Tests never read the real one.
+first_name: Ada
+last_name: Lovelace
+email: ada.lovelace@example.org
+phone: "+44 7700 900123"
+location: Bristol, United Kingdom
+linkedin: https://www.linkedin.com/in/ada-lovelace-test/
+github: https://github.com/ada-lovelace-test
+website: https://ada-lovelace-test.example.org/portfolio
+
+# Label regexes → field key above. Matched case-insensitively against <label>, aria-label, placeholder, name.
+label_map:
+  first_name: ['first\s*name', 'given\s*name', 'forename']
+  last_name: ['last\s*name', 'surname', 'family\s*name']
+  email: ['e-?mail']
+  phone: ['phone', 'mobile', 'telephone']
+  location: ['^location', 'city', 'current location']
+  linkedin: ['linkedin']
+  github: ['github']
+  website: ['website', 'portfolio']
+
+# Labels that must always be left to you, even if a key above would match.
+never_fill: ['sponsor', 'visa', 'right to work', 'work authori[sz]ation', 'salary', 'compensation',
+             'notice', 'gender', 'ethnic', 'disab', 'veteran', 'criminal', 'convict', 'pronoun',
+             'sexual', 'religio', 'nationality', 'citizenship', 'clearance', 'why do you want', 'cover letter']
+
+visa:
+  summary: >-
+    I have completed my MSc in Data Science at the University of Northfield and am moving onto the UK Graduate visa
+    (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship
+    and am flexible on how we arrange it.
+  answers:
+    sponsorship_now: "No"
+    sponsorship_future: "Yes"
+    right_to_work_now: "Yes"

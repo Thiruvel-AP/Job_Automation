@@ -3,16 +3,18 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-from careerops.config import ROOT
+from conftest import PROFILE_FIX
 
 FIX = Path(__file__).resolve().parents[1] / "fixtures" / "apply"
+
+
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
 def test_fill_page_never_submits(tmp_path):
     pw = pytest.importorskip("playwright.sync_api")
     from careerops.apply.assist import fill_page
-    applicant = yaml.safe_load((ROOT / "config/profile/applicant.yaml").read_text())
+    applicant = yaml.safe_load((PROFILE_FIX / "applicant.yaml").read_text(encoding="utf-8"))
     applicant.update(last_name="Tester", email="t@example.com")
     cv = tmp_path / "CV.pdf"; cv.write_bytes(b"%PDF-1.4\n%%EOF")
     cl = tmp_path / "CL.pdf"; cl.write_bytes(b"%PDF-1.4\n%%EOF")
@@ -22,7 +24,7 @@ def test_fill_page_never_submits(tmp_path):
             page = browser.new_page()
             page.goto((FIX / "form.html").resolve().as_uri())
             r = fill_page(page, applicant, str(cv), str(cl))
-            assert page.input_value("#first_name") == "Thiruvel"
+            assert page.input_value("#first_name") == "Ada"
             assert page.input_value("#email") == "t@example.com"
             assert page.input_value("#salary") == ""                       # never_fill
             assert any("Cover" in u for u in r["uploaded"]) and any("Resume" in u for u in r["uploaded"])

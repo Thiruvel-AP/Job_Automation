@@ -9,6 +9,9 @@ from careerops.tailoring.render import compile_tex, env, page_count, pdf_text
 from careerops.tailoring.tailor import tailor_job
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 # ---------------------------------------------------------------- filters
 @pytest.mark.parametrize("raw,out", [
     ("https://example.org/a#top", r"https://example.org/a\#top"),

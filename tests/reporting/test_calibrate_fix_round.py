@@ -19,6 +19,9 @@ BANNER = "RUBRIC PREDATES THIS RUN — grades are not for these outputs"
 STAMP = "20261004-120000"
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 def _manifest_for(tmp_path, company):
     jd = tmp_path / "nw.txt"
     shutil.copy(FIX / "tailoring" / "jd_northwind.txt", jd)

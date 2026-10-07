@@ -9,6 +9,9 @@ from careerops.tailoring.render import pdf_text
 from careerops.tailoring.tailor import tailor_job
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 def test_tailor_loop_end_to_end(tailored):
     rep, fb, llm = tailored
     assert Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists()
@@ -58,12 +61,12 @@ def test_llm_failure_still_writes_a_letter_marked_fallback(settings, db, job):
     assert job["company"].lower() in pdf_text(Path(rep["letter_pdf"])).lower()
 
 
-def test_letter_that_breaks_the_rules_twice_is_a_fallback(settings, db, job):
+def test_letter_that_breaks_the_rules_three_times_is_a_fallback(settings, db, job):
     fb = load_yaml(settings.path("fact_bank"))
     rambling = MockLLM({"cover_letter": lambda ctx: {"paragraphs": ["word " * 400]}})
     rep = tailor_job(job, fb, rambling, settings, settings.path("outputs"))
     assert rep["letter"]["status"] == "fallback" and Path(rep["letter_pdf"]).exists()
-    assert rambling.calls.count("cover_letter") == 2
+    assert rambling.calls.count("cover_letter") == 3
 
 
 def test_regenerate_letter_replaces_a_fallback_in_place(settings, db, job):

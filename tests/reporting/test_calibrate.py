@@ -97,6 +97,7 @@ def run(settings, db, fb, manifest, tmp_path):
     return _run(settings, db, fb, manifest, out, stamp="20261004-100000"), out
 
 
+@pytest.mark.slow
 def test_a_run_writes_the_report_the_json_and_the_rubric(run, settings):
     res, out = run
     assert res["report"] == out / "report-20261004-100000.md" and res["report"].is_file()
@@ -110,6 +111,7 @@ def test_a_run_writes_the_report_the_json_and_the_rubric(run, settings):
     assert [r["id"] for r in data["rows"]] == ["cal-northwind", "cal-sales"] and data["meta"]["stamp"]
 
 
+@pytest.mark.slow
 def test_every_jd_is_tailored_whatever_triage_said_and_the_verdict_is_recorded(run):
     res, _ = run
     north, sales = res["rows"]
@@ -118,6 +120,7 @@ def test_every_jd_is_tailored_whatever_triage_said_and_the_verdict_is_recorded(r
     assert north["triage"]["family"] == "ai_engineer" and sales["triage"]["family"] is None
 
 
+@pytest.mark.slow
 def test_a_row_carries_everything_the_report_promises(run):
     north = run[0]["rows"][0]
     assert north["keywords"]["n"] == len(north["keywords"]["terms"]) <= 25
@@ -133,6 +136,7 @@ def test_a_row_carries_everything_the_report_promises(run):
     assert Path(north["out_dir"]).is_dir()
 
 
+@pytest.mark.slow
 def test_nothing_real_is_touched_jobs_are_not_inserted_and_cvs_go_under_the_run_folder(run, db, settings):
     res, out = run
     assert db.jobs() == []                                                  # no row in the jobs table
@@ -141,6 +145,7 @@ def test_nothing_real_is_touched_jobs_are_not_inserted_and_cvs_go_under_the_run_
     assert (out / "runs" / "20261004-100000" / "outputs").is_dir()
 
 
+@pytest.mark.slow
 def test_only_and_limit_choose_the_jds(settings, db, fb, manifest, tmp_path):
     only = _run(settings, db, fb, manifest, tmp_path / "a", only=["cal-sales"], stamp="s1")
     assert [r["id"] for r in only["rows"]] == ["cal-sales"]
@@ -167,6 +172,7 @@ class BudgetLLM(MockLLM):
         return ["mock"]
 
 
+@pytest.mark.slow
 def test_the_run_stops_when_the_daily_budget_cannot_cover_another_job_and_says_so(settings, db, fb, manifest,
                                                                                     tmp_path):
     logs = []
@@ -179,6 +185,7 @@ def test_the_run_stops_when_the_daily_budget_cannot_cover_another_job_and_says_s
     assert "not run (daily token budget)" in res["report"].read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_every_started_job_ends_its_budget_window(settings, db, fb, manifest, tmp_path):
     class Spy(MockLLM):
         def __init__(self):
@@ -198,6 +205,7 @@ def test_every_started_job_ends_its_budget_window(settings, db, fb, manifest, tm
     assert spy.events == [("begin", est), ("end",), ("begin", est), ("end",)]
 
 
+@pytest.mark.slow
 def test_a_jd_that_fails_is_reported_and_the_others_are_still_measured(settings, db, fb, manifest, tmp_path,
                                                                         monkeypatch):
     real = cal.tailor_job
@@ -216,6 +224,7 @@ def test_a_jd_that_fails_is_reported_and_the_others_are_still_measured(settings,
     assert "error: RuntimeError: xelatex exploded" in md
 
 
+@pytest.mark.slow
 def test_the_run_announces_its_token_estimate_and_warns_when_the_day_cannot_cover_it(settings, db, fb, manifest,
                                                                                        tmp_path):
     class Prov:
@@ -236,6 +245,7 @@ def test_the_run_announces_its_token_estimate_and_warns_when_the_day_cannot_cove
 
 
 # ================================================================== reference CV and --compare
+@pytest.mark.slow
 def test_a_reference_cv_is_scored_with_the_pipelines_keywords_and_a_second_run_can_be_compared(
         settings, db, fb, manifest, tmp_path):
     first = _run(settings, db, fb, manifest, tmp_path / "cal", stamp="20261004-100000")
@@ -257,6 +267,7 @@ def test_a_reference_cv_is_scored_with_the_pipelines_keywords_and_a_second_run_c
     assert "Only in the earlier run: cal-sales" in md
 
 
+@pytest.mark.slow
 def test_compare_accepts_the_md_or_the_json_and_refuses_a_report_without_a_sidecar(settings, db, fb, manifest,
                                                                                       tmp_path):
     first = _run(settings, db, fb, manifest, tmp_path / "cal", limit=1, stamp="s1")
@@ -445,6 +456,7 @@ def config(settings, tmp_path):
     return cfg
 
 
+@pytest.mark.slow
 def test_the_command_runs_on_a_mock_root_and_prints_where_the_files_are(config, manifest, tmp_path, capsys):
     cli.main(["--config", str(config), "calibrate", "--mock", "--manifest", str(manifest), "--limit", "1"])
     out = capsys.readouterr().out
@@ -454,6 +466,7 @@ def test_the_command_runs_on_a_mock_root_and_prints_where_the_files_are(config, 
     assert not (tmp_path / "calibration" / "rubric.csv").exists()          # the configured (real) folder was not written
 
 
+@pytest.mark.slow
 def test_the_command_summarises_and_reports_manifest_errors(config, manifest, tmp_path, capsys):
     cli.main(["--config", str(config), "calibrate", "--mock", "--manifest", str(manifest), "--limit", "1"])
     cli.main(["--config", str(config), "calibrate", "--mock", "--summarise"])
@@ -498,6 +511,7 @@ def _served_llm(providers, pinned=None):
     return Served()
 
 
+@pytest.mark.slow
 def test_the_report_records_the_provider_and_model_that_served_every_call(settings, db, fb, manifest, tmp_path):
     res = _run(settings, db, fb, manifest, tmp_path / "cal", _served_llm(["ollama"], pinned="ollama"), stamp="s", limit=1)
     row = res["rows"][0]
@@ -512,6 +526,7 @@ def test_the_report_records_the_provider_and_model_that_served_every_call(settin
     assert data["meta"]["pinned"] == "ollama" and data["meta"]["providers"] == ["ollama (ollama-model)"]
 
 
+@pytest.mark.slow
 def test_an_unpinned_run_that_fell_back_is_flagged_as_mixed(settings, db, fb, manifest, tmp_path):
     res = _run(settings, db, fb, manifest, tmp_path / "cal", _served_llm(["groq", "ollama"]), stamp="s", limit=1)
     assert res["rows"][0]["usage"]["served_by"] == ["groq/groq-served", "ollama/ollama-served"]
@@ -520,6 +535,7 @@ def test_an_unpinned_run_that_fell_back_is_flagged_as_mixed(settings, db, fb, ma
     assert "MIXED providers" in md
 
 
+@pytest.mark.slow
 def test_a_mock_run_names_no_provider(run):
     md = run[0]["report"].read_text(encoding="utf-8")
     assert "Provider: MockLLM (fallback" in md and "Served every call: –" in md
@@ -594,6 +610,7 @@ def test_freezing_never_overwrites_without_force_and_does_not_even_call_the_mode
     assert res["written"] == [path] and "multi-omics" in path.read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_a_frozen_file_overrides_extraction_and_the_header_says_so_with_the_files_mtime(settings, db, fb, manifest,
                                                                                           tmp_path):
     out = tmp_path / "cal"
@@ -613,6 +630,7 @@ def test_a_frozen_file_overrides_extraction_and_the_header_says_so_with_the_file
     assert json.loads(res["json"].read_text(encoding="utf-8"))["meta"]["keywords"]["mode"] == "frozen"
 
 
+@pytest.mark.slow
 def test_any_provider_reads_the_same_frozen_keywords_so_ceilings_are_identical(settings, db, fb, manifest, tmp_path):
     out = tmp_path / "cal"
     _freeze(settings, _kw_llm(["LangChain"]), manifest, only=["cal-northwind"])
@@ -626,6 +644,7 @@ def test_any_provider_reads_the_same_frozen_keywords_so_ceilings_are_identical(s
     assert a["rows"][0]["ceiling"] == b["rows"][0]["ceiling"] and a["rows"][0]["keywords"] == b["rows"][0]["keywords"]
 
 
+@pytest.mark.slow
 def test_without_a_frozen_folder_extraction_is_live_and_the_header_says_so(settings, db, fb, manifest, tmp_path):
     assert not _kdir(settings).exists()
     llm = _kw_llm(["multi-omics"])
@@ -634,6 +653,7 @@ def test_without_a_frozen_folder_extraction_is_live_and_the_header_says_so(setti
     assert "extract_keywords" in llm.calls and "keywords: live" in res["report"].read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_a_frozen_folder_that_lacks_a_jds_file_fails_loudly_before_anything_runs(settings, db, fb, manifest, tmp_path):
     _freeze(settings, _kw_llm(["LangChain"]), manifest, only=["cal-northwind"])      # cal-sales has no file
     llm = _kw_llm(["Python"])
@@ -674,6 +694,7 @@ def test_a_broken_frozen_file_is_a_manifest_error_naming_it(settings, db, fb, ma
         _run(settings, db, fb, manifest, tmp_path / "cal", MockLLM(), stamp="s", only=["cal-northwind"])
 
 
+@pytest.mark.slow
 def test_the_dropped_keywords_are_listed_with_their_reason_in_the_report(settings, db, fb, manifest, tmp_path):
     llm = _kw_llm(["retrieval", "Docker"], ["retrieval pipelines"])
     jd = yaml.safe_load(manifest.read_text(encoding="utf-8"))[0]["jd_file"]
@@ -684,6 +705,7 @@ def test_the_dropped_keywords_are_listed_with_their_reason_in_the_report(setting
     assert "  - " + note in res["report"].read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_the_summary_line_gives_the_letters_rejection_reason(settings, db, fb, manifest, tmp_path):
     lying = MockLLM({"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I cut latency by 9876 percent across the platform."]}})
@@ -695,6 +717,7 @@ def test_the_summary_line_gives_the_letters_rejection_reason(settings, db, fb, m
     assert f"letter: fallback ({letter['problems'][0]})" in res["report"].read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_a_pending_letter_is_reported_as_pending_not_as_a_fallback(settings, db, fb, manifest, tmp_path):
     from careerops.llm import TaskUnavailable
 
@@ -711,6 +734,7 @@ def test_a_pending_letter_is_reported_as_pending_not_as_a_fallback(settings, db,
     assert "1 pending (no provider may write them)" in res["report"].read_text(encoding="utf-8")
 
 
+@pytest.mark.slow
 def test_the_command_freezes_into_the_mock_root_and_a_later_run_uses_it(config, manifest, tmp_path, capsys):
     cli.main(["--config", str(config), "calibrate", "--mock", "--freeze-keywords", "--manifest", str(manifest),
               "--only", "cal-northwind"])
@@ -741,6 +765,7 @@ def _snapshot(*roots: Path) -> dict[str, str]:
     return out
 
 
+@pytest.mark.slow
 def test_a_calibration_run_removes_and_changes_nothing_that_was_there(settings, db, fb, manifest, tmp_path):
     out = tmp_path / "cal"
     _freeze(settings, _kw_llm(["LangChain"]), manifest)
@@ -762,6 +787,7 @@ def test_a_calibration_run_removes_and_changes_nothing_that_was_there(settings, 
     assert "keep me" in (out / "rubric.csv").read_text(encoding="utf-8")        # extended, never overwritten
 
 
+@pytest.mark.slow
 def test_the_command_removes_nothing_either(config, manifest, tmp_path):
     root = tmp_path / "mockroot"
     cli.main(["--config", str(config), "calibrate", "--mock", "--freeze-keywords", "--manifest", str(manifest)])

@@ -55,6 +55,7 @@ def test_the_failing_placeholder_in_the_users_own_file_is_what_doctor_reports_wi
     assert len(_failed(bad)) == 3 and all(hint for _, ok, hint in bad if not ok)
 
 
+@pytest.mark.slow
 def test_a_missing_applicant_file_fails_and_doctor_includes_the_checks(settings, tmp_path):
     assert _failed(applicant_checks(tmp_path / "nope.yaml")) == ["applicant.yaml"]
     p = tmp_path / "applicant.yaml"

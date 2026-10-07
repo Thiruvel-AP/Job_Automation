@@ -125,7 +125,7 @@ def load_frozen(path: Path, entry: dict) -> dict:
         raise ManifestError(f"{path}: the JD of {entry['id']} changed since its keywords were frozen; re-freeze with "
                             f"`careerops calibrate --freeze-keywords --force --only {entry['id']}`")
     return {"keywords": kws, "company_hook": raw.get("company_hook") or "", "team": raw.get("team") or "",
-            "notes": list(raw.get("notes") or []), "date": mtime}
+            "notes": list(raw.get("notes") or []), "date": mtime, "context_terms": list(raw.get("context_terms") or [])}
 
 
 def load_all_frozen(kdir: Path, entries: list[dict]) -> dict[str, dict]:
@@ -172,7 +172,8 @@ def freeze_keywords(settings: Settings, llm, manifest: Path, kdir: Path, *, only
             log(f"- {entry['id']}: NOT frozen: {errors[entry['id']]}")
             continue
         job, notes, start = job_for(entry), [], len(getattr(llm, "usage", []))
-        kws, hook, team = analyse(job, llm, settings, notes)
+        context: list[dict] = []
+        kws, hook, team = analyse(job, llm, settings, notes, None, context)
         failed = [n for n in notes if LLM_FAILED in n]
         if failed:
             errors[entry["id"]] = failed[0]
@@ -180,7 +181,7 @@ def freeze_keywords(settings: Settings, llm, manifest: Path, kdir: Path, *, only
             continue
         data = {"jd": entry["id"], "frozen": date.today().isoformat(), "jd_sha1": jd_digest(jd_text(entry["_jd_path"])),
                 "served_by": served_by(list(getattr(llm, "usage", []))[start:]),
-                "company_hook": hook, "team": team, "notes": notes,
+                "company_hook": hook, "team": team, "notes": notes, "context_terms": context,
                 "keywords": [{"term": k.term, "weight": k.weight, "required": k.required,
                               **({"alts": k.alts} if k.alts else {})} for k in kws]}
         path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=120), encoding="utf-8")
@@ -236,6 +237,7 @@ def measure(entry: dict, verdict: gates.Verdict, rep: dict, seconds: float, sett
         "triage": {"passed": verdict.passed, "reasons": verdict.reasons, "flags": verdict.flags,
                    "family": verdict.family, "tier": verdict.tier, "ceiling_pre": verdict.ceiling_pre},
         "keywords": {"n": len(kws), "required": sum(k.required for k in kws), "terms": [k.term for k in kws],
+                     "context_terms": [c["term"] for c in rep.get("context_terms") or []],
                      "notes": rep.get("analysis_warnings") or [], "frozen": None},
         "ceiling": rep["ceiling"], "gaps": rep["genuine_gaps"],
         "final": {"literal": final["score"], "stemmed": final["score_stemmed"], "band": final["band"],

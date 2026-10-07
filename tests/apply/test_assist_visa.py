@@ -4,19 +4,22 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
 
 from careerops.apply.assist import classify_visa, fill_page, visa_value
-from careerops.config import ROOT
 
 FIX = Path(__file__).resolve().parents[1] / "fixtures" / "apply"
 SUMMARY = "I am on the UK Graduate visa and will not need sponsorship for 2 years."
 MAGENTA = "rgb(255, 0, 255)"
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 @pytest.fixture
 def applicant():
-    a = yaml.safe_load((ROOT / "config/profile/applicant.yaml").read_text(encoding="utf-8"))
+    a = yaml.safe_load((PROFILE_FIX / "applicant.yaml").read_text(encoding="utf-8"))
     a["visa"] = {"summary": SUMMARY, "answers": {"sponsorship_now": "No", "sponsorship_future": "Yes",
                                                   "right_to_work_now": "Yes"}}
     return a

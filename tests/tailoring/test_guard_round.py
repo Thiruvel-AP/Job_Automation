@@ -144,6 +144,7 @@ def test_a_skill_entry_with_commas_renders_with_slashes():
     assert skill_display("Docker") == "Docker" and skill_display("TensorFlow / Keras") == "TensorFlow / Keras"
 
 
+@pytest.mark.slow
 def test_the_cv_shows_the_comma_skill_with_slashes_in_the_rendered_pdf(fb_fixture, settings, tmp_path):
     from careerops.tailoring.render import pdf_text, render_cv
     fb = dict(fb_fixture)
@@ -240,13 +241,15 @@ def test_the_new_vague_phrases_are_listed_and_matched_in_either_number():
 @pytest.mark.parametrize("name", ["Chattermill", "Lendable", "Quantcast"])
 def test_each_run_190956_hook_is_rejected_and_the_retry_names_the_phrase(settings, spy_llm, name):
     paras, problems, notes, retry, llm = _run_letter(settings, spy_llm, name, [OPENING[name], *REST[name]])
-    assert retry["count"] == 1 and retry["rejected_words"]                                  # rejected, retried once, named
-    assert "Do NOT use them" in llm.sent[1]["user"] and retry["rejected_words"][0] in llm.sent[1]["user"]
-    assert len(llm.sent) == 2 and retry["outcome"] == "fallback" and tailor.FALLBACK_MARK in problems   # template letter
+    assert retry["count"] == 2 and retry["rejected_words"]                                  # rejected, retried twice, named
+    first = retry["rejected_words"][0]
+    assert f"Do not use '{first}' unless it appears in the evidence bullets" in llm.sent[1]["user"]
+    assert len(llm.sent) == 3 and retry["outcome"] == "fallback" and tailor.FALLBACK_MARK in problems   # template letter
+    assert [f["attempt"] for f in retry["failures"]] == [1, 2, 3] and all(f["problems"] for f in retry["failures"])
 
 
 def test_a_hook_that_passes_is_left_alone_and_costs_no_retry(settings, spy_llm):
     good = ("Chattermill's mission to understand customer feedback mirrors my work building NLP and agentic RAG workflows "
             "with LangChain and LangGraph.")
-    paras, problems, _, retry, llm = _run_letter(settings, spy_llm, "Chattermill", [good, *REST["Chattermill"]])
+    paras, problems, _, retry, llm = _run_letter(settings, spy_llm, "Chattermill", [good, REST["Chattermill"][1]])   # hook: FL2, paragraph 2: the other bullet
     assert problems == [] and retry["count"] == 0 and paras[0] == good and len(llm.sent) == 1

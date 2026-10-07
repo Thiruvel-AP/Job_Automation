@@ -1,0 +1,211 @@
+# Fictional fact bank for tests (Ada Lovelace, nobody real). Tests resolve `paths.fact_bank` to THIS file; the real
+# config/profile/fact_bank.yaml is never read by a test (tests/test_no_real_profile.py fails if one does).
+# Same schema as the real bank. Project ids match settings.yaml roles.families[*].projects so load_roles() accepts it.
+# Deliberately WITHOUT Kubernetes, Terraform, dbt, Azure ... : they are on deny_terms, so "genuine gap" tests are stable.
+
+identity:
+  name: Ada Lovelace
+  headline: Data Scientist / AI Engineer
+  email: ada.lovelace@example.org
+  phone: "+44 7700 900123"
+  location: Bristol, UK
+  address: 12 Analytical Row, Bristol BS1 4XX
+  links:
+    linkedin: https://www.linkedin.com/in/ada-lovelace-test/
+    github: https://github.com/ada-lovelace-test
+    portfolio: https://ada-lovelace-test.example.org/portfolio#top
+  status_line: ["Right to work in UK under Graduate visa", "Available to join immediately"]
+
+profile_facts:
+  - MSc Data Science, University of Northfield (completed 2026)
+  - Production LLM agent work on a clinical research platform
+  - Freelance ML engineering across scikit-learn, PyTorch and LangChain
+  - Background in mobile FinTech engineering before data science
+
+skills:
+  core: [Python, SQL, R, Machine Learning, Statistics, scikit-learn, PyTorch, pandas, NumPy, LLMs, RAG, LangChain, Docker, AWS, Git]
+  Languages: [Python, SQL, R, TypeScript, Swift]
+  ML & Stats: [scikit-learn, XGBoost, PyTorch, LSTM, Isolation Forest, hypothesis testing, bootstrap, statistics]
+  LLMs & Agents: [LangChain, LangGraph, AWS Bedrock, RAG, MCP, tool calling, LLM evaluation]
+  Data & Cloud: [pandas, NumPy, PostgreSQL, AWS Lambda, ECR, IAM]
+  Engineering: [FastAPI, Docker, GitHub Actions, pytest, React, Git, MLflow]
+
+experience:
+  - id: az
+    title: Data Scientist (MSc dissertation)
+    org: Northwind Research Lab, University of Northfield
+    dates: May 2026 – Sep 2026
+    location: Bristol, UK
+    bullets:
+      - id: az1
+        text: Built a tool-calling LLM agent (LangChain, AWS Bedrock) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset lookup, used by the whole research team.
+        terms: [llm, llms, agent, agentic, generative ai, langchain, bedrock, aws, tool calling, python]
+      - id: az2
+        text: Designed a deterministic guard architecture with live API resolution and a local 19,213-gene parquet fallback behind circuit breakers, so answers stay reproducible during upstream outages.
+        terms: [guardrails, reliability, apis, api, data quality, resilience]
+      - id: az3
+        text: Deployed the agent as a Docker container on AWS Lambda with ECR image pipelines, IAM execution roles and least-privilege policies, replacing a manual copy-and-paste release process.
+        terms: [docker, aws lambda, serverless, deployment, mlops, cloud, iam, production]
+      - id: az4
+        text: Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from one hosted model to AWS Bedrock.
+        terms: [testing, evaluation, pytest, integration testing, llm evaluation, quality]
+      - id: az5
+        text: Surveyed and explored 14 heterogeneous source datasets, owning the identity-spine datasets and setting metadata boundaries for downstream analysis by three other students.
+        terms: [eda, exploratory data analysis, data analysis, data integration, metadata]
+
+  - id: dc
+    title: Data Consultant
+    org: Bristol Pro Bono Consulting
+    dates: Oct 2025 – Dec 2025
+    location: Bristol, UK
+    bullets:
+      - id: dc1
+        text: Prototyped an MCP-based agentic tool in Python (FastMCP, PostgreSQL, GitHub Actions CI) for a start-up client and presented it in a live stakeholder demo.
+        terms: [mcp, agentic, agent, python, prototype, stakeholder, client, consulting, ci, postgresql, communication, presentation]
+      - id: dc2
+        text: Cleaned and joined donor, event and survey exports with pandas and SQL, and delivered a reporting notebook that the charity's trustees reused for their quarterly review.
+        terms: [pandas, sql, data cleaning, reporting, python, stakeholders]
+      - id: dc3
+        text: Documented every data source and assumption in a shared handbook so the next student team could continue without a handover meeting.
+        terms: [documentation, handover, data governance]
+
+  - id: fl
+    title: Freelance ML Engineer
+    org: Self-employed, Chennai
+    dates: Jan 2025 – Aug 2025
+    location: Chennai, India
+    bullets:
+      - id: fl1
+        text: Built scikit-learn pipelines and LSTM models in PyTorch, deployed as FastAPI services in Docker.
+        terms: [machine learning, deep learning, scikit-learn, pytorch, fastapi, docker, deployment, model deployment, python]
+      - id: fl2
+        text: Built NLP and agentic RAG workflows with Hugging Face Transformers, LangChain and LangGraph.
+        terms: [nlp, rag, retrieval, llm, langchain, langgraph, hugging face, transformers, agentic]
+
+  - id: hp
+    title: Mobile Software Engineer
+    org: Harbour Pay Ltd
+    dates: Jul 2023 – Aug 2024
+    location: Chennai, India
+    bullets:
+      - id: hp1
+        text: Built payment-flow screens in Swift for a FinTech iOS app, with unit tests that cut regressions found in release testing.
+        terms: [swift, ios, mobile, fintech, unit testing]
+      - id: hp2
+        text: Integrated REST APIs and tracked crash reports, fixing the top three crash causes across two releases.
+        terms: [rest api, apis, debugging, monitoring]
+
+  - id: ra
+    title: Research Assistant
+    org: University of Northfield, Department of Statistics
+    dates: Jun 2022 - Sep 2022
+    location: Northfield, UK
+    bullets:
+      - id: ra1
+        text: Cleaned and merged three years of survey responses in R and wrote reproducible scripts so that the department could regenerate every table in the final report.
+        terms: [r, data cleaning, reproducibility, reporting]
+      - id: ra2
+        text: Fitted mixed-effects models to repeated measurements and summarised the effect sizes in plain language for the supervising professor.
+        terms: [statistics, modelling, communication]
+
+projects:
+  - id: churn
+    name: Customer churn prediction
+    stack: Python, scikit-learn, XGBoost
+    github: https://github.com/ada-lovelace-test/churn#readme
+    bullets:
+      - id: churn1
+        text: Built a churn classifier with scikit-learn and XGBoost on 7,043 customer records, comparing models with stratified cross-validation and tuning the decision threshold for recall.
+        terms: [machine learning, classification, scikit-learn, xgboost, model evaluation, python]
+      - id: churn2
+        text: Explained predictions with SHAP values and wrote up the three strongest churn drivers for a non-technical reader.
+        terms: [explainability, shap, communication]
+      - id: churn3
+        text: Packaged the final model behind a small FastAPI service with a pytest suite and a Docker image.
+        terms: [fastapi, docker, pytest, deployment]
+  - id: bitcoin
+    name: Price forecasting
+    stack: Python, PyTorch, LSTM
+    github: https://github.com/ada-lovelace-test/forecasting
+    bullets:
+      - id: bitcoin1
+        text: Built an LSTM forecaster in PyTorch for daily prices and benchmarked it against a seasonal baseline, with a rolling-origin evaluation.
+        terms: [pytorch, lstm, forecasting, time series, deep learning]
+      - id: bitcoin2
+        text: Wrote the data-preparation module that turned raw price logs into weekly features, with unit tests for each transformation.
+        terms: [feature engineering, data preparation, unit testing, python]
+  - id: lloyds
+    name: Banking datathon
+    stack: Isolation Forest, ensemble classifiers, MLflow
+    github: null
+    award: 3rd place, national datathon
+    bullets:
+      - id: lloyds1
+        text: Built an anomaly detector on 200:1 class-imbalanced transactions with Isolation Forest and ensemble classifiers, tracked in MLflow.
+        terms: [anomaly detection, imbalanced data, classification, mlflow, experiment tracking, financial services]
+      - id: lloyds2
+        text: Presented the approach and its limits to a panel of industry judges in a ten-minute pitch.
+        terms: [presentation, communication, stakeholders]
+  - id: gtaigraph
+    name: Omics graph proof of concept
+    stack: networkx, scikit-learn
+    github: https://github.com/ada-lovelace-test/omics-graph
+    bullets:
+      - id: gtaigraph1
+        text: Built a networkx graph of 1,399 cell lines and 16,385 genes with k-NN similarity and community detection.
+        terms: [graph, network analysis, clustering, bioinformatics, omics, healthcare]
+      - id: gtaigraph2
+        text: Trained per-gene regression models with a random forest ensemble on a free GPU, in resumable chunks.
+        terms: [random forest, regression, gpu, model training, scikit-learn]
+  - id: agenticfriend
+    name: Voice study assistant
+    stack: FastAPI, React, PyTorch, Docker
+    github: https://github.com/ada-lovelace-test/study-buddy
+    bullets:
+      - id: agenticfriend1
+        text: Built a full-duplex WebSocket voice agent with streaming speech-to-text and barge-in.
+        terms: [real-time, streaming, speech, voice ai, agent, websocket]
+      - id: agenticfriend2
+        text: Packaged text-to-speech on CUDA in a Docker image with a start-up warm-up.
+        terms: [gpu, cuda, docker, inference, latency, pytorch]
+  - id: mcpsearch
+    name: MCP search agent
+    stack: FastMCP, PostgreSQL, GitHub Actions
+    github: https://github.com/ada-lovelace-test/mcp-search
+    bullets:
+      - id: mcpsearch1
+        text: Built an MCP server and client combining web search with a GraphQL and PostgreSQL data layer, with CI across three Python versions.
+        terms: [mcp, search, graphql, postgresql, ci, local llm]
+  - id: coverfit
+    name: Insurance benchmarking API (hackathon)
+    stack: FastAPI, pandas, Pydantic, pytest
+    github: https://github.com/ada-lovelace-test/coverfit
+    bullets:
+      - id: coverfit1
+        text: Built a deterministic comparable-company matcher over 221 profiles with a single LLM call for the rationale, at about £0.003 per query.
+        terms: [api, fastapi, pandas, llm, cost, latency, insurance, pydantic]
+
+education:
+  - degree: MSc Data Science
+    org: University of Northfield
+    dates: 2025 – 2026
+    note: Distinction-level dissertation on LLM agents for research data
+  - degree: B.E. Electrical and Electronics Engineering
+    org: St. Joseph's College of Engineering
+    dates: Sep 2019 – Apr 2023
+    note: First Class with Distinction
+
+certifications:
+  - AWS Academy Cloud Foundations, Nov 2025
+  - Master's Prize for Applied Data Science, Mar 2026
+
+deny_terms:
+  - kubernetes
+  - terraform
+  - dbt
+  - bigquery
+  - snowflake
+  - azure
+  - airflow
+  - mentored
+  - direct reports

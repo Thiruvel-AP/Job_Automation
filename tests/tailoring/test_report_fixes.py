@@ -307,6 +307,7 @@ def test_letter_evidence_only_comes_from_the_bullets_on_the_cv(fb_fixture):
     assert "a1" not in ids and len(ids) == 2 and set(ids) <= {"b1", "b2", "c1"}
 
 
+@pytest.mark.slow
 def test_the_letter_prompt_gets_exactly_those_two_bullets_the_hook_and_nothing_else(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
@@ -332,6 +333,7 @@ NO_QUESTION = ["Reviewly turns feedback into themes, which is the work I do.", "
                "I would welcome a call to discuss it."]
 
 
+@pytest.mark.slow
 def test_the_closing_question_is_written_by_code_so_a_draft_without_one_is_accepted(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _letter_llm(NO_QUESTION)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
@@ -343,6 +345,7 @@ def test_the_closing_question_is_written_by_code_so_a_draft_without_one_is_accep
                                                "first at Northwind Health AI?")
 
 
+@pytest.mark.slow
 def test_a_question_the_model_wrote_is_replaced_by_the_template_closing_naming_the_team(settings, fb_fixture, job,
                                                                                         spy_llm):
     jd = job["description"] + "\nYou will join our AI Accelerator group.\n"
@@ -356,6 +359,7 @@ def test_a_question_the_model_wrote_is_replaced_by_the_template_closing_naming_t
     assert "cover_letter: dropped the model's own closing question; the template closing is used" in rep["letter"]["notes"]
 
 
+@pytest.mark.slow
 def test_the_fallback_letter_ends_on_the_same_template_closing(settings, fb_fixture, job, spy_llm):
     lying = ["Reviewly turns feedback into themes.", "I cut latency by 9876 percent across the platform."]
     rep = tailor.tailor_job(job, fb_fixture, spy_llm({"cover_letter": _letter_llm(lying)}), settings,
@@ -377,6 +381,7 @@ def test_normalise_json_reaches_every_string():
     assert out == {"a": ["x-y", {"b": '"hi"'}], "n": 3, "t": True, "k‑ey": "v"}
 
 
+@pytest.mark.slow
 def test_llm_text_is_normalised_before_scoring_and_rendering(settings, fb_fixture, job):
     dirty = "Data Scientist with LLM agent work, it’s real work."
 
@@ -426,6 +431,7 @@ def test_the_synonym_only_counts_for_gaps_not_for_the_ats_score_of_the_cv():
     assert score("Fine-tuned with LoRA.", kw, synonyms=True).literal == 1.0
 
 
+@pytest.mark.slow
 def test_the_report_leaves_parameter_efficient_out_of_genuine_gaps(settings, fb_fixture, job):
     """The Chattermill case: the JD says "parameter-efficient techniques such as LoRA"; a bullet's terms say peft/lora."""
     jd = job["description"] + "\nExposure to parameter-efficient techniques such as LoRA is a plus.\n"

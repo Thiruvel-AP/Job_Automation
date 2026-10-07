@@ -97,6 +97,7 @@ def _run(settings, fb, job, llm, jd=JD):
     return tailor.tailor_job({**job, "description": jd + "x" * 900}, fb, llm, settings, settings.path("outputs"))
 
 
+@pytest.mark.slow
 def test_a_wording_miss_gets_the_exact_form_in_the_one_bullet_that_carries_its_stem(settings, prototype_bank, job, spy_llm):
     llm = spy_llm({"extract_keywords": _kw_handler("Prototyping", "Python"), "rephrase_bullets": _exact_form})   # taxonomy: lower case
     rep = _run(settings, prototype_bank, job, llm)
@@ -109,6 +110,7 @@ def test_a_wording_miss_gets_the_exact_form_in_the_one_bullet_that_carries_its_s
     assert rep["final"]["score"] > 0 and rep["attempts"][0]["wording"]["kept"] is True
 
 
+@pytest.mark.slow
 def test_the_exact_form_rewrite_goes_through_the_guard_and_an_invented_number_is_blocked(settings, prototype_bank, job,
                                                                                          spy_llm):
     def lying(ctx):
@@ -124,6 +126,7 @@ def test_the_exact_form_rewrite_goes_through_the_guard_and_an_invented_number_is
     assert "prototyping" in rep["final"]["wording_misses"]
 
 
+@pytest.mark.slow
 def test_no_wording_pass_when_every_keyword_is_already_in_its_exact_form(settings, prototype_bank, job, spy_llm):
     llm = spy_llm({"extract_keywords": _kw_handler("Python")})
     rep = _run(settings, prototype_bank, job, llm, JD_PLAIN)
@@ -182,6 +185,7 @@ def _clean(e):
     return ["Northwind Health AI builds tools I have worked on.", _i(e[0]), _i(e[1])]
 
 
+@pytest.mark.slow
 def test_the_prompt_lists_the_unsupported_words_under_avoid(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _drafts(_clean)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
@@ -192,31 +196,35 @@ def test_the_prompt_lists_the_unsupported_words_under_avoid(settings, fb_fixture
     assert rep["letter"]["status"] == "ok" and rep["letter"]["retry"]["count"] == 0
 
 
+@pytest.mark.slow
 def test_a_rejected_draft_is_retried_once_naming_the_words_and_the_retry_is_logged(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _drafts(_with_filler, _clean)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     calls = [s for s in llm.sent if s["task"] == "cover_letter"]
     assert len(calls) == 2
     second = calls[1]["user"]
-    assert "real-time" in second and "scalable" in second and "Do NOT use them" in second
+    assert "real-time" in second and "scalable" in second
+    assert "Do not use 'real-time' unless it appears in the evidence bullets" in second
     assert "YOUR LAST DRAFT BROKE THESE RULES" in second
     letter = rep["letter"]
     assert letter["status"] == "ok" and letter["problems"] == []
     r = letter["retry"]
     assert r["count"] == 1 and {"real-time", "scalable"} <= set(r["rejected_words"]) and r["outcome"] == "ok after retry"
-    assert r["first_problems"] and any("retried once, naming" in n for n in letter["notes"])
+    assert r["first_problems"] and any("retry 1 of 2, naming" in n for n in letter["notes"])
 
 
+@pytest.mark.slow
 def test_a_second_rejection_falls_back_and_the_retry_is_still_logged(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"cover_letter": _drafts(_with_filler)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert [s["task"] for s in llm.sent].count("cover_letter") == 2               # one draft, one retry, then the fallback
+    assert [s["task"] for s in llm.sent].count("cover_letter") == 3               # a draft, two retries, then the fallback
     letter = rep["letter"]
-    assert letter["status"] == "fallback" and letter["retry"]["count"] == 1 and letter["retry"]["outcome"] == "fallback"
+    assert letter["status"] == "fallback" and letter["retry"]["count"] == 2 and letter["retry"]["outcome"] == "fallback"
     assert "real-time" in letter["retry"]["rejected_words"]
     assert "real-time" not in " ".join(letter["paragraphs"])
 
 
+@pytest.mark.slow
 def test_the_retry_reaches_the_regenerated_letter_report_too(settings, fb_fixture, job, spy_llm):
     rep = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, settings.path("outputs"))
     llm = spy_llm({"cover_letter": _drafts(_with_filler, _clean)})

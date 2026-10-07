@@ -1,4 +1,5 @@
 """Queue ordering key, tier-3 run quota, triage-time ceiling and the family prior in tailoring (M4b)."""
+import pytest
 import json
 from pathlib import Path
 
@@ -77,6 +78,7 @@ class RecordingLLM(MockLLM):
         return super().json(task, system, user, context)
 
 
+@pytest.mark.slow
 def test_headline_and_prior_reach_prompt_and_report(settings, job):
     fb = load_yaml(settings.path("fact_bank"))
     llm = RecordingLLM()

@@ -159,6 +159,7 @@ def test_every_rewrite_goes_through_the_faithfulness_check(fb_fixture):
     assert any(v.startswith("a3:") and "integration testing" in v and "not evidenced" in v for v in viol)   # a3 is not about testing
 
 
+@pytest.mark.slow
 def test_a_rejected_rewrite_leaves_the_canonical_bullet_on_the_cv(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"rephrase_bullets": lambda ctx: {b["id"]: b["text"].rstrip(".") + ", cutting cost 40%."
                                                     for b in ctx["bullets"]}})
@@ -172,6 +173,7 @@ def test_a_rejected_rewrite_leaves_the_canonical_bullet_on_the_cv(settings, fb_f
     assert any("new numbers ['40%']" in v for v in rec["violations"])
 
 
+@pytest.mark.slow
 def test_an_accepted_rewrite_reaches_the_cv_and_the_coverage_counts_it(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"rephrase_bullets": lambda ctx: {b["id"]: b["text"].rstrip(".") + ", covering "
                                                     + ", ".join(b["introduce"]) + "." for b in ctx["bullets"]}})

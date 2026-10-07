@@ -12,6 +12,9 @@ from careerops.tailoring.tailor import letter_summary, regenerate_letter, tailor
 WHY = "cover_letter can only run on groq, and none can take it now: groq: unavailable (no key, daily request or token quota used)"
 
 
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
+
+
 def _no_letter(ctx):
     raise TaskUnavailable(WHY)
 

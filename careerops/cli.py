@@ -8,8 +8,11 @@
   careerops sponsors            download the gov.uk sponsor register if its link changed, diff it against the last one
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
-  careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD)
-  careerops tailor [--limit N] [--one-page]
+  careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
+  careerops live [--max N] [--dry-run]
+                                every JD in data/jds/inbox/ through add-jd → tailor → review → apply assist, one job at
+                                a time, with you at every gate and an archive check after each job (see README)
+  careerops tailor [--limit N | --id JOB] [--one-page]
                                 JD analysis → tailored CV (two full pages; --one-page for one) + letter → review queue
   careerops review              approve / edit / reject (logs preference data)
   careerops apply [--no-letter] open approved jobs' forms, fill basics, you submit; then archive what was sent
@@ -43,7 +46,7 @@ from pathlib import Path
 
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
-from .discovery import gates, sources
+from .discovery import gates, manual, sources
 from .discovery import register as sponsors
 from .review import workflow as review
 from . import mockroot
@@ -86,15 +89,8 @@ def _llm(args, s, db):
         _fail(str(e))
 
 
-def _status(v: gates.Verdict) -> str:
-    return "skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "triaged"
-
-
-def _verdict_fields(v: gates.Verdict) -> dict:
-    return {"status": _status(v), "reason": "; ".join(v.reasons) or None, "flags": v.flags,
-            "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score, "sponsor_match": v.sponsor_match,
-            "sponsor_route": v.sponsor_route, "sponsor_rating": v.sponsor_rating,
-            "family": v.family, "tier": v.tier, "ceiling_pre": v.ceiling_pre}
+_status = gates.verdict_status
+_verdict_fields = gates.verdict_fields
 
 
 def triage_new(db: DB, s) -> dict[str, int]:
@@ -126,7 +122,7 @@ def retriage(db: DB, s) -> dict[str, int]:
             if job["status"] == "applied":
                 continue
             v = gates.triage(dict(job), s, idx, fb)
-            if job["status"] in PRE_TAILOR:
+            if job["status"] in PRE_TAILOR and not job["out_dir"]:     # a tailored job skipped in review is post-tailoring
                 f = _verdict_fields(v)
                 db.update_job(job["id"], commit=False, **f)
                 counts[f["status"]] += 1
@@ -175,27 +171,34 @@ def cmd_retriage(args):
 
 def cmd_add_jd(args):
     s, db = _ctx(args)
-    jd = Path(args.file).read_text(encoding="utf-8") if args.file else sys.stdin.read()
+    try:
+        jd = manual.read_jd(args.file)[0] if args.file else sys.stdin.read()
+    except manual.JDError as e:
+        _fail(str(e))
     if args.id:
+        if db.job(args.id) is None:
+            _fail(f"no such job: {args.id}")
         db.update_job(args.id, description=jd, status="new")
         print(f"Updated JD for {args.id}")
     else:
-        jid = "manual:" + hashlib.sha1(f"{args.company}|{args.title}|{args.url}".encode()).hexdigest()[:12]
-        db.upsert_job({"id": jid, "source": "manual", "company": args.company, "title": args.title,
-                       "location": args.location, "url": args.url, "apply_url": args.url, "description": jd})
-        db.update_job(jid, description=jd, status="new")
+        if not (args.company and args.title):
+            _fail("add-jd needs --company and --title (or --id to replace the JD of an existing job)")
+        try:
+            jid = manual.add_jd(db, jd, company=args.company, title=args.title, url=args.url, location=args.location)
+        except manual.JobExists as e:
+            _fail(str(e))
         print(f"Added {jid}")
     print("Triage:", triage_new(db, s))
 
 
-def _finish_letters(db: DB, s, fb: dict, llm) -> None:
+def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
     """Write the letters of jobs waiting as `letter_pending` (their CV is done; the provider allowed to write letters had
     no budget). Each is tried in turn; one that still cannot be written stays pending, untouched. A letter is never
     written by a provider the task excludes, so this either succeeds on the right one or waits."""
     from .review.workflow import load_report
     from .tailoring.tailor import letter_summary, regenerate_letter
 
-    waiting = db.jobs("letter_pending")
+    waiting = [j for j in db.jobs("letter_pending") if only is None or j["id"] == only]
     if not waiting:
         return
     est = s["llm"].get("letter_token_estimate", 3000)
@@ -223,16 +226,12 @@ def _finish_letters(db: DB, s, fb: dict, llm) -> None:
             llm.end_job()
 
 
-def cmd_tailor(args):
+def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False) -> None:
+    """Tailor these jobs one after the other (the loop `careerops tailor` and `careerops live` share). Each job ends as
+    needs_review, letter_pending, error, or — when the day's token budget is short — stays as it was."""
     from .tailoring.tailor import letter_summary, tailor_job
 
-    s, db = _ctx(args)
-    llm = _llm(args, s, db)
-    fb = load_yaml(s.path("fact_bank"))
-    gates.load_roles(s, fb)
-    _finish_letters(db, s, fb, llm)
-    jobs = select_for_run(db.jobs("triaged"), args.limit, s)
-    print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if args.mock else ''}.")
+    print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if mock else ''}.")
     est = s["llm"].get("job_token_estimate", 10000)
     for n, job in enumerate(jobs):
         print(f"- {job['company']} | {job['title']}")
@@ -247,7 +246,7 @@ def cmd_tailor(args):
         if names and set(using) != set(names):
             print(f"  daily token budget: this job uses {', '.join(using)} only")
         try:
-            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), one_page=getattr(args, "one_page", False))
+            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), one_page=one_page)
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
@@ -285,6 +284,27 @@ def cmd_tailor(args):
             llm.end_job()
 
 
+def cmd_tailor(args):
+    s, db = _ctx(args)
+    llm = _llm(args, s, db)
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    if args.id:                                    # exactly this job: its status must say tailoring is what it waits for
+        job = db.job(args.id)
+        if job is None:
+            _fail(f"no such job: {args.id}")
+        if job["status"] == "letter_pending":
+            _finish_letters(db, s, fb, llm, only=args.id)
+            return
+        if job["status"] != "triaged":
+            _fail(f"{args.id} is '{job['status']}', not 'triaged' (nothing to tailor)")
+        jobs = [job]
+    else:
+        _finish_letters(db, s, fb, llm)
+        jobs = select_for_run(db.jobs("triaged"), args.limit, s)
+    tailor_jobs(db, s, fb, llm, jobs, one_page=getattr(args, "one_page", False), mock=args.mock)
+
+
 def cmd_review(args):
     s, db = _ctx(args)
     review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db))
@@ -311,6 +331,58 @@ def _archive(db: DB, s, job, rep: dict, confirmation: str | None, applied_on, no
     for f in res.flags:
         print(f"  FLAG: {f}")
     return True
+
+
+def cmd_live(args):
+    """Interactive batch: every JD in data/jds/inbox through add-jd -> tailor -> review -> apply assist, one job at a time."""
+    from .apply.assist import assist
+    from .apply.live import Hooks, Live
+
+    if args.yes:
+        _fail("live never answers a gate for you: --yes is not available (approve, skip and 'did you submit' are yours)")
+    if args.max < 1:
+        _fail("--max must be at least 1")
+    s, db = _ctx(args)
+    dry_run = args.dry_run or args.mock
+    if args.mock and not args.dry_run:
+        print("--mock implies --dry-run: the mock data root has no real application form to open.")
+    llm = _llm(args, s, db)
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+
+    def tailor(jid: str) -> None:
+        job = db.job(jid)
+        if job["status"] == "letter_pending":
+            _finish_letters(db, s, fb, llm, only=jid)
+        else:
+            tailor_jobs(db, s, fb, llm, [job], mock=args.mock)
+
+    def review_it(jid: str) -> str:
+        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelosq")
+
+    def preflight_it(jid: str) -> None:
+        job = db.job(jid)
+        preflight(db, s, job, review.load_report(job))
+
+    def assist_it(jid: str) -> dict:
+        job = db.job(jid)
+        r = assist(job, review.load_report(job), load_yaml(s.path("applicant")), s.path("browser_profile"))
+        db.log(jid, "apply", r)
+        return r
+
+    def mark_applied_it(jid: str, confirmation: str | None) -> bool:
+        job = db.job(jid)
+        ok = _archive(db, s, job, review.load_report(job), confirmation, None, False)
+        export(db, s.path("excel"), floor=s["roles"]["floor"])
+        return ok
+
+    resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
+              + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else ""))      # resume: not --retailor
+    code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
+                             mark_applied=mark_applied_it),
+                max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor).run()
+    if code:
+        sys.exit(code)
 
 
 def cmd_apply(args):
@@ -622,9 +694,19 @@ def main(argv=None):
     for name, fn in (("tailor", cmd_tailor), ("run", cmd_run)):
         t = sub.add_parser(name)
         t.add_argument("--limit", type=int, default=10)
+        t.add_argument("--id", help="tailor exactly this job (it must be 'triaged'); --limit is ignored")
         t.add_argument("--mock", action="store_true", help="deterministic MockLLM, no API calls")
         t.add_argument("--one-page", action="store_true", help="one-page CV with the old template (default: two full pages)")
         t.set_defaults(fn=fn)
+    lv = sub.add_parser("live", help="interactive batch: JD files in data/jds/inbox through add-jd, tailor, review, apply "
+                                     "assist, with an archive check after every job")
+    lv.add_argument("--max", type=int, default=5, help="at most N JD files this session (default 5)")
+    lv.add_argument("--dry-run", action="store_true", help="stop after tailor + review: no apply step")
+    lv.add_argument("--retailor", action="store_true", help="a job already started from this JD is tailored again "
+                    "(CV, letter, review) instead of resumed; never an applied job")
+    lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
+    lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
+    lv.set_defaults(fn=cmd_live)
     r = sub.add_parser("review"); r.add_argument("--limit", type=int)
     r.add_argument("--mock", action="store_true", help="MockLLM for the letter-regenerate key, no API calls")
     r.set_defaults(fn=cmd_review)

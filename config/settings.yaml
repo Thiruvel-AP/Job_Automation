@@ -15,6 +15,8 @@ paths:
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies
+  jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
+  live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
   calibration: data/calibration           # M5 calibration JDs, manifest, reports (careerops calibrate)
   # Frozen keyword lists, one <jd-id>.yaml per calibration JD (`careerops calibrate --freeze-keywords`). They are
@@ -174,7 +176,7 @@ llm:
   max_tokens:
     extract_keywords: 2000
     rephrase_bullets: 1200     # <= 5 reworded bullets per call; a reasoning model also spends some of it thinking
-    cover_letter: 1500
+    cover_letter: 3000         # gpt-oss-20b spends reasoning tokens first; run 152700 (Zone & Co) was cut off at 1500
     tailor_profile: 600
     default: 1000
   # Estimated tokens for tailoring one job (keywords + profile + rephrase batches + letter; a below-band retry adds
@@ -188,8 +190,9 @@ llm:
   # back; no other provider ever writes the letter. Tasks not listed here use every provider, in order.
   task_providers:
     cover_letter: [groq]
-  # Tokens a letter alone needs (one cover_letter call, with its retry), for finishing a `letter_pending` job.
-  letter_token_estimate: 3000
+  # Tokens a letter alone needs (up to three cover_letter drafts: a first and two retries), for finishing a
+  # `letter_pending` job. A draft was ~1.5K tokens in the first Monzo live run, so three fit.
+  letter_token_estimate: 5000
   # Every task runs at temperature 0 with a fixed seed: a small model that is asked the same question should answer the
   # same way, so a calibration run (careerops calibrate) measures the prompts, not the dice. A provider entry may set its
   # own `seed` (null = send none, for a provider that rejects it).

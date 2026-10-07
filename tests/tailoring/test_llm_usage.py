@@ -1,10 +1,14 @@
 """report.json carries the actual LLM usage per call (M5 7)."""
+import pytest
 import json
 from pathlib import Path
 
 from careerops.llm import MockLLM
 from careerops.tailoring import tailor
 from careerops.tailoring.tailor import regenerate_letter
+
+
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
 class UsageLLM(MockLLM):

@@ -51,6 +51,7 @@ def _mock_db(mock: Path) -> DB:
 
 
 @pytest.mark.parametrize("cmd", [["run", "--mock", "--limit", "3"], ["tailor", "--mock", "--limit", "3"]])
+@pytest.mark.slow
 def test_a_mock_run_leaves_the_real_data_byte_for_byte_unchanged(world, cmd, capsys):
     cfg, real, mock = world
     before = _tree_hash(real)
@@ -69,6 +70,7 @@ def test_a_mock_run_leaves_the_real_data_byte_for_byte_unchanged(world, cmd, cap
     assert real_db.job("gh:real:1")["status"] == "triaged"             # untouched (and not tailored)
 
 
+@pytest.mark.slow
 def test_run_exports_into_the_mock_root_and_skips_discovery(world, monkeypatch, capsys):
     cfg, real, mock = world
 
@@ -81,6 +83,7 @@ def test_run_exports_into_the_mock_root_and_skips_discovery(world, monkeypatch, 
     assert "Discovery skipped under --mock" in capsys.readouterr().out
 
 
+@pytest.mark.slow
 def test_every_mock_run_tailors_the_seed_job_afresh(world):
     cfg, real, mock = world
     for _ in range(2):
@@ -126,12 +129,12 @@ def test_default_settings_map_every_generated_path_under_data_mock():
 
 def test_paths_outside_data_are_redirected_too_not_reused(tmp_path):
     raw = {"paths": {"db": "data/careerops.db", "applications": "/somewhere/else/Companies",
-                     "mystery": "/elsewhere/thing.csv", "fact_bank": "config/profile/fact_bank.yaml",
+                     "mystery": "/elsewhere/thing.csv", "fact_bank": "profiles/fact_bank.yaml",
                      "mock_root": "data/mock"}}
     m = mockroot.mock_settings(Settings(raw=raw, root=tmp_path))
     assert m.path("applications") == tmp_path / "data/mock/applications"
     assert m.path("mystery") == tmp_path / "data/mock/thing.csv"
-    assert m.path("fact_bank") == tmp_path / "config/profile/fact_bank.yaml"
+    assert m.path("fact_bank") == tmp_path / "profiles/fact_bank.yaml"
     assert m.path("db") == tmp_path / "data/mock/careerops.db"
 
 

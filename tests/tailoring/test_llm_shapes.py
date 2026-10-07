@@ -26,6 +26,7 @@ def _run(settings, fb, job, llm):
 
 
 # ================================================================== raw replies of the new tasks
+@pytest.mark.slow
 def test_a_every_raw_reply_is_saved_as_the_model_sent_it(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep = _run(settings, fb_fixture, job, llm)
@@ -50,6 +51,7 @@ def _odd_shape(ctx):
     return {"rephrased": items + [{"id": "zz9", "text": "a bullet that does not exist"}, {"note": "no id at all"}]}
 
 
+@pytest.mark.slow
 def test_b_odd_shapes_are_read_and_the_reworded_text_is_still_checked(settings, fb_fixture, job, spy_llm):
     rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
     rec = rep["attempts"][0]
@@ -59,6 +61,7 @@ def test_b_odd_shapes_are_read_and_the_reworded_text_is_still_checked(settings, 
     assert "40%" not in texts and "covering" in texts
 
 
+@pytest.mark.slow
 def test_b_every_drop_is_a_warning_in_report_json(settings, fb_fixture, job, spy_llm):
     rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
     saved = json.loads((_final(rep) / "report.json").read_text(encoding="utf-8"))
@@ -84,6 +87,7 @@ def test_a_bullet_listed_under_the_wrong_entry_is_dropped(fb_fixture):
 GARBAGE = {"profile": "x", "experience": "a1", "projects": 3, "rephrase": 7}
 
 
+@pytest.mark.slow
 def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback_letter(settings, fb_fixture, job,
                                                                                       spy_llm):
     llm = spy_llm({"rephrase_bullets": lambda ctx: GARBAGE, "tailor_profile": lambda ctx: GARBAGE,
@@ -96,6 +100,7 @@ def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback
     assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] <= settings["scoring"]["max_pages"]
 
 
+@pytest.mark.slow
 def test_c_a_model_that_is_down_for_every_task_still_gets_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):
     def down(ctx):
         raise RuntimeError("all providers failed")
@@ -128,6 +133,7 @@ def test_c_the_raw_answers_of_a_failed_job_are_kept_next_to_it_and_nothing_half_
     assert str(failed / "llm_raw") in str(e.value)
 
 
+@pytest.mark.slow
 def test_c_a_later_success_clears_the_old_failure_folder(settings, fb_fixture, job, spy_llm, monkeypatch):
     with monkeypatch.context() as m:
         _render_dies(m)
@@ -203,6 +209,7 @@ def test_letter_paragraphs_as_strings_text_objects_or_one_string():
     assert normalise_letter({"paragraphs": 5})[0] == [] and normalise_letter("x")[0] == []
 
 
+@pytest.mark.slow
 def test_a_letter_in_text_objects_is_accepted_and_the_drops_are_reported(settings, fb_fixture, job, spy_llm):
     good = ["Northwind builds oncology tools, which is the work I do.", "I built a tool-calling agent.",
             "Could we talk for twenty minutes?"]
@@ -269,6 +276,7 @@ def test_the_recorder_never_overwrites_and_skips_calls_with_no_reply(tmp_path):
                                                          "rephrase_bullets-2.json"]
 
 
+@pytest.mark.slow
 def test_regenerating_a_letter_adds_its_raw_reply_without_touching_the_first(settings, fb_fixture, job, spy_llm):
     rep = _run(settings, fb_fixture, job, spy_llm())
     first = _raw(rep, "cover_letter-1.json")

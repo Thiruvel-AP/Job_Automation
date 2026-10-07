@@ -81,9 +81,19 @@ def clause(bullet: str) -> str:
     return b[:1].lower() + b[1:]
 
 
+def org_label(org: str) -> str:
+    """Where a job's work was done, as the phrase that follows a comma: "in my freelance AI/ML work" for self-employment,
+    "at AstraZeneca" for "AstraZeneca · GeneTraceAI, University of Bristol" (the short name before the "·"), else "at <org>"."""
+    short = org.split("·")[0].strip()
+    if short.lower().startswith("self-employed"):
+        return "in my freelance AI/ML work"
+    return f"at {short}"
+
+
 def where(org: str, project: bool, first: bool) -> str:
-    """"at <org>" for a job, "in my <project> project" for a project; capitalised when it starts a sentence."""
-    s = ("in my recent work" if not org else f"in my {org} project" if project else f"at {org}")
+    """The place of a bullet: org_label for a job, "in my <project> project" for a project; capitalised when it starts a
+    sentence."""
+    s = ("in my recent work" if not org else f"in my {org} project" if project else org_label(org))
     return s[:1].upper() + s[1:] if first else s
 
 

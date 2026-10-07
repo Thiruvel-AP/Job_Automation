@@ -116,6 +116,24 @@ def opening_claim_problems(opening: str, evidence: list[dict], gaps: list[str] |
     return out
 
 
+def _own_bullet(text: str, evidence: list[dict]) -> int | None:
+    """Index of the evidence bullet the text is written from (most shared content words, at least MATCH_WORDS), else None."""
+    words = content_words(text)
+    overlap = [len(words & content_words(e["text"])) for e in evidence]
+    return max(range(len(evidence)), key=lambda i: overlap[i]) if evidence and max(overlap) >= MATCH_WORDS else None
+
+
+def repeated_evidence_problems(body: list[str], evidence: list[dict]) -> list[str]:
+    """The hook (paragraph 1) and paragraph 2 must be written from different evidence bullets: a letter that tells one
+    example twice leaves the other bullet unused. Nothing to check with fewer than two paragraphs or bullets."""
+    if len(body) < 2 or len(evidence) < 2:
+        return []
+    hook, second = _own_bullet(body[0], evidence), _own_bullet(body[1], evidence)
+    if hook is not None and hook == second:
+        return [f"the hook and paragraph 2 use the same evidence bullet: '{evidence[hook]['text'][:50]}'"]
+    return []
+
+
 def grounding_problems(paragraphs: list[str], evidence: list[dict], jd: str, hook: str = "", extra: str = "",
                        gaps: list[str] | None = None) -> list[str]:
     """Problems with the letter's sentences. `evidence` is [{"text", "terms"}] (the bullets the model was given);

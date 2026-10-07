@@ -41,6 +41,18 @@ class Family:
     projects: list[str]
 
 
+def verdict_status(v: Verdict) -> str:
+    return "skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "triaged"
+
+
+def verdict_fields(v: Verdict) -> dict:
+    """The jobs-table columns a verdict sets."""
+    return {"status": verdict_status(v), "reason": "; ".join(v.reasons) or None, "flags": v.flags,
+            "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score, "sponsor_match": v.sponsor_match,
+            "sponsor_route": v.sponsor_route, "sponsor_rating": v.sponsor_rating,
+            "family": v.family, "tier": v.tier, "ceiling_pre": v.ceiling_pre}
+
+
 def _any(patterns: list[str], text: str) -> str | None:
     for p in patterns:
         if re.search(p, text, re.I):

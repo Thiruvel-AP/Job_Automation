@@ -1,11 +1,15 @@
 """Contact details never leave the machine: no prompt (system or user) carries the applicant's address, email,
 phone or links. The CV and letter templates read them straight from the fact bank at render time."""
+import pytest
 import re
 from pathlib import Path
 
 from careerops.tailoring.tailor import regenerate_letter, tailor_job
 
 TASKS = {"extract_keywords", "tailor_profile", "rephrase_bullets", "cover_letter"}
+
+
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
 def _private_strings(identity: dict) -> list[str]:

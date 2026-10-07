@@ -18,9 +18,12 @@ from . import prompts as P
 from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
 from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, opening_claim_problems, rejected_words,
-                        sentences)
+                        repeated_evidence_problems, sentences)
+from .context_terms import model_terms, split_context
+from .families import possible_evidence
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
+from .qualifiers import prompt_list, repair
 from .letter_rules import fallback_letter, gap_display, grammar_problems, starts_with_past_verb
 from .rewrite_rules import bare_keyword_problems, canonical_case, canonical_forms, filler_problems, qualifier_problems
 from .selection import (JACCARD, ONE_PAGE, Layout, chunks, fill_order, layout_from, missing_keywords, select_cv,
@@ -119,14 +122,20 @@ def llm_keyword(raw, njd: str, weight: float, required: bool) -> Keyword | None:
 
 
 def analyse(job: dict, llm, settings, notes: list[str] | None = None,
-            frozen: dict | None = None) -> tuple[list[Keyword], str, str]:
+            frozen: dict | None = None, context: list[dict] | None = None) -> tuple[list[Keyword], str, str]:
     """(keywords, company_hook, team). `team` is "" when the JD names none. The model only suggests keywords; code
     enforces the rules: verbatim in the JD, short, nothing generic, near-duplicates merged (the shorter stays), at most
     scoring.max_keywords kept by weight then JD frequency. Shape problems in the model's answer and every drop are
     appended to `notes` when given. `frozen` ({"keywords": [Keyword], "company_hook", "team", "notes", "date"}, see
     reporting.calibrate.load_frozen) is the result of an earlier analysis: it is returned as it is, with no model call,
-    so the keywords (and so the ceiling) are the same on every run and with every provider."""
+    so the keywords (and so the ceiling) are the same on every run and with every provider. Team, product-area and
+    organisation names (Growth, Payments, "product squad") are not skills: they are taken out of the keywords before the
+    cap (so they neither count in the score nor use up a place) and appended to `context` as
+    {"term", "weight", "required", "why"}, for the review screen. This is the one place keywords are made, for live
+    tailoring and calibration alike."""
     if frozen is not None:
+        if context is not None:
+            context.extend(frozen.get("context_terms") or [])
         if notes is not None:
             notes.append(f"keywords: frozen ({frozen.get('date')}), extract_keywords not called")
             notes.extend(frozen.get("notes") or [])
@@ -138,6 +147,7 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None,
     tax = taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"])
     hook = team = ""
     llm_kw: list[Keyword] = []
+    model_ctx: set[str] = set()
     try:
         out = _llm_json(llm, "extract_keywords", P.KEYWORDS_SYSTEM,
                         P.KEYWORDS_USER.format(company=job["company"], title=job["title"], jd=jd[:12000]),
@@ -157,6 +167,7 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None,
         out = out if isinstance(out, dict) else {}
         hook = str(out.get("company_hook") or "")[:300]
         team = clean_team(out.get("team"), job)
+        model_ctx = model_terms(out.get("context_terms"), job["description"] or "")
     except Exception as e:  # noqa: BLE001 — taxonomy keywords alone are a usable fallback
         hook = team = ""
         llm_kw = []
@@ -164,9 +175,13 @@ def analyse(job: dict, llm, settings, notes: list[str] | None = None,
         if notes is not None:
             notes.append(f"extract_keywords: {LLM_FAILED} ({str(e)[:120]}); taxonomy keywords only")
     kws, merged = drop_contained(merge_keywords(tax, llm_kw))
+    kws, ctx_terms = split_context(kws, job["description"] or "", model_ctx, team)
     kws, capped = cap_keywords(kws, jd, sc["max_keywords"])
+    if context is not None:
+        context.extend(ctx_terms)
     if notes is not None:
         notes.extend(f"keywords: {n}" for n in merged + capped)
+        notes.extend(f"keywords: '{c['term']}' is context ({c['why']}), not scored" for c in ctx_terms)
     return kws, hook, team
 
 
@@ -183,6 +198,7 @@ def role_prior(job: dict, fb: dict, settings) -> tuple[str | None, int | None, s
     return fam.name, fam.tier, fam.headline, list(fam.projects)
 
 
+LETTER_ATTEMPTS = 3           # the first draft plus up to two retries, each told every violation so far
 REPHRASE_BATCH = 5            # bullets per rephrase_bullets call: small enough for a small model to follow every rule
 PROFILE_MIN_WORDS, PROFILE_MAX_WORDS = 6, 45     # a profile shorter than a sentence is junk, not a profile
 PROFILE_FACTS = 2
@@ -818,7 +834,8 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     problems: list[str] = []
     feedback = ""
     retry = retry if retry is not None else {}
-    retry.update({"count": 0, "rejected_words": [], "first_problems": [], "outcome": "first draft"})
+    retry.update({"count": 0, "rejected_words": [], "first_problems": [], "failures": [], "removed": [],
+                  "outcome": "first draft"})
     avoid = avoid_words(evidence, job["description"], hook, f"{named} {' '.join(gaps)}")
 
     def draft_problems(body: list[str]) -> list[str]:
@@ -844,18 +861,23 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         g_rest = grounding_problems(rest, evidence, job["description"], hook, named, gaps) if rest else []
         claim = opening_claim_problems(first, evidence, gaps) if first else []                 # the model's words only
         extra = numbers(text) - numbers(source)
+        out += repeated_evidence_problems(body, evidence)
         out += style + [p for p in g_first + g_rest + claim if p not in style]
         if extra:
             out.append(f"new numbers {sorted(extra)}")
         return list(dict.fromkeys(out))
 
     body: list[str] = []
-    for attempt in range(2):
+    avoided: list[str] = []                 # every word rejected so far: a retry must not swap one unsupported word for another
+    failures: list[dict] = []
+    retry["failures"] = failures
+    for attempt in range(LETTER_ATTEMPTS):
         try:
             out = _llm_json(
                 llm, "cover_letter",
                 P.LETTER_SYSTEM.replace("{max_words}", str(max_words))
-                .replace("{deny}", ", ".join(d for d in deny if d not in named_ok)),
+                .replace("{deny}", ", ".join(d for d in deny if d not in named_ok))
+                .replace("{qualifiers}", ", ".join(prompt_list(" ".join(texts)))),
                 P.LETTER_USER.format(title=job["title"], company=job["company"], company_hook=hook or "(none)",
                                      gaps=", ".join(gaps) or "(none)", avoid=", ".join(avoid) or "(none)",
                                      evidence="\n".join(f"- {e}" for e in texts)) + feedback,
@@ -876,14 +898,29 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         if not problems:
             retry["outcome"] = "ok after retry" if attempt else "first draft"
             return [*body, closing], []
-        words = rejected_words(problems)
-        if attempt == 0:                                       # the one retry: say which words the check rejected
-            retry.update({"count": 1, "rejected_words": words, "first_problems": list(problems)})
+        fixed = repair(body, problems, draft_problems)       # only unsupported qualifiers wrong: delete them, re-check it all
+        if fixed:
+            body, removed = fixed
+            retry["removed"] = removed
+            retry["outcome"] = "qualifiers removed" + (" after retry" if attempt else "")
             if notes is not None:
-                notes.append("cover_letter: first draft rejected (" + "; ".join(problems)[:200] + "); retried once"
-                             + (f", naming: {', '.join(words)}" if words else ""))
-        feedback = ((f"\n\nThe check rejected these words as unsupported: {', '.join(words)}. Do NOT use them." if words else "")
-                    + "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems))
+                notes.append(f"cover_letter: removed unsupported qualifier(s) {', '.join(removed)}; the full check passed")
+            return [*body, closing], []
+        failures.append({"attempt": attempt + 1, "problems": list(problems)})       # the review screen shows every one
+        avoided += [w for w in rejected_words(problems) if w not in avoided]
+        if attempt == 0:
+            retry["first_problems"] = list(problems)
+        retry["rejected_words"] = list(avoided)
+        if attempt + 1 < LETTER_ATTEMPTS:                      # another go, told exactly what the check rejected
+            retry["count"] = attempt + 1
+            if notes is not None:
+                notes.append(f"cover_letter: draft {attempt + 1} rejected ({'; '.join(problems)[:200]}); "
+                             f"retry {attempt + 1} of {LETTER_ATTEMPTS - 1}"
+                             + (f", naming: {', '.join(avoided)}" if avoided else ""))
+        feedback = (("\n\nThe check rejected these words as unsupported: " + ", ".join(f"'{w}'" for w in avoided) + ". "
+                     + " ".join(f"Do not use '{w}' unless it appears in the evidence bullets." for w in avoided))
+                    if avoided else "")
+        feedback += "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems)
     retry["outcome"] = "fallback" if retry["count"] else retry["outcome"]
     # deterministic fallback — always honest and first person; review will show why (letter_rules.fallback_letter)
     return (fallback_letter(job, hook, _with_orgs(fb, evidence), gaps, closing, deny, job["description"]),
@@ -1031,15 +1068,22 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     usage_from = len(getattr(llm, "usage", []))
     family, tier, headline, preferred = role_prior(job, fb, settings)
     analysis_warnings: list[str] = []
-    kws, hook, team = analyse(job, llm, settings, analysis_warnings, frozen)
-    ceil, gaps = ceiling(fact_text(fb), kws)
+    context_terms: list[dict] = []
+    kws, hook, team = analyse(job, llm, settings, analysis_warnings, frozen, context_terms)
+    ceil, all_gaps = ceiling(fact_text(fb), kws)
+    # A gap with a neighbour term in the fact bank is possible evidence, for the user to judge: never counted, never claimed,
+    # and not called a genuine gap either (so the letter cannot say "I have not used it").
+    alts = {k.term: k.alts for k in kws if k.alts}
+    possible = possible_evidence(fb, all_gaps, alts)
+    gaps = [g for g in all_gaps if g not in possible]
     skills, dropped_groups = cv_skills(fb, kws, None if one_page else sc["max_skill_groups"])
     cv_name, letter_name = _names(fb, settings)
     profile = make_profile(job, fb, kws, headline, llm)         # depends on the facts only, not on the selection
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
-                              "ceiling": ceil, "genuine_gaps": gaps, "attempts": [], "out_dir": str(final_dir),
+                              "ceiling": ceil, "genuine_gaps": gaps, "possible_evidence": possible,
+                              "context_terms": context_terms, "attempts": [], "out_dir": str(final_dir),
                               "analysis_warnings": analysis_warnings, "one_page": one_page,
                               "skills": {"core": core_skills(fb), "rows": list(skills), "dropped_groups": dropped_groups},
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")}}
@@ -1132,7 +1176,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             break   # in band, or (above: rephrasings already reverted) nothing left to try, or no honest way up
         # Below the band: count the keywords the fact bank evidences but the CV missed double when ranking, so the next
         # attempt picks the bullets that carry them. Selection is deterministic; an unchanged one would be wasted quota.
-        fixable = {m for m in s.wording_misses + s.misses if m not in gaps}
+        fixable = {m for m in s.wording_misses + s.misses if m not in all_gaps}
         ranking = _keyword_boost(ranking, fixable)
         if select_cv(fb, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac) == sel:
             break

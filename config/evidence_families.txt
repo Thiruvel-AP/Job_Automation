@@ -1,0 +1,18 @@
+# Evidence families: neighbouring terms, one family per line, `term | term | ...`.
+#  * NOT synonyms (those are config/keyword_groups.txt). Nothing here is ever counted as evidence.
+#  * When a JD term has no evidence in the fact bank but another member of its family does, the gap report lists it as
+#    "possible evidence — you decide", naming the fact-bank entries. It is not a genuine gap, and it is not in the ceiling,
+#    on the CV or in the letter: only you can say whether your experience covers it. If it does, put the word in the fact bank.
+#  * Matching is on stems, whole words; a term is related to a member if either contains the other.
+a/b experiments | a/b testing | experimentation | hypothesis testing | experimental design | controlled experiments | causal inference
+quantitative analysis | quantitative methods | statistics | statistical analysis | statistical modelling | statistical inference | hypothesis testing
+data mining | exploratory data analysis | clustering | unsupervised learning | pattern recognition | feature engineering
+lifetime value | customer lifetime value | ltv | churn modelling | customer analytics | survival analysis
+product analytics | product analysis | user behaviour analysis | funnel analysis | cohort analysis | customer analytics
+real-time analytics | streaming analytics | stream processing | real-time data | event-driven
+self-serve analytics | self-service analytics | dashboards | data visualisation | data visualization | business intelligence
+dashboards | reporting | data visualisation | data visualization | tableau | power bi
+forecasting | time-series forecasting | time series | demand forecasting | predictive modelling
+predictive modelling | machine learning | supervised learning | classification | regression
+model deployment | model serving | mlops | deployment | ci/cd
+stakeholder management | stakeholders | communication | presentation | cross-functional collaboration

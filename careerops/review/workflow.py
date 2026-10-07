@@ -65,6 +65,14 @@ def summary(job, rep: dict) -> str:
         + (f" (page 2 {f['page2_fill']:.0%} full)" if f.get("page2_fill") else "") + f" | attempts {len(rep['attempts'])}",
         f"Letter score {rep['letter']['score']:.0%}" + (f" | letter issues: {rep['letter']['problems']}" if rep['letter']['problems'] else ""),
     ]
+    failures = (rep["letter"].get("retry") or {}).get("failures") or []
+    for fail in failures:
+        lines.append(f"Letter draft {fail['attempt']} rejected: " + "; ".join(fail["problems"])[:400])
+    removed = (rep["letter"].get("retry") or {}).get("removed") or []
+    if removed:
+        lines.append("Letter removed: " + ", ".join(removed) + " (unsupported qualifiers deleted; the full check then passed)")
+    if failures and letter_status(rep) == "ok":
+        lines.append(f"Letter accepted on draft {len(failures) + 1}")
     if letter_status(rep) == "fallback":
         lines.append("LETTER IS A FALLBACK — regenerate (l) before approving")
     if flags:
@@ -72,6 +80,13 @@ def summary(job, rep: dict) -> str:
     if rep.get("needs_result"):
         lines.append(f"Needs a result (yours to supply in fact_bank.yaml, never invented): "
                      f"{', '.join(n['id'] for n in rep['needs_result'])}")
+    if rep.get("context_terms"):
+        lines.append("Context terms (team / product-area / org names; not scored, not in the ceiling): "
+                     + ", ".join(c["term"] for c in rep["context_terms"]))
+    if rep.get("possible_evidence"):
+        lines.append("Possible evidence — you decide (nothing is claimed; add the word to the fact bank if it is true):")
+        for term, via in rep["possible_evidence"].items():
+            lines.append(f"  {term} <- " + "; ".join(f"{v['via']} ({', '.join(v['where'][:2])})" for v in via))
     if rep["genuine_gaps"]:
         lines.append("Genuine gaps (no evidence, left out): " + ", ".join(rep["genuine_gaps"][:25]))
     if f["wording_misses"]:
@@ -167,51 +182,68 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
 
 
 # ---------------------------------------------------------------- interactive loop
-def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None) -> None:
+MENU = {"a": "[a]pprove", "e": "[e]dit", "r": "[r]eject", "l": "[l]etter regenerate", "o": "[o]pen PDFs", "s": "[s]kip",
+        "q": "[q]uit"}
+
+
+def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlosq") -> str:
+    """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'quit'. `allow` names the choices
+    offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, s skip, q quit); `ask` answers the
+    prompts (default: input). A skip changes nothing in the database: what a skip means is the caller's business."""
+    ask = ask or input
     prefs = settings.path("preferences")
+    rep = load_report(job)
+    print(summary(job, rep))
+    menu = "  ".join(MENU[c] for c in "aerlosq" if c in allow)
+    while True:
+        c = ask(f"{menu} > ").strip().lower()
+        if c not in allow:
+            continue
+        if c == "o":
+            open_file(rep["cv_pdf"]); open_file(rep["letter_pdf"])
+        elif c == "a":
+            confirm = None
+            if letter_status(rep) == "fallback":
+                confirm = ask(f"Letter is a FALLBACK. Type '{CONFIRM_FALLBACK}' to approve anyway: ")
+            try:
+                approve(db, job, rep, prefs, confirm=confirm)
+            except FallbackLetterError as e:
+                print(f"  NOT approved: {e}")
+                continue
+            return "approved"
+        elif c == "l":
+            if make_llm is None:
+                print("  no LLM available for this run")
+                continue
+            try:
+                rep = regenerate_letter(db, job, rep, fb, make_llm(), settings)
+            except Exception as e:  # noqa: BLE001  (provider errors, xelatex errors: report, keep the old letter)
+                print(f"  letter NOT regenerated: {e}")
+                continue
+            job = db.job(job["id"])
+            print(summary(job, rep))
+        elif c == "r":
+            reject(db, job, rep, prefs, ask("reason: ").strip() or "unspecified")
+            return "rejected"
+        elif c == "e":
+            path = Path(rep["out_dir"]) / "edit.yaml"
+            path.write_text(yaml.safe_dump(edit_file_for(rep), sort_keys=False, allow_unicode=True, width=120),
+                            encoding="utf-8")
+            editor = os.environ.get("EDITOR", "notepad" if platform.system() == "Windows" else "nano")
+            subprocess.call([editor, str(path)])
+            warns = apply_edits(db, job, rep, yaml.safe_load(path.read_text(encoding="utf-8")), fb, prefs)
+            for w in warns:
+                print("  WARNING:", w)
+            print(f"  re-scored: {rep['final']['score']:.0%} literal, {rep['final']['pages']} page(s)")
+        elif c == "s":
+            return "skipped"
+        elif c == "q":
+            return "quit"
+
+
+def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None) -> None:
     queue = order(db.jobs("needs_review"), settings, tailored=True)[:limit]
     print(f"{len(queue)} job(s) waiting for review.")
     for job in queue:
-        rep = load_report(job)
-        print(summary(job, rep))
-        while True:
-            c = input("[a]pprove  [e]dit  [r]eject  [l]etter regenerate  [o]pen PDFs  [s]kip  [q]uit > ").strip().lower()
-            if c == "o":
-                open_file(rep["cv_pdf"]); open_file(rep["letter_pdf"])
-            elif c == "a":
-                confirm = None
-                if letter_status(rep) == "fallback":
-                    confirm = input(f"Letter is a FALLBACK. Type '{CONFIRM_FALLBACK}' to approve anyway: ")
-                try:
-                    approve(db, job, rep, prefs, confirm=confirm)
-                except FallbackLetterError as e:
-                    print(f"  NOT approved: {e}")
-                    continue
-                break
-            elif c == "l":
-                if make_llm is None:
-                    print("  no LLM available for this run")
-                    continue
-                try:
-                    rep = regenerate_letter(db, job, rep, fb, make_llm(), settings)
-                except Exception as e:  # noqa: BLE001  (provider errors, xelatex errors: report, keep the old letter)
-                    print(f"  letter NOT regenerated: {e}")
-                    continue
-                job = db.job(job["id"])
-                print(summary(job, rep))
-            elif c == "r":
-                reject(db, job, rep, prefs, input("reason: ").strip() or "unspecified"); break
-            elif c == "e":
-                path = Path(rep["out_dir"]) / "edit.yaml"
-                path.write_text(yaml.safe_dump(edit_file_for(rep), sort_keys=False, allow_unicode=True, width=120),
-                                encoding="utf-8")
-                editor = os.environ.get("EDITOR", "notepad" if platform.system() == "Windows" else "nano")
-                subprocess.call([editor, str(path)])
-                warns = apply_edits(db, job, rep, yaml.safe_load(path.read_text(encoding="utf-8")), fb, prefs)
-                for w in warns:
-                    print("  WARNING:", w)
-                print(f"  re-scored: {rep['final']['score']:.0%} literal, {rep['final']['pages']} page(s)")
-            elif c == "s":
-                break
-            elif c == "q":
-                return
+        if review_job(db, job, settings, fb, make_llm) == "quit":
+            return

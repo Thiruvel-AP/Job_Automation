@@ -103,6 +103,7 @@ def chattermill_run(settings, fb_fixture, job, spy_llm):
     return tailor.tailor_job(j, fb_fixture, llm, settings, settings.path("outputs")), llm, j
 
 
+@pytest.mark.slow
 def test_chattermill_with_any_of_groups_and_list_shaped_answers_tailors_without_crashing(chattermill_run):
     rep, llm, _ = chattermill_run
     assert any(set(["PyTorch", "TensorFlow"]) <= set(k["alts"] + [k["term"]]) or
@@ -112,6 +113,7 @@ def test_chattermill_with_any_of_groups_and_list_shaped_answers_tailors_without_
     assert "rephrase_bullets: answer was wrapped in 'rephrased'; read it" in rep["attempts"][0]["warnings"]
 
 
+@pytest.mark.slow
 def test_groups_and_plain_keywords_are_json_everywhere_and_round_trip(chattermill_run):
     rep, _, _ = chattermill_run
     saved = json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))
@@ -121,12 +123,14 @@ def test_groups_and_plain_keywords_are_json_everywhere_and_round_trip(chattermil
     assert isinstance(saved["genuine_gaps"], list) and all(isinstance(g, str) for g in saved["genuine_gaps"])
 
 
+@pytest.mark.slow
 def test_prompts_show_group_keywords_as_terms_not_as_objects(chattermill_run):
     _, llm, _ = chattermill_run
     for call in llm.sent:
         assert "Keyword(" not in call["user"] and "{'term'" not in call["user"] and "[{" not in call["user"]
 
 
+@pytest.mark.slow
 def test_the_letter_can_be_regenerated_and_the_excel_view_exported(chattermill_run, settings, fb_fixture, db, tmp_path):
     rep, llm, job = chattermill_run
     rep = regenerate_letter(job, fb_fixture, llm, settings, rep)       # review's 'l' rebuilds Keyword(**k) with alts
@@ -141,6 +145,7 @@ def test_the_letter_can_be_regenerated_and_the_excel_view_exported(chattermill_r
     assert ws.cell(2, 1).value == "Chattermill" and ws.cell(2, 6).value == "needs_review"
 
 
+@pytest.mark.slow
 def test_odd_keyword_and_letter_shapes_still_get_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"extract_keywords": lambda ctx: {"required": [{"term": "Python"}, 5, None, ["x"]],
                                                     "preferred": "SQL", "company_hook": 3, "team": ["x"]},

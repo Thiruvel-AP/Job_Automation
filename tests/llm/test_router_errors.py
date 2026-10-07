@@ -276,7 +276,7 @@ def test_defaults_are_8000_tpm_and_30_rpm_and_null_means_unlimited(settings, db)
 
 def test_settings_carry_the_pacing_limits_and_per_task_caps(settings):
     llm = settings["llm"]
-    assert llm["max_tokens"] == {"extract_keywords": 2000, "rephrase_bullets": 1200, "cover_letter": 1500,
+    assert llm["max_tokens"] == {"extract_keywords": 2000, "rephrase_bullets": 1200, "cover_letter": 3000,
                               "tailor_profile": 600, "default": 1000}
     groq = next(p for p in llm["providers"] if p["name"] == "groq")
     assert (groq["tpm"], groq["rpm"], groq["tpd"]) == (8000, 30, 200000)
@@ -290,7 +290,7 @@ def test_each_task_sends_its_own_max_tokens(settings, db, server, fake_time):
     r = _router(settings, db, server, "p")
     for task in ("extract_keywords", "rephrase_bullets", "cover_letter", "something_else"):
         r.json(task, "s", "u")
-    assert [b["max_tokens"] for b in _hits("p")] == [2000, 1200, 1500, 1000]
+    assert [b["max_tokens"] for b in _hits("p")] == [2000, 1200, 3000, 1000]
 
 
 def test_max_tokens_falls_back_to_a_built_in_default_when_settings_have_none(settings, db, server, fake_time):

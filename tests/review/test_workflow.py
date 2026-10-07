@@ -1,10 +1,14 @@
 """Review decisions, preference log, Excel export."""
+import pytest
 import json
 
 from openpyxl import load_workbook
 
 from careerops.reporting.excel import export
 from careerops.review import workflow as review
+
+
+pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
 def test_review_edit_approve_reject_and_export(tailored, settings, db, job, tmp_path):

@@ -4,12 +4,13 @@ letter is first person and never pastes a bullet twice, gaps keep their casing, 
 import pytest
 
 from careerops.tailoring import tailor
-from careerops.tailoring.letter_rules import (clause, fallback_letter, gap_display, grammar_problems,
+from careerops.tailoring.grounding import repeated_evidence_problems
+from careerops.tailoring.letter_rules import (clause, fallback_letter, gap_display, grammar_problems, org_label,
                                               starts_with_past_verb)
 from careerops.tailoring.rewrite_rules import bare_keyword_problems, filler_problems
 from careerops.tailoring.scorer import Keyword
 
-ORG = {"fl": "Self-employed, Chennai", "az": "AstraZeneca – GeneTraceAI, University of Bristol",
+ORG = {"fl": "Self-employed, Chennai", "az": "AstraZeneca · GeneTraceAI, University of Bristol",
        "dc": "180 Degrees Consulting Bristol"}
 TXT = {
     "fl2": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
@@ -54,39 +55,39 @@ def _letter(company):
 # The fallback letter of each of the seven calibration companies, word for word (checked by eye for grammar)
 SNAPSHOTS = {
     'Chattermill': [
-        "Chattermill builds a Customer Experience Intelligence platform that continuously analyses explicit and implicit customer feedback for large brands such as Uber, Amazon, Wise, and HelloFresh. I'd like to bring my experience to that work: at Self-employed, Chennai, I built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
-        'At AstraZeneca – GeneTraceAI, University of Bristol, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.',
+        "Chattermill builds a Customer Experience Intelligence platform that continuously analyses explicit and implicit customer feedback for large brands such as Uber, Amazon, Wise, and HelloFresh. I'd like to bring my experience to that work: in my freelance AI/ML work, I built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+        'At AstraZeneca, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.',
         'CTA?',
     ],
     'Creditspring': [
-        "Creditspring offers subscription-based short-term financial products to improve members' financial stability and resilience. I'd like to bring my experience to that work: at Self-employed, Chennai, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+        "Creditspring offers subscription-based short-term financial products to improve members' financial stability and resilience. I'd like to bring my experience to that work: in my freelance AI/ML work, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
         'At 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.',
         'CTA?',
     ],
     'Heathrow Airport Holdings': [
-        "Heathrow Airport Holdings develops analytical models and data science solutions to improve airport operations and inform business decisions. I'd like to bring my experience to that work: at Self-employed, Chennai, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+        "Heathrow Airport Holdings develops analytical models and data science solutions to improve airport operations and inform business decisions. I'd like to bring my experience to that work: in my freelance AI/ML work, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
         'At 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.',
         'CTA?',
     ],
     'Lendable': [
         "Lendable builds fintech technology to give customers instant credit and savings solutions, rebuilding core consumer finance products and expanding into UK and US markets. I'd like to bring my experience to that work: at 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.",
-        'At AstraZeneca – GeneTraceAI, University of Bristol, I wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.',
+        'At AstraZeneca, I wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.',
         'CTA?',
     ],
     'Quantcast': [
-        "Quantcast builds AI-powered advertising technology that optimizes digital ad auctions in real time, delivering measurable outcomes for marketers worldwide. I'd like to bring my experience to that work: at Self-employed, Chennai, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
-        'At AstraZeneca – GeneTraceAI, University of Bristol, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.',
+        "Quantcast builds AI-powered advertising technology that optimizes digital ad auctions in real time, delivering measurable outcomes for marketers worldwide. I'd like to bring my experience to that work: in my freelance AI/ML work, I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+        'At AstraZeneca, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.',
         'I have not used Java yet.',
         'CTA?',
     ],
     'Trainline': [
-        "Trainline empowers greener travel choices by connecting millions of travellers to rail and coach journeys through its mobile app, website and channels. I'd like to bring my experience to that work: at AstraZeneca – GeneTraceAI, University of Bristol, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
+        "Trainline empowers greener travel choices by connecting millions of travellers to rail and coach journeys through its mobile app, website and channels. I'd like to bring my experience to that work: at AstraZeneca, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
         'At 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.',
         'I have not used Power BI yet.',
         'CTA?',
     ],
     'Zone & Co': [
-        "Zone & Co builds an ERP-native AI platform that automates, connects, and scales financial workflows directly within Oracle NetSuite, delivering real-time financial intelligence to finance teams worldwide. I'd like to bring my experience to that work: at AstraZeneca – GeneTraceAI, University of Bristol, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
+        "Zone & Co builds an ERP-native AI platform that automates, connects, and scales financial workflows directly within Oracle NetSuite, delivering real-time financial intelligence to finance teams worldwide. I'd like to bring my experience to that work: at AstraZeneca, I built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
         'At 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.',
         'I have not used Azure yet.',
         'CTA?',
@@ -111,7 +112,7 @@ def test_no_fallback_paragraph_starts_with_a_bare_verb_or_repeats_a_bullet_or_sa
     for i in (a, b):
         assert TXT[i] not in text and text.count(TXT[i][1:].rstrip(".")[:40]) == 1     # a bullet appears once, as a clause
     assert len(paras) == 3 + bool(gaps)                                          # P1, P2, [P3 gap], P4
-    assert paras[0].count("I'd like to bring my experience to that work: at ") == 1
+    assert paras[0].count("I'd like to bring my experience to that work: ") == 1 and "Self-employed" not in paras[0]
     assert paras[1].startswith(("At ", "In my ")) and ", I " in paras[1] and paras[-1] == "CTA?"
 
 
@@ -132,6 +133,22 @@ def test_the_second_bullet_must_differ_from_the_first_and_one_bullet_gives_a_sho
     assert len(one) == 2 and one[0].count("scikit-learn") == 1               # the same bullet twice is not pasted twice
     only = fallback_letter({"company": "Acme", "title": "DS"}, "Acme builds things.", _ev("fl1"), ["Azure"], "CTA?", [])
     assert [p.split()[0] for p in only] == ["Acme", "I", "CTA?"]
+
+
+@pytest.mark.parametrize("org, want", [
+    ("Self-employed, Chennai", "in my freelance AI/ML work"), ("Self-employed", "in my freelance AI/ML work"),
+    ("AstraZeneca · GeneTraceAI, University of Bristol", "at AstraZeneca"), ("Avasoft", "at Avasoft"),
+    ("180 Degrees Consulting Bristol", "at 180 Degrees Consulting Bristol")])
+def test_an_org_is_labelled_for_the_letter_not_pasted_raw(org, want):
+    assert org_label(org) == want
+
+
+def test_the_fallback_letter_says_freelance_work_and_at_astrazeneca_not_the_raw_orgs():
+    text = " ".join(fallback_letter({"company": "Acme", "title": "DS"}, "Acme builds things.", _ev("fl1", "az1"), [], "CTA?", []))
+    assert "in my freelance AI/ML work, I built scikit-learn pipelines" in text and "At AstraZeneca, I built a tool-calling" in text
+    assert "Self-employed" not in text and "GeneTraceAI, University" not in text and "Chennai" not in text
+    second_first = fallback_letter({"company": "Acme", "title": "DS"}, "Acme builds things.", _ev("az1", "fl1"), [], "CTA?", [])
+    assert second_first[1].startswith("In my freelance AI/ML work, I built scikit-learn")      # capitalised at a sentence start
 
 
 def test_a_project_bullet_is_placed_in_its_project_not_at_an_employer():
@@ -230,8 +247,46 @@ def test_run_201304_drafts_with_broken_grammar_are_rejected_twice_and_the_templa
     bank = {"deny_terms": [], "projects": [], "experience": [
         {"id": k, "org": o, "bullets": [{"id": i, "text": TXT[i], "terms": []} for i in TXT if i[:2] == k]} for k, o in ORG.items()]}
     paras, problems = tailor._letter(job, bank, [], HOOK[company], _ev(a, b), llm, settings, gaps, [], "", {})
-    assert tailor.FALLBACK_MARK in problems and len(llm.sent) == 2
+    assert tailor.FALLBACK_MARK in problems and len(llm.sent) == 3
     assert paras[:-1] == SNAPSHOTS[company][:-1]
+
+
+# ---------------------------------------------------------------- the hook and paragraph 2 use different bullets
+EV2 = [{"id": "fl1", "text": TXT["fl1"], "terms": []}, {"id": "az1", "text": TXT["az1"], "terms": []}]
+HOOK_FL1 = "Quantcast optimises ad auctions, and I built scikit-learn pipelines and LSTM models in TensorFlow Keras for that."
+SECOND_FL1 = "I deployed scikit-learn pipelines and LSTM/BiRNN/CNN models as FastAPI services in Docker."
+SECOND_AZ1 = "I built a tool-calling LLM agent with LangChain and AWS Bedrock for a multi-omics cancer research platform."
+
+
+def test_one_bullet_told_in_both_the_hook_and_paragraph_2_is_a_problem():
+    problems = repeated_evidence_problems([HOOK_FL1, SECOND_FL1], EV2)
+    assert len(problems) == 1 and "same evidence bullet" in problems[0] and "scikit-learn" in problems[0]
+
+
+def test_a_hook_and_paragraph_2_from_different_bullets_pass():
+    assert repeated_evidence_problems([HOOK_FL1, SECOND_AZ1], EV2) == []
+    assert repeated_evidence_problems([HOOK_FL1], EV2) == [] and repeated_evidence_problems([HOOK_FL1, SECOND_FL1], EV2[:1]) == []
+    assert repeated_evidence_problems(["A hook naming no bullet at all.", SECOND_FL1], EV2) == []
+
+
+def test_a_model_letter_that_repeats_a_bullet_is_retried_with_the_reason_and_then_accepted(settings, spy_llm):
+    drafts = iter([[HOOK_FL1, SECOND_FL1], [HOOK_FL1, SECOND_AZ1]])
+    llm = spy_llm({"cover_letter": lambda ctx: {"paragraphs": next(drafts)}})
+    job = {"company": "Quantcast", "title": "X", "description": HOOK["Quantcast"] + " Optimises ad auctions."}
+    paras, problems = tailor._letter(job, {"deny_terms": []}, [], HOOK["Quantcast"], _ev("fl1", "az1"), llm, settings, [], [], "", {})
+    assert len(llm.sent) == 2 and "same evidence bullet" in llm.sent[1]["user"]
+    assert not any("same evidence bullet" in p for p in problems) and paras[:2] == [HOOK_FL1, SECOND_AZ1]
+
+
+def test_the_letter_prompt_tells_the_model_to_use_a_different_line_in_the_hook_and_paragraph_2():
+    from careerops.tailoring import prompts
+    assert "OTHER" in prompts.LETTER_SYSTEM and "never tell the same line twice" in prompts.LETTER_SYSTEM
+
+
+def test_the_cover_letter_token_cap_leaves_room_for_reasoning(settings):
+    assert settings["llm"]["max_tokens"]["cover_letter"] == 3000
+    ctx = min(p["context_tokens"] for p in settings["llm"]["providers"] if p["name"] == "groq")
+    assert ctx >= 3000 + 6000                                  # the cap plus a generous letter prompt fits the context
 
 
 # ---------------------------------------------------------------- 4. CV filler (strings of run 201304)

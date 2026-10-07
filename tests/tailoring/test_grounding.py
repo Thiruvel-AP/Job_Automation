@@ -127,6 +127,7 @@ def _lying(ev):
             "Could we find twenty minutes to talk?"]
 
 
+@pytest.mark.slow
 def test_an_invented_client_is_retried_once_with_the_problem_listed_and_the_honest_draft_is_accepted(
         settings, fb_fixture, job, spy_llm):
     from careerops.tailoring import tailor
@@ -139,12 +140,13 @@ def test_an_invented_client_is_retried_once_with_the_problem_listed_and_the_hone
     assert LIE not in " ".join(rep["letter"]["paragraphs"])
 
 
+@pytest.mark.slow
 def test_an_invention_that_survives_the_retry_is_flagged_and_the_letter_is_the_fallback(settings, fb_fixture, job,
                                                                                          spy_llm):
     from careerops.tailoring import tailor
     llm = spy_llm({"cover_letter": _drafts(_lying)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert [s["task"] for s in llm.sent].count("cover_letter") == 2          # one draft, one retry, then stop
+    assert [s["task"] for s in llm.sent].count("cover_letter") == 3          # a draft, two retries, then stop
     letter = rep["letter"]
     assert letter["status"] == "fallback" and tailor.FALLBACK_MARK in letter["problems"]
     assert any("'fintech' (sector)" in p for p in letter["problems"])
@@ -155,6 +157,7 @@ def test_an_invention_that_survives_the_retry_is_flagged_and_the_letter_is_the_f
     assert rep["final"]["pages"] <= settings["scoring"]["max_pages"] and letter["pages"] == 1
 
 
+@pytest.mark.slow
 def test_the_evidence_ids_are_in_the_report_and_survive_a_regenerated_letter(settings, fb_fixture, job, spy_llm):
     from careerops.tailoring import tailor
     rep = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, settings.path("outputs"))

@@ -16,7 +16,8 @@ ollama create qwen2.5-7b-8k -f config/ollama/Modelfile   # same model with an 81
 careerops doctor                # every line should say [ok]
 careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
 careerops llm-check             # one tiny request per LLM provider: reachable, model, latency, JSON, json_mode (never prints keys)
-pytest -q                       # no network or model needed
+pytest -q                       # no network or model needed; tests read tests/fixtures/profile/, never your config/profile/
+pytest -q -m "not slow"         # skips every test that runs xelatex or Chromium (light on RAM, < ~2 GB)
 ```
 
 ## Project structure
@@ -32,7 +33,8 @@ career-ops/
 │   │   ├── companies_house.py    M2 bulk join → company no., SIC codes, sector
 │   │   ├── ats.py                M3 slug probe, verification, careers-page detector
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
-│   │   └── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
+│   │   ├── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
+│   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── tailoring/                JD → CV + cover letter
 │   │   ├── scorer.py             weighted ATS score (literal + stemmed), honest ceiling, keywords
 │   │   ├── faithfulness.py       guard: no new numbers, deny-listed tools, unevidenced keywords
@@ -45,6 +47,7 @@ career-ops/
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · outreach.py (M4)
 │   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
+│   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
 │   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
 │   └── training/rewards.py       Phase 2 GRPO reward functions
 ├── config/
@@ -62,6 +65,8 @@ career-ops/
     ├── outputs/<company_title_id>/  CV.tex/.pdf · Cover_Letter.tex/.pdf · report.json
     ├── exports/                  companies.xlsx · learning_list.md
     ├── feedback/preferences.jsonl   approve/edit/reject log → DPO pairs
+    ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
+    ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
 ```
@@ -104,10 +109,14 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 careerops sponsors                 # gov.uk register: download only if its link changed, store data/register/YYYY-MM-DD.csv.gz, diff vs the last snapshot
 careerops discover                 # pull + triage; skipped jobs keep their reason
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
-careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles
+careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
 careerops tailor --limit 15        # CV (two full pages) + letter per job, in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
+careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
+careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
+careerops live --dry-run           # the same, stopping after tailor + review: no apply step
+careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
 careerops mark-applied --id JOB    # an application made outside the assist: archive it and log 'applied'
@@ -120,6 +129,54 @@ careerops export-prefs             # your edits → DPO pairs (chosen = yours, r
 careerops status                   # counts per status, plus a tier × status table
 careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
 ```
+
+### Live sessions (`careerops live`)
+
+Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it). The
+first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
+`careerops live` takes the files in name order, up to `--max` (default 5), and for each one:
+
+1. checks the file (missing, under 500 bytes, not UTF-8 → moved to `rejected/` with a `.reason.txt` beside it, loop continues);
+2. snapshots the archive (`paths.applications`; read-only `os.walk`: path, size, mtime);
+3. adds the job (the internal `add-jd` function; the job id is passed on as a value, never read from printed output) and triages it;
+4. tailors exactly that id, then asks you to review it: **approve / edit / skip** (plus open PDFs and regenerate the letter);
+   skip leaves the job `skipped` and files the JD in `done/`;
+5. unless `--dry-run`, and only after approval: you confirm *Open the application form?*, the existing apply assist fills the
+   basics (it never submits), every `CHECK VISA ANSWER` line is printed, and *Did YOU submit the form? [y/N]* decides:
+   `y` → mark-applied (archive + `applied`); anything else → status `ready_not_submitted`, nothing recorded as sent;
+6. snapshots the archive again. A removed or changed path, or an addition outside this job's one new `<Company>/<Role>` folder,
+   stops the whole loop (exit code 3) and prints the paths;
+7. moves the JD to `done/<job id>-<name>.txt` (`:` in the id becomes `_`).
+
+There is no `--yes`: every gate is answered by you. `--mock` runs everything on the isolated `data/mock` root with MockLLM
+and implies `--dry-run`. **Ctrl-C** (or an unanswered prompt) prints the stage it stopped at and the command to resume (exit 130);
+the JD stays in `inbox/`, and a rerun continues the same job at the status it reached. A finished JD is remembered by its
+content hash in `data/live/state.json`, so the same text dropped in again is not redone. A dry run, a pending letter and a refused
+apply also leave the JD in `inbox/`. Each session ends with a summary (id, company, role, status, sponsor-register match,
+visa lines, archive check), printed and written to `data/live/<timestamp>.md`.
+
+### What the review screen shows besides the score
+
+- **Context terms**: team, product-area and organisation names in the JD (Growth, Payments, Fincrime, "product squad",
+  "data science teams") are not skills. They are taken out of the keywords before scoring, out of the ATS numerator *and*
+  denominator and out of the ceiling, and listed on their own line. A term is context when it ends in an organisational noun
+  (squad, team, collective ...), is one of a capitalised list of three or more names in the JD, or the model named it under
+  `context_terms`; so is a phrase that ends in a generic head word (`data discipline`, `engineering culture`, `growth
+  mindset`, `central data function`: how the company works, not a skill). A taxonomy skill (Python, Looker ...) never is, and
+  `loss function` / `window functions` stay skills. Live tailoring and `calibrate` both make keywords in
+  `tailor.analyse`, so both apply the same filters (verbatim in the JD, 1-3 words, nothing generic, near-duplicates merged,
+  context terms set aside, cap).
+- **Possible evidence — you decide**: before a JD term is called a genuine gap, `config/evidence_families.txt` is checked
+  (`A/B experiments` ~ hypothesis testing / experimental design, `quantitative analysis` ~ statistics ...). A hit is shown with the
+  fact-bank entries behind it. It is never counted: not in the ceiling, not on the CV, not in the letter, and not a genuine gap
+  either. If your experience does cover it, say so in `fact_bank.yaml` yourself.
+- **Letter drafts**: the letter gets up to three drafts. Each retry is told every word the claim check has rejected so far ("Do
+  not use 'X' unless it appears in the evidence bullets") plus the full text of every violation; each rejected draft's reasons
+  are listed under the score, and a letter that still fails is the flagged fallback. No check is loosened. One exception to
+  "retry": when a draft's only violations are unsupported qualifier words (specialised, integrated, extensive, deep, proven,
+  seamless, robust, strong, solid ...; adjectives and adverbs, never a noun, verb, tool, number or capability), those words are
+  deleted (a/an, commas and "and" tidied, nothing added), the full check is re-run on the edited draft, and it is accepted only
+  if that passes. The review screen then says `Letter removed: <words>`. The letter prompt also bans these qualifiers up front.
 
 ### Calibration
 

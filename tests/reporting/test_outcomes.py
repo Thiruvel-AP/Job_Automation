@@ -189,7 +189,8 @@ def test_careerops_outcome_logs_an_event_and_refuses_unknown_jobs_and_events(db,
 def test_the_date_defaults_to_today(db, cfg):
     add_job(db, "m:8")
     cli.main(["--config", cfg, "outcome", "--id", "m:8", "--event", "acknowledged"])
-    assert db.conn.execute("SELECT on_date FROM outcomes").fetchone()[0] == datetime.now(timezone.utc).date().isoformat()
+    # the CLI's "today" is the user's local day (cli.py: date.today()); a UTC date fails between local midnight and UTC midnight
+    assert db.conn.execute("SELECT on_date FROM outcomes").fetchone()[0] == date.today().isoformat()
 
 
 def test_careerops_outcomes_prints_the_funnel(db, cfg, capsys):
