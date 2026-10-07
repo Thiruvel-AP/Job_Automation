@@ -160,6 +160,30 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
 - **Results** — give a bullet an optional `result:` in the fact bank (a measured outcome). The rephrase step may work it in;
   its numbers count as evidence for that bullet only. `report.json → needs_result` lists the bullets on that CV that have none
   (yours to fill in, never invented).
+- **Keyword placement** — a JD keyword the CV text lacks (bullets, profile and skills together) is offered, as "include if it
+  reads naturally", to the first selected bullet whose own `terms` evidence it: at most 2 per bullet, each keyword once. The
+  faithfulness guard already counts a bullet's `terms` as evidence, so it is unchanged. `report.json → placement` and the
+  calibration report list per JD what was placed, not placed (the model left it out) or blocked (guard refused), and the
+  keywords no selected bullet could take.
+- **Rewrite rules** (`tailoring/rewrite_rules.py`, tighten-only): a reworded bullet must keep any qualifier its source has
+  (team, contributed, coursework, MSc, prototype(d), proof of concept/PoC, hackathon, assisted, supported, helped, or a form
+  of it); it is rejected for adding filler (`leveraging|incorporating|applying … capabilities|techniques`, `using <gerund>
+  with`, `<noun> communication demo`, a trailing `, demonstrating|showcasing|emphasizing|achieving|forming|highlighting|
+  leveraging …` clause, a keyword tacked on bare after a phrase "… on a free T4 regression"); keywords it writes in take
+  canonical casing (LLM, GenAI, NLP).
+- **Letter evidence and fallback** — the two bullets a letter is written from must start with a past-tense verb (noun-led
+  bullets like "XGBoost churn classifier in R …" cannot follow "I"). A draft with "my work on built …", "mirrors my work
+  <noun>", a paragraph that starts with a bare verb or pastes a bullet verbatim is rejected like any other. When the
+  draft fails after the retry, `letter_rules.fallback_letter` writes it, all first person: *<company hook sentence> I'd
+  like to bring my experience to that work: at <org 1>, I <bullet 1 as a clause>.* · *At <org 2>, I <bullet 2 as a
+  clause>.* · *I have not used <Gap> yet.* (only with a gap) · the closing question. Gaps keep the JD's casing or a
+  canonical spelling (Azure, Power BI, AutoGen, DSPy).
+- **Letter opening** — the claim half of the opening sentence (after "mirrors", a dash, ":" or ";") may use only the two
+  evidence bullets; `actionable insights, user-centric, tangible outcomes, instantly, accurately, precise, smooth
+  integration, efficient, exactly what I built` are vague filler unless the evidence says them. Rejected → one retry naming
+  the phrase → any remaining problem → the template fallback above.
+- **No-regression rule** — a rephrased or wording-pass bullet is kept only if it still hits every keyword (literal) the text it
+  replaces hit; otherwise the earlier wording stays and `report.json` warns `no-regression: kept the earlier wording …`.
 - **Wording pass** — after rephrasing, a keyword the CV has only in another form ("prototyped" for "prototyping") gets its
   exact form in the one bullet that carries its stem; the guard checks it like any rephrase and it is kept only if the score
   does not drop.
@@ -212,7 +236,8 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 
 ## What the review screen tells you
 
-- **ATS literal** — conservative substring match on the PDF's text layer; the 70–85 % band applies to this.
+- **ATS literal** — conservative whole-word match on the PDF's text layer, singular/plural (trailing *s*/*es*) taken as
+  one term (*prompt* = *prompts*); the 70–85 % band applies to this.
 - **ATS stemmed** — also equates *communicating/communicate*, *modelling/modeling*, *end-to-end/end to end*,
   *classifier/classification*, *visualisation/visualization*.
   Literal → stemmed gap = wording, not substance.

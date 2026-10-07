@@ -170,12 +170,16 @@ def _drafts(*drafts):
     return lambda ctx: {"paragraphs": (queue.pop(0) if len(queue) > 1 else queue[0])(ctx["evidence"])}
 
 
+def _i(bullet: str) -> str:
+    return "I " + bullet[:1].lower() + bullet[1:]          # first-person prose: a bullet pasted bare is rejected
+
+
 def _with_filler(e):
-    return ["Northwind Health AI builds tools I have worked on.", e[0] + " It was a real-time, scalable system.", e[1]]
+    return ["Northwind Health AI builds tools I have worked on.", _i(e[0]) + " It was a real-time, scalable system.", _i(e[1])]
 
 
 def _clean(e):
-    return ["Northwind Health AI builds tools I have worked on.", e[0], e[1]]
+    return ["Northwind Health AI builds tools I have worked on.", _i(e[0]), _i(e[1])]
 
 
 def test_the_prompt_lists_the_unsupported_words_under_avoid(settings, fb_fixture, job, spy_llm):

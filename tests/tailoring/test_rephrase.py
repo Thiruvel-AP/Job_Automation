@@ -41,8 +41,10 @@ def test_bullets_go_to_the_model_in_batches_of_at_most_five(fb_fixture, spy_llm)
     kws = _kws(*_all_terms(fb_fixture))
     sel = _everything(fb_fixture)
     bidx = tailor.bullet_index(fb_fixture)
-    eligible = [i for i in selected_ids(fb_fixture, sel) if missing_keywords(bidx[i], kws)]
-    assert len(eligible) > 10                                      # the fixture really needs several batches
+    offers, _ = tailor.placement_offers(fb_fixture, sel, kws)      # each missed keyword goes to one bullet, <= 2 per bullet
+    eligible = [i for i in selected_ids(fb_fixture, sel) if offers.get(i)]
+    assert len(eligible) > 10 and len(eligible) < len([i for i in selected_ids(fb_fixture, sel)
+                                                       if missing_keywords(bidx[i], kws)])      # the fixture needs several batches
     llm = spy_llm()
     _, stats, _ = _ask(fb_fixture, kws, llm)
     sizes = [len(s["context"]["bullets"]) for s in llm.sent]
@@ -76,7 +78,7 @@ def test_each_bullet_carries_its_text_its_terms_and_the_keywords_it_may_introduc
 def test_the_deny_list_is_in_the_system_prompt(fb_fixture, spy_llm):
     fb = dict(fb_fixture, deny_terms=["kubernetes", "terraform"])
     llm = spy_llm()
-    _ask(fb, _kws("pytest"), llm)
+    _ask(fb, _kws("pytest"), llm, {"experience": {"ex1": ["a4"]}, "projects": []})
     assert "Never mention: kubernetes, terraform." in llm.sent[0]["system"]
 
 
@@ -144,7 +146,7 @@ def test_a_later_attempt_never_asks_the_same_question_twice(fb_fixture, spy_llm)
 LIES = {"a4": "Wrote a pytest framework with Kubernetes, cutting release time 40%.",           # deny + number
         "a3": "Deployed the agent with Terraform and integration testing on AWS Lambda.",     # deny + unevidenced keyword
         "a1": "Built a tool-calling LLM agent (LangChain, AWS Bedrock) for a multi-omics cancer research platform, "
-              "covering agentic workflows."}                                                  # honest
+              "covering agentic workflows, used by the whole research team."}                 # honest (keeps 'team')
 
 
 def test_every_rewrite_goes_through_the_faithfulness_check(fb_fixture):

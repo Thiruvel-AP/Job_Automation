@@ -73,7 +73,7 @@
 % ---------------- SKILLS ----------------
 \section{Skills}
 \BLOCK{for group, items in skills.items()}
-\textbf{\VAR{group|e}:} \VAR{items|map('e')|join(', ')}\BLOCK{if not loop.last}\\\BLOCK{endif}
+\textbf{\VAR{group|e}:} \VAR{items|map('skill')|join(', ')}\BLOCK{if not loop.last}\\\BLOCK{endif}
 
 \BLOCK{endfor}
 

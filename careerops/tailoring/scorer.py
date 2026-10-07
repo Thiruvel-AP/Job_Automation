@@ -3,8 +3,8 @@
 score = Σ_k w_k · 1[k ∈ text] / Σ_k w_k   over JD keywords k with weights w_k (required 2, preferred 1)
 
 Two views:
-  literal  — case/quote/line-wrap-hyphen normalised substring match. Conservative; this is what a naive
-             ATS sees and what the 70–85 band is applied to.
+  literal  — case/quote/line-wrap-hyphen normalised substring match, singular/plural (trailing s / es) taken as one
+             term. Conservative; this is what a naive ATS sees and what the 70–85 band is applied to.
   stemmed  — also equates hyphen/space, British/American spelling and common suffixes
              ("communicating" ~ "communicate"). The gap literal→stemmed is wording, not substance.
 ceiling  — the stemmed score the *fact bank itself* would get: the best an honest CV can reach.
@@ -56,6 +56,28 @@ def _contains(hay: str, needle: str) -> bool:
     return re.search(r"(?<![\w])" + re.escape(needle) + r"(?![\w])", hay) is not None
 
 
+def _inflections(needle: str) -> list[str]:
+    """The needle and its singular/plural twins (a trailing s or es), longest first. Only for the literal view: an ATS
+    that finds "evaluation" for "evaluations" is not being generous, the JD's own word is one of the two."""
+    forms = {needle}
+    if len(needle) > 3 and needle.endswith("s") and not needle.endswith("ss"):
+        forms.add(needle[:-1])
+        if needle.endswith("es"):
+            forms.add(needle[:-2])
+    if not needle.endswith("s"):
+        forms.update((needle + "s", needle + "es"))
+    return sorted(forms, key=len, reverse=True)
+
+
+def has_literal(hay: str, needle: str) -> bool:
+    """`_contains` that also takes the singular for a plural keyword and the plural for a singular one. `hay` and
+    `needle` are norm_literal'd."""
+    if not needle:
+        return False
+    alt = "|".join(re.escape(f) for f in _inflections(needle))
+    return re.search(r"(?<![\w])(?:" + alt + r")(?![\w])", hay) is not None
+
+
 @dataclass
 class Keyword:
     term: str
@@ -88,7 +110,7 @@ def score(text: str, keywords: list[Keyword], synonyms: bool = False) -> Score:
     out = Score(0.0, 0.0)
     for k in keywords:
         words = _with_group(k.members()) if synonyms else k.members()
-        a = any(_contains(lit, norm_literal(w)) for w in words)
+        a = any(has_literal(lit, norm_literal(w)) for w in words)
         b = a or any(_contains(stm, norm_stem(w)) for w in words)
         s_lit += k.weight * a
         s_stm += k.weight * b

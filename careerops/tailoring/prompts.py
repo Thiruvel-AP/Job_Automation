@@ -27,7 +27,8 @@ JOB DESCRIPTION:
 {jd}"""
 
 REPHRASE_SYSTEM = """You reword CV bullets so that they use a job's keywords. You never add a fact.
-Each bullet comes with its TERMS (what it truly evidences) and MAY INTRODUCE (job keywords you may now write in it).
+Each bullet comes with its TERMS (what it truly evidences) and MAY INTRODUCE (job keywords the CV is missing that this
+bullet evidences: include each one only if it reads naturally).
 Return JSON: an object mapping each bullet id you were given to its reworded bullet, e.g. {"az1": "Built ..."}.
 Rules:
 - One sentence per bullet, at most 30 words, starting with a past-tense action verb (Built, Deployed, Designed).
@@ -67,7 +68,8 @@ Return JSON: {"paragraphs": ["..", "..", ".."]}
 Rules:
 - 3-4 paragraphs, under {max_words} words in total. Confident, plain, human. British English. First person.
 - Paragraph 1, the hook (<= 45 words): tie the company's problem (COMPANY HOOK) to the candidate's own work.
-  NEVER open with "I am writing to apply" or "I am excited".
+  NEVER open with "I am writing to apply" or "I am excited". The company half may use COMPANY HOOK; the half about the
+  candidate's work ("... mirrors my work on ...") may use only words from the EVIDENCE lines, no other capability.
 - Then the two EVIDENCE lines as concrete examples (one paragraph, or one each), each using only what its own line
   says. Keep numbers exactly; add none. Never describe a metric as measured unless EVIDENCE contains the measurement
   (e.g. do not write "hallucination rate" unless EVIDENCE reports one).
@@ -83,7 +85,9 @@ Rules:
 - NEVER upgrade the candidate's role. If an EVIDENCE line says contributed, shipped, supported or team (team project,
   team of five), do not write delivered, built, led, owned or designed for it; say "contributed to" or "as part of a
   team". Keep approximations as written ("~65 tests" stays "about 65 tests", never "65").
-- No vague filler: never write scalable, robust, seamless or cutting-edge unless EVIDENCE uses the word.
+- No vague filler: never write scalable, robust, seamless or cutting-edge unless EVIDENCE uses the word. The same goes
+  for actionable insights, user-centric, tangible outcomes, instantly, accurately, precise, smooth integration,
+  efficient and "exactly what I built".
 - AVOID lists words the check rejects because nothing you were given says them. Never write them, nor a synonym that
   claims the same thing.
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""

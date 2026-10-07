@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Iterator, Sequence, TypeVar
 
 from .budget import bullet_scores, rank_projects
-from .scorer import Keyword, _contains, norm_literal, norm_stem
+from .scorer import Keyword, _contains, has_literal, norm_literal, norm_stem
 
 MOST_RECENT_BULLETS = (2, 4)        # (min, max) bullets of the first (most recent) experience entry, one-page layout
 OTHER_BULLETS = (1, 2)              # (min, max) bullets of every other experience entry, one-page layout
@@ -224,7 +224,7 @@ def missing_keywords(bullet: dict, kws: list[Keyword]) -> list[str]:
     stems = [norm_stem(t) for t in bullet.get("terms", [])]
     out = []
     for k in kws:
-        if any(_contains(lit, norm_literal(w)) for w in k.members()):
+        if any(has_literal(lit, norm_literal(w)) for w in k.members()):
             continue
         word = next((w for w in k.members() if any(_contains(s, norm_stem(w)) for s in stems)), None)
         if word:

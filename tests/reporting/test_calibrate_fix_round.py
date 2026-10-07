@@ -134,3 +134,18 @@ def test_a_calibration_run_records_the_bullets_without_a_result_in_report_json_t
     assert row["needs_result"] and all(not str(bank[i].get("result") or "").strip() for i in row["needs_result"])
     line = next(l for l in log if "bullet(s) need a result" in l)
     assert f"{len(row['needs_result'])} bullet(s) need a result" in line
+
+
+# ---------------------------------------------------------------- keyword placement per JD
+def test_a_calibration_row_and_report_say_which_missed_keywords_were_placed_not_placed_or_blocked(
+        settings, db, fb, manifest, tmp_path):
+    res = _run(settings, db, fb, manifest, tmp_path / "out", only=["cal-northwind"])
+    row = res["rows"][0]
+    assert set(row["placement"]) == {"placed", "not_placed", "blocked", "unoffered"}
+    assert all(isinstance(v, list) for v in row["placement"].values())
+    text = res["report"].read_text(encoding="utf-8")
+    line = next(l for l in text.splitlines() if l.startswith("- keyword placement:"))
+    assert "placed" in line and "not placed" in line and "blocked" in line
+    assert cal._placement_line(None) == [] and cal._placement_line({}) == []          # an old row without it still renders
+    assert "2 rewording(s) refused" in cal._placement_line({"placed": []}, 2)[0]
+    assert row["rephrase"]["regressed"] >= 0                                             # refused-for-regression count is kept

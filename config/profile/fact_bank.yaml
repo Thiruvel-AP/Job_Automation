@@ -14,15 +14,15 @@ profile_facts:
   - MSc Data Science, University of Bristol (completed 2026)
   - Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform
   - Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph
-  - 3rd place, Lloyd's Banking Group Datathon
+  - 3rd place
 
 skills:
-  core: [Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, TensorFlow, Docker]
+  core: [Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git]
   Languages: [Python, SQL, R, TypeScript, JavaScript, Swift, Dart]
   ML & Stats: [scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time-series forecasting, hypothesis testing, ANOVA, bootstrap, PCA, statistics, maximum likelihood estimation, experimental design]
   LLMs & Agents: [LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, LLM evaluation, prompt design]
-  Data & Visualisation: [pandas, NumPy, SciPy, NLTK, networkx, Leiden clustering, tidyverse, tidymodels, PostgreSQL, MongoDB, Databricks/PySpark (coursework), Matplotlib, Seaborn, ggplot2, Tableau, Streamlit, Jupyter, Google Colab, Google AI Studio, Kaggle]
-  Cloud & MLOps: [AWS Lambda, ECR, IAM, EC2, "S3, SQS, DynamoDB (MSc coursework)", GCP Cloud Run, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git]
+  Data Visualisation & Analysis: [pandas, NumPy, SciPy, NLTK, networkx, Leiden clustering, tidyverse, tidymodels, PostgreSQL, MongoDB, Databricks/PySpark, Matplotlib, Seaborn, ggplot2, Tableau, Streamlit, Jupyter, Google Colab, Google AI Studio, Kaggle, Plotly]
+  Cloud & MLOps: [AWS Lambda, ECR, IAM, EC2,S3, SQS, DynamoDB, GCP Cloud Run, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)",]
   Mobile & Web: [React, Node.js, SwiftUI, UIKit, Core Data, Flutter]
   
 experience:
@@ -56,7 +56,7 @@ experience:
   - id: dc180
     title: Data Consultant (AI Engineering & AI System)
     org: 180 Degrees Consulting Bristol
-    dates: Sep 2025 – Dec 2025   ]
+    dates: Sep 2025 – Dec 2025 
     bullets:
       - id: dc1
         text: Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.
@@ -197,7 +197,7 @@ education:
   - degree: MSc Data Science
     org: University of Bristol
     dates: 2025 – 2026          
-    note: First Class with Distinction (Expected)
+    note: Distinction (Expected)
   - degree: B.E. Electrical and Electronics Engineering
     org: St. Joseph's College of Engineering          # FIXED: from your CV
     dates: Sep 2019 – Apr 2023                        # FIXED: from your CV

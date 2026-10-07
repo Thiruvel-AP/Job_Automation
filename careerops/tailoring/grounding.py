@@ -33,8 +33,10 @@ _POSSESSIVE = re.compile(r"['’]s$", re.I)          # "Chattermill's" names Cha
 _PRONOUN = re.compile(r"^I(['’]m|['’]ve|['’]d|['’]ll)?$")
 
 
-FILLER_WORDS = ("scalable", "robust", "seamless", "cutting-edge")     # filler: only if the evidence itself says it
-_REJECTED = re.compile(r"^'([^']+)' \((?:name|sector|client|capability)\)|^vague filler '([^']+)'|^deny-listed '([^']+)'")
+FILLER_WORDS = ("scalable", "robust", "seamless", "cutting-edge",      # filler: only if the evidence itself says it
+                "actionable insights", "user-centric", "tangible outcomes", "instantly", "accurately", "precise",
+                "smooth integration", "efficient", "exactly what I built")
+_REJECTED = re.compile(r"^'([^']+)' \((?:name|sector|client|capability|claim)\)|^vague filler '([^']+)'|^deny-listed '([^']+)'")
 
 
 def avoid_words(evidence: list[dict], jd: str, hook: str = "", extra: str = "") -> list[str]:
@@ -80,6 +82,38 @@ def _names(sentence: str) -> list[str]:
 def _has(allowed: str, term: str) -> bool:
     """Does `allowed` (norm_literal'd text) say `term`, literally or after stemming?"""
     return _contains(allowed, norm_literal(term)) or _contains(norm_stem(allowed), norm_stem(term))
+
+
+# Where the opening sentence turns from the company to the candidate's own work: "<Company>'s mission ... MIRRORS my ...",
+# "... demands models that learn quickly — THAT'S exactly what I built ...".
+_CLAIM_MARK = re.compile(r"\b(?:mirror|reflect|match|echo|resembl|parallel)(?:s|es|ed|e|ing)?\b|\baligns? with\b|"
+                         r"\bmaps? (?:directly )?(?:on)?to\b|\s[—–]\s|\s-\s|;|:", re.I)
+# words that carry no claim about the candidate's work, so the evidence need not say them
+_NEUTRAL = frozenset("""recent recently work worked working works building built build focus experience related similar
+    problem problems project projects directly closely wants""".split())
+
+
+def opening_claim(sentence: str) -> str:
+    """The claim half of an opening sentence: everything after the company clause (after "mirrors", a dash, ":" or ";").
+    "" when the sentence has no such turn."""
+    m = _CLAIM_MARK.search(sentence)
+    return sentence[m.end():].strip() if m else ""
+
+
+def opening_claim_problems(opening: str, evidence: list[dict], gaps: list[str] | None = None) -> list[str]:
+    """Problems with what the opening sentence claims about the candidate. Only the claim half is looked at, and it may
+    draw on the two evidence bullets (text + terms) ALONE: not the job description or the company hook, which the company
+    clause may use. Every name, sector or client word, capability word and other content word in it must be in the
+    evidence. No turn in the sentence = nothing to check here (the ordinary sentence check still ran)."""
+    claim = opening_claim(opening)
+    if not claim:
+        return []
+    out = grounding_problems([claim], evidence, "", "", "", gaps)          # evidence only: jd, hook and extra are empty
+    ev = norm_literal(" ".join(e["text"] + " " + " ".join(e.get("terms", [])) for e in evidence))
+    for w in sorted(content_words(claim) - _NEUTRAL):
+        if not _has(ev, w) and not any(f"'{w}'" in p.lower() for p in out):
+            out.append(f"'{w}' (claim) is not in the two evidence bullets: '{opening.strip()[:60]}'")
+    return out
 
 
 def grounding_problems(paragraphs: list[str], evidence: list[dict], jd: str, hook: str = "", extra: str = "",

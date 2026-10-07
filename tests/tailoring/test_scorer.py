@@ -44,3 +44,24 @@ def test_classifier_classification_and_visualisation_share_a_stem_family_in_the_
     s = score("Built classification models and visualisation dashboards.", kws)
     assert s.literal == 0.0 and s.stemmed == 1.0                  # the literal score is untouched
     assert set(s.wording_misses) == {"classifier", "visualization"}
+
+
+def test_literal_score_takes_singular_and_plural_as_one_term_in_both_directions():
+    for kw, text in (("prompts", "Wrote prompt templates."), ("prompt", "Wrote prompts."),
+                     ("evaluations", "Ran an LLM evaluation after the migration."),
+                     ("evaluation", "Ran evaluations."), ("business processes", "Mapped a business process."),
+                     ("box", "Used boxes."), ("boxes", "Used a box.")):
+        s = score(text, [Keyword(kw, 1, True)])
+        assert s.literal == 1.0 and s.hits == [kw] and s.wording_misses == [], (kw, text)
+
+
+def test_plural_tolerance_does_not_match_a_longer_word_or_a_different_word():
+    for kw, text in (("prompt", "Wrote a promptly reply."), ("evaluations", "Evaluated the model."),
+                     ("class", "Used clas methods."), ("model", "Modelling things.")):
+        assert score(text, [Keyword(kw, 1, True)]).literal == 0.0, (kw, text)
+
+
+def test_the_stemmed_view_is_unchanged_by_the_plural_rule():
+    assert norm_stem("prompts") == norm_stem("prompt") and norm_stem("evaluations") == norm_stem("evaluation")
+    s = score("Wrote prompting guides.", [Keyword("prompts", 1, True)])        # "prompting" is not a plural of "prompts"
+    assert s.literal == 0.0 and s.stemmed == 1.0 and s.wording_misses == ["prompts"]

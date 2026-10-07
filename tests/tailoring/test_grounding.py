@@ -113,12 +113,17 @@ def _drafts(*drafts):
     return lambda ctx: {"paragraphs": (queue.pop(0) if len(queue) > 1 else queue[0])(ctx["evidence"])}
 
 
+def _i(bullet: str) -> str:
+    """A bullet as first-person prose ("I built ..."): the letter guard rejects a bullet pasted bare."""
+    return "I " + bullet[:1].lower() + bullet[1:]
+
+
 def _honest(ev):
-    return ["Northwind Health AI builds tools I have worked on.", ev[0], ev[1], "Could we find twenty minutes to talk?"]
+    return ["Northwind Health AI builds tools I have worked on.", _i(ev[0]), _i(ev[1]), "Could we find twenty minutes to talk?"]
 
 
 def _lying(ev):
-    return ["Northwind Health AI builds tools I have worked on.", ev[0] + " " + LIE, ev[1],
+    return ["Northwind Health AI builds tools I have worked on.", _i(ev[0]) + " " + LIE, _i(ev[1]),
             "Could we find twenty minutes to talk?"]
 
 
@@ -145,7 +150,8 @@ def test_an_invention_that_survives_the_retry_is_flagged_and_the_letter_is_the_f
     assert any("'fintech' (sector)" in p for p in letter["problems"])
     text = " ".join(letter["paragraphs"])
     assert "fintech" not in text and letter["paragraphs"][-1].endswith("?")
-    assert all(e["text"] in text for e in letter["evidence"])                 # the fallback quotes the evidence
+    from careerops.tailoring.letter_rules import clause
+    assert all(clause(e["text"]) in text for e in letter["evidence"])         # the fallback uses the evidence as clauses
     assert rep["final"]["pages"] <= settings["scoring"]["max_pages"] and letter["pages"] == 1
 
 

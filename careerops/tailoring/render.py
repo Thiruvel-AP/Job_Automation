@@ -23,6 +23,29 @@ def latex_escape(s) -> str:
     return "".join(_ESC.get(ch, ch) for ch in str(s))
 
 
+def skill_display(skill) -> str:
+    """One skill entry as the CV shows it. An entry that lists several things ("S3, SQS, DynamoDB (MSc coursework)") would
+    read as three skills among the comma-separated ones, so its commas outside brackets become "/": "S3/SQS/DynamoDB (MSc
+    coursework)". Commas inside brackets stay."""
+    s, depth, out, i = str(skill).strip(), 0, [], 0
+    while i < len(s):
+        ch = s[i]
+        if ch in "([":
+            depth += 1
+        elif ch in ")]" and depth:
+            depth -= 1
+        if ch == "," and depth == 0:
+            while out and out[-1] == " ":
+                out.pop()
+            out.append("/")
+            while i + 1 < len(s) and s[i + 1] == " ":
+                i += 1                                   # no space after the slash
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def env() -> jinja2.Environment:
     e = jinja2.Environment(
         loader=jinja2.FileSystemLoader(ROOT / "templates"),
@@ -32,6 +55,7 @@ def env() -> jinja2.Environment:
         trim_blocks=True, lstrip_blocks=True, autoescape=False, undefined=jinja2.StrictUndefined,
     )
     e.filters["e"] = latex_escape
+    e.filters["skill"] = lambda s: latex_escape(skill_display(s))        # a skill entry with commas shows them as "/"
     # a URL inside \href{...}: hyperref needs % and # escaped
     e.filters["urlesc"] = lambda u: str(u).replace("%", r"\%").replace("#", r"\#")
     # what a reader sees for a link: no scheme, no "www.", no trailing slash

@@ -17,6 +17,7 @@ def _cost(call, settings):
 def _big_bank(fb, experiences=8, bullets=6, projects=8, words=60):
     """The fixture fact bank blown up to the size of a long career: many entries, long bullets."""
     big = copy.deepcopy(fb)
+    big["skills"] = {}                    # a keyword the skills section already lists is not "missed", so nothing would be asked
     filler = " ".join(["delivered measurable improvements across several workstreams"] * (words // 6))
     big["experience"] = [{"id": f"x{i}", "title": f"Role {i}", "org": f"Org {i}", "dates": "2020", "location": "UK",
                           "bullets": [{"id": f"x{i}b{j}", "text": f"Built system {i}.{j} with Python. {filler}",

@@ -242,9 +242,9 @@ def measure(entry: dict, verdict: gates.Verdict, rep: dict, seconds: float, sett
                   "pages": final["pages"], "page2_fill": final.get("page2_fill"), "misses": final["misses"],
                   "wording_misses": final["wording_misses"]},
         "attempts": len(rep["attempts"]), "wording": chosen.get("wording") or {},
-        "rephrase": {**{k: chosen["rephrase"].get(k, 0) for k in ("proposed", "accepted", "blocked", "calls")},
+        "rephrase": {**{k: chosen["rephrase"].get(k, 0) for k in ("proposed", "accepted", "blocked", "regressed", "calls")},
                      "coverage": rep["rephrase_coverage"]},
-        "selection": chosen["selection"], "violations": chosen["violations"],
+        "selection": chosen["selection"], "violations": chosen["violations"], "placement": chosen.get("placement") or {},
         "profile": rep.get("profile") or {},
         "letter": {"status": rep["letter"]["status"], "problems": rep["letter"]["problems"],
                    "reason": rep["letter"].get("reason"),
@@ -350,6 +350,16 @@ def _selection(sel: dict) -> str:
     return " ".join(f"{k}:{len(v)}" for k, v in sel.items())
 
 
+def _placement_line(p: dict | None, regressed: int = 0) -> list[str]:
+    """Detail line: the missed keywords bullets were asked to place, and what became of them."""
+    if not p:
+        return []
+    fmt = lambda xs: f"{len(xs)} ({', '.join(xs)})" if xs else "0"                     # noqa: E731
+    return ["- keyword placement: placed " + fmt(p.get("placed", [])) + " · not placed " + fmt(p.get("not_placed", []))
+            + " · blocked " + fmt(p.get("blocked", [])) + " · no bullet to take it " + fmt(p.get("unoffered", []))
+            + (f" · {regressed} rewording(s) refused for losing a keyword" if regressed else "")]
+
+
 def _row_line(r: dict) -> str:
     if r["status"] != "ok":
         return f"| {r['id']} | {r['status']} | | | | | | | | | | | | | {r.get('error', '')[:60]} |"
@@ -448,6 +458,7 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
                 f"missed: {', '.join(r['final']['misses']) or '–'}; wording only: "
                 f"{', '.join(r['final']['wording_misses']) or '–'}; genuine gaps: {', '.join(r['gaps']) or '–'}",
                 f"- selection: {json.dumps(r['selection'])}",
+                *_placement_line(r.get("placement"), (r.get("rephrase") or {}).get("regressed", 0)),
                 *_wording_line(r.get("wording")),
                 f"- profile facts: {len(r['profile'].get('facts', []))} picked"
                 + (", retried" if r["profile"].get("retried") else "")

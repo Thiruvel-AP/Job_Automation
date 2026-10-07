@@ -86,7 +86,7 @@ def test_no_gap_sentence_when_gaps_is_empty(settings, fb_fixture, job, spy_llm):
 def test_a_required_gap_reaches_the_prompt_and_gets_one_short_plain_sentence(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
     rep, _ = _run(settings, fb_fixture, job, llm, JD_GAP)
-    assert _letter_ctx(llm)["gaps"] == ["kubernetes"]                 # the taxonomy's spelling
+    assert _letter_ctx(llm)["gaps"] == ["Kubernetes"]                 # the JD's casing, not the taxonomy's lower case
     assert "kubernetes" in llm.sent[-1]["user"].lower()
     gap = [s for p in rep["letter"]["paragraphs"] for s in p.split(". ") if "kubernetes" in s.lower()]
     assert len(gap) == 1 and len(gap[0].split()) <= 25

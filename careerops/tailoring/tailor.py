@@ -17,16 +17,19 @@ from ..llm.router import TaskUnavailable
 from . import prompts as P
 from .budget import bullet_scores
 from .faithfulness import check, deny_hits, numbers
-from .grounding import FILLER_WORDS, avoid_words, grounding_problems, rejected_words
+from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, opening_claim_problems, rejected_words,
+                        sentences)
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
+from .letter_rules import fallback_letter, gap_display, grammar_problems, starts_with_past_verb
+from .rewrite_rules import bare_keyword_problems, canonical_case, canonical_forms, filler_problems, qualifier_problems
 from .selection import (JACCARD, ONE_PAGE, Layout, chunks, fill_order, layout_from, missing_keywords, select_cv,
-                        selected_ids)
+                        selected_ids, skills_text)
 from .skills import CORE_LABEL, core_skills, cv_skills, dedupe_skills   # noqa: F401 — dedupe_skills is re-exported
 from .shapes import normalise_keywords, normalise_letter, normalise_profile, normalise_rephrase
 from .textnorm import normalise_json
 from .render import CV2_MARGIN_PT, last_line_fills, page2_fill, page_count, pdf_text, render_cv, render_letter
-from .scorer import (Keyword, _contains, cap_keywords, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
+from .scorer import (Keyword, _contains, cap_keywords, has_literal, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
                      norm_literal, norm_stem, score, taxonomy_keywords)
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
@@ -67,9 +70,16 @@ def _llm_json(llm, task: str, system: str, user: str, context: dict | None = Non
     return normalise_json(llm.json(task, system, user, context=context))
 
 
+def strip_team_word(team: str) -> str:
+    """The team name without a trailing "team" ("Data Science team" -> "Data Science"): the greeting and the closing
+    question both add the word themselves."""
+    t = re.sub(r"\s+", " ", team).strip(" .,:;")
+    return re.sub(r"(?:^|\s)team$", "", t, flags=re.I).strip(" .,:;")
+
+
 def clean_team(raw, job: dict) -> str:
     """The team name the model found, only if the JD really contains it (a model may not invent one)."""
-    t = re.sub(r"\s+", " ", str(raw or "")).strip(" .,:;")
+    t = strip_team_word(str(raw or ""))
     if not t or len(t) > 40 or norm_literal(t) == norm_literal(job["company"]):
         return ""
     return t if norm_literal(t) in norm_literal(job["description"] or "") else ""
@@ -190,21 +200,50 @@ def unused_result(bullet: dict) -> str:
     return "" if not res or norm_literal(res).rstrip(".") in norm_literal(bullet["text"]) else res
 
 
+MAX_OFFERS = 2        # keywords one bullet's rephrase may be asked to place
+
+
+def placement_offers(fb: dict, sel: dict, kws: list[Keyword], other_text: str = "",
+                     limit: int = MAX_OFFERS) -> tuple[dict[str, list[str]], list[str]]:
+    """Which missed keyword each selected bullet is asked to place. A keyword is missed when neither the selected bullets'
+    canonical text nor `other_text` (profile, skills) has it literally; it is offered to the first selected bullet, in CV
+    order, whose `terms` evidence it and which has fewer than `limit` offers (heaviest keyword first), so no keyword is
+    asked for twice. Returns ({bullet id: [words]}, [missed keywords no selected bullet could take: no evidence or no room])."""
+    bidx = bullet_index(fb)
+    ids = selected_ids(fb, sel)
+    cv = norm_literal(other_text + " " + " ".join(bidx[i]["text"] for i in ids))
+    offers: dict[str, list[str]] = {}
+    unoffered: list[str] = []
+    missed = [k for k in kws if not any(has_literal(cv, norm_literal(w)) for w in k.members())]
+    for k in sorted(missed, key=lambda k: -k.weight):                    # stable: the JD's order within a weight
+        for bid in ids:
+            word = next(iter(missing_keywords(bidx[bid], [k])), None)
+            if word and len(offers.get(bid, [])) < limit:
+                offers.setdefault(bid, []).append(word)
+                break
+        else:
+            unoffered.append(k.term)
+    return offers, unoffered
+
+
 def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, cache: dict,
-                      notes: list[str]) -> tuple[dict[str, str], dict]:
-    """Ask for rewordings of the selected bullets that can carry a JD keyword their text lacks (missing_keywords), in
-    batches of REPHRASE_BATCH: each call gets the bullet text, its terms and the keywords it may introduce, and answers
+                      notes: list[str], other_text: str = "") -> tuple[dict[str, str], dict]:
+    """Ask for rewordings of the selected bullets that can carry a JD keyword the CV is missing (`placement_offers`: the
+    keyword is in the bullet's `terms`, at most MAX_OFFERS per bullet; `other_text` = the profile and skills text, which
+    already count as having a keyword), in batches of REPHRASE_BATCH: each call gets the bullet text, its terms and the
+    keywords it may introduce, and answers
     {bullet id: new text}. Returns ({bullet id: proposed text}, stats). `cache` maps (bullet id, missing words) to the
     answer, so a later attempt never pays twice for the same question; a failed batch is not cached and is noted."""
     bidx = bullet_index(fb)
     todo = []
+    offers, unoffered = placement_offers(fb, sel, kws, other_text)
     for bid in selected_ids(fb, sel):
-        miss = tuple(missing_keywords(bidx[bid], kws))
+        miss = tuple(offers.get(bid, ()))
         if miss or unused_result(bidx[bid]):          # a result the user supplied may be worked in, even with no keyword
             todo.append((bid, miss))
     fresh = [t for t in todo if t not in cache]
     stats = {"eligible": len(todo), "asked": len(fresh), "cached": len(todo) - len(fresh), "calls": 0,
-             "failed_calls": 0}
+             "failed_calls": 0, "offered": {bid: list(m) for bid, m in offers.items()}, "unoffered": unoffered}
     system = P.REPHRASE_SYSTEM.replace("{deny}", _deny_list(fb))
     for batch in chunks(fresh, REPHRASE_BATCH):
         items = [{"id": bid, "text": bidx[bid]["text"], "terms": list(bidx[bid].get("terms", [])),
@@ -230,11 +269,24 @@ def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, c
     return proposed, stats
 
 
-def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword]) -> tuple[dict[str, str], list[str],
-                                                                                      list[str]]:
+NO_REGRESSION = "no-regression"       # marks the warning of a rewording refused for losing a keyword the bullet had
+
+
+def lost_hits(old: str, new: str, kws: list[Keyword]) -> list[str]:
+    """The keywords `old` hits literally (the ATS view, singular/plural alike) that `new` does not."""
+    kept = set(score(new, kws).hits)
+    return [t for t in score(old, kws).hits if t not in kept]
+
+
+def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword],
+                    base: dict[str, str] | None = None) -> tuple[dict[str, str], list[str], list[str]]:
     """Run every proposed rewording through faithfulness.check against its own bullet (text + terms). Returns
-    (accepted {bullet id: text}, violations, warnings); a rejected rewording simply keeps the canonical bullet."""
+    (accepted {bullet id: text}, violations, warnings); a rejected rewording simply keeps the bullet as it was.
+    No-regression rule: a rewording that passes the guard is still refused when its literal keyword hits are not a superset
+    of the hits of the text it replaces (`base[bid]`, default the canonical bullet; the wording pass replaces what is on
+    the CV now), and a `no-regression` warning says which keywords it would lose."""
     deny, bidx, vocab = fb.get("deny_terms", []), bullet_index(fb), fact_text(fb)
+    forms = canonical_forms(fb)
     accepted: dict[str, str] = {}
     violations: list[str] = []
     warnings: list[str] = []
@@ -244,9 +296,15 @@ def guard_rephrases(fb: dict, proposed: dict[str, str], kws: list[Keyword]) -> t
         # new numbers here, and no other bullet's result counts
         c = check(new, (b["text"] + " " + str(b.get("result") or "")).strip(), b.get("terms", []), deny, kws,
                   vocabulary=vocab)
+        # rules that only reject more: the bullet's qualifiers survive, no filler pattern is added (see rewrite_rules)
+        c.violations += (qualifier_problems(new, b["text"]) + filler_problems(new, b["text"])
+                         + bare_keyword_problems(new, b["text"], kws))
         warnings.extend(f"{bid}: {w}" for w in c.warnings)
-        if c.ok:
-            accepted[bid] = new.strip()
+        lost = lost_hits((base or {}).get(bid, b["text"]), new, kws) if c.ok else []
+        if lost:
+            warnings.append(f"{bid}: {NO_REGRESSION}: kept the earlier wording, the rewrite would lose {', '.join(lost)}")
+        elif c.ok:
+            accepted[bid] = canonical_case(new.strip(), forms)
         else:
             violations.extend(f"{bid}: {v}" for v in c.violations)
     return accepted, violations, warnings
@@ -316,7 +374,8 @@ def wording_pass(job: dict, fb: dict, ctx: dict, kws: list[Keyword], wording_mis
         new = cache.get(("wording", bid, forms, current[bid]), "")
         if new and new.strip() != current[bid]:
             proposed[bid] = new
-    accepted, _viol, _warn = guard_rephrases(fb, proposed, kws)
+    accepted, _viol, warn = guard_rephrases(fb, proposed, kws, base=current)
+    notes.extend(f"wording: {w}" for w in warn if f": {NO_REGRESSION}: " in w)
     stats["accepted"] = sorted(accepted)
     stats["blocked"] = sorted(set(proposed) - set(accepted))
     for sec in ("experience", "projects"):
@@ -325,6 +384,25 @@ def wording_pass(job: dict, fb: dict, ctx: dict, kws: list[Keyword], wording_mis
                 if bid in accepted:
                     e["bullets"][i] = accepted[bid]
     return stats
+
+
+def placement_report(offered: dict[str, list[str]], unoffered: list[str], proposed: dict[str, str],
+                     accepted: dict[str, str], ctx: dict) -> dict:
+    """What became of each keyword a bullet was asked to place: `placed` (the bullet on the CV now has it literally),
+    `blocked` (the model's rewording was refused by the guard or the no-regression rule) or `not_placed` (the model left
+    it out, or it was reverted later). `unoffered`: missed keywords no selected bullet evidences or has room for."""
+    cur = {bid: text for sec in ("experience", "projects") for e in ctx[sec] for bid, text in
+           zip(e["bullet_ids"], e["bullets"])}
+    out: dict = {"placed": [], "not_placed": [], "blocked": [], "unoffered": list(unoffered)}
+    for bid, words in offered.items():
+        for w in words:
+            if has_literal(norm_literal(cur.get(bid, "")), norm_literal(w)):
+                out["placed"].append(w)
+            elif bid in proposed and bid not in accepted:
+                out["blocked"].append(w)
+            else:
+                out["not_placed"].append(w)
+    return out
 
 
 def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
@@ -594,7 +672,7 @@ def required_gaps(gaps: list[str], kws: list[Keyword]) -> list[str]:
 def letter_greeting(settings, company: str, team: str = "") -> str:
     """'Hi <company> <team> team' when the JD names a team, else 'Dear <company> hiring team' (settings → letter)."""
     cfg = settings["letter"]
-    team = team.strip()
+    team = strip_team_word(team)
     if team:
         return cfg["greeting"].format(company=company, team=f" {team}")
     return cfg["greeting_fallback"].format(company=company)
@@ -602,7 +680,7 @@ def letter_greeting(settings, company: str, team: str = "") -> str:
 
 def letter_closing(settings, company: str, team: str = "") -> str:
     """The closing question, written from the settings template and never by the model (settings -> letter)."""
-    cfg, team = settings["letter"], team.strip()
+    cfg, team = settings["letter"], strip_team_word(team)
     return cfg["closing"].format(company=company, team=team) if team else cfg["closing_fallback"].format(company=company)
 
 
@@ -656,14 +734,22 @@ def _content_words(s: str) -> set[str]:
 
 def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = None) -> list[dict]:
     """The two bullets the letter is written from, chosen in code from the bullets on the CV: the one overlapping the JD
-    most, then the best of the rest from a different entry (two lines about one job read as one example). Canonical
-    fact-bank text, as [{"id", "text", "terms"}]; fewer than two when the CV has fewer bullets."""
+    most, then the best of the rest from a different entry (two lines about one job read as one example). Only bullets
+    that start with a past-tense verb ("Built ...", "Wrote ...") are used: the letter says "I built ...", and a noun-led
+    bullet ("XGBoost churn classifier in R ...") cannot follow "I". When the CV has fewer than two of them, the best such
+    bullets of the whole bank fill up. Canonical fact-bank text, as [{"id", "text", "terms"}]; fewer than two when the
+    CV has fewer bullets."""
     sc = bullet_scores(fb, kws)
     bidx = bullet_index(fb)
     owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
     order = {b: i for i, b in enumerate(sc)}
-    pool = [b for b in sc if not chosen_ids or b in chosen_ids]
+    on_cv = [b for b in sc if not chosen_ids or b in chosen_ids]
+    pool = [b for b in on_cv if starts_with_past_verb(bidx[b]["text"])]
     ranked = sorted(pool, key=lambda b: (-sc[b], order[b]))
+    if len(ranked) < 2 and len(on_cv) >= 2:        # noun-led bullets were left out: the bank's best verb-led ones fill up
+        rest = sorted((b for b in sc if b not in ranked and starts_with_past_verb(bidx[b]["text"])),
+                      key=lambda b: (-sc[b], order[b]))
+        ranked += rest
     picked = ranked[:1]
     if len(ranked) > 1:
         picked.append(next((b for b in ranked[1:] if owner[b] != owner[ranked[0]]), ranked[1]))
@@ -679,7 +765,8 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
         out.append("last paragraph is not a call-to-action question")
     ev_all = norm_literal("\n".join(evidence))
     for w in VAGUE_WORDS:
-        if _contains(norm_literal(text), w) and not _contains(ev_all, w):
+        nw = norm_literal(w)
+        if has_literal(norm_literal(text), nw) and not has_literal(ev_all, nw):
             out.append(f"vague filler '{w}' is not in the evidence")
     sents = _sentences(text)
     for ev in evidence:
@@ -702,6 +789,13 @@ def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+def _with_orgs(fb: dict, evidence: list[dict]) -> list[dict]:
+    """The evidence with the entry each bullet belongs to: {"org"} = the employer (or the project's name when "project")."""
+    owner = {b["id"]: (e.get("org") or e.get("name") or "", sec == "projects")
+             for sec in ("experience", "projects") for e in fb.get(sec, []) for b in e["bullets"]}
+    return [{**e, "org": owner.get(e["id"], ("", False))[0], "project": owner.get(e["id"], ("", False))[1]} for e in evidence]
+
+
 def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[str] | None = None,
             notes: list[str] | None = None, team: str = "",
             retry: dict | None = None) -> tuple[list[str], list[str]]:
@@ -713,7 +807,7 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     "rejected_words", "first_problems", "outcome"}, and `notes` says the retry happened. Raises TaskUnavailable when no
     provider the task is restricted to can take it: the caller keeps the job waiting."""
     deny = fb.get("deny_terms", [])
-    gaps = (gaps or [])[:6]
+    gaps = [gap_display(g, job["description"]) for g in (gaps or [])[:6]]       # "Azure", "Power BI", "DSPy": the JD's casing
     # a deny-listed tool that is a gap is nameable, so the prompt must not also forbid it
     named_ok = {d for g in gaps for d in deny_hits(g, deny)}
     max_words = settings["scoring"]["letter_max_words"]
@@ -726,6 +820,36 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
     retry = retry if retry is not None else {}
     retry.update({"count": 0, "rejected_words": [], "first_problems": [], "outcome": "first draft"})
     avoid = avoid_words(evidence, job["description"], hook, f"{named} {' '.join(gaps)}")
+
+    def draft_problems(body: list[str]) -> list[str]:
+        """Every problem with this body. The opening sentence's claim half may use the two evidence bullets alone, not the
+        JD or the company hook; the paragraphs must be first-person prose, not pasted bullets."""
+        paras = [*body, closing]
+        text = " ".join(paras)
+        out: list[str] = []
+        if not " ".join(body).strip():
+            out.append("empty letter")
+        if len(text.split()) > max_words:
+            out.append(f"{len(text.split())} words > {max_words}")
+        if paras and BANNED_OPENERS.search(paras[0]):
+            out.append("banned opener")
+        if BANNED_CLOSERS.search(text):
+            out.append("banned closer")
+        out += _deny_problems(text, deny, gaps)
+        out += _lack_problems(text, gaps)
+        style = _style_problems(paras, texts) + grammar_problems(body, texts)
+        first = (sentences(body[0]) or [""])[0] if body else ""
+        rest = [s for s in sentences(" ".join(body)) if s != first] if body else []
+        g_first = grounding_problems([first], evidence, job["description"], hook, named, gaps) if first else []
+        g_rest = grounding_problems(rest, evidence, job["description"], hook, named, gaps) if rest else []
+        claim = opening_claim_problems(first, evidence, gaps) if first else []                 # the model's words only
+        extra = numbers(text) - numbers(source)
+        out += style + [p for p in g_first + g_rest + claim if p not in style]
+        if extra:
+            out.append(f"new numbers {sorted(extra)}")
+        return list(dict.fromkeys(out))
+
+    body: list[str] = []
     for attempt in range(2):
         try:
             out = _llm_json(
@@ -748,27 +872,10 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         except Exception as e:  # noqa: BLE001
             problems.append(f"letter LLM failed: {e}")
             break
-        paras = [*body, closing]
-        text = " ".join(paras)
-        problems = []
-        if not " ".join(body).strip():
-            problems.append("empty letter")
-        if len(text.split()) > max_words:
-            problems.append(f"{len(text.split())} words > {max_words}")
-        if paras and BANNED_OPENERS.search(paras[0]):
-            problems.append("banned opener")
-        if BANNED_CLOSERS.search(text):
-            problems.append("banned closer")
-        problems += _deny_problems(text, deny, gaps)
-        problems += _lack_problems(text, gaps)
-        problems += _style_problems(paras, texts)
-        problems += grounding_problems(body, evidence, job["description"], hook, named, gaps)    # the model's words only
-        extra = numbers(text) - numbers(source)
-        if extra:
-            problems.append(f"new numbers {sorted(extra)}")
+        problems = draft_problems(body)
         if not problems:
             retry["outcome"] = "ok after retry" if attempt else "first draft"
-            return paras, []
+            return [*body, closing], []
         words = rejected_words(problems)
         if attempt == 0:                                       # the one retry: say which words the check rejected
             retry.update({"count": 1, "rejected_words": words, "first_problems": list(problems)})
@@ -778,13 +885,9 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         feedback = ((f"\n\nThe check rejected these words as unsupported: {', '.join(words)}. Do NOT use them." if words else "")
                     + "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems))
     retry["outcome"] = "fallback" if retry["count"] else retry["outcome"]
-    # deterministic fallback — always honest, never great; review will show why
-    fallback = [
-        f"{job['company']}'s {job['title']} role sits close to the work I have been doing most recently.",
-        " ".join(texts[:2]),
-        closing,
-    ]
-    return [p for p in fallback if p.strip()], problems + [FALLBACK_MARK]
+    # deterministic fallback — always honest and first person; review will show why (letter_rules.fallback_letter)
+    return (fallback_letter(job, hook, _with_orgs(fb, evidence), gaps, closing, deny, job["description"]),
+            problems + [FALLBACK_MARK])
 
 
 def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_dir: Path, final_name: str,
@@ -947,9 +1050,11 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         llm.attempt = attempt                                    # names this attempt's raw replies (tailor_profile-2.json)
         sel = select_cv(fb, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac)
         rephrase_notes: list[str] = []
-        proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes)
+        proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes,
+                                             other_text=profile["text"] + " " + skills_text(skills))
         accepted, viol, warn = guard_rephrases(fb, proposed, kws)
-        rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted))
+        rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted),
+                      regressed=sum(f": {NO_REGRESSION}: " in w for w in warn))
         ctx = _context(fb, sel, accepted, profile["text"], kws, headline, skills)
 
         def rerender() -> tuple[Path, int]:
@@ -1018,7 +1123,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                "wording_misses": s.wording_misses, "misses": s.misses, "rephrase": rstats,
                "proposal": {"selection": sel, "rephrase": proposed, "profile": profile["text"]},
                "selection": {e["id"]: e["bullet_ids"] for e in ctx["experience"] + ctx["projects"]},
-               "profile": ctx["profile"], "rephrase_coverage": rephrase_coverage(ctx, fb, kws)}
+               "profile": ctx["profile"], "rephrase_coverage": rephrase_coverage(ctx, fb, kws),
+               "placement": placement_report(rstats["offered"], rstats["unoffered"], proposed, accepted, ctx)}
         report["attempts"].append(rec)
         if best is None or abs(s.literal - (lo + hi) / 2) < abs(best[0]["score"] - (lo + hi) / 2):
             best = (rec, ctx)
@@ -1046,7 +1152,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
         "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"],
         "needs_result": needs_result(fb, ctx),
-        "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"],
+        "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"], "placement": rec["placement"],
         "letter": letter, "llm_usage": usage_since(llm, usage_from),
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": str(final_dir / letter_pdf.name) if letter_pdf else None,
         "context": ctx,

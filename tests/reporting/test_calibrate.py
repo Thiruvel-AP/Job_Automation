@@ -123,7 +123,7 @@ def test_a_row_carries_everything_the_report_promises(run):
     assert north["keywords"]["n"] == len(north["keywords"]["terms"]) <= 25
     assert 0 < north["ceiling"] <= 1 and 0 <= north["final"]["literal"] <= 1 and north["final"]["pages"] <= 2
     assert north["final"]["band"] in ("below", "in", "above") and north["attempts"] >= 1
-    assert set(north["rephrase"]) == {"proposed", "accepted", "blocked", "calls", "coverage"}
+    assert set(north["rephrase"]) == {"proposed", "accepted", "blocked", "regressed", "calls", "coverage"}
     assert set(north["rephrase"]["coverage"]) == {"eligible", "rephrased", "ratio"}
     assert north["selection"] and all(isinstance(v, list) and v for v in north["selection"].values())
     assert isinstance(north["violations"], list) and north["letter"]["status"] in ("ok", "fallback")
