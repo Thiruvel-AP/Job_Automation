@@ -15,6 +15,7 @@ paths:
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies
+  judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
@@ -122,6 +123,10 @@ scoring:
   letter_max_words: 250
 
 letter:
+  # off = no letter is asked for: no letter call is made, no letter PDF is written, review says "Letter: off" and approving needs
+  # no extra words. draft = the model drafts one from the evidence as fields (method, data, outcome), not as the bullet
+  # sentence, and every letter check still applies. Off by default: write your own, or turn this on to get a draft.
+  mode: "off"                # quoted: an unquoted off is the boolean false in YAML
   # {company} = job company; {team} = " <team name>" when the JD names one (leading space included), else "".
   greeting: "Hi {company}{team} team"
   greeting_fallback: "Dear {company} hiring team"     # used when the JD names no team
@@ -130,6 +135,17 @@ letter:
   closing: "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?"
   closing_fallback: "Could we find twenty minutes to talk about where I could contribute first at {company}?"     # no team named
   signoff: "With regards"
+  # What a letter becomes when all 3 drafts were rejected by the checks. none = no letter is produced: no PDF, review shows
+  # "NO LETTER", and approving needs the words 'no letter' (regenerate with `l`, write your own, or apply without).
+  # template = the deterministic template letter is written instead, flagged as a fallback in review.
+  on_failure: none
+
+review:
+  # off = no judge. shadow = a second model reads the CV and letter, its verdict is shown on the review screen and logged beside
+  # your decision (paths.judge/log.csv); `careerops judge-report` says how well it agrees with you. gate = a judge "yes" approves
+  # the job without the prompt; refused in code until the log holds 60 human-labelled reviews and not one false approve (judge
+  # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge, and must be another family than gpt-oss.
+  judge: shadow               # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML)
 
 llm:
   # Tried in order; on 429 / 5xx / quota exhausted the router falls through to the next.
@@ -176,6 +192,7 @@ llm:
   max_tokens:
     extract_keywords: 2000
     rephrase_bullets: 1200     # <= 5 reworded bullets per call; a reasoning model also spends some of it thinking
+    judge: 800                 # {would_send, score, issues}: a short JSON answer
     cover_letter: 3000         # gpt-oss-20b spends reasoning tokens first; run 152700 (Zone & Co) was cut off at 1500
     tailor_profile: 600
     default: 1000
@@ -190,6 +207,18 @@ llm:
   # back; no other provider ever writes the letter. Tasks not listed here use every provider, in order.
   task_providers:
     cover_letter: [groq]
+    judge: [groq]              # the judge's model runs on this provider only; no other provider's model may answer for it
+  # A task may use another model than its provider's own `model`: {task: {provider, model}}. The cover letter is written by
+  # the larger gpt-oss-120b on Groq (a small model's letters were the ones most often rejected by the checks, which are
+  # unchanged); every other task keeps the provider's model. Groq limits each model on its own, so the router counts, paces
+  # and budgets this one under its own key "groq/openai/gpt-oss-120b"; the review screen lists tokens per model, and
+  # `careerops doctor` / `llm-check` send it a tiny request to see that it answers.
+  models:
+    cover_letter: {provider: groq, model: openai/gpt-oss-120b}
+    # The judge must be a different family from the generator (gpt-oss). Groq's llama-3.3-70b-versatile; `careerops llm-check`
+    # and `careerops doctor` send it a tiny request to see that it answers. Groq limits it on its own (tpd 100K on the free
+    # tier, below the 200K above, so a spent quota answers 429 and the judge shows "no verdict"; that never blocks a review).
+    judge: {provider: groq, model: llama-3.3-70b-versatile}
   # Tokens a letter alone needs (up to three cover_letter drafts: a first and two retries), for finishing a
   # `letter_pending` job. A draft was ~1.5K tokens in the first Monzo live run, so three fit.
   letter_token_estimate: 5000

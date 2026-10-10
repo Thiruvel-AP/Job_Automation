@@ -124,7 +124,7 @@ _HOOK_LINK = re.compile(r"\b(?:mirror|reflect|align)(?:s|ed|ing)?\b(?:\s+with)?"
 def hook_link_problems(paragraph: str, evidence: list[dict]) -> list[str]:
     """A hook that says the company's mission "mirrors / reflects / aligns with" the candidate's work must have something
     in common with it. The company half and the work half (the sentence's claim plus the evidence bullet it is written
-    from, text + terms) each name company-domain words (domain.py: bank, fintech, payments, customers, cancer ...); when
+    from, text + terms + the entry's name / org / title) each name company-domain words (domain.py: bank, fintech, payments, customers, cancer ...); when
     BOTH name some and they share none ("Monzo simplifies banking ... mirrors my work on a multi-omics cancer research
     agent"), the link is made up. A side that names no domain word (a hook about NLP, a bullet about Docker) cannot be
     judged by this check and passes."""
@@ -137,7 +137,8 @@ def hook_link_problems(paragraph: str, evidence: list[dict]) -> list[str]:
         own = _own_bullet(claim, evidence)
         used = [evidence[own]] if own is not None else evidence
         company_side = domain_groups(company)
-        work_side = domain_groups(" ".join([claim, *(e["text"] + " " + " ".join(e.get("terms", [])) for e in used)]))
+        work_side = domain_groups(" ".join([claim, *(" ".join([e["text"], *e.get("terms", []), e.get("where", "")])
+                                                     for e in used)]))
         if company_side and work_side and not company_side & work_side:
             out.append(f"the hook says the company {m.group(0).strip()} my work, but they share no domain term "
                        f"(company: {', '.join(sorted(company_side))}; my work: {', '.join(sorted(work_side))}): "

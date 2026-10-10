@@ -7,8 +7,10 @@ numerator AND the denominator) and shown separately in review.
 
 Four signals, all deterministic and all checked against the JD:
   * an organisational noun as the last word of the term (squad, team, collective, guild, tribe, department ...)
-  * a generic head word as the last word ("data discipline", "engineering culture", "growth mindset", "central data
-    function"): it names how a company is organised or what it values, not something a CV can evidence
+  * a generic head word as the last word ("data discipline", "engineering culture", "growth mindset", "business
+    perspective", "analytical thinking", "can-do attitude", "central data function"), or "decision making" /
+    "decision-making" as its last words ("data-driven decision making"): it names how a company is organised or what it
+    values, not something a CV can evidence
   * a name in a list of three or more capitalised names in the JD ("... lie in Borrowing, Growth, Payments, Fincrime,
     Wealth, or Core"), unless it is a taxonomy skill
   * a term the model listed under `context_terms` (copied verbatim from the JD), unless it is a taxonomy skill, or the
@@ -23,8 +25,13 @@ from .scorer import Keyword, load_taxonomy, norm_literal
 
 ORG_HEADS = frozenset("""squad squads team teams collective collectives guild guilds tribe tribes chapter chapters pod pods
     department departments division divisions organisation organisations organization organizations""".split())
-# Last words that make a phrase about the company, not a skill: "data discipline", "analytics culture", "growth mindset".
-FRAMING_HEADS = frozenset("discipline disciplines culture cultures mindset mindsets ethos".split())
+# Last words that make a phrase about the company, not a skill: "data discipline", "analytics culture", "growth mindset",
+# "business perspective", "analytical thinking", "positive attitude".
+FRAMING_HEADS = frozenset("""discipline disciplines culture cultures mindset mindsets ethos perspective perspectives thinking
+    attitude attitudes""".split())
+# Last words of more than one word: "decision making" names a trait, not a method ("decision trees" and "decision making
+# under uncertainty" are not caught: only the phrase at the END of the term counts).
+FRAMING_TAILS = frozenset({"decision making", "decision-making"})
 # "function" is ambiguous: "loss function" and "window functions" are skills, "data function" is a business unit. It frames
 # only after a word that names a unit of the company.
 UNIT_WORDS = frozenset("""data analytics business product engineering finance risk central technical support platform
@@ -58,6 +65,9 @@ def why_context(k: Keyword, names: set[str], from_model: set[str], team: str, ta
         return f"organisational noun '{words[-1]}'"
     if words and words[-1] in FRAMING_HEADS:
         return f"generic head word '{words[-1]}' (how the company works, not a skill)"
+    tail = " ".join(words[-2:])
+    if words and (words[-1] in FRAMING_TAILS or tail in FRAMING_TAILS):
+        return f"generic head phrase '{words[-1] if words[-1] in FRAMING_TAILS else tail}' (how the company works, not a skill)"
     if len(words) > 1 and words[-1] in ("function", "functions") and words[-2] in UNIT_WORDS:
         return f"business unit '{words[-2]} {words[-1]}', not a skill"
     if any(m in names for m in members):

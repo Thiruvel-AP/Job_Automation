@@ -1,0 +1,21 @@
+{
+ "jobs": [
+  {
+   "id": "11111111-2222-3333-4444-555555555555",
+   "title": "Backend Engineer",
+   "location": "London",
+   "jobUrl": "https://jobs.ashbyhq.com/synthesia/11111111-2222-3333-4444-555555555555",
+   "descriptionPlain": "other job"
+  },
+  {
+   "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+   "title": "Machine Learning Engineer",
+   "location": "London, UK",
+   "jobUrl": "https://jobs.ashbyhq.com/synthesia/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+   "applyUrl": "https://jobs.ashbyhq.com/synthesia/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/application",
+   "descriptionHtml": "<p><strong>About the role</strong></p><p>You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. </p><ul><li>Python, SQL and scikit-learn</li><li>Experience with LangChain &amp; vector search</li></ul><p>You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. </p>",
+   "descriptionPlain": "You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. ",
+   "isListed": true
+  }
+ ]
+}

@@ -608,3 +608,54 @@ def test_retailor_is_a_live_option_but_not_part_of_the_resume_command():
     with pytest.raises(SystemExit) as e:
         cli.main(["live", "--yes", "--retailor"])
     assert e.value.code == 1                                                    # refused as --yes, not as an unknown option
+
+
+# ------------------------------------------------------------------ header and answer validation; one file only (live --url)
+@pytest.mark.parametrize("line, word", [("Company: <company name>", "company"), ("Title: <job title> ", "title"),
+                                        ("URL: <paste the link>", "url"), ("Company: o", "company"), ("Title: x", "title")])
+def test_a_placeholder_or_one_letter_header_rejects_the_file_with_a_reason(db, settings, inbox, archive, jd, line, word):
+    key = line.split(":")[0]
+    head = {"Company": "Company: Acme\n", "Title": "Title: AI Engineer\n", "URL": "URL: https://acme.example/1\n"}
+    p = inbox / "bad.txt"
+    p.write_text("".join(v for k, v in head.items() if k != key) + line + "\n\n" + jd, encoding="utf-8")
+    fake = Fake(db, settings)
+    live, lines = session(db, settings, fake)
+    assert live.run() == 0
+    reason = (settings.path("jds") / "rejected" / "bad.reason.txt").read_text()
+    assert reason.startswith("header ") and word in reason and ("placeholder" in reason or "shorter than 2" in reason)
+    assert fake.calls == [] and fake.prompts == [] and db.jobs() == [] and not p.exists()      # nothing asked, nothing added
+
+
+def test_a_stray_letter_typed_as_the_company_is_asked_again(db, settings, inbox, archive, jd):
+    put(inbox, "a.txt", jd, header=False)                       # the 'o' case: a review key typed at the company prompt
+    fake = Fake(db, settings, yes(**{"company?": ["o", "Beta Ltd"], "job title?": ["AI Engineer"],
+                                     "application URL?": ["https://beta.example/1"]}))
+    live, lines = session(db, settings, fake)
+    live.run()
+    assert [j["company"] for j in db.jobs()] == ["Beta Ltd"]
+    assert any("company 'o' is shorter than 2 characters" in l for l in lines)
+
+
+def test_three_bad_answers_in_a_row_reject_the_file_like_a_blank_one(db, settings, inbox, archive, jd):
+    put(inbox, "a.txt", jd, header=False)
+    fake = Fake(db, settings, {"company?": ["o", "<x>", "q"]})
+    live, _ = session(db, settings, fake)
+    live.run()
+    assert db.jobs() == [] and (settings.path("jds") / "rejected" / "a.reason.txt").read_text().strip() == "no company or title given"
+
+
+def test_a_placeholder_typed_as_the_url_is_asked_again(db, settings, inbox, archive, jd):
+    put(inbox, "a.txt", jd, header=False)
+    fake = Fake(db, settings, yes(**{"company?": ["Beta Ltd"], "job title?": ["AI Engineer"],
+                                     "application URL?": ["<link>", "https://beta.example/1"]}))
+    session(db, settings, fake)[0].run()
+    assert db.jobs()[0]["url"] == "https://beta.example/1"
+
+
+def test_only_works_on_the_one_file_and_leaves_the_rest_of_the_inbox(db, settings, inbox, archive, jd):
+    a = put(inbox, "a.txt", jd, company="Acme", n=1)
+    b = put(inbox, "b.txt", jd, company="Beta", n=2)
+    fake = Fake(db, settings, yes())
+    live, _ = session(db, settings, fake, only=b)
+    assert live.run() == 0
+    assert [j["company"] for j in db.jobs()] == ["Beta"] and a.exists() and not b.exists()

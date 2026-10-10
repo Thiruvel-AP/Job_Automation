@@ -179,5 +179,6 @@ def test_doctor_runs_the_ollama_checks_for_a_provider_without_a_key(settings, mo
     from careerops.setup import doctor
     _ollama(monkeypatch, models=())
     settings.raw["llm"]["providers"] = [OLLAMA]
+    settings.raw["llm"]["models"] = {}                              # no task model: only the provider's own checks
     names = [(n, ok) for n, ok, _ in doctor(settings) if "ollama" in n]
     assert names == [("ollama at http://localhost:11434/v1", True), ("ollama model qwen2.5-7b-8k is built", False)]

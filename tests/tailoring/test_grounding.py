@@ -144,6 +144,7 @@ def test_an_invented_client_is_retried_once_with_the_problem_listed_and_the_hone
 @pytest.mark.slow
 def test_an_invention_that_survives_the_retry_is_flagged_and_the_letter_is_the_fallback(settings, fb_fixture, job,
                                                                                          spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     from careerops.tailoring import tailor
     llm = spy_llm({"cover_letter": _drafts(_lying)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))

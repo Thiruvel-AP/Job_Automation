@@ -216,6 +216,7 @@ def test_a_rejected_draft_is_retried_once_naming_the_words_and_the_retry_is_logg
 
 @pytest.mark.slow
 def test_a_second_rejection_falls_back_and_the_retry_is_still_logged(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     llm = spy_llm({"cover_letter": _drafts(_with_filler)})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     assert [s["task"] for s in llm.sent].count("cover_letter") == 3               # a draft, two retries, then the fallback

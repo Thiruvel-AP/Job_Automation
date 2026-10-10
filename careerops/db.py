@@ -110,6 +110,7 @@ COLUMNS = [
     ("jobs", "sponsor_rating", "TEXT"),    # the matched sponsor's rating letter (A / B)
     ("jobs", "cv_pages", "INTEGER"),      # pages of the tailored CV (2 by default, 1 with --one-page)
     ("jobs", "page2_fill", "REAL"),       # how full page 2 is, 0-1, from the rendered PDF (0 for a one-page CV)
+    ("jobs", "analysis", "TEXT"),         # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
 ]
 
 
@@ -154,7 +155,7 @@ class DB:
 
     def update_job(self, job_id: str, commit: bool = True, **fields: Any) -> None:
         """commit=False lets a caller batch many updates inside one `with db.conn:` transaction."""
-        for k in ("flags", "keywords"):
+        for k in ("flags", "keywords", "analysis"):
             if k in fields and not isinstance(fields[k], str):
                 fields[k] = json.dumps(fields[k])
         fields["updated_at"] = now()

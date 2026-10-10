@@ -81,6 +81,13 @@ def slow_tests_are_marked(request):
 
 
 @pytest.fixture(autouse=True)
+def no_provider_keys(monkeypatch):
+    """No test may reach a real provider by accident (doctor / llm-check send a tiny request when a key is set): a test that
+    needs a key sets its own fake one."""
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def no_real_data():
     """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
     _guard["hits"].clear()
@@ -141,7 +148,7 @@ def fixture(area: str, name: str) -> Path:
 def settings(tmp_path) -> Settings:
     s = load_settings()
     raw = copy.deepcopy(s.raw)
-    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live"):   # register_dir: M1 writes snapshots
+    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")
@@ -153,6 +160,9 @@ def settings(tmp_path) -> Settings:
     # (it gained Kubernetes), and tests about gaps and guards must not move with it.
     raw["paths"]["fact_bank"] = str(PROFILE_FIX / "fact_bank.yaml")
     raw["paths"]["applicant"] = str(PROFILE_FIX / "applicant.yaml")
+    # The shipped default is letter.mode: off (no letter is asked for). The suite's letter tests are about the drafting, so the
+    # fixture turns it on; tests/tailoring/test_letter_mode.py checks the shipped default and the off path.
+    raw["letter"]["mode"] = "draft"
     shutil.copy(fixture("discovery", "sponsors.csv"), raw["paths"]["sponsors_csv"])
     return Settings(raw=raw, root=ROOT)
 
@@ -167,6 +177,29 @@ class SpyLLM(MockLLM):
     def json(self, task, system, user, context=None):
         self.sent.append({"task": task, "system": system, "user": user, "context": context or {}})
         return super().json(task, system, user, context)
+
+
+# two keyword answers that differ: every term is verbatim in jd_northwind.txt
+FIRST_KEYWORDS = {"required": ["LangChain", "scikit-learn", "GitHub Actions"], "preferred": ["CI/CD"]}
+SECOND_KEYWORDS = {"required": ["Lambda", "IAM", "tool calling"], "preferred": ["S3"]}
+
+
+class FlipLLM(MockLLM):
+    """extract_keywords answers FIRST_KEYWORDS, then SECOND_KEYWORDS, then FIRST ... (one answer per call) and counts its
+    calls in `extractions`, so a second extraction of the same JD shows as different keywords. `fail` makes the call raise."""
+
+    def __init__(self, fail=False):
+        super().__init__()
+        self.extractions = 0
+        self.fail = fail
+        self.handlers["extract_keywords"] = self._extract
+
+    def _extract(self, ctx):
+        self.extractions += 1
+        if self.fail:
+            raise RuntimeError("provider is down")
+        return {**(FIRST_KEYWORDS if self.extractions % 2 else SECOND_KEYWORDS),
+                "company_hook": "Northwind builds oncology tools.", "team": "", "context_terms": []}
 
 
 @pytest.fixture

@@ -91,6 +91,32 @@ def test_generic_head_words_make_a_term_context(term):
     assert kept == [] and [c["term"] for c in context] == [term]
 
 
+@pytest.mark.parametrize("term", ["business perspective", "customer perspectives", "analytical thinking", "design thinking",
+                                  "can-do attitude", "positive attitude", "data-driven decision making",
+                                  "data-driven decision-making", "decision making", "Decision-Making", "good decision making"])
+def test_perspective_thinking_attitude_and_decision_making_are_context_not_skills(term):
+    kept, context = split_context(kws([(term, 1.0)]), f"We want {term} from everyone.")
+    assert kept == [] and [c["term"] for c in context] == [term]
+    assert "generic head" in context[0]["why"]
+
+
+def test_the_two_phrases_named_in_the_round_are_context_in_a_whole_keyword_list():
+    jd = "You bring a business perspective and data-driven decision making to Python and SQL work."
+    kept, context = split_context(kws([("business perspective", 1.0), ("data-driven decision making", 1.0),
+                                       ("Python", 2.0), ("SQL", 2.0)]), jd)
+    assert [k.term for k in kept] == ["Python", "SQL"]
+    assert [(c["term"], c["why"]) for c in context] == [
+        ("business perspective", "generic head word 'perspective' (how the company works, not a skill)"),
+        ("data-driven decision making", "generic head phrase 'decision making' (how the company works, not a skill)")]
+
+
+@pytest.mark.parametrize("term", ["perspective projection", "thinking machines", "decision trees", "decision tree",
+                                  "decision making under uncertainty", "attitude estimation", "perspective transform"])
+def test_a_skill_that_merely_contains_such_a_word_is_not_demoted(term):
+    kept, context = split_context(kws([(term, 1.0)]), f"You know {term}.")
+    assert [k.term for k in kept] == [term] and context == []
+
+
 @pytest.mark.parametrize("term", ["loss function", "window functions", "activation function", "cost functions",
                                   "disciplined approach", "culture fit analysis", "functional programming"])
 def test_a_skill_that_merely_contains_such_a_word_stays_a_keyword(term):
@@ -110,6 +136,21 @@ def test_analyse_takes_data_discipline_out_of_the_keywords_even_when_the_model_l
     assert "data discipline" not in [k.term.lower() for k in got] and "A/B experiments" in [k.term for k in got]
     assert [c["term"] for c in context] == ["data discipline"]
     assert any("'data discipline' is context (generic head word 'discipline'" in n for n in notes)
+
+
+def test_analyse_takes_business_perspective_and_data_driven_decision_making_out_of_the_keywords(settings, spy_llm):
+    jd = ("Data Scientist. You bring a business perspective and data-driven decision making to everything you build in "
+          "Python and SQL, and you design experiments.\n" + "x" * 800)
+    job = {"company": "Acme", "title": "Data Scientist", "description": jd}
+    llm = spy_llm({"extract_keywords": _answer(["business perspective", "data-driven decision making", "Python"],
+                                                ["experiments"])})
+    notes, context = [], []
+    got, _, _ = tailor.analyse(job, llm, settings, notes, None, context)
+    low = [k.term.lower() for k in got]
+    assert "business perspective" not in low and "data-driven decision making" not in low
+    assert {"python", "sql"} <= set(low)
+    assert [c["term"] for c in context] == ["business perspective", "data-driven decision making"]
+    assert any("'data-driven decision making' is context (generic head phrase 'decision making'" in n for n in notes)
 
 
 @pytest.mark.slow

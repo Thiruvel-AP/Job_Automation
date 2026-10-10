@@ -97,6 +97,12 @@ Rules:
   Describe what was built with the facts in EVIDENCE, not with adjectives or adverbs.
 - Do not claim anything not in EVIDENCE. Never mention: {deny}."""
 
+# appended to LETTER_SYSTEM: the evidence arrives as fields (evidence_fields.py), not as a ready sentence
+LETTER_FIELDS_NOTE = """
+- Each EVIDENCE item is given as fields: method (tools and techniques), data (what was worked on) and outcome (the stated
+  result). There is no ready sentence: write your own from the fields, using only what they say. A field marked
+  (not stated) is unknown: say nothing about it. Read "EVIDENCE lines" above as these items."""
+
 LETTER_USER = """ROLE: {title} at {company}
 COMPANY HOOK (from JD): {company_hook}
 GAPS (required tools/platforms/languages/frameworks, absent from the fact bank): {gaps}

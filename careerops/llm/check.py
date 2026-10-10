@@ -12,12 +12,13 @@ SYSTEM = "Reply with a JSON object only, no other text."
 USER = 'Return exactly {"ok": true}'
 
 
-def check_provider(p: Provider) -> dict:
+def check_provider(p: Provider, model: str | None = None, task: str | None = None) -> dict:
     """{provider, configured_model, reachable, ok, model, latency_ms, json_ok, json_mode, error}.
     `json_mode` is "accepted" | "rejected" | "off" (not configured) | "unknown" (no answer to judge it by);
-    "rejected" means the provider returned HTTP 400 for response_format but answered valid JSON without it."""
-    out = {"provider": p.name, "configured_model": p.cfg["model"], "reachable": False, "ok": False, "model": None,
-           "latency_ms": None, "json_ok": False, "json_mode": "unknown", "error": None}
+    "rejected" means the provider returned HTTP 400 for response_format but answered valid JSON without it.
+    `model` checks that model on this provider instead of its own (a task's llm.models entry); `task` is then named."""
+    out = {"provider": p.name, "configured_model": model or p.cfg["model"], "reachable": False, "ok": False, "model": None,
+           "latency_ms": None, "json_ok": False, "json_mode": "unknown", "error": None, "task": task}
     env = p.cfg.get("api_key_env")
     if env and not os.environ.get(env):
         out["error"] = f"no key: {env} is not set"
@@ -25,7 +26,7 @@ def check_provider(p: Provider) -> dict:
     p.json_mode_rejected = False
     start = time.perf_counter()
     try:
-        text = p.chat(SYSTEM, USER, "llm_check", max_tokens=200)   # reasoning models spend part of it thinking
+        text = p.chat(SYSTEM, USER, "llm_check", max_tokens=200, model=model)   # reasoning models spend part of it thinking
     except LLMError as e:                      # the server answered, with an error status
         out.update(reachable=True, error=str(e), latency_ms=_ms(start))
         return out
@@ -48,12 +49,20 @@ def _ms(start: float) -> int:
     return round((time.perf_counter() - start) * 1000)
 
 
+def check_task_models(router: Router) -> list[dict]:
+    """One check per llm.models entry whose provider is in play, on that provider with that model."""
+    by_name = {p.name: p for p in router.providers}
+    return [check_provider(by_name[m["provider"]], m["model"], task)
+            for task, m in router.task_models.items() if m["provider"] in by_name]
+
+
 def check_all(router: Router) -> list[dict]:
-    return [check_provider(p) for p in router.providers]
+    return [check_provider(p) for p in router.providers] + check_task_models(router)
 
 
 def format_row(r: dict) -> list[str]:
-    lines = [f"{'[ok]' if r['ok'] else '[!!]'} {r['provider']}"
+    task = f" ({r['task']})" if r.get("task") else ""
+    lines = [f"{'[ok]' if r['ok'] else '[!!]'} {r['provider']}{task}"
              f"  reachable={'yes' if r['reachable'] else 'no'}"
              f"  model={r['model'] or '-'} (configured {r['configured_model']})"
              f"  latency={'-' if r['latency_ms'] is None else str(r['latency_ms']) + 'ms'}"

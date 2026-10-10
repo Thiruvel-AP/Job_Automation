@@ -118,3 +118,35 @@ def test_adding_a_jd_never_resets_a_job_that_has_moved_on(settings, db, jd):
     db.update_job(jid, status="triaged")
     assert manual.add_jd(db, jd + " v2", company="Acme", title="AI Engineer", url="u") == jid       # replaceable
     assert db.job(jid)["status"] == "new" and db.job(jid)["description"].endswith(" v2")
+
+
+# ------------------------------------------------------------------ meta_problem: placeholders and stray keystrokes
+@pytest.mark.parametrize("field, value", [("company", "<company name>"), ("title", "AI Engineer <remote>"), ("url", "https://x/<id>"),
+                                          ("location", "London >"), ("company", "o"), ("title", " x "), ("company", ""),
+                                          ("company", "  ")])
+def test_meta_problem_rejects_placeholders_and_names_under_two_characters(field, value):
+    assert manual.meta_problem(field, value)
+
+
+@pytest.mark.parametrize("field, value", [("company", "Ab"), ("title", "AI Engineer"), ("url", "https://acme.example/jobs/1"),
+                                          ("location", "London, UK"), ("url", None), ("location", "R")])
+def test_meta_problem_accepts_real_values(field, value):
+    assert manual.meta_problem(field, value) is None
+
+
+def test_add_jd_refuses_a_placeholder_company_and_a_one_letter_title(db):
+    for kw in ({"company": "<company>", "title": "AI Engineer"}, {"company": "Acme", "title": "o"},
+               {"company": "Acme", "title": "AI Engineer", "url": "<url>"}):
+        with pytest.raises(manual.JDError):
+            manual.add_jd(db, BODY, **kw)
+    assert db.jobs() == []
+
+
+def test_add_jd_command_prints_the_error_and_adds_nothing(db, settings, monkeypatch, capsys, tmp_path):
+    f = tmp_path / "jd.txt"
+    f.write_text(BODY, encoding="utf-8")
+    monkeypatch.setattr(cli, "load_settings", lambda path=None: settings)
+    monkeypatch.setattr(cli, "load_dotenv", lambda p: None)
+    with pytest.raises(SystemExit) as e:
+        cli.main(["add-jd", "--file", str(f), "--company", "o", "--title", "AI Engineer"])
+    assert e.value.code == 1 and "company 'o' is shorter than 2 characters" in capsys.readouterr().err and db.jobs() == []

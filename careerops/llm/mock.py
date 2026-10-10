@@ -20,7 +20,7 @@ class MockLLM:
         self.usage: list[dict] = []        # the router records token usage here; the mock never has any
         self.last_raw: str | None = None   # JSON text of the last answer, as a model would have returned it
 
-    def begin_job(self, est_tokens: int) -> list[str]:    # a mock has no token budget
+    def begin_job(self, est_tokens: int, task: str | None = None) -> list[str]:    # a mock has no token budget
         return ["mock"]
 
     def end_job(self) -> None:
@@ -65,4 +65,6 @@ class MockLLM:
                    f"alongside the tools I already use."] if gaps else []),
                 "Could we find twenty minutes next week to talk about where I could contribute first?",
             ]}
+        if task == "judge":                                    # a fixed second opinion: plumbing only, never a real judgement
+            return {"would_send": True, "score": 4, "issues": []}
         raise LLMError(f"MockLLM has no handler for task {task}")

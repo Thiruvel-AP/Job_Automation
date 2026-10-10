@@ -35,7 +35,7 @@ def test_settings_carry_the_letter_block(settings):
         "greeting": "Hi {company}{team} team", "greeting_fallback": "Dear {company} hiring team",
         "closing": "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?",
         "closing_fallback": "Could we find twenty minutes to talk about where I could contribute first at {company}?",
-        "signoff": "With regards"}
+        "signoff": "With regards", "on_failure": "none", "mode": "draft"}   # draft: the fixture turns the letter on
 
 
 def test_greeting_uses_the_team_when_there_is_one_and_the_fallback_when_not(settings):
@@ -110,6 +110,7 @@ def test_only_required_gaps_are_passed(settings, fb_fixture, job, spy_llm):
 
 @pytest.mark.slow
 def test_deny_listed_gap_term_is_still_blocked_when_the_letter_claims_it(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     lying = {"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I have run Kubernetes clusters in production for two years.",
         "Could we talk for twenty minutes?"]}}
@@ -120,6 +121,7 @@ def test_deny_listed_gap_term_is_still_blocked_when_the_letter_claims_it(setting
 
 @pytest.mark.slow
 def test_deny_listed_term_that_is_not_a_gap_is_still_blocked(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     sneaky = {"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I have not yet used Terraform, but I learn quickly.",
         "Could we talk for twenty minutes?"]}}
@@ -153,6 +155,7 @@ def test_chattermill_broad_skills_are_not_gaps_so_no_gap_sentence(settings, fb_f
 
 @pytest.mark.slow
 def test_a_letter_that_says_the_candidate_lacks_statistics_is_rejected(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     rep, _ = _run(settings, fb_fixture, job, spy_llm(LIE), CHATTERMILL)
     assert rep["letter"]["status"] == "fallback"
     assert any("claims a gap not in GAPS" in p and "statistics" in p for p in rep["letter"]["problems"])

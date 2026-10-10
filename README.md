@@ -13,11 +13,12 @@ careerops init                  # data/ folders + .env from .env.example (idempo
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
 ollama create qwen2.5-7b-8k -f config/ollama/Modelfile   # same model with an 8192-token context (Ollama's default is 4096)
 # put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
-careerops doctor                # every line should say [ok]
+careerops doctor                # every line should say [ok] (also sends the letter model a tiny request; --no-ping skips that)
 careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
 careerops llm-check             # one tiny request per LLM provider: reachable, model, latency, JSON, json_mode (never prints keys)
 pytest -q                       # no network or model needed; tests read tests/fixtures/profile/, never your config/profile/
 pytest -q -m "not slow"         # skips every test that runs xelatex or Chromium (light on RAM, < ~2 GB)
+pytest -q -m slow               # the other chunk: the tests that render PDFs
 ```
 
 ## Project structure
@@ -33,6 +34,7 @@ career-ops/
 │   │   ├── companies_house.py    M2 bulk join → company no., SIC codes, sector
 │   │   ├── ats.py                M3 slug probe, verification, careers-page detector
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
+│   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox
 │   │   ├── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── tailoring/                JD → CV + cover letter
@@ -45,7 +47,7 @@ career-ops/
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
-│   ├── review/                   workflow.py (approve/edit/reject → preferences) · outreach.py (M4)
+│   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
 │   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
 │   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
@@ -66,6 +68,7 @@ career-ops/
     ├── exports/                  companies.xlsx · learning_list.md
     ├── feedback/preferences.jsonl   approve/edit/reject log → DPO pairs
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
+    ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
@@ -111,12 +114,18 @@ careerops discover                 # pull + triage; skipped jobs keep their reas
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
-careerops tailor --limit 15        # CV (two full pages) + letter per job, in queue order → data/outputs/<job>/ (+ report.json)
+careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one job ad into data/jds/inbox/ (see "Adding a job from its link")
+careerops live --url URL           # the same fetch, then live works on that one file
+careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
+careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
+careerops tailor --limit 15        # CV (two full pages) + letter per job (letter.mode: draft; with the default `off`, the CV only), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
 careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job
+careerops live --retailor --re-extract   # ... and the JD's keywords are extracted again (a job keeps its FIRST extraction otherwise, so --retailor gives the same keywords and ATS)
+careerops tailor --id JOB --re-extract   # the same flag on tailor / run
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
 careerops mark-applied --id JOB    # an application made outside the assist: archive it and log 'applied'
@@ -130,9 +139,38 @@ careerops status                   # counts per status, plus a tier × status ta
 careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
 ```
 
+### Adding a job from its link (`careerops add-url`, `careerops live --url`)
+
+`careerops add-url <link>` fetches one job ad and writes `data/jds/inbox/<company>-<title>-<id>.txt` with `Company:`, `Title:`,
+`URL:` and `Location:` header lines filled in, then the ad's text. It adds nothing to the database: `careerops live` does that, with
+you at every gate. `careerops live --url <link>` is the same fetch followed by a live session on that one file (the rest of the
+inbox is left alone; a rerun finds the file already there). `--company` / `--title` replace what the page or API gives.
+
+A site that answers HTTP 401, 403 or 429 is asked once: no retry and no workaround, the command exits 1 with "This site blocks
+automated access — copy the job text and use --clipboard". Copy the job text in your browser, then run `careerops live --clipboard`
+from WSL: it reads the Windows clipboard (`powershell.exe ... Get-Clipboard`, UTF-8, `\r` removed; under 2000 characters is refused),
+asks for Company, Title and URL (the same checks as live's prompts; three bad answers write nothing), saves
+`data/jds/inbox/<company>-<title>.txt` (an existing file is never overwritten) and works on that one file. A job from CV-Library,
+Reed, Totaljobs, Indeed or LinkedIn gets a `BOARD:` line on the review screen: the sponsor register match may name the agency, not the
+employer, so apply by hand on the site.
+
+| Link | How it is fetched |
+|---|---|
+| `job-boards.greenhouse.io/<board>/jobs/<id>`, `boards.greenhouse.io/...` | `GET boards-api.greenhouse.io/v1/boards/<board>/jobs/<id>`; the HTML-escaped `content` is unescaped and stripped to text |
+| `jobs.lever.co/<site>/<id>`, `jobs.eu.lever.co/...` | `GET api.lever.co/v0/postings/<site>/<id>` (`api.eu.lever.co` for the EU host): Lever's documented single-posting call |
+| `jobs.ashbyhq.com/<board>/<id>` | Ashby documents no single-posting call, only the board list `GET api.ashbyhq.com/posting-api/job-board/<board>`; that one request is made and the posting picked out of it by its id |
+| anything else | the page itself: a `JobPosting` JSON-LD block if it has one, else the text of `<main>` / `<article>` / the body without scripts, navigation and footers. **Under 2000 characters is refused** with a message (a page that builds its text with JavaScript, a login wall): save the ad by hand instead |
+
+At most one request per second per host, with the same `User-Agent` as the other fetchers, public unauthenticated calls only. An
+existing file of the same name is never overwritten. **Inbox checks** (also for hand-made files): a header holding `<` or `>` (an
+unfilled `Company: <company name>`) or a company / title under 2 characters makes `live` move the file to `rejected/` with the
+reason; an answer typed at the company / title / URL prompt that fails the same check is asked again (three in a row = blank = the
+file is rejected).
+
 ### Live sessions (`careerops live`)
 
-Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it). The
+Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it), or fetch
+one with `careerops add-url`. The
 first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
 `careerops live` takes the files in name order, up to `--max` (default 5), and for each one:
 
@@ -154,6 +192,34 @@ the JD stays in `inbox/`, and a rerun continues the same job at the status it re
 content hash in `data/live/state.json`, so the same text dropped in again is not redone. A dry run, a pending letter and a refused
 apply also leave the JD in `inbox/`. Each session ends with a summary (id, company, role, status, sponsor-register match,
 visa lines, archive check), printed and written to `data/live/<timestamp>.md`.
+
+### The LLM judge (`review.judge: off | shadow | gate`, default `shadow`)
+
+A second model reads the JD, the CV text (no contact block), the letter if there is one and the fact-bank bullets they rest on, and
+answers `{would_send, score 1-5, issues}`. It is **read-only**: it never edits a file, a report or a database row. Its model is
+`llm.models.judge` (shipped: Groq `llama-3.3-70b-versatile`), pinned to its provider by `llm.task_providers.judge`, and it must be
+**another family than the generator** (gpt-oss): `careerops doctor` checks the configuration, and each judgement checks the models that
+actually wrote that job (`report.json → llm_usage`). `careerops llm-check` sends it a tiny request.
+
+- **shadow**: the verdict is printed on the review screen and every approve / reject is logged with it in `data/judge/log.csv`
+  (`careerops live` has no reject key, so there `s` skip counts as a "no"). The verdict can anchor you; decide before you read it
+  if you want honest labels. `careerops judge-report` prints n, agreement, Cohen's kappa, false approves (judge yes / you no) and,
+  with none, the rule-of-three bound 3/n on the false-approve rate.
+- **gate**: a judge "yes" approves the job without the review prompt. **Refused in code** (`judge.GateRefused`, exit 1) until the log
+  holds 60 human-labelled reviews and not one false approve; the 60 is a constant, not a setting. A judge "no", no verdict, a flagged
+  job, a fallback letter or a lost letter all still come to you. Gate only sets the status to `approved`: opening a form, the visa
+  answers and submitting stay yours.
+
+An unquoted `off` in YAML is the boolean `false`; both `letter.mode` and `review.judge` accept it, but the shipped file quotes it.
+
+### Letters (`letter.mode: off | draft`, default `off`)
+
+With `off` no letter is asked for: no letter call, no letter PDF, review says `Letter: off` and approving needs no extra words, and
+the application is archived without one. With `draft` the model drafts one from the evidence **as fields** (`method`, `data`,
+`outcome`), never as the bullet sentence, so it has to write its own; every letter check is unchanged. Your fact bank has no such
+fields yet, so the fields are the bullet's `method` / `data` / `outcome` keys if you add them (the pipeline never writes your fact
+bank), else `method` = its `terms`, `outcome` = its `result`, and `data` = `(not stated)`, which the prompt tells the model to leave
+alone.
 
 ### What the review screen shows besides the score
 
@@ -231,15 +297,20 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
 - **Letter evidence and fallback** — the two bullets a letter is written from are chosen in code from the bullets on the CV:
   every bullet (experience and projects, verb-led or noun-led) is ranked by overlap with the JD keywords **and** the JD's
   company domain (bank, fintech, payments, customers … see `tailoring/domain.py`; an entry's name counts, so "Banking
-  Customer Churn" carries the domain its one-line bullet does not say), best first, the second from a different entry. A
+  Customer Churn" carries the domain its one-line bullet does not say, in the ranking and in the hook check), best first, the
+  second from a different entry; review shows the two ids as `Letter evidence: …`. A
   draft with "my work on built …", "mirrors my work <noun>", a paragraph that starts with a bare verb, or a sentence that
   pastes a bullet — verbatim, or with **70% or more of its words in one bullet** ("I" and bracketed text left out) — is
   rejected like any other. A hook that says the company "mirrors / reflects / aligns with" my work must share a domain term
-  with that work (a bank mission cannot mirror a cancer-research agent). When the draft fails after the retry,
-  `letter_rules.fallback_letter` writes it, all first person: *<company hook sentence> I'd like to bring my experience to
+  with that work (a bank mission cannot mirror a cancer-research agent). With `letter.on_failure: template`, when the draft
+  fails after the retries `letter_rules.fallback_letter` writes it (the default, `none`, writes no letter: next bullet), all first person: *<company hook sentence> I'd like to bring my experience to
   that work: at <org 1>, I <bullet 1 as a clause>.* · *At <org 2>, I <bullet 2 as a clause>.* · *I have not used <Gap> yet.*
   (only with a gap) · the closing question. A noun-led bullet reads "I worked on XGBoost churn classifier in R …". Gaps keep
   the JD's casing or a canonical spelling (Azure, Power BI, AutoGen, DSPy).
+- **Letter model and failure policy** — the cover letter is written by Groq's `openai/gpt-oss-120b` (`llm.models.cover_letter`; every other
+  task stays on `gpt-oss-20b`, all letter checks unchanged); the review screen lists tokens per model. When all three drafts are rejected,
+  `letter.on_failure` decides: `none` (default) = **no letter** — no PDF, review shows `NO LETTER — write your own or apply without`, and
+  approving needs you to type `no letter` (`l` tries again); `template` = the flagged template fallback above (approve with `send fallback`).
 - **CV profile** — with more than two `profile_facts`, code picks the two most relevant to the JD (the same ranking) and the
   model only words them. A project whose `award` text is already in its `name` prints it once.
 - **Letter opening** — the claim half of the opening sentence (after "mirrors", a dash, ":" or ";") may use only the two

@@ -156,8 +156,69 @@ def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
     ]
 
 
-def doctor(settings) -> list[tuple[str, bool, str]]:
-    """(check, passed, hint) for each dependency the pipeline needs."""
+def _feature_on(mode_of, settings) -> bool:
+    """True unless the feature's mode reads as off (a mode that does not parse counts as on: its own check reports it)."""
+    try:
+        return mode_of(settings) != "off"
+    except ValueError:
+        return True
+
+
+def model_checks(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
+    """Doctor lines for `llm.models`: each task's model answers a tiny request on its provider (a few tokens, counted
+    against that model's own daily budget). One line per entry. `ping=False` (doctor --no-ping) sends nothing and says so."""
+    from .db import DB
+    from .llm import check
+    from .llm.router import Router
+    from .review.judge import judge_mode
+    from .tailoring.tailor import letter_mode
+
+    models = settings["llm"].get("models") or {}
+    # a model no feature asks for is not pinged: letter.mode off makes no letter call, review.judge off makes no judge call
+    unused = {t for t, on in (("cover_letter", _feature_on(letter_mode, settings)), ("judge", _feature_on(judge_mode, settings)))
+              if not on}
+    models = {t: m for t, m in models.items() if t not in unused}
+    if not models:
+        return []
+    if not ping:
+        return [(f"{m['provider']}/{m['model']} for {task}: not asked (--no-ping)", True, "") for task, m in models.items()]
+    try:
+        router = Router(settings, DB(settings.path("db")))
+    except ValueError as e:
+        return [("llm.models", False, str(e))]
+    out = [(m, False, "name a provider listed in llm.providers") for m in router.unknown_models]
+    for r in check.check_task_models(router):
+        if r["task"] in unused:
+            continue
+        name = f"{r['provider']}/{r['configured_model']} answers for {r['task']}"
+        if r["ok"]:
+            out.append((f"{name} ({r['latency_ms']} ms, served by {r['model'] or '?'})", True, ""))
+        else:
+            out.append((name, False, r["error"] or "no usable answer; check the model id on console.groq.com/docs/models "
+                                                   "and the key"))
+    return out
+
+
+def judge_checks(settings) -> list[tuple[str, bool, str]]:
+    """Doctor lines for review.judge: a valid mode, and a judge model of another family than the generator (no model call)."""
+    from .review import judge
+
+    try:
+        mode = judge.judge_mode(settings)
+    except ValueError as e:
+        return [("review.judge", False, str(e))]
+    if mode == "off":
+        return [("review.judge: off (no judge)", True, "")]
+    problems = judge.check_config(settings)
+    if problems:
+        return [(f"review.judge: {mode}", False, "; ".join(problems))]
+    return [(f"review.judge: {mode}, judge model {judge.judge_model(settings)['model']} "
+             f"(family {judge.model_family(judge.judge_model(settings)['model'])})", True, "")]
+
+
+def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
+    """(check, passed, hint) for each dependency the pipeline needs. `ping` = also send each llm.models model a tiny
+    request (the only check that spends provider quota)."""
     checks: list[tuple[str, bool, str]] = []
     for tool, hint in (("xelatex", "sudo apt install texlive-xetex"),
                        ("pdftotext", "sudo apt install poppler-utils"),
@@ -178,6 +239,8 @@ def doctor(settings) -> list[tuple[str, bool, str]]:
             checks.append((f"{prov['name']} key ({env})", bool(os.environ.get(env)), f"add {env}=... to .env"))
         else:
             checks += ollama_checks(prov)
+    checks += model_checks(settings, ping)
+    checks += judge_checks(settings)
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += applicant_checks(settings.path("applicant"))
     todos = fact_bank_open_items(settings.path("fact_bank"))

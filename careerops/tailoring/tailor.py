@@ -14,13 +14,15 @@ from typing import Any, Callable
 from ..apply.naming import file_stem
 from ..discovery import gates
 from ..llm.router import TaskUnavailable
+from . import evidence_fields
 from . import prompts as P
-from .budget import fact_scores, letter_scores
+from .budget import entry_where, fact_scores, letter_scores
 from .faithfulness import check, deny_hits, numbers
 from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, hook_link_problems, opening_claim_problems,
                         rejected_words, repeated_evidence_problems, sentences)
 from .context_terms import model_terms, split_context
 from .families import possible_evidence
+from . import freeze
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
 from .qualifiers import prompt_list, repair
@@ -37,6 +39,8 @@ from .scorer import (Keyword, _contains, cap_keywords, has_literal, ceiling, dro
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
+LETTER_MODES = ("off", "draft")             # settings letter.mode: no letter calls at all, or the model drafts one
+LETTER_POLICIES = ("none", "template")     # settings letter.on_failure: what a letter that failed every draft becomes
 LLM_FAILED = "LLM call failed"             # in analyse's notes when only the taxonomy keywords could be used
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
 BANNED_CLOSERS = re.compile(r"look forward to hearing from you", re.I)
@@ -561,9 +565,15 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
 
 
 def letter_summary(letter: dict) -> str:
-    """"ok", or "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text."""
+    """"ok", "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text, or
+    "NO LETTER (<why>)" when letter.on_failure is none and every draft was rejected."""
     if letter.get("status") == "ok":
         return "ok"
+    if letter.get("status") == "none":
+        why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
+        return f"NO LETTER ({letter.get('reason') or 'no letter'}" + (f"; first: {why[0]}" if why else "") + ")"
+    if letter.get("status") == "off":
+        return "off (letter.mode: off)"
     if letter.get("status") == "pending":
         return f"pending ({letter.get('reason') or 'no provider for it'})"
     why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
@@ -764,12 +774,15 @@ def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = 
     sc = letter_scores(fb, kws, jd)
     bidx = bullet_index(fb)
     owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
+    where = {b["id"]: entry_where(e) for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
     order = {b: i for i, b in enumerate(sc)}
     ranked = sorted((b for b in sc if not chosen_ids or b in chosen_ids), key=lambda b: (-sc[b], order[b]))
     picked = ranked[:1]
     if len(ranked) > 1:
         picked.append(next((b for b in ranked[1:] if owner[b] != owner[ranked[0]]), ranked[1]))
-    return [{"id": b, "text": bidx[b]["text"], "terms": list(bidx[b].get("terms", []))} for b in picked]
+    extra = lambda b: {k: bidx[b][k] for k in evidence_fields.OPTIONAL_KEYS if str(bidx[b].get(k) or "").strip()}   # noqa: E731
+    return [{"id": b, "text": bidx[b]["text"], "terms": list(bidx[b].get("terms", [])), "where": where[b], **extra(b)}
+            for b in picked]
 
 
 def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
@@ -812,13 +825,33 @@ def _with_orgs(fb: dict, evidence: list[dict]) -> list[dict]:
     return [{**e, "org": owner.get(e["id"], ("", False))[0], "project": owner.get(e["id"], ("", False))[1]} for e in evidence]
 
 
+def letter_mode(settings) -> str:
+    """settings letter.mode: "off" (default) = no letter is asked for and no letter call is made; "draft" = the model drafts
+    one from the evidence fields (evidence_fields.py), under every letter check."""
+    raw = settings["letter"].get("mode")
+    mode = "off" if raw is None or raw is False else str(raw).strip().lower()          # YAML reads an unquoted `off` as False
+    if mode not in LETTER_MODES:
+        raise ValueError(f"letter.mode must be one of {', '.join(LETTER_MODES)}, got {mode!r}")
+    return mode
+
+
+def letter_policy(settings) -> str:
+    """settings letter.on_failure: "none" (default) = a letter that fails every draft is not produced at all;
+    "template" = the deterministic template letter is written instead (flagged as a fallback in review)."""
+    policy = str((settings["letter"].get("on_failure") or "none")).strip().lower()
+    if policy not in LETTER_POLICIES:
+        raise ValueError(f"letter.on_failure must be one of {', '.join(LETTER_POLICIES)}, got {policy!r}")
+    return policy
+
+
 def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[str] | None = None,
             notes: list[str] | None = None, team: str = "",
-            retry: dict | None = None) -> tuple[list[str], list[str]]:
+            retry: dict | None = None, template: bool = True) -> tuple[list[str], list[str]]:
     """The cover letter from the company hook, the two evidence bullets and the optional GAPS. The model writes the body;
     the closing question is added here from settings (`letter_closing`). A draft is checked (length, banned phrases, deny
     list, claimed gaps, role upgrades, numbers, and every sentence against its own evidence bullet and the JD) and retried
-    once, naming the words it was rejected for; a second failure is the deterministic fallback, flagged. The prompt lists
+    twice, naming the words it was rejected for; a third failure is the deterministic fallback, flagged, or with
+    `template=False` (letter.on_failure: none) no letter at all: ([], problems + [FALLBACK_MARK]). The prompt lists
     the filler and capability words nothing supports under AVOID. `retry` (when given) is filled in: {"count",
     "rejected_words", "first_problems", "outcome"}, and `notes` says the retry happened. Raises TaskUnavailable when no
     provider the task is restricted to can take it: the caller keeps the job waiting."""
@@ -878,10 +911,10 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
                 llm, "cover_letter",
                 P.LETTER_SYSTEM.replace("{max_words}", str(max_words))
                 .replace("{deny}", ", ".join(d for d in deny if d not in named_ok))
-                .replace("{qualifiers}", ", ".join(prompt_list(" ".join(texts)))),
+                .replace("{qualifiers}", ", ".join(prompt_list(" ".join(texts)))) + P.LETTER_FIELDS_NOTE,
                 P.LETTER_USER.format(title=job["title"], company=job["company"], company_hook=hook or "(none)",
                                      gaps=", ".join(gaps) or "(none)", avoid=", ".join(avoid) or "(none)",
-                                     evidence="\n".join(f"- {e}" for e in texts)) + feedback,
+                                     evidence=evidence_fields.block(evidence)) + feedback,
                 {"company": job["company"], "title": job["title"], "company_hook": hook, "evidence": texts,
                  "gaps": gaps, "avoid": avoid})
             body, letter_notes = normalise_letter(out)
@@ -922,7 +955,9 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
                      + " ".join(f"Do not use '{w}' unless it appears in the evidence bullets." for w in avoided))
                     if avoided else "")
         feedback += "\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one:\n" + "\n".join(f"- {p}" for p in problems)
-    retry["outcome"] = "fallback" if retry["count"] else retry["outcome"]
+    retry["outcome"] = ("fallback" if template else "no letter") if retry["count"] else retry["outcome"]
+    if not template:
+        return [], problems + [FALLBACK_MARK]
     # deterministic fallback — always honest and first person; review will show why (letter_rules.fallback_letter)
     return (fallback_letter(job, hook, _with_orgs(fb, evidence), gaps, closing, deny, job["description"]),
             problems + [FALLBACK_MARK])
@@ -930,16 +965,28 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
 
 def _make_letter(job, fb, kws, hook, evidence: list[dict], llm, settings, out_dir: Path, final_name: str,
                  team: str = "", gaps: list[str] | None = None):
-    """Write the cover letter PDF. Always produces one: a failed or rule-breaking LLM draft becomes the
-    deterministic fallback, and report["letter"]["status"] says which of the two the reader is looking at."""
+    """Write the cover letter PDF. A failed or rule-breaking LLM draft becomes, by letter.on_failure, the deterministic
+    fallback ("template": status "fallback") or no letter at all ("none", the default: status "none", no PDF, review
+    says NO LETTER). report["letter"]["status"] says which of ok / fallback / none / pending the reader is looking at."""
+    if letter_mode(settings) == "off":     # nothing was asked for: no model call, no PDF, no fallback
+        return None, {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "off",
+                      "reason": "letter.mode: off", "notes": [],
+                      "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
     notes: list[str] = []
     retry: dict = {}
+    template = letter_policy(settings) == "template"
     try:
-        paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes, team, retry)
+        paras, problems = _letter(job, fb, kws, hook, evidence, llm, settings, gaps, notes, team, retry, template)
     except TaskUnavailable as e:        # no provider may write it now: no letter, no fallback, the job waits
         return None, {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "pending",
                       "reason": str(e)[:300], "notes": notes,
                       "evidence": [{"id": x["id"], "text": x["text"]} for x in evidence]}
+    if not paras:                       # letter.on_failure: none, and every draft was rejected: no letter, nothing to render
+        failed = len(retry.get("failures") or [])
+        return None, {"paragraphs": [], "problems": [p for p in problems if p != FALLBACK_MARK], "score": None, "pages": 0,
+                      "status": "none", "reason": (f"{failed} draft(s) rejected" if failed else "the letter model failed"),
+                      "notes": notes, "retry": retry,
+                      "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paras,
                          "date": date.today().strftime("%d %B %Y"),
                          "greeting": letter_greeting(settings, job["company"], team),
@@ -978,12 +1025,27 @@ def usage_by_task(calls: list[dict]) -> dict[str, dict]:
     return out
 
 
+def usage_by_model(calls: list[dict]) -> dict[str, dict]:
+    """Per "<provider>/<model>" that answered: the number of calls and the summed token usage, so the review screen shows
+    what the letter model (llm.models) cost next to the model that did everything else."""
+    out: dict[str, dict] = {}
+    for c in calls:
+        m = out.setdefault(f"{c.get('provider') or '?'}/{c.get('model') or '?'}",
+                           {"calls": 0, **{k: 0 for k in USAGE_SUMS}, "tasks": []})
+        m["calls"] += 1
+        for k in USAGE_SUMS:
+            m[k] += c.get(k) or 0
+        if (c.get("task") or "?") not in m["tasks"]:
+            m["tasks"].append(c.get("task") or "?")
+    return out
+
+
 def usage_since(llm, start: int) -> dict:
     """Token usage of the LLM calls made since `start` (an index into llm.usage): the calls, their sums and the same per
-    task. Empty for a model that records none (MockLLM)."""
+    task and per model. Empty for a model that records none (MockLLM)."""
     calls = list(getattr(llm, "usage", [])[start:])
     total = {k: sum(c.get(k) or 0 for c in calls) for k in USAGE_SUMS}
-    return {"calls": calls, **total, "by_task": usage_by_task(calls)}
+    return {"calls": calls, **total, "by_task": usage_by_task(calls), "by_model": usage_by_model(calls)}
 
 
 def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
@@ -1003,7 +1065,7 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
     rep["llm_usage"] = {"calls": calls, **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS},
-                        "by_task": usage_by_task(calls)}
+                        "by_task": usage_by_task(calls), "by_model": usage_by_model(calls)}
     (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
     return rep
 
@@ -1024,15 +1086,17 @@ def _discard(path: Path, root: Path) -> None:
 
 
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
-               one_page: bool = False) -> dict[str, Any]:
+               one_page: bool = False, on_extracted: Callable[[dict], None] | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
-    earlier successful output folder exactly as it was."""
+    earlier successful output folder exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
+    analysis (freeze.record) as soon as the model has given it, before anything else can fail, unless `frozen` was used
+    or the model call failed (a taxonomy-only list is never frozen)."""
     final = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
     work = final.with_name(final.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
-        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page)
+        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted)
         old = final.with_name(final.name + ".old")
         _discard(old, out_root)
         if final.exists():
@@ -1056,7 +1120,8 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
 
 
 def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
-            frozen: dict | None = None, one_page: bool = False) -> dict[str, Any]:
+            frozen: dict | None = None, one_page: bool = False,
+            on_extracted: Callable[[dict], None] | None = None) -> dict[str, Any]:
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
@@ -1071,6 +1136,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     analysis_warnings: list[str] = []
     context_terms: list[dict] = []
     kws, hook, team = analyse(job, llm, settings, analysis_warnings, frozen, context_terms)
+    if on_extracted and frozen is None and not any(LLM_FAILED in n for n in analysis_warnings):
+        on_extracted(freeze.record(kws, hook, team, context_terms, analysis_warnings, job["description"] or ""))
     ceil, all_gaps = ceiling(fact_text(fb), kws)
     # A gap with a neighbour term in the fact bank is possible evidence, for the user to judge: never counted, never claimed,
     # and not called a genuine gap either (so the letter cannot say "I have not used it").

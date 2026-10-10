@@ -259,3 +259,80 @@ def test_monzo_draft_3_fails_the_hook_check_inside_the_letter_and_the_retry_is_t
                                      ev, llm, settings, [], [], "", retry)
     assert any("share no domain term" in p for p in retry["failures"][0]["problems"])
     assert "share no domain term" in llm.sent[1]["user"] and tailor.FALLBACK_MARK in problems
+
+
+# ---------------------------------------------------------------- 6. fix round: the entry's name and org are domain terms of its bullets
+def test_the_entry_name_and_org_carry_the_domain_the_bullet_does_not_say():
+    assert domain_groups("Banking Customer Churn") == {"finance", "customer"}
+    assert domain_groups("Lloyd's Banking Group Datathon — 3rd place") == {"finance"}
+    assert domain_groups("Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app") == {"finance"}
+    bare = "XGBoost classifier in R with MCC evaluation."
+    bank = {**BANK, "projects": [
+        {"id": "plain", "name": "Image Classifier", "bullets": [_b("x1", bare, [])]},
+        {"id": "named", "name": "Banking Customer Churn", "bullets": [_b("x2", bare, [])]}]}
+    sc = letter_scores(bank, MONZO_KWS, MONZO)
+    assert sc["x2"] > sc["x1"] and sc["x2"] - sc["x1"] == pytest.approx(2.0 * 2)      # banking + customer, DOMAIN_WEIGHT each
+
+
+def test_the_letter_evidence_carries_the_entry_it_comes_from():
+    ev = {e["id"]: e for e in tailor.letter_evidence(BANK, MONZO_KWS, ON_CV, MONZO)}
+    assert ev["p_ch1"]["where"] == "Banking Customer Churn"
+    assert tailor.letter_evidence(BANK, MONZO_KWS, {"av1"}, MONZO)[0]["where"] == "Brightwave Apps Software Engineer"
+    assert tailor.letter_evidence(BANK, MONZO_KWS, {"p_ll1"}, MONZO)[0]["where"].startswith("Northern Banking Group Datathon")
+
+
+HOOK_BANK = "Monzo simplifies banking, which mirrors my work on an XGBoost classifier in R for a subscription business."
+CHURN_BULLET = {"id": "p_ch1", "text": "XGBoost churn classifier in R (tidymodels) with MCC evaluation.", "terms": ["churn", "customer behaviour"]}
+
+
+def test_a_bank_hook_on_the_banking_churn_project_is_not_rejected_for_a_domain_only_the_project_name_says():
+    assert hook_link_problems(HOOK_BANK, [CHURN_BULLET])                  # bullet alone: customers vs banking, no shared term
+    named = {**CHURN_BULLET, "where": "Banking Customer Churn"}
+    assert hook_link_problems(HOOK_BANK, [named]) == []
+
+
+def test_the_name_does_not_rescue_a_hook_that_links_to_a_different_domain():
+    az = {"id": "az1", "text": FULL_AZ1, "terms": ["llm"], "where": "Data Scientist Northfield Research Lab"}
+    assert hook_link_problems(DRAFT3[0], [az, {**EV_AZ1[1], "where": ""}])        # cancer research is still not banking
+
+
+# ---------------------------------------------------------------- 7. the Monzo letter never uses the LLM-agent bullet for a banking JD
+@pytest.mark.parametrize("chosen", [ON_CV, None, {"az1", "p_ch1", "p_ll1", "av1"}, {"az1", "dc1", "av1", "p_ll1"}])
+def test_az1_is_never_the_letter_evidence_for_a_banking_jd_with_no_llm_keywords(chosen):
+    assert not any("llm" in k.term.lower() or "agent" in k.term.lower() for k in MONZO_KWS)
+    ids = [e["id"] for e in tailor.letter_evidence(BANK, MONZO_KWS, chosen, MONZO)]
+    assert len(ids) == 2 and "az1" not in ids and "dc1" not in ids, ids
+    assert set(ids) <= {"p_ch1", "p_ll1", "av1"}
+
+
+def test_the_ranking_has_the_three_banking_bullets_above_both_agent_bullets():
+    sc = letter_scores(BANK, MONZO_KWS, MONZO)
+    assert min(sc["p_ch1"], sc["p_ll1"], sc["av1"]) > max(sc["az1"], sc["dc1"])
+
+
+# ---------------------------------------------------------------- 8. the review screen shows the two evidence ids
+def _rep(evidence):
+    return {"tier": 1, "headline": "AI Engineer", "ceiling": 0.9, "genuine_gaps": [], "context": {"profile": "P"},
+            "cv_pdf": "cv.pdf", "letter_pdf": "letter.pdf", "attempts": [{"violations": [], "warnings": []}],
+            "final": {"score": 0.8, "score_stemmed": 0.85, "band": "ok", "pages": 2, "wording_misses": []},
+            "letter": {"score": 0.7, "problems": [], "status": "ok", "paragraphs": ["A.", "B?"], "evidence": evidence}}
+
+
+JOB = {"company": "Monzo", "title": "Data Scientist", "location": "London", "url": "https://x.test/j", "flags": "[]",
+       "sponsor_name": "Monzo Bank Ltd", "sponsor_score": 1.0}
+
+
+def test_the_review_screen_lists_the_two_chosen_evidence_ids():
+    from careerops.review.workflow import summary
+    text = summary(JOB, _rep([{"id": "p_ch1", "text": "t"}, {"id": "av1", "text": "u"}]))
+    assert "Letter evidence: p_ch1, av1" in text.splitlines()
+    assert text.splitlines().index("Letter evidence: p_ch1, av1") == next(
+        i for i, l in enumerate(text.splitlines()) if l.startswith("Letter score")) + 1
+
+
+def test_a_report_written_before_the_evidence_was_stored_still_reviews():
+    from careerops.review.workflow import summary
+    assert "Letter evidence" not in summary(JOB, _rep([]))
+    rep = _rep([])
+    del rep["letter"]["evidence"]
+    assert "Letter evidence" not in summary(JOB, rep)

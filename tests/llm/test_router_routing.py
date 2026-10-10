@@ -61,7 +61,7 @@ def _router(settings, db, server, monkeypatch, groq_key=True, only=None, tpd=Non
 
 
 def test_the_settings_restrict_the_letter_to_groq(settings):
-    assert settings["llm"]["task_providers"] == {"cover_letter": ["groq"]}
+    assert settings["llm"]["task_providers"]["cover_letter"] == ["groq"]
 
 
 def test_the_letter_is_written_by_groq_when_groq_can(settings, db, server, monkeypatch):
@@ -87,8 +87,8 @@ def test_the_letter_waits_when_groq_is_rate_limited_and_ollama_is_not_asked(sett
 
 def test_the_letter_waits_when_groqs_daily_budget_is_spent(settings, db, server, monkeypatch):
     r = _router(settings, db, server, monkeypatch, tpd=1000)
-    db.llm_count("groq")
-    db.llm_add_tokens("groq", 1000)
+    db.llm_count("groq/openai/gpt-oss-120b")             # the letter model is counted under its own key (llm.models)
+    db.llm_add_tokens("groq/openai/gpt-oss-120b", 1000)
     with pytest.raises(TaskUnavailable):
         r.json("cover_letter", "s", "u")
     assert _S.seen == []

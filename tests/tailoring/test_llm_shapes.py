@@ -90,6 +90,7 @@ GARBAGE = {"profile": "x", "experience": "a1", "projects": 3, "rephrase": 7}
 @pytest.mark.slow
 def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback_letter(settings, fb_fixture, job,
                                                                                       spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     llm = spy_llm({"rephrase_bullets": lambda ctx: GARBAGE, "tailor_profile": lambda ctx: GARBAGE,
                    "cover_letter": lambda ctx: GARBAGE})
     rep = _run(settings, fb_fixture, job, llm)
@@ -102,6 +103,7 @@ def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback
 
 @pytest.mark.slow
 def test_c_a_model_that_is_down_for_every_task_still_gets_a_cv_and_a_letter(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     def down(ctx):
         raise RuntimeError("all providers failed")
 

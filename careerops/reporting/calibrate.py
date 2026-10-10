@@ -332,7 +332,9 @@ def aggregates(rows: list[dict], settings: Settings) -> dict:
         "rephrase": {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None},
         "letters": {"ok": sum(r["letter"]["status"] == "ok" for r in ok),
                     "fallback": sum(r["letter"]["status"] == "fallback" for r in ok),
-                    "pending": sum(r["letter"]["status"] == "pending" for r in ok)},
+                    "pending": sum(r["letter"]["status"] == "pending" for r in ok),
+                    "none": sum(r["letter"]["status"] == "none" for r in ok),
+                    "off": sum(r["letter"]["status"] == "off" for r in ok)},        # letter.mode: off: no letter was asked for
         "violations": sum(len(r["violations"]) for r in ok),
         "keywords_per_job": _mean(r["keywords"]["n"] for r in ok),
         "mean_final": _mean(r["final"]["literal"] for r in ok), "mean_ceiling": _mean(r["ceiling"] for r in ok),
@@ -425,7 +427,8 @@ def render_report(meta: dict, rows: list[dict], agg: dict, compare: list[str] | 
             f"({pct(agg['rephrase']['ratio'])}) | report |",
             f"| Keywords per JD | {num(agg['keywords_per_job'])} | ≤ {meta['max_keywords']} |",
             f"| Letters | {agg['letters']['ok']} ok, {agg['letters']['fallback']} fallback, "
-            f"{agg['letters'].get('pending', 0)} pending (no provider may write them) | all ok |",
+            f"{agg['letters'].get('pending', 0)} pending (no provider may write them), "
+            f"{agg['letters'].get('none', 0)} none (every draft rejected), {agg['letters'].get('off', 0)} off (letter.mode: off) | all ok |",
             f"| Violations (chosen attempts) | {agg['violations']} | report |",
             f"| Mean final / ceiling | {pct(agg['mean_final'])} / {pct(agg['mean_ceiling'])} | |",
             f"| Manual agreement | mean absolute difference to manual {pct(agg['manual']['mean_abs_diff'], 1)} over "
@@ -624,7 +627,7 @@ def summarise(cal_dir: Path) -> Path:
          and not _yn(rated, RUBRIC_COLUMNS[4], "Y")),
         ("band hit rate ≥ 3 of 4 in-scope JDs", a["band"]["rate"] is not None and a["band"]["rate"] >= 0.75),
         ("no letter with rule problems", a["letters"]["fallback"] == 0 and a["letters"].get("pending", 0) == 0
-         and a["ok"] > 0),
+         and a["letters"].get("none", 0) == 0 and a["ok"] > 0),
         ("would_send = Y for at least 3 JDs", _yn(rated, RUBRIC_COLUMNS[6], "Y") >= 3)]
     mark = lambda name, ok: "– (not assessed: rubric predates this run)" if stale and name in GRADED else "✓" if ok else "✗"
     lines += ["", "Exit criteria (M5): " + "; ".join(f"{mark(name, ok)} {name}" for name, ok in checks), ""]

@@ -1,0 +1,22 @@
+{
+ "id": "0f3b2c1d-5a6e-4b7f-8c9d-1e2f3a4b5c6d",
+ "text": "AI Engineer",
+ "categories": {
+  "location": "Bristol, UK",
+  "team": "AI"
+ },
+ "hostedUrl": "https://jobs.lever.co/northwind/0f3b2c1d-5a6e-4b7f-8c9d-1e2f3a4b5c6d",
+ "applyUrl": "https://jobs.lever.co/northwind/0f3b2c1d-5a6e-4b7f-8c9d-1e2f3a4b5c6d/apply",
+ "descriptionPlain": "You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. You will build and evaluate machine learning models and LLM-based agents in Python, working with data engineers and product managers to take prototypes into production on AWS. ",
+ "lists": [
+  {
+   "text": "What you will do",
+   "content": "<li>Build agents</li><li>Evaluate models</li>"
+  },
+  {
+   "text": "What we ask",
+   "content": "<li>Python</li><li>Cloud experience</li>"
+  }
+ ],
+ "additionalPlain": "We are an equal opportunity employer."
+}

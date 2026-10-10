@@ -334,6 +334,90 @@ rejected when the company half and the work half (claim + the bullet it is writt
 none. A side naming no domain word is not judged. Tests: `tests/tailoring/test_relevance_round.py`; `test_guard_round.REST` and a few
 letter/profile tests were reworded for the stricter paste rule and the code-picked facts. Not run live.
 
+## 5i. Stability round (2026-10-10) — frozen keywords per job, head words, letter model, letter failure policy
+
+Committed first: the relevance round above ("relevance: evidence ranking, paste overlap, award dedupe, hook sanity"); the slow chunk found 7
+tests whose "clean" letter drafts were a bullet with "I" in front, which the paste check rightly rejects. `tests/conftest.restate` gives them
+real restatements; the check is unchanged. Not run live; `careerops doctor`'s model ping and a real letter from gpt-oss-120b are unverified.
+**1. Frozen keywords.** `jobs.analysis` (TEXT, additive column) holds a job's first extraction as JSON: keywords (term, weight, required, alts),
+context terms, company hook, team, drop notes, the JD's sha1 and the date (`tailoring/freeze.py`: `record`, `frozen_for`). `cli.tailor_jobs`
+passes `frozen_for(job)` to `tailor_job(frozen=...)`, so a job tailored again (`live --retailor`, a retry after `error`) calls no
+`extract_keywords` and gets the same keyword list, ceiling and ATS; the output says `keywords: reusing the extraction frozen on <date>`.
+`tailor_job(on_extracted=)` stores the record the moment `analyse` returns, before anything else can fail, but never for a failed model call
+(taxonomy-only keywords are not frozen) or when a frozen analysis was used. A changed JD (`add-jd --id`) is extracted again, and says so.
+`--re-extract` (on `tailor`, `run` and `live`) redoes the extraction and freezes the new one. Calibration keeps its own frozen files.
+**2. Head words.** `context_terms.FRAMING_HEADS` gained perspective(s), thinking, attitude(s); `FRAMING_TAILS` = "decision making" /
+"decision-making" as the last words ("data-driven decision making"). Only the end of the term counts: "decision trees", "decision making under
+uncertainty", "perspective projection" stay keywords; taxonomy terms are never context.
+**3. Letter model.** `llm.models: {cover_letter: {provider: groq, model: openai/gpt-oss-120b}}`: that task uses that model on that provider,
+every other task and provider is unchanged, and `task_providers` still keeps the letter off Ollama. Groq limits each model on its own, so a
+non-default model is counted, paced and budgeted under the key `groq/openai/gpt-oss-120b` (`Provider.key`, `pacer_for`, `available(model)`,
+`tokens_left(model)`; the `llm_usage` table gets rows under that name). `Router.begin_job(est, task=)` checks that model's budget (finishing a
+`letter_pending` letter uses `task="cover_letter"`). `report.json -> llm_usage` has `by_model` ("groq/openai/gpt-oss-20b": calls, tokens,
+tasks) and the review screen prints it under "LLM tokens by model". `careerops doctor` and `llm-check` send each `llm.models` model a tiny
+request (`setup.model_checks`, `llm.check.check_task_models`); `doctor --no-ping` sends nothing. A models entry naming a provider that is not
+configured is ignored by the router and reported by doctor; a malformed one raises. Every letter check is the same as before.
+**4. Letter failure policy.** `letter.on_failure: none | template` (default `none`; `tailor.letter_policy`). After the 3 drafts: `template` = the
+fallback letter as before (status `fallback`, approve needs `send fallback`); `none` = no letter: `report.letter.status == "none"`, no PDF/.tex
+(`letter_pdf` is null), `reason` ("3 draft(s) rejected" / "the letter model failed"), `retry.failures` as always. The job goes to
+`needs_review` (not `letter_pending`, which waits for a budget), review shows `NO LETTER — write your own or apply without` and approving
+needs the words `no letter` (`review.NoLetterError`, event `approved_without_letter`); `l` regenerates. `archive._sources` treats status `none`
+as an approved no-letter submission (job.json `no_letter: true`), so `apply`/`live` do not also need `--no-letter`. Calibration counts
+`none` letters and the M5 "no letter with rule problems" check fails on one. Tests that exercise the fallback letter set `template`.
+
+**5. Entry name in the evidence's domain; evidence ids on the review screen (small fix round).** `budget.entry_where(entry)` = the project's `name`, the job's `org` and `title`; `letter_scores` uses it as before, and `letter_evidence` now also returns it as each evidence dict's `where`. `grounding.hook_link_problems` reads the work side as claim + bullet text + terms + `where`, so a bank hook on "Banking Customer Churn" (bullet: "churn classifier ...") is no longer rejected for a domain only the project's name says; a hook linking a bank to a cancer-research agent is still rejected. The review screen prints `Letter evidence: p_ch1, av1` under the letter score (from `report.letter.evidence`; older reports without it print nothing). Tests (`test_relevance_round.py` sections 6-8): az1/dc1 are never the letter evidence for the Monzo JD with no LLM keywords, whatever the chosen set.
+
+## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
+
+Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where
+`letter.on_failure: none` now gives `none`; the doctor test saw an `llm.models` entry for a provider it had removed). Those tests now set
+`letter.on_failure: template` or the new expectation; no check, guard or deny-list entry was touched.
+**1. URL intake** (`discovery/intake.py`; `careerops add-url URL [--company --title]`, `careerops live --url URL`). `parse_url` →
+Greenhouse (`boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}`, `content` unescaped and stripped with `sources.html_to_text`), Lever
+(`api.lever.co/v0/postings/{site}/{id}`, `api.eu.lever.co` for `jobs.eu.lever.co`; verified in Lever's postings-api README), Ashby (the docs
+list only the board endpoint `api.ashbyhq.com/posting-api/job-board/{board}` and no single-posting call, so that one request is made and
+the posting matched by id / URL) or any other page (`JobPosting` JSON-LD, else `<main>`/`<article>`/body without scripts, nav, header,
+footer; under `MIN_PAGE_CHARS` = 2000 → `IntakeError` with a clear message). One request per second per host (`_throttle`), the shared `UA`,
+5 MB cap, 404 = "closed or wrong link". `write_inbox` creates `<company>-<title>-<id>.txt` with `open(..., "x")` (never overwrites; an
+existing file is reused) and refuses headers `live` would reject. `Live(only=file)` makes `live --url` work on that one file; its resume
+command carries `--url`; `--url` with `--mock` is refused (no network). Fixtures: `tests/fixtures/intake/`.
+**1b. Clipboard intake and blocked sites** (`intake.add_clipboard`, `live --clipboard`; offline-tested with a stubbed `_run_clipboard`). HTTP
+401/403/429 in `_fetch` raise `BlockedError` ("This site blocks automated access — copy the job text and use --clipboard"): one request, no
+retry or workaround, exit 1 from `add-url` / `live --url`. `--clipboard` runs `powershell.exe -NoProfile -Command "[Console]::OutputEncoding=
+[Text.Encoding]::UTF8; Get-Clipboard"`, strips `\r`/BOM, refuses under `MIN_PAGE_CHARS`, asks Company / Title / URL (`meta_problem`, URL must be
+http(s); three bad answers write nothing) and writes `<company>-<title>.txt` via `write_inbox`; `--url` + `--clipboard` is refused, the
+resume command does not carry `--clipboard`. Review screen: `workflow.job_board` (host label or source of cv-library / reed / totaljobs /
+indeed / linkedin) adds the `BOARD:` line. Not run against a real clipboard.
+**2. Inbox validation** (`manual.meta_problem`): `<`/`>` anywhere in company/title/url/location, or a company/title under
+`MIN_NAME_CHARS` = 2, is a defect. A header with one moves the file to `rejected/` with `header <reason>` and nothing is asked; a prompt
+answer with one is asked again (`Live._ask_valid`, three bad answers = blank = reject); `add_jd` raises `JDError` (also for `add-jd --company o`).
+**3. Judge** (`review/judge.py`, `review.judge: off|shadow|gate`, default shadow; spec in README "The LLM judge"). Model =
+`llm.models.judge` (`groq/llama-3.3-70b-versatile`), `llm.task_providers.judge: [groq]`, `llm.max_tokens.judge: 800`; `check_config` refuses a
+missing model/pin or a model of the generator's family (`model_family`), `check_family` compares with `report.llm_usage.calls` for each
+job, `doctor` has a `review.judge` line, `doctor`/`llm-check` ping the model (doctor skips the models of features that are off).
+Input: JD (cut at 9000 chars), CV text from `report.context` (no name/contact), letter paragraphs, source bullets with `result`.
+Output parsed by `parse_verdict` (a `would_send` with a score under 4 counts as a no). Verdicts are cached by a hash of what was shown in
+`paths.judge/verdicts/`; `paths.judge/log.csv` (append-only) gets a row per human decision (`approve`/`reject`; live's `s` = reject via
+`review_job(skip_means_no=True)`; gate auto-approvals are `auto`, not labels). `judge-report`: n, agreement, Cohen's kappa (n/a when a side
+never varies), false approves, false rejects, rule of three 3/n (and 3/judge-yes) when there are none, Wilson interval otherwise, gate status.
+Gate: `GATE_MIN_LABELS` = 60 constant, `require_gate` raises `GateRefused` (cli → exit 1) at the start of `review_job` unless 60 labelled
+reviews and 0 false approves; only a judge yes with no `flags` and letter status ok/off is approved in code; fallback / none letters,
+judge no, no verdict all go to the prompt. The judge module imports nothing from `apply/`.
+**Router fix found on the way:** the provider's `reasoning_effort: low` / `include_reasoning: false` were sent with every model of that
+provider; Groq answers 400 to `reasoning_effort` for llama. They now apply to the provider's own model only (`Provider.reasoning_for`); a
+task model gets the name-based default (gpt-oss: low/false, others: none). Regression test in `test_router_models.py`.
+**4. WSL `o`** (`workflow.open_file` → `wsl_open`): in WSL (`WSL_DISTRO_NAME`/`WSL_INTEROP`/`/proc/version` "microsoft") with `wslpath` and
+`explorer.exe` (or `/mnt/c/Windows/explorer.exe`), `explorer.exe $(wslpath -w FILE)`; explorer's exit code (1 on success) is never read;
+any missing piece falls through to wslview / open / startfile / xdg-open as before.
+**5. Letter mode** (`letter.mode: off|draft`, default off, `tailor.letter_mode`). Off: `_make_letter` returns status `off`
+(`reason: letter.mode: off`, no PDF, no call, evidence still recorded); review prints `Letter: off (...)` and approves without
+confirmation (`l` explains); `archive._sources` treats `off` like `none` (archived with `no_letter: true`); doctor skips the letter model
+ping. Draft: `tailoring/evidence_fields.py` sends `EVIDENCE n / method / data / outcome` instead of the bullet sentence
+(`P.LETTER_FIELDS_NOTE` added to the system prompt); the checks still read the full bullet. **Open question for you:** fact-bank bullets
+have no method/data/outcome keys and I may not edit the bank, so unless you add them the fields are `terms`, `(not stated)` and `result`.
+Tests that need a letter get `letter.mode: draft` from the `settings` fixture (`tests/conftest.py`).
+YAML trap: an unquoted `off` loads as `False`; `letter_mode` / `judge_mode` accept it and `settings.yaml` quotes it.
+
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 
 **Constraint clash.** Sources disagree on the note limit — 200 characters on free accounts (300 on Premium) per one, 300 for all accounts per another — and free accounts get only ~3–5 personalised notes a month. Five sentences is ~400–600 characters, so it can't fit either way.

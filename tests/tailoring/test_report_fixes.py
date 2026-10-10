@@ -295,7 +295,9 @@ def test_letter_evidence_is_the_two_best_cv_bullets_from_different_entries(fb_fi
     bidx = tailor.bullet_index(fb_fixture)
     ev = tailor.letter_evidence(fb_fixture, kws, {"a1", "a3", "b1"})     # a1 and a3 tie (same entry); b1 is the other entry
     assert [e["id"] for e in ev] == ["a1", "b1"]
-    assert ev[0] == {"id": "a1", "text": bidx["a1"]["text"], "terms": bidx["a1"]["terms"]}   # canonical bank text
+    assert {k: ev[0][k] for k in ("id", "text", "terms")} == {"id": "a1", "text": bidx["a1"]["text"],
+                                                              "terms": bidx["a1"]["terms"]}   # canonical bank text
+    assert ev[0]["where"] and ev[1]["where"] and ev[0]["where"] != ev[1]["where"]       # and the entry each comes from
     same = tailor.letter_evidence(fb_fixture, kws, {"a1", "a3"})            # nothing from another entry: take the next best
     assert [e["id"] for e in same] == ["a1", "a3"]
     assert [e["id"] for e in tailor.letter_evidence(fb_fixture, kws, {"a3"})] == ["a3"]
@@ -318,8 +320,8 @@ def test_the_letter_prompt_gets_exactly_those_two_bullets_the_hook_and_nothing_e
     assert len(ev) == 2 and {e["id"] for e in ev} <= cv_ids
     assert call["context"]["evidence"] == [bidx[e["id"]]["text"] for e in ev]
     assert "JD KEYWORDS" not in call["user"] and "COMPANY HOOK" in call["user"] and "GAPS" in call["user"]
-    for e in ev:
-        assert e["text"] in call["user"]
+    for i, e in enumerate(ev, 1):                    # letter.mode: draft sends the evidence as fields, never the sentence
+        assert f"EVIDENCE {i}\n  method: " in call["user"] and e["text"] not in call["user"]
 
 
 def _letter_llm(*drafts):
@@ -361,6 +363,7 @@ def test_a_question_the_model_wrote_is_replaced_by_the_template_closing_naming_t
 
 @pytest.mark.slow
 def test_the_fallback_letter_ends_on_the_same_template_closing(settings, fb_fixture, job, spy_llm):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     lying = ["Reviewly turns feedback into themes.", "I cut latency by 9876 percent across the platform."]
     rep = tailor.tailor_job(job, fb_fixture, spy_llm({"cover_letter": _letter_llm(lying)}), settings,
                             settings.path("outputs"))

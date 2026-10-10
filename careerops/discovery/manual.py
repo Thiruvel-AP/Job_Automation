@@ -13,6 +13,7 @@ from ..db import DB
 from . import gates
 from . import register as sponsors
 
+MIN_NAME_CHARS = 2                     # a company or title shorter than this is a stray keystroke, not a name
 MIN_JD_BYTES = 500                     # a shorter file is a stub or a snippet, not a job description
 # a job that has been tailored or acted on must not be pushed back to 'new' by dropping another JD with the same key
 REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "error")
@@ -60,6 +61,18 @@ def header_fields(text: str) -> dict[str, str]:
     return out
 
 
+def meta_problem(field: str, value: str | None) -> str | None:
+    """Why this header / answer cannot be a company, title, URL or location, or None when it can. A value holding `<` or
+    `>` is an unfilled template placeholder (`Company: <company name>`); a company or title under 2 characters is a
+    stray keystroke (a single `o`, typed at a prompt meant for something else), not a name."""
+    v = (value or "").strip()
+    if "<" in v or ">" in v:
+        return f"{field} {v[:60]!r} contains < or >: it looks like an unfilled placeholder"
+    if field in ("company", "title") and len(v) < MIN_NAME_CHARS:
+        return f"{field} {v!r} is shorter than {MIN_NAME_CHARS} characters"
+    return None
+
+
 def job_id_for(company: str, title: str, url: str | None) -> str:
     return "manual:" + hashlib.sha1(f"{company}|{title}|{url}".encode()).hexdigest()[:12]
 
@@ -67,7 +80,12 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
            location: str = "United Kingdom") -> str:
     """Add a hand-made job (status 'new') and return its id. Raises JobExists when that job is already tailored or
-    acted on, so adding a JD never resets work."""
+    acted on, so adding a JD never resets work. Raises JDError for a company, title or URL that is a placeholder or too
+    short (meta_problem)."""
+    for field, value in (("company", company), ("title", title), ("url", url)):
+        problem = meta_problem(field, value) if value is not None else None
+        if problem:
+            raise JDError(problem)
     jid = job_id_for(company, title, url)
     have = db.job(jid)
     if have is not None and have["status"] not in REPLACEABLE:

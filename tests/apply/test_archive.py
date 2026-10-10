@@ -545,6 +545,34 @@ def test_record_application_without_a_letter_raises_letter_missing(settings, db,
     assert list(settings.path("applications").iterdir()) == [] and db.job(j["id"])["status"] == "approved"
 
 
+def test_a_job_approved_with_no_letter_is_archived_without_the_no_letter_flag(settings, db, make_job):
+    j, r = make_job("gh:nl:0", company="Lendable", letter=False)
+    r["letter"] = {"status": "none", "problems": ["new numbers [9876]"], "score": None, "paragraphs": [], "pages": 0}
+    r["letter_pdf"] = None                              # letter.on_failure: none; the user typed 'no letter' in review
+    res = record_application(db, settings, j, r)
+    meta = json.loads((res.folder / "job.json").read_text())
+    assert meta["no_letter"] is True and meta["letter_status"] == "none" and db.job("gh:nl:0")["status"] == "applied"
+    assert {p.name for p in res.folder.iterdir()} == {"Ada Fixture CV.pdf", "Ada Fixture CV.tex", "JD.txt", "job.json",
+                                                      "report.json"}
+
+
+def test_a_job_whose_letter_is_off_is_archived_without_a_letter_and_without_the_no_letter_flag(settings, db, make_job):
+    j, r = make_job("gh:off:0", company="Lendable", letter=False)
+    r["letter"] = {"status": "off", "problems": [], "score": None, "paragraphs": [], "pages": 0, "reason": "letter.mode: off"}
+    r["letter_pdf"] = None                              # letter.mode: off: no letter was asked for, and nothing has to be typed
+    res = record_application(db, settings, j, r)
+    meta = json.loads((res.folder / "job.json").read_text())
+    assert meta["no_letter"] is True and meta["letter_status"] == "off" and db.job("gh:off:0")["status"] == "applied"
+    assert {p.name for p in res.folder.iterdir()} == {"Ada Fixture CV.pdf", "Ada Fixture CV.tex", "JD.txt", "job.json",
+                                                      "report.json"}
+
+
+def test_a_missing_letter_file_is_still_refused_when_the_report_says_the_letter_is_ok(settings, db, make_job):
+    j, r = make_job("gh:nl:00", company="Lendable", letter=False)       # report says status "ok" but the PDF is gone
+    with pytest.raises(LetterMissing):
+        record_application(db, settings, j, r)
+
+
 def test_mark_applied_without_letter_exits_1_and_no_letter_overrides_and_records_it(settings, db, make_job, tmp_path,
                                                                                     monkeypatch):
     root = settings.path("applications")

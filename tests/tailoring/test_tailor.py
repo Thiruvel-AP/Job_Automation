@@ -53,6 +53,7 @@ def test_good_letter_has_status_ok(tailored):
 
 
 def test_llm_failure_still_writes_a_letter_marked_fallback(settings, db, job):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     fb = load_yaml(settings.path("fact_bank"))
     rep = tailor_job(job, fb, _failing_letter_llm(), settings, settings.path("outputs"))
     assert Path(rep["letter_pdf"]).exists() and Path(rep["letter_pdf"]).with_suffix(".tex").exists()
@@ -62,6 +63,7 @@ def test_llm_failure_still_writes_a_letter_marked_fallback(settings, db, job):
 
 
 def test_letter_that_breaks_the_rules_three_times_is_a_fallback(settings, db, job):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     fb = load_yaml(settings.path("fact_bank"))
     rambling = MockLLM({"cover_letter": lambda ctx: {"paragraphs": ["word " * 400]}})
     rep = tailor_job(job, fb, rambling, settings, settings.path("outputs"))
@@ -70,6 +72,7 @@ def test_letter_that_breaks_the_rules_three_times_is_a_fallback(settings, db, jo
 
 
 def test_regenerate_letter_replaces_a_fallback_in_place(settings, db, job):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     from careerops.tailoring.tailor import regenerate_letter
     fb = load_yaml(settings.path("fact_bank"))
     rep = tailor_job(job, fb, _failing_letter_llm(), settings, settings.path("outputs"))

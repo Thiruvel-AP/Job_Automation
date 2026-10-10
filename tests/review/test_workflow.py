@@ -56,6 +56,7 @@ def test_excel_has_tier_columns_sorted_by_post_tailor_key(settings, db, job, tmp
 
 # ---------------------------------------------------------------- A1: fallback letters need a deliberate approval
 def _fallback_job(settings, db, job):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     from careerops.config import load_yaml
     from careerops.llm import MockLLM
     from careerops.tailoring.tailor import tailor_job

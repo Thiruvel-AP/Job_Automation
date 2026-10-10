@@ -9,7 +9,10 @@
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
-  careerops live [--max N] [--dry-run]
+  careerops add-url URL [--company C] [--title T]
+                                fetch one job ad (Greenhouse, Lever, Ashby API; else the page) into data/jds/inbox/
+  careerops judge-report        the LLM judge vs your review decisions: agreement, kappa, false approves (review.judge)
+  careerops live [--max N] [--dry-run] [--url URL | --clipboard]
                                 every JD in data/jds/inbox/ through add-jd → tailor → review → apply assist, one job at
                                 a time, with you at every gate and an archive check after each job (see README)
   careerops tailor [--limit N | --id JOB] [--one-page]
@@ -48,6 +51,7 @@ from .apply.archive import mark_applied_unarchived, preflight, record_applicatio
 from .apply.errors import ArchiveError, ArchiveIncomplete
 from .discovery import gates, manual, sources
 from .discovery import register as sponsors
+from .review import judge
 from .review import workflow as review
 from . import mockroot
 from .config import load_settings, load_yaml
@@ -185,10 +189,24 @@ def cmd_add_jd(args):
             _fail("add-jd needs --company and --title (or --id to replace the JD of an existing job)")
         try:
             jid = manual.add_jd(db, jd, company=args.company, title=args.title, url=args.url, location=args.location)
-        except manual.JobExists as e:
+        except (manual.JobExists, manual.JDError) as e:
             _fail(str(e))
         print(f"Added {jid}")
     print("Triage:", triage_new(db, s))
+
+
+def cmd_add_url(args):
+    """Fetch one job ad from its link into data/jds/inbox/ (a .txt with Company/Title/URL headers); `live` does the rest."""
+    from .discovery import intake
+
+    s = load_settings(args.config)
+    try:
+        path, created, ad = intake.add_url(s, args.url, args.company, args.title)
+    except intake.IntakeError as e:
+        _fail(str(e))
+    print(f"{'Wrote' if created else 'Already in the inbox, left as it is:'} {path}\n"
+          f"  {ad.company} | {ad.title} | {ad.location or 'location not stated'} | {len(ad.text):,} characters ({ad.source})\n"
+          "Next: careerops live" + ("" if created else f"   (or: careerops live --url {args.url})"))
 
 
 def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
@@ -206,7 +224,7 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
     for job in waiting:
         print(f"- {job['company']} | {job['title']}")
         try:
-            llm.begin_job(est)
+            llm.begin_job(est, task="cover_letter")        # the budget of the model that writes letters
         except BudgetExhausted as e:
             print(f"  STOP: no provider has the daily budget for a letter (~{est:,} tokens): {e}\n"
                   "  the remaining jobs stay letter_pending; re-run after the budget resets (00:00 UTC).")
@@ -226,9 +244,13 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
             llm.end_job()
 
 
-def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False) -> None:
+def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False,
+                re_extract: bool = False) -> None:
     """Tailor these jobs one after the other (the loop `careerops tailor` and `careerops live` share). Each job ends as
-    needs_review, letter_pending, error, or — when the day's token budget is short — stays as it was."""
+    needs_review, letter_pending, error, or — when the day's token budget is short — stays as it was. A job's keywords
+    are extracted once and kept in its record: a job tailored again reuses them (no extract_keywords call, so the same
+    keyword list and ceiling) unless `re_extract` (--re-extract) or its JD has changed."""
+    from .tailoring.freeze import frozen_for
     from .tailoring.tailor import letter_summary, tailor_job
 
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if mock else ''}.")
@@ -245,10 +267,18 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
         names = [p.name for p in getattr(llm, "providers", [])]
         if names and set(using) != set(names):
             print(f"  daily token budget: this job uses {', '.join(using)} only")
+        frozen, why_not = (None, "") if re_extract else frozen_for(job)
+        if frozen:
+            print(f"  keywords: reusing the extraction frozen on {frozen['date']} (--re-extract to redo it)")
+        elif why_not or (re_extract and "analysis" in job.keys() and job["analysis"]):
+            print(f"  keywords: extracting again ({why_not or '--re-extract'})")
         try:
-            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), one_page=one_page)
+            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), frozen, one_page=one_page,
+                             on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec))
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
+            no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
+            off = rep["letter"]["status"] == "off"              # letter.mode: off, no letter was asked for
             db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
                           ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
                           letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"],
@@ -259,14 +289,16 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             max_pages = 1 if rep["one_page"] else s["scoring"]["max_pages"]
             short = (not rep["one_page"] and max_pages == 2
                      and rep["page2_fill"] < s["scoring"]["min_fill_page2"])     # the bullets ran out before page 2 filled
-            over = cv_pages > max_pages or (letter_pages != 1 and not pending)
-            if rep["letter"]["status"] == "fallback":
+            over = cv_pages > max_pages or (letter_pages != 1 and not pending and not no_letter and not off)
+            if rep["letter"]["status"] in ("fallback", "none"):
                 print(f"  letter {letter_summary(rep['letter'])}")
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s)"
                   + (f", page 2 {rep['page2_fill']:.0%} full" + (" (fact bank has no more bullets to add)" if short else "")
                      if not rep["one_page"] else "") + ", "
                   + (f"letter {letter_summary(rep['letter'])}: the job waits as letter_pending" if pending
+                     else f"{letter_summary(rep['letter'])}: review asks for 'no letter' to approve" if no_letter
+                     else f"letter {letter_summary(rep['letter'])}" if off
                      else f"letter {letter_pages} page(s)")
                   + (f"  !! expected {max_pages} and 1" if over else ""))
             u = rep["llm_usage"]
@@ -302,7 +334,8 @@ def cmd_tailor(args):
     else:
         _finish_letters(db, s, fb, llm)
         jobs = select_for_run(db.jobs("triaged"), args.limit, s)
-    tailor_jobs(db, s, fb, llm, jobs, one_page=getattr(args, "one_page", False), mock=args.mock)
+    tailor_jobs(db, s, fb, llm, jobs, one_page=getattr(args, "one_page", False), mock=args.mock,
+                re_extract=getattr(args, "re_extract", False))
 
 
 def cmd_review(args):
@@ -342,7 +375,27 @@ def cmd_live(args):
         _fail("live never answers a gate for you: --yes is not available (approve, skip and 'did you submit' are yours)")
     if args.max < 1:
         _fail("--max must be at least 1")
+    if args.url and args.mock:
+        _fail("--url fetches the ad over the network; --mock never uses the network (put a JD file in the mock inbox instead)")
+    if args.url and args.clipboard:
+        _fail("--url and --clipboard are two ways to get one ad into the inbox: use one of them")
     s, db = _ctx(args)
+    only = None
+    if args.url:
+        from .discovery import intake
+        try:
+            only, created, ad = intake.add_url(s, args.url, args.company, args.title)
+        except intake.IntakeError as e:
+            _fail(str(e))
+        print(f"{'Fetched' if created else 'Already in the inbox:'} {only.name}  ({ad.company} | {ad.title})")
+    elif args.clipboard:
+        from .discovery import intake
+        try:
+            only, created, ad = intake.add_clipboard(s, input)
+        except intake.IntakeError as e:
+            _fail(str(e))
+        print(f"{'Saved' if created else 'Already in the inbox:'} {only.name}  ({ad.company} | {ad.title}, "
+              f"{len(ad.text):,} characters from the clipboard)")
     dry_run = args.dry_run or args.mock
     if args.mock and not args.dry_run:
         print("--mock implies --dry-run: the mock data root has no real application form to open.")
@@ -355,10 +408,11 @@ def cmd_live(args):
         if job["status"] == "letter_pending":
             _finish_letters(db, s, fb, llm, only=jid)
         else:
-            tailor_jobs(db, s, fb, llm, [job], mock=args.mock)
+            tailor_jobs(db, s, fb, llm, [job], mock=args.mock, re_extract=getattr(args, "re_extract", False))
 
     def review_it(jid: str) -> str:
-        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelosq")
+        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelosq",
+                                 skip_means_no=True)           # live has no reject key: a skipped job is a "no" for the judge log
 
     def preflight_it(jid: str) -> None:
         job = db.job(jid)
@@ -377,10 +431,11 @@ def cmd_live(args):
         return ok
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
+              + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now
               + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else ""))      # resume: not --retailor
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
                              mark_applied=mark_applied_it),
-                max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor).run()
+                max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only).run()
     if code:
         sys.exit(code)
 
@@ -523,7 +578,7 @@ def cmd_init(args):
 def cmd_doctor(args):
     s = load_settings(args.config)
     load_dotenv(s.root / ".env")
-    checks = doctor(s)
+    checks = doctor(s, ping=not getattr(args, "no_ping", False))
     for name, ok, hint in checks:
         print(f"  [{'ok' if ok else '!!'}] {name}" + ("" if ok else f"  → {hint}"))
     sys.exit(0 if all(ok for _, ok, _ in checks) else 1)
@@ -620,6 +675,13 @@ def llm_usage_lines(s, db: DB) -> list[str]:
     return out
 
 
+def cmd_judge_report(args):
+    """The judge against your decisions: n, agreement, Cohen's kappa, false approves, and what gate mode still needs."""
+    s, _ = _ctx(args)
+    path = judge.log_path(s)
+    print(judge.format_report(judge.read_log(path), path))
+
+
 def cmd_status(args):
     s, db = _ctx(args)
     print("LLM usage today (UTC):")
@@ -650,7 +712,10 @@ def main(argv=None):
     ap.add_argument("--config", default=None, help="path to settings.yaml")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init").set_defaults(fn=cmd_init)
-    sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    dr = sub.add_parser("doctor")
+    dr.add_argument("--no-ping", action="store_true", help="do not send the llm.models models a tiny request (the one "
+                    "check that spends provider quota)")
+    dr.set_defaults(fn=cmd_doctor)
     sub.add_parser("llm-check", help="one tiny request per LLM provider: reachable, model, latency, JSON, json_mode"
                    ).set_defaults(fn=cmd_llm_check)
     ca = sub.add_parser("calibrate", help="tailor the calibration JDs with the real model and measure the result")
@@ -685,6 +750,15 @@ def main(argv=None):
     o.add_argument("--title", required=True); o.add_argument("--team")
     o.add_argument("--mock", action="store_true")
     o.set_defaults(fn=cmd_outreach)
+    au = sub.add_parser("add-url", help="fetch one job ad from its link into data/jds/inbox/ (Greenhouse, Lever, Ashby, or any "
+                                        "page with at least 2000 characters of text)")
+    au.add_argument("url")
+    au.add_argument("--company", help="use this company name instead of the one the page or API gives")
+    au.add_argument("--title", help="use this job title instead of the one the page or API gives")
+    au.set_defaults(fn=cmd_add_url)
+    jr = sub.add_parser("judge-report", help="LLM judge vs your review decisions: agreement, kappa, false approves")
+    jr.add_argument("--mock", action="store_true", help="read the isolated data/mock judge log")
+    jr.set_defaults(fn=cmd_judge_report)
     sub.add_parser("discover").set_defaults(fn=cmd_discover)
     sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
     a = sub.add_parser("add-jd")
@@ -697,6 +771,8 @@ def main(argv=None):
         t.add_argument("--id", help="tailor exactly this job (it must be 'triaged'); --limit is ignored")
         t.add_argument("--mock", action="store_true", help="deterministic MockLLM, no API calls")
         t.add_argument("--one-page", action="store_true", help="one-page CV with the old template (default: two full pages)")
+        t.add_argument("--re-extract", action="store_true", help="extract the JD keywords again instead of reusing the "
+                       "job's frozen first extraction")
         t.set_defaults(fn=fn)
     lv = sub.add_parser("live", help="interactive batch: JD files in data/jds/inbox through add-jd, tailor, review, apply "
                                      "assist, with an archive check after every job")
@@ -704,6 +780,13 @@ def main(argv=None):
     lv.add_argument("--dry-run", action="store_true", help="stop after tailor + review: no apply step")
     lv.add_argument("--retailor", action="store_true", help="a job already started from this JD is tailored again "
                     "(CV, letter, review) instead of resumed; never an applied job")
+    lv.add_argument("--re-extract", action="store_true", help="extract the JD keywords again (a job keeps its first "
+                    "extraction otherwise, so --retailor gives the same keywords and ATS)")
+    lv.add_argument("--url", help="fetch this job ad into the inbox first (like add-url) and work on that one file only")
+    lv.add_argument("--company", help="with --url: the company name to use instead of the page's")
+    lv.add_argument("--title", help="with --url: the job title to use instead of the page's")
+    lv.add_argument("--clipboard", action="store_true", help="read the job text from the Windows clipboard (from WSL), "
+                    "ask for company / title / URL, save it to the inbox and work on that one file only")
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
     lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
     lv.set_defaults(fn=cmd_live)
@@ -743,6 +826,9 @@ def main(argv=None):
     except NotImplementedError as e:
         print(f"Not built yet: {e}. See docs/IMPLEMENTATION.md.")
         sys.exit(2)
+    except judge.GateRefused as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -123,8 +123,10 @@ class State:
 
 class Live:
     def __init__(self, db: DB, settings, hooks: Hooks, *, max_jobs: int = 5, dry_run: bool = False,
-                 resume_cmd: str = "careerops live", out: Callable[[str], None] = print, retailor: bool = False):
+                 resume_cmd: str = "careerops live", out: Callable[[str], None] = print, retailor: bool = False,
+                 only: Path | None = None):
         self.db, self.s, self.h, self.retailor = db, settings, hooks, retailor
+        self.only = only                                # `live --url`: work on this one inbox file, leave the rest
         self.max_jobs, self.dry_run, self.resume_cmd, self.out = max_jobs, dry_run, resume_cmd, out
         self.root = settings.path("applications")
         self.dirs = folders(settings)
@@ -191,8 +193,9 @@ class Live:
         return code
 
     def _loop(self) -> None:
-        files = sorted((p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"),
-                       key=lambda p: p.name)
+        files = ([self.only] if self.only is not None else
+                 sorted((p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"),
+                        key=lambda p: p.name))
         if not files:
             self.out(f"Nothing in {self.dirs.inbox}: put one JD per .txt file there (optional first lines "
                      "`Company: ...`, `Title: ...`, `URL: ...`).")
@@ -293,32 +296,48 @@ class Live:
     def _stage(self, name: str) -> None:
         self.current["stage"] = name
 
-    def _meta(self, f: Path, text: str) -> dict | None:
-        """company / title / url / location from the file's header lines, asking for what is missing. None = give up."""
+    def _ask_valid(self, prompt: str, field: str) -> str:
+        """Ask until the answer passes `manual.meta_problem` (a blank answer ends it: ''). A stray letter or a template
+        placeholder is not taken for a company, title or URL; three bad answers in a row are treated as blank."""
+        for _ in range(3):
+            answer = self.h.ask(prompt).strip()
+            problem = manual.meta_problem(field, answer) if answer else None
+            if not problem:
+                return answer
+            self.out(f"  {problem}; try again, or leave it blank.")
+        return ""
+
+    def _meta(self, f: Path, text: str) -> tuple[dict | None, str]:
+        """(company / title / url / location from the file's header lines, asking for what is missing; why not). A header
+        that holds `<` or `>` (an unfilled placeholder) or a company / title under 2 characters makes the file invalid
+        (meta=None); so does a blank answer."""
         hdr = manual.header_fields(text)
-        company = hdr.get("company") or self.h.ask(f"{f.name}: company? (blank = reject this file) ").strip()
-        title = (hdr.get("title") or (self.h.ask(f"{f.name}: job title? (blank = reject this file) ").strip()
-                                       if company else ""))
+        for key, value in hdr.items():
+            problem = manual.meta_problem(key, value)
+            if problem:
+                return None, f"header {problem}"
+        company = hdr.get("company") or self._ask_valid(f"{f.name}: company? (blank = reject this file) ", "company")
+        title = hdr.get("title") or (self._ask_valid(f"{f.name}: job title? (blank = reject this file) ", "title")
+                                     if company else "")
         if not (company and title):
-            return None
+            return None, "no company or title given"
         url = hdr.get("url")
         if url is None:
-            url = self.h.ask(f"{f.name}: application URL? (blank = none; you would apply by hand) ").strip() or None
-        return {"company": company, "title": title, "url": url, "location": hdr.get("location") or "United Kingdom"}
+            url = self._ask_valid(f"{f.name}: application URL? (blank = none; you would apply by hand) ", "url") or None
+        return {"company": company, "title": title, "url": url, "location": hdr.get("location") or "United Kingdom"}, ""
 
     def _advance(self, f: Path, text: str, sha: str, entry: dict, r: JobResult) -> str:
         db = self.db
         self._stage("add-jd")
         if not (entry.get("job_id") and db.job(entry["job_id"])):
-            meta = self._meta(f, text)
+            meta, reason = self._meta(f, text)
             if meta is None:
-                reason = "no company or title given"
                 self.out(f"REJECTED {f.name}: {reason}  ({self._reject(f, reason)})")
                 r.note = reason
                 return "rejected (JD)"
             try:
                 jid = manual.add_jd(db, text, **meta)                               # 2. add-jd: the id is the return value
-            except manual.JobExists as e:
+            except (manual.JobExists, manual.JDError) as e:
                 self.out(f"REJECTED {f.name}: {e}  ({self._reject(f, str(e))})")
                 r.note = str(e)
                 return "rejected (JD)"

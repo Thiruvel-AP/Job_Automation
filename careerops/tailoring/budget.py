@@ -24,6 +24,12 @@ def bullet_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
 DOMAIN_WEIGHT = 2.0       # one JD domain group the bullet names counts like one required keyword (weight 2)
 
 
+def entry_where(entry: dict) -> str:
+    """Where a bullet comes from, as text: the project's name, the job's org and title ("Banking Customer Churn", "Lloyd's
+    Banking Group Datathon", "Avasoft"). Its domain words belong to every bullet of the entry."""
+    return " ".join(str(entry[k]).strip() for k in ("name", "org", "title") if str(entry.get(k) or "").strip())
+
+
 def letter_scores(fb: dict, kws: list[Keyword], jd: str = "") -> dict[str, float]:
     """The ranking of the cover letter's evidence: every bullet of every experience and project, by overlap with the JD
     keywords (`bullet_scores`) PLUS overlap with the JD's company domain (bank, payments, customers ...; domain.py). A
@@ -35,7 +41,7 @@ def letter_scores(fb: dict, kws: list[Keyword], jd: str = "") -> dict[str, float
         return out
     for sec in ("experience", "projects"):
         for e in fb.get(sec, []):
-            where = " ".join(str(e.get(k) or "") for k in ("name", "org", "title"))
+            where = entry_where(e)
             for b in e["bullets"]:
                 text = " ".join([b["text"], *b.get("terms", []), where])
                 out[b["id"]] = round(out[b["id"]] + DOMAIN_WEIGHT * domain_overlap(text, weights), 6)

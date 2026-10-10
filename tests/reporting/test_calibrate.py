@@ -355,7 +355,7 @@ def test_cost_rephrase_letters_violations_and_not_run_jobs(settings):
     assert a["cost"] == {"calls_per_job": 7, "seconds_per_job": 40, "tokens_per_job": 10000, "tokens_total": 20000,
                          "max_prompt": 4500}
     assert a["rephrase"] == {"eligible": 8, "rephrased": 4, "ratio": 0.5}
-    assert a["letters"] == {"ok": 1, "fallback": 1, "pending": 0} and a["violations"] == 3
+    assert a["letters"] == {"ok": 1, "fallback": 1, "pending": 0, "none": 0, "off": 0} and a["violations"] == 3
 
 
 def test_an_empty_run_has_empty_aggregates_not_a_crash(settings):
@@ -707,6 +707,7 @@ def test_the_dropped_keywords_are_listed_with_their_reason_in_the_report(setting
 
 @pytest.mark.slow
 def test_the_summary_line_gives_the_letters_rejection_reason(settings, db, fb, manifest, tmp_path):
+    settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
     lying = MockLLM({"cover_letter": lambda ctx: {"paragraphs": [
         "Northwind builds tools I already work on.", "I cut latency by 9876 percent across the platform."]}})
     logs = []
@@ -730,7 +731,7 @@ def test_a_pending_letter_is_reported_as_pending_not_as_a_fallback(settings, db,
     row = res["rows"][0]
     assert row["status"] == "ok" and row["letter"]["status"] == "pending" and row["letter"]["score"] is None
     assert any("letter pending (cover_letter can only run on groq" in m for m in logs), logs
-    assert res["aggregates"]["letters"] == {"ok": 0, "fallback": 0, "pending": 1}
+    assert res["aggregates"]["letters"] == {"ok": 0, "fallback": 0, "pending": 1, "none": 0, "off": 0}
     assert "1 pending (no provider may write them)" in res["report"].read_text(encoding="utf-8")
 
 

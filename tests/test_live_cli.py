@@ -1,10 +1,12 @@
 """`careerops tailor --id` and `careerops live` through the real CLI, on the isolated --mock data root (MockLLM, no network,
 no browser). Tailoring renders real PDFs, so these need xelatex like every other end-to-end test."""
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
 import yaml
+from conftest import FlipLLM
 
 from careerops import cli, mockroot
 from careerops.db import DB
@@ -122,6 +124,34 @@ def test_live_mock_takes_a_jd_through_add_jd_tailor_and_review_and_never_touches
     assert "approved (dry run)" in next((mock / "live").glob("*.md")).read_text()
     assert _hash(real) == before                                           # real paths: byte for byte unchanged
     assert not (real / "careerops.db").exists()
+
+
+def _kw(job) -> list[str]:
+    return [k["term"] for k in json.loads(job["keywords"])]
+
+
+def test_live_retailor_reuses_the_jobs_first_keywords_and_re_extract_redoes_them(world, jd, monkeypatch, capsys):
+    cfg, real, mock = world
+    _inbox(mock, jd)
+    llm = FlipLLM()                                                    # a different keyword answer on every call
+    monkeypatch.setattr(cli, "_llm", lambda args, s, db: llm)
+    db = DB(mock / "careerops.db")
+
+    def live(*flags):
+        _answers(monkeypatch, "a")                                      # approve at the review menu
+        cli.main(["--config", str(cfg), "live", "--mock", "--max", "1", *flags])
+        out = capsys.readouterr().out
+        (job,) = [j for j in DB(mock / "careerops.db").jobs() if j["source"] == "manual"]
+        return out, job
+    out1, first = live()
+    out2, second = live("--retailor")
+    out3, third = live("--retailor")
+    assert llm.extractions == 1 and "Tailoring 1 job(s)" in out2 and "Tailoring 1 job(s)" in out3
+    assert _kw(first) == _kw(second) == _kw(third)
+    assert (first["score"], first["ceiling"]) == (second["score"], second["ceiling"]) == (third["score"], third["ceiling"])
+    assert "reusing the extraction frozen on" in out2 and "reusing the extraction frozen on" not in out1
+    out4, fourth = live("--retailor", "--re-extract")
+    assert llm.extractions == 2 and "extracting again (--re-extract)" in out4 and _kw(fourth) != _kw(first)
 
 
 def test_live_mock_skip_marks_the_job_skipped_and_leaves_the_jd_because_mock_is_a_dry_run(world, jd, monkeypatch, capsys):

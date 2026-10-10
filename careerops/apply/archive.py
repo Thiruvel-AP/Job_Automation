@@ -117,6 +117,8 @@ def _sources(job: dict, rep: dict, no_letter: bool) -> tuple[list[Path], bool]:
     cv = Path(rep.get("cv_pdf") or "")
     letter = Path(rep["letter_pdf"]) if rep.get("letter_pdf") else None
     has_letter = letter is not None and letter.is_file()
+    # status none: approved with 'no letter' in review; status off: letter.mode is off, no letter was ever asked for
+    no_letter = no_letter or (rep.get("letter") or {}).get("status") in ("none", "off")
     if not has_letter and not no_letter:
         raise LetterMissing(f"no cover letter PDF for {job['id']} ({letter or 'none recorded'}); "
                             f"regenerate it in review, or pass --no-letter to go without")
