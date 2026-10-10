@@ -370,6 +370,7 @@ def test_other_http_errors_keep_their_own_messages(web):
 JD_TEXT = ("About the role\r\nWe build forecasting models for energy networks in Bristol, £50k–£60k.\r\n"
            + "You will own pipelines, evaluation and deployment of machine learning services. " * 30)
 ANSWERS = ("Northwind Energy", "Data Scientist", "https://careers.example.com/jobs/12")
+GO = ("", "y")                      # "Copy the job ad now, then press Enter" and "Use this? [y/N]"
 
 
 @pytest.fixture
@@ -425,9 +426,9 @@ def test_a_missing_powershell_is_a_one_line_error(monkeypatch):
 
 def test_add_clipboard_writes_company_title_txt_that_live_accepts(clip, settings, monkeypatch):
     clip.set(JD_TEXT)
-    seen = _answers(monkeypatch, *ANSWERS)
+    seen = _answers(monkeypatch, *GO, *ANSWERS)
     path, created, ad = intake.add_clipboard(settings, input)
-    assert created and seen == ["Company: ", "Job title: ", "Application URL: "]
+    assert created and seen == ["", "Use this? [y/N] ", "Company: ", "Job title: ", "Application URL: "]
     assert path == settings.path("jds") / "inbox" / "northwind-energy-data-scientist.txt"
     text, _ = manual.read_jd(path)
     assert manual.header_fields(text) == {"company": "Northwind Energy", "title": "Data Scientist",
@@ -438,21 +439,21 @@ def test_add_clipboard_writes_company_title_txt_that_live_accepts(clip, settings
 @pytest.mark.parametrize("bad, problem", [("o", "shorter than"), ("<company>", "placeholder"), ("", "is blank")])
 def test_a_bad_company_is_asked_again_like_live_does(clip, settings, monkeypatch, capsys, bad, problem):
     clip.set(JD_TEXT)
-    _answers(monkeypatch, bad, *ANSWERS)
+    _answers(monkeypatch, *GO, bad, *ANSWERS)
     _, _, ad = intake.add_clipboard(settings, input)
     assert ad.company == "Northwind Energy" and problem in capsys.readouterr().out
 
 
 def test_a_url_that_is_not_a_web_link_is_asked_again(clip, settings, monkeypatch, capsys):
     clip.set(JD_TEXT)
-    _answers(monkeypatch, "Northwind Energy", "Data Scientist", "careers page", "<url>", "https://careers.example.com/jobs/12")
+    _answers(monkeypatch, *GO, "Northwind Energy", "Data Scientist", "careers page", "<url>", "https://careers.example.com/jobs/12")
     _, _, ad = intake.add_clipboard(settings, input)
     assert ad.url == "https://careers.example.com/jobs/12" and "must start with http" in capsys.readouterr().out
 
 
 def test_three_bad_answers_write_nothing(clip, settings, monkeypatch):
     clip.set(JD_TEXT)
-    _answers(monkeypatch, "Northwind Energy", "x", "y", "z")
+    _answers(monkeypatch, *GO, "Northwind Energy", "x", "y", "z")
     with pytest.raises(intake.IntakeError, match="no usable title"):
         intake.add_clipboard(settings, input)
     inbox = settings.path("jds") / "inbox"
@@ -461,11 +462,11 @@ def test_three_bad_answers_write_nothing(clip, settings, monkeypatch):
 
 def test_an_existing_clipboard_file_is_left_as_it_is(clip, settings, monkeypatch):
     clip.set(JD_TEXT)
-    _answers(monkeypatch, *ANSWERS)
+    _answers(monkeypatch, *GO, *ANSWERS)
     path, created, _ = intake.add_clipboard(settings, input)
     before = path.read_bytes()
     clip.set(JD_TEXT + "\nA different ad.")
-    _answers(monkeypatch, *ANSWERS)
+    _answers(monkeypatch, *GO, *ANSWERS)
     again, created2, _ = intake.add_clipboard(settings, input)
     assert created and not created2 and again == path and path.read_bytes() == before
 
@@ -473,7 +474,7 @@ def test_an_existing_clipboard_file_is_left_as_it_is(clip, settings, monkeypatch
 def test_live_clipboard_saves_the_file_then_works_on_that_one_file_only(clip, settings, monkeypatch, capsys):
     _cfg(monkeypatch, settings)
     clip.set(JD_TEXT)
-    _answers(monkeypatch, *ANSWERS)
+    _answers(monkeypatch, *GO, *ANSWERS)
     inbox = settings.path("jds") / "inbox"
     inbox.mkdir(parents=True)
     (inbox / "other.txt").write_text("another job waiting its turn", encoding="utf-8")
@@ -496,6 +497,7 @@ def test_live_clipboard_saves_the_file_then_works_on_that_one_file_only(clip, se
 def test_live_clipboard_exits_1_with_the_reason_and_runs_nothing(clip, settings, monkeypatch, capsys):
     _cfg(monkeypatch, settings)
     clip.set("too short")
+    _answers(monkeypatch, "")
     monkeypatch.setattr("careerops.apply.live.Live", lambda *a, **k: pytest.fail("the loop must not start"))
     with pytest.raises(SystemExit) as e:
         cli.main(["live", "--clipboard"])
@@ -507,3 +509,126 @@ def test_live_refuses_url_together_with_clipboard(settings, monkeypatch, capsys)
     with pytest.raises(SystemExit) as e:
         cli.main(["live", "--url", LEVER_URL, "--clipboard"])
     assert e.value.code == 1 and "use one of them" in capsys.readouterr().err
+
+
+# ------------------------------------------------------------------ B1: wait, preview, confirm; refuse a pasted command
+def test_it_says_to_copy_the_ad_waits_for_enter_then_shows_the_size_and_three_lines(clip, settings, monkeypatch, capsys):
+    clip.set(JD_TEXT)
+    seen = _answers(monkeypatch, *GO, *ANSWERS)
+    intake.add_clipboard(settings, input)
+    out = capsys.readouterr().out
+    assert out.index("Copy the job ad now, then press Enter") < out.index("characters. First lines:")
+    assert f"{len(JD_TEXT.replace(chr(13), '').strip()):,} characters. First lines:" in out
+    lines = out.split("First lines:\n", 1)[1].splitlines()[:3]
+    assert lines[0].strip() == "About the role" and lines[1].strip().startswith("We build forecasting models")
+    assert lines[2].strip().startswith("You will own pipelines")                 # the third non-empty line
+    assert seen[0] == "" and seen[1] == "Use this? [y/N] "
+
+
+def test_the_clipboard_is_read_after_enter_not_before(clip, settings, monkeypatch):
+    """The ad copied while the prompt is showing is the one used: the clipboard is read only once Enter has been pressed."""
+    clip.set("an older clipboard that is far too short")
+    it = iter([*GO, *ANSWERS])
+
+    def answer(prompt=""):
+        if prompt == "":
+            clip.set(JD_TEXT)                                                   # the user copies the ad, then presses Enter
+        return next(it)
+    monkeypatch.setattr("builtins.input", answer)
+    _, created, ad = intake.add_clipboard(settings, input)
+    assert created and ad.text.startswith("About the role")
+
+
+@pytest.mark.parametrize("answer", ["", "n", "N", "no", "maybe", "  "])
+def test_anything_but_y_at_use_this_writes_nothing(clip, settings, monkeypatch, answer):
+    clip.set(JD_TEXT)
+    seen = _answers(monkeypatch, "", answer)
+    with pytest.raises(intake.IntakeError, match="not used; nothing was written"):
+        intake.add_clipboard(settings, input)
+    assert seen == ["", "Use this? [y/N] "]                                    # company / title / url were never asked
+    inbox = settings.path("jds") / "inbox"
+    assert not inbox.exists() or not list(inbox.iterdir())
+
+
+@pytest.mark.parametrize("answer", ["y", "Y", " y "])
+def test_y_goes_on(clip, settings, monkeypatch, answer):
+    clip.set(JD_TEXT)
+    _answers(monkeypatch, "", answer, *ANSWERS)
+    assert intake.add_clipboard(settings, input)[1] is True
+
+
+def test_under_2000_characters_is_refused_after_enter_before_any_question(clip, settings, monkeypatch):
+    clip.set("x" * 1999)
+    seen = _answers(monkeypatch, "")
+    with pytest.raises(intake.IntakeError, match="1999 characters.*at least 2000"):
+        intake.add_clipboard(settings, input)
+    assert seen == [""]
+
+
+@pytest.mark.parametrize("start", ["careerops live --clipboard", "careerops live", "powershell.exe -NoProfile -Command Get-Clipboard",
+                                   "PowerShell Get-Clipboard", "explorer.exe .", "Explorer ."])
+@pytest.mark.parametrize("prefix", ["", "$ ", "> ", "PS D:\\VS_Codes> "])
+def test_text_that_starts_like_a_shell_command_is_refused(clip, settings, monkeypatch, start, prefix):
+    clip.set(prefix + start + "\n" + "x" * 2100)
+    _answers(monkeypatch, "")
+    with pytest.raises(intake.IntakeError, match="looks like a shell command"):
+        intake.add_clipboard(settings, input)
+
+
+@pytest.mark.parametrize("start", ["cd /mnt/d/VS_Codes", "git status", "source .venv/bin/activate", "cd ..", "git"])
+def test_cd_git_and_source_in_lowercase_are_refused_too(clip, start):
+    clip.set(start + "\n" + "x" * 2100)
+    with pytest.raises(intake.IntakeError, match=f"starts with '{start.split()[0]}'"):
+        intake.read_clipboard()
+
+
+@pytest.mark.parametrize("start", ["Source Digital is hiring a Data Scientist", "Git is a tool we use daily; we need a Data Scientist",
+                                   "Cd Labs: Data Scientist", "Careers at Acme", "Exploring data is what you will do"])
+def test_an_ad_that_begins_with_an_ordinary_word_is_not_taken_for_a_command(clip, start):
+    clip.set(start + "\n" + "You will build models in Python. " * 80)
+    assert intake.read_clipboard().startswith(start)
+
+
+def test_live_clipboard_refuses_a_pasted_command_and_runs_nothing(clip, settings, monkeypatch, capsys):
+    _cfg(monkeypatch, settings)
+    clip.set("careerops live --clipboard\n" + "x" * 2100)
+    _answers(monkeypatch, "")
+    monkeypatch.setattr("careerops.apply.live.Live", lambda *a, **k: pytest.fail("the loop must not start"))
+    with pytest.raises(SystemExit) as e:
+        cli.main(["live", "--clipboard"])
+    assert e.value.code == 1 and "looks like a shell command" in capsys.readouterr().err
+
+
+def test_live_clipboard_declined_runs_nothing(clip, settings, monkeypatch, capsys):
+    _cfg(monkeypatch, settings)
+    clip.set(JD_TEXT)
+    _answers(monkeypatch, "", "n")
+    monkeypatch.setattr("careerops.apply.live.Live", lambda *a, **k: pytest.fail("the loop must not start"))
+    with pytest.raises(SystemExit) as e:
+        cli.main(["live", "--clipboard"])
+    assert e.value.code == 1 and "not used" in capsys.readouterr().err
+
+
+# ------------------------------------------------------------------ B2: company and title answers
+@pytest.mark.parametrize("bad", ["o", " x ", "<company>", "Acme <Ltd>", "Acme >", "<", ">", ""])
+def test_a_company_that_is_short_or_a_placeholder_is_asked_again(clip, settings, monkeypatch, capsys, bad):
+    clip.set(JD_TEXT)
+    _answers(monkeypatch, *GO, bad, *ANSWERS)
+    assert intake.add_clipboard(settings, input)[2].company == "Northwind Energy"
+    out = capsys.readouterr().out
+    assert "try again" in out and ("is blank" in out or "shorter than 2 characters" in out or "< or >" in out)
+
+
+@pytest.mark.parametrize("bad", ["o", "<job title>", "AI > ML", "", "  "])
+def test_a_title_that_is_short_or_a_placeholder_is_asked_again(clip, settings, monkeypatch, capsys, bad):
+    clip.set(JD_TEXT)
+    _answers(monkeypatch, *GO, "Northwind Energy", bad, "Data Scientist", ANSWERS[2])
+    assert intake.add_clipboard(settings, input)[2].title == "Data Scientist"
+    assert "try again" in capsys.readouterr().out
+
+
+def test_two_characters_is_enough_for_a_name(clip, settings, monkeypatch):
+    clip.set(JD_TEXT)
+    _answers(monkeypatch, *GO, "BP", "ML", ANSWERS[2])
+    ad = intake.add_clipboard(settings, input)[2]
+    assert (ad.company, ad.title) == ("BP", "ML")

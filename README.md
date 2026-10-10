@@ -148,8 +148,11 @@ inbox is left alone; a rerun finds the file already there). `--company` / `--tit
 
 A site that answers HTTP 401, 403 or 429 is asked once: no retry and no workaround, the command exits 1 with "This site blocks
 automated access — copy the job text and use --clipboard". Copy the job text in your browser, then run `careerops live --clipboard`
-from WSL: it reads the Windows clipboard (`powershell.exe ... Get-Clipboard`, UTF-8, `\r` removed; under 2000 characters is refused),
-asks for Company, Title and URL (the same checks as live's prompts; three bad answers write nothing), saves
+from WSL. It prints "Copy the job ad now, then press Enter" and waits (so the ad you copy while it waits is the one used), reads the
+Windows clipboard (`powershell.exe ... Get-Clipboard`, UTF-8, `\r` removed), refuses text under 2000 characters or one that starts like a
+shell command (`careerops`, `powershell`, `explorer`, `cd`, `git`, `source`), shows the character count and the first three lines and asks
+`Use this? [y/N]` (anything but `y` writes nothing), then asks for Company, Title and URL (each at least 2 characters, no `<` or `>`;
+the same checks as live's prompts; three bad answers write nothing), saves
 `data/jds/inbox/<company>-<title>.txt` (an existing file is never overwritten) and works on that one file. A job from CV-Library,
 Reed, Totaljobs, Indeed or LinkedIn gets a `BOARD:` line on the review screen: the sponsor register match may name the agency, not the
 employer, so apply by hand on the site.

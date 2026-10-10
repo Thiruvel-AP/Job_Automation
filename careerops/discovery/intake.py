@@ -372,14 +372,41 @@ def _run_clipboard() -> bytes:
     return p.stdout
 
 
+# What a command copied by mistake starts with (the clipboard has held `careerops live --clipboard` itself). The names no job
+# ad starts with are matched in any case; `cd`, `git` and `source` are ordinary words, so only the lowercase spelling a shell
+# takes counts ("Source Digital is hiring ..." is an ad).
+SHELL_ANY_CASE = ("careerops", "powershell", "powershell.exe", "explorer", "explorer.exe")
+SHELL_LOWER_ONLY = ("cd", "git", "source")
+_PROMPT_MARK = re.compile(r"^(?:PS [^>\n]*>|[$>#%]+)\s*")
+
+
+def shell_command_start(text: str) -> str | None:
+    """The command word the text starts with (careerops, powershell, explorer, cd, git, source), or None when it does not
+    look like a shell command. A prompt mark ($, >, PS C:\\...>) before it is ignored."""
+    words = _PROMPT_MARK.sub("", text.lstrip()).split(None, 1)
+    word = words[0] if words else ""
+    return word if word.lower() in SHELL_ANY_CASE or word in SHELL_LOWER_ONLY else None
+
+
 def read_clipboard() -> str:
     """The clipboard's text: UTF-8, \\r removed, trimmed. Under MIN_PAGE_CHARS characters is refused (a snippet, or
-    something else on the clipboard)."""
+    something else on the clipboard), and so is text that starts like a shell command (see shell_command_start)."""
     text = _run_clipboard().decode("utf-8", errors="replace").removeprefix(chr(0xFEFF)).replace("\r", "").strip()
     if len(text) < MIN_PAGE_CHARS:
         raise IntakeError(f"the clipboard holds {len(text)} characters of text (a job description needs at least "
                           f"{MIN_PAGE_CHARS}): copy the whole job ad, then run this again")
+    word = shell_command_start(text)
+    if word:
+        raise IntakeError(f"the clipboard starts with '{word}': that looks like a shell command, not a job ad. Copy the job "
+                          "ad itself, then run this again")
     return text
+
+
+def preview(text: str, lines: int = 3, width: int = 110) -> str:
+    """The character count and the first `lines` non-empty lines of the clipboard text, each cut to `width` characters."""
+    head = [ln.strip() for ln in text.splitlines() if ln.strip()][:lines]
+    return f"{len(text):,} characters. First lines:\n" + "\n".join("  " + (h if len(h) <= width else h[: width - 1] + "…")
+                                                                  for h in head)
 
 
 def _ask_field(ask: Callable[[str], str], field: str, prompt: str) -> str:
@@ -397,9 +424,16 @@ def _ask_field(ask: Callable[[str], str], field: str, prompt: str) -> str:
 
 
 def add_clipboard(settings, ask: Callable[[str], str] = input) -> tuple[Path, bool, Ad]:
-    """Read the clipboard, ask for Company / Title / URL, and put the ad in paths.jds/inbox as <company>-<title>.txt.
-    Returns (file, created, ad); an existing file of that name is left exactly as it is (created=False)."""
+    """Wait for you to copy the ad ("Copy the job ad now, then press Enter"), read the clipboard, show its size and first three
+    lines and ask "Use this? [y/N]", then ask for Company / Title / URL and put the ad in paths.jds/inbox as
+    <company>-<title>.txt. Anything but y at the question writes nothing. Returns (file, created, ad); an existing file of that
+    name is left exactly as it is (created=False)."""
+    print("Copy the job ad now, then press Enter")
+    ask("")
     text = read_clipboard()
+    print(preview(text))
+    if ask("Use this? [y/N] ").strip().lower() not in ("y", "yes"):
+        raise IntakeError("clipboard text not used; nothing was written")
     company = _ask_field(ask, "company", "Company: ")
     title = _ask_field(ask, "title", "Job title: ")
     url = _ask_field(ask, "url", "Application URL: ")

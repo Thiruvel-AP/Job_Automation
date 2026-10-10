@@ -383,6 +383,13 @@ attempts (unreachable / not JSON) then `Verdict(error=...)` — never raises, lo
 `check_tasks`; `setup.model_checks` asks every (provider, model) every task can use once and reports per task (a feature that is off
 asks nothing; a task restricted to a provider that is not configured fails). Tests: `tests/review/test_judge.py`, `tests/llm/test_router_models.py`.
 
+**B. Clipboard intake — done.** `intake.add_clipboard`: prints "Copy the job ad now, then press Enter" and waits (`ask("")`) before the
+clipboard is read; `read_clipboard` refuses < 2000 characters and text whose first word is a shell command (`shell_command_start`:
+careerops / powershell(.exe) / explorer(.exe) in any case, `cd` / `git` / `source` only in lowercase so an ad that begins "Source
+Digital ..." is kept; a `$ `, `> ` or `PS ...>` prompt mark in front is ignored); `preview` prints the count and the first 3 non-empty
+lines; `Use this? [y/N]` — only `y`/`yes` goes on, else `IntakeError` and nothing is written. B2 (company / title ≥ 2 characters, no `<`
+`>`) was already `manual.meta_problem` behind `_ask_field`; the tests now cover both fields. Tests: `tests/discovery/test_intake.py`.
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where
