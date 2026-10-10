@@ -408,6 +408,21 @@ were returned in arbitrary order). Tests: `tests/discovery/test_robots.py`, `tes
 `tests/fixtures/intake/robots_cvlibrary.txt`, `cvlibrary_job*.html` (written by hand from the page structure CV-Library publishes, not
 saved from a live page).
 
+**E. Sponsorship is a weight, never a filter — done.** E1: the two sponsorship rules ("without sponsorship", "do not offer sponsorship")
+are gone from `gates.jd_rules` (the register miss and agency were already notes only; the nationality rule is not about sponsorship and
+stays); a JD that says no sponsorship stays `triaged`. E2: `discovery/priority.py` — `priority(job, settings)` = `Priority(p, f, s, r)`;
+S = min of the applicable `priority.sponsor_weights` (exact 1.00, fuzzy 0.90, unknown / not on register / agency 0.75, JD says no
+sponsorship 0.65; all > 0 so a job is only moved), R = exp(-days/`priority.recency_days`) from `posted_at` (1.0 unknown), F = `ceiling`
+if tailored else `ceiling_pre` (0 when unknown). `order_files` ranks inbox files that are not in the DB yet (headers `Posted:` /
+`Agency:`, register lookup, `gates.pre_ceiling`); `Live._by_priority` uses it and prints the order (falls back to file-name order if the
+ranking raises); `cli.priority_lines` adds "Top jobs by priority" to `status`. The tailor/review queue keeps its own key
+(`tailoring/queue.py`: floor, tier, ceiling, freshness) — E2 names the inbox, discover and status. E3: `priority.sponsor_wording(jd)`
+finds the sentences about sponsorship (kinds no_sponsorship / right_to_work / sponsorship_offered) and `workflow.summary` prints
+`Sponsorship wording in the JD (information only): ...` and the `Priority P=...` line; `gates.is_sponsor_flag` moves the register
+notes from `FLAGS:` to the `Sponsor:` line and the judge gate ignores them. Tests: `tests/discovery/test_priority.py`,
+`test_gates.py`. Wording patterns are code (`priority.WORDING`), tested on 14 sentences and 4 near-misses; an unusual phrasing is shown
+in no line and costs no weight (it only fails to lower S).
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

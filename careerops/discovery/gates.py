@@ -9,6 +9,13 @@ from .register import CompanyIndex, SponsorIndex
 
 FAMILY_REASON = "title not in target families"
 NOT_ON_REGISTER = "Not on sponsor register"
+# The notes about the sponsor register are information (a weight on priority, see priority.py), not warnings: the review screen
+# shows them on the Sponsor line and the judge gate does not treat them as a reason to ask you.
+SPONSOR_FLAG_STARTS = (NOT_ON_REGISTER, "Sponsor match is fuzzy", "Sponsor register not loaded")
+
+
+def is_sponsor_flag(flag: str) -> bool:
+    return str(flag).startswith(SPONSOR_FLAG_STARTS)
 
 YEARS = re.compile(
     r"(\d{1,2})\s*\+?\s*(?:-|to|–)?\s*(?:\d{1,2})?\s*\+?\s*years?['’]?\s+(?:of\s+)?(?:[\w/&-]+\s+){0,4}?experience",

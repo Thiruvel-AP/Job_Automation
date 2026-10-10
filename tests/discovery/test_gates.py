@@ -1,4 +1,6 @@
 """Rule gates."""
+import pytest
+
 from careerops.discovery import gates
 from careerops.discovery import register as sponsors
 
@@ -14,10 +16,29 @@ def test_gate_passes_good_job(db, settings, job):
     assert v.sponsor_name == "Northwind Health AI Limited"
 
 
-def test_gate_skips_no_sponsorship(db, settings, job):
-    job["description"] += "\nApplicants must have the right to work in the UK without sponsorship."
+@pytest.mark.parametrize("sentence", [
+    "Applicants must have the right to work in the UK without sponsorship.",
+    "We do not offer visa sponsorship for this role.", "We cannot sponsor visas.", "No sponsorship is available.",
+    "Candidates must not require sponsorship now or in the future.", "Unfortunately sponsorship is not available."])
+def test_a_jd_that_says_no_sponsorship_is_still_eligible(db, settings, job, sentence):
+    """Sponsorship is a weight (priority.py), never a filter: I hold the UK Graduate visa."""
+    job["description"] += "\n" + sentence
     v = gates.triage(job, settings, _idx(db, settings))
-    assert not v.passed and any("without sponsorship" in r for r in v.reasons)
+    assert v.passed and v.reasons == [] and gates.verdict_status(v) == "triaged"
+    assert not any("sponsor" in f.lower() for f in v.flags)
+
+
+def test_no_gate_rule_mentions_sponsorship(settings):
+    assert not [r for r in settings["gates"]["jd_rules"] if "sponsor" in r[0].lower() or "sponsor" in r[2].lower()]
+
+
+def test_an_employer_off_the_register_and_an_agency_are_never_skipped(db, settings, job):
+    idx = _idx(db, settings)
+    for j in (dict(job, company="Not A Sponsor Ltd"), dict(job, company="Acme Recruitment Ltd", agency=1),
+              dict(job, company="Not A Sponsor Ltd", description=job["description"] + "\nNo visa sponsorship.")):
+        v = gates.triage(j, settings, idx)
+        assert v.passed and gates.verdict_status(v) == "triaged"
+    assert gates.triage(job, settings, None).passed                              # no register loaded at all
 
 
 def test_gate_skips_sre_people_mgmt_and_senior(db, settings, job):

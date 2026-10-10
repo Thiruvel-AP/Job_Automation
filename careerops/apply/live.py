@@ -192,10 +192,28 @@ class Live:
         self.out(f"Summary written to {report}")
         return code
 
+    def _by_priority(self, files: list[Path]) -> list[Path]:
+        """The inbox files best first: priority P = F x S x R (discovery/priority.py), ties by name. Sponsorship only weights the
+        order; no file is left out. If the ranking itself fails the files go by name, as before."""
+        from ..config import load_yaml
+        from ..discovery import priority as prio
+
+        files = sorted(files, key=lambda p: p.name)
+        if len(files) < 2:
+            return files
+        try:
+            ranked = prio.order_files(files, self.s, self.db, load_yaml(self.s.path("fact_bank")))
+        except Exception as e:  # noqa: BLE001
+            self.out(f"(inbox order by priority not available: {e}; going by file name)")
+            return files
+        self.out("Inbox order by priority P = F x S x R:")
+        for f, pr in ranked:
+            self.out(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
+        return [f for f, _ in ranked]
+
     def _loop(self) -> None:
-        files = ([self.only] if self.only is not None else
-                 sorted((p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"),
-                        key=lambda p: p.name))
+        files = ([self.only] if self.only is not None else self._by_priority(
+                 [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]))
         if not files:
             self.out(f"Nothing in {self.dirs.inbox}: put one JD per .txt file there (optional first lines "
                      "`Company: ...`, `Title: ...`, `URL: ...`).")

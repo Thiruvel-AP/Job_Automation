@@ -92,16 +92,26 @@ roles:
 gates:
   locations_ok: ['united kingdom', '\buk\b', 'england', 'london', 'bristol', 'remote', 'manchester', 'cambridge', 'oxford', 'edinburgh', 'bath', 'cardiff', 'birmingham', 'leeds', 'scotland', 'wales']
   max_years_required: 3
-  require_sponsor_match: true      # flag (never skip) a job whose employer is not on the sponsor register, or when no register snapshot exists
+  require_sponsor_match: true      # note (never skip, never block) on the review screen a job whose employer is not on the sponsor register, or when no register snapshot exists
   # (regex, action, reason). action: skip = never apply; flag = still tailor, but review shows the reason in red.
+  # Sponsorship is deliberately NOT a rule here: a JD that says "no sponsorship" or "right to work without sponsorship" keeps its
+  # job eligible; it only lowers the priority weight S (priority.sponsor_weights below) and is shown as an info line.
   jd_rules:
-    - ['without (the need for )?(visa )?sponsorship', skip, 'JD says right to work without sponsorship']
-    - ['(do not|cannot|unable to|not able to) (offer|provide) (visa )?sponsorship', skip, 'JD says no sponsorship']
     - ['\b(sc|dv|security) clearance\b', flag, 'Clearance mentioned — check residency/eligibility']
     - ['british (citizen|national)s? only|must be a british', skip, 'Nationality restriction']
     - ['\bon[- ]call\b', flag, 'On-call duties mentioned']
     - ['site reliability|\bsre\b|observability ownership', skip, 'SRE-framed role (standing exclusion)']
     - ['direct reports|line manag(e|ement)|people manag', skip, 'People-management requirement (standing exclusion)']
+
+priority:
+  # P = F x S x R orders the live inbox, discover's listing and status (discovery/priority.py). F is the honest ATS ceiling; S and R are
+  # below. Sponsorship is a weight, never a filter: I hold the UK Graduate visa, so every one of these jobs stays eligible.
+  sponsor_weights:
+    exact: 1.00            # employer found on the sponsor register by exact name
+    fuzzy: 0.90            # found by a near match
+    unknown: 0.75          # not on the register, a recruitment agency, or no register loaded
+    no_sponsorship: 0.65   # the JD itself says it does not sponsor / requires the right to work without sponsorship
+  recency_days: 14         # R = exp(-days_since_posted / 14); 1.0 when the posting date is unknown
 
 files:
   name_style: full   # full = identity.name, short = first word of identity.name (CV / cover-letter file names)

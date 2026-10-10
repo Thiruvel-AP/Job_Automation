@@ -36,7 +36,8 @@ career-ops/
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
 │   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
 │   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
-│   │   ├── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
+│   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
+│   │   ├── priority.py           P = F x S x R: orders the live inbox, discover's listing and status
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── tailoring/                JD → CV + cover letter
 │   │   ├── scorer.py             weighted ATS score (literal + stemmed), honest ceiling, keywords
@@ -87,7 +88,8 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 2. **Boards** — `config/settings.yaml → sources`. Add Greenhouse/Lever/Ashby slugs from companies' careers URLs
    (`job-boards.greenhouse.io/<slug>`, `jobs.lever.co/<slug>`, `jobs.ashbyhq.com/<slug>`). Your 80-company sponsor
    tracker is the obvious seed list.
-3. **Gates** — title/seniority/location regexes and the JD rules (no-sponsorship, SRE, line management, clearance).
+3. **Gates** — title/seniority/location regexes and the JD rules (SRE, line management, clearance). Sponsorship is not a gate: see
+   "Priority" below.
 4. **Applicant basics** — `config/profile/applicant.yaml`. Salary, EEO and "why us" are deliberately never filled; visa
    questions are answered from the `visa:` block (below), only when they are recognisable.
 
@@ -354,6 +356,20 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
   exact form in the one bullet that carries its stem; the guard checks it like any rephrase and it is kept only if the score
   does not drop.
 
+### Priority: sponsorship is a weight, never a filter
+
+I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
+not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". `priority.py` ranks instead:
+
+    P = F x S x R      F = honest ATS ceiling (0-1)      R = exp(-days since posted / 14), 1.0 when the date is unknown
+    S = 1.00 exact register match · 0.90 fuzzy · 0.75 not on the register / agency / unknown · 0.65 the JD says no sponsorship
+
+(the lowest applicable S; weights and the 14 days are `priority.sponsor_weights` / `priority.recency_days` in `config/settings.yaml`).
+P orders the `careerops live` inbox (it prints the order), `careerops discover`'s listing and `careerops status` (top open jobs).
+The review screen shows `Priority P=... = F ... x S ... x R ...` and, as an information line (not a flag), the sentences of the JD that
+speak of sponsorship or the right to work. The register notes ("Not on sponsor register", fuzzy match) are shown on the `Sponsor:` line,
+not under `FLAGS:`, and they no longer stop the judge gate from approving.
+
 ### Sponsor register
 
 `careerops sponsors` reads the gov.uk page, finds the CSV link and downloads only if the link (or its date) is new; the file
@@ -361,8 +377,8 @@ is stored as `data/register/YYYY-MM-DD.csv.gz` with a `register_snapshots` row. 
 (a missing field stops the run, naming it). `companies` / `company_events` record added, removed, readded and rating changes
 (one transaction; a same-day rerun does nothing); jobs of a sponsor that lost its licence or dropped from A get a flag.
 Triage matches a job's company against the register (case, punctuation, Ltd/Limited/PLC/LLP, `&`/`and`, both sides of `T/A`)
-and stores `sponsor_match` = `exact` | `fuzzy(0.95)` | `none` plus route and rating. **Not on the register is a flag
-("Not on sponsor register"), never a skip.** "Register not loaded" appears only when no snapshot exists.
+and stores `sponsor_match` = `exact` | `fuzzy(0.95)` | `none` plus route and rating. **Not on the register is a note
+("Not on sponsor register") and a lower S, never a skip.** "Register not loaded" appears only when no snapshot exists.
 
 ### Outcomes
 

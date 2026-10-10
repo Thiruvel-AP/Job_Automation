@@ -20,6 +20,8 @@ import yaml
 
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
+from ..discovery import priority as prio
+from ..discovery.gates import is_sponsor_flag
 from ..tailoring.queue import order
 from ..tailoring.render import page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
@@ -88,9 +90,12 @@ def usage_lines(rep: dict) -> list[str]:
             for name, m in by_model.items()]
 
 
-def summary(job, rep: dict) -> str:
+def summary(job, rep: dict, settings=None) -> str:
     f = rep["final"]
-    flags = json.loads(job["flags"] or "[]")
+    all_flags = json.loads(job["flags"] or "[]")
+    flags = [x for x in all_flags if not is_sponsor_flag(x)]          # sponsor-register notes are information, shown on the Sponsor line
+    sponsor_notes = [x for x in all_flags if is_sponsor_flag(x)]
+    pr = prio.priority(job, settings, tailored=True)
     last = rep["attempts"][-1]
     letter = rep["letter"]
     lines = [
@@ -98,7 +103,9 @@ def summary(job, rep: dict) -> str:
         f"{job['company']} — {job['title']}  [{job['location'] or '?'}]",
         (f"T{rep['tier']} · {rep['headline']}" if rep.get("tier") else "Tier: out of target families"),
         f"{job['url']}",
-        f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})",
+        f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})"
+        + (f" - {'; '.join(sponsor_notes)} (information only; a weight on priority, not a reason to skip)" if sponsor_notes else ""),
+        pr.line(),
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
         f"| band: {f['band']} | pages {f['pages']}"
         + (f" (page 2 {f['page2_fill']:.0%} full)" if f.get("page2_fill") else "") + f" | attempts {len(rep['attempts'])}",
@@ -121,6 +128,9 @@ def summary(job, rep: dict) -> str:
         lines.append("LETTER IS A FALLBACK — regenerate (l) before approving")
     if letter_status(rep) == "none":
         lines.append(NO_LETTER_BANNER + f"  ({letter.get('reason') or 'no letter'}; regenerate (l) to try again)")
+    wording = prio.wording_line(str(prio._get(job, "description") or ""))     # a job row, or a dict without the JD
+    if wording:
+        lines.append(wording)
     if job_board(job):
         lines.append("BOARD: " + BOARD_BANNER)
     if flags:
@@ -314,9 +324,10 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
     if mode == "gate":
         judge.require_gate(settings)
     rep = load_report(job)
-    print(summary(job, rep))
+    print(summary(job, rep, settings))
     verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)
-    if (mode == "gate" and verdict is not None and verdict.yes and not json.loads(job["flags"] or "[]")
+    if (mode == "gate" and verdict is not None and verdict.yes
+            and not [x for x in json.loads(job["flags"] or "[]") if not is_sponsor_flag(x)]
             and letter_status(rep) in ("ok", "off")):
         approve(db, job, rep, prefs)
         judge.log_decision(settings, job, rep, verdict, "auto", "gate: judge yes, no flags")
@@ -358,7 +369,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 print(f"  letter NOT regenerated: {e}")
                 continue
             job = db.job(job["id"])
-            print(summary(job, rep))
+            print(summary(job, rep, settings))
             verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "r":
             reason = ask("reason: ").strip() or "unspecified"

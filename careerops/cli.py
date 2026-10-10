@@ -457,7 +457,7 @@ def cmd_apply(args):
             print(f"  REFUSED {job['id']}: {e}", file=sys.stderr)
             failures += 1
             continue
-        print(review.summary(job, rep))
+        print(review.summary(job, rep, s))
         if input("Open application form? [y/N] ").strip().lower() != "y":
             continue
         r = assist(job, rep, applicant, s.path("browser_profile"))
@@ -682,6 +682,20 @@ def cmd_judge_report(args):
     print(judge.format_report(judge.read_log(path), path))
 
 
+def priority_lines(db: DB, s, n: int = 10) -> list[str]:
+    """The n highest-priority jobs still open (not applied, rejected or skipped): P with its three factors. A weight, not a filter:
+    every job is ranked, none is left out."""
+    from .discovery import priority as prio
+
+    open_jobs = [j for j in db.jobs() if j["status"] not in ("applied", "rejected", "skipped")]
+    ranked = sorted(open_jobs, key=lambda j: prio.sort_key(j, s, tailored=bool(j["out_dir"])))[:n]
+    out = []
+    for j in ranked:
+        p = prio.priority(j, s, tailored=bool(j["out_dir"]))
+        out.append(f"  {p.p:.2f} = {p.f:.2f} x {p.s:.2f} x {p.r:.2f}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
+    return out
+
+
 def cmd_status(args):
     s, db = _ctx(args)
     print("LLM usage today (UTC):")
@@ -697,6 +711,10 @@ def cmd_status(args):
     print("\ntier  " +" ".join(f"{s:>12s}" for s in statuses))
     for t in tiers:
         print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
+    top = priority_lines(db, s)
+    if top:
+        print("\nTop jobs by priority P = F x S x R (not yet applied):")
+        print("\n".join(top))
     archived = list(db.conn.execute(
         "SELECT c.folder, COUNT(*) AS n FROM archive_index r JOIN archive_index c ON c.kind='company' "
         "AND c.folder = CASE WHEN instr(r.folder, '/') > 0 THEN substr(r.folder, 1, instr(r.folder, '/') - 1) "
