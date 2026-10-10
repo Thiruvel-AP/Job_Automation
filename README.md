@@ -13,7 +13,7 @@ careerops init                  # data/ folders + .env from .env.example (idempo
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
 ollama create qwen2.5-7b-8k -f config/ollama/Modelfile   # same model with an 8192-token context (Ollama's default is 4096)
 # put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
-careerops doctor                # every line should say [ok] (also sends the letter model a tiny request; --no-ping skips that)
+careerops doctor                # every line should say [ok] (also sends each task's model a tiny request; --no-ping skips that)
 careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
 careerops llm-check             # one tiny request per LLM provider: reachable, model, latency, JSON, json_mode (never prints keys)
 pytest -q                       # no network or model needed; tests read tests/fixtures/profile/, never your config/profile/
@@ -193,13 +193,25 @@ content hash in `data/live/state.json`, so the same text dropped in again is not
 apply also leave the JD in `inbox/`. Each session ends with a summary (id, company, role, status, sponsor-register match,
 visa lines, archive check), printed and written to `data/live/<timestamp>.md`.
 
+### Doctor: every task's model answers
+
+`careerops doctor` sends one tiny request to each (provider, model) a task can be routed to: `extract_keywords`, `tailor_profile`,
+`rephrase_bullets`, `cover_letter` and `judge` (per `llm.task_providers` / `llm.models`), once per model, and reports a line **per
+task**. A failure says its kind: `model_not_found`, `auth`, `timeout` (60 s), `unreachable`, `rate_limited`, `bad_json`, and what to
+change. A task whose feature is off (`letter.mode`, `review.judge`) asks nothing; `--no-ping` sends nothing.
+
 ### The LLM judge (`review.judge: off | shadow | gate`, default `shadow`)
 
 A second model reads the JD, the CV text (no contact block), the letter if there is one and the fact-bank bullets they rest on, and
 answers `{would_send, score 1-5, issues}`. It is **read-only**: it never edits a file, a report or a database row. Its model is
-`llm.models.judge` (shipped: Groq `llama-3.3-70b-versatile`), pinned to its provider by `llm.task_providers.judge`, and it must be
-**another family than the generator** (gpt-oss): `careerops doctor` checks the configuration, and each judgement checks the models that
-actually wrote that job (`report.json → llm_usage`). `careerops llm-check` sends it a tiny request.
+`llm.models.judge` (shipped: the local Ollama `qwen2.5-7b-8k`, 8192-token context; Groq's `llama-3.3-70b-versatile` answered 404
+`model_not_found`), pinned to its provider by `llm.task_providers.judge`, and it must be **another family than the generator**
+(gpt-oss): `careerops doctor` checks the configuration, and each judgement checks the models that actually wrote that job
+(`report.json → llm_usage`; if Ollama stood in for Groq on a job, the judge declines that job). The prompt is fitted to the model's
+context: the JD is cut to its role / requirements sections, then to the room left after the CV, letter and facts; the review screen
+prints `Judge input: N prompt tokens (...)`, and the same number goes to `data/judge/log.csv` (`judge_input_tokens`) and the `events`
+table. Ollama down, or an answer that is not JSON: tried twice, then **no verdict** (logged with the reason) and the review goes on.
+`careerops doctor` sends a tiny request to every model any task can use (see below).
 
 - **shadow**: the verdict is printed on the review screen and every approve / reject is logged with it in `data/judge/log.csv`
   (`careerops live` has no reject key, so there `s` skip counts as a "no"). The verdict can anchor you; decide before you read it

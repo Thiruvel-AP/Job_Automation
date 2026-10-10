@@ -367,6 +367,22 @@ as an approved no-letter submission (job.json `no_letter: true`), so `apply`/`li
 
 **5. Entry name in the evidence's domain; evidence ids on the review screen (small fix round).** `budget.entry_where(entry)` = the project's `name`, the job's `org` and `title`; `letter_scores` uses it as before, and `letter_evidence` now also returns it as each evidence dict's `where`. `grounding.hook_link_problems` reads the work side as claim + bullet text + terms + `where`, so a bank hook on "Banking Customer Churn" (bullet: "churn classifier ...") is no longer rejected for a domain only the project's name says; a hook linking a bank to a cancer-research agent is still rejected. The review screen prints `Letter evidence: p_ch1, av1` under the letter score (from `report.letter.evidence`; older reports without it print nothing). Tests (`test_relevance_round.py` sections 6-8): az1/dc1 are never the letter evidence for the Monzo JD with no LLM keywords, whatever the chosen set.
 
+## 5k. Intake automation, sponsorship weighting, local judge (2026-10-10)
+
+Tests: `pytest -q -m "not slow"` was 1273 passed at the start of this round. Parts below are marked **done** when committed.
+
+**A. Judge on local Ollama — done.** `llm.models.judge: {provider: ollama, model: qwen2.5-7b-8k}`, `llm.task_providers.judge: [ollama]`
+(Groq's llama-3.3-70b-versatile answered 404 model_not_found). `judge.prepare_input(job, rep, fb, budget)` fits the prompt to
+`input_budget` = ollama `context_tokens` (8192) − `llm.max_tokens.judge` (800) − `CTX_MARGIN` (300): `jdtext.role_sections` keeps the
+role / requirements sections (drops about-us, benefits, equal-opportunity, how-to-apply; unknown headings stay), then the JD is cut to the
+room left, then source facts are dropped from the end before the JD goes under `MIN_JD_CHARS`; if CV + letter alone do not fit → no
+verdict. Tokens (estimate and the provider's `prompt_tokens`) are on `Verdict.tokens`, printed by the review screen, in
+`log.csv → judge_input_tokens` (an older log keeps its own header) and in an `events` row (`stage = judge`). Failure: the router's two
+attempts (unreachable / not JSON) then `Verdict(error=...)` — never raises, logged beside the human decision. Gate rules unchanged.
+`check.py`: `classify()` (model_not_found / auth / timeout / unreachable / rate_limited / bad_json / http_error), `Router.serving(task)`,
+`check_tasks`; `setup.model_checks` asks every (provider, model) every task can use once and reports per task (a feature that is off
+asks nothing; a task restricted to a provider that is not configured fails). Tests: `tests/review/test_judge.py`, `tests/llm/test_router_models.py`.
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

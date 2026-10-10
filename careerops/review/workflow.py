@@ -291,6 +291,8 @@ def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge
         return None
     v = judge.run_judge(llm, settings, job, rep, fb)
     print(f"  {v.line()} [{mode}]")
+    if v.input_line():
+        print(f"  {v.input_line()}")
     for issue in v.issues:
         print(f"    - {issue}")
     return v

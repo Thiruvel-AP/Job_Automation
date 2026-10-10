@@ -144,7 +144,8 @@ review:
   # off = no judge. shadow = a second model reads the CV and letter, its verdict is shown on the review screen and logged beside
   # your decision (paths.judge/log.csv); `careerops judge-report` says how well it agrees with you. gate = a judge "yes" approves
   # the job without the prompt; refused in code until the log holds 60 human-labelled reviews and not one false approve (judge
-  # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge, and must be another family than gpt-oss.
+  # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge (local Ollama qwen2.5-7b-8k), and must be
+  # another family than gpt-oss.
   judge: shadow               # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML)
 
 llm:
@@ -207,7 +208,7 @@ llm:
   # back; no other provider ever writes the letter. Tasks not listed here use every provider, in order.
   task_providers:
     cover_letter: [groq]
-    judge: [groq]              # the judge's model runs on this provider only; no other provider's model may answer for it
+    judge: [ollama]            # the judge's model runs on this provider only; no other provider's model may answer for it
   # A task may use another model than its provider's own `model`: {task: {provider, model}}. The cover letter is written by
   # the larger gpt-oss-120b on Groq (a small model's letters were the ones most often rejected by the checks, which are
   # unchanged); every other task keeps the provider's model. Groq limits each model on its own, so the router counts, paces
@@ -215,10 +216,12 @@ llm:
   # `careerops doctor` / `llm-check` send it a tiny request to see that it answers.
   models:
     cover_letter: {provider: groq, model: openai/gpt-oss-120b}
-    # The judge must be a different family from the generator (gpt-oss). Groq's llama-3.3-70b-versatile; `careerops llm-check`
-    # and `careerops doctor` send it a tiny request to see that it answers. Groq limits it on its own (tpd 100K on the free
-    # tier, below the 200K above, so a spent quota answers 429 and the judge shows "no verdict"; that never blocks a review).
-    judge: {provider: groq, model: llama-3.3-70b-versatile}
+    # The judge must be a different family from the generator (gpt-oss): the local Ollama qwen2.5-7b-8k (the ollama provider's
+    # own model, 8192-token context). Groq's llama-3.3-70b-versatile answered 404 model_not_found for this account, and a local
+    # judge spends no quota and sends nothing out. The judge input is fitted to that context (review/judge.py); `careerops
+    # doctor` sends the model a tiny request. Ollama down or an answer that is not JSON: retried once, then "no verdict"
+    # (logged); that never blocks a review.
+    judge: {provider: ollama, model: qwen2.5-7b-8k}
   # Tokens a letter alone needs (up to three cover_letter drafts: a first and two retries), for finishing a
   # `letter_pending` job. A draft was ~1.5K tokens in the first Monzo live run, so three fit.
   letter_token_estimate: 5000

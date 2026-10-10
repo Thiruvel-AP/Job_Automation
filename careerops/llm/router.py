@@ -309,6 +309,12 @@ class Router:
         m = self.task_models.get(task)
         return m["model"] if m and m["provider"] == p.name else None
 
+    def serving(self, task: str) -> list[tuple[Provider, str]]:
+        """Every (provider, model) this task could be sent to, in the order json() tries them: the providers it is restricted
+        to (llm.task_providers), else all, each with the task's own model on that provider (llm.models) or its own."""
+        only = self.task_providers.get(task)
+        return [(p, self.model_for(p, task) or p.cfg["model"]) for p in self.providers if only is None or p.name in only]
+
     def begin_job(self, est_tokens: int, task: str | None = None) -> list[str]:
         """Check the daily token budgets before a job starts, so a job is never begun that cannot be finished.
         Providers that can take `est_tokens` more today stay in play for this job, in config order; one whose tpd

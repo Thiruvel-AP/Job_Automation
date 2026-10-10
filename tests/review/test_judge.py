@@ -5,6 +5,7 @@ import csv
 import json
 
 import pytest
+import requests
 
 from careerops import cli
 from careerops.llm import MockLLM, Router, router
@@ -53,29 +54,32 @@ def test_model_family(model, family):
     assert judge.model_family(model) == family
 
 
-def test_the_shipped_judge_is_a_llama_on_groq_pinned_to_groq(settings):
-    assert judge.judge_model(settings) == {"provider": "groq", "model": "llama-3.3-70b-versatile"}
+def test_the_shipped_judge_is_the_local_qwen_pinned_to_ollama(settings):
+    assert judge.judge_model(settings) == {"provider": "ollama", "model": "qwen2.5-7b-8k"}
     assert judge.judge_mode(settings) == "shadow" and judge.check_config(settings) == []
-    assert settings["llm"]["task_providers"]["judge"] == ["groq"]
-    assert judge.model_family("llama-3.3-70b-versatile") != judge.model_family(settings["llm"]["providers"][0]["model"])
+    assert settings["llm"]["task_providers"]["judge"] == ["ollama"]
+    assert judge.model_family("qwen2.5-7b-8k") != judge.model_family(settings["llm"]["providers"][0]["model"])
+    ollama = next(p for p in settings["llm"]["providers"] if p["name"] == "ollama")
+    assert ollama["model"] == "qwen2.5-7b-8k" and ollama["context_tokens"] == 8192      # the judge input is fitted to this
 
 
 def test_a_judge_of_the_generators_family_is_refused(settings):
     settings.raw["llm"]["models"]["judge"] = {"provider": "groq", "model": "openai/gpt-oss-safeguard-20b"}
+    settings.raw["llm"]["task_providers"]["judge"] = ["groq"]
     problems = judge.check_config(settings)
     assert len(problems) == 1 and "same family as the generator" in problems[0] and "gpt-oss-20b" in problems[0]
 
 
 def test_a_missing_judge_model_or_provider_pin_is_a_problem(settings):
     del settings.raw["llm"]["task_providers"]["judge"]
-    assert "llm.task_providers.judge: [groq]" in judge.check_config(settings)[0]
+    assert "llm.task_providers.judge: [ollama]" in judge.check_config(settings)[0]
     del settings.raw["llm"]["models"]["judge"]
     assert "llm.models.judge is not set" in judge.check_config(settings)[0]
 
 
-def test_a_local_qwen_is_a_different_family_from_gpt_oss(settings):
-    settings.raw["llm"]["models"]["judge"] = {"provider": "ollama", "model": "qwen2.5-7b-8k"}
-    settings.raw["llm"]["task_providers"]["judge"] = ["ollama"]
+def test_a_groq_llama_is_also_a_different_family_from_gpt_oss(settings):
+    settings.raw["llm"]["models"]["judge"] = {"provider": "groq", "model": "llama-3.3-70b-versatile"}
+    settings.raw["llm"]["task_providers"]["judge"] = ["groq"]
     assert judge.check_config(settings) == []
 
 
@@ -97,9 +101,9 @@ def test_off_needs_no_judge_model_and_a_bad_mode_raises(settings):
 
 def test_the_judge_is_not_refused_when_no_model_of_its_family_wrote_the_job(fb_fixture):
     rep = make_rep(fb_fixture, used_models=("openai/gpt-oss-20b",))
-    assert judge.check_family("llama-3.3-70b-versatile", rep) is None
-    rep = make_rep(fb_fixture, used_models=("openai/gpt-oss-20b", "llama-3.1-8b-instant"))
-    assert "same family as a model that wrote this job (llama-3.1-8b-instant)" in judge.check_family("llama-3.3-70b-versatile", rep)
+    assert judge.check_family("qwen2.5-7b-8k", rep) is None
+    rep = make_rep(fb_fixture, used_models=("openai/gpt-oss-20b", "qwen2.5-7b-8k"))              # Ollama stood in for Groq
+    assert "same family as a model that wrote this job (qwen2.5-7b-8k)" in judge.check_family("qwen2.5-7b-8k", rep)
 
 
 # ------------------------------------------------------------------ the question
@@ -162,7 +166,9 @@ def test_run_judge_asks_once_with_the_judge_task_and_the_input_and_caches_the_ve
     llm, rep = spy(spy_llm), make_rep(fb_fixture)
     v = judge.run_judge(llm, settings, job, rep, fb_fixture)
     assert v.would_send is True and v.score == 4 and v.issues == ["nit"] and v.model == "mock" and v.key
-    assert [s["task"] for s in llm.sent] == ["judge"] and job["description"] in llm.sent[0]["user"]
+    assert [s["task"] for s in llm.sent] == ["judge"]
+    assert "The role" in llm.sent[0]["user"] and "What you'll do" in llm.sent[0]["user"]          # the role part of the JD
+    assert "About Northwind Health AI" not in llm.sent[0]["user"]                                  # not the employer's pitch
     assert judge.SYSTEM == llm.sent[0]["system"]
     again = judge.run_judge(llm, settings, job, rep, fb_fixture)
     assert len(llm.sent) == 1 and again == v                                        # the cache
@@ -213,10 +219,9 @@ def test_no_llm_is_a_verdict_with_an_error(settings, fb_fixture, job):
 class _Resp:
     status_code, ok, headers = 200, True, {}
 
-    def __init__(self, body):
+    def __init__(self, body, content='{"would_send": false, "score": 2, "issues": ["wrong role"]}'):
         self.body = body
-        self.text = json.dumps({"choices": [{"message": {"content": '{"would_send": false, "score": 2, "issues": ["wrong role"]}'},
-                                             "finish_reason": "stop"}], "model": body["model"],
+        self.text = json.dumps({"choices": [{"message": {"content": content}, "finish_reason": "stop"}], "model": body["model"],
                                 "usage": {"prompt_tokens": 900, "completion_tokens": 30, "total_tokens": 930}})
 
     def json(self):
@@ -224,27 +229,181 @@ class _Resp:
 
 
 @pytest.fixture
-def groq_judge(settings, db, monkeypatch):
-    sent = []
-    monkeypatch.setenv("GROQ_API_KEY", "k")
+def ollama_judge(settings, db, monkeypatch):
+    """The shipped judge (Ollama qwen2.5-7b-8k) through the real Router, `requests.post` replaced by a script of replies."""
+    sent, replies = [], []
     monkeypatch.setattr(router, "_pace_sleep", lambda s: None)
-    monkeypatch.setattr(router.requests, "post", lambda url, headers=None, json=None, timeout=None: sent.append(json) or _Resp(json))
-    return Router(settings, db), sent
+    monkeypatch.setattr(router, "_sleep", lambda s: None)
+
+    def post(url, headers=None, json=None, timeout=None):
+        sent.append({"url": url, **json})
+        step = replies.pop(0) if replies else _Resp(json)
+        if isinstance(step, Exception):
+            raise step
+        return step(json) if callable(step) else step
+    monkeypatch.setattr(router.requests, "post", post)
+    return Router(settings, db), sent, replies
 
 
-def test_through_the_router_the_judge_runs_on_its_own_model_and_the_verdict_names_it(groq_judge, settings, fb_fixture, job):
-    r, sent = groq_judge
+def test_through_the_router_the_judge_runs_on_the_local_model_and_the_verdict_names_it(ollama_judge, settings, fb_fixture, job):
+    r, sent, _ = ollama_judge
     v = judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
-    assert [b["model"] for b in sent] == ["llama-3.3-70b-versatile"]
+    assert [(b["url"], b["model"]) for b in sent] == [("http://localhost:11434/v1/chat/completions", "qwen2.5-7b-8k")]
     assert "reasoning_effort" not in sent[0] and sent[0]["max_tokens"] == 800 and sent[0]["response_format"] == {"type": "json_object"}
-    assert v.would_send is False and v.score == 2 and v.issues == ["wrong role"] and v.model == "groq/llama-3.3-70b-versatile"
-    assert r.db.llm_tokens_today("groq/llama-3.3-70b-versatile") == 930 and r.db.llm_tokens_today("groq") == 0   # its own count
+    assert v.would_send is False and v.score == 2 and v.issues == ["wrong role"] and v.model == "ollama/qwen2.5-7b-8k"
+    assert r.db.llm_tokens_today("ollama") == 930 and r.db.llm_tokens_today("groq") == 0 and r.db.llm_calls_today("groq") == 0
+    assert v.tokens == 900 and "Judge input: 900 prompt tokens" in v.input_line()
 
 
-def test_through_the_router_a_generator_of_the_judges_family_blocks_the_call(groq_judge, settings, fb_fixture, job):
-    r, sent = groq_judge
-    v = judge.run_judge(r, settings, job, make_rep(fb_fixture, used_models=("llama-3.1-8b-instant",)), fb_fixture)
+def test_the_judge_never_goes_to_groq_even_when_ollama_is_down(ollama_judge, settings, fb_fixture, job, monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    r, sent, replies = ollama_judge
+    replies += [requests.ConnectionError("refused")] * 2
+    v = judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
+    assert v.would_send is None and all("11434" in b["url"] for b in sent)
+
+
+def test_ollama_unreachable_is_retried_once_then_no_verdict_and_the_review_goes_on(ollama_judge, settings, fb_fixture, job):
+    r, sent, replies = ollama_judge
+    replies += [requests.ConnectionError("refused"), requests.ConnectionError("refused")]
+    v = judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
+    assert len(sent) == 2                                               # one try and one retry, no more
+    assert v.would_send is None and not v.yes and "the judge call failed" in v.error and "refused" in v.error
+    assert "no verdict" in v.line()
+    # logged beside the human decision like any other verdict
+    judge.log_decision(settings, job, make_rep(fb_fixture), v, "approve")
+    (row,) = judge.read_log(judge.log_path(settings))
+    assert row["judge_would_send"] == "" and "refused" in row["judge_error"] and row["human"] == "approve"
+    assert any(e["stage"] == "judge" and "failed" in e["detail"] for e in r.db.conn.execute("SELECT * FROM events"))
+
+
+def test_an_answer_that_is_not_json_is_retried_once_and_a_good_second_answer_is_the_verdict(ollama_judge, settings, fb_fixture, job):
+    r, sent, replies = ollama_judge
+    replies += [lambda b: _Resp(b, "I think this looks fine, send it"),
+                lambda b: _Resp(b, '{"would_send": true, "score": 5, "issues": []}')]
+    v = judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
+    assert len(sent) == 2 and v.would_send is True and v.score == 5
+
+
+def test_two_answers_that_are_not_json_give_no_verdict(ollama_judge, settings, fb_fixture, job):
+    r, sent, replies = ollama_judge
+    replies += [lambda b: _Resp(b, "no json here")] * 2
+    v = judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
+    assert len(sent) == 2 and v.would_send is None and "valid JSON" in v.error
+
+
+def test_a_failed_judge_does_not_stop_the_review(settings, db, fb_fixture, job, monkeypatch, capsys):
+    """review_job asks the judge, gets 'no verdict', and the prompt still appears and the decision is still taken."""
+    from careerops.review import workflow
+    rep = make_rep(fb_fixture)
+    monkeypatch.setattr(workflow, "load_report", lambda j: rep)
+    monkeypatch.setattr(workflow, "summary", lambda j, r: "SUMMARY")
+    monkeypatch.setattr(workflow, "approve", lambda *a, **k: None)
+    monkeypatch.setattr(judge, "run_judge", lambda *a, **k: Verdict(error="the judge call failed: refused", model="ollama/qwen2.5-7b-8k"))
+    answers = iter(["a"])
+    out = workflow.review_job(db, a_job(job), settings, fb_fixture, make_llm=lambda: object(), ask=lambda p: next(answers))
+    assert out == "approved" and "Judge: no verdict (the judge call failed: refused)" in capsys.readouterr().out
+    (row,) = judge.read_log(judge.log_path(settings))
+    assert row["human"] == "approve" and row["judge_would_send"] == ""
+
+
+def test_through_the_router_a_generator_of_the_judges_family_blocks_the_call(ollama_judge, settings, fb_fixture, job):
+    r, sent, _ = ollama_judge
+    v = judge.run_judge(r, settings, job, make_rep(fb_fixture, used_models=("qwen2.5-7b-8k",)), fb_fixture)
     assert sent == [] and "same family as a model that wrote this job" in v.error
+
+
+# ------------------------------------------------------------------ the input fits the local model's context
+LONG_JD = ("About Acme\n" + "We are a company that does many things for many people and is proud of it. " * 40
+           + "\n\nThe role\nYou will build and evaluate machine learning models in Python and SQL for our pricing team.\n"
+           + "\nRequirements\n" + "\n".join(f"- Experience with tool number {i} in production" for i in range(60))
+           + "\n\nBenefits\n" + "\n".join(f"- Perk number {i}" for i in range(80))
+           + "\n\nEqual opportunities\nWe welcome everyone. " * 30)
+
+
+def test_the_budget_is_the_context_minus_the_answer_and_a_margin(settings):
+    assert judge.judge_limits(settings) == (8192, 800)
+    assert judge.input_budget(settings) == 8192 - 800 - judge.CTX_MARGIN
+    ollama = next(p for p in settings["llm"]["providers"] if p["name"] == "ollama")
+    del ollama["context_tokens"]
+    assert judge.input_budget(settings) is None                          # no limit known: nothing is cut for the context
+
+
+def test_the_jd_is_cut_to_its_role_and_requirements_sections(fb_fixture, job):
+    inp, info = judge.prepare_input({**job, "description": LONG_JD}, make_rep(fb_fixture), fb_fixture, None)
+    assert "The role" in inp["jd"] and "Requirements" in inp["jd"] and "tool number 59" in inp["jd"]
+    assert "Perk number" not in inp["jd"] and "Equal opportunities" not in inp["jd"] and "About Acme" not in inp["jd"]
+    assert any("dropped" in n and "Benefits" in n for n in info["notes"]) and info["jd_chars"] == len(LONG_JD)
+    assert info["jd_sent"] == len(inp["jd"]) < len(LONG_JD)
+
+
+def test_a_jd_without_headings_or_that_would_shrink_to_nothing_is_kept_whole(fb_fixture, job):
+    plain = "Build models in Python for our pricing team and own their evaluation end to end. " * 20
+    assert judge.prepare_input({**job, "description": plain}, make_rep(fb_fixture), fb_fixture, None)[0]["jd"] == plain
+    tiny = "About Acme\nWe like cake.\n\nBenefits\nCake.\n\nThe role\nBuild."
+    assert judge.prepare_input({**job, "description": tiny}, make_rep(fb_fixture), fb_fixture, None)[0]["jd"] == tiny
+
+
+def test_the_prompt_is_fitted_to_the_budget_by_cutting_the_jd(fb_fixture, job):
+    big = "The role\n" + "You will build models and evaluate them carefully in production every day. " * 400
+    budget = 3000
+    inp, info = judge.prepare_input({**job, "description": big}, make_rep(fb_fixture), fb_fixture, budget)
+    assert judge.prompt_tokens(inp) <= budget and info["tokens"] == judge.prompt_tokens(inp) and not info["error"]
+    assert inp["jd"].endswith("[JD cut here]") and len(inp["jd"]) >= judge.MIN_JD_CHARS
+    assert any(n.startswith("JD cut to") for n in info["notes"])
+
+
+def test_facts_are_dropped_before_the_jd_goes_below_the_minimum(fb_fixture, job):
+    rep = make_rep(fb_fixture)
+    inp0, _ = judge.prepare_input(job, rep, fb_fixture, None)
+    assert len(inp0["jd"]) < judge.MIN_JD_CHARS and inp0["facts"].count("\n") >= 1      # a short JD: nothing to cut there
+    budget = judge.prompt_tokens(inp0) - 60
+    inp, info = judge.prepare_input(job, rep, fb_fixture, budget)
+    assert inp["facts"].count("\n") < inp0["facts"].count("\n") and any("source fact(s) left out" in n for n in info["notes"])
+    assert judge.prompt_tokens(inp) <= budget and inp["jd"] == inp0["jd"] and not info["error"]
+
+
+def test_a_cv_and_letter_too_big_for_the_context_give_no_verdict_and_send_nothing(settings, fb_fixture, job, spy_llm):
+    rep = make_rep(fb_fixture)
+    rep["context"]["profile"] = "profile word " * 3000
+    llm = spy(spy_llm)
+    v = judge.run_judge(llm, settings, job, rep, fb_fixture)
+    assert v.would_send is None and "too long to judge on this model" in v.error and llm.sent == []
+
+
+def test_a_real_sized_ad_is_sent_within_the_ollama_context(ollama_judge, settings, fb_fixture):
+    from conftest import fixture
+    r, sent, _ = ollama_judge
+    monzo = fixture("tailoring", "jd_monzo.txt").read_text(encoding="utf-8")
+    job = {"id": "x", "title": "Data Scientist", "company": "Monzo", "description": monzo * 6}          # ~37 KB
+    judge.run_judge(r, settings, job, make_rep(fb_fixture), fb_fixture)
+    (body,) = sent
+    est = judge.estimate_tokens(*(m["content"] for m in body["messages"]))
+    assert est + body["max_tokens"] <= 8192 - judge.CTX_MARGIN
+    assert r.db.conn.execute("SELECT detail FROM events WHERE stage='judge'").fetchone()["detail"]      # the tokens are logged
+
+
+def test_the_tokens_sent_are_in_the_log_and_an_old_log_keeps_its_header(settings, job):
+    rep = {"letter": {"status": "ok"}}
+    old = [c for c in judge.LOG_COLUMNS if c != "judge_input_tokens"]
+    path = judge.log_path(settings)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(",".join(old) + "\n", encoding="utf-8")
+    judge.log_decision(settings, job, rep, Verdict(True, 4, [], "m", tokens=1234), "approve")        # a log from before the column
+    assert path.read_text(encoding="utf-8").splitlines()[0] == ",".join(old) and len(judge.read_log(path)) == 1
+    path.unlink()
+    judge.log_decision(settings, job, rep, Verdict(True, 4, [], "m", tokens=1234), "approve")
+    assert judge.read_log(path)[0]["judge_input_tokens"] == "1234"
+
+
+def test_the_review_screen_shows_the_judge_input_line(settings, db, fb_fixture, job, monkeypatch, capsys):
+    from careerops.review import workflow
+    rep = make_rep(fb_fixture)
+    monkeypatch.setattr(workflow, "load_report", lambda j: rep)
+    monkeypatch.setattr(workflow, "summary", lambda j, r: "SUMMARY")
+    monkeypatch.setattr(judge, "run_judge", lambda *a, **k: Verdict(True, 4, [], "ollama/qwen2.5-7b-8k", tokens=3210, note="JD cut to 4,000 characters"))
+    workflow.review_job(db, a_job(job), settings, fb_fixture, make_llm=lambda: object(), ask=lambda p: "s")
+    assert "Judge input: 3,210 prompt tokens (JD cut to 4,000 characters)" in capsys.readouterr().out
 
 
 # ------------------------------------------------------------------ the log is append-only
@@ -396,7 +555,7 @@ def test_mock_llm_answers_the_judge_task_with_a_fixed_yes():
 def test_doctor_reports_the_judge(settings):
     from careerops.setup import judge_checks
     ((name, ok, hint),) = judge_checks(settings)
-    assert ok and "review.judge: shadow" in name and "llama-3.3-70b-versatile" in name and "family llama" in name
+    assert ok and "review.judge: shadow" in name and "qwen2.5-7b-8k" in name and "family qwen" in name
     settings.raw["llm"]["models"]["judge"]["model"] = "openai/gpt-oss-120b"
     ((name, ok, hint),) = judge_checks(settings)
     assert not ok and "same family" in hint
@@ -408,4 +567,5 @@ def test_doctor_does_not_ping_the_models_of_features_that_are_off(settings, monk
     from careerops.setup import model_checks
     settings.raw["review"]["judge"] = "off"
     settings.raw["letter"]["mode"] = "off"
-    assert model_checks(settings) == []                                              # nothing is asked, nothing is sent
+    names = [n for n, _, _ in model_checks(settings, ping=False)]
+    assert "judge: no model asked (review.judge is off)" in names and not any("for judge" in n for n in names)

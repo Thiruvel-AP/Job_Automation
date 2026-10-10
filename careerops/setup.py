@@ -165,37 +165,45 @@ def _feature_on(mode_of, settings) -> bool:
 
 
 def model_checks(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
-    """Doctor lines for `llm.models`: each task's model answers a tiny request on its provider (a few tokens, counted
-    against that model's own daily budget). One line per entry. `ping=False` (doctor --no-ping) sends nothing and says so."""
+    """Doctor lines for every model a task can be sent to: extract_keywords, tailor_profile, rephrase_bullets, cover_letter,
+    judge (and any other task the settings name), on each provider the router may try for it. Each model answers a tiny
+    request (a few tokens, counted against that model's own daily budget), once however many tasks it serves; a failure is
+    reported per task with its kind (model_not_found, auth, timeout, unreachable, rate_limited ...) and what to do. A task
+    whose feature is off (letter.mode, review.judge) asks nothing. `ping=False` (doctor --no-ping) sends nothing and says so."""
     from .db import DB
     from .llm import check
     from .llm.router import Router
     from .review.judge import judge_mode
     from .tailoring.tailor import letter_mode
 
-    models = settings["llm"].get("models") or {}
-    # a model no feature asks for is not pinged: letter.mode off makes no letter call, review.judge off makes no judge call
-    unused = {t for t, on in (("cover_letter", _feature_on(letter_mode, settings)), ("judge", _feature_on(judge_mode, settings)))
-              if not on}
-    models = {t: m for t, m in models.items() if t not in unused}
-    if not models:
-        return []
-    if not ping:
-        return [(f"{m['provider']}/{m['model']} for {task}: not asked (--no-ping)", True, "") for task, m in models.items()]
+    off = {t: f"{feature} is off" for t, feature, on in
+           (("cover_letter", "letter.mode", _feature_on(letter_mode, settings)), ("judge", "review.judge", _feature_on(judge_mode, settings)))
+           if not on}
     try:
-        router = Router(settings, DB(settings.path("db")))
+        router = Router(settings, DB(settings.path("db")) if ping else None)
     except ValueError as e:
         return [("llm.models", False, str(e))]
     out = [(m, False, "name a provider listed in llm.providers") for m in router.unknown_models]
-    for r in check.check_task_models(router):
-        if r["task"] in unused:
-            continue
-        name = f"{r['provider']}/{r['configured_model']} answers for {r['task']}"
-        if r["ok"]:
-            out.append((f"{name} ({r['latency_ms']} ms, served by {r['model'] or '?'})", True, ""))
-        else:
-            out.append((name, False, r["error"] or "no usable answer; check the model id on console.groq.com/docs/models "
-                                                   "and the key"))
+    tasks = check.tasks_to_check(router)
+    live = [t for t in tasks if t not in off]
+    for task in [t for t in live if not router.serving(t)]:         # restricted to a provider that is not configured
+        out.append((f"{task}: a provider can serve it", False,
+                    f"llm.task_providers.{task} names {', '.join(router.task_providers.get(task) or [])}, "
+                    f"but llm.providers has only {', '.join(p.name for p in router.providers)}"))
+    live = [t for t in live if router.serving(t)]
+    if not ping:
+        out += [(f"{p.name}/{model} for {task}: not asked (--no-ping)", True, "") for task in live
+                for p, model in router.serving(task)]
+    else:
+        for r in check.check_tasks(router, live):
+            name = f"{r['provider']}/{r['configured_model']} answers for {r['task']}"
+            if r["ok"]:
+                out.append((f"{name} ({r['latency_ms']} ms, served by {r['model'] or '?'})", True, ""))
+            else:
+                kind = r["kind"] or "no usable answer"
+                out.append((name, False, f"{kind}: {r['error'] or 'no usable answer'}. "
+                                         + check.ADVICE.get(r["kind"], "check the model id and the key")))
+    out += [(f"{task}: no model asked ({why})", True, "") for task, why in off.items()]
     return out
 
 

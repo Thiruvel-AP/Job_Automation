@@ -57,15 +57,16 @@ def groq_settings(settings, server, monkeypatch):
     settings.raw["llm"]["providers"] = [groq]
     settings.raw["letter"]["mode"] = "draft"
     settings.raw["llm"]["models"] = {"cover_letter": settings.raw["llm"]["models"]["cover_letter"]}
+    settings.raw["llm"]["task_providers"] = {"cover_letter": ["groq"]}      # the judge (shipped: ollama) is out of the way
     return settings
 
 
 def test_the_shipped_settings_send_only_the_letter_to_the_120b_model(settings):
     assert settings["llm"]["models"] == {"cover_letter": {"provider": "groq", "model": LETTER_MODEL},
-                                         "judge": {"provider": "groq", "model": "llama-3.3-70b-versatile"}}
+                                         "judge": {"provider": "ollama", "model": "qwen2.5-7b-8k"}}
     groq = next(p for p in settings["llm"]["providers"] if p["name"] == "groq")
     assert groq["model"] == "openai/gpt-oss-20b"                         # every other task is unchanged
-    assert settings["llm"]["task_providers"] == {"cover_letter": ["groq"], "judge": ["groq"]}
+    assert settings["llm"]["task_providers"] == {"cover_letter": ["groq"], "judge": ["ollama"]}
 
 
 def test_the_letter_is_sent_with_the_letter_model_and_every_other_task_with_the_providers_own(groq_settings, db):
@@ -131,7 +132,8 @@ def test_each_model_has_its_own_pacer(groq_settings, db):
 def test_a_provider_that_is_not_configured_is_ignored_by_the_router_and_named_by_the_router_for_doctor(settings, db):
     settings.raw["llm"]["providers"] = [p for p in settings["llm"]["providers"] if p["name"] == "ollama"]
     r = Router(settings, db)
-    assert r.task_models == {} and "no LLM provider named 'groq'" in r.unknown_models[0]
+    assert r.task_models == {"judge": {"provider": "ollama", "model": "qwen2.5-7b-8k"}}          # the letter model's provider is not here
+    assert "llm.models.cover_letter: no LLM provider named 'groq'" in r.unknown_models[0]
 
 
 @pytest.mark.parametrize("bad", ["openai/gpt-oss-120b", {"provider": "groq"}, {"model": "m"}])
@@ -155,29 +157,36 @@ def test_llm_check_checks_the_letter_model_as_well_as_each_provider(groq_setting
     assert [b["model"] for b in _S.bodies] == ["openai/gpt-oss-20b", LETTER_MODEL]
 
 
-def test_doctor_checks_that_the_letter_model_answers(groq_settings):
+def test_doctor_asks_every_model_a_task_can_use_once_and_reports_it_per_task(groq_settings):
     lines = [(n, ok, h) for n, ok, h in model_checks(groq_settings) if "answers" in n]
-    assert len(lines) == 1 and lines[0][1] is True
-    assert lines[0][0].startswith(f"groq/{LETTER_MODEL} answers for cover_letter (") and "served by" in lines[0][0]
-    assert [b["model"] for b in _S.bodies] == [LETTER_MODEL]               # one tiny request, for that model only
+    assert [n.split(" (")[0] for n, _, _ in lines] == [
+        "groq/openai/gpt-oss-20b answers for extract_keywords", "groq/openai/gpt-oss-20b answers for tailor_profile",
+        "groq/openai/gpt-oss-20b answers for rephrase_bullets", f"groq/{LETTER_MODEL} answers for cover_letter",
+        "groq/openai/gpt-oss-20b answers for judge"]
+    assert all(ok for _, ok, _ in lines) and all("served by" in n for n, _, _ in lines)
+    assert [b["model"] for b in _S.bodies] == ["openai/gpt-oss-20b", LETTER_MODEL]       # a model serving several tasks is asked once
 
 
-def test_doctor_fails_with_the_providers_message_when_the_model_does_not_answer(groq_settings):
+def test_doctor_names_the_failing_task_and_the_kind_of_failure(groq_settings):
     _S.fail_models = {LETTER_MODEL}
-    ((name, ok, hint),) = model_checks(groq_settings)
-    assert not ok and name == f"groq/{LETTER_MODEL} answers for cover_letter"
-    assert "HTTP 404" in hint and "does not exist" in hint
+    lines = {n: (ok, h) for n, ok, h in model_checks(groq_settings)}
+    ok, hint = lines[f"groq/{LETTER_MODEL} answers for cover_letter"]
+    assert not ok and hint.startswith("model_not_found:") and "HTTP 404" in hint and "does not exist" in hint
+    assert "check the id" in hint
+    assert all(ok for n, (ok, _) in lines.items() if "cover_letter" not in n)
 
 
 def test_doctor_fails_without_the_key_and_sends_nothing(groq_settings, monkeypatch):
     monkeypatch.delenv("FAKE_GROQ")
-    ((name, ok, hint),) = model_checks(groq_settings)
-    assert not ok and "FAKE_GROQ is not set" in hint and _S.bodies == []
+    lines = model_checks(groq_settings)
+    assert lines and not any(ok for _, ok, _ in lines) and _S.bodies == []
+    assert all(h.startswith("auth: no key: FAKE_GROQ is not set") for _, _, h in lines)
 
 
 def test_doctor_no_ping_sends_nothing_and_says_so(groq_settings):
-    ((name, ok, hint),) = model_checks(groq_settings, ping=False)
-    assert ok and "not asked (--no-ping)" in name and _S.bodies == []
+    lines = model_checks(groq_settings, ping=False)
+    assert len(lines) == 5 and all(ok and "not asked (--no-ping)" in n for n, ok, _ in lines) and _S.bodies == []
+    assert any(n.startswith(f"groq/{LETTER_MODEL} for cover_letter") for n, _, _ in lines)
 
 
 @pytest.mark.parametrize("argv, ping", [(["doctor"], True), (["doctor", "--no-ping"], False)])
@@ -194,20 +203,75 @@ def test_the_doctor_command_pings_unless_told_not_to(argv, ping, monkeypatch):
 def test_doctor_names_a_models_entry_whose_provider_does_not_exist(groq_settings):
     groq_settings.raw["llm"]["models"] = {"cover_letter": {"provider": "nowhere", "model": "m"}}
     out = model_checks(groq_settings)
-    assert len(out) == 1 and not out[0][1] and "no LLM provider named 'nowhere'" in out[0][0]
+    assert not out[0][1] and "no LLM provider named 'nowhere'" in out[0][0]
+    assert not any(LETTER_MODEL in n for n, _, _ in out)            # the misnamed entry is ignored: the letter falls back to groq's own model
 
 
-def test_doctor_has_no_model_line_when_no_task_has_its_own_model(groq_settings):
+def test_doctor_still_asks_the_providers_own_model_when_no_task_has_a_model_of_its_own(groq_settings):
     del groq_settings.raw["llm"]["models"]
-    assert model_checks(groq_settings) == [] and _S.bodies == []
+    lines = model_checks(groq_settings)
+    assert len(lines) == 5 and all(ok for _, ok, _ in lines) and [b["model"] for b in _S.bodies] == ["openai/gpt-oss-20b"]
 
 
 def test_a_connection_failure_is_a_failed_check_not_a_crash(groq_settings, monkeypatch):
     def refuse(*a, **k):
         raise requests.ConnectionError("refused")
     monkeypatch.setattr(router.requests, "post", refuse)
-    ((name, ok, hint),) = model_checks(groq_settings)
-    assert not ok and "refused" in hint
+    lines = model_checks(groq_settings)
+    assert lines and not any(ok for _, ok, _ in lines) and all("refused" in h for _, _, h in lines)
+    assert all(h.startswith("unreachable:") for _, _, h in lines)
+
+
+def test_a_timeout_is_named_as_a_timeout(groq_settings, monkeypatch):
+    def slow(*a, **k):
+        raise requests.ReadTimeout("read timed out")
+    monkeypatch.setattr(router.requests, "post", slow)
+    assert all(h.startswith("timeout:") and "no answer within" in h for _, _, h in model_checks(groq_settings))
+
+
+def test_failures_are_classified_by_status_and_message():
+    for status, kind in ((401, "auth"), (403, "auth"), (429, "rate_limited"), (404, "http_error"), (500, "http_error")):
+        assert check.classify(status, "oops") == kind
+    assert check.classify(404, "The model `x` does not exist") == "model_not_found"
+    assert check.classify(400, "model_decommissioned: the model has been decommissioned") == "model_not_found"
+    assert check.classify(404, "model 'qwen' not found, try pulling it first") == "model_not_found"
+
+
+def test_the_check_has_a_shorter_timeout_than_the_work_and_restores_it(groq_settings, db):
+    p = Router(groq_settings, db).providers[0]
+    p.timeout = 300
+    seen = []
+    p.chat = lambda *a, **k: (seen.append(p.timeout), '{"ok": true}')[1]
+    check.check_provider(p)
+    assert seen == [check.CHECK_TIMEOUT_S] and p.timeout == 300
+
+
+def test_a_task_with_a_feature_that_is_off_asks_nothing(groq_settings):
+    groq_settings.raw["letter"]["mode"] = "off"
+    groq_settings.raw["review"]["judge"] = "off"
+    lines = model_checks(groq_settings)
+    answered = [n.split(" (")[0] for n, _, _ in lines if "answers" in n]
+    assert answered == [f"groq/openai/gpt-oss-20b answers for {t}" for t in ("extract_keywords", "tailor_profile", "rephrase_bullets")]
+    assert ("cover_letter: no model asked (letter.mode is off)", True, "") in lines
+    assert ("judge: no model asked (review.judge is off)", True, "") in lines
+    assert LETTER_MODEL not in [b["model"] for b in _S.bodies]
+
+
+def test_doctor_asks_each_provider_a_task_may_use(settings, db, server, monkeypatch):
+    """extract_keywords may fall through from groq to ollama, so both models are asked for it; the judge only ollama's."""
+    monkeypatch.setenv("FAKE_GROQ", "k")
+    groq = {**next(p for p in settings["llm"]["providers"] if p["name"] == "groq"), "base_url": server,
+            "api_key_env": "FAKE_GROQ", "rpm": 60000, "tpm": 10**9}
+    ollama = {**next(p for p in settings["llm"]["providers"] if p["name"] == "ollama"), "base_url": server, "rpm": 60000}
+    settings.raw["llm"]["providers"] = [groq, ollama]
+    settings.raw["letter"]["mode"] = "draft"
+    r = Router(settings, db)
+    assert [(p.name, m) for p, m in r.serving("extract_keywords")] == [("groq", "openai/gpt-oss-20b"), ("ollama", "qwen2.5-7b-8k")]
+    assert [(p.name, m) for p, m in r.serving("cover_letter")] == [("groq", LETTER_MODEL)]
+    assert [(p.name, m) for p, m in r.serving("judge")] == [("ollama", "qwen2.5-7b-8k")]
+    names = [n.split(" (")[0] for n, ok, _ in model_checks(settings) if "answers" in n]
+    assert "ollama/qwen2.5-7b-8k answers for judge" in names and "groq/openai/gpt-oss-20b answers for extract_keywords" in names
+    assert "ollama/qwen2.5-7b-8k answers for extract_keywords" in names and len(names) == 8
 
 
 # ---------------------------------------------------------------- reasoning parameters belong to the model that reasons

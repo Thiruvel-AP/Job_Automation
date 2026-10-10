@@ -13,7 +13,16 @@ CV text, the letter (if any) and the fact-bank bullets the documents rest on, an
           auto-approved either: those keep their deliberate confirmation. The judge never touches visa answers or submit.
 
 The model is `llm.models.judge` ({provider, model}) and `llm.task_providers.judge` pins it to that provider, so a failed call
-cannot be answered by another model. `check_config` and `check_family` refuse a judge of the generator's family.
+cannot be answered by another model. `check_config` and `check_family` refuse a judge of the generator's family. Shipped: the
+local Ollama `qwen2.5-7b-8k` (a different family from the gpt-oss generator; nothing leaves the machine).
+
+A local model has a small context (num_ctx 8192), and Ollama cuts a longer prompt silently. So the input is fitted to the
+provider's `context_tokens` minus the answer's `max_tokens` before it is sent: the JD is cut to its role / requirements sections
+(`jdtext.role_sections`), then to the room left; if the CV, letter and facts alone do not fit, the judge gives no verdict. The
+tokens sent are shown on the review screen, kept in the verdict, the log and the events table.
+
+The judge never blocks a review: the router tries the call twice (an unreachable server, or an answer that is not JSON, is
+retried once), then the verdict is "no verdict" with the reason, which is logged beside your decision like any other.
 """
 from __future__ import annotations
 
@@ -25,16 +34,21 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from ..db import now
-from ..llm.router import LLMError, TaskUnavailable
+from ..llm.pacing import CHARS_PER_TOKEN, estimate_tokens
+from ..llm.router import DEFAULT_MAX_TOKENS, LLMError, TaskUnavailable
 from ..reporting.outcomes import wilson
+from ..tailoring.jdtext import role_sections
 from ..tailoring.tailor import bullet_index
 
 MODES = ("off", "shadow", "gate")
 GATE_MIN_LABELS = 60               # human-labelled reviews the log needs before gate mode may run (not a setting: a config
                                    # file cannot loosen it)
-JD_CHARS = 9000                    # a longer JD is cut here before it is sent (the Groq per-minute token budget)
+JD_CHARS = 9000                    # a longer JD is cut here before it is sent, whatever the model's context
+CTX_MARGIN = 300                   # tokens of a provider's context kept free: the estimate is a character count, not a tokenizer
+MIN_JD_CHARS = 1750                # facts are dropped before the JD is cut below this (~500 tokens)
+JD_CUT = "\n[JD cut here]"
 LOG_COLUMNS = ["ts", "job_id", "company", "title", "mode", "judge_model", "judge_would_send", "judge_score",
-               "judge_issues", "judge_error", "human", "reason", "letter_status", "verdict_key"]
+               "judge_issues", "judge_error", "human", "reason", "letter_status", "verdict_key", "judge_input_tokens"]
 HUMAN = ("approve", "reject")      # a labelled decision; "auto" (gate) is logged but is not a label
 
 
@@ -83,7 +97,7 @@ def check_config(settings) -> list[str]:
     j = judge_model(settings)
     if j is None:
         return ["llm.models.judge is not set: name a model of another family than the generator, e.g. "
-                "{provider: groq, model: llama-3.3-70b-versatile}"]
+                "{provider: ollama, model: qwen2.5-7b-8k}"]
     out = []
     llm = settings["llm"]
     if (llm.get("task_providers") or {}).get("judge") != [j["provider"]]:
@@ -176,9 +190,64 @@ def build_input(job, rep: dict, fb: dict) -> dict:
     paragraphs = letter.get("paragraphs") or [] if letter.get("status") in ("ok", "fallback") else []
     jd = str(job["description"] or "")
     return {"title": job["title"], "company": job["company"],
-            "jd": jd if len(jd) <= JD_CHARS else jd[:JD_CHARS] + "\n[JD cut here]",
+            "jd": jd if len(jd) <= JD_CHARS else jd[:JD_CHARS] + JD_CUT,
             "cv": cv_text(ctx), "letter": "\n\n".join(paragraphs) if paragraphs else "(no cover letter)",
             "facts": "\n".join(facts) or "(none)"}
+
+
+def judge_limits(settings) -> tuple[int | None, int]:
+    """(context_tokens of the judge's provider or None when it names none, the answer's max_tokens)."""
+    llm = settings["llm"]
+    j = judge_model(settings)
+    prov = next((p for p in llm["providers"] if j and p["name"] == j["provider"]), {})
+    mt = llm.get("max_tokens") or {}
+    return prov.get("context_tokens"), int(mt.get("judge") or mt.get("default") or DEFAULT_MAX_TOKENS)
+
+
+def input_budget(settings) -> int | None:
+    """Tokens the prompt may take on the judge's provider: its context minus the answer and a margin. None = no limit known."""
+    ctx, answer = judge_limits(settings)
+    return max(int(ctx) - answer - CTX_MARGIN, 0) if ctx else None
+
+
+def prompt_tokens(inp: dict) -> int:
+    return estimate_tokens(SYSTEM, USER.format(**inp))
+
+
+def prepare_input(job, rep: dict, fb: dict, budget: int | None) -> tuple[dict, dict]:
+    """(the judge's input fitted to `budget` tokens, what was done to it). The JD is cut to its role / requirements sections
+    first, then to the room the CV, letter and facts leave; when even a short JD does not fit, the facts are dropped from the
+    end (those of the last bullets) before the JD goes below MIN_JD_CHARS. info = {tokens, jd_chars, jd_sent, notes, error}:
+    `error` is set, and the input is not to be sent, when the CV, letter and system prompt alone exceed the budget."""
+    full = str(job["description"] or "")
+    jd, trimmed_note = role_sections(full)
+    inp = build_input({"title": job["title"], "company": job["company"], "description": jd}, rep, fb)
+    info = {"jd_chars": len(full), "notes": [trimmed_note] if trimmed_note else [], "error": ""}
+    facts = inp["facts"].split("\n") if inp["facts"] != "(none)" else []
+    dropped = 0
+    if budget is not None:
+        while prompt_tokens(inp) > budget:
+            over = int((prompt_tokens(inp) - budget) * CHARS_PER_TOKEN) + len(JD_CUT)
+            body = inp["jd"].removesuffix(JD_CUT)
+            if len(body) - over >= MIN_JD_CHARS:
+                inp["jd"] = body[: len(body) - over].rstrip() + JD_CUT
+            elif len(facts) > 1:
+                facts.pop()
+                dropped += 1
+                inp["facts"] = "\n".join(facts)
+                continue
+            elif len(body) > MIN_JD_CHARS:
+                inp["jd"] = body[:MIN_JD_CHARS].rstrip() + JD_CUT
+            else:
+                info["error"] = (f"the CV, letter and facts need ~{prompt_tokens(inp):,} tokens but the judge's context leaves "
+                                 f"{budget:,}: too long to judge on this model")
+            break
+    if inp["jd"].endswith(JD_CUT):
+        info["notes"].append(f"JD cut to {len(inp['jd']):,} characters")
+    if dropped:
+        info["notes"].append(f"{dropped} source fact(s) left out")
+    info["tokens"], info["jd_sent"] = prompt_tokens(inp), len(inp["jd"])
+    return inp, info
 
 
 @dataclass
@@ -189,6 +258,8 @@ class Verdict:
     model: str = ""
     error: str = ""
     key: str = ""
+    tokens: int | None = None              # prompt tokens: what the provider reported, else the estimate
+    note: str = ""                         # what was cut from the input to fit the model's context
 
     @property
     def yes(self) -> bool:
@@ -198,6 +269,12 @@ class Verdict:
         if self.would_send is None:
             return f"Judge: no verdict ({self.error or 'not run'})"
         return f"Judge ({self.model}): {'WOULD SEND' if self.would_send else 'WOULD NOT SEND'} {self.score}/5"
+
+    def input_line(self) -> str:
+        """The tokens the judge was sent and what was cut to fit, or "" when nothing is known."""
+        if not self.tokens:
+            return ""
+        return f"Judge input: {self.tokens:,} prompt tokens" + (f" ({self.note})" if self.note else "")
 
 
 def parse_verdict(out, model: str = "", key: str = "") -> Verdict:
@@ -242,7 +319,8 @@ def run_judge(llm, settings, job, rep: dict, fb: dict) -> Verdict:
         clash = check_family(j["model"], rep)
         if clash:
             return Verdict(model=model, error=clash)
-    inp = build_input(job, rep, fb)
+    inp, info = prepare_input(job, rep, fb, input_budget(settings))
+    note = "; ".join(n for n in info["notes"] if n)
     key = verdict_key(inp, "mock" if mock else model)
     cache = settings.path("judge") / "verdicts" / f"{key}.json"
     try:
@@ -250,15 +328,34 @@ def run_judge(llm, settings, job, rep: dict, fb: dict) -> Verdict:
             return Verdict(**json.loads(cache.read_text(encoding="utf-8")))
     except (OSError, ValueError, TypeError):
         pass
+    db = getattr(llm, "db", None)
+
+    def record(detail: dict) -> None:
+        if db is not None:                              # the events table: tokens and failures stay inspectable
+            try:
+                db.log(job["id"], "judge", {"model": model, "input_tokens_est": info["tokens"], "jd_chars": info["jd_chars"],
+                                            "jd_sent": info["jd_sent"], "note": note, **detail})
+            except Exception:  # noqa: BLE001 — logging must never be the reason a review stops
+                pass
+
+    if info["error"]:
+        record({"error": info["error"]})
+        return Verdict(model=model, key=key, error=info["error"], tokens=info["tokens"], note=note)
     try:
         out = llm.json("judge", SYSTEM, USER.format(**inp), {"task": "judge", **inp})
     except TaskUnavailable as e:
-        return Verdict(model=model, key=key, error=f"the judge model cannot take the call now: {str(e)[:200]}")
-    except (LLMError, OSError, ValueError) as e:
-        return Verdict(model=model, key=key, error=f"the judge call failed: {str(e)[:200]}")
+        record({"error": f"unavailable: {str(e)[:200]}"})
+        return Verdict(model=model, key=key, error=f"the judge model cannot take the call now: {str(e)[:200]}",
+                       tokens=info["tokens"], note=note)
+    except (LLMError, OSError, ValueError) as e:        # the router has already tried twice: no verdict, the review goes on
+        record({"error": f"failed: {str(e)[:200]}"})
+        return Verdict(model=model, key=key, error=f"the judge call failed: {str(e)[:200]}", tokens=info["tokens"], note=note)
     used = (getattr(llm, "usage", None) or [{}])[-1]
     v = parse_verdict(out, model="mock" if mock else f"{used.get('provider') or j['provider']}/{used.get('model') or j['model']}",
                       key=key)
+    v.tokens, v.note = used.get("prompt_tokens") or info["tokens"], note
+    record({"prompt_tokens": used.get("prompt_tokens"), "completion_tokens": used.get("completion_tokens"),
+            "would_send": v.would_send, "error": v.error})
     if v.would_send is not None:
         try:
             cache.parent.mkdir(parents=True, exist_ok=True)
@@ -281,9 +378,14 @@ def log_decision(settings, job, rep: dict, verdict: Verdict | None, human: str, 
            "judge_model": verdict.model, "judge_would_send": "" if verdict.would_send is None else str(verdict.would_send).lower(),
            "judge_score": "" if verdict.score is None else verdict.score, "judge_issues": " | ".join(verdict.issues),
            "judge_error": verdict.error, "human": human, "reason": reason,
-           "letter_status": (rep.get("letter") or {}).get("status", ""), "verdict_key": verdict.key}
+           "letter_status": (rep.get("letter") or {}).get("status", ""), "verdict_key": verdict.key,
+           "judge_input_tokens": verdict.tokens or ""}
+    fields = LOG_COLUMNS
+    if not new:                                          # a log started before a column existed keeps its own header
+        with open(path, encoding="utf-8", newline="") as f:
+            fields = next(csv.reader(f), None) or LOG_COLUMNS
     with open(path, "a", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=LOG_COLUMNS)
+        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         if new:
             w.writeheader()
         w.writerow(row)
