@@ -34,7 +34,8 @@ career-ops/
 │   │   ├── companies_house.py    M2 bulk join → company no., SIC codes, sector
 │   │   ├── ats.py                M3 slug probe, verification, careers-page detector
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
-│   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox
+│   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
+│   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
 │   │   ├── gates.py              rule triage (title, seniority, sponsorship, SRE, line mgmt…)
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── tailoring/                JD → CV + cover letter
@@ -69,6 +70,7 @@ career-ops/
     ├── feedback/preferences.jsonl   approve/edit/reject log → DPO pairs
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
+    ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
@@ -145,6 +147,20 @@ careerops calibrate                # tailor the calibration JDs with the real mo
 `URL:` and `Location:` header lines filled in, then the ad's text. It adds nothing to the database: `careerops live` does that, with
 you at every gate. `careerops live --url <link>` is the same fetch followed by a live session on that one file (the rest of the
 inbox is left alone; a rerun finds the file already there). `--company` / `--title` replace what the page or API gives.
+
+**robots.txt first.** Before any fetch (a page, or one of the job-board APIs) the host's `robots.txt` is read once and cached in
+`data/robots/<host>.json` for 24 hours; a path it disallows for this tool (user-agent token `career-ops`; `*` and `$` rules as in
+RFC 9309) is refused with "<host>/robots.txt disallows <path> ...". A `robots.txt` that answers 401, 403, 429 or 5xx, or not at all,
+refuses a page host too (the rules cannot be checked); the three documented public job-board API hosts (Greenhouse, Lever, Ashby) are
+the one exception for a 401/403 on `robots.txt` itself, because their API is meant for programs and its own 401/403/429 still stops
+the fetch. Redirects are followed one hop at a time, each checked the same way. **linkedin.com (and lnkd.in) is never fetched**: LinkedIn
+ads come in through job-alert emails (`careerops discover --gmail-alerts`) or `--clipboard`.
+
+**CV-Library.** `https://www.cv-library.co.uk/job/apply/<id>...` is rewritten to `https://www.cv-library.co.uk/job/<id>` (its
+`robots.txt` disallows `/job/apply/`), and only that page is fetched: title, company or agency, location, salary and the description
+block (the page's JSON-LD `JobPosting`, else its own description element), never the "similar jobs" sidebar. A recruitment-agency name
+sets `Agency: yes` in the inbox file. CV-Library search or query URLs (`/jobs?q=...`; `robots.txt` has `Disallow: /*?`) are never fetched.
+The extraction is tested on saved fixtures only; it has not been run against a live CV-Library page.
 
 A site that answers HTTP 401, 403 or 429 is asked once: no retry and no workaround, the command exits 1 with "This site blocks
 automated access — copy the job text and use --clipboard". Copy the job text in your browser, then run `careerops live --clipboard`

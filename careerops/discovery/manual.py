@@ -18,7 +18,8 @@ MIN_JD_BYTES = 500                     # a shorter file is a stub or a snippet, 
 # a job that has been tailored or acted on must not be pushed back to 'new' by dropping another JD with the same key
 REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "error")
 HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "role": "title", "job title": "title",
-               "url": "url", "link": "url", "location": "location"}
+               "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
+               "agency": "agency"}
 HEADER_LINE = re.compile(r"^\s*([A-Za-z ]{3,12}?)\s*:\s*(\S.*?)\s*$")
 
 
@@ -78,7 +79,7 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
 
 
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
-           location: str = "United Kingdom") -> str:
+           location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False) -> str:
     """Add a hand-made job (status 'new') and return its id. Raises JobExists when that job is already tailored or
     acted on, so adding a JD never resets work. Raises JDError for a company, title or URL that is a placeholder or too
     short (meta_problem)."""
@@ -90,9 +91,10 @@ def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = Non
     have = db.job(jid)
     if have is not None and have["status"] not in REPLACEABLE:
         raise JobExists(f"{jid} ({company} / {title}) already exists with status '{have['status']}'")
-    db.upsert_job({"id": jid, "source": "manual", "company": company, "title": title, "location": location,
-                   "url": url, "apply_url": url, "description": text})
-    db.update_job(jid, description=text, status="new")
+    db.upsert_job({"id": jid, "source": source, "company": company, "title": title, "location": location,
+                   "url": url, "apply_url": url, "description": text, "posted_at": posted})
+    db.update_job(jid, description=text, status="new", source=source, agency=int(bool(agency)),
+                  **({"posted_at": posted} if posted else {}))
     return jid
 
 

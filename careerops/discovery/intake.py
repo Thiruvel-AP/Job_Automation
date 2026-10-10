@@ -9,8 +9,14 @@ gate. Public, unauthenticated APIs only, at most one request per second per host
   Lever       GET api.lever.co/v0/postings/{site}/{id}  (api.eu.lever.co for jobs.eu.lever.co)  - documented single posting
   Ashby       the board list GET api.ashbyhq.com/posting-api/job-board/{board}, then the posting in it by its id. Ashby
               documents no single-posting endpoint, so this is the one documented call, filtered here.
+  CV-Library  https://www.cv-library.co.uk/job/apply/{id}... is rewritten to https://www.cv-library.co.uk/job/{id}; title,
+              company / agency, location, salary and the description block only (JSON-LD JobPosting, else the page's own
+              description element; never the "similar jobs" sidebar). A CV-Library search or query URL is never fetched.
   otherwise   the page itself: a JobPosting JSON-LD block if it has one, else the page's main text. Under MIN_PAGE_CHARS
               characters is refused rather than guessed at (a page that builds its text with JavaScript, a login wall).
+
+Before ANY fetch the host's robots.txt is read and cached for 24 hours (robots.py); a disallowed path is refused with a message
+that says so, and redirects are followed by hand so that every hop is checked too. linkedin.com is never fetched.
 """
 from __future__ import annotations
 
@@ -24,11 +30,12 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 
 from . import manual
+from .robots import RobotsCache, RobotsError, never_fetch
 from .sources import UA, html_to_text
 
 MIN_PAGE_CHARS = 2000                  # a page with less text than this is not taken for a job description
@@ -37,6 +44,12 @@ MAX_BYTES = 5_000_000                  # a bigger response is not a job ad
 GREENHOUSE_HOSTS = ("job-boards.greenhouse.io", "boards.greenhouse.io")
 LEVER_HOSTS = {"jobs.lever.co": "api.lever.co", "jobs.eu.lever.co": "api.eu.lever.co"}
 ASHBY_HOSTS = ("jobs.ashbyhq.com",)
+CVLIBRARY_HOSTS = ("www.cv-library.co.uk", "cv-library.co.uk")
+CVLIBRARY_JOB = re.compile(r"/job/(?:apply/)?(\d+)(?:/[^/?#]*)?/?")        # /job/123, /job/123/slug, /job/apply/123[/slug]
+MAX_REDIRECTS = 5
+REDIRECT_STATUSES = (301, 302, 303, 307, 308)
+AGENCY_WORDS = re.compile(r"\b(?:recruit\w*|staffing|resourcing|headhunt\w*|executive search|talent (?:partners?|solutions?|acquisition)|"
+                          r"personnel|appointments|search (?:&|and) selection)\b", re.I)
 UUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 
 
@@ -54,9 +67,13 @@ class BlockedError(IntakeError):
     """The site answered 401 / 403 / 429. It is never retried or worked around."""
 
 
+class RobotsRefused(IntakeError):
+    """robots.txt disallows the path (or cannot be checked), or the host is one this tool never contacts."""
+
+
 @dataclass
 class Target:
-    kind: str                          # greenhouse | lever | ashby | page
+    kind: str                          # greenhouse | lever | ashby | cvlibrary | page
     url: str
     board: str = ""
     ad_id: str = ""
@@ -72,6 +89,9 @@ class Ad:
     text: str
     source: str
     ad_id: str
+    salary: str = ""
+    agency: bool = False               # the poster looks like a recruitment agency, not the employer
+    posted: str = ""                   # YYYY-MM-DD the ad was posted, when the source says
 
 
 # ------------------------------------------------------------------ network (tests replace _get / _sleep / _clock)
@@ -94,17 +114,45 @@ def _throttle(host: str) -> None:
 
 
 def _get(url: str, **kw) -> requests.Response:
-    r = requests.get(url, headers=UA, timeout=60, **kw)
+    r = requests.get(url, headers=UA, timeout=60, allow_redirects=False, **kw)      # redirects are followed by _fetch, hop by hop
     return r
 
 
-def _fetch(url: str, what: str) -> requests.Response:
-    """One GET, paced per host. Any failure becomes an IntakeError saying what could not be fetched."""
+_default_robots = RobotsCache(None)           # when no cache is given (tests, library use): in memory, for this process
+
+
+def _robots_get(url: str) -> tuple[int | None, str]:
+    """The one request for a robots.txt: paced and identified like every other; (None, "") when there is no answer."""
     _throttle(urlparse(url).netloc.lower())
     try:
         r = _get(url)
-    except requests.RequestException as e:
-        raise IntakeError(f"{what}: could not be fetched ({type(e).__name__}: {e})") from None
+    except requests.RequestException:
+        return None, ""
+    return r.status_code, (r.text[:500_000] if r.ok else "")
+
+
+def _fetch(url: str, what: str, robots: RobotsCache | None = None) -> requests.Response:
+    """One GET, paced per host and checked against the host's robots.txt first (and so is every redirect hop). Any failure
+    becomes an IntakeError saying what could not be fetched."""
+    robots = robots or _default_robots
+    for _hop in range(MAX_REDIRECTS + 1):
+        try:
+            robots.check(url, _robots_get)
+        except RobotsError as e:
+            raise RobotsRefused(str(e)) from None
+        _throttle(urlparse(url).netloc.lower())
+        try:
+            r = _get(url)
+        except requests.RequestException as e:
+            raise IntakeError(f"{what}: could not be fetched ({type(e).__name__}: {e})") from None
+        where = (getattr(r, "headers", None) or {}).get("Location") if r.status_code in REDIRECT_STATUSES else None
+        if not where:
+            break
+        url = urljoin(url, where)
+        if urlparse(url).scheme not in ("http", "https"):
+            raise IntakeError(f"{what}: redirected to something that is not a web link")
+    else:
+        raise IntakeError(f"{what}: too many redirects")
     if r.status_code in BLOCKED_STATUSES:
         raise BlockedError(BLOCKED_MESSAGE)
     if r.status_code == 404:
@@ -116,8 +164,8 @@ def _fetch(url: str, what: str) -> requests.Response:
     return r
 
 
-def _json(url: str, what: str):
-    r = _fetch(url, what)
+def _json(url: str, what: str, robots: RobotsCache | None = None):
+    r = _fetch(url, what, robots)
     try:
         return r.json()
     except ValueError:
@@ -132,6 +180,15 @@ def parse_url(url: str) -> Target:
         raise IntakeError(f"not a web link: {url!r} (it must start with http:// or https://)")
     host, parts = u.netloc.lower().split(":")[0], [p for p in u.path.split("/") if p]
     full = u.geturl()
+    if never_fetch(full):
+        raise RobotsRefused(never_fetch(full))
+    if host in CVLIBRARY_HOSTS:
+        m = CVLIBRARY_JOB.fullmatch(u.path)
+        if not m:
+            raise IntakeError(f"{full}: only a single CV-Library job link (cv-library.co.uk/job/<number>) is fetched; its "
+                              "search and query pages are never fetched (robots.txt disallows them). Open the job and use "
+                              "its own link, or copy the text and use --clipboard")
+        return Target("cvlibrary", f"https://www.cv-library.co.uk/job/{m.group(1)}", ad_id=m.group(1))      # no apply/, no query
     if host in GREENHOUSE_HOSTS:
         q = parse_qs(u.query)
         if len(parts) >= 3 and parts[1] == "jobs" and parts[2].isdigit():
@@ -160,15 +217,16 @@ def _http_url(candidate, fallback: str) -> str:
 
 
 # ------------------------------------------------------------------ the APIs
-def greenhouse_ad(t: Target) -> Ad:
-    j = _json(f"https://boards-api.greenhouse.io/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}")
+def greenhouse_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
+    j = _json(f"https://boards-api.greenhouse.io/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}",
+              robots)
     return Ad(company=str(j.get("company_name") or "").strip() or _name(t.board), title=str(j.get("title") or "").strip(),
               url=_http_url(j.get("absolute_url"), t.url), location=str((j.get("location") or {}).get("name") or "").strip(),
               text=html_to_text(j.get("content")), source="greenhouse", ad_id=t.ad_id)
 
 
-def lever_ad(t: Target) -> Ad:
-    j = _json(f"https://{t.api_host}/v0/postings/{t.board}/{t.ad_id}", f"Lever posting {t.board}/{t.ad_id}")
+def lever_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
+    j = _json(f"https://{t.api_host}/v0/postings/{t.board}/{t.ad_id}", f"Lever posting {t.board}/{t.ad_id}", robots)
     parts = [j.get("descriptionPlain") or html_to_text(j.get("description"))]
     for lst in j.get("lists") or []:
         parts.append(f"{lst.get('text', '')}\n{html_to_text(lst.get('content'))}")
@@ -178,8 +236,8 @@ def lever_ad(t: Target) -> Ad:
               text="\n\n".join(p for p in parts if p).strip(), source="lever", ad_id=t.ad_id)
 
 
-def ashby_ad(t: Target) -> Ad:
-    data = _json(f"https://api.ashbyhq.com/posting-api/job-board/{t.board}", f"Ashby board {t.board}")
+def ashby_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
+    data = _json(f"https://api.ashbyhq.com/posting-api/job-board/{t.board}", f"Ashby board {t.board}", robots)
     for j in data.get("jobs") or []:
         if (str(j.get("id") or "").lower() == t.ad_id or t.ad_id in str(j.get("jobUrl") or "").lower()
                 or t.ad_id in str(j.get("applyUrl") or "").lower()):
@@ -287,8 +345,8 @@ def _ld_location(jp: dict) -> str:
     return ""
 
 
-def page_ad(t: Target) -> Ad:
-    r = _fetch(t.url, t.url)
+def page_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
+    r = _fetch(t.url, t.url, robots)
     p = _Page()
     p.feed(r.text)
     jp = _job_posting(p.ld)
@@ -306,11 +364,128 @@ def page_ad(t: Target) -> Ad:
               source="page", ad_id=t.ad_id)
 
 
+# ------------------------------------------------------------------ CV-Library
+class _Fields(HTMLParser):
+    """The first element of a page for each field: title (<h1>), company, location, salary and the description block, found by
+    the words in their class / id / itemprop. Inside the description, sub-elements that are not the ad ("similar jobs",
+    "related", "recommended", sidebars, share and apply buttons) are skipped. One element is read at a time."""
+    VOID = {"br", "img", "hr", "input", "meta", "link", "source", "wbr", "area", "col", "embed", "param", "track"}
+    BLOCK = {"p", "div", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "tr", "section"}
+    MATCH = {"company": re.compile(r"hiring[-_ ]?organi[sz]ation|company|employer|recruiter|posted[-_ ]?by|agency", re.I),
+             "location": re.compile(r"location", re.I), "salary": re.compile(r"salary", re.I),
+             "description": re.compile(r"job[-_ ]*description|itemprop=description", re.I)}
+    NOT_THE_AD = re.compile(r"similar|related|recommended|sidebar|more[-_ ]jobs|you[-_ ]may|share|apply[-_ ]?(?:btn|button)|alert",
+                            re.I)
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.out: dict[str, list[str]] = {}
+        self.done: set[str] = set()
+        self.key: str | None = None
+        self.depth = 0
+        self.skip = 0                     # depth inside a not-the-ad sub-element of the description
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        label = " ".join([a.get("class") or "", a.get("id") or "", f"itemprop={a.get('itemprop')}" if a.get("itemprop") else ""])
+        if self.key is None:
+            key = "title" if tag == "h1" and "title" not in self.done else next(
+                (k for k, rx in self.MATCH.items() if k not in self.done and rx.search(label)), None)
+            if key and tag not in self.VOID:
+                self.key, self.depth = key, 1
+                self.out[key] = []
+            return
+        if tag in self.VOID:
+            if tag == "br" and not self.skip:
+                self.out[self.key].append("\n")
+            return
+        self.depth += 1
+        if self.skip:
+            self.skip += 1
+        elif self.key == "description" and self.NOT_THE_AD.search(label):
+            self.skip = 1
+        elif tag in self.BLOCK:
+            self.out[self.key].append("\n- " if tag == "li" else "\n")
+
+    def handle_endtag(self, tag):
+        if self.key is None or tag in self.VOID:
+            return
+        self.depth -= 1
+        if self.skip:
+            self.skip -= 1
+        if self.depth <= 0:
+            self.done.add(self.key)
+            self.key, self.depth, self.skip = None, 0, 0
+
+    def handle_data(self, data):
+        if self.key and not self.skip:
+            self.out[self.key].append(data)
+
+    def get(self, key: str) -> str:
+        return _tidy(self.out.get(key, []))
+
+
+def looks_like_agency(name: str) -> bool:
+    return bool(AGENCY_WORDS.search(name or ""))
+
+
+def _num(v) -> str:
+    try:
+        return f"{float(v):,.0f}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def _ld_salary(jp: dict) -> str:
+    """"GBP 50,000-60,000 per year" from a JobPosting's baseSalary, or "" when it names none."""
+    base = jp.get("baseSalary")
+    if not isinstance(base, dict):
+        return ""
+    value = base.get("value") if isinstance(base.get("value"), dict) else base
+    lo, hi, one = value.get("minValue"), value.get("maxValue"), value.get("value")
+    if lo is not None and hi is not None:
+        amount = f"{_num(lo)}-{_num(hi)}"
+    else:
+        pick = next((v for v in (one, lo, hi) if v is not None and not isinstance(v, dict)), None)
+        amount = _num(pick) if pick is not None else ""
+    if not amount:
+        return ""
+    unit = str(value.get("unitText") or "").lower()
+    return " ".join(x for x in (str(base.get("currency") or value.get("currency") or "").strip(), amount,
+                                f"per {unit}" if unit else "") if x)
+
+
+def cvlibrary_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
+    """One CV-Library job page (always cv-library.co.uk/job/<id>): title, company or agency, location, salary and the description
+    block only. JSON-LD JobPosting first (what the page gives search engines), the page's own elements for what it lacks."""
+    r = _fetch(t.url, t.url, robots)
+    p = _Page()
+    p.feed(r.text)
+    f = _Fields()
+    f.feed(r.text)
+    jp = _job_posting(p.ld)
+    org = jp.get("hiringOrganization")
+    company = str((org.get("name") if isinstance(org, dict) else org) or f.get("company") or "").strip()
+    title = str(jp.get("title") or f.get("title") or p.meta.get("og:title") or " ".join(p.title.split())).strip()
+    desc = html_to_text(jp.get("description")) if isinstance(jp.get("description"), str) else ""
+    if len(desc) < manual.MIN_JD_BYTES:
+        desc = f.get("description")
+    if len(desc) < manual.MIN_JD_BYTES:
+        raise IntakeError(f"{t.url}: the description block was not found or is under {manual.MIN_JD_BYTES} characters; copy the "
+                          "job text and use --clipboard")
+    posted = str(jp.get("datePosted") or "")[:10]
+    return Ad(company=company, title=title, url=t.url, location=_ld_location(jp) or f.get("location"), text=desc,
+              source="cvlibrary", ad_id=t.ad_id, salary=_ld_salary(jp) or f.get("salary"), agency=looks_like_agency(company),
+              posted=posted if re.fullmatch(r"\d{4}-\d{2}-\d{2}", posted) else "")
+
+
 # ------------------------------------------------------------------ the entry points
-def fetch_ad(url: str, company: str | None = None, title: str | None = None) -> Ad:
-    """Fetch the ad behind `url`. `company` / `title` replace what the page or API says."""
+def fetch_ad(url: str, company: str | None = None, title: str | None = None, robots: RobotsCache | None = None) -> Ad:
+    """Fetch the ad behind `url`. `company` / `title` replace what the page or API says. The host's robots.txt is read first
+    (`robots`: the cache to use; default one in memory)."""
     t = parse_url(url)
-    ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "page": page_ad}[t.kind](t)
+    ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "cvlibrary": cvlibrary_ad,
+          "page": page_ad}[t.kind](t, robots)
     if company:
         ad.company = company.strip()
     if title:
@@ -332,9 +507,15 @@ def file_name(ad: Ad) -> str:
 
 def render(ad: Ad) -> str:
     one_line = lambda s: " ".join(str(s).split())          # noqa: E731 — a header value is one line
-    head = [f"Company: {one_line(ad.company)}", f"Title: {one_line(ad.title)}", f"URL: {ad.url}"]
+    head = [f"Company: {one_line(ad.company)}", f"Title: {one_line(ad.title)}", f"URL: {ad.url}", f"Source: {one_line(ad.source)}"]
     if one_line(ad.location):
         head.append(f"Location: {one_line(ad.location)}")
+    if one_line(ad.salary):
+        head.append(f"Salary: {one_line(ad.salary)}")
+    if ad.posted:
+        head.append(f"Posted: {ad.posted}")
+    if ad.agency:
+        head.append("Agency: yes")
     return "\n".join(head) + "\n\n" + ad.text.strip() + "\n"
 
 
@@ -444,6 +625,6 @@ def add_clipboard(settings, ask: Callable[[str], str] = input) -> tuple[Path, bo
 
 def add_url(settings, url: str, company: str | None = None, title: str | None = None) -> tuple[Path, bool, Ad]:
     """Fetch `url` and put the ad in paths.jds/inbox. Returns (file, created, ad)."""
-    ad = fetch_ad(url, company, title)
+    ad = fetch_ad(url, company, title, RobotsCache(settings.path("robots")))
     path, created = write_inbox(settings.path("jds") / "inbox", ad)
     return path, created, ad

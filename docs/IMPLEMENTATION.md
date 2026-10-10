@@ -390,6 +390,24 @@ Digital ..." is kept; a `$ `, `> ` or `PS ...>` prompt mark in front is ignored)
 lines; `Use this? [y/N]` — only `y`/`yes` goes on, else `IntakeError` and nothing is written. B2 (company / title ≥ 2 characters, no `<`
 `>`) was already `manual.meta_problem` behind `_ask_field`; the tests now cover both fields. Tests: `tests/discovery/test_intake.py`.
 
+**C. Robots-aware URL intake + CV-Library — done (fixtures only; not run against a live site).** `discovery/robots.py`: own RFC 9309
+matcher (`urllib.robotparser` ignores the `*`/`$` that CV-Library's `Disallow: /*?` and `Allow: *?jobId=` need), group chosen by token
+`career-ops` else `*`, longest rule wins, Allow wins ties; `RobotsCache(dir)` keeps `<host>.json` for `TTL_S` = 24 h (`paths.robots`);
+404/410 = allowed, 401/403/429/5xx/no answer = refused ("cannot be checked") except a 401/403 on the three documented API hosts
+(`DOCUMENTED_API_HOSTS`: Greenhouse boards-api, Lever, Ashby; observed 2026-10-10: Ashby's `/robots.txt` answers 401 although its posting
+API is documented as public; Greenhouse's has `Disallow: /embed/`, Lever's `Allow: /`). `intake._fetch` checks robots.txt before every GET
+and follows redirects by hand (`allow_redirects=False`, max 5) so a hop to a disallowed path or to linkedin.com is refused; the robots.txt
+request is paced like any other (so the first fetch from a host takes a second longer). `NEVER_FETCH` = linkedin.com, lnkd.in (checked in
+`parse_url` and on every hop, before any request). CV-Library: `parse_url` rewrites `/job/apply/<id>[/slug][?q]` and `/job/<id>[/slug][?q]`
+to `https://www.cv-library.co.uk/job/<id>` and refuses every other path (search/query); `cvlibrary_ad` reads JSON-LD `JobPosting`
+(title, hiringOrganization, jobLocation, baseSalary, datePosted, description) and falls back to `_Fields` (h1 and class/id/itemprop
+words; sub-elements named similar/related/recommended/sidebar/share/alert inside the description are skipped). Inbox files now start
+`Company / Title / URL / Source` then `Location`, `Salary`, `Posted`, `Agency: yes`; `manual.HEADER_KEYS` reads them and `live` passes
+`source`, `posted_at` and the new `jobs.agency` column to `add_jd`. `DB.jobs()` now orders by `first_seen, rowid` (same-second inserts
+were returned in arbitrary order). Tests: `tests/discovery/test_robots.py`, `test_intake.py` (sections C1-C3); fixtures
+`tests/fixtures/intake/robots_cvlibrary.txt`, `cvlibrary_job*.html` (written by hand from the page structure CV-Library publishes, not
+saved from a live page).
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

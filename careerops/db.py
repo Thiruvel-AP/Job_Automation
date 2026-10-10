@@ -110,7 +110,8 @@ COLUMNS = [
     ("jobs", "sponsor_rating", "TEXT"),    # the matched sponsor's rating letter (A / B)
     ("jobs", "cv_pages", "INTEGER"),      # pages of the tailored CV (2 by default, 1 with --one-page)
     ("jobs", "page2_fill", "REAL"),       # how full page 2 is, 0-1, from the rendered PDF (0 for a one-page CV)
-    ("jobs", "analysis", "TEXT"),         # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
+    ("jobs", "agency", "INTEGER"),        # 1 = posted by a recruitment agency, not the employer (a weight on priority, never a filter)
+    ("jobs", "analysis", "TEXT"),        # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
 ]
 
 
@@ -170,7 +171,7 @@ class DB:
             st = [status] if isinstance(status, str) else list(status)
             q += f" WHERE status IN ({','.join('?' * len(st))})"
             args += st
-        q += " ORDER BY first_seen"
+        q += " ORDER BY first_seen, rowid"      # rowid: jobs added within the same second keep their order
         if limit:
             q += f" LIMIT {int(limit)}"
         return list(self.conn.execute(q, args))

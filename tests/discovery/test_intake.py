@@ -30,15 +30,24 @@ def web(monkeypatch):
     """Replaces the one network call. `web.add(url_part, fixture_name_or_Resp)`; `web.urls` is every URL asked for, in order."""
     class Web:
         routes: dict = {}
-        urls: list = []
+        urls: list = []                 # every URL asked for except a robots.txt
+        robots_urls: list = []          # every robots.txt asked for
+        robots_routes: dict = {}
 
         def add(self, part, reply, status=200):
             self.routes[part] = reply if isinstance(reply, Resp) else Resp((DIR / reply).read_bytes(), status)
 
+        def robots(self, host_part, text="", status=200):
+            """What the host's robots.txt says (default: it has none: 404, everything allowed)."""
+            self.robots_routes[host_part] = Resp(text, status)
+
     w = Web()
-    w.routes, w.urls = {}, []
+    w.routes, w.urls, w.robots_urls, w.robots_routes = {}, [], [], {}
 
     def fake_get(url, **kw):
+        if url.endswith("/robots.txt"):
+            w.robots_urls.append(url)
+            return next((r for part, r in w.robots_routes.items() if part in url), Resp("", 404))
         w.urls.append(url)
         for part, reply in w.routes.items():
             if part in url:
@@ -48,6 +57,7 @@ def web(monkeypatch):
     monkeypatch.setattr(intake, "_get", fake_get)
     monkeypatch.setattr(intake, "_sleep", lambda s: None)
     intake._last.clear()
+    intake._default_robots.memory.clear()
     return w
 
 
@@ -188,12 +198,12 @@ def test_requests_to_one_host_are_a_second_apart(web, monkeypatch):
     web.add("api.lever.co", "lever_posting.json")
     web.add("example.com", "page_plain.html")
     intake.fetch_ad(LEVER_URL)
-    assert slept == []                                                         # the first request to a host waits for nothing
+    assert slept == [pytest.approx(1.0)]                       # robots.txt first (no wait), then the posting a second later
     now[0] += 0.25
-    intake.fetch_ad(LEVER_URL)                                                 # same host 0.25 s later
-    assert slept == [pytest.approx(0.75)]
-    intake.fetch_ad("https://example.com/x")                                   # another host: no wait
-    assert slept == [pytest.approx(0.75)]
+    intake.fetch_ad(LEVER_URL)                                                 # same host 0.25 s later; robots.txt is cached
+    assert slept == [pytest.approx(1.0), pytest.approx(0.75)]
+    intake.fetch_ad("https://example.com/x")                                   # another host: its robots.txt, then the page
+    assert slept == [pytest.approx(1.0), pytest.approx(0.75), pytest.approx(1.0)]
 
 
 def test_every_request_carries_the_shared_user_agent(monkeypatch):
@@ -219,7 +229,7 @@ def test_the_file_has_the_headers_the_live_loop_reads_and_survives_read_jd(web, 
     assert created and path.parent == settings.path("jds") / "inbox" and path.name == "monzo-bank-data-scientist-4412345.txt"
     text, sha = manual.read_jd(path)                                            # >= 500 bytes, UTF-8
     assert manual.header_fields(text) == {"company": "Monzo Bank", "title": "Data Scientist", "url": GH_URL,
-                                          "location": "London, UK"}
+                                          "source": "greenhouse", "location": "London, UK"}
     assert text.split("\n\n", 1)[1].startswith("About the role")
 
 
@@ -432,7 +442,7 @@ def test_add_clipboard_writes_company_title_txt_that_live_accepts(clip, settings
     assert path == settings.path("jds") / "inbox" / "northwind-energy-data-scientist.txt"
     text, _ = manual.read_jd(path)
     assert manual.header_fields(text) == {"company": "Northwind Energy", "title": "Data Scientist",
-                                          "url": "https://careers.example.com/jobs/12"}
+                                          "url": "https://careers.example.com/jobs/12", "source": "clipboard"}
     assert "£50k–£60k" in text and "\r" not in text
 
 
@@ -632,3 +642,211 @@ def test_two_characters_is_enough_for_a_name(clip, settings, monkeypatch):
     _answers(monkeypatch, *GO, "BP", "ML", ANSWERS[2])
     ad = intake.add_clipboard(settings, input)[2]
     assert (ad.company, ad.title) == ("BP", "ML")
+
+
+# ------------------------------------------------------------------ C1: robots.txt before every fetch
+def test_robots_txt_is_read_before_the_page_and_a_disallowed_path_is_refused_without_fetching_it(web):
+    web.robots("example.com", "User-agent: *\nDisallow: /private/\n")
+    web.add("example.com", "page_plain.html")
+    with pytest.raises(intake.RobotsRefused, match="example.com/robots.txt disallows /private/job/1.*--clipboard"):
+        intake.fetch_ad("https://example.com/private/job/1")
+    assert web.robots_urls == ["https://example.com/robots.txt"] and web.urls == []         # the page itself was never asked for
+
+
+def test_an_allowed_path_is_fetched_and_robots_txt_is_read_only_once_per_host(web):
+    web.robots("example.com", "User-agent: *\nDisallow: /private/\n")
+    web.add("example.com", "page_plain.html")
+    intake.fetch_ad("https://example.com/careers/a")
+    intake.fetch_ad("https://example.com/careers/b")
+    assert web.robots_urls == ["https://example.com/robots.txt"] and len(web.urls) == 2
+
+
+def test_the_documented_apis_are_checked_too(web):
+    web.robots("boards-api.greenhouse.io", "User-agent: *\nDisallow: /embed/\n")
+    web.add("boards-api.greenhouse.io", "greenhouse_job.json")
+    assert intake.fetch_ad(GH_URL).title == "Data Scientist"
+    assert web.robots_urls == ["https://boards-api.greenhouse.io/robots.txt"]
+    web.robots("api.lever.co", "User-agent: *\nDisallow: /v0/\n")
+    web.add("api.lever.co", "lever_posting.json")
+    with pytest.raises(intake.RobotsRefused, match="disallows /v0/postings"):
+        intake.fetch_ad(LEVER_URL)
+
+
+@pytest.mark.parametrize("status", [401, 403, 429, 500])
+def test_a_robots_txt_that_cannot_be_read_refuses_a_page_host_and_the_page_is_not_asked_for(web, status):
+    web.robots("example.com", "denied", status)
+    web.add("example.com", "page_plain.html")
+    with pytest.raises(intake.RobotsRefused, match="cannot be checked.*--clipboard"):
+        intake.fetch_ad("https://example.com/careers/a")
+    assert web.urls == []
+
+
+def test_the_robots_cache_is_kept_in_paths_robots_for_a_day(web, settings):
+    web.add("boards-api.greenhouse.io", "greenhouse_job.json")
+    web.robots("boards-api.greenhouse.io", "User-agent: *\nDisallow: /embed/\n")
+    intake.add_url(settings, GH_URL)
+    assert (settings.path("robots") / "boards-api.greenhouse.io.json").exists()
+    web.robots_urls.clear()
+    intake.add_url(settings, "https://boards.greenhouse.io/monzo/jobs/4412345?x=1")      # a new cache object, same day: read from the file
+    assert web.robots_urls == []
+
+
+def test_the_commands_print_the_robots_refusal_and_write_nothing(web, settings, monkeypatch, capsys):
+    _cfg(monkeypatch, settings)
+    web.robots("example.com", "User-agent: *\nDisallow: /\n")
+    for argv in (["add-url"], ["live", "--url"]):
+        with pytest.raises(SystemExit) as e:
+            cli.main([*argv, "https://example.com/jobs/ml"])
+        assert e.value.code == 1 and "robots.txt disallows /jobs/ml" in capsys.readouterr().err
+    inbox = settings.path("jds") / "inbox"
+    assert web.urls == [] and (not inbox.exists() or not list(inbox.iterdir()))
+
+
+def test_a_redirect_is_followed_by_hand_and_the_new_host_is_checked_too(web):
+    class Redirect(Resp):
+        headers = {"Location": "https://other.example.org/private/x"}
+    web.routes["example.com/jobs/go"] = Redirect("", 302)
+    web.robots("other.example.org", "User-agent: *\nDisallow: /private/\n")
+    web.add("other.example.org", "page_plain.html")
+    with pytest.raises(intake.RobotsRefused, match="other.example.org/robots.txt disallows /private/x"):
+        intake.fetch_ad("https://example.com/jobs/go")
+    assert web.urls == ["https://example.com/jobs/go"]
+
+
+def test_a_redirect_to_a_fine_page_is_followed_and_to_linkedin_is_not(web):
+    class Redirect(Resp):
+        headers = {"Location": "/careers/real"}
+    web.routes["example.com/jobs/short-link"] = Redirect("", 301)
+    web.add("example.com/careers/real", "page_plain.html")
+    assert intake.fetch_ad("https://example.com/jobs/short-link").source == "page"
+    assert web.urls == ["https://example.com/jobs/short-link", "https://example.com/careers/real"]
+
+    class ToLinkedIn(Resp):
+        headers = {"Location": "https://www.linkedin.com/jobs/view/1"}
+    web.routes["example.com/jobs/ln"] = ToLinkedIn("", 302)
+    web.urls.clear()
+    with pytest.raises(intake.RobotsRefused, match="LinkedIn"):
+        intake.fetch_ad("https://example.com/jobs/ln")
+    assert web.urls == ["https://example.com/jobs/ln"]
+
+
+def test_a_redirect_loop_stops(web):
+    class Loop(Resp):
+        headers = {"Location": "https://example.com/jobs/loop"}
+    web.routes["example.com"] = Loop("", 302)
+    with pytest.raises(intake.IntakeError, match="too many redirects"):
+        intake.fetch_ad("https://example.com/jobs/loop")
+    assert len(web.urls) == intake.MAX_REDIRECTS + 1
+
+
+def test_requests_do_not_follow_redirects_on_their_own(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(intake.requests, "get", lambda url, **kw: seen.update(kw) or Resp("{}"))
+    intake._get("https://example.com/x")
+    assert seen["allow_redirects"] is False
+
+
+# ------------------------------------------------------------------ C3: LinkedIn is never fetched
+@pytest.mark.parametrize("url", ["https://www.linkedin.com/jobs/view/3841", "https://uk.linkedin.com/jobs/view/1/",
+                                 "https://linkedin.com/comm/jobs/view/1", "https://lnkd.in/dXyz"])
+def test_a_linkedin_link_is_refused_before_any_request(web, url):
+    with pytest.raises(intake.RobotsRefused) as e:
+        intake.fetch_ad(url)
+    assert "job-alert emails" in str(e.value) and "--clipboard" in str(e.value)
+    assert web.urls == [] and web.robots_urls == []
+
+
+def test_the_commands_refuse_linkedin_with_exit_1(web, settings, monkeypatch, capsys):
+    _cfg(monkeypatch, settings)
+    for argv in (["add-url"], ["live", "--url"]):
+        with pytest.raises(SystemExit) as e:
+            cli.main([*argv, "https://www.linkedin.com/jobs/view/1"])
+        assert e.value.code == 1 and "LinkedIn ads come in through job-alert emails" in capsys.readouterr().err
+    assert web.urls == [] and web.robots_urls == []
+
+
+# ------------------------------------------------------------------ C2: CV-Library
+CVL_ROBOTS = (DIR / "robots_cvlibrary.txt").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("url", [
+    "https://www.cv-library.co.uk/job/apply/219034011",
+    "https://www.cv-library.co.uk/job/apply/219034011/data-scientist",
+    "https://www.cv-library.co.uk/job/apply/219034011?jobId=219034011&utm_source=alert",
+    "https://www.cv-library.co.uk/job/219034011",
+    "https://www.cv-library.co.uk/job/219034011/data-scientist?utm_medium=email",
+    "https://cv-library.co.uk/job/219034011/"])
+def test_a_cv_library_apply_or_job_link_becomes_the_plain_job_page(url):
+    t = intake.parse_url(url)
+    assert (t.kind, t.url, t.ad_id) == ("cvlibrary", "https://www.cv-library.co.uk/job/219034011", "219034011")
+
+
+@pytest.mark.parametrize("url", ["https://www.cv-library.co.uk/jobs/data-scientist", "https://www.cv-library.co.uk/data-scientist-jobs-in-london",
+                                 "https://www.cv-library.co.uk/search-jobs?q=data+scientist", "https://www.cv-library.co.uk/jobs?q=python&page=2",
+                                 "https://www.cv-library.co.uk/job/", "https://www.cv-library.co.uk/job/apply/",
+                                 "https://www.cv-library.co.uk/?q=python", "https://www.cv-library.co.uk/job/abc"])
+def test_a_cv_library_search_or_query_url_is_never_fetched(web, url):
+    with pytest.raises(intake.IntakeError, match="only a single CV-Library job link.*never fetched"):
+        intake.fetch_ad(url)
+    assert web.urls == [] and web.robots_urls == []
+
+
+def test_a_cv_library_job_is_read_from_its_json_ld_and_nothing_else(web):
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    web.add("cv-library.co.uk/job/219034011", "cvlibrary_job.html")
+    ad = intake.fetch_ad("https://www.cv-library.co.uk/job/apply/219034011/data-scientist?jobId=219034011")
+    assert web.urls == ["https://www.cv-library.co.uk/job/219034011"]                         # the apply URL was never asked for
+    assert web.robots_urls == ["https://www.cv-library.co.uk/robots.txt"]
+    assert (ad.company, ad.title, ad.location, ad.source) == ("Brightwell Analytics Ltd", "Data Scientist", "Bristol, England, GB", "cvlibrary")
+    assert ad.salary == "GBP 45,000-55,000 per year" and ad.posted == "2026-10-06" and ad.agency is False
+    assert ad.url == "https://www.cv-library.co.uk/job/219034011" and "Python, SQL and scikit-learn" in ad.text
+    for noise in ("SIMILAR-JOB-NOISE", "Similar jobs", "NAV-NOISE", "FOOTER-NOISE", "<p>", "&lt;", "Truncated teaser"):
+        assert noise not in ad.text
+
+
+def test_a_cv_library_page_without_json_ld_gives_the_description_element_without_the_sidebar(web):
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    web.add("cv-library.co.uk/job/777", "cvlibrary_job_plain.html")
+    ad = intake.fetch_ad("https://www.cv-library.co.uk/job/777")
+    assert (ad.company, ad.title, ad.location) == ("Northgate Recruitment Solutions", "Machine Learning Engineer", "Leeds, West Yorkshire")
+    assert ad.salary == "£50,000 - £60,000 per annum" and ad.agency is True            # an agency: flagged, not dropped
+    assert ad.text.startswith("Our client, a growing fintech") and "- Strong Python and SQL" in ad.text
+    for noise in ("SIMILAR-JOB-NOISE", "Similar jobs", "SHARE-NOISE", "RECOMMENDED-NOISE", "NAV-NOISE", "FOOTER-NOISE"):
+        assert noise not in ad.text
+
+
+def test_a_cv_library_page_with_no_description_is_refused_in_one_line(web):
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    web.routes["cv-library.co.uk/job/5"] = Resp("<html><body><main><h1>Data Scientist</h1><p>Login to see this job.</p></main></body></html>")
+    with pytest.raises(intake.IntakeError, match="description block was not found.*--clipboard"):
+        intake.fetch_ad("https://www.cv-library.co.uk/job/5")
+
+
+def test_the_cv_library_inbox_file_has_the_headers_live_reads(web, settings):
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    web.add("cv-library.co.uk/job/777", "cvlibrary_job_plain.html")
+    path, created, ad = intake.add_url(settings, "https://www.cv-library.co.uk/job/apply/777")
+    text, _ = manual.read_jd(path)
+    assert manual.header_fields(text) == {"company": "Northgate Recruitment Solutions", "title": "Machine Learning Engineer",
+                                          "url": "https://www.cv-library.co.uk/job/777", "source": "cvlibrary",
+                                          "location": "Leeds, West Yorkshire", "salary": "£50,000 - £60,000 per annum",
+                                          "agency": "yes"}
+
+
+def test_cv_library_robots_would_refuse_the_apply_path_itself(web):
+    """Belt and braces: even if the rewrite were bypassed, robots.txt disallows /job/apply/ and the page is not fetched."""
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    with pytest.raises(Exception, match="disallows /job/apply/1"):
+        intake._default_robots.check("https://www.cv-library.co.uk/job/apply/1", intake._robots_get)
+
+
+def test_the_job_from_cv_library_keeps_its_source_agency_flag_and_posted_date_in_the_database(web, settings, db):
+    from careerops.apply.live import Folders  # noqa: F401 — live reads these headers; the job row is what matters here
+    web.robots("cv-library.co.uk", CVL_ROBOTS)
+    web.add("cv-library.co.uk/job/219034011", "cvlibrary_job.html")
+    path, _, ad = intake.add_url(settings, "https://www.cv-library.co.uk/job/219034011")
+    hdr = manual.header_fields(path.read_text(encoding="utf-8"))
+    assert hdr["posted"] == "2026-10-06" and "agency" not in hdr
+    jid = manual.add_jd(db, ad.text, company=ad.company, title=ad.title, url=ad.url, source="cvlibrary", posted=ad.posted, agency=ad.agency)
+    row = db.job(jid)
+    assert (row["source"], row["posted_at"], row["agency"]) == ("cvlibrary", "2026-10-06", 0)

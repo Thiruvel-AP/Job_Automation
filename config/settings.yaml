@@ -18,6 +18,8 @@ paths:
   judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
+  robots: data/robots                     # robots.txt rules per host, <host>.json, kept 24 h before a page is fetched (discovery/robots.py)
+  secrets: data/secrets                   # gitignored (data/): the Gmail OAuth client file and token (`discover --gmail-alerts`); never in git
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
   calibration: data/calibration           # M5 calibration JDs, manifest, reports (careerops calibrate)
   # Frozen keyword lists, one <jd-id>.yaml per calibration JD (`careerops calibrate --freeze-keywords`). They are

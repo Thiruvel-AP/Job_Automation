@@ -324,7 +324,14 @@ class Live:
         url = hdr.get("url")
         if url is None:
             url = self._ask_valid(f"{f.name}: application URL? (blank = none; you would apply by hand) ", "url") or None
-        return {"company": company, "title": title, "url": url, "location": hdr.get("location") or "United Kingdom"}, ""
+        meta = {"company": company, "title": title, "url": url, "location": hdr.get("location") or "United Kingdom"}
+        if re.fullmatch(r"[A-Za-z][\w.-]{0,30}", hdr.get("source") or ""):
+            meta["source"] = hdr["source"].lower()
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("posted") or ""):
+            meta["posted"] = hdr["posted"]
+        if (hdr.get("agency") or "").lower() in ("yes", "true", "1"):
+            meta["agency"] = True
+        return meta, ""
 
     def _advance(self, f: Path, text: str, sha: str, entry: dict, r: JobResult) -> str:
         db = self.db
