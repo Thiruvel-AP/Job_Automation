@@ -3,7 +3,7 @@
 A model draft is checked for the ungrammatical shapes small models produce from a bullet ("my work on built ...",
 "mirrors my work a tool-calling agent", a paragraph that starts with a bare past-tense verb or is an evidence bullet pasted
 verbatim). When a draft fails, the letter is built here, all in the first person, from text that is already checked: the
-company hook's first sentence and the two evidence bullets, each turned into a clause ("I built ...").
+company hook's first sentence and the two evidence bullets, each turned into a clause ("I built ...", "I worked on ...").
 """
 from __future__ import annotations
 
@@ -51,9 +51,28 @@ _MIRRORS_NOUN = re.compile(r"\b(?:mirror|reflect|match|echo)s?\s+my\s+(?:work|ex
                            re.I)
 
 
+PASTE_OVERLAP = 0.7        # a sentence with at least this share of its words in one evidence bullet is that bullet pasted
+PASTE_MIN_WORDS = 5        # shorter sentences share words by chance ("I used Python.")
+_BRACKETED = re.compile(r"\([^)]*\)|\[[^\]]*\]")
+_LEADING_I = re.compile(r"^\s*I\s+")
+
+
+def _paste_words(text: str) -> set[str]:
+    """The words compared by the paste check: lower-case alphanumeric tokens, bracketed text and a leading "I" left out."""
+    return set(re.findall(r"[a-z0-9]+", _LEADING_I.sub("", _BRACKETED.sub(" ", text)).lower()))
+
+
+def paste_overlap(sentence: str, bullet: str) -> float:
+    """The share of the sentence's words (see `_paste_words`) that the bullet also has; 0.0 for a sentence of fewer than
+    PASTE_MIN_WORDS words."""
+    s = _paste_words(sentence)
+    return len(s & _paste_words(bullet)) / len(s) if len(s) >= PASTE_MIN_WORDS else 0.0
+
+
 def grammar_problems(body: list[str], evidence: list[str]) -> list[str]:
     """Ungrammatical or pasted shapes in the model's paragraphs: "my work on built ...", "mirrors my work <noun>", a
-    paragraph that starts with a bare past-tense verb (it has no subject), a sentence that is an evidence bullet verbatim."""
+    paragraph that starts with a bare past-tense verb (it has no subject), a sentence that is an evidence bullet verbatim
+    or nearly so (PASTE_OVERLAP of its words are the bullet's, "I" and bracketed text left out)."""
     out: list[str] = []
     text = " ".join(body)
     # the verbs a bullet starts with are the ones a model copies after "my work on": "my work on built scikit-learn pipelines"
@@ -71,14 +90,28 @@ def grammar_problems(body: list[str], evidence: list[str]) -> list[str]:
     for s in sentences(text):
         if norm_literal(s).rstrip(". ") in ev:
             out.append(f"pastes an evidence bullet verbatim: '{s.strip()[:50]}'")
+            continue
+        share = max((paste_overlap(s, e) for e in evidence), default=0.0)
+        if share >= PASTE_OVERLAP:
+            out.append(f"pastes an evidence bullet ({share:.0%} of its words are the bullet's): '{s.strip()[:50]}'")
     return list(dict.fromkeys(out))
 
 
 # ------------------------------------------------------------------ the fallback letter
 def clause(bullet: str) -> str:
-    """A bullet as a clause that follows "I": first letter lower-cased (past-tense verbs only reach here), no final period."""
+    """A bullet as a clause that follows "I": first letter lower-cased (a plain capitalised first word only: "XGBoost",
+    "LSTM" and "MCP" keep their case), no final period."""
     b = bullet.strip().rstrip(".").rstrip()
-    return b[:1].lower() + b[1:]
+    first = re.match(r"[A-Za-z][A-Za-z-]*", b)
+    plain = bool(first) and not any(c.isupper() for c in first.group(0)[1:])
+    return b[:1].lower() + b[1:] if plain else b
+
+
+def i_clause(bullet: str) -> str:
+    """The bullet as a first-person clause: "I built a tool-calling agent ..." for a verb-led bullet, "I worked on XGBoost
+    churn classifier in R ..." for a noun-led one (it cannot follow "I" as it stands). "worked on" says no more than the
+    bullet does: no built / led / owned."""
+    return f"I {clause(bullet)}" if starts_with_past_verb(bullet) else f"I worked on {clause(bullet)}"
 
 
 def org_label(org: str) -> str:
@@ -118,11 +151,11 @@ def fallback_letter(job: dict, hook: str, evidence: list[dict], gaps: list[str],
                   None) if evidence else None
     if evidence:
         paras.append(f"{lead} I'd like to bring my experience to that work: "
-                     f"{where(first['org'], first.get('project', False), False)}, I {clause(first['text'])}.")
+                     f"{where(first['org'], first.get('project', False), False)}, {i_clause(first['text'])}.")
     else:
         paras.append(lead)
     if second:
-        paras.append(f"{where(second['org'], second.get('project', False), True)}, I {clause(second['text'])}.")
+        paras.append(f"{where(second['org'], second.get('project', False), True)}, {i_clause(second['text'])}.")
     if gaps:
         paras.append(f"I have not used {gap_display(gaps[0], jd)} yet.")
     paras.append(closing)

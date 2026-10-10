@@ -327,9 +327,9 @@ def _letter_llm(*drafts):
     return lambda ctx: {"paragraphs": drafts.pop(0) if len(drafts) > 1 else drafts[0]}
 
 
-GOOD = ["Reviewly turns feedback into themes, which is the work I do.", "I built a tool-calling agent.",
+GOOD = ["Reviewly turns feedback into themes, which is the work I do.", "At the university I built a tool-calling agent for a cancer research platform, and it is the work that I am proudest of.",
         "Could we talk for twenty minutes about it?"]
-NO_QUESTION = ["Reviewly turns feedback into themes, which is the work I do.", "I built a tool-calling agent.",
+NO_QUESTION = ["Reviewly turns feedback into themes, which is the work I do.", "At the university I built a tool-calling agent for a cancer research platform, and it is the work that I am proudest of.",
                "I would welcome a call to discuss it."]
 
 

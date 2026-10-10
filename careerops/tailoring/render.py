@@ -46,6 +46,15 @@ def skill_display(skill) -> str:
     return "".join(out)
 
 
+def award_shown(project: dict) -> str:
+    """The award to print beside a project: "" when it has none, or when its text is already in the project's name
+    ("Lloyd's Banking Group Datathon — 3rd place" + award "3rd place"), so it is printed once."""
+    award = " ".join(str(project.get("award") or "").split())
+    if not award or award.casefold() in " ".join(str(project.get("name") or "").split()).casefold():
+        return ""
+    return award
+
+
 def env() -> jinja2.Environment:
     e = jinja2.Environment(
         loader=jinja2.FileSystemLoader(ROOT / "templates"),
@@ -55,6 +64,7 @@ def env() -> jinja2.Environment:
         trim_blocks=True, lstrip_blocks=True, autoescape=False, undefined=jinja2.StrictUndefined,
     )
     e.filters["e"] = latex_escape
+    e.filters["award"] = award_shown                                     # a project's award, unless its name already says it
     e.filters["skill"] = lambda s: latex_escape(skill_display(s))        # a skill entry with commas shows them as "/"
     # a URL inside \href{...}: hyperref needs % and # escaped
     e.filters["urlesc"] = lambda u: str(u).replace("%", r"\%").replace("#", r"\#")

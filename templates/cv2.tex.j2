@@ -73,7 +73,7 @@
 \BLOCK{if not loop.first}
 \vspace{3pt}
 \BLOCK{endif}
-\needspace{3\baselineskip}\noindent\textbf{\VAR{p.name|e}}\BLOCK{if p.get('stack')} -- \textit{\VAR{p.stack|e}}\BLOCK{endif} \hfill \BLOCK{if p.get('award')}\textit{\VAR{p.award|e}}\BLOCK{elif p.get('github')}\href{\VAR{p.github|urlesc}}{GitHub}\BLOCK{endif}
+\needspace{3\baselineskip}\noindent\textbf{\VAR{p.name|e}}\BLOCK{if p.get('stack')} -- \textit{\VAR{p.stack|e}}\BLOCK{endif} \hfill \BLOCK{if p|award}\textit{\VAR{(p|award)|e}}\BLOCK{elif p.get('github')}\href{\VAR{p.github|urlesc}}{GitHub}\BLOCK{endif}
 
 \begin{itemize}
 \BLOCK{for b in p.bullets}

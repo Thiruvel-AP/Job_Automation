@@ -115,6 +115,24 @@ def real_profile_hits():
         _guard["profile_hits"].clear()
 
 
+# A letter sentence that is mostly one evidence bullet's own words is a paste and is rejected (letter_rules.paste_overlap).
+# Test drafts that must pass say the same thing in other words; the keys are the starts of the fixture bullets.
+_RESTATED = {
+    "Built a tool-calling LLM agent": "At the university I built a tool-calling LLM agent for a cancer research platform, "
+                                      "and it is the piece of work that I am proudest of.",
+    "Built a churn classifier": "In a separate project that I enjoyed I built a churn classifier with scikit-learn and "
+                                "XGBoost, and it is another example of how I work.",
+}
+
+
+def restate(bullet: str) -> str:
+    """A first-person sentence for a fixture bullet that shares well under the paste limit of its words."""
+    for start, sentence in _RESTATED.items():
+        if bullet.startswith(start):
+            return sentence
+    raise KeyError(f"no restatement for {bullet[:40]!r}: add it to _RESTATED in tests/conftest.py")
+
+
 def fixture(area: str, name: str) -> Path:
     return FIX / area / name
 

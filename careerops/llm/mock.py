@@ -57,8 +57,9 @@ class MockLLM:
             gaps = ctx.get("gaps") or []
             return {"paragraphs": [
                 f"{ctx['company']} is hiring a {ctx['title']}, and my recent work maps directly onto it.",
-                # first person: "I built ...", never the bullet pasted bare (the letter guard rejects both shapes)
-                (lambda e: "I " + e[:1].lower() + e[1:])(ctx["evidence"][0]) if ctx["evidence"] else "",
+                # first person and short: the guard rejects a bare bullet and a sentence that is >= 70% the bullet's words
+                (lambda e: "A concrete example from my own work is that I " + " ".join(e.split()[:6]).rstrip(" ,;:(")
+                           + ".")(ctx["evidence"][0]) if ctx["evidence"] else "",
                 # optional gap sentence: one required tool the candidate lacks, stated plainly, no apology
                 *([f"I have not used {gaps[0]} yet, and I would pick it up quickly "
                    f"alongside the tools I already use."] if gaps else []),

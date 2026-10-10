@@ -211,7 +211,7 @@ def test_letter_paragraphs_as_strings_text_objects_or_one_string():
 
 @pytest.mark.slow
 def test_a_letter_in_text_objects_is_accepted_and_the_drops_are_reported(settings, fb_fixture, job, spy_llm):
-    good = ["Northwind builds oncology tools, which is the work I do.", "I built a tool-calling agent.",
+    good = ["Northwind builds oncology tools, which is the work I do.", "At the university I built a tool-calling agent for a cancer research platform, and it is the work that I am proudest of.",
             "Could we talk for twenty minutes?"]
     llm = spy_llm({"cover_letter": lambda ctx: {"paragraphs": [{"text": good[0]}, good[1], None, {"text": good[2]}]}})
     rep = _run(settings, fb_fixture, job, llm)

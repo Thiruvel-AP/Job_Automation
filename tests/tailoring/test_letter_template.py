@@ -187,17 +187,15 @@ def _bank():
             b("n2", "LSTM forecaster in python with cyclic encoding.", ["lstm", "python"])]}]}
 
 
-def test_noun_led_bullets_are_not_letter_evidence_even_when_they_match_the_job_best():
+def test_every_bullet_is_ranked_for_the_letter_noun_led_ones_included():
+    """Relevance round: a noun-led bullet that matches the job best is letter evidence (the fallback letter says "I worked
+    on ..." for it); only the bullets on the CV are candidates."""
     kws = [Keyword("python", 2, True), Keyword("xgboost", 2, True), Keyword("lstm", 2, True), Keyword("sql", 1, False)]
     ev = tailor.letter_evidence(_bank(), kws, {"v1", "v2", "n1", "n2"})
-    assert [e["id"] for e in ev] == ["v1", "v2"]
-    assert all(starts_with_past_verb(e["text"]) for e in ev)
-
-
-def test_when_the_cv_has_fewer_than_two_verb_led_bullets_the_banks_best_verb_led_ones_fill_up():
-    kws = [Keyword("python", 2, True), Keyword("xgboost", 2, True)]
-    ev = tailor.letter_evidence(_bank(), kws, {"v1", "n1", "n2"})            # one verb-led bullet on the CV
-    assert [e["id"] for e in ev] == ["v1", "v2"]
+    assert [e["id"] for e in ev] == ["n1", "v1"]                             # n1 (xgboost, python), then the best of another entry
+    assert not starts_with_past_verb(ev[0]["text"])
+    ev = tailor.letter_evidence(_bank(), kws, {"v1", "n1", "n2"})
+    assert [e["id"] for e in ev] == ["n1", "v1"] and "v2" not in [e["id"] for e in ev]
 
 
 # ---------------------------------------------------------------- 3. gap casing
@@ -231,7 +229,8 @@ def test_a_model_draft_with_these_shapes_is_rejected(para, what):
 
 @pytest.mark.parametrize("para", [
     "Zone mirrors my work on a tool-calling LLM agent.", "Chattermill's focus mirrors my work building NLP workflows.",
-    "I built scikit-learn pipelines and deployed them as FastAPI services.", "At Acme, I wrote the reporting pipeline."])
+    "I also have hands-on experience with scikit-learn pipelines and LSTM models, which I deployed as FastAPI services.",
+    "At Acme, I wrote the reporting pipeline."])
 def test_grammatical_first_person_prose_passes(para):
     assert grammar_problems([para], [TXT["fl1"], TXT["fl2"]]) == []
 
@@ -255,7 +254,8 @@ def test_run_201304_drafts_with_broken_grammar_are_rejected_twice_and_the_templa
 EV2 = [{"id": "fl1", "text": TXT["fl1"], "terms": []}, {"id": "az1", "text": TXT["az1"], "terms": []}]
 HOOK_FL1 = "Quantcast optimises ad auctions, and I built scikit-learn pipelines and LSTM models in TensorFlow Keras for that."
 SECOND_FL1 = "I deployed scikit-learn pipelines and LSTM/BiRNN/CNN models as FastAPI services in Docker."
-SECOND_AZ1 = "I built a tool-calling LLM agent with LangChain and AWS Bedrock for a multi-omics cancer research platform."
+SECOND_AZ1 = ("Separately, I have worked on a tool-calling LLM agent using LangChain and AWS Bedrock for a multi-omics cancer "
+              "research platform.")
 
 
 def test_one_bullet_told_in_both_the_hook_and_paragraph_2_is_a_problem():

@@ -21,21 +21,38 @@ def _llm(spy_llm, picks, profile):
     return spy_llm({"tailor_profile": lambda ctx: {"facts": picks, "profile": profile}})
 
 
-# ---------------------------------------------------------------- the model's pick
-def test_the_prompt_lists_the_numbered_facts_and_asks_for_two(fb_fixture, spy_llm):
-    llm = _llm(spy_llm, ["F2", "F3"], "Data Scientist with production LLM agent work and FinTech engineering roots.")
-    _profile(fb_fixture, llm)
+# ---------------------------------------------------------------- code picks the two facts, the model words them
+JD_KWS = [Keyword("fintech", 2, True), Keyword("llm", 2, True)]          # facts 2 and 3 of FACTS say these; fact 1 says neither
+
+
+def test_the_prompt_lists_only_the_two_facts_code_picked_for_the_job(fb_fixture, spy_llm):
+    llm = _llm(spy_llm, ["F1", "F2"], "Data Scientist with production LLM agent work and FinTech engineering roots.")
+    _profile(fb_fixture, llm, JD_KWS)
     call = llm.sent[0]
-    assert call["task"] == "tailor_profile" and "F1: " + FACTS[0] in call["user"] and "F3: " + FACTS[2] in call["user"]
+    assert call["task"] == "tailor_profile" and "F1: " + FACTS[1] in call["user"] and "F2: " + FACTS[2] in call["user"]
+    assert FACTS[0] not in call["user"] and "F3" not in call["user"]            # the MSc fact is the least relevant: not offered
     assert "HEADLINE: Data Scientist" in call["user"] and "exactly two facts" in call["system"]
     assert "at most 45 words" in call["system"] and "{deny}" not in call["system"]
-    assert call["context"]["facts"][1] == {"id": "F2", "text": FACTS[1]}
+    assert call["context"]["facts"] == [{"id": "F1", "text": FACTS[1]}, {"id": "F2", "text": FACTS[2]}]
+
+
+def test_the_two_facts_are_ranked_by_keywords_and_by_the_jds_company_domain(fb_fixture, spy_llm):
+    """Relevance round: with more than two profile_facts the same ranking as the letter's evidence chooses (keyword overlap
+    plus the JD's domain: a bank JD keeps the fact that says FinTech although no keyword names it)."""
+    jd = {"title": "Data Scientist", "company": "Monzo", "description": "Help build the bank of the future for our customers."}
+    llm = _llm(spy_llm, ["F1", "F2"], "Data Scientist with mobile FinTech engineering roots and an MSc.")
+    p = tailor.make_profile(jd, fb_fixture, [], HEADLINE, llm)
+    assert FACTS[2] in p["facts"] and len(p["facts"]) == 2                    # FinTech is finance: it outranks the LLM fact
+    assert tailor.pick_facts(FACTS, [], [], 2, jd["description"]) == [0, 2]   # MSc (bank order on the tie) + FinTech
+    assert tailor.pick_facts(FACTS, [], [], 2, "") == [0, 1]                  # nothing to rank by: the bank's first two
+    assert tailor.pick_facts(FACTS[:2], [], [], 2, jd["description"]) == [0, 1]    # two facts or fewer: all of them
+    assert tailor.pick_facts(FACTS, JD_KWS, [], 2) == [1, 2]                   # returned in fact-bank order, not rank order
 
 
 def test_a_good_profile_is_kept_and_only_the_picked_facts_are_reported(fb_fixture, spy_llm):
     text = "Data Scientist with production LLM agent work on a clinical research platform and a mobile FinTech past."
-    llm = _llm(spy_llm, ["F2", "F3"], text)
-    p = _profile(fb_fixture, llm)
+    llm = _llm(spy_llm, ["F1", "F2"], text)
+    p = _profile(fb_fixture, llm, JD_KWS)
     assert p["text"] == text and p["facts"] == [FACTS[1], FACTS[2]] and not p["retried"] and not p["fallback"]
     assert p["violations"] == [] and len(llm.sent) == 1
 
@@ -48,15 +65,16 @@ def test_facts_may_be_named_by_id_number_or_text(fb_fixture, picks):
 
 
 def test_bad_or_missing_picks_are_topped_up_by_jd_overlap_in_code(fb_fixture, spy_llm):
-    kws = [Keyword("fintech", 2, True), Keyword("llm", 2, True)]
-    p = _profile(fb_fixture, _llm(spy_llm, ["F9", "nonsense"], "Data Scientist with FinTech and LLM work."), kws)
+    p = _profile(fb_fixture, _llm(spy_llm, ["F9", "nonsense"], "Data Scientist with FinTech and LLM work."), JD_KWS)
     assert p["facts"] == [FACTS[1], FACTS[2]]                      # the two facts that mention the JD keywords
     assert any("picked by JD overlap" in w for w in p["warnings"])
     assert any("dropped" in w for w in p["warnings"])
-    one = _profile(fb_fixture, _llm(spy_llm, ["F1"], "Data Scientist with an MSc."), kws)
-    assert one["facts"][0] == FACTS[0] and len(one["facts"]) == 2   # the model's pick stays, code adds one
-    p = _profile(fb_fixture, _llm(spy_llm, ["F1", "F2", "F3"], "Data Scientist with an MSc."), kws)
-    assert p["facts"] == FACTS[:2] and any("more than two" in w for w in p["warnings"])
+    one = _profile(fb_fixture, _llm(spy_llm, ["F2"], "Data Scientist with FinTech work."), JD_KWS)
+    assert one["facts"][0] == FACTS[2] and len(one["facts"]) == 2   # the model's pick stays, code adds the other
+    p = _profile(fb_fixture, _llm(spy_llm, ["F1", "F2", "F3"], "Data Scientist with LLM work."), JD_KWS)
+    assert p["facts"] == [FACTS[1], FACTS[2]] and any("dropped 'F3'" in w for w in p["warnings"])    # only two were offered
+    _, _, notes = normalise_profile({"facts": ["F1", "F2", "F3"], "profile": "x"}, FACTS)
+    assert any("more than two" in n for n in notes)
 
 
 def test_a_model_that_fails_still_gets_a_profile_from_two_facts(fb_fixture, spy_llm):
@@ -84,11 +102,13 @@ def test_a_skill_or_tool_that_is_not_in_the_picked_facts_is_not_allowed(fb_fixtu
 
 
 def test_a_fact_that_was_not_picked_is_not_allowed_either(fb_fixture, spy_llm):
-    kws = [Keyword("FinTech", 2, True)]
-    p = _profile(fb_fixture, _llm(spy_llm, ["F1", "F2"], "Data Scientist with mobile FinTech engineering roots."), kws)
-    assert any("keyword 'FinTech' not evidenced" in v for v in p["violations"])    # F3 says it, but F3 was not picked
-    p = _profile(fb_fixture, _llm(spy_llm, ["F2", "F3"], "Data Scientist with mobile FinTech engineering roots."), kws)
-    assert p["violations"] == [] and p["text"] == "Data Scientist with mobile FinTech engineering roots."
+    kws = [Keyword("FinTech", 2, True), Keyword("llm", 2, True), Keyword("Northfield", 0.5, False)]
+    text = "Data Scientist with mobile FinTech and LLM work from Northfield."
+    p = _profile(fb_fixture, _llm(spy_llm, ["F1", "F2"], text), kws)          # code picked the FinTech and LLM facts
+    assert any("keyword 'Northfield' not evidenced" in v for v in p["violations"])    # the MSc fact says it, but was not picked
+    kws = [Keyword("FinTech", 2, True), Keyword("Northfield", 1.5, False)]    # now the MSc fact outranks the LLM fact
+    p = _profile(fb_fixture, _llm(spy_llm, ["F1", "F2"], "Data Scientist with mobile FinTech work from Northfield."), kws)
+    assert p["facts"] == [FACTS[0], FACTS[2]] and p["violations"] == []
 
 
 def test_the_headline_is_allowed_because_it_is_the_users_own_role_title(fb_fixture, spy_llm):

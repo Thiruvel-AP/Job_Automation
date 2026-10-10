@@ -228,13 +228,20 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
   with`, `<noun> communication demo`, a trailing `, demonstrating|showcasing|emphasizing|achieving|forming|highlighting|
   leveraging …` clause, a keyword tacked on bare after a phrase "… on a free T4 regression"); keywords it writes in take
   canonical casing (LLM, GenAI, NLP).
-- **Letter evidence and fallback** — the two bullets a letter is written from must start with a past-tense verb (noun-led
-  bullets like "XGBoost churn classifier in R …" cannot follow "I"). A draft with "my work on built …", "mirrors my work
-  <noun>", a paragraph that starts with a bare verb or pastes a bullet verbatim is rejected like any other. When the
-  draft fails after the retry, `letter_rules.fallback_letter` writes it, all first person: *<company hook sentence> I'd
-  like to bring my experience to that work: at <org 1>, I <bullet 1 as a clause>.* · *At <org 2>, I <bullet 2 as a
-  clause>.* · *I have not used <Gap> yet.* (only with a gap) · the closing question. Gaps keep the JD's casing or a
-  canonical spelling (Azure, Power BI, AutoGen, DSPy).
+- **Letter evidence and fallback** — the two bullets a letter is written from are chosen in code from the bullets on the CV:
+  every bullet (experience and projects, verb-led or noun-led) is ranked by overlap with the JD keywords **and** the JD's
+  company domain (bank, fintech, payments, customers … see `tailoring/domain.py`; an entry's name counts, so "Banking
+  Customer Churn" carries the domain its one-line bullet does not say), best first, the second from a different entry. A
+  draft with "my work on built …", "mirrors my work <noun>", a paragraph that starts with a bare verb, or a sentence that
+  pastes a bullet — verbatim, or with **70% or more of its words in one bullet** ("I" and bracketed text left out) — is
+  rejected like any other. A hook that says the company "mirrors / reflects / aligns with" my work must share a domain term
+  with that work (a bank mission cannot mirror a cancer-research agent). When the draft fails after the retry,
+  `letter_rules.fallback_letter` writes it, all first person: *<company hook sentence> I'd like to bring my experience to
+  that work: at <org 1>, I <bullet 1 as a clause>.* · *At <org 2>, I <bullet 2 as a clause>.* · *I have not used <Gap> yet.*
+  (only with a gap) · the closing question. A noun-led bullet reads "I worked on XGBoost churn classifier in R …". Gaps keep
+  the JD's casing or a canonical spelling (Azure, Power BI, AutoGen, DSPy).
+- **CV profile** — with more than two `profile_facts`, code picks the two most relevant to the JD (the same ranking) and the
+  model only words them. A project whose `award` text is already in its `name` prints it once.
 - **Letter opening** — the claim half of the opening sentence (after "mirrors", a dash, ":" or ";") may use only the two
   evidence bullets; `actionable insights, user-centric, tangible outcomes, instantly, accurately, precise, smooth
   integration, efficient, exactly what I built` are vague filler unless the evidence says them. Rejected → one retry naming

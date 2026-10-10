@@ -15,16 +15,16 @@ from ..apply.naming import file_stem
 from ..discovery import gates
 from ..llm.router import TaskUnavailable
 from . import prompts as P
-from .budget import bullet_scores
+from .budget import fact_scores, letter_scores
 from .faithfulness import check, deny_hits, numbers
-from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, opening_claim_problems, rejected_words,
-                        repeated_evidence_problems, sentences)
+from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, hook_link_problems, opening_claim_problems,
+                        rejected_words, repeated_evidence_problems, sentences)
 from .context_terms import model_terms, split_context
 from .families import possible_evidence
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
 from .qualifiers import prompt_list, repair
-from .letter_rules import fallback_letter, gap_display, grammar_problems, starts_with_past_verb
+from .letter_rules import fallback_letter, gap_display, grammar_problems
 from .rewrite_rules import bare_keyword_problems, canonical_case, canonical_forms, filler_problems, qualifier_problems
 from .selection import (JACCARD, ONE_PAGE, Layout, chunks, fill_order, layout_from, missing_keywords, select_cv,
                         selected_ids, skills_text)
@@ -435,16 +435,19 @@ def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
     return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
 
 
-# ---- 2b. profile: the model picks two profile_facts and words them; the guard sees those two facts only
-def pick_facts(facts: list[str], kws: list[Keyword], have: list[int], n: int = PROFILE_FACTS) -> list[int]:
-    """`have` (fact indexes the model picked) topped up to `n` with the facts that overlap the JD keywords most
-    (fact-bank order on ties). Code, not model: used when the model picked too few valid facts."""
-    sc = {i: score(f, kws).stemmed for i, f in enumerate(facts)}
+# ---- 2b. profile: code picks the two most JD-relevant profile_facts (all of them when the bank has two or fewer), the model
+# words them; the guard sees those two facts only
+def pick_facts(facts: list[str], kws: list[Keyword], have: list[int], n: int = PROFILE_FACTS, jd: str = "") -> list[int]:
+    """`have` (fact indexes already chosen) topped up to `n` with the facts that rank highest for the JD: keyword overlap
+    plus the JD's company domain (budget.fact_scores; fact-bank order on ties). Code, not model. With nothing in `have`
+    these are the `n` most relevant facts, returned in fact-bank order."""
+    sc = fact_scores(facts, kws, jd)
     rest = sorted((i for i in range(len(facts)) if i not in have), key=lambda i: (-sc[i], i))
-    return (list(have) + rest)[:n]
+    chosen = (list(have) + rest)[:n]
+    return chosen if have else sorted(chosen)
 
 
-def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], str], str]:
+def _profile_retrier(llm, facts: list[str], fb: dict, headline: str) -> Callable[[str, list[str], str], str]:
     """The one retry a profile that fails the guard gets: the model sees what was wrong and the facts it may use."""
     deny = _deny_list(fb)
 
@@ -453,7 +456,7 @@ def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], 
                         P.PROFILE_RETRY_USER.format(headline=headline or fb["identity"].get("headline", ""),
                                                     previous=previous or "(none)", problems="; ".join(problems),
                                                     source=source),
-                        {"profile_facts": fb["profile_facts"], "previous": previous, "problems": problems,
+                        {"profile_facts": facts, "previous": previous, "problems": problems,
                          "headline": headline})
         return str(out.get("profile") or "")
 
@@ -462,14 +465,18 @@ def _profile_retrier(llm, fb: dict, headline: str) -> Callable[[str, list[str], 
 
 def make_profile(job: dict, fb: dict, kws: list[Keyword], headline: str, llm,
                  retry: Callable[[str, list[str], str], str] | None = None) -> dict:
-    """The CV profile: the model picks two of `profile_facts` and writes <= 45 words from them; the text is checked
+    """The CV profile: code picks the two `profile_facts` most relevant to the JD (when the bank has more than two), the
+    model writes <= 45 words from them; the text is checked
     against those two facts only (no skills, no bullets). A draft that fails the guard is rewritten once by `retry`,
     then the two facts themselves are used. Returns {"text", "facts", "violations", "warnings", "retried", "fallback"}."""
     facts = list(fb["profile_facts"])
+    jd = job.get("description") or ""
+    if len(facts) > PROFILE_FACTS:        # code picks the two most relevant to the JD (keywords + company domain); the model words them
+        facts = [facts[i] for i in pick_facts(facts, kws, [], PROFILE_FACTS, jd)]
     deny = fb.get("deny_terms", [])
     vocab = fact_text(fb)
     headline = headline or fb["identity"].get("headline", "")
-    retry = retry or _profile_retrier(llm, fb, headline)
+    retry = retry or _profile_retrier(llm, facts, fb, headline)
     warnings: list[str] = []
     picked: list[int] = []
     text = ""
@@ -485,7 +492,7 @@ def make_profile(job: dict, fb: dict, kws: list[Keyword], headline: str, llm,
     except Exception as e:  # noqa: BLE001 — the code-picked facts are a usable profile
         warnings.append(f"profile: LLM failed ({str(e)[:120]})")
     if len(picked) < min(PROFILE_FACTS, len(facts)):
-        picked = pick_facts(facts, kws, picked)
+        picked = pick_facts(facts, kws, picked, PROFILE_FACTS, jd)
         warnings.append("profile: facts picked by JD overlap (the model named fewer than two valid ones)")
     source = headline + ". " + " ".join(facts[i] for i in picked)     # the headline is the user's own role title
 
@@ -748,24 +755,17 @@ def _content_words(s: str) -> set[str]:
     return {w for w in re.findall(r"[a-z][a-z0-9+#-]{4,}", norm_literal(s)) if w not in _STOP}
 
 
-def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = None) -> list[dict]:
-    """The two bullets the letter is written from, chosen in code from the bullets on the CV: the one overlapping the JD
-    most, then the best of the rest from a different entry (two lines about one job read as one example). Only bullets
-    that start with a past-tense verb ("Built ...", "Wrote ...") are used: the letter says "I built ...", and a noun-led
-    bullet ("XGBoost churn classifier in R ...") cannot follow "I". When the CV has fewer than two of them, the best such
-    bullets of the whole bank fill up. Canonical fact-bank text, as [{"id", "text", "terms"}]; fewer than two when the
-    CV has fewer bullets."""
-    sc = bullet_scores(fb, kws)
+def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = None, jd: str = "") -> list[dict]:
+    """The two bullets the letter is written from, chosen in code from the bullets on the CV. EVERY bullet (experience and
+    projects, verb-led or noun-led) is ranked by overlap with the JD keywords plus overlap with the JD's company domain
+    (bank, payments, customers ...; budget.letter_scores): the best one, then the best of the rest from a different entry
+    (two lines about one job read as one example). The text stays the canonical fact-bank text, as [{"id", "text",
+    "terms"}]; fewer than two when the CV has fewer bullets."""
+    sc = letter_scores(fb, kws, jd)
     bidx = bullet_index(fb)
     owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
     order = {b: i for i, b in enumerate(sc)}
-    on_cv = [b for b in sc if not chosen_ids or b in chosen_ids]
-    pool = [b for b in on_cv if starts_with_past_verb(bidx[b]["text"])]
-    ranked = sorted(pool, key=lambda b: (-sc[b], order[b]))
-    if len(ranked) < 2 and len(on_cv) >= 2:        # noun-led bullets were left out: the bank's best verb-led ones fill up
-        rest = sorted((b for b in sc if b not in ranked and starts_with_past_verb(bidx[b]["text"])),
-                      key=lambda b: (-sc[b], order[b]))
-        ranked += rest
+    ranked = sorted((b for b in sc if not chosen_ids or b in chosen_ids), key=lambda b: (-sc[b], order[b]))
     picked = ranked[:1]
     if len(ranked) > 1:
         picked.append(next((b for b in ranked[1:] if owner[b] != owner[ranked[0]]), ranked[1]))
@@ -862,6 +862,7 @@ def _letter(job, fb, kws, hook, evidence: list[dict], llm, settings, gaps: list[
         claim = opening_claim_problems(first, evidence, gaps) if first else []                 # the model's words only
         extra = numbers(text) - numbers(source)
         out += repeated_evidence_problems(body, evidence)
+        out += hook_link_problems(body[0], evidence) if body else []
         out += style + [p for p in g_first + g_rest + claim if p not in style]
         if extra:
             out.append(f"new numbers {sorted(extra)}")
@@ -995,9 +996,9 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     usage_from = len(getattr(llm, "usage", []))
     ids = {i for sec in ("experience", "projects") for e in rep["context"][sec] for i in e.get("bullet_ids", [])}
     stem = Path(rep["letter_pdf"]).stem if rep.get("letter_pdf") else _names(fb, settings)[1]    # none while pending
-    pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", letter_evidence(fb, kws, ids), llm,
-                               settings, out_dir, stem, rep.get("team") or "",
-                               required_gaps(rep.get("genuine_gaps") or [], kws))
+    evidence = letter_evidence(fb, kws, ids, job["description"])
+    pdf, letter = _make_letter(job, fb, kws, rep.get("company_hook") or "", evidence, llm, settings, out_dir, stem,
+                               rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws))
     rep["letter"], rep["letter_pdf"] = letter, str(pdf) if pdf else None
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
@@ -1187,8 +1188,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     cv_pages = page_count(pdf)
     fill_final = page2_fill(pdf, cv_pages)
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
-    letter_pdf, letter = _make_letter(job, fb, kws, hook, letter_evidence(fb, kws, chosen_ids), llm, settings, out_dir,
-                                      letter_name, team, required_gaps(gaps, kws))
+    evidence = letter_evidence(fb, kws, chosen_ids, job["description"])
+    letter_pdf, letter = _make_letter(job, fb, kws, hook, evidence, llm, settings, out_dir, letter_name, team,
+                                      required_gaps(gaps, kws))
     report.update({
         "final": {"score": final_score.literal, "score_stemmed": final_score.stemmed,
                   "band": in_band(final_score.literal, band), "pages": cv_pages, "page2_fill": fill_final,

@@ -314,6 +314,26 @@ a copula ("is robust") or whose removal leaves a dangling article/conjunction/do
 ({qualifiers}, minus the words the evidence uses). **Generic head words:** `context_terms.FRAMING_HEADS` (discipline, culture, mindset, ethos)
 and `X function` after a unit word (data, analytics, business ...) make a term context, never a gap.
 
+## 5h. Relevance round (2026-10-09) — domain-aware evidence, profile facts, tighter paste and hook checks
+
+Review of the Monzo run: the letter was written from the LLM-agent bullets (az1, dc1) for a bank. Nothing is loosened; the rest re-ranks.
+**Domain** (`tailoring/domain.py`, new): `DOMAIN_GROUPS` (finance, customer, health, travel, retail, advertising ...), `jd_domain(jd)` =
+{group: 1/3, 2/3 or 1 by how often the JD names it}, `domain_groups(text)`, `domain_overlap`. **Ranking** (`budget.letter_scores`, `fact_scores`):
+keyword overlap (`bullet_scores`) + `DOMAIN_WEIGHT` (2.0, one required keyword) x the JD weight of every domain group the bullet names in its
+text, `terms` or entry (project name, job org/title). `tailor.letter_evidence(fb, kws, chosen_ids, jd)` ranks ALL bullets on the CV (the
+past-tense-verb filter is gone), picks the best, then the best from a different entry. A noun-led bullet in the fallback letter reads
+`letter_rules.i_clause` = "I worked on ..." (never "built"), and `clause` keeps acronyms' case. **Profile:** with more than
+`tailor.PROFILE_FACTS` (2) `profile_facts`, `pick_facts(facts, kws, [], 2, jd)` chooses the top two by `fact_scores` (bank order on ties,
+shown in bank order); the model is offered only those two, the guard sees only those two. **Paste check:** `letter_rules.paste_overlap` =
+share of a sentence's words (alphanumeric tokens, bracketed text and a leading "I" removed, >= 5 words) that one evidence bullet also has;
+`PASTE_OVERLAP` = 0.7 makes `grammar_problems` report "pastes an evidence bullet (N% of its words are the bullet's)"; the exact-match message
+stays. `MockLLM`'s paragraph 2 is now a short own-words sentence. **Award:** `render.award_shown` (jinja filter `award`) returns "" when the
+award text is in the project's name; `cv.tex.j2` / `cv2.tex.j2` use it (the GitHub link shows instead). **Hook link:**
+`grounding.hook_link_problems` (called in `_letter.draft_problems` on paragraph 1): a sentence with mirror/reflect/align(s|ed|ing)[ with] is
+rejected when the company half and the work half (claim + the bullet it is written from, text + terms) each name domain groups and share
+none. A side naming no domain word is not judged. Tests: `tests/tailoring/test_relevance_round.py`; `test_guard_round.REST` and a few
+letter/profile tests were reworded for the stricter paste rule and the code-picked facts. Not run live.
+
 ## 6. Outreach (`outreach.py`) — your LinkedIn prompt, adapted to LinkedIn's limits
 
 **Constraint clash.** Sources disagree on the note limit — 200 characters on free accounts (300 on Premium) per one, 300 for all accounts per another — and free accounts get only ~3–5 personalised notes a month. Five sentences is ~400–600 characters, so it can't fit either way.
@@ -341,7 +361,7 @@ Inputs are what you supply (name, title, team); nothing is scraped from LinkedIn
 **Sprint done =** all tests green (existing 28 + new), `run --mock` end-to-end on fixtures, README updated, zip delivered.
 
 ### Letter template + CV filler round (run 201304 review)
-`tailoring/letter_rules.py`: `starts_with_past_verb` (`letter_evidence` keeps only such bullets; with fewer than two on the CV the bank's best verb-led ones fill up), `gap_display` (JD casing, else a canonical map), `grammar_problems` (added to `_style_problems`' set in `_letter.draft_problems`: "my work on <verb>", "mirrors my work <noun>", a paragraph starting with a bare past-tense verb, a bullet pasted verbatim) and `fallback_letter` (P1 hook + "I'd like to bring my experience to that work: at <org>, I <clause>.", P2 "At <org 2>, I <clause>.", P3 gap, P4 CTA; a project bullet reads "in my <name> project"). It replaces the old fallback AND the previous round's opening-only `code_hook` (that kept the model's paragraphs, which usually re-described bullet 1 and so pasted it twice). `MockLLM`'s letter now writes "I <bullet clause>". `rewrite_rules`: the trailing-participial pattern joins `FILLER_PATTERNS`; `bare_keyword_problems(new, source, kws)` is added in `guard_rephrases`.
+`tailoring/letter_rules.py`: `starts_with_past_verb` (no longer a filter on letter evidence since the relevance round, 5h), `gap_display` (JD casing, else a canonical map), `grammar_problems` (added to `_style_problems`' set in `_letter.draft_problems`: "my work on <verb>", "mirrors my work <noun>", a paragraph starting with a bare past-tense verb, a bullet pasted verbatim) and `fallback_letter` (P1 hook + "I'd like to bring my experience to that work: at <org>, I <clause>.", P2 "At <org 2>, I <clause>.", P3 gap, P4 CTA; a project bullet reads "in my <name> project"). It replaces the old fallback AND the previous round's opening-only `code_hook` (that kept the model's paragraphs, which usually re-described bullet 1 and so pasted it twice). `MockLLM`'s letter now writes "I <bullet clause>". `rewrite_rules`: the trailing-participial pattern joins `FILLER_PATTERNS`; `bare_keyword_problems(new, source, kws)` is added in `guard_rephrases`.
 
 ### Guard round (run 190956 review)
 `tailoring/rewrite_rules.py`: `qualifier_problems`, `filler_problems` (both added to `guard_rephrases`' violations, `faithfulness.py` untouched) and `canonical_case` (accepted rewrites only). `grounding.opening_claim_problems`: evidence-only check of the opening's claim half (`opening_claim` splits at mirrors/dash/colon/semicolon; names, sector/client words, capabilities and other content words must be in the two bullets' text + terms; `_NEUTRAL` words excepted); `FILLER_WORDS` gained the nine vague phrases (matched singular/plural, case-folded). `tailor._letter`: `draft_problems` separates the opening's problems; after two rejections, if only they remain, `code_hook` replaces the opening sentence (re-checked, `retry["outcome"] == "code-built hook"`). `strip_team_word` stops "team team" in the greeting, closing and `clean_team`. `render.skill_display` + the `skill` template filter show commas outside brackets as "/".

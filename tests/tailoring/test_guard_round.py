@@ -170,19 +170,19 @@ HOOKS = {
     "Quantcast": "Quantcast builds AI-powered advertising technology that optimizes digital ad auctions in real time, "
                  "delivering measurable outcomes for marketers worldwide."}
 EVIDENCE = {"Chattermill": _ev(FL2, P_CH1), "Lendable": _ev(DC1, AZ4), "Quantcast": _ev(FL1, P_CH1)}
-REST = {   # the evidence paragraphs of each run's letter, each worded from its own bullet only (they passed in 190956)
-    "Chattermill": ["I built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
-                    "I built an XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, "
-                    "SMOTE inside the recipe and MCC evaluation."],
-    "Lendable": ["I proposed and prototyped an MCP-based agentic tool in Python using FastMCP, Ollama gpt-oss:20b, PostgreSQL "
-                 "and GitHub Actions CI for a Madrid-based product start-up client, and presented it in a live stakeholder "
-                 "demo.",
-                 "I wrote a three-tier test framework of about 65 tests across eight files, validating the LLM provider "
-                 "migration from Groq to AWS Bedrock after a rate-limit evaluation."],
-    "Quantcast": ["I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services "
-                  "in Docker.",
-                  "I built an XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, "
-                  "SMOTE inside the recipe and MCC evaluation."]}
+REST = {   # the evidence paragraphs of each run's letter, each worded from its own bullet only, in the writer's own words:
+           # under 70% of a sentence's words are the bullet's (letter_rules.PASTE_OVERLAP), "I" and bracketed text left out
+    "Chattermill": ["My own experience here includes agentic RAG workflows and NLP, built with LangChain and LangGraph.",
+                    "On the modelling side, I have worked on churn classification with an XGBoost classifier in R, "
+                    "Bayesian hyperparameter search and MCC evaluation."],
+    "Lendable": ["My MCP experience comes from a start-up client project, where I proposed and prototyped an agentic tool in "
+                 "Python and gave a live stakeholder demo of it.",
+                 "Alongside that, my test work was a three-tier framework of about 65 tests that I used when the LLM provider "
+                 "moved from Groq to AWS Bedrock."],
+    "Quantcast": ["I also have hands-on experience with scikit-learn pipelines and LSTM, BiRNN and CNN models, which I "
+                  "deployed as FastAPI services.",
+                  "On the modelling side, I have worked on churn classification with an XGBoost classifier in R, "
+                  "Bayesian hyperparameter search and MCC evaluation."]}
 OPENING = {"Chattermill": CHATTERMILL, "Lendable": LENDABLE, "Quantcast": QUANTCAST}
 JOBS = {"Chattermill": "Data Scientist", "Lendable": "AI Engineer", "Quantcast": "Machine Learning Engineer"}
 

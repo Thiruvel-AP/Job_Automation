@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 import pytest
+from conftest import restate
 
 from careerops.tailoring import tailor
 from careerops.tailoring.grounding import avoid_words, grounding_problems, rejected_words
@@ -174,7 +175,7 @@ def _drafts(*drafts):
 
 
 def _i(bullet: str) -> str:
-    return "I " + bullet[:1].lower() + bullet[1:]          # first-person prose: a bullet pasted bare is rejected
+    return restate(bullet)          # first-person prose in other words: a bullet pasted, even with "I" in front, is rejected
 
 
 def _with_filler(e):

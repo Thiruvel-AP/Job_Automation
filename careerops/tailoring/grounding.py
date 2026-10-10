@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import re
 
+from .domain import domain_groups
 from .scorer import _contains, load_taxonomy, norm_literal, norm_stem
 
 SECTOR_WORDS = frozenset("""fintech healthcare banking insurance retail e-commerce ecommerce telecom telecoms logistics
@@ -113,6 +114,34 @@ def opening_claim_problems(opening: str, evidence: list[dict], gaps: list[str] |
     for w in sorted(content_words(claim) - _NEUTRAL):
         if not _has(ev, w) and not any(f"'{w}'" in p.lower() for p in out):
             out.append(f"'{w}' (claim) is not in the two evidence bullets: '{opening.strip()[:60]}'")
+    return out
+
+
+# the verbs that tie the company to the candidate's work in a hook: "<Company>'s mission REFLECTS my work on ..."
+_HOOK_LINK = re.compile(r"\b(?:mirror|reflect|align)(?:s|ed|ing)?\b(?:\s+with)?", re.I)
+
+
+def hook_link_problems(paragraph: str, evidence: list[dict]) -> list[str]:
+    """A hook that says the company's mission "mirrors / reflects / aligns with" the candidate's work must have something
+    in common with it. The company half and the work half (the sentence's claim plus the evidence bullet it is written
+    from, text + terms) each name company-domain words (domain.py: bank, fintech, payments, customers, cancer ...); when
+    BOTH name some and they share none ("Monzo simplifies banking ... mirrors my work on a multi-omics cancer research
+    agent"), the link is made up. A side that names no domain word (a hook about NLP, a bullet about Docker) cannot be
+    judged by this check and passes."""
+    out: list[str] = []
+    for sentence in sentences(paragraph):
+        m = _HOOK_LINK.search(sentence)
+        if not m:
+            continue
+        company, claim = sentence[:m.start()], sentence[m.end():]
+        own = _own_bullet(claim, evidence)
+        used = [evidence[own]] if own is not None else evidence
+        company_side = domain_groups(company)
+        work_side = domain_groups(" ".join([claim, *(e["text"] + " " + " ".join(e.get("terms", [])) for e in used)]))
+        if company_side and work_side and not company_side & work_side:
+            out.append(f"the hook says the company {m.group(0).strip()} my work, but they share no domain term "
+                       f"(company: {', '.join(sorted(company_side))}; my work: {', '.join(sorted(work_side))}): "
+                       f"'{sentence.strip()[:60]}'")
     return out
 
 

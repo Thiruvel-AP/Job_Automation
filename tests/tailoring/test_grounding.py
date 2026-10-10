@@ -1,6 +1,7 @@
 """Cover letter: every sentence is checked against the evidence bullet it is written from and the JD. A proper noun,
 client, sector or capability word that is in neither is flagged; the letter is retried once, then flagged (fallback)."""
 import pytest
+from conftest import restate
 
 from careerops.tailoring.grounding import grounding_problems, sentences
 from careerops.tailoring.tailor import _style_problems
@@ -114,8 +115,8 @@ def _drafts(*drafts):
 
 
 def _i(bullet: str) -> str:
-    """A bullet as first-person prose ("I built ..."): the letter guard rejects a bullet pasted bare."""
-    return "I " + bullet[:1].lower() + bullet[1:]
+    """A bullet as first-person prose in other words: the letter guard rejects a bullet pasted, with or without "I"."""
+    return restate(bullet)
 
 
 def _honest(ev):
