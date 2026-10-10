@@ -1,0 +1,15 @@
+{
+ "jobId": 5001,
+ "employerId": 9,
+ "employerName": "Birch Health",
+ "jobTitle": "Data Scientist",
+ "locationName": "Leeds",
+ "minimumSalary": 45000.0,
+ "maximumSalary": 55000.0,
+ "currency": "GBP",
+ "expirationDate": "08/11/2026",
+ "date": "08/10/2026",
+ "jobDescription": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Data Scientist: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Reed full description.&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;",
+ "applications": 3,
+ "jobUrl": "https://www.reed.co.uk/jobs/data-scientist/5001"
+}

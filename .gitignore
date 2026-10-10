@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .claude/settings.local.json
+
+# OAuth client / token files, wherever they end up
+client_secret*.json
+gmail_token.json

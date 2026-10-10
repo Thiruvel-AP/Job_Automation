@@ -148,7 +148,7 @@ def fixture(area: str, name: str) -> Path:
 def settings(tmp_path) -> Settings:
     s = load_settings()
     raw = copy.deepcopy(s.raw)
-    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets"):   # register_dir: M1 writes snapshots
+    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")

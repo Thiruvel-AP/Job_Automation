@@ -1,0 +1,64 @@
+{
+ "jobs": [
+  {
+   "id": 101,
+   "title": "Data Scientist",
+   "location": {
+    "name": "London, UK"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/101",
+   "updated_at": "2026-10-08T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Data Scientist: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  },
+  {
+   "id": 102,
+   "title": "Marketing Manager",
+   "location": {
+    "name": "London, UK"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/102",
+   "updated_at": "2026-10-08T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Marketing Manager: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  },
+  {
+   "id": 103,
+   "title": "AI Engineer",
+   "location": {
+    "name": "New York, NY"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/103",
+   "updated_at": "2026-10-08T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a AI Engineer: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  },
+  {
+   "id": 104,
+   "title": "Machine Learning Engineer",
+   "location": {
+    "name": "Remote"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/104",
+   "updated_at": "2026-10-01T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Machine Learning Engineer: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;This role is remote and open to candidates based in the UK.&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  },
+  {
+   "id": 105,
+   "title": "Applied Scientist",
+   "location": {
+    "name": "Remote"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/105",
+   "updated_at": "2026-10-01T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Applied Scientist: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Remote within the United States only.&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  },
+  {
+   "id": 106,
+   "title": "Data Scientist",
+   "location": {
+    "name": "Manchester"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/106",
+   "updated_at": "2026-10-08T09:00:00-04:00",
+   "content": "&lt;p&gt;Acme Analytics builds forecasting tools for retailers.&lt;/p&gt;&lt;h3&gt;The role&lt;/h3&gt;&lt;p&gt;You will work as a Data Scientist: build, evaluate and deploy machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Python, SQL and scikit-learn&lt;/li&gt;&lt;li&gt;Experience with experiment design&lt;/li&gt;&lt;li&gt;Clear communication&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Applicants must have the right to work in the UK without sponsorship.&lt;/p&gt;&lt;p&gt;In this role you will own the full life cycle of your models: framing the business question with colleagues in pricing and operations, preparing the data, comparing approaches with proper validation, shipping the chosen model behind a small service and watching its accuracy in production every week. You will write clear documentation, review other people&#x27;s code and share what you learn with the team in our fortnightly sessions.&lt;/p&gt;&lt;p&gt;We review applications as they arrive and reply to everyone who applies.&lt;/p&gt;"
+  }
+ ]
+}

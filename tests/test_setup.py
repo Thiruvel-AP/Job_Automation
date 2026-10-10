@@ -33,7 +33,7 @@ def test_schema_has_track_a_tables(db: DB):
 
 # `companies --snapshot` is built (M1, tests/discovery/test_register_snapshots.py, with HTTP mocked); running it here would
 # reach the real GOV.UK site.
-@pytest.mark.parametrize("argv", [["companies", "--resolve"], ["learning"]])
+@pytest.mark.parametrize("argv", [["companies", "--queue"], ["learning"]])     # --resolve is built since M3 (tests/discovery/test_ats.py)
 def test_unbuilt_milestones_fail_cleanly(argv, settings, tmp_path, monkeypatch, capsys):
     cfg = tmp_path / "settings.yaml"
     import yaml
@@ -179,6 +179,7 @@ def test_doctor_runs_the_ollama_checks_for_a_provider_without_a_key(settings, mo
     from careerops.setup import doctor
     _ollama(monkeypatch, models=())
     settings.raw["llm"]["providers"] = [OLLAMA]
-    settings.raw["llm"]["models"] = {}                              # no task model: only the provider's own checks
-    names = [(n, ok) for n, ok, _ in doctor(settings) if "ollama" in n]
+    settings.raw["llm"]["models"] = {}
+    # ping=False: the per-task model requests are tested in tests/llm/test_router_models.py; this is the provider's own checks
+    names = [(n, ok) for n, ok, _ in doctor(settings, ping=False) if "ollama" in n and "not asked" not in n]
     assert names == [("ollama at http://localhost:11434/v1", True), ("ollama model qwen2.5-7b-8k is built", False)]

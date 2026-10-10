@@ -12,7 +12,7 @@ pip install -e ".[dev]" && playwright install chromium
 careerops init                  # data/ folders + .env from .env.example (idempotent)
 ollama pull qwen2.5:7b-instruct # local fallback; fits the 4060's 8 GB VRAM
 ollama create qwen2.5-7b-8k -f config/ollama/Modelfile   # same model with an 8192-token context (Ollama's default is 4096)
-# put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY in .env
+# put GROQ_API_KEY (console.groq.com) and optional ADZUNA_APP_ID/KEY, REED_API_KEY in .env
 careerops doctor                # every line should say [ok] (also sends each task's model a tiny request; --no-ping skips that)
 careerops status                 # job counts, plus LLM tokens and requests used today vs the daily limits
 careerops llm-check             # one tiny request per LLM provider: reachable, model, latency, JSON, json_mode (never prints keys)
@@ -36,6 +36,9 @@ career-ops/
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
 │   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
 │   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
+│   │   ├── http.py               the polite client discovery shares: 1 req/s per host, robots, a 401/403/429 stops the host
+│   │   ├── discover.py           `discover --ats --reed --adzuna --gmail-alerts`: filters, dedupe, inbox files, manual queue, report
+│   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
 │   │   ├── priority.py           P = F x S x R: orders the live inbox, discover's listing and status
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
@@ -72,6 +75,8 @@ career-ops/
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
+    ├── discover/                 boards/ (posting lists, 6 h) · company_boards.json · gmail_seen.json · runs.jsonl
+    ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read-only token); git-ignored like all of data/
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
@@ -115,6 +120,9 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 ```bash
 careerops sponsors                 # gov.uk register: download only if its link changed, store data/register/YYYY-MM-DD.csv.gz, diff vs the last snapshot
 careerops discover                 # pull + triage; skipped jobs keep their reason
+careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
+careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
+careerops discover --report        # counts per source, resolved vs the manual queue
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
@@ -142,6 +150,65 @@ careerops export-prefs             # your edits → DPO pairs (chosen = yours, r
 careerops status                   # counts per status, plus a tier × status table
 careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
 ```
+
+### Finding jobs: `careerops discover`
+
+`careerops discover --ats | --reed | --adzuna | --gmail-alerts` finds open jobs and writes each one as an inbox file
+(`data/jds/inbox/<company>-<title>-<id>.txt`, headers `Company:`, `Title:`, `URL:`, `Source:`, then `Location:`, `Salary:`, `Posted:`,
+`Agency: yes`). It adds nothing to the database and applies to nothing; `careerops live` then works through the inbox best priority
+first. Without a source flag `discover` keeps its older job (the boards in `sources:` into the database, then triage; `run` and cron use
+that). Common to every source: a title in `roles.families` and a UK or remote-UK place are kept (a bare "Remote" only when the ad says
+UK; Reed, Adzuna and CV-Library are UK sites); closed postings are dropped; a job already in the database, in `inbox/`, `done/` or
+`rejected/`, in the application archive (read only, company and role folder names) or earlier in the same run is dropped (company +
+normalised title + place). Sponsorship is never a filter (see "Priority"). `--limit N` caps the new files (default 40), `--dry-run`
+finds and ranks without writing, and every run is listed best priority first.
+
+- **`--ats`** reads Greenhouse, Lever and Ashby boards through their documented public APIs: the boards in `sources:` (your company
+  list) plus the boards of sponsor-register companies that were found by probing slugs derived from the register name (a few per run,
+  `discover.ats.probe_per_run`, each company at most once per `companies.reprobe_after_days`; a board is accepted only when its name
+  matches the company, see `ats.verify_rule`). Posting lists are cached for 6 hours. **Workable is not read**: its API needs the account
+  owner's token and no public posting API is documented.
+- **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
+  recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
+  (`details_per_run`). An expired posting is closed.
+- **`--adzuna`** uses the Adzuna API (`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `sources.adzuna.queries`). Its descriptions are snippets, so a
+  result is a **link**: it is looked for on the employer's own board (a known board, else a few slug probes per run); a CV-Library
+  address is read like `add-url`; anything else goes to the manual queue. Adzuna's own redirect links are never followed.
+- **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
+  title, company and link. LinkedIn and Indeed pages are **never fetched**: the job is looked for on the employer's own board by title
+  (as for Adzuna); CV-Library job links go through the CV-Library reader; Reed links through the Reed API. A job that cannot be
+  resolved is appended to `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason`, one row per link, never
+  rewritten) for you to open, copy the ad and run `careerops live --clipboard`. Messages are remembered in
+  `data/discover/gmail_seen.json`. The alert parsers are written from the usual layout of these emails and tested on hand-made
+  fixtures; they have not met a real mailbox.
+- **`--report`** prints counts per source (alerts, seen, role/place filtered, closed, duplicate, written, resolved, queued) for the last
+  run and for all runs, and how many alerts were resolved vs how many sit in the manual queue.
+
+Every request goes through one client: at most one per second per host, the honest `User-Agent`, `robots.txt` read first for pages and
+the public job-board APIs, redirects followed by hand, and an HTTP 401, 403 or 429 stops that host for the rest of the run (no retry,
+no workaround). linkedin.com is never contacted. The Reed, Adzuna and Gmail calls are credentialed API calls and do not read
+`robots.txt`; their keys are never printed or put in a URL (Adzuna's `app_id`/`app_key` are query parameters by its design, so its
+requests are not logged).
+
+#### Getting a Reed API key
+
+Sign up as a jobseeker at reed.co.uk, then request an API key at https://www.reed.co.uk/developers/jobseeker (the key is shown on that
+page after you log in). Put it in `.env` as `REED_API_KEY=...`. The API uses HTTP Basic auth with the key as the user name and an empty
+password; `careerops` does that for you.
+
+#### Getting Gmail access (read-only)
+
+1. In https://console.cloud.google.com create a project (any name), then **APIs & Services → Library → Gmail API → Enable**.
+2. **APIs & Services → OAuth consent screen**: user type *External*, fill the app name and your e-mail, add yourself under *Test
+   users*, and add the scope `.../auth/gmail.readonly` (read-only). Leave the app in *Testing* (a refresh token then lasts 7 days; run
+   `--gmail-auth` again when it stops working) or publish it for your own use.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Desktop app.** Download the JSON and
+   save it as `data/secrets/gmail_client.json` (the folder is git-ignored; never commit it).
+4. Run `careerops discover --gmail-auth`. Your browser opens at Google's consent page; you sign in and agree there (career-ops never
+   types a password). The refresh token is saved in `data/secrets/gmail_token.json`. A token that was granted anything wider than
+   `gmail.readonly` is refused, and the scope cannot send, delete or label mail.
+5. `careerops discover --gmail-alerts` then reads the last `discover.gmail.query_days` days of alerts from the senders in
+   `discover.gmail.senders`.
 
 ### Adding a job from its link (`careerops add-url`, `careerops live --url`)
 

@@ -7,6 +7,10 @@
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            download the gov.uk sponsor register if its link changed, diff it against the last one
   careerops discover            pull jobs from configured boards, triage with rule gates
+  careerops discover --ats | --reed | --adzuna | --gmail-alerts [--limit N] [--dry-run]
+                                find open jobs and write each as a JD file in data/jds/inbox/ (best priority first)
+  careerops discover --gmail-auth | --report
+                                sign in to Gmail (read-only) once · counts per source, resolved vs the manual queue
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
   careerops add-url URL [--company C] [--title T]
@@ -156,6 +160,12 @@ def cmd_sponsors(args):
 
 
 def cmd_discover(args):
+    """`discover` with a source flag (--ats --reed --adzuna --gmail-alerts) writes ads to data/jds/inbox/; --report prints the counts;
+    --gmail-auth signs in to Gmail (read-only) once. With none of them it keeps its older job: the boards in sources: into the
+    database, then triage (what `run` and cron call)."""
+    sources_asked = [n for n in ("ats", "reed", "adzuna", "gmail_alerts") if getattr(args, n, False)]
+    if getattr(args, "report", False) or getattr(args, "gmail_auth", False) or sources_asked:
+        return _discover_inbox(args, sources_asked)
     s, db = _ctx(args)
     new = seen = 0
     for label, job in sources.fetch_all(s):
@@ -166,6 +176,52 @@ def cmd_discover(args):
         new += db.upsert_job(job)
     print(f"Fetched {seen} postings, {new} new.")
     print("Triage:", triage_new(db, s))
+
+
+def _discover_inbox(args, sources_asked: list[str]) -> None:
+    from .discovery import discover as disc
+    from .discovery import gmail
+    from .discovery.http import Fetcher
+    from .discovery.robots import RobotsCache
+
+    s, db = _ctx(args)
+    if getattr(args, "report", False):
+        print(disc.format_report(s))
+        return
+    if getattr(args, "gmail_auth", False):
+        try:
+            gmail.authorize(s)
+        except gmail.GmailAuthError as e:
+            _fail(str(e))
+        return
+    fetcher = Fetcher(RobotsCache(s.path("robots")))
+    d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
+                      limit=getattr(args, "limit", None))
+    steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
+             "gmail_alerts": ("gmail", d.from_gmail)}
+    for name in sources_asked:
+        label, fn = steps[name]
+        print(f"discover: {label} ...")
+        try:
+            fn()
+        except Exception as e:  # noqa: BLE001 — one source failing must not lose what the others found
+            d.run.notes.append(f"{label}: {type(e).__name__}: {e}")
+            print(f"  ! {label}: {e}")
+        c = d.run.sources.get(label, {})
+        print("  " + (", ".join(f"{k} {v}" for k, v in c.items() if v) or "nothing found"))
+    for n in d.run.notes:
+        print(f"  note: {n}")
+    lines = d.listing()
+    print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
+    print("\n".join(lines))
+    queued = sum(c.get("to_manual_queue", 0) for c in d.run.sources.values())
+    if queued:
+        print(f"{queued} link(s) could not be resolved to a full ad: {s.path('jds') / 'manual_queue.csv'} "
+              "(copy each ad and run `careerops live --clipboard`)")
+    if not d.dry_run:
+        disc.save_run(s, d.run)
+    if d.run.written and not d.dry_run:
+        print("Next: careerops live   (works through the inbox best priority first)")
 
 
 def cmd_retriage(args):
@@ -639,9 +695,13 @@ def cmd_companies(args):
     elif args.refresh_ch:
         print(companies_house.join(db, s, companies_house.download_bulk(s)))
     elif args.resolve:
-        print(ats.resolve(db, s, limit=args.limit))
+        from .discovery.http import Fetcher
+        from .discovery.robots import RobotsCache
+        print(ats.resolve(db, s, limit=args.limit, fetcher=Fetcher(RobotsCache(s.path("robots")))))
     elif args.set:
-        print(ats.detect(args.url))
+        from .discovery.http import Fetcher
+        from .discovery.robots import RobotsCache
+        print(ats.detect(args.url, fetcher=Fetcher(RobotsCache(s.path("robots")))))
     else:   # --queue (default)
         raise NotImplementedError("M3 — manual queue listing")
 
@@ -777,7 +837,19 @@ def main(argv=None):
     jr = sub.add_parser("judge-report", help="LLM judge vs your review decisions: agreement, kappa, false approves")
     jr.add_argument("--mock", action="store_true", help="read the isolated data/mock judge log")
     jr.set_defaults(fn=cmd_judge_report)
-    sub.add_parser("discover").set_defaults(fn=cmd_discover)
+    dc = sub.add_parser("discover", help="find open jobs and write them to data/jds/inbox/ (--ats --reed --adzuna --gmail-alerts); "
+                                         "with none of these: pull the boards in sources: into the database and triage")
+    dc.add_argument("--ats", action="store_true", help="Greenhouse / Lever / Ashby boards: your sources: list and the boards of "
+                    "sponsor-register companies (a few more are looked for each run)")
+    dc.add_argument("--reed", action="store_true", help="the Reed Jobseeker API (REED_API_KEY in .env); agency posts are flagged")
+    dc.add_argument("--adzuna", action="store_true", help="the Adzuna API (snippets only: resolved via the employer's board)")
+    dc.add_argument("--gmail-alerts", dest="gmail_alerts", action="store_true", help="LinkedIn / CV-Library / Indeed / Reed alert "
+                    "emails through the read-only Gmail API; unresolved ones go to data/jds/manual_queue.csv")
+    dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Gmail once (read-only; opens your browser)")
+    dc.add_argument("--report", action="store_true", help="counts per source over all runs, resolved vs the manual queue")
+    dc.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
+    dc.add_argument("--dry-run", dest="dry_run", action="store_true", help="find and rank, write nothing")
+    dc.set_defaults(fn=cmd_discover)
     sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")

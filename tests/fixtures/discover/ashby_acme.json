@@ -1,0 +1,47 @@
+{
+ "apiVersion": "1",
+ "jobs": [
+  {
+   "id": "aaaaaaaa-0000-0000-0000-000000000001",
+   "title": "Machine Learning Engineer",
+   "location": "London, UK",
+   "isListed": true,
+   "address": {
+    "postalAddress": {
+     "addressCountry": "United Kingdom"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/acme/aaaaaaaa-0000-0000-0000-000000000001",
+   "descriptionPlain": "Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. ",
+   "publishedAt": "2026-10-05T10:00:00+00:00"
+  },
+  {
+   "id": "aaaaaaaa-0000-0000-0000-000000000002",
+   "title": "Data Scientist",
+   "location": "London, UK",
+   "isListed": false,
+   "address": {
+    "postalAddress": {
+     "addressCountry": "United Kingdom"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/acme/aaaaaaaa-0000-0000-0000-000000000002",
+   "descriptionPlain": "Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. ",
+   "publishedAt": "2026-10-05T10:00:00+00:00"
+  },
+  {
+   "id": "aaaaaaaa-0000-0000-0000-000000000003",
+   "title": "Data Analyst",
+   "location": "Berlin",
+   "isListed": true,
+   "address": {
+    "postalAddress": {
+     "addressCountry": "Germany"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/acme/aaaaaaaa-0000-0000-0000-000000000003",
+   "descriptionPlain": "Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. Acme builds forecasting tools. You will build and evaluate machine learning models in Python and SQL for our pricing team, and explain the results to commercial colleagues. Requirements: Python, SQL, scikit-learn, experiment design. ",
+   "publishedAt": "2026-10-05T10:00:00+00:00"
+  }
+ ]
+}

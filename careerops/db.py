@@ -110,6 +110,7 @@ COLUMNS = [
     ("jobs", "sponsor_rating", "TEXT"),    # the matched sponsor's rating letter (A / B)
     ("jobs", "cv_pages", "INTEGER"),      # pages of the tailored CV (2 by default, 1 with --one-page)
     ("jobs", "page2_fill", "REAL"),       # how full page 2 is, 0-1, from the rendered PDF (0 for a one-page CV)
+    ("companies", "ats_evidence", "TEXT"),   # M3: JSON {rule, board_name, uk_jobs, total_jobs, tried} behind ats / ats_slug
     ("jobs", "agency", "INTEGER"),        # 1 = posted by a recruitment agency, not the employer (a weight on priority, never a filter)
     ("jobs", "analysis", "TEXT"),        # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
 ]

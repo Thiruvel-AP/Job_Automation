@@ -423,6 +423,29 @@ notes from `FLAGS:` to the `Sponsor:` line and the judge gate ignores them. Test
 `test_gates.py`. Wording patterns are code (`priority.WORDING`), tested on 14 sentences and 4 near-misses; an unusual phrasing is shown
 in no line and costs no weight (it only fails to lower S).
 
+**D. `careerops discover` writes ads to the inbox — done (offline tests only; no live run, no real mailbox).** Modules: `discovery/http.py`
+(`Fetcher`: 1 req/s per host, `sources.UA`, robots.txt for pages and the public job-board APIs (`robots=False` only for the credentialed
+Reed / Adzuna / Gmail calls), manual redirects, 401/403/429 -> `Blocked` and the host is not asked again, linkedin.com refused, one retry on a
+connection error), `candidate.py` (the shape every source produces; `family_of`, `uk_ok`, `dedupe_key`), `ats.py` (M3: `slug_candidates`,
+`probe`, `verify`/`verify_rule`, `resolve`, `detect` implemented to docs/tasks/M3; each gained a keyword-only `fetcher` and `settings`
+argument, the positional signatures are unchanged; `board_postings`, `configured_boards`, `resolved_boards`, `all_boards`; `companies.ats_evidence`
+column added), `reed.py`, `gmail.py` (loopback + PKCE OAuth with `requests`, `gmail.readonly` only, token in `paths.secrets`, alert parsers), `discover.py`
+(`Discover`, `Known`, `BoardCache`, `BoardLookup`, `queue_manual`, `format_report`). Settings: `discover:` block, `paths.discover/robots/secrets`.
+**D1** APIs checked against the vendors' docs on 2026-10-10: Greenhouse `GET boards-api.greenhouse.io/v1/boards/{token}[/jobs?content=true]` (no auth
+for GET), Lever `GET api.lever.co/v0/postings/{site}?mode=json` (EU host `api.eu.lever.co`; no auth for GET), Ashby `GET api.ashbyhq.com/posting-api/job-board/{board}`;
+**Workable not implemented**: its API (`/spi/v3/...`) needs an account token and the docs list no public posting endpoint. M3's `sector` filter needs M2
+(Companies House join), which is still a stub, so without it `resolve` takes any A-rated register row that does not look like a public body; coverage of
+the register is therefore slow (`probe_per_run` rows a run) until M2 exists. Greenhouse's list endpoint gives `updated_at`, not a first-published date, so
+R for those jobs can look fresher than the posting is. **D2** Reed: search (`postedByDirectEmployer` / `postedByRecruitmentAgency`, run separately because
+the result has no agency field) then `/jobs/{id}`; `expirationDate` passed = closed. **D3** Adzuna is treated as snippets (docs unreachable from here; the
+third-party descriptions say "truncated"): a description of >= 1500 characters that does not end in an ellipsis is taken as the ad, anything else is a link
+resolved through the employer's board (never by following Adzuna's redirect) or queued. **D4** alerts: LinkedIn / Indeed through the employer's board by
+title (>= 0.88 similar), CV-Library through `intake.fetch_ad` (C2), Reed through the API; `data/jds/manual_queue.csv` for the rest. **D5** `Known`:
+DB + inbox/done/rejected headers + archive folder names (company + role, any place) + this run; closed = Reed `expirationDate`, Ashby `isListed: false`.
+**D6** `runs.jsonl` + `discover --report`. **D7** README "Getting a Reed API key", "Getting Gmail access". Tests: `tests/discovery/test_{http,ats,reed,gmail,discover}.py`.
+Judgement calls: the documented API hosts are exempt from the *unreadable robots.txt* refusal only (Ashby's `/robots.txt` answers 401 while its API is documented as
+public), a robots.txt they do serve is obeyed; `discover` with no source flag keeps the old pull-into-the-database job so `run`/cron do not change.
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

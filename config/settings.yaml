@@ -18,6 +18,7 @@ paths:
   judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
+  discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), company_boards.json, gmail_seen.json, runs.jsonl
   robots: data/robots                     # robots.txt rules per host, <host>.json, kept 24 h before a page is fetched (discovery/robots.py)
   secrets: data/secrets                   # gitignored (data/): the Gmail OAuth client file and token (`discover --gmail-alerts`); never in git
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
@@ -102,6 +103,25 @@ gates:
     - ['\bon[- ]call\b', flag, 'On-call duties mentioned']
     - ['site reliability|\bsre\b|observability ownership', skip, 'SRE-framed role (standing exclusion)']
     - ['direct reports|line manag(e|ement)|people manag', skip, 'People-management requirement (standing exclusion)']
+
+discover:
+  # `careerops discover --ats --reed --adzuna --gmail-alerts`: every ad that passes goes to data/jds/inbox/ (see discovery/discover.py).
+  # Kept: a title in roles.families and a UK or remote-UK place. Dropped: closed postings and jobs already in the DB, the inbox/done/
+  # rejected folders or the application archive. Sponsorship is never a filter (priority: below).
+  cache_hours: 6                   # a board's posting list is reused this long
+  max_new_per_run: 40              # at most this many new inbox files per run (--limit)
+  alert_probes_per_run: 12         # companies named by alerts / Adzuna whose board is looked for by probing slugs, per run
+  ats:
+    probe_per_run: 40              # register companies probed for a board per --ats run (each at most once per companies.reprobe_after_days)
+  reed:
+    queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
+    location: null                 # Reed's locationName; null = all of the UK
+    pages_per_query: 1             # pages of 100 per query, for direct employers and again for agencies
+    details_per_run: 60            # full ads fetched per run (one request each, one per second)
+  gmail:
+    senders: [linkedin, cvlibrary, indeed, reed]   # job-alert emails from these (read-only Gmail API)
+    query_days: 14
+    max_messages: 60
 
 priority:
   # P = F x S x R orders the live inbox, discover's listing and status (discovery/priority.py). F is the honest ATS ceiling; S and R are

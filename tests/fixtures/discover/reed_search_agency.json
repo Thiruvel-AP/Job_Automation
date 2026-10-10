@@ -1,0 +1,20 @@
+{
+ "results": [
+  {
+   "jobId": 6001,
+   "employerId": 9,
+   "employerName": "Northgate Recruitment Solutions",
+   "jobTitle": "Machine Learning Engineer",
+   "locationName": "Reading",
+   "minimumSalary": 45000.0,
+   "maximumSalary": 55000.0,
+   "currency": "GBP",
+   "expirationDate": "08/11/2026",
+   "date": "08/10/2026",
+   "jobDescription": "A snippet of the ad...",
+   "applications": 3,
+   "jobUrl": "https://www.reed.co.uk/jobs/machine-learning-engineer/6001"
+  }
+ ],
+ "totalResults": 1
+}

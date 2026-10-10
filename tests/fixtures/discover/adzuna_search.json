@@ -1,0 +1,43 @@
+{
+ "results": [
+  {
+   "id": "7001",
+   "title": "Data Scientist",
+   "company": {
+    "display_name": "Acme Analytics Ltd"
+   },
+   "location": {
+    "display_name": "London"
+   },
+   "redirect_url": "https://www.adzuna.co.uk/jobs/land/ad/7001",
+   "description": "Forecasting models for retailers in Python and ...",
+   "created": "2026-10-07T08:00:00Z"
+  },
+  {
+   "id": "7002",
+   "title": "AI Engineer",
+   "company": {
+    "display_name": "Unknown Startup Ltd"
+   },
+   "location": {
+    "display_name": "Bristol"
+   },
+   "redirect_url": "https://www.adzuna.co.uk/jobs/land/ad/7002",
+   "description": "Build agents with LLMs and ...",
+   "created": "2026-10-07T08:00:00Z"
+  },
+  {
+   "id": "7003",
+   "title": "Sales Director",
+   "company": {
+    "display_name": "Acme Analytics Ltd"
+   },
+   "location": {
+    "display_name": "London"
+   },
+   "redirect_url": "https://www.adzuna.co.uk/jobs/land/ad/7003",
+   "description": "Sell things...",
+   "created": "2026-10-07T08:00:00Z"
+  }
+ ]
+}

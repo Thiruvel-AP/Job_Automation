@@ -1,0 +1,58 @@
+{
+ "jobs": [
+  {
+   "id": 101,
+   "title": "Data Scientist",
+   "location": {
+    "name": "London, UK"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/101",
+   "updated_at": "2026-10-08T09:00:00-04:00"
+  },
+  {
+   "id": 102,
+   "title": "Marketing Manager",
+   "location": {
+    "name": "London, UK"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/102",
+   "updated_at": "2026-10-08T09:00:00-04:00"
+  },
+  {
+   "id": 103,
+   "title": "AI Engineer",
+   "location": {
+    "name": "New York, NY"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/103",
+   "updated_at": "2026-10-08T09:00:00-04:00"
+  },
+  {
+   "id": 104,
+   "title": "Machine Learning Engineer",
+   "location": {
+    "name": "Remote"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/104",
+   "updated_at": "2026-10-01T09:00:00-04:00"
+  },
+  {
+   "id": 105,
+   "title": "Applied Scientist",
+   "location": {
+    "name": "Remote"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/105",
+   "updated_at": "2026-10-01T09:00:00-04:00"
+  },
+  {
+   "id": 106,
+   "title": "Data Scientist",
+   "location": {
+    "name": "Manchester"
+   },
+   "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/106",
+   "updated_at": "2026-10-08T09:00:00-04:00"
+  }
+ ]
+}

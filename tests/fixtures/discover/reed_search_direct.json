@@ -1,0 +1,50 @@
+{
+ "results": [
+  {
+   "jobId": 5001,
+   "employerId": 9,
+   "employerName": "Birch Health",
+   "jobTitle": "Data Scientist",
+   "locationName": "Leeds",
+   "minimumSalary": 45000.0,
+   "maximumSalary": 55000.0,
+   "currency": "GBP",
+   "expirationDate": "08/11/2026",
+   "date": "08/10/2026",
+   "jobDescription": "A snippet of the ad...",
+   "applications": 3,
+   "jobUrl": "https://www.reed.co.uk/jobs/data-scientist/5001"
+  },
+  {
+   "jobId": 5002,
+   "employerId": 9,
+   "employerName": "Birch Health",
+   "jobTitle": "Account Manager",
+   "locationName": "Leeds",
+   "minimumSalary": 45000.0,
+   "maximumSalary": 55000.0,
+   "currency": "GBP",
+   "expirationDate": "08/11/2026",
+   "date": "08/10/2026",
+   "jobDescription": "A snippet of the ad...",
+   "applications": 3,
+   "jobUrl": "https://www.reed.co.uk/jobs/account-manager/5002"
+  },
+  {
+   "jobId": 5003,
+   "employerId": 9,
+   "employerName": "Cedar Bank",
+   "jobTitle": "AI Engineer",
+   "locationName": "Edinburgh",
+   "minimumSalary": 45000.0,
+   "maximumSalary": 55000.0,
+   "currency": "GBP",
+   "expirationDate": "01/10/2026",
+   "date": "08/10/2026",
+   "jobDescription": "A snippet of the ad...",
+   "applications": 3,
+   "jobUrl": "https://www.reed.co.uk/jobs/ai-engineer/5003"
+  }
+ ],
+ "totalResults": 3
+}

@@ -1,0 +1,11 @@
+{
+ "installed": {
+  "client_id": "1234-abc.apps.googleusercontent.com",
+  "client_secret": "GOCSPX-not-a-real-secret",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "redirect_uris": [
+   "http://localhost"
+  ]
+ }
+}
