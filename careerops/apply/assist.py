@@ -8,6 +8,11 @@ Visa questions are answered from the plan for the job's work location W (apply/v
 applicant.yaml `visa.by_country[W]` (else `.default`) and nothing else; a job whose W is unknown is refused before a browser opens. Every
 visa field is highlighted and printed as `CHECK VISA ANSWER [W=XX]: question -> answer`; for a remote role at home XX is the remote label
 (`visa.remote.label`), never the home country.
+
+Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` lists them (ethnicity first), with
+the first form option that equals one of the `match_any` texts you wrote (case- and dash-insensitive); no match, or a question that is not
+listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
+Nothing about equal opportunities is ever inferred from anything else.
 """
 from __future__ import annotations
 
@@ -15,6 +20,7 @@ import re
 from pathlib import Path
 
 from ..discovery import countries
+from . import eo
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
 from .visa import VisaPlan, plan_for, require_plan, work_for
@@ -45,6 +51,7 @@ QUESTION_JS = """el => {
 # A field is a visa question when its label says so. These are answered from applicant.yaml -> visa.by_country, never from never_fill.
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
+EO_COLOUR = "3px solid blue"
 APPLY_BUTTON = re.compile(r"^\s*(apply( for this job| now)?|i'?m interested)\s*$", re.I)
 
 
@@ -114,6 +121,38 @@ def _answer_visa(el, typ: str, question: str, plan: VisaPlan | None) -> str | No
     return None
 
 
+def _eo_options(page, el, typ: str) -> list[tuple[str, object]]:
+    """(text, element) of every choice of an equal-opportunities field: a select's options, a radio / checkbox group's labels. A text
+    box has none."""
+    if typ == "select":
+        return [(_norm(o.inner_text()), o) for o in el.query_selector_all("option") if _norm(o.inner_text())]
+    if typ in ("radio", "checkbox"):
+        name = el.get_attribute("name")
+        group = page.query_selector_all(f'input[type={typ}][name="{name}"]') if name else [el]
+        return [(_norm((r.evaluate(LABEL_JS) or "").split("|")[0]), r) for r in group]
+    return []
+
+
+def _answer_eo(page, el, typ: str, entry: "eo.Entry | None") -> tuple[str | None, list[str], str]:
+    """Pick the option of an equal-opportunities field: (the option chosen or None, the option texts, why nothing was chosen). Only a
+    listed question is ever answered, and only with an option that equals one of its `match_any` texts."""
+    options = _eo_options(page, el, typ)
+    texts = [t for t, _ in options]
+    if entry is None:
+        return None, texts, "not listed in equal_opportunities: left blank"
+    if not options:
+        return None, texts, "no options to choose from (a text box): left blank"
+    pick = eo.choose(texts, entry)
+    if pick is None:
+        return None, texts, "no option matched match_any: left blank"
+    target = next(e for t, e in options if t == pick)
+    if typ == "select":
+        el.select_option(label=target.inner_text())
+    else:
+        target.check()
+    return pick, texts, ""
+
+
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
               letter_text: str | None = None, job=None, plan: VisaPlan | None = None) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
@@ -130,8 +169,9 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         plan = plan_for(applicant, work_for(job, applicant) if job is not None else
                         Work(home, "explicit", "no job given: the home block", shown=countries.place_name(home) if home else ""))
     where = (plan.work.shown if plan.work.home_remote else plan.work.country) if plan is not None else "?"
-    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": []}
+    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
     seen_groups: set = set()
+    listed_eo = eo.entries(applicant)
     never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
 
     for el in page.query_selector_all("input, textarea, select"):
@@ -186,6 +226,25 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                   + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else ""))
             report["visa"].append({"question": question, "value": held, "work_location": where})
             report["filled" if held else "manual"].append(f"{short} = visa" if held else short)
+            continue
+
+        if eo.is_eo_field(f"{question} {label}"):
+            # Before never_fill on purpose (its gender / ethnic / disab ... labels are left empty by default): only a question listed in
+            # equal_opportunities is answered, with an option you wrote down; all of them are highlighted and printed.
+            if typ in ("radio", "checkbox"):
+                name = el.get_attribute("name")
+                if name and ("eo", name) in seen_groups:
+                    continue
+                seen_groups.add(("eo", name))
+            entry = eo.entry_for(f"{question} {label}", listed_eo)
+            group_els = [e for _, e in _eo_options(page, el, typ)] if typ in ("radio", "checkbox") else [el]
+            for g in group_els:
+                g.evaluate(f"e => e.style.outline = '{EO_COLOUR}'")
+            picked, texts, why = _answer_eo(page, el, typ, entry)
+            shown = (" (" + why + (f"; options: {' | '.join(texts[:12])}" if why.startswith("no option matched") else "") + ")") if not picked else ""
+            print(f"CHECK EO ANSWER [{entry.key if entry else 'not listed'}]: {question[:150]} -> {picked or 'EMPTY'}{shown}")
+            report["eo"].append({"question": question, "key": entry.key if entry else None, "value": picked, "options": texts})
+            report["filled" if picked else "manual"].append(f"{short} = eo" if picked else short)
             continue
 
         if _matches(label, never):

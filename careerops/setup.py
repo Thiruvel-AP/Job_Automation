@@ -159,6 +159,19 @@ def visa_checks(a: dict) -> list[tuple[str, object, str]]:
     ]
 
 
+def eo_checks(a: dict) -> list[tuple[str, object, str]]:
+    """The structure of applicant.yaml `equal_opportunities` (apply/eo.py), when there is one: a mapping of questions, each with a
+    non-empty `match_any` list of option texts, an optional `answer` text, an optional `question` list of regexes (ethnicity needs none),
+    and no other keys. One failing line lists every problem. No block, no check: the assist then leaves every such question blank."""
+    from .apply import eo
+
+    if "equal_opportunities" not in a:
+        return []
+    found = eo.problems(a["equal_opportunities"])
+    return [("applicant equal_opportunities is well formed" + (f" ({len(a['equal_opportunities'])} question(s))" if not found else ""),
+             not found, "; ".join(found) + " (applicant.yaml)")]
+
+
 def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
     """Doctor lines for applicant.yaml (read only): the email is not on a placeholder domain, a UK phone is not written
     "+44 0..." (the trunk 0 is dropped after +44), and `location` is a place, not an address with a postcode (the CV and
@@ -171,7 +184,7 @@ def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
     email, phone, loc = (str(a.get(k) or "").strip() for k in ("email", "phone", "location"))
     domain = email.rpartition("@")[2].lower()
     bad_domain = domain in PLACEHOLDER_DOMAINS or domain.endswith(tuple("." + d for d in PLACEHOLDER_DOMAINS))
-    return [*visa_checks(a),
+    return [*visa_checks(a), *eo_checks(a),
         (f"applicant email is not on a placeholder domain ({email or 'empty'})", bool(email) and not bad_domain,
          "applicant.yaml `email` must be your real address, not @example.com/.org/.net"),
         (f"applicant phone has no 0 after +44 ({phone or 'empty'})", not re.match(r"\+44[\s\-().]*0", phone),

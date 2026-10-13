@@ -514,6 +514,21 @@ gets the location "United Kingdom" (older behaviour), so W is the office country
 Tests: `tests/discovery/test_workcountry.py`, `tests/apply/test_visa_plan.py`, `tests/apply/test_assist_visa.py` (Chromium, slow), additions to `test_live.py`,
 `test_applicant_doctor.py`, `test_listed_only.py`. **Unverified:** a real application form; the rules on real ads (they are tested on hand-made sentences).
 
+## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
+
+`apply/eo.py` + `assist.fill_page`. Reads `applicant.yaml → equal_opportunities`: `{key: {answer, match_any: [...], question: [regex]}}` (`question` built in for `ethnicity`:
+`ethnic | \brace\b | racial`, required for any other key; unknown keys are an error). **Fills only listed questions**: for each `match_any` text in order, the first form option
+(select option, radio / checkbox label in form order) whose `eo.norm` equals the text's (casefolded, NFKC, all dash characters and runs of spaces collapsed to one space,
+trailing `*`/`:` dropped; **equality, never "contains"**, so "American Indian or Alaska Native" is not "Indian"); no match, a text box, or no `equal_opportunities` block → empty.
+`answer` is documentation (never typed, not matched unless it is also in `match_any`). **Nothing is inferred**: no other applicant field, the job or the visa block is read for an EO answer.
+**Printing**: every EO field (`eo.EO_FIELD`: ethnic / race / gender / sex / disab / veteran / pronoun / sexual orientation / religio / belief / transgender / marital), listed or
+not, is outlined blue and printed `CHECK EO ANSWER [key|not listed]: question -> option|EMPTY (reason; options: ...)`; `report["eo"]` has `{question, key, value, options}`; empty ones
+go to `manual`, filled to `filled` (`... = eo`). These fields are handled before `never_fill` (which keeps nationality / citizenship / criminal / salary ...). **Doctor**:
+`setup.eo_checks` fails a malformed block (one line, every problem listed) and says nothing when there is no block. Not done: a custom React dropdown (not a `<select>` / radio /
+checkbox) is not recognised as having options, so it stays empty and is printed; a free-text box is never typed into (decision: `answer` is not a form option).
+Tests: `tests/apply/test_eo.py` (matching, structure, doctor), `tests/apply/test_assist_eo.py` (Chromium: UK-style list, US-style list, no-match list, unlisted questions, text box, order,
+invalid block). **Unverified:** a real application form.
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

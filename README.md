@@ -97,8 +97,9 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
    tracker is the obvious seed list.
 3. **Gates** — title/seniority/location regexes and the JD rules (SRE, line management, clearance). Sponsorship is not a gate: see
    "Priority" below.
-4. **Applicant basics** — `config/profile/applicant.yaml`. Salary, EEO and "why us" are deliberately never filled; visa
-   questions are answered from the `visa:` block (below), only when they are recognisable.
+4. **Applicant basics** — `config/profile/applicant.yaml`. Salary and "why us" are deliberately never filled; visa
+   questions are answered from the `visa:` block (below), only when they are recognisable; equal-opportunities questions only
+   from the `equal_opportunities:` block (below), and only the ones you list.
 
    ```yaml
    visa:
@@ -143,6 +144,31 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
    label stays empty and orange. Nothing is submitted. `careerops doctor` fails on an `@example.com/.org/.net` email, a `+44 0…`
    phone, a `location` with a UK postcode, a missing `visa.home` and a missing `visa.by_country[visa.home]`; it warns (shown,
    exit code unchanged) about a missing `visa.by_country.default`.
+
+   **Equal-opportunities questions** (ethnicity first) are filled **only** when listed in `equal_opportunities` and never inferred from
+   anything else:
+
+   ```yaml
+   equal_opportunities:
+     ethnicity:
+       answer: "Asian - Indian"          # for your reference; never typed anywhere
+       match_any:                        # the form options you accept, best first
+         - "Asian or Asian British - Indian"
+         - "Asian, Asian British or Asian Welsh: Indian"
+         - "Indian"
+         - "Asian"
+       # question: ["ethnic"]            # optional regexes for the question's label; built in for ethnicity, required for any other key
+   ```
+
+   For a listed question the assist picks, for each `match_any` text in order, the first form option **equal** to it ignoring case,
+   dashes and spacing (`Asian or Asian British – Indian` = `asian or asian british - indian`; never "contains": `American Indian or
+   Alaska Native` is not `Indian`). A select, a radio group or a checkbox group has options; no match, or a text box, leaves the field
+   empty. Every equal-opportunities field on the form (ethnicity, gender, disability, religion, sexual orientation, veteran status,
+   pronouns ...), listed or not, is outlined blue and printed as `CHECK EO ANSWER [ethnicity]: <question> -> <option or EMPTY (why)>`
+   (`[not listed]` for the ones you did not list, which are always left blank; an unmatched list prints its options). `careerops
+   doctor` validates the block when there is one: a mapping of questions, each with a non-empty `match_any` list of texts, an optional
+   `answer` text, an optional `question` list of valid regexes (required unless the key is `ethnicity`), no other keys; an invalid
+   entry is never used to fill anything.
 
 ## Daily use
 

@@ -40,3 +40,13 @@ visa:
       sponsorship_now: true
       sponsorship_future: true
       summary: "I would need a work visa for {country} and am open to sponsorship."
+
+equal_opportunities:
+  ethnicity:
+    answer: "Asian - Indian"
+    match_any:            # first option on the form that matches, in this order
+      - "Asian or Asian British - Indian"
+      - "Asian, Asian British or Asian Welsh: Indian"
+      - "Indian"
+      - "Asian"
+  # Only questions listed here get filled. Gender, disability, religion etc. are left blank for you.
