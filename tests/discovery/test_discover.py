@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import pytest
 
 from careerops import cli
-from careerops.discovery import discover as disc, gmail, intake, manual, register as sponsors
+from careerops.discovery import boards as boards_module, discover as disc, gmail, intake, manual, register as sponsors
 from careerops.discovery.discover import Discover
 from careerops.discovery.http import Fetcher
 from careerops.discovery.robots import RobotsCache
@@ -36,7 +36,7 @@ def gh_net(**extra):
 def cfg(settings):
     settings.raw["sources"].update(greenhouse=[ACME], lever=[], lever_eu=[], ashby=[])
     settings.raw["discover"]["alert_probes_per_run"] = 0
-    settings.raw["discover"]["ats"]["probe_per_run"] = 0
+    settings.raw["discover"]["sources"] = []                 # the shipped list is yours; tests bring their own
     return settings
 
 
@@ -186,28 +186,195 @@ def test_the_board_list_is_cached_and_reused(cfg, db):
     assert len(net.urls()) == n and (cfg.path("discover") / "boards" / "greenhouse-acme.json").exists()
 
 
-# ------------------------------------------------------------------ ats: sponsor-register companies
-def test_a_register_company_gets_its_board_found_and_is_read_under_its_register_name(cfg, db):
-    sponsors_csv = cfg.path("sponsors_csv")
-    db.conn.execute("INSERT INTO companies (norm, town_norm, register_name, town, rating, route, first_seen) VALUES "
-                    "('acme analytics','london','Acme Analytics Ltd','London','A','Skilled Worker','2026-10-01')")
-    db.conn.commit()
-    cfg.raw["sources"]["greenhouse"] = []
-    cfg.raw["discover"]["ats"]["probe_per_run"] = 5
-    net = gh_net()
-    net.routes.insert(0, ("boards/acmeanalytics/jobs", fixture_json("gh_jobs_acme.json")))
-    net.routes.insert(1, ("boards/acmeanalytics", fixture_json("gh_board_acme.json")))
-    d = make(cfg, db, net)
+# ------------------------------------------------------------------ ats: seeds (archive folder names, discover.sources, register)
+def monzo_net():
+    """Monzo's Greenhouse board and nothing else: every other token is a 404 (what the real APIs answer for an unknown board)."""
+    return Net(strict=False).add("boards/monzo/jobs", fixture_json("gh_jobs_monzo.json"))
+
+
+@pytest.fixture
+def seeded(cfg):
+    """No explicit boards in sources:, so only the seed companies (archive folders, discover.sources) are looked for."""
+    cfg.raw["sources"].update(greenhouse=[], lever=[], lever_eu=[], ashby=[])
+    return cfg
+
+
+def test_a_company_from_the_archive_folder_names_gets_its_board_found_by_token(seeded, db):
+    (seeded.path("applications") / "Monzo Bank Ltd").mkdir()
+    d = make(seeded, db, monzo_net())
     d.from_boards()
-    assert db.conn.execute("SELECT probe_status, ats_slug FROM companies").fetchone()[:] == ("verified", "acmeanalytics")
-    assert titles(d)[0].startswith("Data Scientist") and all(c.company == "Acme Analytics Ltd" for c, _ in d.run.written)
-    assert any("looked for boards" in n or "ats resolve" in n for n in d.run.notes)
+    (f,) = d.findings
+    assert f.tokens == ["monzobank", "monzo-bank", "monzo"] and [(b.ats, b.slug) for b in f.boards] == [("greenhouse", "monzo")]
+    assert titles(d) == ["Data Scientist | London, UK", "Machine Learning Engineer | Remote"] and f.matched == 2   # Marketing is not a target role
+    assert all(c.company == "Monzo Bank Ltd" for c, _ in d.run.written)                                              # the folder's own name
+    assert "Monzo Bank Ltd [archive] | tried: monzobank, monzo-bank, monzo | board: greenhouse/monzo | 2 matched" in d.ats_report()[1]
 
 
-def test_without_a_register_the_configured_boards_are_still_read_and_it_says_so(cfg, db):
+def test_only_folder_names_are_read_never_what_is_inside_and_nothing_is_changed(seeded, db):
+    arch = seeded.path("applications")
+    (arch / "Monzo" / "Data Scientist" / "v2").mkdir(parents=True)
+    (arch / "Monzo" / "Data Scientist" / "CV.pdf").write_bytes(b"%PDF-1.4 mine")
+    (arch / "stray.pdf").write_bytes(b"x")                                    # a file at the top is not a company
+    before = sorted((str(p.relative_to(arch)), p.stat().st_mtime_ns) for p in arch.rglob("*"))
+    d = make(seeded, db, monzo_net())
+    d.from_boards()
+    assert [f.seed.name for f in d.findings] == ["Monzo"]
+    assert sorted((str(p.relative_to(arch)), p.stat().st_mtime_ns) for p in arch.rglob("*")) == before
+
+
+def test_discover_sources_come_after_the_archive_and_are_not_listed_twice(seeded, db):
+    (seeded.path("applications") / "Zeta Corp").mkdir()
+    seeded.raw["discover"]["sources"] = ["Monzo", {"name": "Zeta Corp Ltd"}, "  "]
+    d = make(seeded, db, monzo_net())
+    d.from_boards()
+    assert [(f.seed.name, f.seed.origin) for f in d.findings] == [("Zeta Corp", "archive"), ("Monzo", "config")]
+
+
+def test_a_register_company_is_not_a_seed_unless_it_is_in_the_archive_or_sources(seeded, db):
+    db.replace_sponsors(sponsors.parse(seeded.path("sponsors_csv")))
+    net = Net(strict=False)
+    d = make(seeded, db, net)
+    d.from_boards()
+    assert d.findings == [] and net.urls() == []                                    # a register full of sponsors, none looked at
+    seeded.raw["discover"]["sources"] = ["Northwind Health AI"]
+    d = make(seeded, db, Net(strict=False))
+    d.from_boards()
+    assert [(f.seed.name, f.seed.on_register) for f in d.findings] == [("Northwind Health AI", True)]
+
+
+def test_a_verified_register_board_is_tried_first_for_a_seed_that_is_on_the_register(seeded, db):
+    db.replace_sponsors(sponsors.parse(seeded.path("sponsors_csv")))
+    db.conn.execute("INSERT INTO companies (norm, town_norm, register_name, town, rating, route, first_seen, ats, ats_slug, ats_verified) "
+                    "VALUES ('northwind health ai','london','Northwind Health AI','London','A','Skilled Worker','2026-10-01','greenhouse','nwh',1)")
+    db.conn.commit()
+    seeded.raw["discover"]["sources"] = ["Northwind Health AI"]
+    net = Net(strict=False).add("boards/nwh/jobs", fixture_json("gh_jobs_monzo.json"))
+    d = make(seeded, db, net)
+    d.from_boards()
+    (f,) = d.findings
+    assert f.tokens == ["nwh"] and [(b.ats, b.slug) for b in f.boards] == [("greenhouse", "nwh")]
+
+
+def test_the_sources_boards_named_token_by_token_are_still_read(cfg, db):
     d = make(cfg, db, gh_net())
     d.from_boards()
-    assert any("no sponsor-register companies" in n for n in d.run.notes) and len(d.run.written) == 3
+    assert len(d.run.written) == 3 and [f.seed.origin for f in d.findings] == ["sources"] and d.findings[0].matched == 3
+
+
+def test_a_board_named_in_sources_and_found_for_a_seed_is_read_once(cfg, db):
+    (cfg.path("applications") / "Acme").mkdir()
+    d = make(cfg, db, gh_net())
+    d.from_boards()
+    assert len(d.run.written) == 3 and d.run.sources["ats"]["seen"] == 6 and [f.seed.origin for f in d.findings] == ["sources", "archive"]
+
+
+def test_a_blocked_board_host_is_reported_not_remembered_and_not_asked_again(seeded, db):
+    (seeded.path("applications") / "Monzo").mkdir()
+    (seeded.path("applications") / "Wise").mkdir()
+    net = Net(strict=False).add("boards-api.greenhouse.io", "no", 429)
+    d = make(seeded, db, net)
+    d.from_boards()
+    assert all(f.errors for f in d.findings) and sum("greenhouse" in u for u in net.urls(include_robots=True)) == 1       # one 429, then left alone
+    assert not any(k.startswith("greenhouse:") for k in json.loads((seeded.path("discover") / "boards.json").read_text(encoding="utf-8")))
+    assert any("stopped asking" in n for n in d.run.notes)
+
+
+def test_the_limit_stops_the_walk_and_says_how_many_companies_were_left(seeded, db):
+    for n in ("Monzo", "Wise", "Zed"):
+        (seeded.path("applications") / n).mkdir()
+    d = make(seeded, db, monzo_net(), limit=1)
+    d.from_boards()
+    assert len(d.run.written) == 1 and any("2 compan(ies) not looked at" in n for n in d.run.notes)
+
+
+def test_requests_to_one_host_are_at_least_a_second_apart(seeded, db):
+    from urllib.parse import urlparse
+    (seeded.path("applications") / "Nobody Special Ltd").mkdir()
+    now, at, net = [0.0], {}, Net(strict=False)
+
+    def get(url, **kw):
+        at.setdefault(urlparse(url).hostname, []).append(now[0])
+        return net.get(url, **kw)
+    Discover(seeded, db, Fetcher(RobotsCache(), get=get, sleep=lambda s: now.__setitem__(0, now[0] + s), clock=lambda: now[0], gap_s=1.0),
+             today=TODAY, say=lambda s: None).from_boards()
+    assert max(len(v) for v in at.values()) >= 3
+    assert all(b - a >= 1.0 - 1e-9 for v in at.values() for a, b in zip(v, v[1:]))
+
+
+# ------------------------------------------------------------------ ats: the board cache (boards.json, 30 days, misses too)
+def test_hits_and_misses_are_cached_for_thirty_days_and_not_asked_again(seeded, db):
+    (seeded.path("applications") / "Monzo Bank Ltd").mkdir()
+    net = monzo_net()
+    make(seeded, db, net).from_boards()
+    cache = json.loads((seeded.path("discover") / "boards.json").read_text(encoding="utf-8"))
+    assert cache["greenhouse:monzo"]["found"] is True and cache["greenhouse:monzobank"]["found"] is False
+    assert cache["ashby:monzo-bank"]["found"] is False and len(cache) == 12                       # 3 tokens x 4 providers
+    first = len(net.urls())
+    d = make(seeded, db, net)
+    d.from_boards()
+    again = d.findings[0]
+    assert again.cached == {"monzobank", "monzo-bank", "monzo"} and [b.slug for b in again.boards] == ["monzo"]
+    assert len(net.urls()) == first                                                         # misses and the hit: not one request more
+    assert "monzobank (cached)" in again.line() and "monzo (cached)" in again.line()
+
+
+def test_a_cached_answer_expires_after_board_cache_days(seeded):
+    ts = "2026-10-10T12:00:00+00:00"
+    idx = boards_module.BoardIndex(seeded, clock=lambda: datetime(2026, 11, 5, tzinfo=timezone.utc))              # 26 days later
+    idx.data = {"greenhouse:monzo": {"ts": ts, "found": True}, "greenhouse:nope": {"ts": ts, "found": False}}
+    assert idx.get("greenhouse", "monzo") is True and idx.get("greenhouse", "nope") is False and idx.get("ashby", "monzo") is None
+    idx.clock = lambda: datetime(2026, 11, 20, tzinfo=timezone.utc)                                               # 41 days later
+    assert idx.get("greenhouse", "monzo") is None and idx.get("greenhouse", "nope") is None
+
+
+@pytest.mark.parametrize("reply", [{"error": "no such board"}, {"jobs": "x"}, ["not", "a", "dict"], ""])
+def test_a_token_counts_only_when_the_api_answers_with_a_jobs_list(seeded, db, reply):
+    (seeded.path("applications") / "Nope").mkdir()
+    d = make(seeded, db, Net(strict=False).add("boards-api.greenhouse.io", reply))
+    d.from_boards()
+    assert d.findings[0].boards == []
+
+
+def test_an_empty_lever_list_is_not_a_board_but_an_empty_greenhouse_jobs_list_is(seeded, db):
+    (seeded.path("applications") / "Quiet").mkdir()
+    net = Net(strict=False).add("boards/quiet/jobs", {"jobs": []}).add("api.lever.co", [])
+    d = make(seeded, db, net)
+    d.from_boards()
+    assert [(b.ats, b.slug) for b in d.findings[0].boards] == [("greenhouse", "quiet")] and d.run.written == []
+
+
+# ------------------------------------------------------------------ ats: the run report
+def test_the_report_lists_boards_found_first_then_the_rest_with_totals(seeded, db):
+    for n in ("Aardvark", "Monzo"):
+        (seeded.path("applications") / n).mkdir()
+    d = make(seeded, db, monzo_net())
+    d.from_boards()
+    rep = d.ats_report()
+    assert rep[0] == "ats: 2 company(ies) looked at · 1 with a board · 1 without · 2 job(s) matched the role and place"
+    assert rep[1] == "  Monzo [archive] | tried: monzo | board: greenhouse/monzo | 2 matched"
+    assert rep[2] == "  Aardvark [archive] | tried: aardvark | board: none | 0 matched"
+
+
+def test_discover_ats_dry_run_shows_the_monzo_board_the_ranking_with_urls_and_writes_nothing(cmd, seeded, capsys):
+    (seeded.path("applications") / "Monzo").mkdir()
+    cmd(monzo_net(), "--ats", "--dry-run")
+    out = capsys.readouterr().out
+    assert "Monzo [archive] | tried: monzo | board: greenhouse/monzo | 2 matched" in out
+    assert "2 new ad(s) would be written" in out and "Monzo | Data Scientist | London, UK | https://job-boards.greenhouse.io/monzo/jobs/101" in out
+    assert inbox_files(seeded) == [] and disc.read_runs(seeded) == []
+
+
+def test_the_command_prints_the_ten_best_by_priority(cmd, seeded, capsys):
+    net = Net(strict=False)
+    for i in range(12):
+        (seeded.path("applications") / f"Corp{i:02d}").mkdir()
+        board = fixture_json("gh_jobs_monzo.json")
+        board["jobs"] = [dict(board["jobs"][0], id=900 + i, title=f"Data Scientist {i}")]
+        net.add(f"boards/corp{i:02d}/jobs", board)
+    cmd(net, "--ats", "--dry-run", "--limit", "12")
+    out = capsys.readouterr().out
+    assert "12 new ad(s) would be written" in out and "(the top 10 of 12 by priority" in out
+    assert sum(" | https://" in line for line in out.splitlines() if " x " in line) == 10
 
 
 # ------------------------------------------------------------------ the ranking

@@ -163,11 +163,18 @@ UK; Reed, Adzuna and CV-Library are UK sites); closed postings are dropped; a jo
 normalised title + place). Sponsorship is never a filter (see "Priority"). `--limit N` caps the new files (default 40), `--dry-run`
 finds and ranks without writing, and every run is listed best priority first.
 
-- **`--ats`** reads Greenhouse, Lever and Ashby boards through their documented public APIs: the boards in `sources:` (your company
-  list) plus the boards of sponsor-register companies that were found by probing slugs derived from the register name (a few per run,
-  `discover.ats.probe_per_run`, each company at most once per `companies.reprobe_after_days`; a board is accepted only when its name
-  matches the company, see `ats.verify_rule`). Posting lists are cached for 6 hours. **Workable is not read**: its API needs the account
-  owner's token and no public posting API is documented.
+- **`--ats`** reads Greenhouse, Lever and Ashby boards through their documented public APIs. It starts from your companies, in this
+  order and no other: (1) the top-level folder names under `paths.applications` (`D:\Professional\UK\Companies`; names only, nothing
+  inside a folder is opened), (2) the employers you list in `discover.sources` (settings.yaml), (3) sponsor-register companies, only
+  when they are also one of those (the register is never sampled). For each company it guesses up to four board tokens from the name
+  (lower-case, Ltd / Limited / plc / Group / UK / Holdings / Technologies dropped, spaces and punctuation removed: `Monzo Bank Ltd` ->
+  `monzobank`, `monzo-bank`, `monzo`) and asks each provider; a token counts only when the API answers 200 with a jobs list. Every
+  answer, found or not, is kept 30 days (`discover.ats.board_cache_days`) in `data/discover/boards.json`, so a company is asked about
+  once a month; a blocked host or an error is not kept. The run prints, per company, the tokens tried, the board found
+  (`greenhouse/monzo`) or none and the jobs that matched the role and place, then the top 10 by priority P with title, company,
+  location and URL. A token is a guess: a board with the right token but another company's name is read as this company, so look at
+  the printed board before applying. The boards named token by token in `sources:` are still read. Posting lists are cached for 6
+  hours. **Workable is not read**: its API needs the account owner's token and no public posting API is documented.
 - **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
   recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
   (`details_per_run`). An expired posting is closed.

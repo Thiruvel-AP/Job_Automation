@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -109,6 +110,31 @@ def slug_candidates(register_name: str, ch_name: str | None = None) -> list[str]
     return list(dict.fromkeys(out))[:4]
 
 
+TOKEN_STRIP = {"ltd", "limited", "plc", "group", "uk", "holdings", "technologies"}
+TOKEN_FIRST_WORD_MIN = 3            # a one- or two-letter first word ("ai", "bt") is a board of some other company far too often
+
+
+def board_tokens(name: str, hint: str | None = None) -> list[str]:
+    """≤4 board-token guesses for a company or folder name, best first: 'Monzo Bank Ltd' → ['monzobank', 'monzo-bank', 'monzo'].
+    Lower-case, accents and punctuation removed, Ltd / Limited / plc / Group / UK / Holdings / Technologies dropped; then the words
+    joined, hyphenated, the first word (3+ letters, name of more than one word) and the first two words (name of more than two).
+    `hint` (a slug already verified for this company) goes first."""
+    text = unicodedata.normalize("NFKD", re.split(r"\s+t/a\s+|\s+trading as\s+", name, flags=re.I)[0])
+    text = text.encode("ascii", "ignore").decode().lower().replace("'", "")
+    words = re.findall(r"[a-z0-9]+", re.sub(r"\([^)]*\)", " ", text))
+    kept = [w for w in words if w not in TOKEN_STRIP] or words
+    if len(kept) > 1 and kept[0] == "the":
+        kept = kept[1:]
+    cands = [hint] if hint else []
+    if kept:
+        cands += ["".join(kept), "-".join(kept)]
+        if len(kept) > 1 and len(kept[0]) >= TOKEN_FIRST_WORD_MIN:
+            cands.append(kept[0])
+        if len(kept) > 2:
+            cands.append("".join(kept[:2]))
+    return list(dict.fromkeys(c for c in cands if c and SLUG_OK.match(c)))[:4]
+
+
 def verify_rule(hit: Hit, company_norm: str, slug_is_full_name: bool) -> tuple[bool, str]:
     """(verified, rule), first match wins: name_exact | name_prefix_uk | full_slug_uk | name_mismatch (rejected) | weak."""
     if hit.board_name:
@@ -151,19 +177,37 @@ def _ms_to_iso(ms) -> str | None:
         return None
 
 
-def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None) -> list[Posting]:
-    """Every open posting on the board, with its description (one request: all three APIs return the text in the list).
-    [] for a board that does not exist. Raises FetchError / Blocked on a failure."""
-    slug, name = board.slug, board.name
+PROVIDERS = ("greenhouse", "lever", "lever_eu", "ashby")
+
+
+def board_request(ats: str, slug: str) -> tuple[str, dict | None, str]:
+    """(url, params, what) of the call that lists a board's postings with their text."""
+    if ats == "greenhouse":
+        return f"{GH}/{slug}/jobs", {"content": "true"}, f"Greenhouse board {slug}"
+    if ats in LEVER:
+        return f"{LEVER[ats]}/{slug}", {"mode": "json"}, f"Lever site {slug}"
+    if ats == "ashby":
+        return f"{ASHBY}/{slug}", None, f"Ashby board {slug}"
+    raise ValueError(f"unknown ATS {ats!r}")
+
+
+def is_board(ats: str, data) -> bool:
+    """Is this 200 reply a real job board? Greenhouse and Ashby answer {"jobs": [...]} (an empty list is a board with no open roles);
+    Lever answers a bare list, and an empty one is not told apart from an unknown site, so it needs at least one posting."""
+    if ats in LEVER:
+        return isinstance(data, list) and len(data) > 0
+    return isinstance(data, dict) and isinstance(data.get("jobs"), list) and "error" not in data
+
+
+def parse_postings(ats: str, data, name: str) -> list[Posting]:
+    """The postings in a board reply (see board_request), under the company name `name`."""
     out: list[Posting] = []
-    if board.ats == "greenhouse":
-        data = fetcher.json(f"{GH}/{slug}/jobs", params={"content": "true"}, what=f"Greenhouse board {slug}")
+    if ats == "greenhouse":
         for j in (data or {}).get("jobs", []) if isinstance(data, dict) else []:
             out.append(Posting(str(j.get("id")), name, str(j.get("title") or ""), str((j.get("location") or {}).get("name") or ""),
                                str(j.get("absolute_url") or ""), html_to_text(j.get("content")),
                                j.get("first_published") or j.get("updated_at")))
-    elif board.ats in LEVER:
-        data = fetcher.json(f"{LEVER[board.ats]}/{slug}", params={"mode": "json"}, what=f"Lever site {slug}")
+    elif ats in LEVER:
         for j in data if isinstance(data, list) else []:
             parts = [j.get("descriptionPlain") or html_to_text(j.get("description"))]
             parts += [f"{x.get('text', '')}\n{html_to_text(x.get('content'))}" for x in j.get("lists") or []]
@@ -172,8 +216,7 @@ def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None)
             out.append(Posting(str(j.get("id")), name, str(j.get("text") or ""), str(cats.get("location") or ""),
                                str(j.get("hostedUrl") or ""), "\n\n".join(p for p in parts if p).strip(),
                                _ms_to_iso(j.get("createdAt")), str(j.get("country") or "")))
-    elif board.ats == "ashby":
-        data = fetcher.json(f"{ASHBY}/{slug}", what=f"Ashby board {slug}")
+    elif ats == "ashby":
         for j in (data or {}).get("jobs", []) if isinstance(data, dict) else []:
             loc = j.get("location") or ""
             addr = (j.get("address") or {}).get("postalAddress") or {}
@@ -182,6 +225,13 @@ def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None)
                                j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")), j.get("publishedAt"),
                                str(addr.get("addressCountry") or ""), listed=j.get("isListed") is not False))
     return out
+
+
+def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None) -> list[Posting]:
+    """Every open posting on the board, with its description (one request: all three APIs return the text in the list).
+    [] for a board that does not exist. Raises FetchError / Blocked on a failure."""
+    url, params, what = board_request(board.ats, board.slug)
+    return parse_postings(board.ats, fetcher.json(url, params=params, what=what), board.name)
 
 
 def probe(slug: str, *, fetcher: Fetcher | None = None, settings=None) -> list[Hit]:

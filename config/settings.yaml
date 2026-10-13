@@ -111,8 +111,11 @@ discover:
   cache_hours: 6                   # a board's posting list is reused this long
   max_new_per_run: 40              # at most this many new inbox files per run (--limit)
   alert_probes_per_run: 12         # companies named by alerts / Adzuna whose board is looked for by probing slugs, per run
+  # `discover --ats` looks for a job board of these companies, in this order: (1) the folder names directly under paths.applications
+  # (names only, nothing inside is read), (2) `sources` below, (3) sponsor-register companies, only if they are also in (1) or (2).
+  sources: []                      # employers to look for beside the archive folders: ["Monzo", "Wise", {name: "Octopus Energy"}]
   ats:
-    probe_per_run: 40              # register companies probed for a board per --ats run (each at most once per companies.reprobe_after_days)
+    board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
   reed:
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
     location: null                 # Reed's locationName; null = all of the UK

@@ -209,11 +209,15 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
             print(f"  ! {label}: {e}")
         c = d.run.sources.get(label, {})
         print("  " + (", ".join(f"{k} {v}" for k, v in c.items() if v) or "nothing found"))
+        if label == "ats":
+            print("\n".join(d.ats_report()))
     for n in d.run.notes:
         print(f"  note: {n}")
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
     print("\n".join(lines))
+    if len(d.run.written) > len(lines):
+        print(f"  (the top {len(lines)} of {len(d.run.written)} by priority P = F x S x R)")
     queued = sum(c.get("to_manual_queue", 0) for c in d.run.sources.values())
     if queued:
         print(f"{queued} link(s) could not be resolved to a full ad: {s.path('jds') / 'manual_queue.csv'} "
@@ -839,8 +843,8 @@ def main(argv=None):
     jr.set_defaults(fn=cmd_judge_report)
     dc = sub.add_parser("discover", help="find open jobs and write them to data/jds/inbox/ (--ats --reed --adzuna --gmail-alerts); "
                                          "with none of these: pull the boards in sources: into the database and triage")
-    dc.add_argument("--ats", action="store_true", help="Greenhouse / Lever / Ashby boards: your sources: list and the boards of "
-                    "sponsor-register companies (a few more are looked for each run)")
+    dc.add_argument("--ats", action="store_true", help="Greenhouse / Lever / Ashby boards of the companies in your archive "
+                    "folder, then discover.sources (and register companies among them); prints, per company, the tokens tried and the board found")
     dc.add_argument("--reed", action="store_true", help="the Reed Jobseeker API (REED_API_KEY in .env); agency posts are flagged")
     dc.add_argument("--adzuna", action="store_true", help="the Adzuna API (snippets only: resolved via the employer's board)")
     dc.add_argument("--gmail-alerts", dest="gmail_alerts", action="store_true", help="LinkedIn / CV-Library / Indeed / Reed alert "

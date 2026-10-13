@@ -8,8 +8,9 @@ never overwritten), which `careerops live` then works through best-priority firs
 is applied to.
 
 Sources
-  ats      Greenhouse / Lever / Ashby boards: your sources.* list plus the boards of sponsor-register companies that `ats.resolve`
-           verified (a few unresolved companies are probed per run, each at most once per companies.reprobe_after_days)
+  ats      Greenhouse / Lever / Ashby boards of the seed companies (seeds.py): the folder names of the application archive, then
+           discover.sources, then register companies that are also one of those. A board is found by guessing tokens from the
+           name (boards.py; every answer cached for 30 days); the boards named token by token in sources: are read as well
   reed     the Reed Jobseeker API (REED_API_KEY): search, then the full ad of every job worth keeping; agency posts are flagged
   adzuna   the Adzuna API: its descriptions are snippets, so each result is a LINK, resolved to the employer's own board (or, for a
            CV-Library address, to the CV-Library page); what cannot be resolved goes to the manual queue
@@ -37,7 +38,8 @@ from ..apply.naming import folder_key
 from ..db import DB
 from . import ats as ats_mod
 from . import candidate as cand
-from . import gates, gmail, intake, manual, priority, reed
+from . import boards as boards_mod
+from . import gates, gmail, intake, manual, priority, reed, seeds as seeds_mod
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
@@ -189,14 +191,19 @@ class BoardCache:
         except (OSError, ValueError, KeyError, TypeError):
             pass
         posts = ats_mod.board_postings(board, self.fetcher)
-        self.memory[k] = posts
+        self.put(board, posts)
+        return posts
+
+    def put(self, board: ats_mod.Board, posts: list[ats_mod.Posting]) -> None:
+        """Keep a posting list that was just fetched (in memory, and on disk for discover.cache_hours)."""
+        self.memory[(board.ats, board.slug)] = posts
+        path = self.dir / "boards" / f"{board.ats}-{board.slug}.json"
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps({"fetched": self.clock().isoformat(), "name": board.name,
                                         "postings": [p.__dict__ for p in posts]}), encoding="utf-8")
         except OSError:
             pass
-        return posts
 
     # company -> board lookups found by probing
     def _lookups(self) -> dict:
@@ -305,6 +312,7 @@ class Discover:
         self.lookup = BoardLookup(settings, db, fetcher, self.cache)
         self.inbox = settings.path("jds") / "inbox"
         self.new_files = 0
+        self.findings: list[boards_mod.Finding] = []
 
     # ---- filters, in the order that spends least first
     def wanted(self, c: Candidate, label: str) -> bool:
@@ -371,33 +379,61 @@ class Discover:
 
     # ---- sources
     def from_boards(self) -> None:
+        """Boards of the seed companies (seeds.py: archive folder names, discover.sources, register companies among them), found by
+        guessing board tokens from each name (boards.py), plus the boards you named token by token in sources:. One company at a
+        time: find its board, read its postings, move on. self.findings is the per-company report (ats_report)."""
         label = "ats"
-        if self.db.conn.execute("SELECT 1 FROM companies LIMIT 1").fetchone() is None:
-            self.run.notes.append("ats: no sponsor-register companies in the database yet (run `careerops sponsors`); only the boards "
-                                  "in sources: are read")
-        else:
-            n = int(self.s["discover"].get("ats", {}).get("probe_per_run", 40))
-            if n > 0:
-                st = ats_mod.resolve(self.db, self.s, limit=n, fetcher=self.f)
-                self.say(f"ats: looked for boards of {st.probed} register companies: {st}")
-                self.run.notes.append(f"ats resolve: {st}")
-        self.lookup = BoardLookup(self.s, self.db, self.f, self.cache)          # now with the boards just verified
-        for board in self.lookup.boards:
-            try:
-                posts = self.cache.postings(board)
-            except Blocked as e:
-                self.run.notes.append(str(e))
-                continue
-            except FetchError as e:
-                self.run.notes.append(f"{board.ats}:{board.slug}: {e}")
-                continue
-            for p in posts:
-                if not p.listed:
-                    self.run.count(label, "closed")
-                    continue
-                if self.accept(posting_candidate(board, p), label) == "full":
+        self.findings = []
+        index = boards_mod.BoardIndex(self.s)
+        listed = ats_mod.configured_boards(self.s)
+        for board in listed:
+            f = boards_mod.Finding(seeds_mod.Seed(board.name, "sources"), boards=[board])
+            self.findings.append(f)
+            if self.read_board(board, f, label) == "full":
+                return
+        seeds = seeds_mod.seeds(self.s, self.db)
+        have = {(b.ats, b.slug) for b in listed}
+        for i, seed in enumerate(seeds):
+            if i and i % 20 == 0:
+                self.say(f"ats: {i}/{len(seeds)} companies looked at ...")
+            f = boards_mod.find(seed, self.f, index, on_postings=lambda b, posts: self.cache.put(b, posts))
+            self.findings.append(f)
+            for board in (b for b in f.boards if (b.ats, b.slug) not in have):      # a board named in sources: is read once
+                if self.read_board(board, f, label) == "full":
+                    left = len(seeds) - i - 1
+                    if left:
+                        self.run.notes.append(f"ats: the limit of {self.limit} new file(s) is reached; {left} compan(ies) not looked at "
+                                              "this run (the next run carries on)")
                     return
+        if self.f.backed_off:
+            self.run.notes.append("ats: stopped asking " + ", ".join(f"{h} (HTTP {c})" for h, c in sorted(self.f.backed_off.items())))
 
+    def read_board(self, board: ats_mod.Board, finding: boards_mod.Finding, label: str) -> str:
+        """Run every posting of one board through the filters; counts the ones that match the role and place into the finding."""
+        try:
+            posts = self.cache.postings(board)
+        except (Blocked, FetchError) as e:
+            finding.errors.append(str(e))
+            self.run.notes.append(str(e) if isinstance(e, Blocked) else f"{board.ats}:{board.slug}: {e}")
+            return "error"
+        for p in posts:
+            if not p.listed:
+                self.run.count(label, "closed")
+                continue
+            c = posting_candidate(board, p)
+            finding.matched += cand.family_of(c, self.s) is not None and cand.uk_ok(c, self.s)
+            if self.accept(c, label) == "full":
+                return "full"
+        return "ok"
+
+    def ats_report(self) -> list[str]:
+        """Per company: the tokens tried, the board found (provider/token) or none, the postings that matched. Boards found first."""
+        fs = self.findings
+        got = [f for f in fs if f.boards]
+        lines = [f"ats: {len(fs)} company(ies) looked at · {len(got)} with a board · {len(fs) - len(got)} without · "
+                 f"{sum(f.matched for f in fs)} job(s) matched the role and place"]
+        lines += [f.line() for f in got] + [f.line() for f in fs if not f.boards]
+        return lines
     def from_reed(self) -> None:
         label = "reed"
         try:
@@ -566,10 +602,10 @@ class Discover:
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
         return sorted(out, key=lambda t: (-t[0].p, -(t[0].s * t[0].r), t[1].company, t[1].title))
 
-    def listing(self, n: int = 30) -> list[str]:
+    def listing(self, n: int = 10) -> list[str]:
         lines = []
         for pr, c, path in self.ranked()[:n]:
-            lines.append(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {c.company} | {c.title} | {c.location or '?'}  "
+            lines.append(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {c.company} | {c.title} | {c.location or '?'} | {c.url}  "
                          f"[{c.source}{', agency' if c.agency else ''}; {pr.s_reason}]  {path.name}")
         return lines
 

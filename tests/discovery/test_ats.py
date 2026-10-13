@@ -31,6 +31,41 @@ def test_stop_words_do_not_make_collisions_and_there_are_at_most_four_deduped_ca
     assert ats.slug_candidates("Acme Ltd T/A Widgets") == ["acme"]                # the legal part before T/A
 
 
+# ------------------------------------------------------------------ board tokens (discover --ats)
+@pytest.mark.parametrize("name, tokens", [
+    ("Monzo Bank Ltd", ["monzobank", "monzo-bank", "monzo"]),
+    ("Monzo", ["monzo"]),
+    ("Arvora ltd", ["arvora"]),
+    ("Damia Group Ltd", ["damia"]),                                            # Ltd and Group are not part of a board's name
+    ("Build Technologies", ["build"]),
+    ("Acme Holdings UK plc", ["acme"]),
+    ("Charlotte Tilbury Beauty", ["charlottetilburybeauty", "charlotte-tilbury-beauty", "charlotte", "charlottetilbury"]),
+    ("Checkout.com", ["checkoutcom", "checkout-com", "checkout"]),               # punctuation removed, then split into words
+    ("Smith & Nephew", ["smithnephew", "smith-nephew", "smith"]),
+    ("Côte d'Azur Data", ["cotedazurdata", "cote-dazur-data", "cote", "cotedazur"]),
+    ("BT Group", ["bt"]),                                                     # a 2-letter first word is not tried on its own
+    ("Acme Ltd T/A Widgets", ["acme"]),
+    ("The Data Lab (UK) Limited", ["datalab", "data-lab", "data"]),                  # a leading "The" is dropped
+])
+def test_board_tokens(name, tokens):
+    assert ats.board_tokens(name) == tokens
+
+
+def test_board_tokens_are_at_most_four_valid_slugs_and_a_verified_slug_goes_first():
+    t = ats.board_tokens("Northwind Health Analytics Platform Limited", hint="nwh")
+    assert t[0] == "nwh" and len(t) == 4 and len(set(t)) == 4
+    assert ats.board_tokens("", ) == [] and ats.board_tokens("!!! ???") == [] and ats.board_tokens("A") == []
+    assert ats.board_tokens("Monzo", hint="monzo") == ["monzo"]
+
+
+def test_is_board_wants_a_jobs_list_and_lever_wants_a_posting():
+    assert ats.is_board("greenhouse", {"jobs": []}) and ats.is_board("ashby", {"jobs": [{}]})
+    assert not ats.is_board("greenhouse", {"error": "x", "jobs": []}) and not ats.is_board("greenhouse", {"jobs": None})
+    assert not ats.is_board("ashby", []) and not ats.is_board("greenhouse", None)
+    assert ats.is_board("lever", [{"id": "1"}]) and ats.is_board("lever_eu", [{"id": "1"}])
+    assert not ats.is_board("lever", []) and not ats.is_board("lever", {"jobs": []})
+
+
 # ------------------------------------------------------------------ probe
 def test_probe_reads_a_greenhouse_board_with_its_name_and_counts_uk_jobs():
     net = Net(strict=False).add("boards/acme/jobs", fixture_json("gh_jobs_acme_plain.json")).add("boards/acme", fixture_json("gh_board_acme.json"))
