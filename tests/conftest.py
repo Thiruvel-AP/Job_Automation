@@ -148,11 +148,14 @@ def fixture(area: str, name: str) -> Path:
 def settings(tmp_path) -> Settings:
     s = load_settings()
     raw = copy.deepcopy(s.raw)
-    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover"):   # register_dir: M1 writes snapshots
+    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover", "aiapply_applied"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")
     raw["paths"]["tmp"] = str(tmp_path / "stage")
+    # No source registry unless a test brings one (tests/discovery/test_registry.py copies the shipped config/sources.yaml): the
+    # shipped one names OpenAI's Ashby board and 20 alert senders, which no other test wants to read or to fake.
+    raw["paths"]["sources"] = str(tmp_path / "sources.yaml")
     raw["paths"]["calibration"] = str(tmp_path / "calibration")
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords
     (tmp_path / "Companies").mkdir()                      # only `careerops init` creates the real one

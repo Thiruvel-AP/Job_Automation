@@ -7,7 +7,8 @@
   * linkedin.com is never contacted;
   * an HTTP 401 / 403 / 429 stops that host for the rest of the run: `Blocked` is raised, nothing is retried or worked around, and
     later requests to the host raise at once without sending anything;
-  * a connection error is retried once; other statuses are returned for the caller to read.
+  * a connection error is retried once; other statuses are returned for the caller to read;
+  * a `Crawl-delay` in the host's robots.txt (up to MAX_CRAWL_DELAY_S) is the gap to that host instead of one second.
 
 Tests replace `get`, `sleep` and `clock`, so no test touches the network.
 """
@@ -28,6 +29,7 @@ MAX_REDIRECTS = 5
 REDIRECT_STATUSES = (301, 302, 303, 307, 308)
 BLOCKED_STATUSES = (401, 403, 429)
 MAX_BYTES = 20_000_000
+MAX_CRAWL_DELAY_S = 30
 
 
 class FetchError(RuntimeError):
@@ -57,12 +59,14 @@ class Fetcher:
         self._clock = clock or (lambda: time.monotonic())
         self.gap_s = gap_s
         self.last: dict[str, float] = {}
+        self.host_gap: dict[str, float] = {}          # host -> the Crawl-delay its robots.txt asks for, when longer than gap_s
         self.backed_off: dict[str, int] = {}          # host -> the 401 / 403 / 429 it answered
         self.requests = 0
 
     # ---- pacing
     def _throttle(self, host: str) -> None:
-        wait = self.last.get(host, -self.gap_s) + self.gap_s - self._clock()
+        gap = max(self.gap_s, self.host_gap.get(host, 0.0))
+        wait = self.last.get(host, -gap) + gap - self._clock()
         if wait > 0:
             self._sleep(wait)
         self.last[host] = self._clock()
@@ -80,11 +84,22 @@ class Fetcher:
             self.backed_off[host] = r.status_code          # the host said no to a script: not asked again this run
         return r.status_code, (r.text[:500_000] if getattr(r, "ok", False) else "")
 
+    def robots_state(self, url: str) -> str:
+        """'allowed' | 'disallowed' | 'unchecked' for a page or API URL: what robots.txt says about it for this tool ('unchecked' when
+        robots.txt cannot be read, or the host is one this tool never contacts). Costs one paced request per host per 24 hours."""
+        try:
+            self.robots.check(url, self._robots_get)
+        except RobotsError as e:
+            return "disallowed" if "disallows" in str(e) else "unchecked"
+        return "allowed"
+
     # ---- the request
     def request(self, url: str, *, params: dict | None = None, headers: dict | None = None, auth: tuple | None = None,
-                robots: bool = True, what: str = "") -> requests.Response:
+                robots: bool = True, what: str = "", stream: bool = False) -> requests.Response:
         """GET `url`. Raises Blocked (401 / 403 / 429, robots.txt, a host already backed off, linkedin.com) or FetchError
-        (no answer, 5xx, too many redirects, a response over MAX_BYTES). 404 and other statuses are returned."""
+        (no answer, 5xx, too many redirects, a response over MAX_BYTES). 404 and other statuses are returned.
+        `stream=True` leaves the body unread (and the MAX_BYTES check to the caller, who must close the response): for an open-data
+        file that is larger than a job-board answer."""
         what = what or url
         for _hop in range(MAX_REDIRECTS + 1):
             host = host_of(url)
@@ -101,12 +116,16 @@ class Fetcher:
                         raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]}; not asked again",
                                       self.backed_off[host]) from None
                     raise Blocked(str(e)) from None
+                delay = self.robots.crawl_delay(url)
+                if delay and delay > self.gap_s:
+                    self.host_gap[host] = min(delay, MAX_CRAWL_DELAY_S)
             r = None
             for attempt in (0, 1):
                 self._throttle(host)
                 self.requests += 1
                 try:
-                    r = self._get(url, headers={**UA, **(headers or {})}, params=params if _hop == 0 else None, auth=auth)
+                    r = self._get(url, headers={**UA, **(headers or {})}, params=params if _hop == 0 else None, auth=auth,
+                                  **({"stream": True} if stream else {}))
                     break
                 except requests.RequestException as e:
                     if attempt == 1 or not isinstance(e, requests.ConnectionError):
@@ -124,7 +143,7 @@ class Fetcher:
                 continue
             if r.status_code >= 500:
                 raise FetchError(f"{what}: HTTP {r.status_code}")
-            if len(getattr(r, "content", b"") or b"") > MAX_BYTES:
+            if not stream and len(getattr(r, "content", b"") or b"") > MAX_BYTES:
                 raise FetchError(f"{what}: the response is over {MAX_BYTES // 1_000_000} MB")
             return r
         raise FetchError(f"{what}: too many redirects")

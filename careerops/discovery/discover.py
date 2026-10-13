@@ -14,8 +14,15 @@ Sources
   reed     the Reed Jobseeker API (REED_API_KEY): search, then the full ad of every job worth keeping; agency posts are flagged
   adzuna   the Adzuna API: its descriptions are snippets, so each result is a LINK, resolved to the employer's own board (or, for a
            CV-Library address, to the CV-Library page); what cannot be resolved goes to the manual queue
-  gmail    LinkedIn / CV-Library / Indeed / Reed job-alert emails through the read-only Gmail API; the same resolution; LinkedIn and
-           Indeed pages are never fetched
+  gmail    the job-alert emails of every source in config/sources.yaml that lists sender domains (LinkedIn, CV-Library, Indeed, Reed
+           and the rest) through the read-only Gmail API; the same resolution; LinkedIn and Indeed pages are never fetched
+  jobbank  Canada's Job Bank open-data CSV (jobbank.py): rows are only LISTED (no employer, no ad text), in listed_only.csv
+
+The source registry (config/sources.yaml, registry.py) says which sources exist and how each is read; health.py checks each of them
+after every run. Outside the UK: a job whose place is another country (the ad's own country, else read from its place) is not dropped
+but written with `Country:` and `Status: listed_only` headers (at most discover.listed_only.max_per_run a run, apart from the
+UK limit); `careerops live` will not apply to it without a visa block for that country in applicant.yaml, and its priority S is
+priority.sponsor_weights.non_uk. Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
 
 The manual queue (paths.jds/manual_queue.csv, append-only, one row per link) lists what could not be resolved, for
 `careerops live --clipboard`. Sponsorship is never a filter here: the output is ordered by priority P = F x S x R (priority.py).
@@ -39,24 +46,29 @@ from ..db import DB
 from . import ats as ats_mod
 from . import candidate as cand
 from . import boards as boards_mod
-from . import gates, gmail, intake, manual, priority, reed, seeds as seeds_mod
+from . import countries, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
 from .sources import html_to_text
 
 MANUAL_COLUMNS = ["ts", "source", "company", "title", "location", "link", "reason"]
+LISTED_COLUMNS = ["ts", "source", "country", "company", "title", "location", "posted", "salary", "ref", "link", "note"]
+ALERT_SUBJECT = re.compile(r"job|vacanc|stellen|vacature|alert|match|recommend|new roles?|positions?|offres?|opportunit", re.I)
+COMPANY_COLUMNS = ("company", "company_name", "employer", "employer_name", "organisation", "organization")
+TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
 TITLE_MATCH = 0.88                 # similarity at which an alert's title is taken for a posting's title on the employer's board
-COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "duplicate", "written", "already_in_inbox", "bad_header",
-            "resolved", "to_manual_queue")
+COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "duplicate", "written", "listed_only", "listed_capped",
+            "already_in_inbox", "bad_header", "resolved", "to_manual_queue")
 
 
 # ------------------------------------------------------------------ the run record
 @dataclass
 class Run:
     started: str = ""
-    sources: dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))
+    sources: dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))      # by the step that found it (ats, gmail ...)
+    by_source: dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))    # by registry source id: new, listed_only, alerts
     notes: list[str] = field(default_factory=list)
     written: list[tuple[Candidate, Path]] = field(default_factory=list)
     dry_run: bool = False
@@ -64,9 +76,17 @@ class Run:
     def count(self, source: str, what: str, n: int = 1) -> None:
         self.sources[source][what] += n
 
+    def credit(self, source_id: str, what: str, n: int = 1) -> None:
+        self.by_source[source_id][what] += n
+
+    def new_jobs(self, source_id: str) -> int:
+        """Ads written to the inbox plus rows listed for this source in this run."""
+        c = self.by_source.get(source_id) or {}
+        return int(c.get("new", 0)) + int(c.get("listed_only", 0))
+
     def as_json(self) -> dict:
         return {"ts": self.started, "dry_run": self.dry_run, "sources": {s: dict(c) for s, c in self.sources.items()},
-                "notes": self.notes[:50]}
+                "by_source": {s: dict(c) for s, c in self.by_source.items()}, "notes": self.notes[:50]}
 
 
 # ------------------------------------------------------------------ what is already known
@@ -76,6 +96,7 @@ class Known:
 
     def __init__(self):
         self.full: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)       # (company, title) -> {place: where}
+        self.notes: list[str] = []                                                 # what could not be read while loading
 
     def add(self, company: str, title: str, location: str, where: str) -> None:
         c, t, p = cand.dedupe_key(company, title, location)
@@ -135,7 +156,40 @@ def load_known(settings, db: DB) -> Known:
                     k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/{sub}")
     for company, role in archive_pairs(settings.path("applications")):
         k.add(company, role, "", "already applied (application archive)")
+    add_aiapply(settings, k)
     return k
+
+
+def read_aiapply(path: Path) -> tuple[list[tuple[str, str]], str]:
+    """(company, title) of every row of the AIApply export (paths.aiapply_applied), and a note when it cannot be used. The column
+    names are matched case-insensitively (company / employer / ..., title / job title / position / ...). READ ONLY."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as f:
+            rdr = csv.DictReader(f)
+            names = {(n or "").strip().lower(): n for n in rdr.fieldnames or []}
+            c_col = next((names[n] for n in COMPANY_COLUMNS if n in names), None)
+            t_col = next((names[n] for n in TITLE_COLUMNS if n in names), None)
+            if not (c_col and t_col):
+                return [], (f"{path.name}: no company and title columns (found: {', '.join(names) or 'none'}); "
+                            "nothing was skipped because of it")
+            return [((r.get(c_col) or "").strip(), (r.get(t_col) or "").strip()) for r in rdr], ""
+    except FileNotFoundError:
+        return [], ""
+    except (OSError, csv.Error, UnicodeDecodeError) as e:
+        return [], f"{path.name} cannot be read ({type(e).__name__}); nothing was skipped because of it"
+
+
+def add_aiapply(settings, k: Known) -> int:
+    """Jobs AIApply applied to (company + normalised title, any place) count as already applied. Returns how many rows were read."""
+    key = (settings.raw.get("paths") or {}).get("aiapply_applied")
+    if not key:
+        return 0
+    pairs, note = read_aiapply(settings.path("aiapply_applied"))
+    if note:
+        k.notes.append(note)
+    for company, title in pairs:
+        k.add(company, title, "", "already applied (AIApply)")
+    return len(pairs)
 
 
 # ------------------------------------------------------------------ the manual queue (append-only)
@@ -232,9 +286,10 @@ class BoardLookup:
     """Which board a company's jobs are on, and the posting on it that matches a title: the boards you listed, the register
     boards `ats.resolve` verified, and (a few per run) boards found by probing slugs derived from the company name."""
 
-    def __init__(self, settings, db: DB, fetcher: Fetcher, cache: BoardCache, probes: int | None = None):
+    def __init__(self, settings, db: DB, fetcher: Fetcher, cache: BoardCache, probes: int | None = None,
+                 extra_boards: list[ats_mod.Board] | None = None):
         self.settings, self.fetcher, self.cache = settings, fetcher, cache
-        self.boards = ats_mod.all_boards(settings, db)
+        self.boards = merge_boards(ats_mod.all_boards(settings, db), extra_boards or [])
         self.by_name: dict[str, list[ats_mod.Board]] = defaultdict(list)
         for b in self.boards:
             self.by_name[sponsors.normalise(b.name)].append(b)
@@ -292,10 +347,20 @@ class BoardLookup:
         return None
 
 
+def merge_boards(boards: list[ats_mod.Board], extra: list[ats_mod.Board]) -> list[ats_mod.Board]:
+    """`boards`, then the `extra` ones that are not among them (same provider and token); the earlier name wins."""
+    seen, out = set(), []
+    for b in [*boards, *extra]:
+        if (b.ats, b.slug) not in seen:
+            seen.add((b.ats, b.slug))
+            out.append(b)
+    return out
+
+
 def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = "") -> Candidate:
     return Candidate(source=board.ats.replace("lever_eu", "lever"), company=board.name or p.company, title=p.title,
                      location=p.location, url=p.url, description=p.description, posted=p.posted_at or "", ext_id=p.ext_id,
-                     country=p.country, origin=origin)
+                     country=p.country, origin=origin, board=f"{board.ats}:{board.slug}")
 
 
 # ------------------------------------------------------------------ the pipeline for one candidate
@@ -307,11 +372,17 @@ class Discover:
         self.limit = limit if limit is not None else int(settings["discover"].get("max_new_per_run", 40))
         self.known = load_known(settings, db)
         self.run = Run(started=self.today.isoformat(timespec="seconds"), dry_run=dry_run)
+        self.run.notes += self.known.notes
         self.fb = fb
+        self.registry = registry_mod.load(settings)
         self.cache = BoardCache(settings, fetcher)
-        self.lookup = BoardLookup(settings, db, fetcher, self.cache)
+        self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards())
         self.inbox = settings.path("jds") / "inbox"
         self.new_files = 0
+        self.listed_files = 0
+        lo = settings["discover"].get("listed_only") or {}
+        self.listed_enabled = bool(lo.get("enabled", True))
+        self.listed_cap = int(lo.get("max_per_run", 20))
         self.findings: list[boards_mod.Finding] = []
 
     # ---- filters, in the order that spends least first
@@ -320,10 +391,20 @@ class Discover:
         if cand.family_of(c, self.s) is None:
             self.run.count(label, "role_filtered")
             return False
-        if not cand.uk_ok(c, self.s):
-            self.run.count(label, "place_filtered")
-            return False
-        return True
+        if cand.uk_ok(c, self.s):
+            return True
+        elsewhere = self.elsewhere(c)
+        if elsewhere and self.listed_enabled:
+            c.country, c.listed_only = elsewhere, True            # outside the UK: written for the record, never applied to
+            return True
+        self.run.count(label, "place_filtered")
+        return False
+
+    @staticmethod
+    def elsewhere(c: Candidate) -> str:
+        """The country a candidate that is not in the UK is in (the ad's own country, else read from its place), '' when unknown."""
+        country = countries.canon(c.country) or countries.detect(c.location)
+        return "" if country in ("", countries.UK) else country
 
     def duplicate(self, c: Candidate, label: str) -> bool:
         where = self.known.where(c.company, c.title, c.location)
@@ -344,15 +425,18 @@ class Discover:
             return "dropped"
         if self.duplicate(c, label):
             return "dropped"
-        if self.new_files >= self.limit:
+        if c.listed_only:
+            if self.listed_files >= self.listed_cap:           # its own limit: a flood of non-UK ads never crowds out UK ones
+                self.run.count(label, "listed_capped")
+                return "dropped"
+        elif self.new_files >= self.limit:
             return "full"
         if len(c.description.encode("utf-8")) < manual.MIN_JD_BYTES:
             self.run.count(label, "needs_full_text")
             return "dropped"
         if self.dry_run:
             self.known.add(c.company, c.title, c.location, "found earlier in this run")
-            self.new_files += 1
-            self.run.count(label, "written")
+            self.wrote(c, label)
             self.run.written.append((c, self.inbox / intake.file_name(c.to_ad())))
             return "written"
         try:
@@ -365,10 +449,20 @@ class Discover:
         if not created:
             self.run.count(label, "already_in_inbox")
             return "exists"
-        self.new_files += 1
-        self.run.count(label, "written")
+        self.wrote(c, label)
         self.run.written.append((c, path))
         return "written"
+
+    def wrote(self, c: Candidate, label: str) -> None:
+        """Count one new inbox ad: against the UK limit, or (outside the UK) against the listed-only one; credit its registry source."""
+        if c.listed_only:
+            self.listed_files += 1
+            self.run.count(label, "listed_only")
+        else:
+            self.new_files += 1
+        self.run.count(label, "written")
+        src = self.registry.attribute(c)
+        self.run.credit(src.id if src else "other", "listed_only" if c.listed_only else "new")
 
     def to_queue(self, label: str, source: str, company: str, title: str, location: str, link: str, reason: str) -> None:
         if self.dry_run:
@@ -385,7 +479,7 @@ class Discover:
         label = "ats"
         self.findings = []
         index = boards_mod.BoardIndex(self.s)
-        listed = ats_mod.configured_boards(self.s)
+        listed = merge_boards(ats_mod.configured_boards(self.s), self.registry.boards())     # boards named by token: sources: and sources.yaml
         for board in listed:
             f = boards_mod.Finding(seeds_mod.Seed(board.name, "sources"), boards=[board])
             self.findings.append(f)
@@ -499,7 +593,7 @@ class Discover:
 
     # ---- a link or a (company, title): look for the whole ad
     def resolve_link(self, label: str, kind: str, company: str, title: str, location: str, link: str, origin: str,
-                     counted: bool = False) -> str:
+                     counted: bool = False, default_country: str = "") -> str:
         """Find the full ad for something that is only a pointer. Order: a CV-Library job link (C2), a Reed job link (with a key),
         the employer's own board (D1). Anything else goes to the manual queue, with the reason."""
         host = (urlparse(link).hostname or "").lower()
@@ -533,7 +627,22 @@ class Discover:
             return "queued"
         self.run.count(label, "resolved")
         c.origin = origin
+        if default_country and not c.country:               # an alert from a one-country source: that country unless the place says another
+            c.country = countries.detect(c.location) or default_country
         return self.accept(c, label, counted=counted)
+
+    def alert_source(self, from_header: str, subject: str) -> registry_mod.Source | None:
+        """Which source an alert email belongs to. With discover.gmail.senders set (kinds) or no registry: the four built-in senders;
+        otherwise the sources.yaml entry whose sender domain (and subject words) match."""
+        g = self.s["discover"].get("gmail") or {}
+        if self.registry.alert_sources() and not g.get("senders"):
+            return self.registry.match_sender(from_header, subject)
+        kind = gmail.sender_kind(from_header)
+        if kind is None or kind not in (g.get("senders") or gmail.SENDERS):
+            return None
+        return self.registry.by_kind(kind) or registry_mod.Source(
+            id=kind, name=kind, url="https://" + gmail.SENDERS[kind][0], country="multi", method="gmail_alerts",
+            domains=gmail.SENDERS[kind], parser=kind)
 
     def from_gmail(self) -> None:
         label = "gmail"
@@ -550,7 +659,7 @@ class Discover:
         except (OSError, ValueError):
             seen = set()
         try:
-            ids = gmail.list_message_ids(self.f, token, gmail.build_query(self.s), int(g.get("max_messages", 60)))
+            ids = gmail.list_message_ids(self.f, token, gmail.build_query(self.s, self.registry), int(g.get("max_messages", 60)))
         except (FetchError, Blocked) as e:
             self.run.notes.append(f"gmail: {e}")
             return
@@ -559,17 +668,28 @@ class Discover:
             if mid in seen:
                 continue
             try:
-                frm, _subject, html, text = gmail.message_text(gmail.get_message(self.f, token, mid))
+                frm, subject, html, text = gmail.message_text(gmail.get_message(self.f, token, mid))
             except (FetchError, Blocked) as e:
                 self.run.notes.append(f"gmail message {mid}: {e}")
                 break
-            kind = gmail.sender_kind(frm)
+            src = self.alert_source(frm, subject)
             done_now.append(mid)
-            if kind is None:
+            if src is None:
                 continue
-            for item in gmail.parse_alert(kind, html, text, mid):
+            kind = src.kind
+            dedicated = kind in gmail.JOB_LINK
+            parsed = (gmail.parse_alert(kind, html, text, mid) if dedicated else
+                      gmail.parse_alert(kind, html, text, mid, link_fn=lambda href, s=src: gmail.generic_link(s, href)))
+            if not parsed and not dedicated and ALERT_SUBJECT.search(subject or ""):
+                # a source without a dedicated parser whose alert showed no job link we recognise: never guessed at, handed to you
+                self.run.count(label, "alerts_unparsed")
+                self.to_queue(label, src.id, "", (subject or "")[:120], "", gmail.web_link(mid),
+                              f"alert email from {src.name}: no job links were recognised in it; open the email and add the ads you want")
+            default_country = src.home_country if src.home_country not in ("", countries.UK) else ""
+            for item in parsed:
                 self.run.count(label, "alerts")
                 self.run.count(label, f"alerts_{kind}")
+                self.run.credit(src.id, "alerts")
                 if self.known.where(item.company, item.title, item.location):
                     self.run.count(label, "duplicate")
                     continue
@@ -578,7 +698,8 @@ class Discover:
                 if cand.family_of(probe, self.s) is None:
                     self.run.count(label, "role_filtered")
                     continue
-                if self.resolve_link(label, kind, item.company, item.title, item.location, item.link, f"gmail:{kind}") == "full":
+                if self.resolve_link(label, kind, item.company, item.title, item.location, item.link, f"gmail:{kind}",
+                                     default_country=default_country) == "full":
                     break
         if not self.dry_run:
             try:
@@ -586,6 +707,47 @@ class Discover:
                 seen_path.write_text(json.dumps(sorted(seen | set(done_now))[-2000:]), encoding="utf-8")
             except OSError:
                 pass
+
+    def from_jobbank(self) -> None:
+        """Canada's Job Bank open-data CSV: rows in a target role family, first posted recently, LISTED (no employer, no ad text)."""
+        label = "jobbank"
+        sources = self.registry.with_method("jobbank_csv")
+        if not sources:
+            self.run.notes.append("jobbank: no enabled jobbank_csv source in config/sources.yaml")
+            return
+        cfg = self.s["discover"].get("jobbank") or {}
+        cap = int(cfg.get("max_rows_per_run", 50))
+        for src in sources:
+            have = {f"{r['source']}|{r['ref']}" for r in read_listed(self.s) if r.get("ref")}
+            added = 0
+            try:
+                stream = jobbank.listed(self.f, self.s, src.dataset, want=lambda t: gates.classify_role(t, self.s) is not None,
+                                        today=self.today, say=self.say)
+                for kind, item in stream:
+                    if kind == "note":
+                        self.run.notes.append(str(item))
+                        continue
+                    self.run.count(label, "seen")
+                    key = f"{src.id}|{item['ref']}"
+                    if item["ref"] and key in have:
+                        self.run.count(label, "duplicate")
+                        continue
+                    if added >= cap:
+                        self.run.count(label, "listed_capped")
+                        continue
+                    have.add(key)
+                    added += 1
+                    if not self.dry_run:
+                        append_listed(self.s, [{"ts": self.today.isoformat(timespec="seconds"), "source": src.id,
+                                                "country": src.home_country, "company": "", "title": item["title"],
+                                                "location": item["location"], "posted": item["posted"], "salary": item["salary"],
+                                                "ref": item["ref"], "link": "",
+                                                "note": "Job Bank open data has no employer or link: search the title on jobbank.gc.ca"}])
+                    self.run.count(label, "listed_only")
+                    self.run.credit(src.id, "listed_only")
+            except (jobbank.JobBankError, FetchError, Blocked) as e:
+                self.run.notes.append(f"jobbank ({src.id}): {e}")
+                self.say(f"jobbank: {e}")
 
     # ---- output
     def ranked(self) -> list[tuple[priority.Priority, Candidate, Path]]:
@@ -598,7 +760,7 @@ class Discover:
             except Exception:  # noqa: BLE001
                 pre = None
             job = {"id": c.ad_id(), "company": c.company, "description": c.description, "sponsor_match": match, "agency": c.agency,
-                   "posted_at": c.posted or None, "ceiling_pre": pre}
+                   "posted_at": c.posted or None, "ceiling_pre": pre, "country": c.country if c.listed_only else None}
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
         return sorted(out, key=lambda t: (-t[0].p, -(t[0].s * t[0].r), t[1].company, t[1].title))
 
@@ -606,8 +768,33 @@ class Discover:
         lines = []
         for pr, c, path in self.ranked()[:n]:
             lines.append(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {c.company} | {c.title} | {c.location or '?'} | {c.url}  "
-                         f"[{c.source}{', agency' if c.agency else ''}; {pr.s_reason}]  {path.name}")
+                         f"[{c.source}{', agency' if c.agency else ''}{', listed only' if c.listed_only else ''}; {pr.s_reason}]  {path.name}")
         return lines
+
+
+# ------------------------------------------------------------------ rows that are listed, not written as ads (append-only)
+def listed_path(settings) -> Path:
+    return settings.path("discover") / "listed_only.csv"
+
+
+def read_listed(settings) -> list[dict]:
+    path = listed_path(settings)
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def append_listed(settings, rows: list[dict]) -> None:
+    """Append rows to paths.discover/listed_only.csv (postings outside the UK that have no full ad to write: Job Bank Canada)."""
+    path = listed_path(settings)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new = not path.exists()
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=LISTED_COLUMNS)
+        if new:
+            w.writeheader()
+        w.writerows(rows)
 
 
 def save_run(settings, run: Run) -> None:

@@ -4,6 +4,10 @@ Per JD file: validate -> archive snapshot -> add-jd (internal function, the job 
 tailor that id -> review that id (approve / edit / skip) -> [not --dry-run] the apply assist, which never submits ->
 "Did YOU submit the form?" -> mark-applied only on a `y` -> archive snapshot again and compare -> move the JD to done/.
 
+A file marked as outside the UK (a `Country:` header that is not the UK, or `Status: listed_only`, which `careerops discover` writes for
+a job in another country) is not worked on: it stays in inbox/, is not counted towards --max and is listed in the summary as
+`listed_only`, unless applicant.yaml has a `visa_by_country:` block for that country (you add those yourself).
+
 Nothing here submits anything, answers a gate for the user, or writes to the archive. The archive is only read (a snapshot
 is os.walk + lstat); the one permitted write to it, for a job the user says they submitted, is mark-applied's own
 (`record_application`, injected as a hook). If the archive differs afterwards in any way other than that job's one new
@@ -28,7 +32,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..db import DB
-from ..discovery import manual
+from ..discovery import countries, manual
 from . import snapshot
 from .errors import ArchiveError
 
@@ -246,6 +250,14 @@ class Live:
                                           entry.get("title", "-"), f"already done ({entry.get('status')})"))
             return None
 
+        refusal = self._outside_uk(text)
+        if refusal:                                                                # listed only: no tailoring, no apply, no archive
+            hdr = manual.header_fields(text)
+            self.out(f"LISTED ONLY {f.name}: {refusal}")
+            self.results.append(JobResult(f.name, company=hdr.get("company", "-"), role=hdr.get("title", "-"), status="listed_only",
+                                          note=refusal))
+            return None
+
         r = JobResult(f.name)
         self.results.append(r)
         self.before = snapshot.take(self.root)                                     # 1. archive snapshot
@@ -268,6 +280,26 @@ class Live:
         if status in FINISHED and not self.dry_run:                                # 7. the JD moves to done/ (never in a dry run)
             self._finish_file(f, sha, entry, status)
         return r
+
+    def _outside_uk(self, text: str) -> str | None:
+        """Why this JD must not be worked on: it is for a job outside the UK (`Country:` header) or marked `Status: listed_only`, and
+        applicant.yaml has no `visa_by_country:` block for that country. None when it may go on (a UK job, or a country you gave a block)."""
+        from ..config import load_yaml
+
+        hdr = manual.header_fields(text)
+        said = (hdr.get("country") or "").strip()
+        country = countries.canon(said)
+        if country == countries.UK or not (said or (hdr.get("status") or "").strip().lower() == "listed_only"):
+            return None
+        try:
+            applicant = load_yaml(self.s.path("applicant")) or {}
+        except (OSError, ValueError):
+            applicant = {}
+        if country and countries.visa_block(applicant, country):
+            return None
+        where = country or said or "no country given"
+        return (f"outside the UK ({where}): listed only. It is not tailored or applied to unless applicant.yaml has a "
+                f"`visa_by_country` block for {country or 'its country'}; the file stays in inbox/")
 
     def _fill(self, r: JobResult) -> None:
         job = self.db.job(self.current.get("job_id")) if self.current.get("job_id") else None

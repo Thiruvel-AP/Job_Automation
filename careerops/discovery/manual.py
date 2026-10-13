@@ -19,7 +19,7 @@ MIN_JD_BYTES = 500                     # a shorter file is a stub or a snippet, 
 REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "error")
 HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "role": "title", "job title": "title",
                "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
-               "agency": "agency"}
+               "agency": "agency", "country": "country", "status": "status"}
 HEADER_LINE = re.compile(r"^\s*([A-Za-z ]{3,12}?)\s*:\s*(\S.*?)\s*$")
 
 

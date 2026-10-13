@@ -31,6 +31,8 @@ class Candidate:
     closed: bool = False               # the source says the posting is no longer open
     country: str = ""                  # ISO-ish country name or code when the source gives one
     origin: str = ""                   # how it was found when not directly: "gmail:linkedin"
+    board: str = ""                    # the job board it was read from, "ashby:openai" (which registry source it counts for)
+    listed_only: bool = False          # outside the UK: written for the record (Country: / Status: listed_only), never applied to
 
     def ad_id(self) -> str:
         return self.ext_id or hashlib.sha1(self.url.encode()).hexdigest()[:10]
@@ -39,7 +41,8 @@ class Candidate:
         posted = (self.posted or "")[:10]
         return Ad(company=self.company, title=self.title, url=self.url, location=self.location, text=self.description,
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
-                  posted=posted if re.fullmatch(r"\d{4}-\d{2}-\d{2}", posted) else "")
+                  posted=posted if re.fullmatch(r"\d{4}-\d{2}-\d{2}", posted) else "",
+                  country=self.country if self.listed_only else "", listed_only=self.listed_only)
 
 
 def norm_title(title: str) -> str:

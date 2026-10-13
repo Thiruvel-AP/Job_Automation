@@ -182,6 +182,11 @@ class RobotsCache:
         self._store(host, rules)
         return rules
 
+    def crawl_delay(self, url: str) -> float | None:
+        """The Crawl-delay (seconds) the host's robots.txt asks for, once its rules have been read; None when it asks for none."""
+        have = self.memory.get(host_of(url))
+        return have[1].crawl_delay if have is not None and isinstance(have[1], Rules) else None
+
     def check(self, url: str, fetch: Callable[[str], tuple[int | None, str]]) -> None:
         """Raises RobotsError when `url` may not be fetched: a host in NEVER_FETCH, a robots.txt that cannot be checked, or a
         path that robots.txt disallows for this tool."""

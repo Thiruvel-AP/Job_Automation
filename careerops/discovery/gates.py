@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass, field
 
 from ..tailoring.scorer import ceiling, taxonomy_keywords
+from . import countries
 from .register import CompanyIndex, SponsorIndex
 
 FAMILY_REASON = "title not in target families"
@@ -112,6 +113,19 @@ def pre_ceiling(jd: str, fb: dict, settings) -> float:
     return ceiling(fact_text(fb), taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"]))[0]
 
 
+def visa_countries(settings) -> tuple[str, ...]:
+    """The countries (canonical names) applicant.yaml has a non-empty `visa_by_country:` block for: a job in one of them passes the
+    location rule. () when the file or the key is not there. READ ONLY."""
+    from ..config import load_yaml
+
+    try:
+        applicant = load_yaml(settings.path("applicant")) or {}
+    except (OSError, ValueError, KeyError):
+        return ()
+    found = (countries.canon(k) for k in (applicant.get("visa_by_country") or {}))
+    return tuple(dict.fromkeys(c for c in found if c and countries.visa_block(applicant, c)))
+
+
 def triage(job: dict, settings, sponsors: "CompanyIndex | SponsorIndex | None", fb: dict | None = None) -> Verdict:
     """Rule verdict for one job. With a fact bank, also computes `ceiling_pre`."""
     g = settings["gates"]
@@ -128,7 +142,7 @@ def triage(job: dict, settings, sponsors: "CompanyIndex | SponsorIndex | None", 
         v.reasons.append(f"level excluded ({hit})")
     if fb is not None and jd:
         v.ceiling_pre = pre_ceiling(jd, fb, settings)
-    if loc and not _any(g["locations_ok"], loc):
+    if loc and not _any(g["locations_ok"], loc) and countries.detect(loc) not in visa_countries(settings):
         v.reasons.append(f"location '{loc}' not in allow-list")
 
     for pattern, action, why in g.get("jd_rules", []):

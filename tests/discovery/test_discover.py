@@ -37,6 +37,7 @@ def cfg(settings):
     settings.raw["sources"].update(greenhouse=[ACME], lever=[], lever_eu=[], ashby=[])
     settings.raw["discover"]["alert_probes_per_run"] = 0
     settings.raw["discover"]["sources"] = []                 # the shipped list is yours; tests bring their own
+    settings.raw["discover"]["listed_only"] = {"enabled": False}      # these tests are about the UK flow; tests/discovery/test_listed_only.py the rest
     return settings
 
 

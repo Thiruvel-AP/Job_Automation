@@ -8,6 +8,7 @@
        fuzzy    on the register by a near match                                  0.90
        unknown  not on the register, a recruitment agency, or no register yet    0.75
        no_sponsorship   the JD itself says it does not sponsor / needs the right to work without sponsorship   0.65
+       non_uk   the job is outside the UK (`Country:` header; listed only, `live` will not apply without a visa block)   0.50
      When several apply the lowest one is used. A holder of the UK Graduate visa can take any of these jobs, so none of them
      removes a job; they only move it down.
   R  exp(-days_since_posted / priority.recency_days), 1.0 when the posting date is unknown
@@ -23,7 +24,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65}
+from . import countries
+
+DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_uk": 0.50}
 DEFAULT_RECENCY_DAYS = 14.0
 
 # ------------------------------------------------------------------ what the JD says about sponsorship (an info line, not a flag)
@@ -143,6 +146,9 @@ def sponsor_factor(job: Mapping[str, Any], settings=None) -> tuple[float, str]:
         options.append((w["unknown"], "agency"))
     if says_no_sponsorship(str(_get(job, "description") or "")):
         options.append((w["no_sponsorship"], "JD says no sponsorship"))
+    country = countries.canon(str(_get(job, "country") or ""))
+    if country and country != countries.UK:
+        options.append((w["non_uk"], f"outside the UK ({country})"))
     return min(options, key=lambda o: o[0])
 
 
@@ -193,7 +199,7 @@ def file_job(path, settings, fb: dict, idx) -> dict | None:
         ceiling_pre = None
     return {"id": str(path.name), "company": hdr.get("company", ""), "title": hdr.get("title", ""), "description": text,
             "sponsor_match": match, "agency": (hdr.get("agency") or "").lower() in ("yes", "true", "1"),
-            "posted_at": hdr.get("posted"), "ceiling_pre": ceiling_pre}
+            "posted_at": hdr.get("posted"), "ceiling_pre": ceiling_pre, "country": hdr.get("country")}
 
 
 def order_files(files, settings, db, fb: dict, today: datetime | None = None) -> list[tuple[Any, Priority | None]]:

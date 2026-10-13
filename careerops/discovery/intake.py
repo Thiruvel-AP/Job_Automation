@@ -92,6 +92,8 @@ class Ad:
     salary: str = ""
     agency: bool = False               # the poster looks like a recruitment agency, not the employer
     posted: str = ""                   # YYYY-MM-DD the ad was posted, when the source says
+    country: str = ""                  # set only for a job outside the UK: written as `Country:` (live refuses it without a visa block)
+    listed_only: bool = False          # written as `Status: listed_only`
 
 
 # ------------------------------------------------------------------ network (tests replace _get / _sleep / _clock)
@@ -510,6 +512,10 @@ def render(ad: Ad) -> str:
     head = [f"Company: {one_line(ad.company)}", f"Title: {one_line(ad.title)}", f"URL: {ad.url}", f"Source: {one_line(ad.source)}"]
     if one_line(ad.location):
         head.append(f"Location: {one_line(ad.location)}")
+    if one_line(ad.country):
+        head.append(f"Country: {one_line(ad.country)}")
+    if ad.listed_only:
+        head.append("Status: listed_only")
     if one_line(ad.salary):
         head.append(f"Salary: {one_line(ad.salary)}")
     if ad.posted:

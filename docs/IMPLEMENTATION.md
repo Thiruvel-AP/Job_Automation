@@ -446,6 +446,43 @@ DB + inbox/done/rejected headers + archive folder names (company + role, any pla
 Judgement calls: the documented API hosts are exempt from the *unreadable robots.txt* refusal only (Ashby's `/robots.txt` answers 401 while its API is documented as
 public), a robots.txt they do serve is obeyed; `discover` with no source flag keeps the old pull-into-the-database job so `run`/cron do not change.
 
+## 5o. Source registry round (2026-10-13) — **done** (offline tests only; no live discover run, no real mailbox)
+
+**1. `config/sources.yaml` + `discovery/registry.py`.** One entry per source (`id`, `name`, `url`, `country` = ISO code or `multi`, `method` =
+greenhouse | ashby | lever | reed | jobbank_csv | gmail_alerts | dedupe_only; optional `token`, `domains`, `subject_contains`, `parser`,
+`dataset`, `enabled`, `note`). 24 seeded entries. `registry.load(settings)` (`paths.sources`) validates and names the bad entry; a missing
+file is an empty registry. Checked on 2026-10-13 against the vendors: OpenAI = Ashby `openai` (HTTP 200, ~13 MB list); **Google DeepMind has no
+Greenhouse token that answers** (`deepmind`, `googledeepmind`, `google-deepmind`, `deepmindtechnologies`, `deepmind-technologies` all 404 on
+`boards-api.greenhouse.io`, though `job-boards.greenhouse.io/deepmind` pages exist), so it is `gmail_alerts`; BlackRock and JPMorgan have no
+public API, so also `gmail_alerts`. **The sender domains of the alert sources are unverified guesses** (no real alert was read) and say so in
+their `note`. Registry boards (OpenAI) are read by `discover --ats` and used by the alert-resolution lookup.
+**2. Health (`discovery/health.py`).** `careerops sources check` and the end of every `discover` run (also the older no-flag one): per source, method
+reachable / robots.txt / credentials / alerts in `discover.health.alert_days` (7) / postings, table (source, method, status, new jobs) and
+`paths.discover/health/<date>.csv` (appended; header once). Every check is isolated; `--dry-run` prints without saving. New jobs per source come from
+`Run.by_source` (a `Candidate` is credited to its alert, its token board or its method's entry: `Registry.attribute`).
+**3. Country gate.** `discovery/countries.py` (canonical names, codes, `detect(place)`: country names, then Canadian/Australian regions, then major
+cities, then US state codes; `London, Ontario` is Canada). A role-family match that is not UK is no longer dropped: `Discover.wanted` sets
+`Candidate.country/listed_only`, `intake.render` writes `Country:` + `Status: listed_only` (UK ads are unchanged), `discover.listed_only.max_per_run`
+(20) is its own limit beside `max_new_per_run`. Priority S = `priority.sponsor_weights.non_uk` (0.5, the lowest applicable weight). `live` refuses a
+file with a non-UK `Country:` (or `Status: listed_only` without a country) unless `applicant.yaml` has a non-empty `visa_by_country.<country>` block:
+`LISTED ONLY`, the file stays in `inbox/`, `_one` returns None (not counted towards `--max`); the check reads headers only, so removing the `Status:`
+line does not let it through. A country with a block also passes the triage location rule (`gates.visa_countries`). `config/profile/applicant.yaml` was
+not touched: add the blocks yourself. Not done: the database has no `country` column, so a non-UK job added by hand with `add-jd --location` is not caught.
+**4. Gmail alerts.** `gmail.build_query(settings, registry)` names every source with `domains` (a shared sender carries `subject:(...)`);
+`discover.gmail.senders: []` (shipped) means all of them, a list of the four older kinds keeps the old fixed query. `gmail.parse_alert(..., link_fn)`
+and `gmail.generic_link` read sources without a dedicated parser (job links on the source's own domain, tracking parameters dropped). Resolution to the
+employer's Greenhouse/Ashby/Lever board (else `manual_queue.csv`) was already in place and now serves every source; an alert with no recognisable job link
+goes to the queue as a link to the email (`gmail.web_link`). A one-country source (SEEK AU) gives the posting that country when its own place does not say one.
+**5. AIApply dedupe.** `paths.aiapply_applied` (`data/aiapply_applied.csv`): `discover.read_aiapply`, matched on company + normalised title in `Known`; a file
+without the two columns is a note, never a crash; never written.
+**Job Bank Canada (`jobbank_csv`, `discover --jobbank`).** Read from the September 2026 file: UTF-16, tab-separated, ~46 MB, columns include
+`WIC Job Location Snapshot ID`, `Job Title`, `First Posting Date`, `Province/Territory`, `City`, salary fields; **no employer, link or ad text**. So rows are
+only LISTED in `paths.discover/listed_only.csv` (never inbox ads). The file is found through the CKAN API, streamed (`Fetcher.request(stream=True)`), and
+`Fetcher` now keeps a host's robots.txt `Crawl-delay` (open.canada.ca asks 20 s; capped at 30).
+Tests: `tests/discovery/test_{registry,health,listed_only,jobbank,aiapply,gmail_sources}.py`, additions to `tests/apply/test_live.py`; the settings fixture
+points `paths.sources` at a file that is not there (no registry) and `listed_only` is off in `test_discover.py`'s fixture, so the older tests keep their
+UK-only meaning. **Unverified:** a live run of any of it (a real Gmail, the Job Bank download, the alert layouts of the generic sources).
+
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 
 Started from a suite that was not green: the stability round (5i) was uncommitted and 18 tests failed (17 expected `fallback` where

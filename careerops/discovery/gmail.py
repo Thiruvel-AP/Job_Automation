@@ -10,7 +10,9 @@ installed apps" is a few requests, made with `requests` like everything else.
 This code never types a password, never reads a mailbox other than through the token you granted, and never sends, deletes or
 labels anything (the scope cannot).
 
-Alert emails: LinkedIn, CV-Library, Indeed and Reed. Each is parsed for (title, company, location, link) per job. The link is a
+Alert emails: the sources in config/sources.yaml that list sender `domains` (registry.py). LinkedIn, CV-Library, Indeed and Reed have a
+dedicated parser; every other source is read by the generic one (job links on the source's own domains). Each is parsed for (title,
+company, location, link) per job. The link is a
 pointer only: linkedin.com and indeed.com pages are never fetched; the job is looked for on the employer's own board instead
 (discover.py). The parsers are written from the usual layout of these emails and tested on hand-made fixtures; they have not been
 run on a real mailbox, so an alert that does not parse lands in the manual queue rather than being guessed at.
@@ -167,10 +169,31 @@ def access_token(settings, *, post=requests.post, clock: Callable[[], float] = t
 
 
 # ------------------------------------------------------------------ the Gmail API (read-only calls)
-def build_query(settings) -> str:
+def source_clause(source) -> str:
+    """The Gmail search clause for one registry source: its sender domains, and its subject words when it shares a sender."""
+    frm = " OR ".join(f"from:{d}" for d in source.domains)
+    if not source.subject_contains:
+        return frm
+    words = " OR ".join(f'"{w}"' if " " in w else w for w in source.subject_contains)
+    return f"(({frm}) subject:({words}))"
+
+
+def build_query(settings, registry=None) -> str:
+    """The Gmail search for the alert emails of the last discover.gmail.query_days days. With a registry (and no explicit
+    discover.gmail.senders) it names every source that lists sender domains; `senders` (kinds: linkedin, cvlibrary, indeed, reed) keeps
+    the older fixed list."""
     g = settings["discover"].get("gmail") or {}
+    days = int(g.get("query_days", 14))
+    if registry is not None and len(registry) and not g.get("senders"):
+        clauses = " OR ".join(source_clause(s) for s in registry.alert_sources())
+        return f"({clauses}) newer_than:{days}d"
     senders = " OR ".join(f"from:{d}" for k in (g.get("senders") or list(SENDERS)) for d in SENDERS.get(k, ()))
-    return f"({senders}) newer_than:{int(g.get('query_days', 14))}d"
+    return f"({senders}) newer_than:{days}d"
+
+
+def web_link(message_id: str) -> str:
+    """Where to open one message in Gmail (for the manual queue: the alert that could not be read)."""
+    return f"https://mail.google.com/mail/u/0/#all/{message_id}"
 
 
 def list_message_ids(fetcher: Fetcher, token: str, query: str, limit: int) -> list[str]:
@@ -307,14 +330,38 @@ def _split_company_place(piece: str) -> tuple[str, str]:
     return piece.strip(), ""
 
 
-def parse_alert(kind: str, html: str, text: str = "", message_id: str = "") -> list[AlertItem]:
+GENERIC_JOB_PATH = re.compile(
+    r"/(?:jobs?|job-?details?|jobdetails?|viewjob|vacanc(?:y|ies)|vacatures?|stellenangebote?|stellenanzeigen?|offres?|listing|roles?|"
+    r"positions?|careers?|opportunit(?:y|ies)|view|apply)(?:/|$|-)|/job[-_]?\w*\d|\d{5,}", re.I)
+TRACKING_PARAMS = re.compile(r"^(utm_|trk|tracking|mc_|ref$|refid$|campaign|cid$|eid$|source$)", re.I)
+
+
+def generic_link(source, href: str) -> str | None:
+    """A link to one job in an alert email of a source without a dedicated parser: http(s), on one of the source's own domains, and a
+    path that looks like a job page (/jobs/..., /vacancy/..., /stellenangebote/..., a long job number). Tracking parameters are dropped."""
+    u = urlparse(htmllib.unescape(href or ""))
+    host = (u.hostname or "").lower()
+    if u.scheme not in ("http", "https") or not any(host == d or host.endswith("." + d) for d in source.domains):
+        return None
+    if not GENERIC_JOB_PATH.search(u.path):
+        return None
+    if re.search(r"unsubscribe|preferences|settings|/alerts?(?:/|$)|/account|/login|/privacy|/help|/terms", u.path, re.I):
+        return None
+    keep = urlencode([(k, v) for k, v in parse_qs(u.query).items() for v in v if not TRACKING_PARAMS.match(k)])
+    return f"{u.scheme}://{u.netloc}{u.path}" + (f"?{keep}" if keep else "")
+
+
+def parse_alert(kind: str, html: str, text: str = "", message_id: str = "", link_fn: Callable[[str], str | None] | None = None
+                ) -> list[AlertItem]:
     """Every job in one alert email: the anchor text is the title; the text pieces after it, before the next job, give the
-    company and the place ('Company · London, UK', or two pieces). Missing parts are left empty, never guessed."""
+    company and the place ('Company · London, UK', or two pieces). Missing parts are left empty, never guessed. `link_fn(href)` says
+    which anchors are job links (default: the dedicated pattern of `kind`; the generic parser passes generic_link)."""
     p = _Flow()
     p.feed(html or "")
     p.close()
     items = p.items
-    jobs = [(i, job_link(kind, it[1])) for i, it in enumerate(items) if it[0] == "a" and job_link(kind, it[1])]
+    link_of = link_fn or (lambda href: job_link(kind, href))
+    jobs = [(i, link_of(it[1])) for i, it in enumerate(items) if it[0] == "a" and link_of(it[1])]
     out: list[AlertItem] = []
     seen: set[str] = set()
     for n, (i, link) in enumerate(jobs):
@@ -322,7 +369,7 @@ def parse_alert(kind: str, html: str, text: str = "", message_id: str = "") -> l
         if link in seen or NOISE.match(title) or not title:
             continue
         end = jobs[n + 1][0] if n + 1 < len(jobs) else min(len(items), i + 8)
-        pieces = [it[1] if it[0] == "t" else it[2] for it in items[i + 1:end] if (it[0] == "t" or not job_link(kind, it[1]))]
+        pieces = [it[1] if it[0] == "t" else it[2] for it in items[i + 1:end] if (it[0] == "t" or not link_of(it[1]))]
         pieces = [x for x in pieces if x and not NOISE.match(x) and not SALARY.match(x)][:3]
         company, place = ("", "")
         if pieces:

@@ -37,7 +37,9 @@ career-ops/
 │   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
 │   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
 │   │   ├── http.py               the polite client discovery shares: 1 req/s per host, robots, a 401/403/429 stops the host
-│   │   ├── discover.py           `discover --ats --reed --adzuna --gmail-alerts`: filters, dedupe, inbox files, manual queue, report
+│   │   ├── discover.py           `discover --ats --reed --adzuna --gmail-alerts --jobbank`: filters, dedupe, inbox files, manual queue, report
+│   │   ├── registry.py · health.py   config/sources.yaml (every source and how it is read) · the health check of each source
+│   │   ├── countries.py · jobbank.py country names/codes/places (the `listed_only` rule) · Canada's Job Bank open-data CSV
 │   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
 │   │   ├── priority.py           P = F x S x R: orders the live inbox, discover's listing and status
@@ -75,7 +77,7 @@ career-ops/
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
-    ├── discover/                 boards/ (posting lists, 6 h) · company_boards.json · gmail_seen.json · runs.jsonl
+    ├── discover/                 boards/ (posting lists, 6 h) · company_boards.json · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
     ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read-only token); git-ignored like all of data/
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
@@ -122,7 +124,10 @@ careerops sponsors                 # gov.uk register: download only if its link 
 careerops discover                 # pull + triage; skipped jobs keep their reason
 careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
 careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
+careerops discover --jobbank       # Canada's Job Bank open-data CSV: matching rows are listed in data/discover/listed_only.csv
 careerops discover --report        # counts per source, resolved vs the manual queue
+careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
+careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
@@ -188,8 +193,55 @@ finds and ranks without writing, and every run is listed best priority first.
   rewritten) for you to open, copy the ad and run `careerops live --clipboard`. Messages are remembered in
   `data/discover/gmail_seen.json`. The alert parsers are written from the usual layout of these emails and tested on hand-made
   fixtures; they have not met a real mailbox.
+- **`--jobbank`** reads Canada's Job Bank open-data CSV (Open Government Licence - Canada): the newest English monthly file is found
+  through the open.canada.ca catalogue API and downloaded once (robots.txt first; the portal asks for a 20 s crawl delay, which the
+  client keeps). The file is UTF-16, tab-separated, ~46 MB, and has **no employer, no link and no ad text**, so a row can never be an
+  inbox ad: rows whose title is in a target role family and that were first posted within `discover.jobbank.max_days_old` days are
+  only **listed** in `data/discover/listed_only.csv` (search the title on jobbank.gc.ca).
 - **`--report`** prints counts per source (alerts, seen, role/place filtered, closed, duplicate, written, resolved, queued) for the last
   run and for all runs, and how many alerts were resolved vs how many sit in the manual queue.
+
+#### The source registry, `config/sources.yaml`, and the health table
+
+One entry per place jobs are looked for: `id`, `name`, `url`, `country` (an ISO code, or `multi`) and `method`: `greenhouse` /
+`ashby` / `lever` (public job-board APIs; with a `token` that company's board, `openai` is Ashby token `openai`), `reed` (the Jobseeker
+API), `jobbank_csv`, `gmail_alerts` (the source's alert emails, matched by the sender `domains` you list), or `dedupe_only`
+(AIApply: never searched). Allowed access only: public/official APIs, pages robots.txt allows, your own Gmail read-only; a 401/403
+or a robots.txt "no" stops that source and is never worked around. LinkedIn, Indeed, Glassdoor, Welcome to the Jungle, Wellfound, YC,
+EURES, StepStone, IrishJobs, SEEK, MyCareersFuture, GOV.UK Find a Job, NHS Jobs, BlackRock and JPMorgan have no API this tool may use,
+so they are `gmail_alerts`: set up a job alert on each site and the emails are read (LinkedIn, CV-Library, Indeed and Reed have
+dedicated parsers, the rest a generic one that takes job links on the source's own domain; an alert it cannot read goes to the manual
+queue as a link to the email). Google DeepMind has no Greenhouse token that answers (checked 2026-10-13), hence `gmail_alerts`.
+**The sender domains of most alert sources are my best knowledge, not read off a real email**: if `sources check` shows
+`quiet` (no alerts in 7 days) for a source whose alerts you do receive, correct its `domains` (the note in the file says which are
+unverified).
+
+`careerops sources check` and the end of every `careerops discover` run print one row per source (source, method, status, new jobs)
+and save the full table (reachable, robots.txt, credentials, alerts in the last 7 days, postings, detail) to
+`data/discover/health/<date>.csv` (a second check the same day appends its rows). Status: `ok`, `quiet` (works, found nothing),
+`blocked` (robots.txt, 401 / 403 / 429), `unreachable`, `no_credentials` (no `REED_API_KEY`, not signed in to Gmail), `not_found`,
+`no_file`, `error`, `disabled`. A source failing never stops the others, and a failing check never fails the command it ends.
+
+#### Jobs outside the UK, and AIApply
+
+A job whose place is another country (the ad's own country, else read from its place: `Toronto, ON` is Canada) is not dropped: it is
+written to the inbox with `Country: Canada` and `Status: listed_only` headers (at most `discover.listed_only.max_per_run` a run,
+counted apart from the UK limit; `discover.listed_only.enabled: false` drops them as before). Its priority S is
+`priority.sponsor_weights.non_uk` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
+it in `inbox/` and does not count it towards `--max`, unless `applicant.yaml` has a block for that country, which you add yourself:
+
+```yaml
+visa_by_country:
+  Canada:                 # a country name or code (CA)
+    summary: "..."        # same shape as the top-level `visa:` block
+    answers: {sponsorship_now: "No", ...}
+```
+
+A country with such a block also passes the triage location rule. An alert from a one-country source (SEEK AU) gives the job that
+country unless its place says another.
+
+`data/aiapply_applied.csv` (`paths.aiapply_applied`; optional, read only) lists what AIApply applied to: a job with the same company and
+normalised title is skipped as a duplicate. Columns are matched by name (`company` / `employer` ..., `title` / `job title` / `position` ...).
 
 Every request goes through one client: at most one per second per host, the honest `User-Agent`, `robots.txt` read first for pages and
 the public job-board APIs, redirects followed by hand, and an HTTP 401, 403 or 429 stops that host for the rest of the run (no retry,
@@ -214,8 +266,8 @@ password; `careerops` does that for you.
 4. Run `careerops discover --gmail-auth`. Your browser opens at Google's consent page; you sign in and agree there (career-ops never
    types a password). The refresh token is saved in `data/secrets/gmail_token.json`. A token that was granted anything wider than
    `gmail.readonly` is refused, and the scope cannot send, delete or label mail.
-5. `careerops discover --gmail-alerts` then reads the last `discover.gmail.query_days` days of alerts from the senders in
-   `discover.gmail.senders`.
+5. `careerops discover --gmail-alerts` then reads the last `discover.gmail.query_days` days of alerts from the sender domains of the
+   sources in `config/sources.yaml` (or, if you list kinds in `discover.gmail.senders`, only those of the four older ones).
 
 ### Adding a job from its link (`careerops add-url`, `careerops live --url`)
 

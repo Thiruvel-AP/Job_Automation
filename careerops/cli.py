@@ -7,8 +7,13 @@
                                 tailor every JD in data/calibration/manifest.yaml with the real model and measure it
   careerops sponsors            download the gov.uk sponsor register if its link changed, diff it against the last one
   careerops discover            pull jobs from configured boards, triage with rule gates
-  careerops discover --ats | --reed | --adzuna | --gmail-alerts [--limit N] [--dry-run]
-                                find open jobs and write each as a JD file in data/jds/inbox/ (best priority first)
+  careerops discover --ats | --reed | --adzuna | --gmail-alerts | --jobbank [--limit N] [--dry-run]
+                                find open jobs and write each as a JD file in data/jds/inbox/ (best priority first); a job outside
+                                the UK is written as `Status: listed_only` (live will not apply to it without a visa block);
+                                every run ends with a health table of the sources in config/sources.yaml
+  careerops sources check | list [--mock]
+                                health of every source in config/sources.yaml (method reachable, robots.txt, credentials, alerts
+                                in the last 7 days, postings) -> table + data/discover/health/<date>.csv; `list` prints the registry
   careerops discover --gmail-auth | --report
                                 sign in to Gmail (read-only) once · counts per source, resolved vs the manual queue
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
@@ -163,19 +168,32 @@ def cmd_discover(args):
     """`discover` with a source flag (--ats --reed --adzuna --gmail-alerts) writes ads to data/jds/inbox/; --report prints the counts;
     --gmail-auth signs in to Gmail (read-only) once. With none of them it keeps its older job: the boards in sources: into the
     database, then triage (what `run` and cron call)."""
-    sources_asked = [n for n in ("ats", "reed", "adzuna", "gmail_alerts") if getattr(args, n, False)]
+    sources_asked = [n for n in ("ats", "reed", "adzuna", "gmail_alerts", "jobbank") if getattr(args, n, False)]
     if getattr(args, "report", False) or getattr(args, "gmail_auth", False) or sources_asked:
         return _discover_inbox(args, sources_asked)
+    from .discovery import discover as disc
+    from .discovery import registry as registry_mod
+
     s, db = _ctx(args)
     new = seen = 0
+    run = disc.Run()
+    try:
+        reg = registry_mod.load(s)
+    except registry_mod.RegistryError as e:
+        _fail(str(e))
     for label, job in sources.fetch_all(s):
         if isinstance(job, Exception):
             print(f"  ! {label}: {job}")
             continue
         seen += 1
-        new += db.upsert_job(job)
+        added = db.upsert_job(job)
+        new += added
+        if added:
+            src = reg.label_source(label)
+            run.credit(src.id if src else "other", "new")
     print(f"Fetched {seen} postings, {new} new.")
     print("Triage:", triage_new(db, s))
+    _print_health(s, reg, run=run)
 
 
 def _discover_inbox(args, sources_asked: list[str]) -> None:
@@ -198,7 +216,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
                       limit=getattr(args, "limit", None))
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
-             "gmail_alerts": ("gmail", d.from_gmail)}
+             "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank)}
     for name in sources_asked:
         label, fn = steps[name]
         print(f"discover: {label} ...")
@@ -213,6 +231,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
             print("\n".join(d.ats_report()))
     for n in d.run.notes:
         print(f"  note: {n}")
+    _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
     print("\n".join(lines))
@@ -226,6 +245,54 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         disc.save_run(s, d.run)
     if d.run.written and not d.dry_run:
         print("Next: careerops live   (works through the inbox best priority first)")
+
+
+def _print_health(s, reg, *, run=None, fetcher=None, cache=None, save: bool = True) -> list:
+    """The health table of the sources (discovery/health.py), printed and saved to data/discover/health/<date>.csv. A source that
+    fails shows in its row; the check as a whole never stops the command that called it."""
+    from .discovery import health
+    from .discovery.http import Fetcher
+    from .discovery.robots import RobotsCache
+
+    if not len(reg):
+        print("\nSource health: no sources in config/sources.yaml.")
+        return []
+    print("\nSource health:")
+    try:
+        rows = health.check_all(s, reg, fetcher or Fetcher(RobotsCache(s.path("robots"))), run=run, cache=cache, say=print)
+        print(health.format_table(rows))
+        if save:
+            print(f"saved to {health.save(s, rows)}")
+        else:
+            print("(dry run: not saved)")
+        return rows
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! the health check failed: {type(e).__name__}: {e}")
+        return []
+
+
+def cmd_sources(args):
+    """`sources list` prints the registry (no network); `sources check` runs the health check of every source."""
+    from .discovery import registry as registry_mod
+
+    s = load_settings(args.config)
+    load_dotenv(s.root / ".env")
+    if args.mock:
+        s = mockroot.mock_settings(s)
+        mockroot.ensure_dirs(s)
+    try:
+        reg = registry_mod.load(s)
+    except registry_mod.RegistryError as e:
+        _fail(str(e))
+    if args.what == "list":
+        for src in reg:
+            extra = f" token={src.token}" if src.token else (f" domains={','.join(src.domains)}" if src.domains else "")
+            print(f"{src.id:16s} {src.method:13s} {src.country:5s} {'' if src.enabled else '(disabled) '}{src.name}{extra}")
+        print(f"{len(reg)} source(s) in {s.path('sources')}")
+        return
+    rows = _print_health(s, reg)
+    if rows and all(r.status in ("blocked", "unreachable", "error") for r in rows if r.source.enabled):
+        sys.exit(1)
 
 
 def cmd_retriage(args):
@@ -849,11 +916,17 @@ def main(argv=None):
     dc.add_argument("--adzuna", action="store_true", help="the Adzuna API (snippets only: resolved via the employer's board)")
     dc.add_argument("--gmail-alerts", dest="gmail_alerts", action="store_true", help="LinkedIn / CV-Library / Indeed / Reed alert "
                     "emails through the read-only Gmail API; unresolved ones go to data/jds/manual_queue.csv")
+    dc.add_argument("--jobbank", action="store_true", help="Canada's Job Bank open-data CSV: matching rows are listed in "
+                    "data/discover/listed_only.csv (the file has no employer or ad text)")
     dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Gmail once (read-only; opens your browser)")
     dc.add_argument("--report", action="store_true", help="counts per source over all runs, resolved vs the manual queue")
     dc.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
     dc.add_argument("--dry-run", dest="dry_run", action="store_true", help="find and rank, write nothing")
     dc.set_defaults(fn=cmd_discover)
+    so = sub.add_parser("sources", help="the source registry (config/sources.yaml): `check` = health of every source, `list`")
+    so.add_argument("what", choices=["check", "list"])
+    so.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
+    so.set_defaults(fn=cmd_sources)
     sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")
