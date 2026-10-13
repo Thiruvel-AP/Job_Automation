@@ -129,7 +129,7 @@ discover:
     max_messages: 60
 
   # A job outside the UK is not dropped: it is written to the inbox with `Country:` and `Status: listed_only` headers so you can see the
-  # market. `careerops live` will not tailor or apply to it unless applicant.yaml has a `visa_by_country:` block for that country.
+  # market. `careerops live` will not tailor or apply to it unless applicant.yaml has a `visa.by_country.<country>` block for that country.
   listed_only:
     enabled: true                  # false = jobs outside the UK are dropped as before
     max_per_run: 20                # at most this many such ads per run, counted apart from max_new_per_run so they never crowd out UK ones
@@ -149,7 +149,7 @@ priority:
     fuzzy: 0.90            # found by a near match
     unknown: 0.75          # not on the register, a recruitment agency, or no register loaded
     no_sponsorship: 0.65   # the JD itself says it does not sponsor / requires the right to work without sponsorship
-    non_uk: 0.50           # the job is outside the UK (listed only): ranked below UK jobs of the same fit
+    non_home: 0.50         # the work is not where you live (W is not visa.home in applicant.yaml): ranked below home jobs of the same fit
   recency_days: 14         # R = exp(-days_since_posted / 14); 1.0 when the posting date is unknown
 
 files:

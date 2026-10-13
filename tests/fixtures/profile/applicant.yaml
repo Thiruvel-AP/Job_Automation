@@ -25,11 +25,18 @@ never_fill: ['sponsor', 'visa', 'right to work', 'work authori[sz]ation', 'salar
              'sexual', 'religio', 'nationality', 'citizenship', 'clearance', 'why do you want', 'cover letter']
 
 visa:
-  summary: >-
-    I have completed my MSc in Data Science at the University of Northfield and am moving onto the UK Graduate visa
-    (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship
-    and am flexible on how we arrange it.
-  answers:
-    sponsorship_now: "No"
-    sponsorship_future: "Yes"
-    right_to_work_now: "Yes"
+  home: GB
+  remote:
+    label: "Remote"                     # the only wording shown for a remote role at home
+    unrestricted_uses: home
+  by_country:
+    GB:
+      right_to_work: true
+      sponsorship_now: false
+      sponsorship_future: true
+      summary: "I have completed my MSc in Data Science at the University of Northfield and am moving onto the UK Graduate visa (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship and am flexible on how we arrange it."
+    default:
+      right_to_work: false
+      sponsorship_now: true
+      sponsorship_future: true
+      summary: "I would need a work visa for {country} and am open to sponsorship."

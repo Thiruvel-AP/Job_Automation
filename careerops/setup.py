@@ -134,6 +134,31 @@ PLACEHOLDER_DOMAINS = ("example.com", "example.org", "example.net")
 UK_POSTCODE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.I)
 
 
+WARN = "warn"          # a doctor result that is shown but does not fail the run
+
+
+def visa_checks(a: dict) -> list[tuple[str, object, str]]:
+    """The per-country visa answers (apply/visa.py): `visa.home` must be a country this tool knows and `visa.by_country[visa.home]` must
+    exist (both fail: without them a remote role cannot be placed or answered), and `visa.by_country.default` should (warn: a job
+    anywhere else would have no visa answers)."""
+    from .discovery import countries
+
+    visa = a.get("visa") or {}
+    home = countries.code(visa.get("home"))
+    blocks = visa.get("by_country") or {}
+    have_home = bool(home) and any(isinstance(b, dict) and b and countries.place_code(k) == home for k, b in blocks.items() if k != "default")
+    have_default = isinstance(blocks.get("default"), dict) and bool(blocks.get("default"))
+    return [
+        ("applicant visa.home is set to a country", bool(home),
+         "write `home: GB` (a country code or name) under visa: in applicant.yaml; remote roles are answered as home"),
+        ("applicant visa.by_country[visa.home] is present", have_home,
+         "add the home country's block under visa.by_country in applicant.yaml (right_to_work, sponsorship_now, sponsorship_future, summary)"),
+        ("applicant visa.by_country.default is present", True if have_default else WARN,
+         "add visa.by_country.default (the answers for any place without its own block, summary may use {country}); without it a "
+         "job anywhere else has no visa answers"),
+    ]
+
+
 def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
     """Doctor lines for applicant.yaml (read only): the email is not on a placeholder domain, a UK phone is not written
     "+44 0..." (the trunk 0 is dropped after +44), and `location` is a place, not an address with a postcode (the CV and
@@ -146,7 +171,7 @@ def applicant_checks(path: Path) -> list[tuple[str, bool, str]]:
     email, phone, loc = (str(a.get(k) or "").strip() for k in ("email", "phone", "location"))
     domain = email.rpartition("@")[2].lower()
     bad_domain = domain in PLACEHOLDER_DOMAINS or domain.endswith(tuple("." + d for d in PLACEHOLDER_DOMAINS))
-    return [
+    return [*visa_checks(a),
         (f"applicant email is not on a placeholder domain ({email or 'empty'})", bool(email) and not bad_domain,
          "applicant.yaml `email` must be your real address, not @example.com/.org/.net"),
         (f"applicant phone has no 0 after +44 ({phone or 'empty'})", not re.match(r"\+44[\s\-().]*0", phone),

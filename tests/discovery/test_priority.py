@@ -42,7 +42,7 @@ def test_the_weights_come_from_the_settings(settings):
 
 
 def test_the_shipped_weights_are_the_agreed_ones(settings):
-    assert settings["priority"]["sponsor_weights"] == {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_uk": 0.50}
+    assert settings["priority"]["sponsor_weights"] == {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
     assert settings["priority"]["recency_days"] == 14
 
 

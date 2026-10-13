@@ -10,13 +10,13 @@ from pathlib import Path
 
 from ..config import load_yaml
 from ..db import DB
-from . import gates
+from . import gates, workcountry
 from . import register as sponsors
 
 MIN_NAME_CHARS = 2                     # a company or title shorter than this is a stray keystroke, not a name
 MIN_JD_BYTES = 500                     # a shorter file is a stub or a snippet, not a job description
 # a job that has been tailored or acted on must not be pushed back to 'new' by dropping another JD with the same key
-REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "error")
+REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "needs_country", "error")
 HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "role": "title", "job title": "title",
                "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
                "agency": "agency", "country": "country", "status": "status"}
@@ -79,7 +79,8 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
 
 
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
-           location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False) -> str:
+           location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False,
+           work_country: str | None = None) -> str:
     """Add a hand-made job (status 'new') and return its id. Raises JobExists when that job is already tailored or
     acted on, so adding a JD never resets work. Raises JDError for a company, title or URL that is a placeholder or too
     short (meta_problem)."""
@@ -94,7 +95,8 @@ def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = Non
     db.upsert_job({"id": jid, "source": source, "company": company, "title": title, "location": location,
                    "url": url, "apply_url": url, "description": text, "posted_at": posted})
     db.update_job(jid, description=text, status="new", source=source, agency=int(bool(agency)),
-                  **({"posted_at": posted} if posted else {}))
+                  **({"posted_at": posted} if posted else {}),
+                  **({"work_country": work_country, "work_evidence": f"{workcountry.SET_BY_YOU}: Country header"} if work_country else {}))
     return jid
 
 

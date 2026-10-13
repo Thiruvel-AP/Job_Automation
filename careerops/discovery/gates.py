@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass, field
 
 from ..tailoring.scorer import ceiling, taxonomy_keywords
-from . import countries
+from . import countries, workcountry
 from .register import CompanyIndex, SponsorIndex
 
 FAMILY_REASON = "title not in target families"
@@ -35,6 +35,10 @@ class Verdict:
     sponsor_route: str | None = None
     sponsor_rating: str | None = None
     needs_full_jd: bool = False
+    needs_country: bool = False            # passed every rule, but the country the work is in cannot be told (workcountry.py)
+    work_country: str | None = None        # W, ISO code
+    work_evidence: str | None = None       # the header / sentence W rests on (the reason when it is unknown)
+    work_location: str | None = None       # the remote label when the role is remote and at home (never the ad's words), else None
     family: str | None = None
     tier: int | None = None
     ceiling_pre: float | None = None
@@ -50,12 +54,15 @@ class Family:
 
 
 def verdict_status(v: Verdict) -> str:
-    return "skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "triaged"
+    return ("skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "needs_country" if v.needs_country else "triaged")
 
 
 def verdict_fields(v: Verdict) -> dict:
     """The jobs-table columns a verdict sets."""
-    return {"status": verdict_status(v), "reason": "; ".join(v.reasons) or None, "flags": v.flags,
+    reason = "; ".join(v.reasons) or (f"work country unknown: {v.work_evidence}" if v.needs_country else None)
+    return {"status": verdict_status(v), "reason": reason, "flags": v.flags,
+            "work_country": v.work_country, "work_evidence": None if v.needs_country else v.work_evidence,
+            "work_location": v.work_location,
             "sponsor_name": v.sponsor_name, "sponsor_score": v.sponsor_score, "sponsor_match": v.sponsor_match,
             "sponsor_route": v.sponsor_route, "sponsor_rating": v.sponsor_rating,
             "family": v.family, "tier": v.tier, "ceiling_pre": v.ceiling_pre}
@@ -114,15 +121,10 @@ def pre_ceiling(jd: str, fb: dict, settings) -> float:
 
 
 def visa_countries(settings) -> tuple[str, ...]:
-    """The countries (canonical names) applicant.yaml has a non-empty `visa_by_country:` block for: a job in one of them passes the
-    location rule. () when the file or the key is not there. READ ONLY."""
-    from ..config import load_yaml
-
-    try:
-        applicant = load_yaml(settings.path("applicant")) or {}
-    except (OSError, ValueError, KeyError):
-        return ()
-    found = (countries.canon(k) for k in (applicant.get("visa_by_country") or {}))
+    """The countries (canonical names) applicant.yaml has a non-empty `visa.by_country.<country>` block for (not `default`): a job in
+    one of them passes the location rule. () when the file or the key is not there. READ ONLY."""
+    applicant = workcountry.applicant_visa(settings)
+    found = (countries.canon(k) for k in (((applicant.get("visa") or {}).get("by_country")) or {}))
     return tuple(dict.fromkeys(c for c in found if c and countries.visa_block(applicant, c)))
 
 
@@ -171,4 +173,10 @@ def triage(job: dict, settings, sponsors: "CompanyIndex | SponsorIndex | None", 
         v.flags.append("Job description looks truncated — fetch/paste the full JD before tailoring")
 
     v.passed = not v.reasons
+    work = workcountry.for_job({"location": loc, "description": jd, "title": title, "work_country": job.get("work_country"),
+                                "work_evidence": job.get("work_evidence")}, workcountry.applicant_visa(settings))
+    v.work_country = work.country
+    v.work_evidence = work.evidence if work.country else work.reason
+    v.work_location = work.shown if work.home_remote else None
+    v.needs_country = v.passed and not v.needs_full_jd and work.country is None
     return v

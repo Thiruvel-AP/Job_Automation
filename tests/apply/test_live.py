@@ -678,15 +678,18 @@ def one_file(live, f):
     return live._one(f)
 
 
-def with_visa_blocks(settings, tmp_path, block: str) -> None:
-    """The fictional applicant plus the visa_by_country block the user would add by hand (the real applicant.yaml is never touched)."""
-    src = Path(settings.raw["paths"]["applicant"]).read_text(encoding="utf-8")
+def with_visa_blocks(settings, tmp_path, blocks: dict) -> None:
+    """The fictional applicant plus the visa.by_country blocks the user would add by hand (the real applicant.yaml is never touched)."""
+    import yaml
+    a = yaml.safe_load(Path(settings.raw["paths"]["applicant"]).read_text(encoding="utf-8"))
+    a["visa"]["by_country"].update(blocks)
     p = tmp_path / "applicant_with_blocks.yaml"
-    p.write_text(src + "\n" + block, encoding="utf-8")
+    p.write_text(yaml.safe_dump(a), encoding="utf-8")
     settings.raw["paths"]["applicant"] = str(p)
 
 
-CANADA_BLOCK = "visa_by_country:\n  Canada:\n    summary: I hold a Canadian open work permit.\n    answers:\n      sponsorship_now: 'No'\n"
+CANADA_BLOCK = {"Canada": {"right_to_work": True, "sponsorship_now": False, "sponsorship_future": False,
+                           "summary": "I hold a Canadian open work permit."}}
 
 
 def test_a_job_outside_the_uk_without_a_visa_block_is_listed_only_not_worked_on_and_not_counted(db, settings, inbox, archive, jd):
@@ -696,7 +699,7 @@ def test_a_job_outside_the_uk_without_a_visa_block_is_listed_only_not_worked_on_
     assert one_file(live, f) is None                                                   # None = does not count towards --max
     assert fake.calls == [] and db.jobs() == [] and f.exists()                    # no tailor, no review, no apply, no job, the file stays
     (r,) = live.results
-    assert (r.status, r.company, r.role) == ("listed_only", "Maple", "Data Scientist") and "visa_by_country" in r.note
+    assert (r.status, r.company, r.role) == ("listed_only", "Maple", "Data Scientist") and "visa.by_country" in r.note
     assert any(l.startswith("LISTED ONLY a_maple.txt") and "Canada" in l for l in lines)
     assert not (settings.path("jds") / "rejected").exists() or not any((settings.path("jds") / "rejected").iterdir())
 
@@ -721,14 +724,14 @@ def test_a_visa_block_for_that_country_lets_it_through_like_any_other_job(db, se
 
 
 def test_the_block_may_be_keyed_by_the_country_code(db, settings, tmp_path, inbox, archive, jd):
-    with_visa_blocks(settings, tmp_path, CANADA_BLOCK.replace("Canada:", "CA:"))
+    with_visa_blocks(settings, tmp_path, {"CA": CANADA_BLOCK["Canada"]})
     f = put_abroad(inbox, "a_maple.txt", jd)
     live, _ = session(db, settings, Fake(db, settings, yes()))
     assert one_file(live, f) is not None
 
 
 def test_a_block_for_another_country_or_an_empty_one_does_not_count(db, settings, tmp_path, inbox, archive, jd):
-    with_visa_blocks(settings, tmp_path, "visa_by_country:\n  Germany:\n    summary: x\n  Canada: {}\n")
+    with_visa_blocks(settings, tmp_path, {"Germany": {"summary": "x"}, "Canada": {}})
     f = put_abroad(inbox, "a_maple.txt", jd)
     fake = Fake(db, settings, yes())
     live, _ = session(db, settings, fake)
@@ -776,3 +779,47 @@ def test_the_listed_only_file_is_not_moved_or_changed_by_live(db, settings, inbo
     session(db, settings, Fake(db, settings, yes()))[0].run()
     assert f.read_bytes() == before and not (settings.path("jds") / "done").glob("*") or True
     assert f.exists() and not list((settings.path("jds") / "done").glob("*"))
+
+
+# ------------------------------------------------------------------ W unknown: needs_country, until you give the country
+NEUTRAL_AD = "Acme builds forecasting tools for retailers. You will join a small team of data scientists and ship models. " * 12
+
+
+def put_remote(inbox: Path, name: str, extra: str = "") -> Path:
+    p = inbox / name
+    p.write_text("Company: Acme\nTitle: Data Scientist\nURL: https://acme.example/jobs/9\nLocation: Remote - Germany or the Netherlands\n"
+                 + extra + "\n" + NEUTRAL_AD, encoding="utf-8")
+    return p
+
+
+def test_a_job_whose_country_cannot_be_told_is_needs_country_not_tailored_and_its_file_stays(db, settings, inbox, archive):
+    f = put_remote(inbox, "a_acme.txt")
+    fake = Fake(db, settings, yes())
+    live, lines = session(db, settings, fake)
+    assert live.run() == 0
+    assert fake.calls == [] and f.exists() and not list((settings.path("jds") / "done").glob("*"))
+    (job,) = db.jobs()
+    assert job["status"] == "needs_country" and job["work_country"] is None and "work country unknown" in job["reason"]
+    assert live.results[0].status == "needs_country"
+    assert any("Country: XX" in l and "set-country" in l for l in lines)
+
+
+def test_a_country_line_in_the_file_gives_it_and_the_job_goes_on(db, settings, inbox, archive):
+    f = put_remote(inbox, "a_acme.txt")
+    session(db, settings, Fake(db, settings, yes()))[0].run()
+    assert db.jobs()[0]["status"] == "needs_country"
+    put_remote(inbox, "a_acme.txt", extra="Country: GB\n")                      # the same job, now with the country you give
+    fake = Fake(db, settings, yes())
+    live, _ = session(db, settings, fake)
+    assert live.run() == 0
+    (job,) = db.jobs()
+    assert job["work_country"] == "GB" and job["work_evidence"].startswith("set by you") and job["status"] == "applied"
+    assert "tailor" in fake.names() and "assist" in fake.names()
+    assert not f.exists()
+
+
+def test_a_known_country_in_the_header_needs_no_help(db, settings, inbox, archive, jd):
+    put(inbox, "a.txt", jd, company="Acme", n=1)                                 # Location: Bristol, UK
+    fake = Fake(db, settings, yes())
+    session(db, settings, fake)[0].run()
+    assert db.jobs()[0]["work_country"] == "GB" and db.jobs()[0]["work_evidence"] == "Location: Bristol, UK"

@@ -463,8 +463,8 @@ reachable / robots.txt / credentials / alerts in `discover.health.alert_days` (7
 **3. Country gate.** `discovery/countries.py` (canonical names, codes, `detect(place)`: country names, then Canadian/Australian regions, then major
 cities, then US state codes; `London, Ontario` is Canada). A role-family match that is not UK is no longer dropped: `Discover.wanted` sets
 `Candidate.country/listed_only`, `intake.render` writes `Country:` + `Status: listed_only` (UK ads are unchanged), `discover.listed_only.max_per_run`
-(20) is its own limit beside `max_new_per_run`. Priority S = `priority.sponsor_weights.non_uk` (0.5, the lowest applicable weight). `live` refuses a
-file with a non-UK `Country:` (or `Status: listed_only` without a country) unless `applicant.yaml` has a non-empty `visa_by_country.<country>` block:
+(20) is its own limit beside `max_new_per_run`. Priority S = `priority.sponsor_weights.non_uk` (renamed `non_home` in 5p; 0.5, the lowest applicable weight). `live` refuses a
+file with a non-UK `Country:` (or `Status: listed_only` without a country) unless `applicant.yaml` has a non-empty `visa.by_country.<country>` block (`default` does not count; this was `visa_by_country` until 5p):
 `LISTED ONLY`, the file stays in `inbox/`, `_one` returns None (not counted towards `--max`); the check reads headers only, so removing the `Status:`
 line does not let it through. A country with a block also passes the triage location rule (`gates.visa_countries`). `config/profile/applicant.yaml` was
 not touched: add the blocks yourself. Not done: the database has no `country` column, so a non-UK job added by hand with `add-jd --location` is not caught.
@@ -482,6 +482,37 @@ only LISTED in `paths.discover/listed_only.csv` (never inbox ads). The file is f
 Tests: `tests/discovery/test_{registry,health,listed_only,jobbank,aiapply,gmail_sources}.py`, additions to `tests/apply/test_live.py`; the settings fixture
 points `paths.sources` at a file that is not there (no registry) and `listed_only` is off in `test_discover.py`'s fixture, so the older tests keep their
 UK-only meaning. **Unverified:** a live run of any of it (a real Gmail, the Job Bank download, the alert layouts of the generic sources).
+
+## 5p. Per-country visa answers, generic remote (2026-10-13) — **done** (offline tests only; no real form opened)
+
+**W(job)** (`discovery/workcountry.py`, `resolve` / `for_job`), generic around `visa.home`: on-site / hybrid → the office country (the place in `Location:`, else the
+one office the ad names); remote with no restriction (no place in the location or in a scope sentence, or "anywhere / worldwide") → `visa.home`; remote restricted
+to a place that includes home (the country, or a region that covers it: EMEA / Europe for GB, EU for DE) → home; restricted to one place that excludes home ("US only",
+"EU only") → that place (a country code or a region key: EU, EEA, EMEA, Europe, North America, Americas, LATAM, APAC; `countries.REGIONS`); otherwise `None`. Evidence (a header
+or one sentence) comes with every answer. Sentences with *not / cannot / outside / except* decide nothing; "join us" is not the US (capital `US` only); a London office is
+not remote scope (names and regions only, no cities, in ad sentences). `Country:` in a JD file or `careerops set-country` (a country or region) is W as you gave it
+(`work_evidence` starts "set by you", survives a re-triage). Without `visa.home` a remote role cannot be placed (`needs_country`); an office still can.
+**The remote label.** For a remote role at home every user-facing string says only `visa.remote.label` (default "Remote"): `Work.line()` / `shown`, the review header
+location (`workflow.shown_location`), `visa.review_lines`, `CHECK VISA ANSWER [W=Remote]`, `{country}` in a summary, the Excel Location column (`jobs.work_location`, set at
+triage) and `set-country`'s output; the home country's names (name, other names, code in capitals) in the evidence sentence become `[home]`. `visa.remote.summary`
+(optional) replaces the home block's summary for such a role; without it the home block's own summary is used verbatim (it is your text). The archive's `job.json`
+still records the ad's location as it was. DB `jobs.work_country` (the code) stays internal.
+**Answers** (`apply/visa.py`, `plan_for`): `visa.by_country[W]` (key = country name/code or region key), else `.default`; only real booleans (`right_to_work`,
+`sponsorship_now`, `sponsorship_future`) fill Yes/No fields. W unknown → status **`needs_country`** (`gates.triage`; after `skipped` and `needs_jd`): not tailored
+(`tailor` selects `triaged`), `apply` / `live` refuse it (`require_plan` raises `WorkCountryError`, an `ArchiveError`, from the preflight hook and from `assist` before a
+browser opens). DB: `jobs.work_country`, `work_evidence`, `work_location` (additive). **Assist**: `fill_page(..., plan=)`; `visa_value(plan, kind)`; every visa field is
+printed `CHECK VISA ANSWER [W=XX]: ...`; a question that names another country than W is left empty and says so. **Review screen**: `Work location: ... — evidence: "..."`
+and `Visa answers (source): right to work X · sponsorship now Y · sponsorship in the future Z`. **Priority**: S = `priority.sponsor_weights.non_home` (0.5; `non_uk` is still
+read as its old name) whenever W is not `visa.home` (`work_country` beats the listing's `country`; unknown W is not penalised). **Doctor**: fails without `visa.home` (a
+country this tool knows) and without `visa.by_country[visa.home]`; warns (`ok == "warn"`: printed `[warn]`, exit code unchanged) without `default`. New command
+`careerops set-country --id JOB --country XX`. This replaces the first version of this round, which was UK-specific (`remote_from_uk_counts_as_uk`, `non_uk`, a GB
+block that had no default fallback); that key is no longer read.
+Judgement calls: (1) a country counts as "your block" for `live`'s listed-only refusal and for the triage location rule only when it has its own key, never through
+`default`, so a foreign job is still skipped by the location rule (and `live` asks "Tailor it anyway?") unless you add the country; `default` serves jobs that pass the
+rule by other routes (a remote ad restricted to the US from a UK-listed company, a job you chose to tailor). (2) A file given to `live` without a `Location:` header still
+gets the location "United Kingdom" (older behaviour), so W is the office country for it. (3) A bare "Remote" with nothing else is unrestricted, so it is home.
+Tests: `tests/discovery/test_workcountry.py`, `tests/apply/test_visa_plan.py`, `tests/apply/test_assist_visa.py` (Chromium, slow), additions to `test_live.py`,
+`test_applicant_doctor.py`, `test_listed_only.py`. **Unverified:** a real application form; the rules on real ads (they are tested on hand-made sentences).
 
 ## 5j. URL intake, LLM judge, letter mode (2026-10-10) — **done** (tested offline; none of it run live)
 

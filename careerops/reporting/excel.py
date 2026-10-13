@@ -25,7 +25,7 @@ COLS = [("Company", "company", 26), ("Title", "title", 38), ("Tier", "tier", 6),
         ("First seen", "first_seen", 20), ("Last seen", "last_seen", 20)]
 
 FILL = {"applied": "C6EFCE", "approved": "DDEBF7", "needs_review": "FFF2CC", "rejected": "F8CBAD",
-        "skipped": "EDEDED", "needs_jd": "FCE4D6", "error": "F4B084"}
+        "skipped": "EDEDED", "needs_jd": "FCE4D6", "needs_country": "FCE4D6", "error": "F4B084"}
 PCT = {"sponsor_score", "score", "score_stemmed", "ceiling_pre", "ceiling", "letter_score"}
 STATUS_COL = next(i for i, c in enumerate(COLS, 1) if c[1] == "status")
 
@@ -46,6 +46,8 @@ def export(db: DB, path: Path, floor: float = 0.70) -> int:
             v = r[key]
             if key == "flags":
                 v = " | ".join(json.loads(v or "[]"))
+            elif key == "location":
+                v = r["work_location"] or v                  # a remote role at home shows the remote label, never the home country
             elif key == "application_dir" and r["status"] != "applied":
                 v = None                                   # only applied rows have an archive folder to show
             vals.append(v)

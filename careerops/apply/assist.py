@@ -3,13 +3,21 @@ and STOPS. It never clicks submit — you do, then paste the confirmation into t
 
 Why stop: visa/salary/EEO answers must be yours, ATS terms generally forbid automated submission,
 and a reviewed form is the whole point of the human-in-the-loop gate.
+
+Visa questions are answered from the plan for the job's work location W (apply/visa.py): the three booleans of
+applicant.yaml `visa.by_country[W]` (else `.default`) and nothing else; a job whose W is unknown is refused before a browser opens. Every
+visa field is highlighted and printed as `CHECK VISA ANSWER [W=XX]: question -> answer`; for a remote role at home XX is the remote label
+(`visa.remote.label`), never the home country.
 """
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
+from ..discovery import countries
+from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
+from .visa import VisaPlan, plan_for, require_plan, work_for
 
 LABEL_JS = """el => {
   const bits = [];
@@ -34,7 +42,7 @@ QUESTION_JS = """el => {
   const p = el.closest('div,li,p'); return p ? p.innerText.slice(0, 200) : '';
 }"""
 
-# A field is a visa question when its label says so. These are answered from applicant.yaml -> visa, never from never_fill.
+# A field is a visa question when its label says so. These are answered from applicant.yaml -> visa.by_country, never from never_fill.
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
 APPLY_BUTTON = re.compile(r"^\s*(apply( for this job| now)?|i'?m interested)\s*$", re.I)
@@ -48,8 +56,11 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
 
+KIND_KEY = {"right_to_work_now": "right_to_work", "sponsorship_now": "sponsorship_now", "sponsorship_future": "sponsorship_future"}
+
+
 def classify_visa(question: str) -> str | None:
-    """Which applicant.yaml `visa.answers` key a Yes/No or dropdown visa question asks for; None when unclear (then it is
+    """Which kind of answer a Yes/No or dropdown visa question asks for; None when unclear (then it is
     left empty). "now or in the future" / "future" -> sponsorship_future; sponsorship now / currently / require ->
     sponsorship_now; "currently"/"now" + "right to work" -> right_to_work_now."""
     q = question.lower()
@@ -65,26 +76,32 @@ def classify_visa(question: str) -> str | None:
     return None
 
 
-def visa_value(applicant: dict, kind: str | None) -> str | None:
-    """The configured answer for `kind`; None when there is no such answer or it is "ask" (the user answers it)."""
-    v = ((applicant.get("visa") or {}).get("answers") or {}).get(kind) if kind else None
-    v = ("Yes" if v else "No") if isinstance(v, bool) else str(v).strip() if v is not None else ""
-    return None if not v or v.lower() == "ask" else v
+def visa_value(plan: VisaPlan | None, kind: str | None) -> str | None:
+    """'Yes' / 'No' from the plan's booleans for `kind` (a classify_visa result); None when there is no plan, no such answer, or it is
+    not a boolean (the question is left to the user)."""
+    key = KIND_KEY.get(kind) if kind else None
+    return plan.answer(key) if plan is not None and key else None
 
 
-def _answer_visa(el, typ: str, question: str, applicant: dict) -> str | None:
-    """Fill one visa field from the visa block; returns what it now holds, None when it is left empty. Free text gets
-    `visa.summary` (a share-code box is left empty: it wants the code, not prose). Yes/No and dropdowns get the
-    classified answer; radios are picked within their group."""
-    visa = applicant.get("visa") or {}
+def about_another_country(question: str, plan: VisaPlan | None) -> str | None:
+    """The country a visa question names when it is not W ("right to work in the UK?" on an Irish job): the answers are for W, so
+    the field is left empty rather than answered for the wrong country."""
+    named = countries.mentions(question)
+    return named[0] if plan is not None and named and plan.work.name not in named else None
+
+
+def _answer_visa(el, typ: str, question: str, plan: VisaPlan | None) -> str | None:
+    """Fill one visa field from the plan; returns what it now holds, None when it is left empty. Free text gets the plan's summary
+    (a share-code box is left empty: it wants the code, not prose). Yes/No and dropdowns get the classified answer; radios are picked
+    within their group."""
     if typ in ("text", "textarea", "search", ""):
         if "share code" in question.lower():
             return None
-        summary = _norm(visa.get("summary") or "")
+        summary = plan.summary if plan is not None else ""
         if summary and not (el.input_value() or "").strip():
             el.fill(summary)
         return _norm(el.input_value() or "") or None
-    value = visa_value(applicant, classify_visa(question))
+    value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
     if value is None:
         return None
     want = value.lower()
@@ -98,14 +115,21 @@ def _answer_visa(el, typ: str, question: str, applicant: dict) -> str | None:
 
 
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
-              letter_text: str | None = None, job=None) -> dict:
+              letter_text: str | None = None, job=None, plan: VisaPlan | None = None) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
 
     With `job`, the wrong-file guard runs first: nothing is uploaded unless the CV and letter belong to that job.
     A cover-letter file field gets the letter PDF; a cover-letter text box gets `letter_text` (when still empty).
+    Visa fields are answered from `plan` (the visa plan of W); without one it is worked out from `job`, and with neither, from the
+    home block (`visa.home`). A job whose W is unknown has no plan: every visa field stays empty.
     """
     if job is not None:
         check_job_files(job, cv_pdf, letter_pdf)
+    if plan is None:
+        home = rules_from(applicant).home or None
+        plan = plan_for(applicant, work_for(job, applicant) if job is not None else
+                        Work(home, "explicit", "no job given: the home block", shown=countries.place_name(home) if home else ""))
+    where = (plan.work.shown if plan.work.home_remote else plan.work.country) if plan is not None else "?"
     report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": []}
     seen_groups: set = set()
     never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
@@ -145,7 +169,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                     continue                                   # the rest of a group already answered
                 seen_groups.add(name)
                 group = page.query_selector_all(f'input[type=radio][name="{name}"]') if name else [el]
-                value = visa_value(applicant, classify_visa(question))
+                value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
                 done = None
                 for r in group:
                     r.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
@@ -156,9 +180,11 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                 held = done
             else:
                 el.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
-                held = _answer_visa(el, typ, question, applicant)
-            print(f"CHECK VISA ANSWER: {question[:150]} -> {held or 'EMPTY'}")
-            report["visa"].append({"question": question, "value": held})
+                held = _answer_visa(el, typ, question, plan)
+            other = about_another_country(question, plan)
+            print(f"CHECK VISA ANSWER [W={where}]: {question[:150]} -> {held or 'EMPTY'}"
+                  + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else ""))
+            report["visa"].append({"question": question, "value": held, "work_location": where})
             report["filled" if held else "manual"].append(f"{short} = visa" if held else short)
             continue
 
@@ -189,7 +215,9 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
     url = job["apply_url"] or job["url"]
     cv = rep.get("cv_pdf")
     letter = rep.get("letter_pdf") if rep.get("letter_pdf") and Path(rep["letter_pdf"]).is_file() else None
+    plan = require_plan(job, applicant)                    # W unknown / no answers for it: WorkCountryError, nothing is opened
     check_job_files(job, cv, letter)                       # refuse before a browser even opens
+    print(plan.work.line() + f"\n{plan.describe()}")
     letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
     with sync_playwright() as pw:
         ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
@@ -202,7 +230,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
                     a.click()
                     page.wait_for_timeout(2500)
                     break
-        r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job)
+        r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan)
         print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
         print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
         print("\nReview everything in the browser and press Submit yourself.")

@@ -90,6 +90,27 @@ def usage_lines(rep: dict) -> list[str]:
             for name, m in by_model.items()]
 
 
+def work_country_lines(job, settings=None) -> list[str]:
+    """W (the country the work is done in) with the evidence sentence, and the visa answers that country gets (apply/visa.py)."""
+    if settings is None:
+        return []
+    from ..apply import visa
+    from ..discovery import workcountry
+
+    return visa.review_lines(job, workcountry.applicant_visa(settings))
+
+
+def shown_location(job, settings=None) -> str:
+    """The job's location as the review screen prints it: the remote label for a remote role at home (never the home country), else
+    the location the ad gave."""
+    from ..apply import visa
+    from ..discovery import workcountry
+
+    if settings is None:
+        return job["location"] or "?"
+    return visa.displayed_location(job, workcountry.applicant_visa(settings)) or "?"
+
+
 def summary(job, rep: dict, settings=None) -> str:
     f = rep["final"]
     all_flags = json.loads(job["flags"] or "[]")
@@ -100,12 +121,13 @@ def summary(job, rep: dict, settings=None) -> str:
     letter = rep["letter"]
     lines = [
         "=" * 78,
-        f"{job['company']} — {job['title']}  [{job['location'] or '?'}]",
+        f"{job['company']} — {job['title']}  [{shown_location(job, settings)}]",
         (f"T{rep['tier']} · {rep['headline']}" if rep.get("tier") else "Tier: out of target families"),
         f"{job['url']}",
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})"
         + (f" - {'; '.join(sponsor_notes)} (information only; a weight on priority, not a reason to skip)" if sponsor_notes else ""),
         pr.line(),
+        *work_country_lines(job, settings),
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
         f"| band: {f['band']} | pages {f['pages']}"
         + (f" (page 2 {f['page2_fill']:.0%} full)" if f.get("page2_fill") else "") + f" | attempts {len(rep['attempts'])}",

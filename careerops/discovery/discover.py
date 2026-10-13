@@ -22,7 +22,7 @@ The source registry (config/sources.yaml, registry.py) says which sources exist 
 after every run. Outside the UK: a job whose place is another country (the ad's own country, else read from its place) is not dropped
 but written with `Country:` and `Status: listed_only` headers (at most discover.listed_only.max_per_run a run, apart from the
 UK limit); `careerops live` will not apply to it without a visa block for that country in applicant.yaml, and its priority S is
-priority.sponsor_weights.non_uk. Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
+priority.sponsor_weights.non_home. Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
 
 The manual queue (paths.jds/manual_queue.csv, append-only, one row per link) lists what could not be resolved, for
 `careerops live --clipboard`. Sponsorship is never a filter here: the output is ordered by priority P = F x S x R (priority.py).
@@ -46,7 +46,7 @@ from ..db import DB
 from . import ats as ats_mod
 from . import candidate as cand
 from . import boards as boards_mod
-from . import countries, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod
+from . import countries, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
@@ -759,8 +759,12 @@ class Discover:
                 pre = gates.pre_ceiling(c.description, self.fb, self.s) if self.fb is not None else None
             except Exception:  # noqa: BLE001
                 pre = None
+            work = workcountry.resolve(location=c.location, description=c.description, title=c.title,
+                                       override=c.country if c.listed_only else "",
+                                       rules=workcountry.rules_from(workcountry.applicant_visa(self.s)))
             job = {"id": c.ad_id(), "company": c.company, "description": c.description, "sponsor_match": match, "agency": c.agency,
-                   "posted_at": c.posted or None, "ceiling_pre": pre, "country": c.country if c.listed_only else None}
+                   "posted_at": c.posted or None, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
+                   "work_country": work.country}
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
         return sorted(out, key=lambda t: (-t[0].p, -(t[0].s * t[0].r), t[1].company, t[1].title))
 

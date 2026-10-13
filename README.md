@@ -102,20 +102,47 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 
    ```yaml
    visa:
-     summary: >-            # free-text visa/right-to-work boxes get this verbatim
-       I am on the UK Graduate visa and won't need sponsorship for 2 years; afterwards I'd welcome Skilled Worker sponsorship.
-     answers:               # Yes/No and dropdown questions, by type; quote them ("Yes"/"No"), or write "ask" to leave one to you
-       sponsorship_now: "No"          # "require sponsorship?" / "... currently ..."
-       sponsorship_future: "Yes"      # "now or in the future" / "in the future"
-       right_to_work_now: "Yes"       # "currently/now have the right to work"
+     home: GB                            # required: where you live; remote work with no restriction is done "at home"
+     remote:
+       label: "Remote"                   # the only wording shown for a remote role at home (review screen, forms, Excel); never the country
+       summary: "..."                    # optional: the form's free text for a remote role at home, instead of the home block's
+     by_country:
+       GB:                               # required: the block of visa.home (`careerops doctor` fails without it)
+         right_to_work: true             # "currently/now have the right to work"
+         sponsorship_now: false          # "require sponsorship?" / "... currently ..."
+         sponsorship_future: true        # "now or in the future" / "in the future"
+         summary: "..."                  # free-text visa boxes get this verbatim
+       IE: {...}                         # optional: a block for exactly this country, or a region key (EU, EMEA ...)
+       default:                          # any place without its own block; doctor warns without it
+         right_to_work: false
+         sponsorship_now: true
+         sponsorship_future: true
+         summary: "I would need a work visa for {country} and am open to sponsorship."   # {country} = what is shown for W
    ```
 
+   **Which block is used depends on where the work is done, W** (`discovery/workcountry.py`, plain rules over the `Location:` header
+   and the ad text, no model): on-site / hybrid = the office country; **remote with no restriction = `visa.home`**; remote restricted to
+   a place that includes home (the country itself, or EMEA / Europe when home is in it) = home; remote restricted to one place that
+   excludes home ("US only", "EU only") = that place; anything else (two such places, no office, no location) is unknown. Answers =
+   `by_country[W]`, else `by_country.default`. A job whose W is unknown gets the status **`needs_country`**: it is not tailored,
+   `apply` and `live` refuse it before any form opens, and `careerops set-country --id JOB --country XX` (or a `Country: XX` line in
+   its JD file for `live`) gives it the place, which wins over the ad. **Everything you read or send says only `visa.remote.label`
+   for a remote role at home**: the review screen (`Work location: Remote — evidence: "..."`, the header location, the Visa answers
+   line), `CHECK VISA ANSWER [W=Remote]`, `{country}` in a summary and the Excel Location column; the home country's names are hidden
+   as `[home]` in the evidence sentence, which is otherwise the ad's own words. (The home block's own `summary` is your text and is used
+   verbatim; give `visa.remote.summary` if it names the country.) A restriction to another place prints that place. The review screen
+   always shows the evidence and the three booleans chosen. Priority S is `priority.sponsor_weights.non_home` (0.5) whenever W is not
+   `visa.home`. The rules are conservative (a sentence with *not / cannot / outside* decides nothing; several places and none of them
+   home is ambiguous), so a wrong guess is a `needs_country`, not a wrong answer: read the evidence line.
+
    A field is a visa field when its label mentions *right to work, visa, sponsor, immigration, work permit, work
-   authorisation* or *share code*. Every one is outlined magenta and printed as `CHECK VISA ANSWER: <question> -> <value or
-   EMPTY>`. A question whose type is unclear (e.g. "Do you have the right to work?" with no *now/currently*), a value of
-   `ask` and any share-code box are left empty for you. Every other `never_fill` label stays empty and orange. Nothing is
-   submitted. `careerops doctor` fails on an `@example.com/.org/.net` email, a `+44 0…` phone and a `location` with a UK
-   postcode.
+   authorisation* or *share code*. Every one is outlined magenta and printed as `CHECK VISA ANSWER [W=IE]: <question> -> <value
+   or EMPTY>`. Only the three booleans fill Yes/No boxes and dropdowns (a value that is not `true` / `false` is left to you), a
+   question whose type is unclear (e.g. "Do you have the right to work?" with no *now/currently*), a question about a country
+   other than W ("... to work in the UK?" on an Irish job) and any share-code box are left empty for you. Every other `never_fill`
+   label stays empty and orange. Nothing is submitted. `careerops doctor` fails on an `@example.com/.org/.net` email, a `+44 0…`
+   phone, a `location` with a UK postcode, a missing `visa.home` and a missing `visa.by_country[visa.home]`; it warns (shown,
+   exit code unchanged) about a missing `visa.by_country.default`.
 
 ## Daily use
 
@@ -227,17 +254,11 @@ and save the full table (reachable, robots.txt, credentials, alerts in the last 
 A job whose place is another country (the ad's own country, else read from its place: `Toronto, ON` is Canada) is not dropped: it is
 written to the inbox with `Country: Canada` and `Status: listed_only` headers (at most `discover.listed_only.max_per_run` a run,
 counted apart from the UK limit; `discover.listed_only.enabled: false` drops them as before). Its priority S is
-`priority.sponsor_weights.non_uk` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
-it in `inbox/` and does not count it towards `--max`, unless `applicant.yaml` has a block for that country, which you add yourself:
-
-```yaml
-visa_by_country:
-  Canada:                 # a country name or code (CA)
-    summary: "..."        # same shape as the top-level `visa:` block
-    answers: {sponsorship_now: "No", ...}
-```
-
-A country with such a block also passes the triage location rule. An alert from a one-country source (SEEK AU) gives the job that
+`priority.sponsor_weights.non_home` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
+it in `inbox/` and does not count it towards `--max`, unless `applicant.yaml` has a block for exactly that country, which you add yourself
+(`visa.by_country.CA`, a code or a name; `default` does not count, so a job abroad is never worked on just because a default exists).
+A country with such a block also passes the triage location rule; the same location rule still skips a foreign job without one
+(`live` asks "Tailor it anyway?"). An alert from a one-country source (SEEK AU) gives the job that
 country unless its place says another.
 
 `data/aiapply_applied.csv` (`paths.aiapply_applied`; optional, read only) lists what AIApply applied to: a job with the same company and

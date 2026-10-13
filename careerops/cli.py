@@ -45,6 +45,9 @@
   careerops companies --snapshot | --refresh-ch | --resolve | --queue | --set NAME --url URL
   careerops learning            ranked skills-gap list across all tailored jobs (M4)
   careerops outreach --id JOB --person NAME --title TITLE   LinkedIn note + follow-up drafts (M4)
+  careerops set-country --id JOB --country XX
+                                the country a job's work is in (W): decides the visa answers; a job whose W cannot be told is
+                                `needs_country` (not tailored, never applied to) until you give it
 """
 from __future__ import annotations
 
@@ -56,6 +59,7 @@ import traceback
 from datetime import date
 from pathlib import Path
 
+from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
 from .discovery import gates, manual, sources
@@ -110,7 +114,7 @@ def triage_new(db: DB, s) -> dict[str, int]:
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)                   # fail fast on a renamed project id
     idx = sponsors.load_index(db)
-    counts = {"triaged": 0, "skipped": 0, "needs_jd": 0}
+    counts = {"triaged": 0, "skipped": 0, "needs_jd": 0, "needs_country": 0}
     for job in db.jobs("new"):
         f = _verdict_fields(gates.triage(dict(job), s, idx, fb))
         db.update_job(job["id"], **f)
@@ -118,7 +122,7 @@ def triage_new(db: DB, s) -> dict[str, int]:
     return counts
 
 
-PRE_TAILOR = ("new", "triaged", "skipped", "needs_jd")
+PRE_TAILOR = ("new", "triaged", "skipped", "needs_jd", "needs_country")
 RULES_SKIP = "new rules would skip: "
 
 
@@ -129,7 +133,7 @@ def retriage(db: DB, s) -> dict[str, int]:
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
     idx = sponsors.load_index(db)
-    counts = {"triaged": 0, "skipped": 0, "needs_jd": 0, "post_tailor": 0, "post_tailor_would_skip": 0}
+    counts = {"triaged": 0, "skipped": 0, "needs_jd": 0, "needs_country": 0, "post_tailor": 0, "post_tailor_would_skip": 0}
     with db.conn:
         for job in db.jobs():
             if job["status"] == "applied":
@@ -293,6 +297,28 @@ def cmd_sources(args):
     rows = _print_health(s, reg)
     if rows and all(r.status in ("blocked", "unreachable", "error") for r in rows if r.source.enabled):
         sys.exit(1)
+
+
+def cmd_set_country(args):
+    """Give a job the place its work is in (W; a country or a region such as EU): used when the status is needs_country, or when the guess
+    is wrong. Wins over the ad and survives a re-triage; the job is triaged again if it was waiting for it. Changes nothing else."""
+    from .discovery import countries, workcountry
+
+    s, db = _ctx(args)
+    job = db.job(args.id)
+    if job is None:
+        _fail(f"no such job: {args.id}")
+    code = countries.place_code(args.country)
+    if not code:
+        _fail(f"{args.country!r} is not a country or region this tool knows: use a code or name such as DE, Ireland, EU")
+    if job["status"] == "applied":
+        _fail(f"{args.id} is already applied: its record is left as it is")
+    db.update_job(args.id, work_country=code, work_evidence=f"{workcountry.SET_BY_YOU}: set-country {args.country}")
+    home = workcountry.rules_from(workcountry.applicant_visa(s)).home
+    print(f"{args.id}: work location set by you" + ("." if code == home else f": {countries.place_name(code)}."))    # home is never printed
+    if job["status"] == "needs_country":
+        db.update_job(args.id, status="new")
+        print("Triage:", manual.triage_job(db, s, args.id))
 
 
 def cmd_retriage(args):
@@ -544,6 +570,7 @@ def cmd_live(args):
     def preflight_it(jid: str) -> None:
         job = db.job(jid)
         preflight(db, s, job, review.load_report(job))
+        visa_mod.require_plan(job, load_yaml(s.path("applicant")))           # W unknown / no answers for it: refused before a form opens
 
     def assist_it(jid: str) -> dict:
         job = db.job(jid)
@@ -580,6 +607,7 @@ def cmd_apply(args):
         rep = review.load_report(job)
         try:                                       # refuse before a form is opened: letter, right files, root, paths
             preflight(db, s, job, rep, no_letter=args.no_letter)
+            visa_mod.require_plan(job, applicant)                  # W unknown / no answers for it: no form is opened
         except ArchiveError as e:
             print(f"  REFUSED {job['id']}: {e}", file=sys.stderr)
             failures += 1
@@ -707,8 +735,9 @@ def cmd_doctor(args):
     load_dotenv(s.root / ".env")
     checks = doctor(s, ping=not getattr(args, "no_ping", False))
     for name, ok, hint in checks:
-        print(f"  [{'ok' if ok else '!!'}] {name}" + ("" if ok else f"  → {hint}"))
-    sys.exit(0 if all(ok for _, ok, _ in checks) else 1)
+        tag = "ok" if ok is True else "warn" if ok == "warn" else "!!"
+        print(f"  [{tag}] {name}" + ("" if ok is True else f"  → {hint}"))
+    sys.exit(0 if all(ok for _, ok, _ in checks) else 1)           # a warning ("warn") does not fail the run
 
 
 def cmd_llm_check(args):
@@ -927,6 +956,12 @@ def main(argv=None):
     so.add_argument("what", choices=["check", "list"])
     so.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
     so.set_defaults(fn=cmd_sources)
+    sc = sub.add_parser("set-country", help="give a job the country its work is in (visa answers and priority follow it); "
+                                            "triages a needs_country job again")
+    sc.add_argument("--id", required=True)
+    sc.add_argument("--country", required=True, help="a code or name: GB, DE, Ireland")
+    sc.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
+    sc.set_defaults(fn=cmd_set_country)
     sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")

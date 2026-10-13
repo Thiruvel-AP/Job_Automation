@@ -62,12 +62,16 @@ def test_codes_and_names_agree_and_multi_is_not_a_country():
 
 
 def test_a_visa_block_is_found_by_country_name_or_code_and_must_not_be_empty():
-    applicant = {"visa_by_country": {"CA": {"summary": "x"}, "Germany": {"answers": {"right_to_work_now": "Yes"}}, "AU": {}, "NZ": None}}
+    by = {"CA": {"summary": "x"}, "Germany": {"right_to_work": True}, "AU": {}, "NZ": None, "GB": {"summary": "uk"},
+          "default": {"summary": "anyone"}}
+    applicant = {"visa": {"by_country": by}}
     assert countries.visa_block(applicant, "Canada") == {"summary": "x"}
-    assert countries.visa_block(applicant, "DE") == {"answers": {"right_to_work_now": "Yes"}}
+    assert countries.visa_block(applicant, "DE") == {"right_to_work": True}
     assert countries.visa_block(applicant, "Australia") is None and countries.visa_block(applicant, "New Zealand") is None
     assert countries.visa_block(applicant, "France") is None and countries.visa_block({}, "Canada") is None
-    assert countries.visa_block({"visa": {"summary": "UK block"}}, "United Kingdom") is None     # the UK is the top-level `visa:` block
+    assert countries.visa_block(applicant, "default") is None and countries.visa_block(applicant, "") is None      # `default` is not a country
+    assert countries.visa_block(applicant, "United Kingdom") == {"summary": "uk"}
+    assert countries.visa_block({"visa_by_country": {"CA": {"summary": "x"}}}, "Canada") is None                  # the earlier layout is gone
 
 
 # ------------------------------------------------------------------ discover writes it listed_only
@@ -145,16 +149,16 @@ def test_priority_s_is_half_outside_the_uk_by_default_and_the_listing_says_so(cf
     d.from_boards()
     by = {c.title + " | " + c.location: pr for pr, c, _ in d.ranked()}
     ny = by["AI Engineer | New York, NY"]
-    assert ny.s == 0.5 and "outside the UK (United States)" in ny.s_reason
+    assert ny.s == 0.5 and "work location United States is not home" in ny.s_reason
     assert all(pr.s > 0.5 for k, pr in by.items() if "New York" not in k)
-    assert any("listed only" in line and "outside the UK" in line for line in d.listing())
+    assert any("listed only" in line and "is not home" in line for line in d.listing())
 
 
 def test_the_weight_is_a_setting_and_can_only_lower_s(cfg):
-    assert priority.weights(cfg)["non_uk"] == 0.5
+    assert priority.weights(cfg)["non_home"] == 0.5
     job = {"company": "X", "description": "a job", "sponsor_match": "exact", "country": "Canada"}
     assert priority.sponsor_factor(job, cfg)[0] == 0.5
-    cfg.raw["priority"]["sponsor_weights"]["non_uk"] = 0.2
+    cfg.raw["priority"]["sponsor_weights"]["non_home"] = 0.2
     assert priority.sponsor_factor(job, cfg)[0] == 0.2
     assert priority.sponsor_factor({**job, "country": "United Kingdom"}, cfg)[0] == 1.0         # a UK job is unaffected
     assert priority.sponsor_factor({k: v for k, v in job.items() if k != "country"}, cfg)[0] == 1.0
@@ -175,13 +179,15 @@ def test_a_country_with_a_visa_block_passes_the_location_rule_and_the_others_do_
     from careerops.discovery import gates
     job = {"title": "Data Scientist", "location": "Toronto, ON", "description": "A data science job."}
     berlin = {**job, "location": "Berlin, Germany"}
-    assert gates.visa_countries(settings) == ()
+    assert gates.visa_countries(settings) == ("United Kingdom",)               # the fixture applicant has a GB block and a default
     assert any("not in allow-list" in r for r in gates.triage(job, settings, None).reasons)
     p = tmp_path / "applicant.yaml"
-    p.write_text(Path(settings.raw["paths"]["applicant"]).read_text(encoding="utf-8")
-                 + "\nvisa_by_country:\n  CA:\n    summary: open work permit\n  Germany: {}\n", encoding="utf-8")
+    import yaml
+    a = yaml.safe_load(Path(settings.raw["paths"]["applicant"]).read_text(encoding="utf-8"))
+    a["visa"]["by_country"].update({"CA": {"summary": "open work permit"}, "Germany": {}})
+    p.write_text(yaml.safe_dump(a), encoding="utf-8")
     settings.raw["paths"]["applicant"] = str(p)
-    assert gates.visa_countries(settings) == ("Canada",)                         # Germany's block is empty: it does not count
+    assert set(gates.visa_countries(settings)) == {"United Kingdom", "Canada"}   # Germany's block is empty: it does not count
     assert not any("allow-list" in r for r in gates.triage(job, settings, None).reasons)
     assert any("allow-list" in r for r in gates.triage(berlin, settings, None).reasons)
 

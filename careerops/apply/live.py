@@ -6,7 +6,7 @@ tailor that id -> review that id (approve / edit / skip) -> [not --dry-run] the 
 
 A file marked as outside the UK (a `Country:` header that is not the UK, or `Status: listed_only`, which `careerops discover` writes for
 a job in another country) is not worked on: it stays in inbox/, is not counted towards --max and is listed in the summary as
-`listed_only`, unless applicant.yaml has a `visa_by_country:` block for that country (you add those yourself).
+`listed_only`, unless applicant.yaml has a `visa.by_country.<country>` block for that country (you add those yourself).
 
 Nothing here submits anything, answers a gate for the user, or writes to the archive. The archive is only read (a snapshot
 is os.walk + lstat); the one permitted write to it, for a job the user says they submitted, is mark-applied's own
@@ -283,7 +283,7 @@ class Live:
 
     def _outside_uk(self, text: str) -> str | None:
         """Why this JD must not be worked on: it is for a job outside the UK (`Country:` header) or marked `Status: listed_only`, and
-        applicant.yaml has no `visa_by_country:` block for that country. None when it may go on (a UK job, or a country you gave a block)."""
+        applicant.yaml has no `visa.by_country.<country>` block for that country. None when it may go on (a UK job, or a country you gave a block)."""
         from ..config import load_yaml
 
         hdr = manual.header_fields(text)
@@ -299,7 +299,7 @@ class Live:
             return None
         where = country or said or "no country given"
         return (f"outside the UK ({where}): listed only. It is not tailored or applied to unless applicant.yaml has a "
-                f"`visa_by_country` block for {country or 'its country'}; the file stays in inbox/")
+                f"`visa.by_country` block for {country or 'its country'}; the file stays in inbox/")
 
     def _fill(self, r: JobResult) -> None:
         job = self.db.job(self.current.get("job_id")) if self.current.get("job_id") else None
@@ -381,6 +381,8 @@ class Live:
             meta["posted"] = hdr["posted"]
         if (hdr.get("agency") or "").lower() in ("yes", "true", "1"):
             meta["agency"] = True
+        if countries.place_code(hdr.get("country")):
+            meta["work_country"] = countries.place_code(hdr["country"])     # a `Country:` header is W, as you gave it
         return meta, ""
 
     def _advance(self, f: Path, text: str, sha: str, entry: dict, r: JobResult) -> str:
@@ -417,6 +419,11 @@ class Live:
             if st == "new":
                 self._stage("triage")
                 manual.triage_job(db, self.s, jid)
+            elif st == "needs_country":
+                self.out(f"  Work country unknown ({job['reason']}). Not tailored, not applied to. Add a line `Country: XX` (a code "
+                         f"or name, e.g. Country: DE) to {f.name} and run live again, or: careerops set-country --id {jid} --country XX")
+                r.note = job["reason"] or "work country unknown"
+                return "needs_country"
             elif st == "needs_jd":
                 reason = "JD looks truncated (under 800 characters): paste the full text and drop it in again"
                 self.out(f"REJECTED {f.name}: {reason}  ({self._reject(f, reason)})")

@@ -109,6 +109,12 @@ _CITIES: dict[str, tuple[str, ...]] = {
 }
 _CITY_RX = [(re.compile(r"(?<![\w])(" + "|".join(re.escape(c) for c in cities) + r")(?![\w])", re.I), country)
             for country, cities in _CITIES.items()]
+# UK towns are read last: "Birmingham, AL" is read as Alabama by the US region codes before it gets here, "London, Ontario" as Canada
+_UK_CITIES = ("london", "manchester", "birmingham", "bristol", "leeds", "edinburgh", "glasgow", "cardiff", "belfast", "liverpool",
+              "sheffield", "newcastle", "nottingham", "cambridge", "oxford", "southampton", "leicester", "brighton", "aberdeen",
+              "milton keynes", "coventry", "norwich", "swansea", "exeter", "dundee", "inverness")
+_UK_CITY_RX = re.compile(r"(?<![\w])(" + "|".join(re.escape(c) for c in _UK_CITIES) + r")(?![\w])", re.I)
+_US_WORD = re.compile(r"(?<![\w])(US|U\.S\.|USA|U\.S\.A\.)(?![\w])")        # case-sensitive: "join us" is not a country
 
 
 def canon(value: str | None) -> str:
@@ -141,14 +147,103 @@ def detect(place: str | None) -> str:
     for rx, country in _US_REGION_RX:
         if rx.search(text):
             return country
+    if _UK_CITY_RX.search(text):
+        return UK
     return ""
 
 
+# ------------------------------------------------------------------ regions ("remote, EU only"): which of the known countries each covers
+EUROPE = frozenset({"GB", "IE", "DE", "NL", "FR", "ES", "IT", "CH", "SE", "DK", "NO", "FI", "PL", "PT", "BE", "AT"})
+EU = frozenset({"IE", "DE", "NL", "FR", "ES", "IT", "SE", "DK", "FI", "PL", "PT", "BE", "AT"})
+REGIONS: dict[str, tuple[frozenset, "re.Pattern[str]"]] = {
+    "EU": (EU, re.compile(r"(?<![\w])(?:eu|e\.u\.|european union)(?![\w])", re.I)),
+    "EEA": (EU | {"NO"}, re.compile(r"(?<![\w])eea(?![\w])", re.I)),
+    "EMEA": (EUROPE | {"AE", "IL", "ZA"}, re.compile(r"(?<![\w])emea(?![\w])", re.I)),
+    "Europe": (EUROPE, re.compile(r"(?<![\w])(?:europe|european)(?!\s+union)(?![\w])", re.I)),
+    "North America": (frozenset({"US", "CA", "MX"}), re.compile(r"(?<![\w])north america\w*(?![\w])", re.I)),
+    "Americas": (frozenset({"US", "CA", "MX", "BR"}), re.compile(r"(?<![\w])americas(?![\w])", re.I)),
+    "LATAM": (frozenset({"MX", "BR"}), re.compile(r"(?<![\w])(?:latam|latin america)(?![\w])", re.I)),
+    "APAC": (frozenset({"AU", "NZ", "SG", "IN", "JP", "CN", "HK", "KR"}), re.compile(r"(?<![\w])(?:apac|asia[- ]pacific)(?![\w])", re.I)),
+}
+
+
+def region_key(value: str | None) -> str:
+    """The canonical key of a region ("eu" -> "EU", "emea" -> "EMEA"); "" when it is not one."""
+    v = " ".join(str(value or "").split()).lower()
+    return next((k for k in REGIONS if k.lower() == v), "")
+
+
+def place_code(value: str | None) -> str:
+    """The code of a country ("Ireland" -> "IE") or the key of a region ("emea" -> "EMEA"); "" when it is neither."""
+    return code(value) or region_key(value)
+
+
+def place_name(value: str | None) -> str:
+    """How a place reads in a sentence: a country's name, a region's key."""
+    return region_key(value) or canon(value)
+
+
+def covers(place: str | None, home: str | None) -> bool:
+    """Does this place (a country or a region, by name or code) include the country `home`?"""
+    p, h = place_code(place), code(home)
+    if not p or not h:
+        return False
+    return p == h or (p in REGIONS and h in REGIONS[p][0])
+
+
+def home_words(home: str | None) -> re.Pattern[str] | None:
+    """A pattern for the ways a text names the country `home` (the name, its other names and its code), for hiding it from what is shown."""
+    name = canon(home)
+    if not name:
+        return None
+    aliases = _NAMES.get(name, ())
+    words = sorted({name.lower(), *(a for a in aliases if len(a) > 2)}, key=len, reverse=True)
+    short = sorted({a.upper() for a in aliases if len(a) <= 2} | {code(name)})            # "UK", "GB": exact capitals only ("in" is a word)
+    body = "|".join(re.escape(w) for w in words)
+    return re.compile(rf"(?<![\w])(?:(?i:{body})|{'|'.join(re.escape(s) for s in short if s)})(?![\w])")
+
+
+def code(value: str | None) -> str:
+    """The ISO code of a country given by name or code ("Ireland" -> "IE", "uk" -> "GB"); "" when it is not one this tool knows."""
+    name = canon(value)
+    return next((a.upper() for a in _NAMES.get(name, ()) if len(a) == 2), "") if name else ""
+
+
+def name_of(value: str | None) -> str:
+    """The canonical name of a country given by name or code (canon, spelled for what reads as a name)."""
+    return canon(value)
+
+
+def mentions(text: str | None, cities: bool = False, regions: bool = False) -> list[str]:
+    """Every country a free text names, in the order it names them, each once: country names and codes written in capitals (US, UK),
+    Canadian / Australian regions and, with `cities`, major cities. With `regions`, regions (EU, EMEA, Europe ...) are listed too, by
+    their key. For ad sentences, where "join us" and "our London office" must not decide anything, the default reads names only."""
+    t = " ".join(str(text or "").split())
+    found: list[tuple[int, str]] = [(m.start(), UK) for m in _UK_RX.finditer(t)]
+    masked = _UK_RX.sub(lambda m: " " * len(m.group(0)), t)             # "Northern Ireland" is not Ireland
+    if regions:
+        for key, (_, rx) in REGIONS.items():
+            found += [(m.start(), key) for m in rx.finditer(masked)]
+            masked = rx.sub(lambda m: " " * len(m.group(0)), masked)             # "North America" is not "America" the country
+    found += [(m.start(), _ALIAS[m.group(1).lower()]) for m in _NAME_RX.finditer(masked)]
+    found += [(m.start(), "United States") for m in _US_WORD.finditer(masked)]
+    if cities:
+        for rx, country in [*_REGION_RX, *_CITY_RX, *_US_REGION_RX]:
+            found += [(m.start(), country) for m in rx.finditer(masked)]
+        found += [(m.start(), UK) for m in _UK_CITY_RX.finditer(masked)]
+    out: list[str] = []
+    for _, country in sorted(found):
+        if country not in out:
+            out.append(country)
+    return out
+
+
 def visa_block(applicant: dict, country: str) -> dict | None:
-    """The applicant.yaml block for a country: `visa_by_country: {Canada: {summary: ..., answers: {...}}}` (the key may be the name or
-    the code). None when there is no non-empty block for it. The UK is the top-level `visa:` block and is not looked up here."""
+    """The applicant.yaml block for a country: `visa.by_country.<country>` (the key is a code or a name: GB, Ireland). None when there
+    is no non-empty block for exactly that country; `visa.by_country.default` is not a country and never counts as one."""
     want = canon(country)
-    for key, block in ((applicant or {}).get("visa_by_country") or {}).items():
+    by_country = (((applicant or {}).get("visa") or {}).get("by_country")) or {}
+    for key, block in by_country.items():
         if want and canon(key) == want and isinstance(block, dict) and block:
             return block
     return None

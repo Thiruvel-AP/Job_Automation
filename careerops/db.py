@@ -113,6 +113,9 @@ COLUMNS = [
     ("companies", "ats_evidence", "TEXT"),   # M3: JSON {rule, board_name, uk_jobs, total_jobs, tried} behind ats / ats_slug
     ("jobs", "agency", "INTEGER"),        # 1 = posted by a recruitment agency, not the employer (a weight on priority, never a filter)
     ("jobs", "analysis", "TEXT"),        # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
+    ("jobs", "work_country", "TEXT"),    # W: ISO code of the country the work is done in (discovery/workcountry.py); NULL = unknown
+    ("jobs", "work_evidence", "TEXT"),   # the header / sentence W rests on (home hidden for a remote role), or "set by you: ..."
+    ("jobs", "work_location", "TEXT"),   # the location as it may be shown: the remote label for a remote role at home, else NULL (use `location`)
 ]
 
 
