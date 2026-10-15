@@ -379,6 +379,10 @@ class Live:
             meta["source"] = hdr["source"].lower()
         if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("posted") or ""):
             meta["posted"] = hdr["posted"]
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("first_seen") or ""):
+            meta["seen_on"] = hdr["first_seen"]
+        if (hdr.get("listed") or "").lower() in ("yes", "true", "1"):
+            meta["open_listing"] = True
         if (hdr.get("agency") or "").lower() in ("yes", "true", "1"):
             meta["agency"] = True
         if countries.place_code(hdr.get("country")):

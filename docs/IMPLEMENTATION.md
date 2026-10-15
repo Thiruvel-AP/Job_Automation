@@ -436,11 +436,11 @@ for GET), Lever `GET api.lever.co/v0/postings/{site}?mode=json` (EU host `api.eu
 **Workable not implemented**: its API (`/spi/v3/...`) needs an account token and the docs list no public posting endpoint. M3's `sector` filter needs M2
 (Companies House join), which is still a stub, so without it `resolve` takes any A-rated register row that does not look like a public body; coverage of
 the register is therefore slow until M2 exists (`discover --ats` no longer calls `resolve`: see D8; `careerops resolve` does). Greenhouse's list endpoint gives `updated_at`, not a first-published date, so
-R for those jobs can look fresher than the posting is. **D2** Reed: search (`postedByDirectEmployer` / `postedByRecruitmentAgency`, run separately because
+R for those jobs could look fresher than the posting is (5r: R now counts from the day we first saw the job, and an open listing keeps R >= 0.5). **D2** Reed: search (`postedByDirectEmployer` / `postedByRecruitmentAgency`, run separately because
 the result has no agency field) then `/jobs/{id}`; `expirationDate` passed = closed. **D3** Adzuna is treated as snippets (docs unreachable from here; the
 third-party descriptions say "truncated"): a description of >= 1500 characters that does not end in an ellipsis is taken as the ad, anything else is a link
 resolved through the employer's board (never by following Adzuna's redirect) or queued. **D4** alerts: LinkedIn / Indeed through the employer's board by
-title (>= 0.88 similar), CV-Library through `intake.fetch_ad` (C2), Reed through the API; `data/jds/manual_queue.csv` for the rest. **D5** `Known`:
+title (>= 0.8 similar since 5r; was 0.88), CV-Library through `intake.fetch_ad` (C2), Reed through the API; `data/jds/manual_queue.csv` for the rest. **D5** `Known`:
 DB + inbox/done/rejected headers + archive folder names (company + role, any place) + this run; closed = Reed `expirationDate`, Ashby `isListed: false`.
 **D6** `runs.jsonl` + `discover --report`. **D7** README "Getting a Reed API key", "Getting Gmail access". **D8** `discover --ats` seeds (no random register sampling any more): `discovery/seeds.py` (`seeds`: top-level folder NAMES of `paths.applications`, then `discover.sources`, then register companies only when they match one of those, which adds `on_register` and the slug `resolve` verified, tried first) and `discovery/boards.py` (`BoardIndex`: `paths.discover/boards.json`, one entry per `provider:token`, hit or miss, `discover.ats.board_cache_days` = 30; `find`: up to four tokens per company from `ats.board_tokens`, the first token that is a board for any provider ends the search; `Finding` is the per-company report row). `ats.py` gained `board_tokens`, `PROVIDERS`, `board_request`, `is_board` (200 + `jobs` list; an empty Lever list is not told apart from an unknown site) and `parse_postings` (`board_postings` is now request + parse). A blocked host, a 5xx or a connection error is reported and NOT cached. `Discover.from_boards` reads the `sources:` boards, then one seed at a time; `ats_report()` prints boards found first; `listing()` is the top 10 and shows the URL. The `discover.ats.probe_per_run` setting is gone. Tests: `tests/discovery/test_{ats,discover}.py`. Tests: `tests/discovery/test_{http,ats,reed,gmail,discover}.py`.
 Judgement calls: the documented API hosts are exempt from the *unreadable robots.txt* refusal only (Ashby's `/robots.txt` answers 401 while its API is documented as
@@ -513,6 +513,32 @@ rule by other routes (a remote ad restricted to the US from a UK-listed company,
 gets the location "United Kingdom" (older behaviour), so W is the office country for it. (3) A bare "Remote" with nothing else is unrestricted, so it is home.
 Tests: `tests/discovery/test_workcountry.py`, `tests/apply/test_visa_plan.py`, `tests/apply/test_assist_visa.py` (Chromium, slow), additions to `test_live.py`,
 `test_applicant_doctor.py`, `test_listed_only.py`. **Unverified:** a real application form; the rules on real ads (they are tested on hand-made sentences).
+
+## 5r. Discovery quality round (2026-10-15) — **done** (offline tests only; no live discover run, no real mailbox)
+
+**1. Resolver.** `BoardLookup.boards_for` no longer probes with `ats.slug_candidates` + `verify_rule`: a company an alert (or Adzuna) names that is in no list is
+looked up as `discover --ats` looks up a seed (`boards.find`, `Seed(name, "alert")`): up to four `ats.board_tokens`, each asked of Greenhouse, Lever (global, EU) and Ashby,
+every answer cached in `boards.json` for `discover.ats.board_cache_days` (30). `company_boards.json` is gone (`BoardCache.remember` too); `Discover` and `BoardLookup`
+share one `BoardIndex`. `discover.alert_probes_per_run` (default now 100) caps the companies looked for per run; one left alone says so in its queue reason. `find` takes the
+open posting whose normalised title is >= `discover.title_match` (0.8; was 0.88) similar **and has the same level words** (`candidate.level_words`), preferring the same
+place. Because a guessed token can be another company's, a board with origin `alert` must also pass `plausible`: the posting's town is not another town than the alert's
+(`candidate.norm_place`), and a Greenhouse board's own name (`GET /boards/{token}`, once per board) is the company's or starts with it. `resolve_link(source_id=, seen=)`
+credits `resolved` / `unresolved` to the registry source in `Run.by_source`; `resolution_lines` prints `linkedin  12 of 20 (60%)` after a run and in `discover --report` (last run and all runs).
+**2. Recency.** R counts from `seen_on`, the day discover first saw the job, else from `posted_at` (hand-added JDs). `firstseen.FirstSeen` (`paths.discover/first_seen.json`, key =
+`candidate.dedupe_key`) keeps the earliest of the alert's date (`gmail.message_date`: `internalDate`, else the `Date` header) and the first run that read the job; a dry run records
+nothing. `Discover.accept` sets `Candidate.first_seen` and `open_listing` (read off an employer board) once a job passes the role / place / closed / duplicate checks; the inbox
+file gets `First seen:` and `Listed: yes` headers (`intake.render`), `live` keeps them in `jobs.seen_on` / `jobs.open_listing` (additive columns; `manual.add_jd(seen_on=, open_listing=)`),
+`priority.file_job` reads them from the file. `priority.open_listing_floor` (0.5) raises R of an open listing, never lowers it; `Priority.floored` says so on the review line.
+Test: a 64-day-old posting still open on a board gets R >= 0.5 (it is 1.0 on its first day), and one seen 64 days ago and still listed sits at exactly 0.5.
+**3. Manual queue.** `Discover.to_queue` holds the run's unresolved links; `flush_queue` (at the end of every source step, `_finishing`) drops those already in either file, ranks the rest
+by `candidate.title_relevance` x S (`priority.sponsor_factor`: register match by company name) with arrival order breaking ties, writes the best `discover.manual_queue_max` (10)
+to `manual_queue.csv` and the rest to `manual_queue_overflow.csv` (`score` column). An alert email nothing could be read from counts as relevance 0.5. The cap is per run, not on the
+file's total. Counters `to_manual_queue` / `to_manual_queue_overflow`. `queue_manual()` (one row, no cap) is kept for direct use.
+**4. Filter audit.** `Discover.filtered_out` collects every title `wanted()` turns away (role family, or place with `listed_only` off) and the alert titles outside the families;
+`flush_filtered` appends them to `paths.discover/filtered.csv`, skipping a (company, title, filter) already there so a board read daily adds only new titles. A dry run writes nothing.
+**5. AIApply dedupe** is unchanged (CSV, company + title).
+Tests: `tests/discovery/test_quality_round.py` (43), one in `tests/apply/test_live.py`; three older tests updated (`boards.json` instead of `company_boards.json`, the new headers, the
+`resolved` / `unresolved` counts). **Unverified:** a live run: token guesses on real boards, the Greenhouse name check, real alert dates.
 
 ## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
 

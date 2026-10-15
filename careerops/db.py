@@ -115,6 +115,8 @@ COLUMNS = [
     ("jobs", "analysis", "TEXT"),        # JSON: the job's first keyword extraction, frozen and reused (tailoring/freeze.py)
     ("jobs", "work_country", "TEXT"),    # W: ISO code of the country the work is done in (discovery/workcountry.py); NULL = unknown
     ("jobs", "work_evidence", "TEXT"),   # the header / sentence W rests on (home hidden for a remote role), or "set by you: ..."
+    ("jobs", "seen_on", "TEXT"),         # YYYY-MM-DD discover first saw the job (an alert's date or the first run): R counts from here, not from posted_at
+    ("jobs", "open_listing", "INTEGER"), # 1 = it was on the employer's own board when discover read it: R never falls under priority.open_listing_floor
     ("jobs", "work_location", "TEXT"),   # the location as it may be shown: the remote label for a remote role at home, else NULL (use `location`)
 ]
 

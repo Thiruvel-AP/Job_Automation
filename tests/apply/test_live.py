@@ -823,3 +823,17 @@ def test_a_known_country_in_the_header_needs_no_help(db, settings, inbox, archiv
     fake = Fake(db, settings, yes())
     session(db, settings, fake)[0].run()
     assert db.jobs()[0]["work_country"] == "GB" and db.jobs()[0]["work_evidence"] == "Location: Bristol, UK"
+
+
+
+def test_first_seen_and_listed_headers_reach_the_job(db, settings, inbox, archive):
+    """discover writes `First seen:` and `Listed: yes`; the job keeps them (seen_on, open_listing) so R counts from the first sighting."""
+    f = inbox / "a.txt"
+    f.write_text("Company: Acme\nTitle: Data Scientist\nURL: https://acme.example/jobs/1\nLocation: Bristol, UK\nPosted: 2026-08-07\n"
+                 "First seen: 2026-10-09\nListed: yes\n\n" + "Build models in Python and SQL. " * 30, encoding="utf-8")
+    live, _ = session(db, settings, Fake(db, settings, yes()))
+    text = f.read_text(encoding="utf-8")
+    meta, why = live._meta(f, text)
+    assert why == "" and meta["posted"] == "2026-08-07" and meta["seen_on"] == "2026-10-09" and meta["open_listing"] is True
+    plain, _ = live._meta(f, text.replace("Listed: yes", "Listed: no").replace("First seen: 2026-10-09", "First seen: soon"))
+    assert "seen_on" not in plain and "open_listing" not in plain

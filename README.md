@@ -77,7 +77,7 @@ career-ops/
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
-    ├── discover/                 boards/ (posting lists, 6 h) · company_boards.json · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
+    ├── discover/                 boards/ (posting lists, 6 h) · boards.json (token answers, 30 d) · first_seen.json · filtered.csv · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
     ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read-only token); git-ignored like all of data/
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
@@ -237,13 +237,24 @@ finds and ranks without writing, and every run is listed best priority first.
   recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
   (`details_per_run`). An expired posting is closed.
 - **`--adzuna`** uses the Adzuna API (`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `sources.adzuna.queries`). Its descriptions are snippets, so a
-  result is a **link**: it is looked for on the employer's own board (a known board, else a few slug probes per run); a CV-Library
-  address is read like `add-url`; anything else goes to the manual queue. Adzuna's own redirect links are never followed.
+  result is a **link**: it is looked for on the employer's own board (a known board, else the company's name is turned into up to four
+  board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); a CV-Library address is read like `add-url`;
+  anything else goes to the manual queue. Adzuna's own redirect links are never followed.
 - **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
   title, company and link. LinkedIn and Indeed pages are **never fetched**: the job is looked for on the employer's own board by title
   (as for Adzuna); CV-Library job links go through the CV-Library reader; Reed links through the Reed API. A job that cannot be
   resolved is appended to `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason`, one row per link, never
-  rewritten) for you to open, copy the ad and run `careerops live --clipboard`. Messages are remembered in
+  rewritten) for you to open, copy the ad and run `careerops live --clipboard`. **Resolving**: for every alert's company, up to four
+  board tokens (`Monzo Bank Ltd` -> `monzobank`, `monzo-bank`, `monzo`) are asked of the public Greenhouse, Lever and Ashby APIs (hits
+  and misses cached 30 days in `data/discover/boards.json`, one request a second per host); the alert's title must match an open posting
+  at normalised-title similarity >= `discover.title_match` (0.8) with the same level words ("Data Scientist" is not "Senior Data
+  Scientist"). A board found only through a guessed token is also held to the alert's town and, on Greenhouse, to the board's own
+  company name. The run prints, per source, how many alerts were resolved (`linkedin 12 of 20 (60%)`; `discover --report` adds all runs).
+  **The queue is capped**: a run keeps its best `discover.manual_queue_max` (10) unresolved links in `manual_queue.csv`, ranked by title
+  relevance (role tier 1 = 1.0, tier 2 = 0.8, tier 3 = 0.6, halved for a level the triage excludes) x S, and writes the rest to
+  `data/jds/manual_queue_overflow.csv` (same columns plus `score`). **Filter audit**: every title the role or place filter turned away is
+  in `data/discover/filtered.csv` (`ts, source, company, title, location, filter, reason, link`; a title is written once; a role reason
+  lists the words such as "data" or "machine learning" that make it worth a second look). Messages are remembered in
   `data/discover/gmail_seen.json`. The alert parsers are written from the usual layout of these emails and tested on hand-made
   fixtures; they have not met a real mailbox.
 - **`--jobbank`** reads Canada's Job Bank open-data CSV (Open Government Licence - Canada): the newest English monthly file is found
@@ -534,10 +545,13 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
 I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
 not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". `priority.py` ranks instead:
 
-    P = F x S x R      F = honest ATS ceiling (0-1)      R = exp(-days since posted / 14), 1.0 when the date is unknown
+    P = F x S x R      F = honest ATS ceiling (0-1)      R = exp(-days since we first saw it / 14), 1.0 when the date is unknown
     S = 1.00 exact register match · 0.90 fuzzy · 0.75 not on the register / agency / unknown · 0.65 the JD says no sponsorship
 
 (the lowest applicable S; weights and the 14 days are `priority.sponsor_weights` / `priority.recency_days` in `config/settings.yaml`).
+R counts from the day **discover first saw the job** (an alert's date, or the first discover run that read it; `data/discover/first_seen.json`,
+the inbox file's `First seen:` header), not from the board's publish date, which says nothing about how long you have known of it. A job still
+listed on the employer's own board (`Listed: yes`) never gets an R below `priority.open_listing_floor` (0.5): an open posting is not stale.
 P orders the `careerops live` inbox (it prints the order), `careerops discover`'s listing and `careerops status` (top open jobs).
 The review screen shows `Priority P=... = F ... x S ... x R ...` and, as an information line (not a flag), the sentences of the JD that
 speak of sponsorship or the right to work. The register notes ("Not on sponsor register", fuzzy match) are shown on the `Sponsor:` line,

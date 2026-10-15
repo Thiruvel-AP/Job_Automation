@@ -94,6 +94,8 @@ class Ad:
     posted: str = ""                   # YYYY-MM-DD the ad was posted, when the source says
     country: str = ""                  # set only for a job outside the UK: written as `Country:` (live refuses it without a visa block)
     listed_only: bool = False          # written as `Status: listed_only`
+    first_seen: str = ""               # YYYY-MM-DD discover first saw the job (an alert's date or the first run): what R counts from
+    open_listing: bool = False         # written as `Listed: yes`: the job is on the employer's own board (R never falls under the floor)
 
 
 # ------------------------------------------------------------------ network (tests replace _get / _sleep / _clock)
@@ -520,6 +522,10 @@ def render(ad: Ad) -> str:
         head.append(f"Salary: {one_line(ad.salary)}")
     if ad.posted:
         head.append(f"Posted: {ad.posted}")
+    if ad.first_seen:
+        head.append(f"First seen: {ad.first_seen}")
+    if ad.open_listing:
+        head.append("Listed: yes")
     if ad.agency:
         head.append("Agency: yes")
     return "\n".join(head) + "\n\n" + ad.text.strip() + "\n"

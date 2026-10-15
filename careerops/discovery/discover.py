@@ -24,12 +24,20 @@ but written with `Country:` and `Status: listed_only` headers (at most discover.
 UK limit); `careerops live` will not apply to it without a visa block for that country in applicant.yaml, and its priority S is
 priority.sponsor_weights.non_home. Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
 
+Resolving an alert (or an Adzuna link): the company's name gives up to four board tokens (boards.py), each asked of Greenhouse, Lever
+and Ashby (answers, hits and misses, cached 30 days); the alert's title is then matched to an open posting on the board
+(discover.title_match, 0.8, and the same level words). Per source, the report says how many alerts were resolved.
+
 The manual queue (paths.jds/manual_queue.csv, append-only, one row per link) lists what could not be resolved, for
-`careerops live --clipboard`. Sponsorship is never a filter here: the output is ordered by priority P = F x S x R (priority.py).
+`careerops live --clipboard`: the best discover.manual_queue_max (10) of a run by title relevance x S, the rest in
+manual_queue_overflow.csv. Every title the role or place filter turned away is in paths.discover/filtered.csv with the reason.
+Sponsorship is never a filter here: the output is ordered by priority P = F x S x R (priority.py), where R counts from the day
+discover first saw the job (firstseen.py), not from the board's publish date.
 """
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import os
 import re
@@ -46,21 +54,43 @@ from ..db import DB
 from . import ats as ats_mod
 from . import candidate as cand
 from . import boards as boards_mod
-from . import countries, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import countries, firstseen, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
+from .seeds import Seed
 from .sources import html_to_text
 
 MANUAL_COLUMNS = ["ts", "source", "company", "title", "location", "link", "reason"]
+OVERFLOW_COLUMNS = [*MANUAL_COLUMNS, "score"]
+FILTERED_COLUMNS = ["ts", "source", "company", "title", "location", "filter", "reason", "link"]
+ALERT_EMAIL_RELEVANCE = 0.5        # an alert email nothing could be read from: ranked mid-queue, below a clear title and above a stray one
+INTEREST = re.compile(r"data|machine learning|\bml\b|\bai\b|analy|scien|llm|nlp|statist|intelligence|model", re.I)
 LISTED_COLUMNS = ["ts", "source", "country", "company", "title", "location", "posted", "salary", "ref", "link", "note"]
 ALERT_SUBJECT = re.compile(r"job|vacanc|stellen|vacature|alert|match|recommend|new roles?|positions?|offres?|opportunit", re.I)
 COMPANY_COLUMNS = ("company", "company_name", "employer", "employer_name", "organisation", "organization")
 TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
-TITLE_MATCH = 0.88                 # similarity at which an alert's title is taken for a posting's title on the employer's board
+TITLE_MATCH = 0.8                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
 COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "duplicate", "written", "listed_only", "listed_capped",
-            "already_in_inbox", "bad_header", "resolved", "to_manual_queue")
+            "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow")
+
+
+def role_reason(title: str) -> str:
+    """Why a title is outside every role family, with the words that make it worth a second look ('mentions: data, scien')."""
+    words = sorted({m.group(0).lower() for m in INTEREST.finditer(title or "")})
+    return "no roles.families title pattern matches" + (f" (title mentions: {', '.join(words)})" if words else "")
+
+
+def _finishing(fn):
+    """A source step ends by writing what it collected: the manual queue rows, the filtered titles, the first-seen days."""
+    @functools.wraps(fn)
+    def run(self, *a, **kw):
+        try:
+            return fn(self, *a, **kw)
+        finally:
+            self.finish()
+    return run
 
 
 # ------------------------------------------------------------------ the run record
@@ -193,42 +223,65 @@ def add_aiapply(settings, k: Known) -> int:
 
 
 # ------------------------------------------------------------------ the manual queue (append-only)
-def queue_manual(settings, source: str, company: str, title: str, location: str, link: str, reason: str,
-                 *, now: datetime | None = None) -> bool:
-    """Append a row to paths.jds/manual_queue.csv unless that link (or, without one, that company + title) is already in it.
-    True when a row was added."""
-    path = settings.path("jds") / "manual_queue.csv"
-    have = read_manual_queue(path)
-    key = link or f"{company}|{title}"
-    if any((r.get("link") or f"{r.get('company')}|{r.get('title')}") == key for r in have):
-        return False
+def manual_queue_path(settings) -> Path:
+    return settings.path("jds") / "manual_queue.csv"
+
+
+def overflow_path(settings) -> Path:
+    return settings.path("jds") / "manual_queue_overflow.csv"
+
+
+def filtered_path(settings) -> Path:
+    return settings.path("discover") / "filtered.csv"
+
+
+def queue_key(row: dict) -> str:
+    return row.get("link") or f"{row.get('company')}|{row.get('title')}"
+
+
+def append_rows(path: Path, columns: list[str], rows: list[dict]) -> None:
+    """Append rows to a CSV (header written once); never rewrites what is there."""
     path.parent.mkdir(parents=True, exist_ok=True)
     new = not path.exists()
     with open(path, "a", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=MANUAL_COLUMNS)
+        w = csv.DictWriter(f, fieldnames=columns, extrasaction="ignore")
         if new:
             w.writeheader()
-        w.writerow({"ts": (now or datetime.now(timezone.utc)).isoformat(timespec="seconds"), "source": source, "company": company,
-                    "title": title, "location": location, "link": link, "reason": reason})
+        w.writerows(rows)
+
+
+def queue_manual(settings, source: str, company: str, title: str, location: str, link: str, reason: str,
+                 *, now: datetime | None = None) -> bool:
+    """Append a row to paths.jds/manual_queue.csv unless that link (or, without one, that company + title) is already in it.
+    True when a row was added. (A discover run does not call this per row: it ranks the run's rows and writes the best ones.)"""
+    path = manual_queue_path(settings)
+    row = {"ts": (now or datetime.now(timezone.utc)).isoformat(timespec="seconds"), "source": source, "company": company,
+           "title": title, "location": location, "link": link, "reason": reason}
+    if queue_key(row) in {queue_key(r) for r in read_manual_queue(path)}:
+        return False
+    append_rows(path, MANUAL_COLUMNS, [row])
     return True
 
 
-def read_manual_queue(path: Path) -> list[dict]:
+def read_rows(path: Path) -> list[dict]:
     if not path.exists():
         return []
     with open(path, encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
 
 
+def read_manual_queue(path: Path) -> list[dict]:
+    return read_rows(path)
+
+
 # ------------------------------------------------------------------ boards: cache, lookup
 class BoardCache:
-    """Posting lists per board kept in paths.discover/boards/<ats>-<slug>.json for discover.cache_hours, and which boards a company
-    name was found to have (paths.discover/company_boards.json) for ats.reprobe_after_days, misses included."""
+    """Posting lists per board kept in paths.discover/boards/<ats>-<slug>.json for discover.cache_hours. (Which tokens are boards at all
+    is boards.BoardIndex: paths.discover/boards.json, hits and misses, discover.ats.board_cache_days.)"""
 
     def __init__(self, settings, fetcher: Fetcher, clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)):
         self.dir = settings.path("discover")
         self.hours = float(settings["discover"].get("cache_hours", 6))
-        self.reprobe_days = float(settings["companies"].get("reprobe_after_days", 30))
         self.fetcher, self.clock = fetcher, clock
         self.memory: dict[tuple[str, str], list[ats_mod.Posting]] = {}
 
@@ -259,74 +312,80 @@ class BoardCache:
         except OSError:
             pass
 
-    # company -> board lookups found by probing
-    def _lookups(self) -> dict:
-        try:
-            return json.loads((self.dir / "company_boards.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return {}
-
-    def remembered(self, company_norm: str) -> dict | None:
-        d = self._lookups().get(company_norm)
-        if d and self.clock() - datetime.fromisoformat(d["ts"]) < timedelta(days=self.reprobe_days):
-            return d
-        return None
-
-    def remember(self, company_norm: str, board: ats_mod.Board | None) -> None:
-        d = self._lookups()
-        d[company_norm] = {"ts": self.clock().isoformat(), **({"ats": board.ats, "slug": board.slug, "name": board.name} if board else {})}
-        try:
-            self.dir.mkdir(parents=True, exist_ok=True)
-            (self.dir / "company_boards.json").write_text(json.dumps(d), encoding="utf-8")
-        except OSError:
-            pass
-
 
 class BoardLookup:
     """Which board a company's jobs are on, and the posting on it that matches a title: the boards you listed, the register
-    boards `ats.resolve` verified, and (a few per run) boards found by probing slugs derived from the company name."""
+    boards `ats.resolve` verified, and, for any other company an alert or Adzuna names, boards found from its name the way
+    `discover --ats` finds them (boards.find: up to four tokens, each asked of Greenhouse, Lever and Ashby, every answer cached for
+    discover.ats.board_cache_days). A board found only by a guessed token is held to a stricter match (see plausible())."""
 
     def __init__(self, settings, db: DB, fetcher: Fetcher, cache: BoardCache, probes: int | None = None,
-                 extra_boards: list[ats_mod.Board] | None = None):
+                 extra_boards: list[ats_mod.Board] | None = None, index: boards_mod.BoardIndex | None = None):
         self.settings, self.fetcher, self.cache = settings, fetcher, cache
+        self.index = index or boards_mod.BoardIndex(settings)
         self.boards = merge_boards(ats_mod.all_boards(settings, db), extra_boards or [])
         self.by_name: dict[str, list[ats_mod.Board]] = defaultdict(list)
         for b in self.boards:
             self.by_name[sponsors.normalise(b.name)].append(b)
             self.by_name["".join(sponsors.normalise(b.slug.replace("-", " ")).split())].append(b)
-        self.probes = int(settings["discover"].get("alert_probes_per_run", 12)) if probes is None else probes
+        d = settings["discover"]
+        self.probes = int(d.get("alert_probes_per_run", 100)) if probes is None else probes
+        self.probes_allowed = self.probes
+        self.title_match = float(d.get("title_match", TITLE_MATCH))
+        self.guessed: dict[str, list[ats_mod.Board]] = {}            # company (normalised) -> boards found from its name, this run
+        self.findings: list[boards_mod.Finding] = []
+        self.not_looked: set[str] = set()                            # companies left alone because the per-run limit was reached
+        self.names: dict[tuple[str, str], str | None] = {}
 
     def boards_for(self, company: str) -> list[ats_mod.Board]:
         norm = sponsors.normalise(company)
         found = list(self.by_name.get(norm, [])) or list(self.by_name.get("".join(norm.split()), []))
         if found or not norm:
             return found
-        mem = self.cache.remembered(norm)
-        if mem is not None:
-            return [ats_mod.Board(mem["ats"], mem["slug"], mem["name"], "resolved")] if mem.get("ats") else []
+        if norm in self.guessed:
+            return self.guessed[norm]
         if self.probes <= 0:
+            if self.probes_allowed:
+                self.not_looked.add(norm)
             return []
         self.probes -= 1
-        board = self._probe(company, norm)
-        self.cache.remember(norm, board)
-        return [board] if board else []
+        finding = boards_mod.find(Seed(company, "alert"), self.fetcher, self.index, on_postings=lambda b, posts: self.cache.put(b, posts))
+        self.findings.append(finding)
+        self.guessed[norm] = finding.boards
+        return finding.boards
 
-    def _probe(self, company: str, norm: str) -> ats_mod.Board | None:
-        for slug in ats_mod.slug_candidates(company):
-            full = slug in ("".join(norm.split()), "-".join(norm.split()))
+    def board_name(self, board: ats_mod.Board) -> str | None:
+        """The company name a Greenhouse board gives itself (one request, kept for the run); None when it cannot be read."""
+        k = (board.ats, board.slug)
+        if k not in self.names:
             try:
-                hits = ats_mod.probe(slug, fetcher=self.fetcher, settings=self.settings)
-            except Exception:  # noqa: BLE001
-                return None
-            for h in hits:
-                ok, _ = ats_mod.verify_rule(h, norm, full)
-                if ok:
-                    return ats_mod.Board(h.ats, h.slug, company, "resolved")
-        return None
+                data = self.fetcher.json(f"{ats_mod.GH}/{board.slug}", what=f"Greenhouse board {board.slug}")
+                self.names[k] = str(data["name"]) if isinstance(data, dict) and data.get("name") else None
+            except (FetchError, Blocked):
+                self.names[k] = None
+        return self.names[k]
+
+    def plausible(self, board: ats_mod.Board, company: str, location: str, post: ats_mod.Posting) -> bool:
+        """A board named by you or verified against the register is the company's. A board found only because its token looked like the
+        company's name might be another company's (token `arc`), so the title match must also not contradict the rest: the posting's
+        town is not another town than the alert's, and a Greenhouse board's own name is the company's (or starts with it)."""
+        if board.origin != "alert":
+            return True
+        here, there = cand.norm_place(location), cand.norm_place(post.location)
+        if here and there and here != there:
+            return False
+        if board.ats == "greenhouse":
+            name = self.board_name(board)
+            if name:
+                bn, cn = sponsors.normalise(name).split(), sponsors.normalise(company).split()
+                if bn and cn and bn[: len(cn)] != cn and cn[: len(bn)] != bn:
+                    return False
+        return True
 
     def find(self, company: str, title: str, location: str = "") -> tuple[ats_mod.Board, ats_mod.Posting] | None:
-        """The posting on the company's board whose title is the title (same normalised title, or >= TITLE_MATCH similar), preferring
-        the one in the same place. None when the company has no known board or the board has no such posting."""
+        """The open posting on the company's board whose title is the title (same normalised title, or >= discover.title_match similar
+        with the same level words: "Data Scientist" is not "Senior Data Scientist"), preferring the one in the same place. None when the
+        company has no known board or the board has no such posting."""
         want = cand.norm_title(title)
         for board in self.boards_for(company):
             try:
@@ -338,7 +397,7 @@ class BoardLookup:
                 if not p.listed:
                     continue
                 s = SequenceMatcher(None, want, cand.norm_title(p.title)).ratio()
-                if s >= TITLE_MATCH:
+                if s >= self.title_match and cand.level_words(title) == cand.level_words(p.title) and self.plausible(board, company, location, p):
                     here = bool(location) and cand.norm_place(location) != "" and cand.norm_place(location) == cand.norm_place(p.location)
                     scored.append((s, here, p))
             if scored:
@@ -376,7 +435,13 @@ class Discover:
         self.fb = fb
         self.registry = registry_mod.load(settings)
         self.cache = BoardCache(settings, fetcher)
-        self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards())
+        self.index = boards_mod.BoardIndex(settings)                 # one for the run: boards.json is written whole
+        self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards(), index=self.index)
+        self.first_seen = firstseen.FirstSeen(settings, persist=not dry_run)
+        self.today_day = firstseen.day(self.today)
+        self.pending_queue: list[dict] = []                          # unresolved links of the run, ranked and written by flush_queue()
+        self.pending_filtered: list[dict] = []                       # titles the filters turned away, written by flush_filtered()
+        self._sponsor_index: object = False                          # loaded on first use (False = not yet)
         self.inbox = settings.path("jds") / "inbox"
         self.new_files = 0
         self.listed_files = 0
@@ -390,6 +455,7 @@ class Discover:
         """Role family and place; no network, no counters for the dedupe (a job costs a details request only after this)."""
         if cand.family_of(c, self.s) is None:
             self.run.count(label, "role_filtered")
+            self.filtered_out(c.source, c.company, c.title, c.location, c.url, "role", role_reason(c.title))
             return False
         if cand.uk_ok(c, self.s):
             return True
@@ -398,7 +464,14 @@ class Discover:
             c.country, c.listed_only = elsewhere, True            # outside the UK: written for the record, never applied to
             return True
         self.run.count(label, "place_filtered")
+        where = f"in {elsewhere}, and discover.listed_only is off" if elsewhere else f"{c.location or c.country or 'no place given'}"
+        self.filtered_out(c.source, c.company, c.title, c.location, c.url, "place", f"not in the UK or remote UK ({where})")
         return False
+
+    def filtered_out(self, source: str, company: str, title: str, location: str, link: str, which: str, reason: str) -> None:
+        """Note a title the role or place filter turned away (written to paths.discover/filtered.csv by flush_filtered)."""
+        self.pending_filtered.append({"ts": self.today.isoformat(timespec="seconds"), "source": source, "company": company, "title": title,
+                                      "location": location, "filter": which, "reason": reason, "link": link})
 
     @staticmethod
     def elsewhere(c: Candidate) -> str:
@@ -425,6 +498,8 @@ class Discover:
             return "dropped"
         if self.duplicate(c, label):
             return "dropped"
+        c.first_seen = self.first_seen.record(c.company, c.title, c.location, firstseen.day(c.seen) or self.today_day)
+        c.open_listing = bool(c.board)                         # read off an employer's own board just now: still open
         if c.listed_only:
             if self.listed_files >= self.listed_cap:           # its own limit: a flood of non-UK ads never crowds out UK ones
                 self.run.count(label, "listed_capped")
@@ -464,21 +539,79 @@ class Discover:
         src = self.registry.attribute(c)
         self.run.credit(src.id if src else "other", "listed_only" if c.listed_only else "new")
 
-    def to_queue(self, label: str, source: str, company: str, title: str, location: str, link: str, reason: str) -> None:
-        if self.dry_run:
-            self.run.count(label, "to_manual_queue")
+    def to_queue(self, label: str, source: str, company: str, title: str, location: str, link: str, reason: str,
+                 relevance: float | None = None) -> None:
+        """Hold a link that could not be resolved. flush_queue() ranks the run's links by title relevance x S and writes the best
+        discover.manual_queue_max of them to manual_queue.csv, the rest to manual_queue_overflow.csv."""
+        rel = cand.title_relevance(title, self.s) if relevance is None else relevance
+        self.pending_queue.append({"label": label, "ts": self.today.isoformat(timespec="seconds"), "source": source, "company": company,
+                                   "title": title, "location": location, "link": link, "reason": reason,
+                                   "score": round(rel * self.sponsor_weight(company), 3)})
+
+    def sponsor_weight(self, company: str) -> float:
+        """S of priority.py for this employer: 1.0 on the register by name, 0.9 near, 0.75 otherwise (or when no register is loaded)."""
+        if self._sponsor_index is False:
+            self._sponsor_index = sponsors.load_index(self.db)
+        idx = self._sponsor_index
+        match = idx.lookup(company, self.s["sponsors"].get("fuzzy_threshold", 0.92)).label if idx is not None and company else None
+        return priority.sponsor_factor({"sponsor_match": match}, self.s)[0]
+
+    def flush_queue(self) -> None:
+        rows, self.pending_queue = self.pending_queue, []
+        if not rows:
             return
-        if queue_manual(self.s, source, company, title, location, link, reason, now=self.today):
-            self.run.count(label, "to_manual_queue")
+        queue, overflow = manual_queue_path(self.s), overflow_path(self.s)
+        have = {queue_key(r) for r in [*read_rows(queue), *read_rows(overflow)]}
+        fresh = []
+        for r in rows:                                          # arrival order; a link already queued (or seen twice now) is skipped
+            if queue_key(r) not in have:
+                have.add(queue_key(r))
+                fresh.append(r)
+        ranked = sorted(fresh, key=lambda r: -r["score"])        # stable: equal scores keep their order of arrival
+        cap = max(0, int(self.s["discover"].get("manual_queue_max", 10)))
+        keep, rest = ranked[:cap], ranked[cap:]
+        for r in keep:
+            self.run.count(r["label"], "to_manual_queue")
+        for r in rest:
+            self.run.count(r["label"], "to_manual_queue_overflow")
+        if not self.dry_run:
+            if keep:
+                append_rows(queue, MANUAL_COLUMNS, keep)
+            if rest:
+                append_rows(overflow, OVERFLOW_COLUMNS, rest)
+
+    def flush_filtered(self) -> None:
+        """Append the titles the filters turned away to paths.discover/filtered.csv; a (company, title, filter) already in the file is not
+        written again, so a board read every day adds its new titles only."""
+        rows, self.pending_filtered = self.pending_filtered, []
+        if not rows or self.dry_run:
+            return
+        path = filtered_path(self.s)
+        have = {(r.get("company"), r.get("title"), r.get("filter")) for r in read_rows(path)}
+        fresh = []
+        for r in rows:
+            k = (r["company"], r["title"], r["filter"])
+            if k not in have:
+                have.add(k)
+                fresh.append(r)
+        if fresh:
+            append_rows(path, FILTERED_COLUMNS, fresh)
+
+    def finish(self) -> None:
+        """Write what the run collected. Safe to call again: a second call finds nothing left to write."""
+        self.flush_queue()
+        self.flush_filtered()
+        self.first_seen.save()
 
     # ---- sources
+    @_finishing
     def from_boards(self) -> None:
         """Boards of the seed companies (seeds.py: archive folder names, discover.sources, register companies among them), found by
         guessing board tokens from each name (boards.py), plus the boards you named token by token in sources:. One company at a
         time: find its board, read its postings, move on. self.findings is the per-company report (ats_report)."""
         label = "ats"
         self.findings = []
-        index = boards_mod.BoardIndex(self.s)
+        index = self.index
         listed = merge_boards(ats_mod.configured_boards(self.s), self.registry.boards())     # boards named by token: sources: and sources.yaml
         for board in listed:
             f = boards_mod.Finding(seeds_mod.Seed(board.name, "sources"), boards=[board])
@@ -528,6 +661,7 @@ class Discover:
                  f"{sum(f.matched for f in fs)} job(s) matched the role and place"]
         lines += [f.line() for f in got] + [f.line() for f in fs if not f.boards]
         return lines
+    @_finishing
     def from_reed(self) -> None:
         label = "reed"
         try:
@@ -552,6 +686,7 @@ class Discover:
         self.run.sources[label]["seen"] -= 1                    # accept() will count this job again
         return True
 
+    @_finishing
     def from_adzuna(self) -> None:
         label = "adzuna"
         cfg = self.s["sources"].get("adzuna") or {}
@@ -589,13 +724,14 @@ class Discover:
         self.run.count(label, "seen")
         if not self.wanted(c, label) or self.duplicate(c, label):
             return "dropped"
-        return self.resolve_link(label, "adzuna", c.company, c.title, c.location, c.url, "", counted=True)
+        return self.resolve_link(label, "adzuna", c.company, c.title, c.location, c.url, "", counted=True, source_id="adzuna")
 
     # ---- a link or a (company, title): look for the whole ad
     def resolve_link(self, label: str, kind: str, company: str, title: str, location: str, link: str, origin: str,
-                     counted: bool = False, default_country: str = "") -> str:
+                     counted: bool = False, default_country: str = "", source_id: str = "", seen: str = "") -> str:
         """Find the full ad for something that is only a pointer. Order: a CV-Library job link (C2), a Reed job link (with a key),
-        the employer's own board (D1). Anything else goes to the manual queue, with the reason."""
+        the employer's own board (D1). Anything else goes to the manual queue, with the reason. `source_id` is who gets the credit in
+        the resolved-% report (default: `kind`); `seen` is the day the alert about it arrived (YYYY-MM-DD): R counts from it."""
         host = (urlparse(link).hostname or "").lower()
         c: Candidate | None = None
         why = ""
@@ -620,13 +756,22 @@ class Discover:
                 c = posting_candidate(found[0], found[1], origin)
             elif not why:
                 boards = self.lookup.boards_for(company)
-                why = (f"no posting titled like this on the {boards[0].ats} board of {company}: closed, or titled differently"
-                       if boards else f"no public job board known for {company}")
+                if boards:
+                    why = f"no posting titled like this on the {boards[0].ats} board of {company}: closed, or titled differently"
+                elif sponsors.normalise(company) in self.lookup.not_looked:
+                    why = (f"board of {company} not looked for: the limit of {self.lookup.probes_allowed} compan(ies) a run "
+                           "(discover.alert_probes_per_run) was reached")
+                else:
+                    why = f"no public job board known for {company}"
         if c is None:
+            self.run.credit(source_id or kind, "unresolved")
             self.to_queue(label, kind, company, title, location, link, why or "no company given")
             return "queued"
         self.run.count(label, "resolved")
+        self.run.credit(source_id or kind, "resolved")
         c.origin = origin
+        if seen:
+            c.seen = seen
         if default_country and not c.country:               # an alert from a one-country source: that country unless the place says another
             c.country = countries.detect(c.location) or default_country
         return self.accept(c, label, counted=counted)
@@ -644,6 +789,7 @@ class Discover:
             id=kind, name=kind, url="https://" + gmail.SENDERS[kind][0], country="multi", method="gmail_alerts",
             domains=gmail.SENDERS[kind], parser=kind)
 
+    @_finishing
     def from_gmail(self) -> None:
         label = "gmail"
         g = self.s["discover"].get("gmail") or {}
@@ -668,10 +814,12 @@ class Discover:
             if mid in seen:
                 continue
             try:
-                frm, subject, html, text = gmail.message_text(gmail.get_message(self.f, token, mid))
+                msg = gmail.get_message(self.f, token, mid)
+                frm, subject, html, text = gmail.message_text(msg)
             except (FetchError, Blocked) as e:
                 self.run.notes.append(f"gmail message {mid}: {e}")
                 break
+            alert_day = gmail.message_date(msg)
             src = self.alert_source(frm, subject)
             done_now.append(mid)
             if src is None:
@@ -684,7 +832,8 @@ class Discover:
                 # a source without a dedicated parser whose alert showed no job link we recognise: never guessed at, handed to you
                 self.run.count(label, "alerts_unparsed")
                 self.to_queue(label, src.id, "", (subject or "")[:120], "", gmail.web_link(mid),
-                              f"alert email from {src.name}: no job links were recognised in it; open the email and add the ads you want")
+                              f"alert email from {src.name}: no job links were recognised in it; open the email and add the ads you want",
+                              relevance=ALERT_EMAIL_RELEVANCE)
             default_country = src.home_country if src.home_country not in ("", countries.UK) else ""
             for item in parsed:
                 self.run.count(label, "alerts")
@@ -697,9 +846,10 @@ class Discover:
                                   description="")
                 if cand.family_of(probe, self.s) is None:
                     self.run.count(label, "role_filtered")
+                    self.filtered_out(kind, item.company, item.title, item.location, item.link, "role", role_reason(item.title))
                     continue
                 if self.resolve_link(label, kind, item.company, item.title, item.location, item.link, f"gmail:{kind}",
-                                     default_country=default_country) == "full":
+                                     default_country=default_country, source_id=src.id, seen=alert_day) == "full":
                     break
         if not self.dry_run:
             try:
@@ -708,6 +858,7 @@ class Discover:
             except OSError:
                 pass
 
+    @_finishing
     def from_jobbank(self) -> None:
         """Canada's Job Bank open-data CSV: rows in a target role family, first posted recently, LISTED (no employer, no ad text)."""
         label = "jobbank"
@@ -763,7 +914,7 @@ class Discover:
                                        override=c.country if c.listed_only else "",
                                        rules=workcountry.rules_from(workcountry.applicant_visa(self.s)))
             job = {"id": c.ad_id(), "company": c.company, "description": c.description, "sponsor_match": match, "agency": c.agency,
-                   "posted_at": c.posted or None, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
+                   "posted_at": c.posted or None, "seen_on": c.first_seen or None, "open_listing": c.open_listing, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
                    "work_country": work.country}
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
         return sorted(out, key=lambda t: (-t[0].p, -(t[0].s * t[0].r), t[1].company, t[1].title))
@@ -855,4 +1006,24 @@ def format_report(settings) -> str:
     if queue:
         lines.append(f"  manual queue: {settings.path('jds') / 'manual_queue.csv'} — for each row, copy the ad and run "
                      "`careerops live --clipboard`")
+    overflow = read_rows(overflow_path(settings))
+    if overflow:
+        lines.append(f"  {len(overflow)} more in {overflow_path(settings)} (below the best {settings['discover'].get('manual_queue_max', 10)} of their run)")
+    if runs:
+        by_source: dict[str, Counter] = defaultdict(Counter)
+        for r in runs:
+            for s, c in (r.get("by_source") or {}).items():
+                by_source[s].update(c)
+        lines += resolution_lines(runs[-1].get("by_source") or {}, "Alerts resolved to the employer's board or a full ad, last run:")
+        lines += resolution_lines(by_source, f"Alerts resolved, all {len(runs)} run(s):")
     return "\n".join(lines)
+
+
+def resolution_lines(by_source: dict, title: str) -> list[str]:
+    """Per source: how many of the alerts that needed a full ad found one ('linkedin  12 of 20 (60%)'). [] when none needed one."""
+    rows = []
+    for sid in sorted(by_source):
+        ok, no = int(by_source[sid].get("resolved", 0)), int(by_source[sid].get("unresolved", 0))
+        if ok + no:
+            rows.append(f"  {sid:16s} {ok} of {ok + no} ({100 * ok / (ok + no):.0f}%)")
+    return [title, *rows] if rows else []

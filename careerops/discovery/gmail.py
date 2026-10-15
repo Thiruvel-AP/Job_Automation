@@ -237,6 +237,24 @@ def message_text(msg: dict) -> tuple[str, str, str, str]:
     return hdr.get("from", ""), hdr.get("subject", ""), "\n".join(html_parts), "\n".join(plain_parts)
 
 
+def message_date(msg: dict) -> str:
+    """YYYY-MM-DD the alert reached the mailbox (Gmail's internalDate, else the Date header), '' when neither can be read."""
+    from datetime import datetime, timezone
+    from email.utils import parsedate_to_datetime
+
+    try:
+        return datetime.fromtimestamp(int(msg["internalDate"]) / 1000, timezone.utc).date().isoformat()
+    except (KeyError, TypeError, ValueError, OSError, OverflowError):
+        pass
+    for h in (msg.get("payload") or {}).get("headers", []):
+        if str(h.get("name", "")).lower() == "date":
+            try:
+                return parsedate_to_datetime(h["value"]).astimezone(timezone.utc).date().isoformat()
+            except (TypeError, ValueError, IndexError):
+                break
+    return ""
+
+
 def sender_kind(from_header: str) -> str | None:
     m = re.search(r"@([\w.-]+)", from_header or "")
     domain = (m.group(1) if m else "").lower()

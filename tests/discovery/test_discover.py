@@ -87,7 +87,8 @@ def test_the_inbox_file_has_the_headers_live_reads_and_the_ad_text(cfg, db):
     text = read_inbox(cfg, "acme-analytics-ltd-data-scientist-101.txt")
     text2, _ = manual.read_jd(cfg.path("jds") / "inbox" / "acme-analytics-ltd-data-scientist-101.txt")
     assert manual.header_fields(text2) == {"company": "Acme Analytics Ltd", "title": "Data Scientist", "location": "London, UK",
-                                           "url": "https://job-boards.greenhouse.io/acme/jobs/101", "source": "greenhouse", "posted": "2026-10-08"}
+                                           "url": "https://job-boards.greenhouse.io/acme/jobs/101", "source": "greenhouse", "posted": "2026-10-08",
+                                           "first_seen": "2026-10-10", "listed": "yes"}      # first seen = the run's day; on an employer's board
     assert text.startswith("Company: Acme Analytics Ltd\nTitle: Data Scientist\nURL: https://job-boards.greenhouse.io/acme/jobs/101\nSource: greenhouse\n")
     assert "Python, SQL and scikit-learn" in text and "<p>" not in text
 
@@ -493,10 +494,10 @@ def test_an_unknown_company_is_probed_once_and_remembered_when_probing_is_allowe
     net = gh_net(**{"api.adzuna.com": fixture_json("adzuna_search.json")})
     make(cfg, db, net).from_adzuna()
     probes = [u for u in net.urls() if "unknownstartup" in u]
-    assert probes and (cfg.path("discover") / "company_boards.json").exists()
+    assert len(probes) == 4 and (cfg.path("discover") / "boards.json").exists()          # one token, each of the four providers
     net2 = gh_net(**{"api.adzuna.com": fixture_json("adzuna_search.json")})
     make(cfg, db, net2).from_adzuna()
-    assert not [u for u in net2.urls() if "unknownstartup" in u]                         # a miss is remembered for reprobe_after_days
+    assert not [u for u in net2.urls() if "unknownstartup" in u]                         # a miss is remembered for discover.ats.board_cache_days
 
 
 # ------------------------------------------------------------------ gmail alerts

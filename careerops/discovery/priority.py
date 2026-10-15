@@ -12,7 +12,10 @@
                   a job listed under another country)                                                                      0.50
      When several apply the lowest one is used. A holder of the UK Graduate visa can take any of these jobs, so none of them
      removes a job; they only move it down.
-  R  exp(-days_since_posted / priority.recency_days), 1.0 when the posting date is unknown
+  R  exp(-days / priority.recency_days), 1.0 when no date is known. The days run from the day WE first saw the job (an alert's date, or
+     the first discover run that read it: the job's `seen_on`), not from the board's own publish date; only a job with no such
+     day (a hand-added JD) falls back to `posted_at`. A job still listed on the employer's own board (`open_listing`) never gets
+     an R under priority.open_listing_floor (0.5): a posting that is open is not stale however long ago it was published.
 
 It orders the `live` inbox, `discover`'s listing and `status`; the review screen shows P and the three factors. Nothing here
 skips, drops or hides a job.
@@ -29,6 +32,7 @@ from . import countries, workcountry
 
 DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
 DEFAULT_RECENCY_DAYS = 14.0
+DEFAULT_OPEN_LISTING_FLOOR = 0.5
 
 # ------------------------------------------------------------------ what the JD says about sponsorship (an info line, not a flag)
 _NEG = (r"(?:do(?:es)? not|don[’']t|doesn[’']t|cannot|can[’']t|can not|unable to|not able to|will not|won[’']t|"
@@ -99,10 +103,12 @@ class Priority:
     s: float
     r: float
     s_reason: str          # why S is what it is
-    days: float | None     # days since posted, None when unknown
+    days: float | None     # days since first seen (else since posted), None when unknown
+    floored: bool = False  # R was raised to the open-listing floor
 
     def line(self) -> str:
         age = "posting date unknown" if self.days is None else f"{self.days:.0f} d old"
+        age += ", still listed on the employer's board" if self.floored else ""
         return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x R {self.r:.2f} ({age})")
 
 
@@ -114,6 +120,11 @@ def weights(settings) -> dict[str, float]:
 def recency_days(settings) -> float:
     v = ((settings.raw.get("priority") or {}).get("recency_days") if settings is not None else None) or DEFAULT_RECENCY_DAYS
     return float(v)
+
+
+def open_listing_floor(settings) -> float:
+    v = ((settings.raw.get("priority") or {}).get("open_listing_floor") if settings is not None else None)
+    return float(DEFAULT_OPEN_LISTING_FLOOR if v is None else v)
 
 
 def _get(job: Mapping[str, Any], key: str) -> Any:
@@ -155,12 +166,23 @@ def sponsor_factor(job: Mapping[str, Any], settings=None) -> tuple[float, str]:
     return min(options, key=lambda o: o[0])
 
 
+def _recency(job: Mapping[str, Any], settings=None, today: datetime | None = None) -> tuple[float, float | None, bool]:
+    """(R, days, floored). Days count from `seen_on` (the day discover first saw the job), else from `posted_at`; a job still listed on
+    the employer's board (`open_listing`) is never given less than the open-listing floor (floored says it was raised)."""
+    since = parse_date(_get(job, "seen_on")) or parse_date(_get(job, "posted_at"))
+    if since is None:
+        return 1.0, None, False
+    days = max(((today or datetime.now(timezone.utc)) - since).total_seconds() / 86400.0, 0.0)
+    r = math.exp(-days / recency_days(settings))
+    floor = open_listing_floor(settings)
+    if _get(job, "open_listing") and r < floor:
+        return floor, days, True
+    return r, days, False
+
+
 def recency_factor(job: Mapping[str, Any], settings=None, today: datetime | None = None) -> tuple[float, float | None]:
-    posted = parse_date(_get(job, "posted_at"))
-    if posted is None:
-        return 1.0, None
-    days = max(((today or datetime.now(timezone.utc)) - posted).total_seconds() / 86400.0, 0.0)
-    return math.exp(-days / recency_days(settings)), days
+    r, days, _ = _recency(job, settings, today)
+    return r, days
 
 
 def ats_factor(job: Mapping[str, Any], tailored: bool = True) -> float:
@@ -173,8 +195,8 @@ def priority(job: Mapping[str, Any], settings=None, tailored: bool = True, today
     """P = F x S x R for a job row (or dict with the same keys)."""
     f = ats_factor(job, tailored)
     s, why = sponsor_factor(job, settings)
-    r, days = recency_factor(job, settings, today)
-    return Priority(f * s * r, f, s, r, why, days)
+    r, days, floored = _recency(job, settings, today)
+    return Priority(f * s * r, f, s, r, why, days, floored)
 
 
 def sort_key(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> tuple:
@@ -203,7 +225,8 @@ def file_job(path, settings, fb: dict, idx) -> dict | None:
     work = workcountry.resolve(location=hdr.get("location", ""), description=text, title=hdr.get("title", ""),
                                override=hdr.get("country", ""), rules=workcountry.rules_from(workcountry.applicant_visa(settings)))
     return {"id": str(path.name), "company": hdr.get("company", ""), "title": hdr.get("title", ""), "description": text,
-            "work_country": work.country,
+            "work_country": work.country, "seen_on": hdr.get("first_seen"),
+            "open_listing": (hdr.get("listed") or "").lower() in ("yes", "true", "1"),
             "sponsor_match": match, "agency": (hdr.get("agency") or "").lower() in ("yes", "true", "1"),
             "posted_at": hdr.get("posted"), "ceiling_pre": ceiling_pre, "country": hdr.get("country")}
 

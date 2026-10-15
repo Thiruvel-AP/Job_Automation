@@ -235,6 +235,9 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
             print("\n".join(d.ats_report()))
     for n in d.run.notes:
         print(f"  note: {n}")
+    d.finish()
+    if any(c.get("resolved") or c.get("unresolved") for c in d.run.by_source.values()):
+        print("\n".join(disc.resolution_lines(d.run.by_source, "Alerts resolved to a full ad (per source):")))
     _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
@@ -242,9 +245,12 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if len(d.run.written) > len(lines):
         print(f"  (the top {len(lines)} of {len(d.run.written)} by priority P = F x S x R)")
     queued = sum(c.get("to_manual_queue", 0) for c in d.run.sources.values())
-    if queued:
-        print(f"{queued} link(s) could not be resolved to a full ad: {s.path('jds') / 'manual_queue.csv'} "
-              "(copy each ad and run `careerops live --clipboard`)")
+    over = sum(c.get("to_manual_queue_overflow", 0) for c in d.run.sources.values())
+    if queued or over:
+        print(f"{queued + over} link(s) could not be resolved to a full ad: the best {queued} are in {disc.manual_queue_path(s)} "
+              "(copy each ad and run `careerops live --clipboard`)" + (f", {over} more in {disc.overflow_path(s)}" if over else ""))
+    if any(c.get("role_filtered") or c.get("place_filtered") for c in d.run.sources.values()) and not d.dry_run:
+        print(f"Titles the role / place filters turned away, with the reason: {disc.filtered_path(s)}")
     if not d.dry_run:
         disc.save_run(s, d.run)
     if d.run.written and not d.dry_run:

@@ -19,7 +19,7 @@ paths:
   judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
-  discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), company_boards.json, gmail_seen.json, runs.jsonl, health/<date>.csv, listed_only.csv
+  discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), boards.json, first_seen.json, filtered.csv, manual_queue_overflow.csv, gmail_seen.json, runs.jsonl, health/<date>.csv, listed_only.csv
   aiapply_applied: data/aiapply_applied.csv   # optional export of the jobs AIApply applied to (company + title columns): read only, used to skip duplicates
   robots: data/robots                     # robots.txt rules per host, <host>.json, kept 24 h before a page is fetched (discovery/robots.py)
   secrets: data/secrets                   # gitignored (data/): the Gmail OAuth client file and token (`discover --gmail-alerts`); never in git
@@ -112,7 +112,9 @@ discover:
   # rejected folders or the application archive. Sponsorship is never a filter (priority: below).
   cache_hours: 6                   # a board's posting list is reused this long
   max_new_per_run: 40              # at most this many new inbox files per run (--limit)
-  alert_probes_per_run: 12         # companies named by alerts / Adzuna whose board is looked for by probing slugs, per run
+  alert_probes_per_run: 100        # companies named by alerts / Adzuna whose board is looked for (up to 4 tokens x Greenhouse, Lever, Ashby), per run; answers are cached board_cache_days; 0 = never look
+  title_match: 0.8                 # an alert's title is taken for a posting on the employer's board at this normalised-title similarity (and the same level words)
+  manual_queue_max: 10             # unresolved alerts of one run kept in manual_queue.csv (best title relevance x S first); the rest go to manual_queue_overflow.csv
   # `discover --ats` looks for a job board of these companies, in this order: (1) the folder names directly under paths.applications
   # (names only, nothing inside is read), (2) `sources` below, (3) sponsor-register companies, only if they are also in (1) or (2).
   sources: []                      # employers to look for beside the archive folders: ["Monzo", "Wise", {name: "Octopus Energy"}]
@@ -150,7 +152,8 @@ priority:
     unknown: 0.75          # not on the register, a recruitment agency, or no register loaded
     no_sponsorship: 0.65   # the JD itself says it does not sponsor / requires the right to work without sponsorship
     non_home: 0.50         # the work is not where you live (W is not visa.home in applicant.yaml): ranked below home jobs of the same fit
-  recency_days: 14         # R = exp(-days_since_posted / 14); 1.0 when the posting date is unknown
+  recency_days: 14         # R = exp(-days / 14), the days counted from the day discover first saw the job (an alert's date or the first run); 1.0 when no date is known
+  open_listing_floor: 0.5  # a job still listed on the employer's own board never gets an R below this, however long ago it was first seen
 
 files:
   name_style: full   # full = identity.name, short = first word of identity.name (CV / cover-letter file names)

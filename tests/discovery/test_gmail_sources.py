@@ -115,7 +115,7 @@ def test_a_glassdoor_alert_is_resolved_on_the_employers_board_or_queued_with_its
     assert (row["source"], row["title"]) == ("glassdoor-uk", "Senior AI Engineer")
     assert row["link"].startswith("https://www.glassdoor.co.uk/job-listing/senior-ai-engineer") and "utm_" not in row["link"]
     assert d.run.sources["gmail"]["alerts_glassdoor-uk"] == 2
-    assert dict(d.run.by_source["glassdoor-uk"]) == {"alerts": 2, "new": 1}              # the health table's "new jobs" column
+    assert dict(d.run.by_source["glassdoor-uk"]) == {"alerts": 2, "new": 1, "resolved": 1, "unresolved": 1}    # "new" is the health table's column
     assert not [u for u in net.urls(True) if "glassdoor" in u]                           # an alert's own site is never fetched
 
 

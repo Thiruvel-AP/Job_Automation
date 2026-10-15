@@ -33,6 +33,9 @@ class Candidate:
     origin: str = ""                   # how it was found when not directly: "gmail:linkedin"
     board: str = ""                    # the job board it was read from, "ashby:openai" (which registry source it counts for)
     listed_only: bool = False          # outside the UK: written for the record (Country: / Status: listed_only), never applied to
+    seen: str = ""                     # YYYY-MM-DD an alert about it reached the mailbox, when it was found through one
+    first_seen: str = ""               # set by discover when the job is kept: the earliest of `seen` and the first run that saw it
+    open_listing: bool = False         # still listed on the employer's own board (Greenhouse / Lever / Ashby) when it was read
 
     def ad_id(self) -> str:
         return self.ext_id or hashlib.sha1(self.url.encode()).hexdigest()[:10]
@@ -42,7 +45,8 @@ class Candidate:
         return Ad(company=self.company, title=self.title, url=self.url, location=self.location, text=self.description,
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
                   posted=posted if re.fullmatch(r"\d{4}-\d{2}-\d{2}", posted) else "",
-                  country=self.country if self.listed_only else "", listed_only=self.listed_only)
+                  country=self.country if self.listed_only else "", listed_only=self.listed_only,
+                  first_seen=self.first_seen, open_listing=self.open_listing)
 
 
 def norm_title(title: str) -> str:
@@ -96,3 +100,22 @@ def posted_date(value: str | None) -> datetime | None:
     except ValueError:
         return None
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+LEVEL_WORDS = frozenset({"senior", "sr", "lead", "staff", "principal", "junior", "jr", "graduate", "grad", "head", "intern", "internship",
+                         "associate", "entry", "trainee", "apprentice", "director", "manager", "placement"})
+
+
+def level_words(title: str) -> frozenset[str]:
+    """The seniority words in a title ('Senior Data Scientist' -> {'senior'}): two titles of one role at different levels are two jobs."""
+    return frozenset(norm_title(title).split()) & LEVEL_WORDS
+
+
+def title_relevance(title: str, settings) -> float:
+    """How close a title is to what you are looking for, 0-1: 1.0 for a tier-1 family (roles.families), 0.8 for tier 2, 0.6 for tier 3
+    and so on down to 0.4; halved when the title carries a level the triage excludes (senior, lead ...); 0.1 for no family at all."""
+    hit = gates.classify_role(title, settings)
+    if hit is None:
+        return 0.1
+    r = max(0.4, 1.0 - 0.2 * (hit[1] - 1))
+    return r / 2 if gates.level_excluded(title, settings) else r
