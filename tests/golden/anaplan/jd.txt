@@ -1,0 +1,35 @@
+At Anaplan, we are a team of innovators focused on optimizing business decision-making through our leading AI-infused scenario planning and analysis platform so our customers can outpace their competition and the market.
+What unites Anaplanners across teams and geographies is our collective commitment to our customers’ success and to our Winning Culture.
+Our customers rank among the who’s who in the Fortune 50. Coca-Cola, LinkedIn, Adobe, LVMH and Bayer are just a few of the 2,400+ global companies who rely on our best-in-class platform.
+Our Winning Culture is the engine that drives our teams of innovators. We champion diversity of thought and ideas, we behave like leaders regardless of title, we are committed to achieving ambitious goals, and we love celebrating our wins – big and small.
+Supported by operating principles of being strategy-led, values-based and disciplined in execution, you’ll be inspired, connected, developed and rewarded here. Everything that makes you unique is welcome; join us and let’s build what’s next - together!
+About The Role 
+We are seeking a versatile Data Scientist to join the Functional Analytics team. The core mission of our team is to design and develop new functional analytic capabilities or “engines” that integrate directly into Anaplan Applications to solve complex enterprise business problems. 
+In this role, you will develop best-in-class ML models and pipelines to drive automated, actionable insights at scale. Beyond core development, you will act as a key technical partner for our customers. You will play a highly visible role in driving customer onboardings, getting hands-on with client data to customize and fine-tune our ML engines so they seamlessly adapt to complex business realities and specific customer needs. 
+Your Impact 
+Customer Onboarding & Engine Customization: Lead the technical deployment of our engines for new clients. Partner closely with customers, Customer Success, Product, and Engineering to adapt and customize ML models, ensuring they accurately reflect client-specific business logic, operational guardrails, and unique data nuances. 
+Analytic Engine Development: Design and develop scalable functional analytic capabilities that seamlessly integrate into Anaplan Applications, translating raw customer data into automated, high-value business insights. 
+Advanced Modeling & Timeseries Forecasting: Design, train, and implement robust Machine Learning (LightGBM, XGBoost) and Deep Learning (PyTorch) models specifically focused on complex demand sensing and resolving cold-start forecasting problems. 
+Feature Engineering Pipelines: Build and optimize scalable data pipelines leveraging a hybrid SQL/Python architecture (dbt, Snowflake) to extract rich, localized temporal signals from high-volume transactional retail data. 
+End-to-End Deployment (MLOps): Partner with our engineers to transition your models from prototype into scalable, monitored, and reliable production pipelines using tools like MLflow and Optuna. 
+Your Skills 
+Strong hands-on professional experience in Data Science, successfully building and deploying systems from prototype to production in a fast-paced environment. 
+Strong predictive modeling foundation: Extensive experience with traditional ML algorithms, Deep Learning frameworks, and complex time-series forecasting. 
+Experience developing production-grade Python code: High proficiency in Python, Pandas, and modern software practices (testing, clean code, code review, CI/CD). 
+Data & Pipeline Expertise: Hands-on experience optimizing data models and access patterns for modern data warehouses (Snowflake, Databricks) utilizing SQL and transformation tools like dbt. 
+Cloud & Data Infrastructure: Experience working with scalable cloud infrastructure (AWS, GCP, or Azure), and handling columnar data formats like Parquet. 
+MLOps Exposure: Experience with tools and frameworks for training, tracking, deploying, and monitoring models in production (e.g., MLflow, Optuna, Prefect, or Airflow). 
+Desirable 
+Background in supply chain forecasting, enterprise AI, or retail analytics 
+M.S. or Ph.D. in Computer Science, Artificial Intelligence, Statistics, Data Science, or a related quantitative field. 
+Our Commitment to Diversity, Equity, Inclusion and Belonging (DEIB) 
+We believe attracting and retaining the best talent and fostering an inclusive culture strengthens our business. DEIB improves our workforce, enhances trust with our partners and customers, and drives business success. Build your career in a place where diversity, equity, inclusion and belonging aren’t just words on paper – this is what drives our innovation, it’s how we connect, and it contributes to what makes us a market leader. We believe in a hiring and working environment where all people are respected and valued, regardless of gender identity or expression, sexual orientation, religion, ethnicity, age, neurodiversity, disability status, citizenship, or any other aspect which makes people unique. We hire you for who you are, and we want you to bring your authentic self to work every day! 
+We will ensure that individuals with disabilities are provided reasonable accommodation to participate in the job application or interview process, perform essential job functions, and receive equitable benefits and all privileges of employment. Please contact us to request accommodation.  
+Fraud Recruitment Disclaimer  
+It has come to our attention that fraudulent and fictitious job opportunities are being circulated on the Internet. Prospective candidates are being contacted by certain individuals, mainly through telephone calls, emails and correspondence, claiming they are representatives of Anaplan. The main purpose of these correspondences and announcements is to obtain privileged information from individuals.  
+Anaplan does not:  
+- Extend offers to candidates without an extensive interview process with a member of our recruitment team and a hiring manager via video or in person.   
+- Send job offers via email. All offers are first extended verbally by a member of our internal recruitment team whenever possible and then followed up via written communication.  
+All emails from Anaplan would come from an @anaplan.com email address. Should you have any doubts about the authenticity of an email, letter or telephone communication purportedly from, for, or on behalf of Anaplan, please send an email to people@anaplan.com before taking any further action in relation to the correspondence.   
+Privacy & AI Notice
+Candidate data processed during our recruitment activities is handled in accordance with our Candidate Privacy Notice. This may include the use of artificial intelligence or automated tools to assist our team in evaluating qualifications.
