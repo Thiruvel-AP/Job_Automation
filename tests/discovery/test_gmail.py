@@ -31,7 +31,7 @@ class Token:
     """Google's token endpoint: remembers what it was sent, answers as scripted."""
 
     def __init__(self, body=None, status=200):
-        self.body = body or {"access_token": "at-1", "refresh_token": "rt-1", "expires_in": 3600, "scope": gmail.SCOPE,
+        self.body = body or {"access_token": "at-1", "refresh_token": "rt-1", "expires_in": 3600, "scope": " ".join(gmail.SCOPES),
                              "token_type": "Bearer"}
         self.status, self.sent = status, []
 
@@ -82,11 +82,14 @@ def test_the_secrets_folder_is_inside_the_git_ignored_data_folder():
 
 
 # ------------------------------------------------------------------ sign-in
-def test_sign_in_asks_only_for_the_read_only_scope_with_pkce_and_keeps_a_private_token_file(settings, secrets):
+def test_sign_in_asks_for_the_three_scopes_with_pkce_and_keeps_a_private_token_file(settings, secrets):
     token, browser, said = Token(), browser_that_grants(), []
     gmail.authorize(settings, open_browser=browser, post=token, say=said.append, timeout_s=20)
     q = browser.seen
-    assert q["scope"] == gmail.SCOPE == "https://www.googleapis.com/auth/gmail.readonly"
+    assert gmail.SCOPE == "https://www.googleapis.com/auth/gmail.readonly"
+    assert set(q["scope"].split()) == set(gmail.SCOPES) == {
+        "https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/spreadsheets"}
     assert q["code_challenge_method"] == "S256" and q["response_type"] == "code" and q["access_type"] == "offline"
     assert q["redirect_uri"].startswith("http://127.0.0.1:") and q["client_id"].startswith("1234-abc")
     url, data = token.sent[0]
@@ -94,17 +97,35 @@ def test_sign_in_asks_only_for_the_read_only_scope_with_pkce_and_keeps_a_private
     challenge = base64.urlsafe_b64encode(__import__("hashlib").sha256(data["code_verifier"].encode()).digest()).rstrip(b"=").decode()
     assert challenge == q["code_challenge"]                                    # the verifier is the one the challenge was made from
     saved = json.loads((secrets / gmail.TOKEN_FILE).read_text(encoding="utf-8"))
-    assert saved["refresh_token"] == "rt-1" and saved["scope"] == gmail.SCOPE
+    assert saved["refresh_token"] == "rt-1" and set(saved["scope"].split()) == set(gmail.SCOPES)
     assert oct((secrets / gmail.TOKEN_FILE).stat().st_mode & 0o777) == "0o600"
     assert not any("rt-1" in line or "at-1" in line or "GOCSPX" in line for line in said)        # nothing secret is printed
-    assert any("READ-ONLY" in line for line in said)
+    assert any("never send" in line for line in said)
 
 
-def test_a_wider_scope_than_read_only_is_refused_and_no_token_is_kept(settings, secrets):
-    token = Token({"access_token": "a", "refresh_token": "r", "expires_in": 60, "scope": gmail.SCOPE + " https://mail.google.com/"})
-    with pytest.raises(gmail.GmailAuthError, match="only .*gmail.readonly is accepted"):
+def test_a_wider_scope_than_the_three_is_refused_and_no_token_is_kept(settings, secrets):
+    token = Token({"access_token": "a", "refresh_token": "r", "expires_in": 60,
+                   "scope": " ".join(gmail.SCOPES) + " https://mail.google.com/"})
+    with pytest.raises(gmail.GmailAuthError, match="only .*gmail.readonly.* are accepted"):
         gmail.authorize(settings, open_browser=browser_that_grants(), post=token, say=lambda s: None, timeout_s=20)
     assert not (secrets / gmail.TOKEN_FILE).exists()
+
+
+def test_a_sign_in_where_a_box_was_unticked_is_refused_and_no_token_is_kept(settings, secrets):
+    token = Token({"access_token": "a", "refresh_token": "r", "expires_in": 60, "scope": gmail.SCOPE + " " + gmail.SCOPE_SHEETS})
+    with pytest.raises(gmail.GmailAuthError, match="lacks .*gmail.compose.*tick every box"):
+        gmail.authorize(settings, open_browser=browser_that_grants(), post=token, say=lambda s: None, timeout_s=20)
+    assert not (secrets / gmail.TOKEN_FILE).exists()
+
+
+def test_a_token_from_before_the_new_scopes_still_reads_alerts_but_is_refused_for_drafts_and_the_sheet(settings, secrets):
+    gmail._write_token(settings, {"refresh_token": "rt", "access_token": "x", "expires_at": 9e12, "scope": gmail.SCOPE})
+    assert gmail.access_token(settings, post=lambda *a, **k: pytest.fail("asked")) == "x"
+    for need in (gmail.SCOPE_COMPOSE, gmail.SCOPE_SHEETS):
+        with pytest.raises(gmail.GmailAuthError, match="lacks .*--gmail-auth"):
+            gmail.access_token(settings, need=(need,))
+    gmail._write_token(settings, {"refresh_token": "rt", "access_token": "y", "expires_at": 9e12, "scope": " ".join(gmail.SCOPES)})
+    assert gmail.access_token(settings, need=(gmail.SCOPE_COMPOSE, gmail.SCOPE_SHEETS)) == "y"
 
 
 def test_a_wrong_state_or_a_refusal_in_the_browser_saves_nothing(settings, secrets):
@@ -138,7 +159,7 @@ def test_not_signed_in_or_a_refused_refresh_says_to_run_gmail_auth(settings, sec
     with pytest.raises(gmail.GmailAuthError, match="refused to refresh.*--gmail-auth"):
         gmail.access_token(settings, post=Token({"error": "invalid_grant"}, 400))
     gmail._write_token(settings, {"refresh_token": "rt", "access_token": "x", "expires_at": 0, "scope": gmail.SCOPE + " other"})
-    with pytest.raises(gmail.GmailAuthError, match="only .*gmail.readonly is accepted"):
+    with pytest.raises(gmail.GmailAuthError, match="only .*gmail.readonly.* are accepted"):
         gmail.access_token(settings)
 
 

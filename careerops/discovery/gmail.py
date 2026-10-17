@@ -1,14 +1,17 @@
-"""Job-alert emails through the READ-ONLY Gmail API (`careerops discover --gmail-alerts`; `--gmail-auth` signs in once).
+"""Job-alert emails through the Gmail API (`careerops discover --gmail-alerts`; `--gmail-auth` signs in once).
 
-Scope: https://www.googleapis.com/auth/gmail.readonly and nothing wider (a token that was granted more is refused). The OAuth client
+Scopes (SCOPES): gmail.readonly (the alert emails), gmail.compose (outreach drafts, `careerops outreach draft`) and spreadsheets
+(the application tracker, `careerops tracker sync`); a token that was granted anything else is refused. gmail.compose is the narrowest
+scope Google offers for creating a draft, and it is wide enough to send as well: what keeps this tool from sending is the code, not the
+scope. The only write call to Gmail is `drafts.create` (outreach.py); tests/test_never_sends.py fails on any send. The OAuth client
 file you download from Google Cloud (a "Desktop app" client) and the token this module writes both live in paths.secrets
 (data/secrets/, git-ignored); nothing from there is printed, logged, committed or sent anywhere but accounts.google.com /
-oauth2.googleapis.com / gmail.googleapis.com. No Google client library is used: the loopback + PKCE flow of "OAuth 2.0 for
-installed apps" is a few requests, made with `requests` like everything else.
+oauth2.googleapis.com / gmail.googleapis.com / sheets.googleapis.com. No Google client library is used: the loopback + PKCE flow of
+"OAuth 2.0 for installed apps" is a few requests, made with `requests` like everything else.
 
 `--gmail-auth` opens your browser at Google's consent page and waits for the redirect on 127.0.0.1; YOU sign in and agree there.
-This code never types a password, never reads a mailbox other than through the token you granted, and never sends, deletes or
-labels anything (the scope cannot).
+This code never types a password and never reads a mailbox other than through the token you granted. It never deletes or labels
+anything, and it never sends.
 
 Alert emails: the sources in config/sources.yaml that list sender `domains` (registry.py). LinkedIn, CV-Library, Indeed and Reed have a
 dedicated parser; every other source is read by the generic one (job links on the source's own domains). Each is parsed for (title,
@@ -41,11 +44,14 @@ import requests
 
 from .http import Fetcher
 
-SCOPE = "https://www.googleapis.com/auth/gmail.readonly"
+SCOPE = "https://www.googleapis.com/auth/gmail.readonly"                 # the alert emails (discover --gmail-alerts)
+SCOPE_COMPOSE = "https://www.googleapis.com/auth/gmail.compose"          # outreach drafts: drafts.create only (outreach.py)
+SCOPE_SHEETS = "https://www.googleapis.com/auth/spreadsheets"            # the application tracker (tracker.py)
+SCOPES = (SCOPE, SCOPE_COMPOSE, SCOPE_SHEETS)
 AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URI = "https://oauth2.googleapis.com/token"
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
-ALLOWED_TOKEN_HOSTS = ("accounts.google.com", "oauth2.googleapis.com", "gmail.googleapis.com")
+ALLOWED_TOKEN_HOSTS = ("accounts.google.com", "oauth2.googleapis.com", "gmail.googleapis.com", "sheets.googleapis.com")
 CLIENT_FILE, TOKEN_FILE = "gmail_client.json", "gmail_token.json"
 SENDERS = {"linkedin": ("linkedin.com",), "cvlibrary": ("cv-library.co.uk",), "indeed": ("indeed.com", "indeed.co.uk"),
            "reed": ("reed.co.uk",)}
@@ -55,7 +61,7 @@ class GmailAuthError(RuntimeError):
     """Not signed in, a client file that is missing or wrong, or a token that was refused. One line, says what to do."""
 
 
-# ------------------------------------------------------------------ OAuth (loopback + PKCE), read-only
+# ------------------------------------------------------------------ OAuth (loopback + PKCE)
 def _secrets_dir(settings) -> Path:
     return settings.path("secrets")
 
@@ -94,10 +100,16 @@ def _read_token(settings) -> dict | None:
         return None
 
 
-def _check_scope(granted: str) -> None:
+def _check_scope(granted: str, need: tuple[str, ...] = (SCOPE,)) -> None:
+    """A token holds only scopes of SCOPES (anything wider is refused) and every scope in `need` (the sign-in needs all of them; a
+    caller needs the ones it uses, so a token from before the compose and Sheets scopes still reads alert emails)."""
     scopes = set((granted or "").split())
-    if scopes != {SCOPE}:
-        raise GmailAuthError(f"Google granted {sorted(scopes) or 'no scope'} but only {SCOPE} is accepted; the token was not kept")
+    if not scopes <= set(SCOPES):
+        raise GmailAuthError(f"Google granted {sorted(scopes) or 'no scope'} but only {', '.join(SCOPES)} are accepted; "
+                             "the token was not kept")
+    missing = [s for s in need if s not in scopes]
+    if missing:
+        raise GmailAuthError(f"the Gmail sign-in lacks {', '.join(missing)}: run `careerops discover --gmail-auth` again and tick every box")
 
 
 def authorize(settings, *, open_browser: Callable[[str], object] = webbrowser.open, post=requests.post,
@@ -125,9 +137,10 @@ def authorize(settings, *, open_browser: Callable[[str], object] = webbrowser.op
     server.timeout = 1
     redirect = f"http://127.0.0.1:{server.server_port}"
     url = c["auth_uri"] + "?" + urlencode({
-        "response_type": "code", "client_id": c["client_id"], "redirect_uri": redirect, "scope": SCOPE, "state": state,
+        "response_type": "code", "client_id": c["client_id"], "redirect_uri": redirect, "scope": " ".join(SCOPES), "state": state,
         "code_challenge": challenge, "code_challenge_method": "S256", "access_type": "offline", "prompt": "consent"})
-    say("Opening your browser to let you grant career-ops READ-ONLY access to Gmail. If it does not open, visit:\n  " + url)
+    say("Opening your browser to let you grant career-ops access to read Gmail, create Gmail drafts (never send) and edit the tracker "
+        "Sheet. If it does not open, visit:\n  " + url)
     open_browser(url)
     deadline = clock() + timeout_s
     try:
@@ -145,11 +158,12 @@ def authorize(settings, *, open_browser: Callable[[str], object] = webbrowser.op
     body = r.json() if r.ok else {}
     if not r.ok or not body.get("refresh_token"):
         raise GmailAuthError(f"Google refused the sign-in (HTTP {r.status_code}); nothing was saved")
-    _check_scope(body.get("scope", ""))
+    _check_scope(body.get("scope", ""), need=SCOPES)
     _write_token(settings, {"refresh_token": body["refresh_token"], "access_token": body.get("access_token"),
                             "expires_at": clock() + float(body.get("expires_in", 0)), "scope": body["scope"],
                             "granted_at": datetime.now(timezone.utc).isoformat(timespec="seconds")})     # what `careerops doctor` ages
-    say(f"Signed in. Token saved in {_secrets_dir(settings) / TOKEN_FILE} (git-ignored). career-ops can only read mail.")
+    say(f"Signed in. Token saved in {_secrets_dir(settings) / TOKEN_FILE} (git-ignored). career-ops reads mail, creates drafts "
+        "and edits the tracker Sheet; it never sends.")
 
 
 def token_age_days(settings, now: datetime | None = None) -> float | None:
@@ -170,11 +184,11 @@ def token_age_days(settings, now: datetime | None = None) -> float | None:
     return max((now - granted).total_seconds() / 86400.0, 0.0)
 
 
-def access_token(settings, *, post=requests.post, clock: Callable[[], float] = time.time) -> str:
+def access_token(settings, *, post=requests.post, clock: Callable[[], float] = time.time, need: tuple[str, ...] = (SCOPE,)) -> str:
     tok = _read_token(settings)
     if not tok or not tok.get("refresh_token"):
         raise GmailAuthError("not signed in to Gmail: run `careerops discover --gmail-auth` first")
-    _check_scope(tok.get("scope", ""))
+    _check_scope(tok.get("scope", ""), need)
     if tok.get("access_token") and tok.get("expires_at", 0) - clock() > 120:
         return tok["access_token"]
     c = client_config(settings)
@@ -188,7 +202,7 @@ def access_token(settings, *, post=requests.post, clock: Callable[[], float] = t
     return tok["access_token"]
 
 
-# ------------------------------------------------------------------ the Gmail API (read-only calls)
+# ------------------------------------------------------------------ the Gmail API (read calls; drafts are made in outreach.py)
 def source_clause(source) -> str:
     """The Gmail search clause for one registry source: its sender domains, and its subject words when it shares a sender."""
     frm = " OR ".join(f"from:{d}" for d in source.domains)

@@ -106,7 +106,7 @@ def test_authorize_writes_the_grant_time(settings):
         status_code = 200
 
         def json(self):
-            return {"refresh_token": "rt", "access_token": "at", "expires_in": 3600, "scope": gmail.SCOPE}
+            return {"refresh_token": "rt", "access_token": "at", "expires_in": 3600, "scope": " ".join(gmail.SCOPES)}
 
     def browser(url):
         from urllib.parse import parse_qs, urlparse

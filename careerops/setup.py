@@ -19,6 +19,7 @@ DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile"
              "calibration")
 CALIBRATION_SUBDIRS = ("jds", "reference")      # inside paths.calibration; init adds them, never touches what is in them
 FILE_PARENTS = ("db", "excel", "learning", "preferences")
+DNC_FILE = "do_not_contact.csv"                 # inside paths.outreach: addresses and domains no outreach draft goes to (contacts.py)
 
 
 def load_dotenv(path: Path) -> int:
@@ -63,6 +64,12 @@ def init(settings) -> list[str]:
         if not p.exists():
             p.mkdir(parents=True, exist_ok=True)
             made.append(_show(p, settings.root))
+    if "outreach" in settings.raw["paths"]:
+        dnc = settings.path("outreach") / DNC_FILE
+        if not dnc.exists():
+            dnc.parent.mkdir(parents=True, exist_ok=True)
+            dnc.write_text("value,note\n", encoding="utf-8")
+            made.append(_show(dnc, settings.root))
     env, example = settings.root / ".env", settings.root / ".env.example"
     if not env.exists() and example.exists():
         shutil.copy(example, env)

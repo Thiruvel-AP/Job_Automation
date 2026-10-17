@@ -96,6 +96,26 @@ CREATE TABLE IF NOT EXISTS archive_index (
     kind TEXT CHECK(kind IN ('company','role')),
     company_key TEXT, job_id TEXT, created_at TEXT
 );
+
+-- People to write to about an application (contacts.py). At most two are kept by discovery; `contact add` may add more, and the best two
+-- (user, hunter, jd, company_site) are the ones the tracker shows and outreach drafts to. A row is never deleted.
+CREATE TABLE IF NOT EXISTS contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id TEXT NOT NULL,
+    name TEXT, role TEXT,
+    email TEXT,                       -- lower case; NULL for a person whose address is not known yet
+    source TEXT NOT NULL,             -- jd | company_site | hunter | user
+    mx_status TEXT,                   -- ok | a_record | no_mx | invalid | unknown (domain check only, no SMTP probe)
+    hunter_status TEXT,               -- Hunter's verification status for an address it found (valid, accept_all, ...)
+    created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_contacts_job ON contacts(job_id);
+
+-- Gmail drafts made by outreach.py: one per contact, two per job at most. Nothing here was ever sent by career-ops.
+CREATE TABLE IF NOT EXISTS outreach_drafts (
+    job_id TEXT NOT NULL, contact_email TEXT NOT NULL, draft_id TEXT, subject TEXT, created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_outreach_job ON outreach_drafts(job_id);
 """
 
 # Additive columns for databases created before they existed: (table, column, type). Never drop or rename.

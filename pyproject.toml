@@ -9,6 +9,7 @@ dependencies = [
   "jinja2>=3.1",
   "openpyxl>=3.1",
   "playwright>=1.44",
+  "dnspython>=2.4",          # the e-mail domain check (careerops/contacts.py); no other part of the pipeline needs it
 ]
 
 [project.optional-dependencies]

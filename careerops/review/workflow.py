@@ -411,6 +411,20 @@ def approve(db: DB, job, rep: dict, prefs: Path, confirm: str | None = None) -> 
     db.log(job["id"], "review", "approved")
 
 
+def contacts_step(db: DB, job, settings, ask) -> None:
+    """After [a]pprove, with outreach.mode: drafts: the contacts found for the job (source, domain check) and `[c]ontact add`, before
+    mark-applied. Needs the network (the company site, DNS): never on the mock root, and a failure is printed, never raised."""
+    from .. import mockroot, outreach
+
+    if mockroot.is_mock(settings) or not outreach.drafts_on(settings):
+        return
+    try:
+        from .. import contacts
+        contacts.review_step(db, settings, db.job(job["id"]), ask)
+    except Exception as e:  # noqa: BLE001  (a missing dnspython, a network error: the review goes on)
+        print(f"  contacts: skipped ({e})")
+
+
 def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings) -> dict:
     """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log."""
     rep = _regenerate_letter(job, fb, llm, settings, rep)
@@ -548,6 +562,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         judge.log_decision(settings, job, rep, verdict, "auto", "gate: judge yes, no flags")
         db.log(job["id"], "review", {"auto_approved_by_judge": verdict.model, "score": verdict.score})
         print("  Judge gate: approved without the prompt (judge yes, no flags). Whether to open the form is still yours.")
+        contacts_step(db, job, settings, ask)
         return "approved"
     hook_mode = bool(rep.get("letters"))
     menu = "  ".join((HOOK_L if hook_mode and c == "l" else MENU[c]) for c in MENU_ORDER if c in allow and (c != "g" or hook_mode))
@@ -571,6 +586,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 print(f"  NOT approved: {e}")
                 continue
             judge.log_decision(settings, job, rep, verdict, "approve")
+            contacts_step(db, job, settings, ask)
             return "approved"
         elif c == "n":
             if note_path(rep).exists():

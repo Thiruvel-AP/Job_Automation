@@ -29,6 +29,10 @@ career-ops/
 │   ├── cli.py                    every `careerops …` command
 │   ├── config.py · db.py         settings loader · SQLite schema + state machine
 │   ├── setup.py                  `init` (data layout, .env) and `doctor` (toolchain checks)
+│   ├── googleapi.py              the one paced client for Sheets and Gmail with your token; refuses any send
+│   ├── tracker.py                the Google Sheet: one row per applied job, found by header text (`mark-applied`, `tracker sync`)
+│   ├── contacts.py               who to write to: the ad, the company site, a name you give, Hunter; MX domain check; do-not-contact list
+│   ├── outreach.py               Gmail DRAFTS (never sent) to those contacts after you apply; claim guard on the body
 │   ├── discovery/                where companies and jobs come from
 │   │   ├── register.py           UKVI sponsor register: download, parse, match · M1 snapshots + diff
 │   │   ├── companies_house.py    M2 bulk join → company no., SIC codes, sector
@@ -85,7 +89,8 @@ career-ops/
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
     ├── discover/                 boards/ (posting lists, 6 h) · boards.json (token answers, 30 d) · first_seen.json · filtered.csv · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
-    ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read-only token); git-ignored like all of data/
+    ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read mail, create drafts, edit the Sheet); git-ignored like all of data/
+    ├── outreach/                 do_not_contact.csv (`value,note`: addresses and domains no draft goes to; `careerops init` creates it)
     ├── live/                     state.json (resume) · one summary .md per live session
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
@@ -207,7 +212,10 @@ careerops live --retailor --re-extract   # ... and the JD's keywords are extract
 careerops tailor --id JOB --re-extract   # the same flag on tailor / run
 careerops review                   # approve / edit (opens YAML of bullets) / reject
 careerops apply                    # fills basics + uploads PDFs, YOU press submit, paste the reference
-careerops mark-applied --id JOB    # an application made outside the assist: archive it and log 'applied'
+careerops mark-applied --id JOB    # an application made outside the assist: archive it and log 'applied' (then the Sheet row, and the drafts if outreach.mode: drafts)
+careerops tracker sync             # every applied job to your Google Sheet, one row per job, updated never duplicated (--dry-run prints the rows, no network)
+careerops contact add JOB "First Last" --role "Hiring Manager" [--email x@y]   # a person you found on LinkedIn; no --email asks Hunter once
+careerops outreach draft JOB [--to you@gmail.com]   # Gmail drafts with the CV attached, never sent; --to = one test draft to that address
 careerops outcome --id JOB --event screen --date 2026-10-12 --note "phone"   # applied|acknowledged|screen|interview|offer|rejected|withdrawn
 careerops outcomes                 # the funnel applied → any reply → screen → interview → offer: counts, rates, 95% Wilson intervals
 careerops outcomes --import-archive          # DRY RUN: list <paths.applications>/<Company>/<Role> as approximate 'applied' events
@@ -323,19 +331,58 @@ Sign up as a jobseeker at reed.co.uk, then request an API key at https://www.ree
 page after you log in). Put it in `.env` as `REED_API_KEY=...`. The API uses HTTP Basic auth with the key as the user name and an empty
 password; `careerops` does that for you.
 
-#### Getting Gmail access (read-only)
+#### Getting Gmail access (alerts, drafts and the Sheet)
 
 1. In https://console.cloud.google.com create a project (any name), then **APIs & Services → Library → Gmail API → Enable**.
-2. **APIs & Services → OAuth consent screen**: user type *External*, fill the app name and your e-mail, add yourself under *Test
-   users*, and add the scope `.../auth/gmail.readonly` (read-only). Leave the app in *Testing* (a refresh token then lasts 7 days; run
-   `--gmail-auth` again when it stops working) or publish it for your own use.
+2. Also enable the **Google Sheets API** (same Library page) if you use the tracker.
+   **APIs & Services → OAuth consent screen**: user type *External*, fill the app name and your e-mail, add yourself under *Test
+   users*, and add the scopes `.../auth/gmail.readonly`, `.../auth/gmail.compose` and `.../auth/spreadsheets`. Leave the app in
+   *Testing* (a refresh token then lasts 7 days; run `--gmail-auth` again when it stops working) or publish it for your own use.
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Desktop app.** Download the JSON and
    save it as `data/secrets/gmail_client.json` (the folder is git-ignored; never commit it).
 4. Run `careerops discover --gmail-auth`. Your browser opens at Google's consent page; you sign in and agree there (career-ops never
-   types a password). The refresh token is saved in `data/secrets/gmail_token.json`. A token that was granted anything wider than
-   `gmail.readonly` is refused, and the scope cannot send, delete or label mail.
+   types a password). The refresh token is saved in `data/secrets/gmail_token.json`. A token that was granted anything other than
+   those three scopes is refused, and so is a sign-in where a box was unticked. `gmail.compose` is the narrowest scope Google has for
+   creating a draft and it is wide enough to send too: what keeps career-ops from sending is the code (see "Outreach drafts"), not the
+   scope. A token from before these scopes still reads alerts; the tracker and the drafts ask you to run `--gmail-auth` again.
 5. `careerops discover --gmail-alerts` then reads the last `discover.gmail.query_days` days of alerts from the sender domains of the
    sources in `config/sources.yaml` (or, if you list kinds in `discover.gmail.senders`, only those of the four older ones).
+
+### The tracker, contacts and outreach drafts
+
+**Tracker** (`careerops/tracker.py`, `tracker.sheet_id` / `tracker.tab` in `config/settings.yaml`). One row per applied job in the
+`Applications` tab, keyed by `Job ID`. `mark-applied` (and `apply`, and `live`, which end the same way) writes it; `careerops tracker sync
+[--id JOB]` sends every applied job again and is idempotent: a row is updated in place, never duplicated, and nothing deletes one. The 36
+headers of row 1 (A1:AJ1: Job ID, Date applied, Company, ... Status, Interview date, Notes) are matched **by text, not position**: add,
+move or insert columns freely; a header career-ops writes that row 1 lacks is appended at the end, nothing is reordered. **You own Status,
+Interview date and Notes**: Status gets `Applied` only while its cell is empty, the other two are never written. On an update only the
+cells whose value changed are written (RAW, so a URL or job id is never turned into a number or date; dates are `YYYY-MM-DD`); the JD text
+is cut at 45,000 characters. `tracker sync --dry-run` prints the rows and uses no network. A tracker failure is printed, never undoes the
+application, and `tracker sync` sends it again.
+
+**Contacts** (`careerops/contacts.py`), at most two stored per job by discovery, in this order: (1) addresses in the job ad (`jd`); (2)
+`mailto:` links on `/careers`, `/jobs` and `/contact` of the company's domain, each fetched once through the polite client (robots.txt,
+one request a second) and kept only if they look like recruitment or HR (careers@, jobs@, recruitment@, talent@, hr@) on the company's own
+domain (`company_site`); (3) `careerops contact add JOB "First Last" --role "Hiring Manager" [--email x@y]`: you find the person on
+LinkedIn (it is never fetched). With no `--email` and `HUNTER_API_KEY` in `.env`, Hunter's Email Finder is asked once (domain + name; the
+key goes in a header); its verification status is kept and `accept_all` counts as unverified: no draft goes to an unverified Hunter
+address by itself. No address is ever guessed from a pattern. Every address gets a **domain check** (MX record, else an A record) with
+dnspython; there is no SMTP `RCPT TO` probe (port 25 is usually blocked at home, a catch-all server says 250 to everything, and probing
+can get your IP flagged). `data/outreach/do_not_contact.csv` (`value,note`: an address or a domain per row) is checked before any draft.
+
+**Outreach drafts** (`careerops/outreach.py`, `outreach.mode: off | drafts`, default `off`). With `drafts`, after `mark-applied` the
+job's best contacts get a Gmail **draft**: one per contact, two per job. **career-ops never sends**: the only Gmail call it makes is
+`drafts.create`; the Google client refuses any path ending in `/send`, and `tests/test_never_sends.py` fails the build if `smtplib`,
+`SMTP_SSL`, `messages().send`, `drafts().send` or a send endpoint appears anywhere in the package. You read the draft in Gmail and press
+send. Subject: `Application: <role> at <company> – <your name>`. Body (plain text, at most 120 words, fact-bank text only): `Dear <first
+name>,` (or `Hello <company> team,`), `I have just applied for <role> (<req id if the ad has one>).`, the job's hook letter line word for
+word, one ask for 15 minutes about the first 90 days, your signature (name, phone, LinkedIn, GitHub from `applicant.yaml`) and an opt-out
+line. It passes the letter claim guard (no "we" / "our", no bullet tied to another bullet's tool) and is refused if it holds a number the
+fact bank lacks or another company's name. Attachments: the CV PDF made for the job, and the letter PDF when one was chosen. The Sheet gets
+`Outreach status` (`drafted <n>`, or `no draft: <why>`) and `Follow-up due` (applied + `outreach.follow_up_days`, 7).
+`careerops outreach draft JOB --to you@gmail.com` makes ONE test draft to that address (nothing recorded, no limit used).
+**Review screen:** with `outreach.mode: drafts`, after `[a]pprove` the contacts found are listed with their source and domain check, and
+`[c]ontact add` lets you add the person you found before you apply.
 
 ### Adding a job from its link (`careerops add-url`, `careerops live --url`)
 

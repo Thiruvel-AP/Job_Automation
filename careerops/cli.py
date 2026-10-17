@@ -15,7 +15,8 @@
                                 health of every source in config/sources.yaml (method reachable, robots.txt, credentials, alerts
                                 in the last 7 days, postings) -> table + data/discover/health/<date>.csv; `list` prints the registry
   careerops discover --gmail-auth | --report
-                                sign in to Gmail (read-only) once · counts per source, resolved vs the manual queue
+                                sign in to Google once (read mail, create drafts, edit the tracker Sheet; never sends) · counts per
+                                source, resolved vs the manual queue
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
   careerops add-url URL [--company C] [--title T]
@@ -48,6 +49,15 @@
   careerops companies --snapshot | --refresh-ch | --resolve | --queue | --set NAME --url URL
   careerops learning            ranked skills-gap list across all tailored jobs (M4)
   careerops outreach --id JOB --person NAME --title TITLE   LinkedIn note + follow-up drafts (M4)
+  careerops tracker sync [--id JOB] [--dry-run]
+                                write every applied job (or one) to your Google Sheet, one row per Job ID, updated never duplicated;
+                                --dry-run prints the rows and touches no network (tracker.py)
+  careerops contact add JOB "First Last" [--role R] [--email E] [--domain D] | contact list JOB
+                                a person you found on LinkedIn: stored with a domain check; no --email asks Hunter once if
+                                HUNTER_API_KEY is set (contacts.py)
+  careerops outreach draft JOB [--to ADDRESS]
+                                Gmail DRAFTS (never sent) to the job's contacts with the CV attached; --to makes one test draft
+                                to that address (outreach.py). Runs after mark-applied when outreach.mode is `drafts`.
   careerops set-country --id JOB --country XX
                                 the country a job's work is in (W): decides the visa answers; a job whose W cannot be told is
                                 `needs_country` (not tailored, never applied to) until you give it
@@ -176,7 +186,7 @@ def cmd_sponsors(args):
 
 def cmd_discover(args):
     """`discover` with a source flag (--ats --reed --adzuna --gmail-alerts) writes ads to data/jds/inbox/; --report prints the counts;
-    --gmail-auth signs in to Gmail (read-only) once. With none of them it keeps its older job: the boards in sources: into the
+    --gmail-auth signs in to Google once (Gmail read, Gmail drafts, Sheets; never sends). With none of them it keeps its older job: the boards in sources: into the
     database, then triage (what `run` and cron call)."""
     sources_asked = [n for n in ("ats", "reed", "adzuna", "gmail_alerts", "jobbank") if getattr(args, n, False)]
     if getattr(args, "report", False) or getattr(args, "gmail_auth", False) or sources_asked:
@@ -525,6 +535,36 @@ def _fail(msg: str) -> None:
 
 
 def _archive(db: DB, s, job, rep: dict, confirmation: str | None, applied_on, no_letter: bool) -> bool:
+    """Archive a submitted application and mark it applied, then draft the outreach and update the tracker row. True if fully archived;
+    problems are printed. The job is applied whatever the archive says, so the follow-ups run either way."""
+    ok = _archive_files(db, s, job, rep, confirmation, applied_on, no_letter)
+    _after_applied(db, s, job["id"])
+    return ok
+
+
+def _after_applied(db: DB, s, job_id: str) -> None:
+    """Outreach drafts (outreach.mode: drafts), then the tracker row (tracker.sheet_id). Neither can undo or block the application
+    record: a failure is printed and the application stays recorded. Never runs on the mock root (no network there)."""
+    if mockroot.is_mock(s):
+        return
+    from . import contacts, outreach, tracker
+
+    job = db.job(job_id)
+    if outreach.drafts_on(s):
+        try:
+            contacts.discover(db, s, job)
+            res = outreach.draft_for_job(db, s, job)
+            print(f"  outreach: {res.status}" + "".join(f"\n    no draft to {a}: {w}" for a, w in res.skipped))
+        except Exception as e:  # noqa: BLE001  (Google, DNS, a missing file: the application is already recorded)
+            print(f"  outreach: no drafts made ({e})", file=sys.stderr)
+    if tracker.configured(s):
+        try:
+            print(f"  tracker: row {tracker.sync(db, s, [job_id])[job_id]}")
+        except Exception as e:  # noqa: BLE001
+            print(f"  tracker: not updated ({e}); `careerops tracker sync` sends it again", file=sys.stderr)
+
+
+def _archive_files(db: DB, s, job, rep: dict, confirmation: str | None, applied_on, no_letter: bool) -> bool:
     """Archive a submitted application and mark it applied. True if fully archived; problems are printed."""
     try:
         res = record_application(db, s, job, rep, confirmation=confirmation, applied_on=applied_on,
@@ -867,13 +907,108 @@ def cmd_learning(args):
         print(f"{g.priority:6.1f}  {g.term}  (in {g.jobs} jobs, required in {g.required_in})")
 
 
+def cmd_contact(args):
+    """`contact add JOB "First Last"`: a person you found yourself; `contact list JOB`. Nothing is sent."""
+    from . import contacts, tracker
+
+    s, db = _ctx(args)
+    job = db.job(args.job)
+    if job is None:
+        _fail(f"no such job: {args.job}")
+    if args.what == "list":
+        rows = contacts.stored(db, args.job)
+        print("\n".join(contacts.describe(r, s) for r in rows) if rows else f"No contacts stored for {args.job}.")
+        return
+    if not args.name:
+        _fail('contact add needs a name: careerops contact add JOB "First Last" --role "Hiring Manager"')
+    try:
+        c = contacts.add(db, s, job, args.name, args.role or "Hiring Manager", args.email or "", args.domain or "")
+    except (contacts.ContactError, OSError) as e:
+        _fail(str(e))
+    print("Stored: " + contacts.describe({"name": c.name, "role": c.role, "email": c.email, "source": c.source,
+                                          "mx_status": c.mx_status, "hunter_status": c.hunter_status}, s))
+    for n in c.notes:
+        print(f"  note: {n}")
+    if job["status"] == "applied" and tracker.configured(s):
+        try:
+            tracker.sync(db, s, [args.job])
+            print("  tracker row updated")
+        except Exception as e:  # noqa: BLE001
+            print(f"  tracker: not updated ({e})", file=sys.stderr)
+
+
+def cmd_tracker(args):
+    """`tracker sync`: every applied job (or --id) to the Google Sheet; --dry-run prints the rows and uses no network."""
+    from . import tracker
+
+    s, db = _ctx(args)
+    ids = [args.id] if args.id else None
+    if args.dry_run:
+        rows = [db.job(j) for j in ids] if ids else db.jobs("applied")
+        fb = load_yaml(s.path("fact_bank"))
+        rows = [r for r in rows if r is not None and r["applied_at"]]
+        for r in rows:
+            print(f"--- {r['id']}")
+            for h, v in tracker.record(db, s, r, fb).items():
+                text = " ".join(str(v).split())
+                print(f"  {h}: {text[:90] + ('...' if len(text) > 90 else '')}")
+        print(f"{len(rows)} row(s) would be sent; nothing was.")
+        return
+    if args.id and (db.job(args.id) is None or not db.job(args.id)["applied_at"]):
+        _fail(f"{args.id} is not an applied job")
+    try:
+        res = tracker.sync(db, s, ids)
+    except tracker.TrackerError as e:
+        _fail(str(e))
+    for jid, what in res.items():
+        print(f"  {what}: {jid}")
+    print(f"Tracker: {len(res)} job(s), " + ", ".join(f"{sum(v == k for v in res.values())} {k}" for k in ("added", "updated", "unchanged")) + ".")
+
+
 def cmd_outreach(args):
+    if args.action == "draft":
+        return cmd_outreach_draft(args)
+    if not (args.id and args.person and args.title):
+        _fail("outreach: use `outreach draft JOB`, or --id JOB --person NAME --title TITLE for the LinkedIn note")
     from .review import outreach
 
     s, db = _ctx(args)
     job = db.job(args.id)
     out = outreach.draft(dict(job), review.load_report(job), args.person, args.title, args.team, _llm(args, s, db))
     print(f"NOTE ({len(out.note)} chars):\n{out.note}\n\nFOLLOW-UP:\n{out.message}")
+
+
+def cmd_outreach_draft(args):
+    """`outreach draft JOB [--to ADDRESS]`: Gmail drafts, never sent. With --to, one test draft to that address, nothing recorded."""
+    from . import contacts, outreach, tracker
+
+    if args.mock:
+        _fail("outreach draft talks to Gmail; --mock never uses the network")
+    if not args.job_id:
+        _fail("outreach draft needs a job id: careerops outreach draft JOB [--to ADDRESS]")
+    s, db = _ctx(args)
+    job = db.job(args.job_id)
+    if job is None:
+        _fail(f"no such job: {args.job_id}")
+    try:
+        if not args.to:
+            contacts.discover(db, s, job)
+        res = outreach.draft_for_job(db, s, job, to=args.to)
+    except Exception as e:  # noqa: BLE001  (OutreachError, GoogleError, GmailAuthError, DNS: one line)
+        _fail(str(e))
+    for addr, did in res.drafted:
+        print(f"Draft created in Gmail for {addr} (draft id {did}). Nothing was sent: open Drafts, read it, send it yourself.")
+    for addr, why in res.skipped:
+        print(f"  no draft to {addr}: {why}")
+    print(f"Outreach: {res.status}")
+    if not res.test and job["status"] == "applied" and tracker.configured(s):
+        try:
+            tracker.sync(db, s, [args.job_id])
+            print("  tracker row updated")
+        except Exception as e:  # noqa: BLE001
+            print(f"  tracker: not updated ({e})", file=sys.stderr)
+    if not res.drafted:
+        sys.exit(1)
 
 
 def llm_usage_lines(s, db: DB) -> list[str]:
@@ -976,11 +1111,30 @@ def main(argv=None):
     c.add_argument("--limit", type=int, default=300)
     c.set_defaults(fn=cmd_companies)
     lr = sub.add_parser("learning"); lr.add_argument("--top", type=int, default=25); lr.set_defaults(fn=cmd_learning)
-    o = sub.add_parser("outreach")
-    o.add_argument("--id", required=True); o.add_argument("--person", required=True)
-    o.add_argument("--title", required=True); o.add_argument("--team")
+    o = sub.add_parser("outreach", help="`outreach draft JOB [--to ADDRESS]`: Gmail drafts, never sent; or --id --person --title "
+                                        "for the LinkedIn note (M4)")
+    o.add_argument("action", nargs="?", choices=["draft"])
+    o.add_argument("job_id", nargs="?", help="with `draft`: the job")
+    o.add_argument("--to", help="with `draft`: one test draft to this address (nothing recorded, no limit used)")
+    o.add_argument("--id"); o.add_argument("--person")
+    o.add_argument("--title"); o.add_argument("--team")
     o.add_argument("--mock", action="store_true")
     o.set_defaults(fn=cmd_outreach)
+    ct = sub.add_parser("contact", help="people to write to about a job: `contact add JOB \"First Last\" --role R [--email E]`, `contact list JOB`")
+    ct.add_argument("what", choices=["add", "list"])
+    ct.add_argument("job", help="job id")
+    ct.add_argument("name", nargs="?", help="with add: \"First Last\" (you found them on LinkedIn; it is never fetched)")
+    ct.add_argument("--role", help="default: Hiring Manager")
+    ct.add_argument("--email", help="their address if you know it; without it Hunter is asked once (HUNTER_API_KEY)")
+    ct.add_argument("--domain", help="the company's domain for Hunter when it cannot be told from the job link")
+    ct.set_defaults(fn=cmd_contact)
+
+    tk = sub.add_parser("tracker", help="`tracker sync`: applied jobs to your Google Sheet (one row per job, never duplicated)")
+    tk.add_argument("what", choices=["sync"])
+    tk.add_argument("--id", help="just this job")
+    tk.add_argument("--dry-run", dest="dry_run", action="store_true", help="print the rows, send nothing, use no network")
+    tk.set_defaults(fn=cmd_tracker)
+
     au = sub.add_parser("add-url", help="fetch one job ad from its link into data/jds/inbox/ (Greenhouse, Lever, Ashby, or any "
                                         "page with at least 2000 characters of text)")
     au.add_argument("url")
@@ -1000,7 +1154,7 @@ def main(argv=None):
                     "emails through the read-only Gmail API; unresolved ones go to data/jds/manual_queue.csv")
     dc.add_argument("--jobbank", action="store_true", help="Canada's Job Bank open-data CSV: matching rows are listed in "
                     "data/discover/listed_only.csv (the file has no employer or ad text)")
-    dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Gmail once (read-only; opens your browser)")
+    dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Google once: read mail, create drafts, edit the tracker Sheet; never sends (opens your browser)")
     dc.add_argument("--report", action="store_true", help="counts per source over all runs, resolved vs the manual queue")
     dc.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
     dc.add_argument("--dry-run", dest="dry_run", action="store_true", help="find and rank, write nothing")

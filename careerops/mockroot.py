@@ -42,6 +42,15 @@ def mock_settings(s: Settings) -> Settings:
     return Settings(raw=raw, root=s.root)
 
 
+def is_mock(s: Settings) -> bool:
+    """Is `s` the mock root's settings (its database lives under paths.mock_root)? The network steps after an application (Gmail drafts,
+    the Google Sheet) never run for it."""
+    try:
+        return s.path("db").is_relative_to(mock_root(s))
+    except (KeyError, ValueError):
+        return False
+
+
 def ensure_dirs(s: Settings) -> None:
     for key in DATA_DIRS:
         s.path(key).mkdir(parents=True, exist_ok=True)
