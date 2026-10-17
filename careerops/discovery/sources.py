@@ -16,6 +16,8 @@ from typing import Any, Iterator
 
 import requests
 
+from . import freshness
+
 UA = {"User-Agent": "career-ops/2.0 (personal job search)"}
 
 
@@ -73,7 +75,8 @@ def greenhouse(entry: Any) -> Iterator[dict]:
             "url": j.get("absolute_url"),
             "apply_url": j.get("absolute_url"),
             "description": html_to_text(j.get("content")),
-            "posted_at": j.get("first_published") or j.get("updated_at"),
+            "posted_at": j.get("first_published"),            # never updated_at: it resets when a job is reposted
+            "posted_at_source": freshness.label("greenhouse", "first_published") if j.get("first_published") else None,
         }
 
 
@@ -96,7 +99,8 @@ def lever(entry: Any, eu: bool = False) -> Iterator[dict]:
             "url": j.get("hostedUrl"),
             "apply_url": j.get("applyUrl") or j.get("hostedUrl"),
             "description": "\n\n".join(p for p in parts if p).strip(),
-            "posted_at": datetime.fromtimestamp(created / 1000, timezone.utc).isoformat() if created else None,
+            "posted_at": freshness.from_millis(created),
+            "posted_at_source": freshness.label("lever", "createdAt") if freshness.from_millis(created) else None,
         }
 
 
@@ -119,6 +123,7 @@ def ashby(entry: Any) -> Iterator[dict]:
             "apply_url": j.get("applyUrl") or j.get("jobUrl"),
             "description": j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")),
             "posted_at": j.get("publishedAt"),
+            "posted_at_source": freshness.label("ashby", "publishedAt") if j.get("publishedAt") else None,
         }
 
 
@@ -143,6 +148,7 @@ def adzuna(query: str, pages: int = 2, max_days_old: int = 7) -> Iterator[dict]:
                 "apply_url": j.get("redirect_url"),
                 "description": html_to_text(j.get("description")),   # truncated snippet
                 "posted_at": j.get("created"),
+                "posted_at_source": freshness.label("adzuna", "created") if j.get("created") else None,
             }
         time.sleep(3)   # stay well inside 25 calls/minute
 

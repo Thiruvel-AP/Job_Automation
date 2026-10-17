@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..db import DB
-from ..discovery import countries, manual
+from ..discovery import countries, freshness, manual
 from . import snapshot
 from .errors import ArchiveError
 
@@ -128,8 +128,9 @@ class State:
 class Live:
     def __init__(self, db: DB, settings, hooks: Hooks, *, max_jobs: int = 5, dry_run: bool = False,
                  resume_cmd: str = "careerops live", out: Callable[[str], None] = print, retailor: bool = False,
-                 only: Path | None = None):
+                 only: Path | None = None, fresh: bool = False):
         self.db, self.s, self.h, self.retailor = db, settings, hooks, retailor
+        self.fresh = fresh                              # `live --fresh`: tier 0 only (posted at most 24 h ago); the rest stays in the inbox
         self.only = only                                # `live --url`: work on this one inbox file, leave the rest
         self.max_jobs, self.dry_run, self.resume_cmd, self.out = max_jobs, dry_run, resume_cmd, out
         self.root = settings.path("applications")
@@ -197,27 +198,34 @@ class Live:
         return code
 
     def _by_priority(self, files: list[Path]) -> list[Path]:
-        """The inbox files best first: priority P = F x S x R (discovery/priority.py), ties by name. Sponsorship only weights the
-        order; no file is left out. If the ranking itself fails the files go by name, as before."""
+        """The inbox files best first: freshness tier, then priority P = F x S (discovery/priority.py), ties by name. Sponsorship only
+        weights the order; no file is left out (`--fresh` leaves the files older than 24 h in the inbox, untouched). If the ranking
+        itself fails the files go by name, as before (and `--fresh` then cannot tell the fresh ones: it says so and takes none)."""
         from ..config import load_yaml
         from ..discovery import priority as prio
 
         files = sorted(files, key=lambda p: p.name)
-        if len(files) < 2:
+        if len(files) < 2 and not self.fresh:
             return files
         try:
             ranked = prio.order_files(files, self.s, self.db, load_yaml(self.s.path("fact_bank")))
         except Exception as e:  # noqa: BLE001
             self.out(f"(inbox order by priority not available: {e}; going by file name)")
-            return files
-        self.out("Inbox order by priority P = F x S x R:")
+            return [] if self.fresh else files
+        self.out("Inbox order by freshness tier, then priority P = F x S:")
         for f, pr in ranked:
-            self.out(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
+            self.out(f"  T{pr.tier} {pr.age():>7}  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
+        if self.fresh:
+            keep = [f for f, pr in ranked if pr is not None and pr.tier == 0]
+            self.out(f"--fresh: {len(keep)} file(s) posted at most 24 h ago (tier 0); {len(ranked) - len(keep)} older file(s) stay in the inbox.")
+            return keep
         return [f for f, _ in ranked]
 
     def _loop(self) -> None:
         files = ([self.only] if self.only is not None else self._by_priority(
                  [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]))
+        if self.fresh and not files and self.only is None:
+            self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
         if not files:
             self.out(f"Nothing in {self.dirs.inbox}: put one JD per .txt file there (optional first lines "
                      "`Company: ...`, `Title: ...`, `URL: ...`).")
@@ -377,8 +385,10 @@ class Live:
         meta = {"company": company, "title": title, "url": url, "location": hdr.get("location") or "United Kingdom"}
         if re.fullmatch(r"[A-Za-z][\w.-]{0,30}", hdr.get("source") or ""):
             meta["source"] = hdr["source"].lower()
-        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("posted") or ""):
+        if freshness.is_iso(hdr.get("posted")):
             meta["posted"] = hdr["posted"]
+            if (hdr.get("posted_source") or "") in freshness.TRUSTED:
+                meta["posted_source"] = hdr["posted_source"]
         if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("first_seen") or ""):
             meta["seen_on"] = hdr["first_seen"]
         if (hdr.get("listed") or "").lower() in ("yes", "true", "1"):

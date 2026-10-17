@@ -16,3 +16,5 @@ forecasting | time-series forecasting | time series | demand forecasting | predi
 predictive modelling | machine learning | supervised learning | classification | regression
 model deployment | model serving | mlops | deployment | ci/cd
 stakeholder management | stakeholders | communication | presentation | cross-functional collaboration
+gradient boosting | xgboost | lightgbm | catboost | tree-based models | random forest
+dbt | sql | data transformation | data modelling | etl

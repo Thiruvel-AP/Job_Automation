@@ -1,236 +1,493 @@
+# fact_bank.yaml — reviewed against linkedin_diff.md (2026-10-11)
+# Source of truth for every change: your LinkedIn export or your own hand-made CV. Nothing invented.
+# Lines marked DECIDE are factual choices only you can make — check them before a live run.
+
 identity:
-  name: Thiruvel Andagurunathan Pandian          # FIXED: CVs use the full name
-  headline: Data Scientist / AI Engineer
-  email: apthiruvel@gmail.com                    # FIXED: from the CV header
-  phone: "+44 7741 016954"                       # FIXED: from the CV header
+  name: Thiruvel Andagurunathan Pandian
+  headline: Data Scientist & AI/ML Engineer
+  email: apthiruvel@gmail.com
+  phone: "+44 7741 016954"
   location: Bristol, UK
   links:
-    linkedin: https://www.linkedin.com/in/thiruvel-a-p/   # FIXED
-    github: https://github.com/Thiruvel-AP                # FIXED
+    linkedin: https://www.linkedin.com/in/thiruvel-a-p/
+    github: https://github.com/Thiruvel-AP
     portfolio: https://thiruvel-ap.github.io/PersonalPortfolio/
-  status_line: ["Right to work in UK under Graduate visa", "Available to join immediately"]
+  status_line: ["Right to Work in UK", "Available to join Immediately"]   # 17 Oct: your daily CV. Was "Right to work in UK under Graduate visa"
 
-profile_facts:   
-  - MSc Data Science, University of Bristol (completed 2026)
-  - Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform
-  - Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph
-  - 3rd place
+profile_facts:
+  - "MSc Data Science, University of Bristol (completed 2026)"
+  - "Over a year of hands-on experience building and deploying machine learning and LLM systems"                       # LinkedIn About
+  - "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)"   # your CV
+  - "Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda)"   # your CV
+  - "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+  - "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+  - "Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking"                   # your CV + LinkedIn
+  - "Turns statistical outputs into clear recommendations for technical and non-technical stakeholders"                # your CV
+  - "3rd place, Lloyd's Banking Group Datathon"                                                                         # was just "3rd place"
 
 skills:
   core: [Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git]
   Languages: [Python, SQL, R, TypeScript, JavaScript, Swift, Dart]
-  ML & Stats: [scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time-series forecasting, hypothesis testing, ANOVA, bootstrap, PCA, statistics, maximum likelihood estimation, experimental design]
-  LLMs & Agents: [LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, LLM evaluation, prompt design]
-  Data Visualisation & Analysis: [pandas, NumPy, SciPy, NLTK, networkx, Leiden clustering, tidyverse, tidymodels, PostgreSQL, MongoDB, Databricks/PySpark, Matplotlib, Seaborn, ggplot2, Tableau, Streamlit, Jupyter, Google Colab, Google AI Studio, Kaggle, Plotly]
-  Cloud & MLOps: [AWS Lambda, ECR, IAM, EC2,S3, SQS, DynamoDB, GCP Cloud Run, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)",]
+  ML & Statistics: [scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time-series forecasting, customer segmentation (k-means, HAC, DBSCAN), class-imbalance handling (SMOTE), model validation (cross-validation, MCC), hypothesis testing, ANOVA, bootstrap, PCA, statistics, maximum likelihood estimation, experimental design (MSc coursework)]
+  LLMs & Agents: [ReAct agent loops, agent memory, "AI-assisted development (Claude Code, Cursor, OpenAI Codex)", LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, LLM evaluation, prompt design]
+  Data & Visualisation: [pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, ggplot2, Tableau, Streamlit, tidyverse, tidymodels, NLTK, networkx, Leiden clustering, Databricks/PySpark (coursework)]
+  Databases: [PostgreSQL, MongoDB, DynamoDB, ChromaDB]
+  Cloud & MLOps: [AWS Lambda, ECR, IAM, EC2, S3, SQS, GCP Cloud Run, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)"]
   Mobile & Web: [React, Node.js, SwiftUI, UIKit, Core Data, Flutter]
-  
+  # Removed as padding (restore if you disagree): Jupyter, Google Colab, Google AI Studio, Kaggle
+
 experience:
   - id: az
-    title: Data Scientist  
-    org: AstraZeneca · GeneTraceAI, University of Bristol
-    dates: May 2026 – Sep 2026  
+    display_org: "AstraZeneca, United Kingdom"   # 17 Oct: heading exactly as on your daily CV
+    title: Data Scientist
+    org: AstraZeneca                       # LinkedIn. Was "AstraZeneca · GeneTraceAI, University of Bristol"
+    location: Bristol, UK (Remote)
+    employment_type: indirect contract     # DECIDE: LinkedIn says "Indirect Contract"; your own CV says "(MSc Dissertation)". Make CV and LinkedIn say the same true thing.
+    dates: May 2026 – Sep 2026
+    situation: "Needed an LLM a research team could trust before it shipped"
     bullets:
       - id: az1
-        text: Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
-        terms: [llm, agent, agentic, generative ai, genai, langchain, bedrock, aws, tool calling, function calling, python]
+        text: "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+        terms: [llm, llms, agent, agentic, generative ai, genai, langchain, bedrock, aws, tool calling, function calling, python]
       - id: az2
-        text: Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers.
+        text: "Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers."
+        result: "19,213-gene parquet fallback"
         terms: [guardrails, reliability, apis, api, data quality, fault tolerance, resilience]
       - id: az3
-        text: Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies.
+        text: "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies."
         terms: [docker, containerised, containerized, aws lambda, serverless, deployment, mlops, cloud, iam, security, production]
       - id: az4
-        text: Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.
+        text: "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+        result: "~65 tests across 8 files"
         terms: [testing, evaluation, pytest, integration testing, llm evaluation, quality]
       - id: az5
-        text: Surveyed and explored 14 heterogeneous source datasets (gene expression, gene properties, nomenclature), owning the identity-spine datasets and setting metadata boundaries for downstream modelling.
+        text: "Surveyed and explored 14 heterogeneous source datasets (gene expression, gene properties, nomenclature), owning the identity-spine datasets (identifier crosswalks, Cellosaurus) and setting metadata boundaries for downstream modelling."
+        result: "14 source datasets"
         terms: [eda, exploratory data analysis, data analysis, data wrangling, data integration, metadata]
       - id: az6
-        text: Integrated the agent into a React front end with real-time gene alias enrichment.
+        text: "Integrated the agent into a React front end with real-time gene alias enrichment."
         terms: [react, full stack, frontend, javascript]
-      - id: az7                                            
-        text: Managed AWS account governance for the project, including root-user isolation, IAM user and group management and least-privilege policies.
+      - id: az7
+        text: "Managed AWS account governance for the project, including root-user isolation, IAM user and group management and least-privilege policies."
         terms: [aws, iam, security, governance, access control]
+      - id: az8                            # NEW from LinkedIn
+        text: "Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph-formation strategy, and designed a bipartite/heterogeneous graph approach with Leiden clustering for similarity detection and KNN for gene-to-cell-line association."
+        terms: [gnn, graph neural networks, graph, research, literature review, clustering, knn, network analysis]
+      - id: az9                            # NEW from LinkedIn
+        text: "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+        terms: [technical writing, documentation, evaluation, hallucination, research, communication]
+      - id: az10                           # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true                     # used word for word, never rephrased
+        situation_included: true           # starts with its own "Needed ...:" opener
+        replaces: [az1, az2]
+        text: "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+        result: "19,213-gene parquet fallback"
+        terms: [llm, agent, agentic, tool calling, langchain, bedrock, aws, guardrails, hallucination, reliability, fault tolerance, failure recovery, apis, prompt engineering]
+      - id: az11                           # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [az4]
+        text: "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level → API → live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+        result: "~65 tests"
+        terms: [testing, evaluation, llm evaluation, evals, debugging, root cause analysis, quality, pytest, migration]
+      - id: az12                           # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [az3, az5, az9]
+        text: "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+        result: "14 source datasets"
+        terms: [python, data pipeline, data integration, data quality, docker, aws lambda, serverless, deployment, mlops, iam, documentation]
 
   - id: dc180
+    display_org: "180 Degrees Consulting"   # 17 Oct: heading exactly as on your daily CV
     title: Data Consultant (AI Engineering & AI System)
     org: 180 Degrees Consulting Bristol
-    dates: Sep 2025 – Dec 2025 
+    location: Bristol, UK (Remote)
+    employment_type: internship
+    situation: "Faced a loosely defined problem from a Madrid based startup client"
+    dates: Sep 2025 – Dec 2025
     bullets:
       - id: dc1
-        text: Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.
-        terms: [mcp, agentic, agent, python, prototype, stakeholder, client, consulting, ci, postgresql, open-source llm, open-weight,  communication, presentation, stakeholder communication]
+        text: "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+        terms: [mcp, agentic, agent, python, prototype, stakeholder, client, consulting, ci, postgresql, open-source llm, open-weight, communication, presentation, stakeholder communication]
       - id: dc2
-        text:  Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership.
+        text: "Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership."
+        result: "5-star commendation from senior leadership"
         terms: [typescript, node.js, openai, production, client, delivery]
+      - id: dc3                            # NEW from LinkedIn
+        text: "Designed hierarchical agent workflows with real-time query capabilities, integrating Exograph and PostgreSQL for persistent storage and retrieval across agent sessions."
+        terms: [agent, agentic, workflow, graphql, postgresql, data storage, retrieval]
+      - id: dc4                            # NEW from LinkedIn
+        text: "Translated ambiguous business requirements into a production-ready technical blueprint and owned the solution within a cross-functional consulting team, from architecture design through stakeholder presentation."
+        terms: [requirements, stakeholder, cross-functional, consulting, ownership, communication, business]
+      - id: dc5                            # NEW 15 Oct: you confirmed reviewing PRs with the client's CTO
+        text: "Reviewed pull requests in the client's production repository alongside the client's CTO, the engagement's point of contact."
+        terms: [code review, pull requests, git, collaboration, stakeholder]
+      - id: dc6                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        situation_included: true
+        replaces: [dc1, dc3, dc4]
+        text: "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement."
+        result: "5-star rating from senior leadership"
+        terms: [agent, agentic, mcp, graphql, postgresql, agent memory, architecture, leadership, cross-functional, prototype, stakeholder, client, consulting, python, ci]
+      - id: dc7                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        text: "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+        terms: [architecture, system design, multi-agent, llm, graphql, api, prompt engineering, statistics]
+      - id: dc8                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [dc2, dc5]
+        text: "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+        terms: [typescript, node.js, openai, production, code review, pull requests, git, collaboration, client, delivery]
 
   - id: freelance
-    title: Freelance AI/ML Engineer
-    org: Self-employed, Chennai
+    display_org: "Freelance"   # 17 Oct: heading exactly as on your daily CV
+    title: AI/ML Engineer                  # LinkedIn. Was "Freelance AI/ML Engineer"
+    org: Freelance                         # LinkedIn "Self Employed · Freelance". Was "Self-employed, Chennai"
+    location: Chennai, India
+    employment_type: freelance
     dates: Jan 2025 – Aug 2025
     bullets:
       - id: fl1
-        text: Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.
+        text: "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
         terms: [machine learning, deep learning, scikit-learn, tensorflow, keras, fastapi, docker, deployment, model deployment, python]
       - id: fl2
-        text: Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+        text: "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
         terms: [nlp, rag, retrieval, llm, langchain, langgraph, hugging face, transformers, agentic]
       - id: fl3
-        text: Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task.
+        text: "Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task."
         terms: [fine-tuning, lora, peft, parameter-efficient fine-tuning, task-specific fine-tuning, llama, llm]
-      - id: fl4                                           
-        text: Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run.
+      - id: fl4
+        text: "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run."
         terms: [rag, retrieval, claude, anthropic, chromadb, gcp, cloud run, rest api, fastapi, docker, production]
+      - id: fl5                            # NEW from LinkedIn
+        text: "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+        terms: [feature engineering, cross-validation, hyperparameter tuning, classification, regression, reproducibility, machine learning, scikit-learn]
+      - id: fl6                            # NEW from LinkedIn
+        text: "Developed NLP pipelines covering tokenisation, word embeddings and contextual language models using Hugging Face Transformers and local LLMs via Ollama."
+        terms: [nlp, tokenisation, embeddings, transformers, hugging face, ollama, language models]
+      - id: fl7                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [fl1, fl2, fl3, fl4, fl6]
+        text: "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+        terms: [rag, agentic, langchain, langgraph, chromadb, gcp, cloud run, nlp, hugging face, transformers, ollama, scikit-learn, machine learning, fastapi, docker, rest api, lora, fine-tuning, llama]
 
   - id: avasoft
-    title: Software Engineer (SDE Trainee Jan–Jun 2023)
+    display_org: "Avasoft LTD., Chennai, India"   # 17 Oct: heading exactly as on your daily CV
+    title: "Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)"   # DECIDE: LinkedIn dates. Your hand-made CV said Jul 2023 and Jun 2023.
     org: Avasoft
+    location: Chennai, India
+    employment_type: full-time
     dates: Jan 2023 – Sep 2024
     bullets:
       - id: av1
-        text: Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.
+        text: "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
         terms: [api, apis, fintech, financial services, integration, third-party data, flutter, mobile]
       - id: av2
-        text: Delivered 10 reusable SwiftUI/UIKit component templates that accelerated team velocity across concurrent releases.
+        text: "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated team velocity across concurrent releases."
+        result: "10 reusable component templates"
         terms: [swift, ios, mobile, software engineering]
       - id: av3
-        text: Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management.
+        text: "Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management."
         terms: [data modelling, data modeling, schema design]
       - id: av4
-        text: Built a JavaScript web-scraping pipeline that automated a manual collection process and surfaced market-trend signals used for pricing decisions.
+        text: "Built a JavaScript web-scraping pipeline that automated a manual collection process and surfaced market-trend signals used for pricing decisions."
         terms: [javascript, web scraping, automation, data pipeline, data collection]
       - id: av5
-        text: Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.
+        text: "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
         terms: [flutter, dart, offline-first, data persistence, synchronisation, mobile]
+      - id: av6                            # NEW from LinkedIn + your CV
+        text: "Secured backend communication with SSL pinning and integrated AWS Cognito for user authentication with single sign-on in the FinTech app."
+        terms: [security, authentication, aws cognito, sso, ssl, fintech]
+      - id: av7                            # NEW from LinkedIn (trainee period)
+        text: "Built e-commerce and ticketing UIs in Swift/SwiftUI with product search, cart logic, order tracking and booking management."
+        terms: [swift, swiftui, ios, mobile, ui]
+      - id: av8                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [av1, av6]
+        text: "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+        terms: [fintech, financial services, api, apis, rest api, integration, third-party data, security, authentication, production, teamwork]
+      - id: av9                            # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [av2]
+        text: "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated the team across concurrent releases, so features shipped from shared, tested building blocks."
+        result: "10 reusable component templates"
+        terms: [swift, ios, mobile, software engineering, reusable components]
+      - id: av10                           # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [av3, av4]
+        text: "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        terms: [data modelling, schema design, javascript, web scraping, automation, data pipeline, data collection, pricing]
 
 projects:
-  - id: agenticfriend
-    name: AgenticFriend — real-time voice assistant
-    stack: FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA
-    github: https://github.com/Thiruvel-AP/adk_multi-agent        
+  - id: gtaigraph
+    display_name: "GTAI Graph PoC -- Cancer Cell-Line Omics Graph"   # 17 Oct: heading exactly as on your daily CV
+    name: GTAI Cell Line Finder — multi-omics graph for cancer cell-line selection (PoC)   # LinkedIn title
+    stack: Python, networkx, Leiden, scikit-learn, RAPIDS cuML
+    github: https://github.com/Thiruvel-AP/GTAI-GraphPOC
+    situation: "Needed to find which cell lines behave unusually for a gene"
     bullets:
-      - id: p_af1
-        text: Full-duplex WebSocket voice agent with a rolling VAD state machine for streaming speech-to-text (faster-whisper) and barge-in.
-        terms: [real-time, streaming, speech, voice ai, agent, websocket]
-      - id: p_af2
-        text: Text-to-speech on CUDA in float16 with start-up warm-up, packaged in an nvidia/cuda Docker image.
-        terms: [gpu, cuda, docker, inference, latency, pytorch]
-  - id: mcpsearch
-    name: mcp_searchagent
-    stack: FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions
-    github: https://github.com/Thiruvel-AP/mcp_searchagent     
+      - id: p_gg1
+        text: "Merged 14 public omics source files (crosswalk, median imputation, robust z-scoring with MAD) into a graph of 1,399 cell lines and 16,385 genes (~2.8M edges), and used Leiden community detection (19 clusters, modularity 0.822) to explore its structure."
+        result: "1,399 cell lines × 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822"
+        terms: [graph, network analysis, clustering, bioinformatics, omics, healthcare, data integration, imputation]
+      - id: p_gg2
+        text: "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545)."
+        result: "RAM 8.2 → 5.5 GB; train Pearson 0.807 vs test 0.545"
+        terms: [random forest, regression, gpu, model training, scikit-learn, validation, overfitting]
+      - id: p_gg3                          # NEW 16 Oct: your reference CV
+        text: "Combined mRNA and protein evidence per gene with Stouffer's method."
+        terms: [statistics, meta analysis, data integration, evidence combination]
+      - id: p_gg4                          # NEW 16 Oct: your reference CV
+        text: "Reported that Leiden communities (19 clusters) did not beat a lineage baseline, and traced a hash randomisation bug to its root cause so runs reproduce."
+        result: "19 clusters; did not beat a lineage baseline"
+        terms: [baseline, evaluation, reproducibility, debugging, root cause analysis]
+      - id: p_gg5                          # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        replaces: [p_gg1, p_gg2, p_gg4]
+        text: "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, cut RAM from 8.2 to 5.5 GB on a free T4 GPU, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
+        result: "1,399 cell lines × 16,385 genes; RAM 8.2 → 5.5 GB; train Pearson 0.807 vs test 0.545"
+        terms: [graph, data integration, omics, bioinformatics, gpu, memory optimisation, evaluation, overfitting, debugging, root cause analysis, reproducibility]
+  - id: iata
+    display_name: "IATA Customer-Feedback Text Analytics"   # 17 Oct: heading exactly as on your daily CV
+    name: Mining Insights from Customer Feedback — NLP & unsupervised analytics (MSc team project)   # LinkedIn title
+    stack: Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN
+    situation: "Needed structure in unstructured airline support tickets"
+    github: https://github.com/Thiruvel-AP/TextAnalytics
     bullets:
-      - id: p_ms1
-        text: MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
-        terms: [mcp, search, graphql, postgresql, ci, open-weight, local llm]
-  - id: astrofreud                                                 
-    name: AstroFreud — LangGraph interview agent
-    stack: Python, LangGraph, DeepFace
-    github: https://github.com/Thiruvel-AP/AstroFreud             
-    bullets:
-      - id: p_as1
-        text: 14-node LangGraph interview pipeline with DeepFace (Facenet512) biometric verification, psycholinguistic five-dimension scoring and emergency email alerting.
-        terms: [langgraph, agentic, multi-step, computer vision, nlp, face verification, workflow]
-  - id: coverfit
-    name: CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
-    stack: FastAPI, pandas, LiteLLM, Pydantic, pytest
-    github: https://github.com/Thiruvel-AP/AIHackathon-Phoenix    # FIXED
-    bullets:
-      - id: p_cf1
-        text: Deterministic comparable-company matching over 221 profiles and 1,116 cover lines with a single LLM call for rationale, at ~£0.003 per query and under 3 s.
-        terms: [api, fastapi, pandas, llm, cost, latency, insurance, pydantic]
-  - id: lloyds
-    name: Lloyd's Banking Group Datathon — 3rd place 
-    stack: Isolation Forest, ensemble classifiers, MLflow
-    github: null
-    award: 3rd place 
-    bullets:
-      - id: p_ll1
-        text: Anomaly detection on 200:1 class-imbalanced data with Isolation Forest and ensemble classifiers, tracked in MLflow.
-        terms: [anomaly detection, imbalanced data, classification, mlflow, experiment tracking, financial services]
+      - id: p_ia1
+        text: "Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets."
+        result: "silhouette < 0.30 traced to its cause"
+        terms: [nlp, text analytics, clustering, preprocessing, embeddings, root cause analysis, team project, customer feedback, support tickets, unsupervised clustering, customer behaviour]
+      - id: p_ia2                          # NEW 16 Oct: your reference CV
+        text: "In a five person team, coordinated per member Git branches merged through pull requests and ran the team Trello board."
+        terms: [git, pull requests, code review, collaboration, teamwork, project management]
   - id: churn
-    name: Banking Customer Churn
+    display_name: "Banking Customer Churn"   # 17 Oct: heading exactly as on your daily CV
+    name: Banking Customer Churn — propensity model
     stack: R, tidymodels, XGBoost
     github: https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction
     bullets:
       - id: p_ch1
-        text: XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation.
-        terms: [r, xgboost, classification, churn, propensity, hyperparameter tuning, customer behaviour, classical ML, machine learning]
+        text: "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+        terms: [r, xgboost, classification, churn, propensity, hyperparameter tuning, customer behaviour, classical ML, machine learning, banking]
+  - id: lloyds
+    name: Lloyd's Banking Group Datathon   # "— 3rd place" removed from the name; it lives in award
+    stack: scikit-learn, Isolation Forest, SciPy, MLflow
+    github: null
+    award: 3rd place
+    bullets:
+      - id: p_ll1
+        text: "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow."
+        result: "3rd place; 200:1 class imbalance"
+        terms: [anomaly detection, imbalanced data, classification, mlflow, experiment tracking, financial services, banking]
   - id: bitcoin
-    name: Bitcoin Forecasting
-    stack: TensorFlow, LSTM, TensorFlow Serving
-    github: https://github.com/Thiruvel-AP/BitcoinForecasting     # FIXED: link is in memory
+    display_name: "Bitcoin Forecasting -- LSTM Time Series"   # 17 Oct: heading exactly as on your daily CV
+    name: Bitcoin Forecasting — LSTM time-series service
+    stack: Python, TensorFlow, TF Serving
+    situation: "Needed forecasts validated on time ordered data"
+    github: https://github.com/Thiruvel-AP/BitcoinForecasting
     bullets:
       - id: p_bt1
-        text: LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, served through a TensorFlow Serving REST API.
+        text: "Trained a forecasting LSTM with cyclic date encoding and TimeSeriesSplit grid-search tuning, then deployed it behind a TensorFlow Serving REST API."
         terms: [forecasting, time series, lstm, tensorflow, model serving, rest api]
-  - id: gtaigraph
-    name: GTAI Graph PoC — cancer cell-line omics graph
-    stack: networkx, leidenalg, scikit-learn, RAPIDS cuML
-    github: https://github.com/Thiruvel-AP/GTAI-GraphPOC     
+  - id: coverfit
+    display_name: "CoverFit -- Insurance Benchmarking API"   # 17 Oct: heading exactly as on your daily CV
+    name: CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
+    stack: FastAPI, pandas, LiteLLM, Pydantic, pytest
+    github: https://github.com/Thiruvel-AP/AIHackathon-Phoenix
     bullets:
-      - id: p_gg1
-        text: networkx heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) with k-NN similarity and Leiden community detection (modularity 0.822).
-        terms: [graph, network analysis, clustering, bioinformatics, omics, healthcare]
-      - id: p_gg2
-        text: Per-gene protein-prediction models for 11,459 genes (OLS + GPU Random Forest ensemble), with resumable chunked GPU training on a free T4.
-        terms: [random forest, regression, gpu, model training, scikit-learn]
-  - id: iata                                                       # FIXED: on file in memory, missing from the bank
-    name: IATA customer-feedback text analytics (MSc team project, team of five)
-    stack: Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN
-    github: https://github.com/Thiruvel-AP/TextAnalytics
+      - id: p_cf1
+        text: "Deterministic comparable-company matching over 221 profiles and 1,116 cover lines with a single LLM call for rationale, at ~£0.003 per query and under 3 s."
+        result: "~£0.003 per query, under 3 s"
+        terms: [api, fastapi, pandas, llm, cost, latency, insurance, pydantic]
+      - id: p_cf2                          # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        situation_included: true
+        replaces: [p_cf1]
+        text: "An insurance sponsor needed a fast, low-cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in under 3 seconds at ~£0.003 per query."
+        result: "under 3 seconds at ~£0.003 per query"
+        terms: [api, fastapi, pandas, pydantic, llm, cost, latency, insurance, pytest, explainability]
+  - id: agenticfriend
+    display_name: "AgenticFriend -- Real-Time Voice AI Agent"   # 17 Oct: heading exactly as on your daily CV
+    name: AgenticFriend — real-time voice assistant
+    stack: FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA
+    github: https://github.com/Thiruvel-AP/adk_multi-agent
     bullets:
-      - id: p_ia1
-        text: Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets.
-        terms: [nlp, text analytics, clustering, preprocessing, embeddings, root cause analysis, team project, customer feedback, support tickets, text analytics, unsupervised clustering]
-  - id: lsde                                                       # FIXED: backs the S3/SQS/DynamoDB skills, now labelled coursework
-    name: Auto-scaled word-frequency pipeline on AWS (MSc coursework)
+      - id: p_af1
+        text: "Full-duplex WebSocket voice agent with a rolling VAD state machine for streaming speech-to-text (faster-whisper) and barge-in."
+        terms: [real-time, streaming, speech, voice ai, agent, websocket]
+      - id: p_af2
+        text: "Text-to-speech on CUDA in float16 with start-up warm-up, packaged in an nvidia/cuda Docker image."
+        terms: [gpu, cuda, docker, inference, latency, pytorch]
+      - id: p_af3                          # NEW 17 Oct: your daily CV, verbatim
+        verbatim: true
+        situation_included: true
+        replaces: [p_af1, p_af2]
+        text: "Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full-stack application (React front end, FastAPI and Google ADK back end, full-duplex WebSocket) with ReAct-based agent orchestration, barge-in handling and self-hosted speech models on Docker/CUDA (float16 inference, model warm-up) to cut latency."
+        terms: [real-time, streaming, voice ai, speech, agent, react agent, full stack, react, fastapi, google adk, websocket, gpu, cuda, docker, latency, inference]
+  - id: astrofreud
+    name: AstroFreud — LangGraph interview agent
+    stack: Python, LangGraph, DeepFace
+    github: https://github.com/Thiruvel-AP/AstroFreud
+    bullets:
+      - id: p_as1
+        text: "14-node LangGraph interview pipeline with DeepFace (Facenet512) biometric verification, psycholinguistic five-dimension scoring and emergency email alerting."
+        terms: [langgraph, agentic, multi-step, computer vision, nlp, face verification, workflow]
+  - id: mcpsearch
+    name: mcp_searchagent
+    stack: FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions
+    github: https://github.com/Thiruvel-AP/mcp_searchagent
+    bullets:
+      - id: p_ms1
+        text: "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11."
+        terms: [mcp, search, graphql, postgresql, ci, open-weight, local llm]
+  - id: lsde
+    name: Auto-scaled word-frequency pipeline on AWS
     stack: EC2, SQS, S3, DynamoDB, CloudWatch, Auto Scaling
     github: null
+    badge: MSc Coursework
     bullets:
       - id: p_ls1
-        text: Built an SQS-driven word-frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on CloudWatch queue alarms, and benchmarked instance configurations.
+        text: "Built an SQS-driven word-frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on CloudWatch queue alarms, and benchmarked instance configurations."
         terms: [aws, cloud, data pipeline, auto scaling, distributed, coursework]
+
+  - id: cnn
+    display_name: "Image Classification -- CNN and Transfer Learning"   # 17 Oct: heading exactly as on your daily CV
+    name: Image Classification — CNN and Transfer Learning
+    stack: Python, PyTorch, torchvision
+    github: null
+    badge: MSc Coursework
+    bullets:
+      - id: p_cn1
+        text: "Trained a PyTorch CNN on CIFAR-10 and compared it with ImageNet pretrained ResNet50 transfer learning (frozen backbone, new 10 class head), judged by confusion matrices and validation loss rather than accuracy alone."
+        terms: [pytorch, deep learning, cnn, convolutional neural network, transfer learning, computer vision, image classification, model evaluation, coursework]
 
 education:
   - degree: MSc Data Science
+    display_org: "University of Bristol, UK"
+    display_line: "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)"   # 17 Oct: heading exactly as on your daily CV
     org: University of Bristol
-    dates: 2025 – 2026          
-    note: Distinction (Expected)
+    dates: Sep 2025 – Sep 2026            # LinkedIn. Was "2025 – 2026"
+    note: Distinction (Expected)           # DECIDE: keep, update with your final grade, or remove
+    modules: [Large-Scale Data Engineering, Statistical Computing & Empirical Methods, AI & Text Analytics, Visual Analytics, Data Science Methods & Practices, "Technology, Innovation, Business & Society"]   # LinkedIn unit names
+    research_focus: "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"   # LinkedIn
   - degree: B.E. Electrical and Electronics Engineering
-    org: St. Joseph's College of Engineering          # FIXED: from your CV
-    dates: Sep 2019 – Apr 2023                        # FIXED: from your CV
+    display_line: "B.E. Electrical & Electronics Engineering, First Class with Distinction"   # 17 Oct: heading exactly as on your daily CV
+    org: St. Joseph's College of Engineering
+    dates: Aug 2019 – May 2023             # DECIDE: LinkedIn. Your hand-made CV said Sep 2019 – Apr 2023.
     note: First Class with Distinction
+    grade: "91%"                           # LinkedIn
 
-certifications:                                       
-  - Anthropic MCP certifications (Introductory and Advanced), Jun 2026
-  - AWS Academy Cloud Foundations, Nov 2025
-  - 180 Degrees Consulting Data Science Consultant Certificate, Dec 2025
-  - Bristol PLUS Award, Mar 2026
+certifications:
+  - "Model Context Protocol: Advanced Topics — Anthropic, Jun 2026"
+  - "Introduction to Model Context Protocol — Anthropic, Jun 2026"
+  - "AWS Academy Cloud Foundations, Nov 2025"
+  - "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025"
+  - "Bristol PLUS Award, Mar 2026"
 
-deny_terms:
-  - terraform
-  - dbt
-  - bigquery
-  - snowflake
-  - redshift
-  - clickhouse
-  - azure
-  - kubeflow
-  - power bi
-  - looker
-  - hubspot
-  - dagster
-  - airflow
-  - prefect
-  - autogen
-  - dspy
-  - golang
-  - recommender system
-  - recommendation system
-  - mentored
-  - mentoring
-  - direct reports
-  - career-ops
-  - job application automation
+publications:                              # NEW from LinkedIn
+  - title: "Modern Power System Operations in Effective Transmission Congestion Management via Optimal DG Capacity Using Firefly Algorithms"
+    venue: ICEES 2023 (EEE, SSN)
+    date: Mar 2023
+
+languages:                                 # NEW from LinkedIn
+  - language: English
+    level: Professional working proficiency
+  - language: Tamil
+    level: Native or bilingual proficiency
+
+deny_terms: [terraform, dbt, bigquery, snowflake, redshift, clickhouse, azure, kubeflow, power bi, looker, hubspot, dagster, airflow, prefect, autogen, dspy, golang, mentored, mentoring, direct reports, career-ops, job application automation]
+# ---------------------------------------------------------------------------
+# Role families # NEW 17 Oct: your daily CV, verbatim. The pipeline picks the family whose terms best match the job ad,
+# then uses that family's title, profile body and skill lines WORD FOR WORD (no model rewrites them).
+families:
+  - id: ai_engineer
+    match: [ai engineer, llm, agent, agentic, genai, generative ai, rag, mcp, prompt, harness, evals, langchain, typescript]
+    title: "AI Engineer"
+    headline_stack: [TypeScript, Python, OpenAI, Claude, Gemini, LangChain, LangGraph, AWS Bedrock, MCP, RAG]
+    profile_body: "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily."
+    skill_lines:
+      - label: "Agentic AI & LLM Applications"
+        items: "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)"
+      - label: "Software Engineering & Integrations"
+        items: "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis"
+      - label: "Cloud & Deployment"
+        items: "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+
+  - id: data_scientist
+    match: [data scientist, machine learning, statistics, forecasting, modelling, modeling, predictive, analytics, xgboost, pytorch, experimentation]
+    title: "Data Scientist"
+    headline_stack: [Python, SQL, PyTorch, XGBoost, scikit-learn, AWS, GCP, MLflow]
+    profile_body: "Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking."
+    skill_lines:
+      - label: "Machine Learning, Deep Learning & Statistics"
+        items: "Predictive modelling (gradient boosting with XGBoost, random forest, scikit-learn), clustering (K-Means, HAC, DBSCAN, Leiden), deep learning (PyTorch, TensorFlow/Keras, LSTM, GRU, BiRNN, CNN), time-series forecasting (cyclic time encoding, TimeSeriesSplit), anomaly detection (Isolation Forest), class-imbalance handling (SMOTE), hyper-parameter tuning (grid search, two-stage Bayesian), model evaluation (held-out, cross-validation, Pearson, MCC), statistical inference and experimental design (confidence intervals, bootstrap, hypothesis testing; MSc coursework), MLflow experiment tracking"
+      - label: "Python, Data Quality & Cloud"
+        items: "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS (Lambda, ECR, IAM, S3, Bedrock), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), serverless deployment (Lambda, Cloud Run), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git"
+      - label: "NLP, LLMs, Embeddings & Evaluation"
+        items: "NLP (text preprocessing, TF-IDF, SBERT embeddings, text clustering), Hugging Face Transformers, large language models (Claude, OpenAI, open-weight via Ollama), prompt engineering, RAG with embeddings (ChromaDB), agents (LangChain, LangGraph), team LoRA fine-tune of Llama, LLM evaluation (hallucination-rate analysis, deterministic guardrails)"
+      - label: "Client Delivery & Communication"
+        items: "Scoping ambiguous problems with clients, stakeholder demos, working with client engineering teams, code review, transparent reporting of model limitations, root-cause analysis, technical documentation"
+
+# Short certifications line set # NEW 17 Oct: your daily CV, verbatim
+certifications_short:
+  - "Anthropic MCP Advanced & Introductory, 2026"
+  - "AWS Academy Cloud Foundations, 2025 · 180DC Data Science Consultant, 2025"
+  - "Lloyd's Datathon 3rd Place, 2026 · Bristol PLUS Award, 2026"
+
+# Hook library (15 Oct, checked against this file). Picked per job by term overlap; used word for word.
+hook_library:
+  - id: h_agent_harness       # NEW 17 Oct: your daily CV headline and profile sentence 1
+    proof: az10
+    terms: [agent, agents, agentic, harness, tool calling, failure, recovery, reliability, evals, evaluation, llm, guardrails, mcp, typescript]
+    headline: "agents that recover from tool failure | ~65-test evals"
+    profile_line: "AI engineer (MSc Data Science, University of Bristol) who builds the harness around the model: at AstraZeneca, built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) that recovers when its tools fail (circuit breakers with a 19,213-gene parquet fallback, deterministic Ensembl and HGNC calls) and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness, which also validated a Groq-to-Bedrock model migration."
+    letter_line: "At AstraZeneca I built a tool-calling agent that recovers when its tools fail, and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness."
+
+  - id: h_prod_tests
+    proof: az4
+    terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype]
+    headline: "LLM agent shipped to AWS Lambda behind ~65 automated tests"
+    profile_line: "Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests."
+    letter_line: "At AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests."
+
+  - id: h_llm_guard
+    proof: az2
+    terms: [llm, llms, genai, generative ai, agent, agents, agentic, rag, guardrails, hallucination, langchain, bedrock]
+    headline: "LLM agent with hallucination guards and a 19,213 gene fallback"
+    profile_line: "AI engineer who makes LLM systems trustworthy: at AstraZeneca I built an agent with deterministic hallucination guards and a 19,213 gene fallback, tested by ~65 tests."
+    letter_line: "At AstraZeneca I built an LLM agent that stays correct when sources fail: deterministic hallucination guards, circuit breakers and a 19,213 gene fallback, tested by ~65 tests."
+
+  - id: h_scale_gpu
+    proof: p_gg2
+    terms: [scale, scalable, gpu, performance, optimisation, optimization, large scale, big data, model training, regression, random forest]
+    headline: "11,459 per gene models on one GPU, RAM cut from 8.2 to 5.5 GB"
+    profile_line: "Data scientist who scales modelling and reports its limits: trained 11,459 per gene models on a single T4 GPU, cut RAM from 8.2 to 5.5 GB, and caught overfitting on held out data."
+    letter_line: "I trained 11,459 per gene models on a single GPU, cut memory from 8.2 to 5.5 GB, and used held out testing to surface overfitting (train Pearson 0.807 vs test 0.545)."
+
+  - id: h_client
+    proof: dc2
+    terms: [client, clients, stakeholder, stakeholders, consulting, customer, delivery, requirements, communication, onboarding]
+    headline: "Client prototype now in live daily use, rated five stars by leadership"
+    profile_line: "Data scientist who turns loose client briefs into working systems: at 180 Degrees Consulting my prototype went into the client's production repository, in live daily use, rated five stars by senior leadership."
+    letter_line: "At 180 Degrees Consulting I turned a loosely defined client brief into a prototype that is now in live daily use in the client's production repository, rated five stars by senior leadership."
+
+  - id: h_cost_latency
+    proof: p_cf1
+    terms: [cost, latency, api, apis, fastapi, product, llm, efficiency, inference]
+    headline: "LLM matching API at ~£0.003 per query, under 3 s"
+    profile_line: "Data scientist who keeps solutions simple and cheap: built a deterministic matching API with one LLM call at ~£0.003 per query and under 3 s."
+    letter_line: "I built a deterministic matching API that makes a single LLM call, costing ~£0.003 per query and answering in under 3 s."
+
+  - id: h_imbalance
+    proof: p_ll1
+    terms: [anomaly detection, fraud, imbalanced, imbalance, banking, financial services, fintech, risk, outlier]
+    headline: "3rd place, Lloyd's Datathon: anomaly detection at 200:1 imbalance"
+    profile_line: "Data scientist with banking data experience: placed 3rd at the Lloyd's Banking Group Datathon detecting anomalies under 200:1 class imbalance, with experiments tracked in MLflow."
+    letter_line: "At the Lloyd's Banking Group Datathon I placed 3rd detecting anomalies under 200:1 class imbalance, comparing Isolation Forest with ensemble classifiers in MLflow."
+
+  - id: h_forecast            # no number exists for this project yet: the pipeline flags "hook has no number"
+    proof: p_bt1
+    terms: [forecasting, forecast, time series, timeseries, demand, lstm, temporal, sequence]
+    headline: "LSTM forecasting validated on time ordered data, served via REST API"
+    profile_line: "Data scientist who validates forecasts the way they will be used: an LSTM forecaster tuned with TimeSeriesSplit and served through a TensorFlow Serving REST API."
+    letter_line: "I built an LSTM forecaster validated on time ordered data with TimeSeriesSplit and served it through a REST API."

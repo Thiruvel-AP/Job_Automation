@@ -1,6 +1,6 @@
-"""Discovery quality round: alert companies resolved to a board by token (title match 0.8, 30-day cache, resolved % per source), R counted
-from the day we first saw a job (an open posting keeps R >= 0.5), the manual queue kept to the best N of a run with the rest in an overflow
-file, and the audit of every title the role / place filters turned away. No network: `Net` answers every request."""
+"""Discovery quality round: alert companies resolved to a board by token (title match 0.8, 30-day cache, resolved % per source), the
+posting's age counted from the source's own time (freshness tiers; no recency factor), the manual queue kept to the best N of a run with
+the rest in an overflow file, and the audit of every title the role / place filters turned away. No network: `Net` answers every request."""
 import base64
 import csv
 import json
@@ -200,10 +200,10 @@ def test_resolved_percent_is_reported_per_source_for_the_run_and_over_all_runs(c
 
 def test_the_shipped_defaults_are_the_agreed_ones(settings):
     assert settings["discover"]["title_match"] == 0.8 and settings["discover"]["manual_queue_max"] == 10
-    assert settings["discover"]["ats"]["board_cache_days"] == 30 and settings["priority"]["open_listing_floor"] == 0.5
+    assert settings["discover"]["ats"]["board_cache_days"] == 30
 
 
-# ------------------------------------------------------------------ 2. recency: counted from the day we first saw the job
+# ------------------------------------------------------------------ 2. freshness: the age counts from the source's own posting time
 ANAPLAN = ("1", "Data Scientist", "London, UK")
 
 
@@ -214,48 +214,84 @@ def anaplan_net(published):
     return net
 
 
-def test_a_64_day_old_posting_that_is_still_open_has_r_at_least_0_5_because_r_counts_from_the_day_we_saw_it(cfg, db, fb_fixture):
+def test_a_64_day_old_open_posting_is_tier_3_but_its_p_is_not_cut_and_it_is_still_written(cfg, db, fb_fixture):
+    """The old R = exp(-days / 14) took this posting to 0.01 (0.5 with the open-listing floor); now P = F x S and the age only picks a tier."""
     cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
     published = (TODAY - timedelta(days=64)).isoformat()
     d = make(cfg, db, anaplan_net(published), fb=fb_fixture)
     d.from_boards()
     (pr, c, path), = d.ranked()
-    assert c.posted.startswith(published[:10]) and c.first_seen == "2026-10-10" and c.open_listing
-    assert pr.r >= 0.5 and pr.days == pytest.approx(0.5, abs=0.01)             # first seen today, half a day before noon
+    assert c.posted.startswith(published[:10]) and c.posted_source == "greenhouse.first_published" and c.first_seen == "2026-10-10"
+    assert pr.tier == 3 and pr.hours == pytest.approx(64 * 24, abs=0.1) and pr.p == pytest.approx(pr.f * pr.s)
     text = path.read_text(encoding="utf-8")
-    assert "Posted: 2026-08-07" in text and "First seen: 2026-10-10" in text and "Listed: yes" in text
+    assert f"Posted: {published}" in text and "Posted via: greenhouse.first_published" in text
+    assert "First seen: 2026-10-10" in text and "Listed: yes" in text
 
 
-def test_the_inbox_files_priority_counts_from_its_first_seen_header_not_its_posted_one(cfg, db, fb_fixture):
+def test_a_reposted_greenhouse_job_is_dated_by_first_published_not_updated_at(cfg, db, fb_fixture):
+    """Greenhouse resets updated_at on a repost: the Anaplan ad, published 69 days ago, would look 10 days old."""
+    cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
+    net = Net(strict=False)
+    reply = board(ANAPLAN, published=(TODAY - timedelta(days=69)).isoformat())
+    reply["jobs"][0]["updated_at"] = (TODAY - timedelta(days=10)).isoformat()
+    net.add("boards/acme/jobs", reply)
+    net.add("boards/acme", {"name": "Acme Analytics Ltd", "content": ""})
+    d = make(cfg, db, net, fb=fb_fixture)
+    d.from_boards()
+    (pr, c, _), = d.ranked()
+    assert pr.hours == pytest.approx(69 * 24, abs=0.1) and pr.tier == 3 and c.posted_source == "greenhouse.first_published"
+
+
+def test_a_greenhouse_posting_without_first_published_is_dated_by_the_day_we_saw_it(cfg, db, fb_fixture):
+    cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
+    net = Net(strict=False)
+    reply = board(ANAPLAN)
+    del reply["jobs"][0]["first_published"]                                     # updated_at is still there, and is not used
+    net.add("boards/acme/jobs", reply)
+    net.add("boards/acme", {"name": "Acme Analytics Ltd", "content": ""})
+    d = make(cfg, db, net, fb=fb_fixture)
+    d.from_boards()
+    (pr, c, _), = d.ranked()
+    assert c.posted == "" and c.posted_source == "" and c.first_seen == "2026-10-10"
+    assert pr.tier == 0 and pr.hours == pytest.approx(12.0, abs=0.1) and pr.posted_via == "first seen"
+
+
+@pytest.mark.parametrize("ats, field, label", [("greenhouse", "first_published", "greenhouse.first_published"),
+                                               ("lever", "createdAt", "lever.createdAt"), ("lever_eu", "createdAt", "lever.createdAt"),
+                                               ("ashby", "publishedAt", "ashby.publishedAt")])
+def test_each_board_names_its_own_posting_time_field(ats, field, label):
+    from careerops.discovery import ats as ats_mod
+    board_ = ats_mod.Board(ats, "acme", "Acme")
+    post = ats_mod.Posting("1", "Acme", "Data Scientist", "London", "https://e.com/1", "x", "2026-10-09T10:00:00+00:00")
+    c = disc.posting_candidate(board_, post)
+    assert c.posted_source == label and c.posted == "2026-10-09T10:00:00+00:00"
+    assert disc.posting_candidate(board_, ats_mod.Posting("1", "Acme", "T", "L", "u", "x", None)).posted_source == ""
+
+
+def test_the_inbox_files_age_counts_from_its_posted_headers_and_an_untrusted_one_from_first_seen(cfg, db, fb_fixture):
     from careerops.discovery import priority
     cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
     d = make(cfg, db, anaplan_net((TODAY - timedelta(days=64)).isoformat()), fb=fb_fixture)
     d.from_boards()
     (_, path), = d.run.written
     job = priority.file_job(path, cfg, fb_fixture, None)
-    assert job["seen_on"] == "2026-10-10" and job["open_listing"] is True and job["posted_at"] == "2026-08-07"
-    assert priority.priority(job, cfg, tailored=False, today=TODAY).r > 0.9
+    assert job["seen_on"] == "2026-10-10" and job["open_listing"] is True and job["posted_at_source"] == "greenhouse.first_published"
+    assert priority.priority(job, cfg, tailored=False, today=TODAY).tier == 3
+    path.write_text(path.read_text(encoding="utf-8").replace("Posted via: greenhouse.first_published\n", ""), encoding="utf-8")
+    untrusted = priority.file_job(path, cfg, fb_fixture, None)                  # a Posted: line nobody vouches for: counted from First seen
+    assert priority.priority(untrusted, cfg, tailored=False, today=TODAY).tier == 0
 
 
-def test_a_job_seen_64_days_ago_and_still_listed_stays_at_the_floor_and_one_that_is_not_listed_decays(cfg):
-    seen = {"seen_on": (TODAY - timedelta(days=64)).date().isoformat(), "sponsor_match": "exact", "ceiling_pre": 0.8, "description": "x"}
-    listed = prio.priority({**seen, "open_listing": 1}, cfg, tailored=False, today=TODAY)
-    assert listed.r == 0.5 and listed.floored and "still listed on the employer's board" in listed.line()
-    gone = prio.priority(seen, cfg, tailored=False, today=TODAY)
-    assert gone.r < 0.02 and not gone.floored
-    fresh = prio.priority({**seen, "seen_on": TODAY.date().isoformat(), "open_listing": 1}, cfg, tailored=False, today=TODAY)
-    assert fresh.r > 0.95 and not fresh.floored                                # the floor only ever raises
+def test_a_job_seen_64_days_ago_is_tier_3_and_one_seen_today_is_tier_0_whether_or_not_it_is_still_listed(cfg):
+    base = {"sponsor_match": "exact", "ceiling_pre": 0.8, "description": "x"}
+    old = prio.priority({**base, "seen_on": (TODAY - timedelta(days=64)).date().isoformat(), "open_listing": 1}, cfg, tailored=False, today=TODAY)
+    new = prio.priority({**base, "seen_on": TODAY.date().isoformat()}, cfg, tailored=False, today=TODAY)
+    assert (old.tier, new.tier) == (3, 0) and old.p == new.p == pytest.approx(0.8)         # age never changes P, only the tier
 
 
-def test_the_floor_is_a_setting(cfg):
-    cfg.raw["priority"]["open_listing_floor"] = 0.3
-    job = {"seen_on": "2026-01-01", "open_listing": 1}
-    assert prio.recency_factor(job, cfg, TODAY)[0] == 0.3
-
-
-def test_without_a_first_seen_day_posted_at_is_still_what_r_counts_from(cfg):
-    r, days = prio.recency_factor({"posted_at": (TODAY - timedelta(days=14)).isoformat()}, cfg, TODAY)
-    assert days == pytest.approx(14) and r == pytest.approx(0.368, abs=0.001)
+def test_the_posting_time_of_a_page_without_a_trusted_source_is_ignored_for_the_age(cfg):
+    job = {"posted_at": "2026-10-10T08:00:00Z", "posted_at_source": None, "seen_on": "2026-08-01", "sponsor_match": "exact", "ceiling_pre": 0.8}
+    assert prio.priority(job, cfg, tailored=False, today=TODAY).tier == 3
 
 
 def test_an_alerts_own_date_is_the_first_sighting_when_it_is_older_than_the_run(cfg, db, fb_fixture):
@@ -267,7 +303,22 @@ def test_an_alerts_own_date_is_the_first_sighting_when_it_is_older_than_the_run(
     d.from_gmail()
     (pr, c, path), = d.ranked()
     assert c.first_seen == "2026-10-05" and "First seen: 2026-10-05" in path.read_text(encoding="utf-8")
-    assert pr.days == pytest.approx(5.5, abs=0.01) and 0.6 < pr.r < 0.7 and c.open_listing
+    assert pr.hours == pytest.approx(47.0, abs=0.1) and pr.tier == 1 and c.open_listing        # the board's own first_published (2026-10-08 13:00 UTC) wins
+
+
+def test_an_alert_for_a_posting_with_no_time_is_dated_by_the_email_that_arrived(cfg, db, fb_fixture):
+    """Gmail alert | the email's arrival time: an upper bound on when the job was posted."""
+    cfg.raw["sources"]["greenhouse"] = [{"slug": "maple", "name": "Maple Analytics Ltd"}]
+    arrived = TODAY - timedelta(hours=30)
+    reply = gh("maple", "Maple Analytics", ("7", "Data Scientist", "London, UK"))
+    del reply["boards/maple/jobs"]["jobs"][0]["first_published"]
+    html = linkedin_alert(("Data Scientist", "Maple Analytics Ltd", "London"))
+    net = mail_net({"m1": (LINKEDIN, "Data Scientist jobs", html, ms(arrived))}, reply)
+    d = make(cfg, db, net, fb=fb_fixture)
+    d.from_gmail()
+    (pr, c, path), = d.ranked()
+    assert c.posted_source == "gmail.received" and c.posted == "2026-10-09T06:00:00+00:00"
+    assert pr.hours == pytest.approx(30.0, abs=0.1) and pr.tier == 1 and "Posted via: gmail.received" in path.read_text(encoding="utf-8")
 
 
 def test_the_first_run_that_saw_a_job_is_remembered_even_when_the_file_is_gone(cfg, db):
@@ -316,12 +367,20 @@ def test_message_date_is_gmails_internal_date_else_the_date_header_else_nothing(
     assert gmail.message_date({}) == "" and gmail.message_date({"payload": {"headers": [{"name": "Date", "value": "no"}]}}) == ""
 
 
-def test_add_jd_keeps_the_first_seen_day_and_the_open_flag_and_priority_reads_them_from_the_row(cfg, db):
-    jid = manual.add_jd(db, "x" * 600, company="Acme", title="Data Scientist", url="https://a.example/1", posted="2026-08-07",
-                        seen_on="2026-08-10", open_listing=True)
+def test_message_time_is_the_arrival_as_an_iso_utc_datetime():
+    assert gmail.message_time({"internalDate": str(ms(TODAY))}) == "2026-10-10T12:00:00+00:00"
+    hdr = {"payload": {"headers": [{"name": "Date", "value": "Tue, 06 Oct 2026 23:30:00 -0400"}]}}
+    assert gmail.message_time(hdr) == "2026-10-07T03:30:00+00:00" and gmail.message_time({}) == ""
+
+
+def test_add_jd_keeps_the_posting_time_its_source_and_the_open_flag_and_priority_reads_them_from_the_row(cfg, db):
+    jid = manual.add_jd(db, "x" * 600, company="Acme", title="Data Scientist", url="https://a.example/1", posted="2026-08-07T09:00:00Z",
+                        posted_source="greenhouse.first_published", seen_on="2026-10-09", open_listing=True)
     row = db.job(jid)
-    assert (row["posted_at"], row["seen_on"], row["open_listing"]) == ("2026-08-07", "2026-08-10", 1)
-    assert prio.priority(row, cfg, tailored=False, today=TODAY).r == 0.5               # 61 days since first seen, but still listed
+    assert (row["posted_at"], row["posted_at_source"], row["seen_on"], row["open_listing"]) == (
+        "2026-08-07T09:00:00Z", "greenhouse.first_published", "2026-10-09", 1)
+    pr = prio.priority(row, cfg, tailored=False, today=TODAY)
+    assert pr.tier == 3 and pr.hours == pytest.approx(64 * 24 + 3, abs=0.1)         # first_published, not the day we saw it
     plain = manual.add_jd(db, "x" * 600, company="Beta", title="Data Scientist", url="https://b.example/1")
     assert db.job(plain)["seen_on"] is None and not db.job(plain)["open_listing"]
 
@@ -402,8 +461,9 @@ def test_every_title_the_filters_turn_away_is_written_with_its_reason(cfg, db):
     cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
     d = make(cfg, db, acme_net())
     d.from_boards()
-    got = {(r["title"], r["location"]): r for r in rows(disc.filtered_path(cfg))}
-    assert list(rows(disc.filtered_path(cfg))[0]) == disc.FILTERED_COLUMNS
+    assert disc.filtered_path(cfg, "2026-10-10").name == "filtered_2026-10-10.csv"
+    got = {(r["title"], r["location"]): r for r in rows(disc.filtered_path(cfg, "2026-10-10"))}
+    assert list(rows(disc.filtered_path(cfg, "2026-10-10"))[0]) == disc.FILTERED_COLUMNS
     role = got[("Marketing Manager", "London, UK")]
     assert role["filter"] == "role" and role["company"] == "Acme Analytics Ltd" and role["source"] == "greenhouse"
     assert role["reason"] == "no roles.families title pattern matches" and role["link"].endswith("/102")
@@ -421,20 +481,47 @@ def test_a_title_that_only_just_misses_a_family_says_which_words_to_look_at(cfg,
 def test_a_title_is_written_once_however_many_runs_see_it(cfg, db):
     cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
     make(cfg, db, acme_net()).from_boards()
-    first = disc.filtered_path(cfg).read_text(encoding="utf-8")
+    first = disc.filtered_path(cfg, "2026-10-10").read_text(encoding="utf-8")
     make(cfg, db, acme_net(), today=TODAY + timedelta(days=1)).from_boards()
-    assert disc.filtered_path(cfg).read_text(encoding="utf-8") == first
+    assert disc.filtered_path(cfg, "2026-10-10").read_text(encoding="utf-8") == first
+    assert not disc.filtered_path(cfg, "2026-10-11").exists()                 # nothing new the next day: no file for it
+
+
+def test_a_title_first_turned_away_on_a_later_day_goes_to_that_days_file(cfg, db):
+    cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
+    make(cfg, db, acme_net()).from_boards()
+    shutil.rmtree(cfg.path("discover") / "boards")                              # the board's posting list is read again, not served from its 6-hour cache
+    net = acme_net()
+    board = fixture_json("gh_jobs_acme.json")
+    board["jobs"].append(dict(board["jobs"][0], id=999, title="Barista", absolute_url="https://job-boards.greenhouse.io/acme/jobs/999"))
+    net.routes.insert(0, ("boards/acme/jobs", board))
+    make(cfg, db, net, today=TODAY + timedelta(days=1)).from_boards()
+    assert [r["title"] for r in rows(disc.filtered_path(cfg, "2026-10-11"))] == ["Barista"]       # only the new one, with its reason
+    assert rows(disc.filtered_path(cfg, "2026-10-11"))[0]["reason"].startswith("no roles.families title pattern matches")
 
 
 def test_a_dry_run_writes_no_audit_file(cfg, db):
     cfg.raw["sources"]["greenhouse"] = [{"slug": "acme", "name": "Acme Analytics Ltd"}]
     make(cfg, db, acme_net(), dry_run=True).from_boards()
-    assert not disc.filtered_path(cfg).exists()
+    assert not disc.filtered_path(cfg, "2026-10-10").exists()
 
 
 def test_alert_titles_outside_the_families_are_audited_with_the_alerts_source(cfg, db):
     d = make(cfg, db, alert_net([("Retail Store Manager", "Shopco"), ("Data Scientist", "Orbit Ltd")]))
     d.from_gmail()
-    (row,) = rows(disc.filtered_path(cfg))
+    (row,) = rows(disc.filtered_path(cfg, "2026-10-10"))
     assert (row["source"], row["company"], row["title"], row["filter"]) == ("linkedin", "Shopco", "Retail Store Manager", "role")
     assert row["link"].startswith("https://www.linkedin.com/jobs/view/")
+
+
+def test_the_queue_keeps_a_fresh_alert_before_a_better_titled_old_one(cfg, db):
+    """The queue is ranked like the inbox: the freshness tier of the alert's arrival first, then title relevance x S."""
+    cfg.raw["discover"]["manual_queue_max"] = 1
+    fresh = linkedin_alert(("Data Analyst", "Nova Ltd", "London")).replace("3900000000", "3900000007")   # relevance 0.6, arrived 5 hours ago
+    old = linkedin_alert(("Data Scientist", "Orbit Ltd", "London"))                    # relevance 1.0, arrived 8 days ago
+    net = mail_net({"m1": (LINKEDIN, "Data Scientist jobs", old, ms(TODAY - timedelta(days=8))),
+                    "m2": (LINKEDIN, "Data Analyst jobs", fresh, ms(TODAY - timedelta(hours=5)))})
+    d = make(cfg, db, net)
+    d.from_gmail()
+    assert [r["company"] for r in rows(cfg.path("jds") / "manual_queue.csv")] == ["Nova Ltd"]
+    assert [r["company"] for r in rows(cfg.path("jds") / "manual_queue_overflow.csv")] == ["Orbit Ltd"]

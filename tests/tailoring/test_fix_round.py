@@ -22,48 +22,51 @@ def _b(bid, *words):
     return {"id": bid, "text": " ".join(words) + " work", "terms": []}
 
 
-# ---------------------------------------------------------------- 2. at most 3 projects; their bullets before a 4th project
+# ---------------------------------------------------------------- 2. the projects: a cap, and the fill order
 def _bank():
     def proj(pid, n, tag):
         return {"id": pid, "bullets": [_b(f"{pid}{i}", f"{tag}{i}", f"x{pid}{i}") for i in range(n)]}
 
     return {"skills": {}, "experience": [{"id": "e1", "bullets": [_b("a0", "ea0", "ya0"), _b("a1", "ea1", "ya1")]}],
-            "projects": [proj("p1", 4, "one"), proj("p2", 4, "two"), proj("p3", 3, "three"), proj("p4", 4, "four")]}
+            "projects": [proj("p1", 4, "one"), proj("p2", 4, "two"), proj("p3", 3, "three"), proj("p4", 4, "four"),
+                         proj("p5", 3, "five"), proj("p6", 3, "six"), proj("p7", 3, "seven")]}
 
 
-def test_the_selection_never_holds_more_than_three_projects_with_two_or_three_bullets_each():
+def test_the_selection_never_holds_more_projects_than_the_layout_with_two_or_three_bullets_each():
     fb = _bank()
-    kws = _kws(*[f"{t}{i}" for t in ("one", "two", "three", "four") for i in range(4)])
+    kws = _kws(*[f"{t}{i}" for t in ("one", "two", "three", "four", "five", "six", "seven") for i in range(4)])
     sel = select_cv(fb, kws, layout=TWO_PAGE)
-    assert len(sel["projects"]) == 3
+    assert len(sel["projects"]) == TWO_PAGE.projects == 5                        # 7 projects in the bank, 5 on the CV
     assert all(2 <= len(sel["project_bullets"][p]) <= 3 for p in sel["projects"])
 
 
-def test_fill_adds_bullets_to_the_three_projects_before_any_fourth_project():
+def test_fill_adds_a_further_project_before_more_bullets_of_the_shown_ones():
     fb = _bank()
-    # the 4th project is the one the JD talks about most, but it did not make the three: its bullets still come last
+    # the 4th project is the one the JD talks about most, but it did not make the three: with room for a 4th it still comes first
     kws = _kws(*[f"{t}{i}" for t in ("one", "two", "three") for i in range(2)], *[f"four{i}" for i in range(4)],
                "four0")
     sel = {"experience": {"e1": ["a0", "a1"]}, "projects": ["p1", "p2", "p3"],
            "project_bullets": {"p1": ["p10", "p11"], "p2": ["p20", "p21"], "p3": ["p30", "p31"]}}
-    order = fill_order(fb, kws, sel, extra_projects=True)
+    order = fill_order(fb, kws, sel, max_projects=4)
     chosen_rest = {"p12", "p13", "p22", "p23", "p32"}
-    last_chosen = max(order.index(b) for b in chosen_rest)
-    assert all(order.index(b) > last_chosen for b in order if b.startswith("p4"))
-    assert chosen_rest <= set(order)
+    first_chosen = min(order.index(b) for b in chosen_rest)
+    assert all(order.index(b) < first_chosen for b in order if b.startswith("p4"))
+    assert chosen_rest <= set(order) and {"p40", "p41", "p42", "p43"} <= set(order)
+    assert not any(b.startswith(("p5", "p6", "p7")) for b in order)               # the maximum of 4 projects is not exceeded
 
 
-def test_without_extra_projects_a_fourth_project_never_enters_the_fill():
+def test_without_a_maximum_no_further_project_enters_the_fill():
     fb = _bank()
     sel = {"experience": {"e1": ["a0", "a1"]}, "projects": ["p1", "p2", "p3"],
            "project_bullets": {"p1": ["p10", "p11"], "p2": ["p20", "p21"], "p3": ["p30", "p31"]}}
-    order = fill_order(fb, _kws("four0", "four1"), sel)                 # default: scoring.cv_fill_extra_projects off
+    order = fill_order(fb, _kws("four0", "four1"), sel)                  # no max_projects: only the shown projects and the jobs
     assert order and not any(b.startswith("p4") for b in order)
-    assert any(b.startswith("p4") for b in fill_order(fb, _kws("four0"), sel, extra_projects=True))
+    assert any(b.startswith("p4") for b in fill_order(fb, _kws("four0"), sel, max_projects=4))
 
 
-def test_the_default_is_a_hard_cap_of_three_projects(settings):
-    assert settings["scoring"].get("cv_fill_extra_projects") is False
+def test_the_defaults_start_with_five_projects_and_may_fill_to_six(settings):
+    sc = settings["scoring"]
+    assert sc["cv_projects"] == 5 and sc["cv_projects_max"] == 6 and "cv_fill_extra_projects" not in sc
 
 
 # ---------------------------------------------------------------- 3. the wording pass
@@ -95,6 +98,7 @@ def _exact_form(ctx):
 
 def _run(settings, fb, job, llm, jd=JD):
     settings.raw["scoring"]["band"] = [0.0, 1.0]       # two keywords swing the score 50% <-> 100%: no band revert in these tests
+    settings.raw["hook"] = {"enabled": False}          # the hook's problem clause is made of the JD keywords: it would be the literal hit these tests need missing
     return tailor.tailor_job({**job, "description": jd + "x" * 900}, fb, llm, settings, settings.path("outputs"))
 
 

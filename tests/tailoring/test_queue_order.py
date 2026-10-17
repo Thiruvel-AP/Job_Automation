@@ -84,7 +84,7 @@ def test_headline_and_prior_reach_prompt_and_report(settings, job):
     llm = RecordingLLM()
     rep = tailor_job(dict(job, title="Data Scientist", family="data_scientist", tier=1), fb, llm, settings,
                      settings.path("outputs"))
-    assert "HEADLINE: Data Scientist" in llm.prompts["tailor_profile"][0]       # the profile starts with the headline
+    assert "tailor_profile" not in llm.prompts and "hook" not in llm.prompts      # the profile and the hook are assembled in code
     saved = json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))
     assert (saved["family"], saved["tier"], saved["headline"]) == ("data_scientist", 1, "Data Scientist")
     assert rep["context"]["id"]["headline"] == "Data Scientist"

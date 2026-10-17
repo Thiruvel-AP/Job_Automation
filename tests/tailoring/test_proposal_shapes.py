@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+from conftest import with_results
 from openpyxl import load_workbook
 
 from careerops.llm import MockLLM
@@ -100,7 +101,7 @@ def chattermill_run(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"rephrase_bullets": _list_shaped, "extract_keywords": _anyof_keywords})
     settings.raw["scoring"]["max_keywords"] = 60              # no cap: the cap cuts by weight and frequency, not by arrival
     j = {**job, "company": "Chattermill", "title": "Data Scientist", "description": CHATTERMILL}
-    return tailor.tailor_job(j, fb_fixture, llm, settings, settings.path("outputs")), llm, j
+    return tailor.tailor_job(j, with_results(fb_fixture), llm, settings, settings.path("outputs")), llm, j
 
 
 @pytest.mark.slow

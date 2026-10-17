@@ -1,7 +1,7 @@
-"""Priority P = F x S x R (discovery/priority.py): sponsorship is a weight, never a filter. The review screen shows P and its
-factors plus the JD's sponsorship wording as an information line; live's inbox, `status` and the gate follow the same rule."""
+"""Priority (discovery/priority.py): the freshness tier first, then P = F x S; sponsorship is a weight, never a filter. The review
+screen shows P, its two factors and the posting age in hours, plus the JD's sponsorship wording as an information line; live's
+inbox, `status` and the gate follow the same rule. The tiers themselves are tested in test_freshness.py."""
 import json
-import math
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -43,25 +43,38 @@ def test_the_weights_come_from_the_settings(settings):
 
 def test_the_shipped_weights_are_the_agreed_ones(settings):
     assert settings["priority"]["sponsor_weights"] == {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
-    assert settings["priority"]["recency_days"] == 14
+    assert not {"recency_days", "open_listing_floor"} & set(settings["priority"])          # no recency factor any more: the tiers do it
 
 
-# ------------------------------------------------------------------ R
-def test_recency_decays_with_a_14_day_time_constant_and_is_one_when_unknown(settings):
-    assert prio.recency_factor(job_(), settings, NOW) == (1.0, None)
-    r, days = prio.recency_factor(job_(posted_at=(NOW - timedelta(days=14)).isoformat()), settings, NOW)
-    assert days == pytest.approx(14) and r == pytest.approx(math.exp(-1))
-    r, _ = prio.recency_factor(job_(posted_at=NOW.date().isoformat()), settings, NOW)
-    assert 0.95 < r <= 1.0                                   # a date without a time is midnight: half a day old at noon
-    assert prio.recency_factor(job_(posted_at=(NOW + timedelta(days=3)).isoformat()), settings, NOW)[0] == 1.0     # a future date is today
-    assert prio.recency_factor(job_(posted_at="garbage"), settings, NOW) == (1.0, None)
-    assert prio.recency_factor(job_(posted_at="2026-10-01T00:00:00Z"), settings, NOW)[0] < prio.recency_factor(job_(posted_at="2026-10-09T00:00:00Z"), settings, NOW)[0]
+# ------------------------------------------------------------------ the order: tier first, then P
+def test_there_is_no_recency_factor_in_p(settings):
+    """R = exp(-days / 14) took a 64-day-old posting that was still open to 0.01. P is F x S whatever the age."""
+    old = job_(posted_at="2026-08-01T00:00:00Z", posted_at_source="greenhouse.first_published")
+    new = job_(posted_at="2026-10-10T08:00:00Z", posted_at_source="greenhouse.first_published")
+    a, b = prio.priority(old, settings, today=NOW), prio.priority(new, settings, today=NOW)
+    assert a.p == b.p == pytest.approx(0.80 * 1.0) and not hasattr(a, "r")
+    assert (a.tier, b.tier) == (3, 0)
 
 
-def test_the_recency_constant_is_a_setting(settings):
-    settings.raw["priority"]["recency_days"] = 7
-    r, _ = prio.recency_factor(job_(posted_at=(NOW - timedelta(days=7)).isoformat()), settings, NOW)
-    assert r == pytest.approx(math.exp(-1))
+def test_the_order_is_lexicographic_a_fresher_tier_beats_a_better_p(settings):
+    weak_fresh = job_(id="fresh", ceiling_pre=0.10, sponsor_match="none", posted_at="2026-10-10T06:00:00Z",
+                      posted_at_source="lever.createdAt")                                   # 6 h old: tier 0, P = 0.075
+    strong_old = job_(id="old", ceiling_pre=0.99, sponsor_match="exact", posted_at="2026-10-01T00:00:00Z",
+                      posted_at_source="lever.createdAt")                                   # 9.5 d old: tier 3, P = 0.99
+    mid = job_(id="mid", ceiling_pre=0.50, sponsor_match="exact", posted_at="2026-10-08T12:00:00Z",
+               posted_at_source="lever.createdAt")                                          # 48 h old: tier 1
+    order = sorted([strong_old, mid, weak_fresh], key=lambda j: prio.sort_key(j, settings, tailored=False, today=NOW))
+    assert [j["id"] for j in order] == ["fresh", "mid", "old"]
+    assert len(order) == 3                                                                    # nothing is dropped for being old
+
+
+def test_inside_a_tier_the_order_is_p_then_s(settings):
+    same = dict(posted_at="2026-10-10T06:00:00Z", posted_at_source="reed.date")
+    a = job_(id="a", ceiling_pre=0.75, sponsor_match="exact", **same)
+    b = job_(id="b", ceiling_pre=1.00, sponsor_match="none", **same)                          # P = 0.75 too, but S is lower
+    c = job_(id="c", ceiling_pre=0.90, sponsor_match="exact", **same)
+    order = sorted([b, a, c], key=lambda j: prio.sort_key(j, settings, tailored=False, today=NOW))
+    assert [j["id"] for j in order] == ["c", "a", "b"]
 
 
 # ------------------------------------------------------------------ F and P
@@ -71,13 +84,14 @@ def test_f_is_the_tailored_ceiling_when_there_is_one_else_the_triage_ceiling():
     assert prio.ats_factor(job_(ceiling_pre=None)) == 0.0 and prio.ats_factor(job_(ceiling_pre=1.4)) == 1.0
 
 
-def test_p_is_the_product_and_shows_its_three_factors(settings):
-    j = job_(sponsor_match="fuzzy(0.95)", ceiling_pre=0.80, posted_at=(NOW - timedelta(days=14)).isoformat())
+def test_p_is_the_product_of_f_and_s_and_the_line_shows_the_age(settings):
+    j = job_(sponsor_match="fuzzy(0.95)", ceiling_pre=0.80, posted_at="2026-10-10T07:00:00Z", posted_at_source="greenhouse.first_published")
     pr = prio.priority(j, settings, tailored=False, today=NOW)
-    assert pr.p == pytest.approx(0.80 * 0.90 * math.exp(-1)) and (pr.f, pr.s) == (0.80, 0.90)
+    assert pr.p == pytest.approx(0.80 * 0.90) and (pr.f, pr.s) == (0.80, 0.90) and pr.hours == pytest.approx(5.0) and pr.tier == 0
     line = pr.line()
-    assert "P=0.26" in line and "F 0.80" in line and "S 0.90 (fuzzy register match)" in line and "R 0.37 (14 d old)" in line
-    assert "posting date unknown" in prio.priority(job_(), settings).line()
+    assert "P=0.72" in line and "F 0.80" in line and "S 0.90 (fuzzy register match)" in line
+    assert "age 5 h (tier 0, <= 24 h, Greenhouse first_published)" in line and " R " not in line
+    assert "age date unknown (tier 3, older)" in prio.priority(job_(), settings).line()
 
 
 def test_a_non_sponsor_with_f_080_outranks_a_sponsor_with_f_045(settings):
@@ -100,7 +114,7 @@ def test_s_never_drops_a_job_it_only_moves_it_down(settings):
     assert len(sorted(jobs, key=lambda j: prio.sort_key(j, settings, tailored=False))) == 3
 
 
-def test_a_job_with_no_ceiling_yet_sorts_last_but_by_s_x_r(settings):
+def test_a_job_with_no_ceiling_yet_sorts_last_but_by_s(settings):
     a = job_(id="a", ceiling_pre=None, sponsor_match="exact")
     b = job_(id="b", ceiling_pre=None, sponsor_match="none")
     c = job_(id="c", ceiling_pre=0.2)
@@ -161,12 +175,13 @@ def screen(settings, db, tailored):
 
 
 @pytest.mark.slow
-def test_the_review_screen_shows_p_with_f_s_and_r_and_the_wording_as_information(screen):
+def test_the_review_screen_shows_p_with_f_and_s_the_age_and_the_wording_as_information(screen):
     text = screen("Intro.\nThe role needs the right to work in the UK without sponsorship.\n" + "Python " * 60,
-                  sponsor_match="exact", posted_at="2026-10-01T00:00:00+00:00")
+                  sponsor_match="exact", posted_at="2026-10-01T00:00:00+00:00", posted_at_source="ashby.publishedAt")
     lines = text.splitlines()
     pline = next(ln for ln in lines if ln.startswith("Priority P="))
-    assert "F " in pline and "S 0.65 (JD says no sponsorship)" in pline and "R " in pline and "d old" in pline
+    assert "F " in pline and "S 0.65 (JD says no sponsorship)" in pline and " R " not in pline and "tier 3" in pline
+    assert any(ln.startswith("Posted:") and " h ago" in ln and "Ashby publishedAt" in ln and "tier 3" in ln for ln in lines)
     wording = next(ln for ln in lines if ln.startswith("Sponsorship wording in the JD"))
     assert "right to work in the UK without sponsorship" in wording and "(information only)" in wording
     assert not any(ln.startswith("FLAGS:") and "sponsor" in ln.lower() for ln in lines)       # not a blocking flag
@@ -246,19 +261,22 @@ def test_the_inbox_is_ordered_by_p_not_by_file_name_and_nothing_is_left_out(sett
     assert names.index("a.txt") < names.index("b.txt")          # the non-sponsor with the strong ad outranks the sponsor with the weak one
 
 
-def test_posted_and_agency_headers_move_a_file_in_the_order(settings, db, inbox_files, tmp_path):
+def test_posted_headers_put_a_file_in_its_tier_and_the_agency_header_lowers_s(settings, db, inbox_files, tmp_path):
     from careerops.config import load_yaml
     fb = load_yaml(settings.path("fact_bank"))
     jd = fixture("tailoring", "jd_northwind.txt").read_text(encoding="utf-8")
     box = tmp_path / "box2"
-    fresh = _put(box, "z_fresh.txt", "Northwind Health AI", jd, posted=(NOW - timedelta(days=1)).date().isoformat())
-    old = _put(box, "a_old.txt", "Northwind Health AI", jd, posted=(NOW - timedelta(days=60)).date().isoformat())
-    agency = _put(box, "b_agency.txt", "Northwind Health AI", jd, agency="yes")
-    ranked = prio.order_files([old, agency, fresh], settings, db, fb, today=NOW)
-    assert [f.name for f, _ in ranked] == ["b_agency.txt", "z_fresh.txt", "a_old.txt"] or \
-        [f.name for f, _ in ranked][0] in ("b_agency.txt", "z_fresh.txt")
+    via = lambda v: {"posted via": v}                                                      # noqa: E731  (a header name with a space)
+    fresh = _put(box, "z_fresh.txt", "Northwind Health AI", jd, posted="2026-10-10T08:00:00Z", **via("greenhouse.first_published"))
+    old = _put(box, "a_old.txt", "Northwind Health AI", jd, posted="2026-08-01T08:00:00Z", **via("greenhouse.first_published"))
+    page = _put(box, "m_page.txt", "Northwind Health AI", jd, posted="2026-10-10T08:00:00Z", **{"first seen": "2026-08-01"})   # an untrusted Posted: line
+    agency = _put(box, "b_agency.txt", "Northwind Health AI", jd, agency="yes", posted="2026-10-10T09:00:00Z", **via("reed.date"))
+    ranked = prio.order_files([old, agency, fresh, page], settings, db, fb, today=NOW)
     pr = {f.name: p for f, p in ranked}
-    assert pr["b_agency.txt"].s == 0.75 and pr["b_agency.txt"].r == 1.0 and pr["a_old.txt"].r < 0.05 and pr["z_fresh.txt"].r > 0.85
+    assert [pr[n].tier for n in ("z_fresh.txt", "b_agency.txt", "m_page.txt", "a_old.txt")] == [0, 0, 3, 3]      # a page's own Posted: is not trusted
+    assert [f.name for f, _ in ranked][:2] == ["z_fresh.txt", "b_agency.txt"]            # same tier, same F: the surer employer first
+    assert pr["b_agency.txt"].s == 0.75 and pr["z_fresh.txt"].s > 0.75 and pr["a_old.txt"].hours > 1500
+    assert len(ranked) == 4                                                                # the 69-day-old ad is still there
 
 
 def test_live_goes_through_the_inbox_in_priority_order_and_says_so(settings, db, inbox_files):
@@ -268,7 +286,7 @@ def test_live_goes_through_the_inbox_in_priority_order_and_says_so(settings, db,
                 out=lines.append)
     ordered = live._by_priority(list(inbox_files.values()))
     assert [f.name for f in ordered][0] == "c.txt" and len(ordered) == 4
-    assert lines[0] == "Inbox order by priority P = F x S x R:" and any("c.txt" in ln and "=" in ln for ln in lines[1:])
+    assert lines[0] == "Inbox order by freshness tier, then priority P = F x S:" and any("c.txt" in ln and "=" in ln and "T0" in ln for ln in lines[1:])
     assert any("d.txt (unreadable)" in ln for ln in lines)
 
 
@@ -292,8 +310,8 @@ def test_status_lists_the_open_jobs_by_priority_with_their_factors(settings, db,
         db.update_job(jid, status="applied" if jid == "m:3" else "triaged", ceiling_pre=ceiling, sponsor_match=match, tier=1)
     cli.main(["status"])
     out = capsys.readouterr().out
-    section = out.split("Top jobs by priority P = F x S x R (not yet applied):\n", 1)[1]
+    section = out.split("Top jobs, freshest tier first, then P = F x S (not yet applied):\n", 1)[1]
     lines = [ln for ln in section.splitlines() if ln.startswith("  ")][:3]
-    assert "Strong Non Sponsor" in lines[0] and "0.60 = 0.80 x 0.75 x 1.00" in lines[0] and "not on the register" in lines[0]
-    assert "Weak Sponsor" in lines[1] and "0.45 = 0.45 x 1.00 x 1.00" in lines[1]
+    assert "Strong Non Sponsor" in lines[0] and "0.60 = 0.80 x 0.75" in lines[0] and "not on the register" in lines[0] and "T0" in lines[0]
+    assert "Weak Sponsor" in lines[1] and "0.45 = 0.45 x 1.00" in lines[1]
     assert "Done Already" not in section                                    # applied jobs are not listed

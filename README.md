@@ -42,15 +42,21 @@ career-ops/
 │   │   ├── countries.py · jobbank.py country names/codes/places (the `listed_only` rule) · Canada's Job Bank open-data CSV
 │   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
-│   │   ├── priority.py           P = F x S x R: orders the live inbox, discover's listing and status
+│   │   ├── priority.py           freshness tier, then P = F x S: orders the live inbox, discover's listing and status
+│   │   ├── freshness.py          posted_at from the source (Greenhouse first_published, Lever createdAt ...), age in hours, tiers 0-3
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
+│   ├── hook.py                   the hook: the `hook_library` entry that fits the ad, used word for word (headline, profile line 1, its proof bullet first, letter sentence 1); no model
+│   ├── ats.py                    negation-aware ATS score and the three numbers (strict CV, claimable ceiling, CV + letter) with the gate
+│   ├── note.py · golden.py       the post-CV note.md · diff of a pipeline CV against tests/golden/anaplan/cv.txt
 │   ├── tailoring/                JD → CV + cover letter
 │   │   ├── scorer.py             weighted ATS score (literal + stemmed), honest ceiling, keywords
 │   │   ├── faithfulness.py       guard: no new numbers, deny-listed tools, unevidenced keywords
 │   │   ├── prompts.py            all LLM prompts in one place
 │   │   ├── selection.py          which bullets and projects go on the CV (code, not the model)
 │   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
+│   │   ├── profile.py            the CV profile, assembled in code: the hook's profile line + one or two `profile_facts` sentences (no model)
 │   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
+│   │   ├── letters.py            `letter.mode: hook`: the letter ASSEMBLED in code (library letter line + two sentences from two bullets + 20-minute ask), the our/we/linked-phrase guard, relocation line, greeting
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
@@ -61,6 +67,7 @@ career-ops/
 │   └── training/rewards.py       Phase 2 GRPO reward functions
 ├── config/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
+│   ├── typography.yaml           CV typography: special hyphen spellings, the protected terms (every other hyphen is closed up when the PDF is rendered)
 │   ├── taxonomy.txt              ATS keyword vocabulary
 │   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml
 ├── templates/                    cv.tex.j2 · cover_letter.tex.j2
@@ -178,7 +185,8 @@ careerops discover                 # pull + triage; skipped jobs keep their reas
 careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
 careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
 careerops discover --jobbank       # Canada's Job Bank open-data CSV: matching rows are listed in data/discover/listed_only.csv
-careerops discover --report        # counts per source, resolved vs the manual queue
+careerops discover --report        # counts per source, resolved vs the manual queue, and how many ads are in each freshness tier (no network)
+scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
@@ -188,10 +196,11 @@ careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one 
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
-careerops tailor --limit 15        # CV (two full pages) + letter per job (letter.mode: draft; with the default `off`, the CV only), in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
+careerops live --fresh             # tier 0 only: the inbox files posted at most 24 hours ago (older ones stay in the inbox, untouched)
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
 careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job
 careerops live --retailor --re-extract   # ... and the JD's keywords are extracted again (a job keeps its FIRST extraction otherwise, so --retailor gives the same keywords and ATS)
@@ -203,6 +212,7 @@ careerops outcome --id JOB --event screen --date 2026-10-12 --note "phone"   # a
 careerops outcomes                 # the funnel applied → any reply → screen → interview → offer: counts, rates, 95% Wilson intervals
 careerops outcomes --import-archive          # DRY RUN: list <paths.applications>/<Company>/<Role> as approximate 'applied' events
 careerops outcomes --import-archive --apply  # write them to the database only (the archive is only listed, never written)
+careerops import-linkedin config/reference/linkedin.pdf   # LinkedIn profile PDF → config/profile/fact_bank.proposed.yaml + data/linkedin_diff.md (see below)
 careerops export                   # data/exports/companies.xlsx (Jobs, Summary, Outcomes)
 careerops export-prefs             # your edits → DPO pairs (chosen = yours, rejected = model's)
 careerops status                   # counts per status, plus a tier × status table
@@ -253,7 +263,7 @@ finds and ranks without writing, and every run is listed best priority first.
   **The queue is capped**: a run keeps its best `discover.manual_queue_max` (10) unresolved links in `manual_queue.csv`, ranked by title
   relevance (role tier 1 = 1.0, tier 2 = 0.8, tier 3 = 0.6, halved for a level the triage excludes) x S, and writes the rest to
   `data/jds/manual_queue_overflow.csv` (same columns plus `score`). **Filter audit**: every title the role or place filter turned away is
-  in `data/discover/filtered.csv` (`ts, source, company, title, location, filter, reason, link`; a title is written once; a role reason
+  in `data/discover/filtered_<date>.csv` (`ts, source, company, title, location, filter, reason, link`; one file per day holding the titles first turned away that day, a title is written once; a role reason
   lists the words such as "data" or "machine learning" that make it worth a second look). Messages are remembered in
   `data/discover/gmail_seen.json`. The alert parsers are written from the usual layout of these emails and tested on hand-made
   fixtures; they have not met a real mailbox.
@@ -377,13 +387,13 @@ file is rejected).
 Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it), or fetch
 one with `careerops add-url`. The
 first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
-`careerops live` takes the files in name order, up to `--max` (default 5), and for each one:
+`careerops live` takes the files best first (freshness tier, then P = F x S; it prints the order), up to `--max` (default 5), and for each one:
 
 1. checks the file (missing, under 500 bytes, not UTF-8 → moved to `rejected/` with a `.reason.txt` beside it, loop continues);
 2. snapshots the archive (`paths.applications`; read-only `os.walk`: path, size, mtime);
 3. adds the job (the internal `add-jd` function; the job id is passed on as a value, never read from printed output) and triages it;
-4. tailors exactly that id, then asks you to review it: **approve / edit / skip** (plus open PDFs and regenerate the letter);
-   skip leaves the job `skipped` and files the JD in `done/`;
+4. tailors exactly that id, then asks you to review it: **approve / edit / skip** (plus `l` to pick the letter A / B / none, `n` to open
+   the note, `o` to open the PDFs); skip leaves the job `skipped` and files the JD in `done/`;
 5. unless `--dry-run`, and only after approval: you confirm *Open the application form?*, the existing apply assist fills the
    basics (it never submits), every `CHECK VISA ANSWER` line is printed, and *Did YOU submit the form? [y/N]* decides:
    `y` → mark-applied (archive + `applied`); anything else → status `ready_not_submitted`, nothing recorded as sent;
@@ -400,10 +410,15 @@ visa lines, archive check), printed and written to `data/live/<timestamp>.md`.
 
 ### Doctor: every task's model answers
 
-`careerops doctor` sends one tiny request to each (provider, model) a task can be routed to: `extract_keywords`, `tailor_profile`,
+`careerops doctor` sends one tiny request to each (provider, model) a task can be routed to: `extract_keywords`,
 `rephrase_bullets`, `cover_letter` and `judge` (per `llm.task_providers` / `llm.models`), once per model, and reports a line **per
 task**. A failure says its kind: `model_not_found`, `auth`, `timeout` (60 s), `unreachable`, `rate_limited`, `bad_json`, and what to
 change. A task whose feature is off (`letter.mode`, `review.judge`) asks nothing; `--no-ping` sends nothing.
+
+Two **reminders** (warnings, never a failure; a line appears only when one applies): from **2026-11-24** the MSc entry of the fact bank whose
+`note` still says "Expected" (put the real grade in; you edit that file, the pipeline never does), and the **Gmail sign-in more than 6 days old**
+(a grant made while the OAuth app is in Testing lapses after about 7 days; `careerops discover --gmail-auth` again). The age is the grant's own
+time, kept as `granted_at` in `data/secrets/gmail_token.json` (a token written before that was kept is aged by its file)
 
 ### The LLM judge (`review.judge: off | shadow | gate`, default `shadow`)
 
@@ -429,7 +444,23 @@ table. Ollama down, or an answer that is not JSON: tried twice, then **no verdic
 
 An unquoted `off` in YAML is the boolean `false`; both `letter.mode` and `review.judge` accept it, but the shipped file quotes it.
 
-### Letters (`letter.mode: off | draft`, default `off`)
+### Letters (`letter.mode: off | draft | hook`, default `off`)
+
+**`off`** (the default since 17 Oct) asks for no letter: a live run uploads the **CV only** (see below).
+
+**`hook`** **assembles** the letter in code (`tailoring/letters.py`); no model writes any of it. It is the hook entry's `letter_line` word for
+word, then **two sentences each built from one selected bullet's own words**, then the call to action: *"Could we take 20 minutes to talk about
+production, deployment and testing?"* (`letter.closing_hook`; the problem phrase is the hook entry's own `terms` that the ad asked for, lower
+case, never title case: only a name like AWS or MLOps keeps its capitals). A body sentence is `On <that bullet's terms the ad asked for>, here is
+my closest example: at <employer>, I <the bullet's first clause>.` The clause is the longest cut of the bullet that keeps the sentence under the
+paste limit (0.7 of its words in **any** fact-bank bullet, `letter_rules.paste_overlap`); a bullet no cut of which passes gives **no letter**
+rather than a pasted one. The letter greets "Dear <Company> <team the ad names> team" ("Hi <agency> team" for a recruitment agency), carries
+your relocation line when the job is in another town (`relocation: {willing, scope, remote_ok, letter_line}` in `applicant.yaml`; nothing for a
+remote job or your own town; the file is only read), and is at most `scoring.letter_max_words` (250) words. **The guard** (`letters.claim_problems`,
+also applied to a `draft` letter) rejects "our" and "we", "I help <Company>", and any noun phrase that links a bullet's object to a different
+bullet's tool (*"Docker and AWS Lambda ran the test suite"*: the agent was deployed there, the tests are another bullet). Variant **B** (a gap
+sentence) was the model's and is gone: B is always **none**. In review `l` cycles A → none; the chosen letter is the one the apply assist uploads
+and the archive keeps (`letters/A/<name> Cover Letter.pdf`). With the hook off or none buildable for the job, the letters are **none**.
 
 With `off` no letter is asked for: no letter call, no letter PDF, review says `Letter: off` and approving needs no extra words, and
 the application is archived without one. With `draft` the model drafts one from the evidence **as fields** (`method`, `data`,
@@ -482,21 +513,94 @@ careerops calibrate --mock                         # no model, own data root: ch
 
 ### The two-page CV
 
-Every CV is two full A4 pages (`templates/cv2.tex.j2`: 11pt Carlito, 0.6in margins, navy uppercase headings with a rule).
-Order: Profile → Skills → Experience → Projects → Education → Certifications & Awards.
+Every CV is two full A4 pages. `templates/cv2.tex.j2` renders with the preamble and macros of your style reference
+(`config/reference/cv_style_reference.tex`, git-ignored) line for line: 11pt Carlito (fontspec), margin 0.6in with top and bottom
+0.5in, the `navy` / `ink` / `muted` palette, ragged2e `\RaggedRight`, no hyphenation, section headings 13pt bold navy
+letter-spaced uppercase with a 0.8pt rule, the navy bullet dot, `\linespread{1.03}`, and the macros `\role`, `\roleNoLoc`,
+`\project`, `\gh`, `\badge`, `\skillgroup`, `\num` and `\gap` (v2 of the reference, 16 Oct 2026). Only `needspace` (no heading or entry alone at the foot of a page)
+and the linespread value (the fill step may raise it) are added. Order: Profile → Skills → Work Experience → Projects →
+Education → [Research Focus, Publications] → Certifications & Achievements → [Languages]. If you change the reference, the
+preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/tailoring/test_cv_template.py` follow it.
+
+- **Layout** (as in the reference) — experience goes through `\role{org}{location}{dates}{title}` (`\roleNoLoc` when an entry has
+  no location): the employer bold on the left, its location after a middle dot in muted italics, the dates muted on the right, the
+  job title in italics on the next line. A project is `\project{name}{stack}{tag}`: the bold name, an italic muted stack line
+  and a tag at the right, which is the award, else the project's own `badge:` (a short label you write in the fact bank, e.g. `Open source`;
+  printed once if its text is already in the name), or a `(coursework)` / `(MSc coursework)` ending of the name as a navy `\badge`
+  (`MSc Coursework`; a project with a GitHub link keeps its name and shows the link instead), else the link as `\gh` (`GitHub`).
+  A skills group is `\skillgroup`: the navy bold label on a line of its own and its items below it (the first item of each group
+  starts with a capital). There are four groups, in this order: Machine Learning, Deep Learning & Statistics · Python, Data Quality &
+  Cloud · NLP, LLMs & Evaluation · Client Delivery & Communication (`cv.skill_groups` in `config/settings.yaml`: each fact-bank skill
+  goes to one group by name or by the fact-bank group it sits in; `skills.core` and `cv.skills_always` are never cut; inside a group
+  the skills are ordered by the JD keyword weight they carry, then by the fact bank's order, a pinned skill has no edge; a skill appears once:
+  "Kubernetes" and "Kubernetes (AWS EKS)" are one (the qualified one stays), and an umbrella name from `cv.skill_umbrellas` (AWS) goes when a
+  specific skill of it (AWS Lambda) is listed; TypeScript and JavaScript (`cv.skills_when_asked`) are shown only when the ad names them; a group
+  with no skill row of its own but `from_terms` shows the matching `terms:` you wrote on your bullets, e.g. Client Delivery & Communication).
+  A group the fact bank has nothing for is left off and the review
+  screen says so. A project with an `award:` that the JD does not rank in its top three moves to Certifications & Achievements as a
+  bold first line. An experience or project with `situation:` in the fact bank opens its first bullet with "<situation>: " (STAR);
+  the model never writes it. Length rules, measured on the PDF: a bullet is at most 3 lines (longer: back to its fact-bank wording,
+  else split at a sentence or semicolon, else reworded shorter by the model, else reported), the profile at most 7 lines (the hook
+  sentence first), the 12pt headline exactly one line (its trailing stack list is dropped first). The contact line shows the
+  portfolio as just "Portfolio". Education is `\roleNoLoc` (school with its location, dates, the degree with its grade and note) and, below, a muted
+  small line with the modules and `details`. The header is the 22pt navy name, a 10pt contact line with short links (no
+  `https://`) and an italic muted status line, all joined with ` · `. The certifications are one bullet joined with ` · `, each
+  with its date in italics. A separator may end a line, never start one. Dates always read `Mon YYYY – Mon YYYY`
+  (`cv.date_separator` in `config/settings.yaml`: `" – "` by default, `" to "` is the other choice; a fact-bank date without
+  months, such as `2025 – 2026`, is printed as it is: a month is never invented). **Bold is only** what the macros make bold: the
+  employer (and the school), the project name, the skill-row labels, the badge, the section headings, and the `result:` text of a
+  bullet in `\num{}` (the measured outcome you wrote in the fact bank, found in the bullet even with up to two extra words inside
+  it; a bullet that words it differently shows no bold and the review screen says which). The profile has no bold.
+  **Italics are** the job title, locations, the degree line, a project's stack line, a certification's date, a publication's
+  venue, and `(Expected)` / `(coursework)`.
+  A fact-bank experience with `employment_type: freelance` prints
+  as `Freelance · <location>` on the bold line (no "Self-employed"); a bank that predates the field and has an org starting
+  "Self-employed" / "Freelance" is treated the same, with the location taken from `location:` or from the rest of the org
+  text. Optional experience/education fields: `location`, `employment_type`; education: `location`, `modules` (a list, printed
+  on the muted line under the degree), `grade`, `note`, `details`. Optional top-level sections, printed only when page 2 is short:
+  `publications` (strings or `{title, venue, date}`), `languages` (strings or `{name, level}`), `research_focus` (text).
 
 - **Skills** — `skills.core` in `fact_bank.yaml` is the first row ("Core"), in your order, and is never dropped. A skill
   appears once (case-insensitive, first row wins); the other groups list every skill with the JD's first; at most
-  `scoring.max_skill_groups` (5) of them, the groups the JD matches least are left off. `careerops doctor` fails, naming the
+  `scoring.max_skill_groups` (5) of them, the groups the JD matches least are left off, except the **Databases** row (any row whose name has "database" in it), which is
+  always shown when the JD mentions SQL or databases. `careerops doctor` fails, naming the
   skill, if a core skill is on `deny_terms` or no bullet / skill row / project stack mentions it literally; the CV refuses to
   render a denied core skill.
+
+- **Type scale** — the reference's: the name 22pt bold navy, section headings 13pt bold navy uppercase letter-spaced with a rule,
+  everything else 11pt except the contact line, each project's stack line, the badge, the GitHub link and the modules line, which
+  are 10pt (`\small`). (`templates/cv2.tex.j2`; `tests/tailoring/test_cv_template.py` and `test_cv_typography.py` measure the
+  rendered PDF with `pdftotext -bbox`.)
+
+- **Typography, applied at render time only** — after every faithfulness and claim check has run on the original wording, the text
+  that reaches the PDF is tidied (`tailoring/typography.py`; `report.json` keeps the checked text). No em dash survives: `—`, `--`
+  and a spaced hyphen used as a dash become a comma, a colon (after a name or title, and always in a project name) or parentheses
+  (a pair around an aside with its own comma). Every hyphenated word is closed up (`class-imbalance → class imbalance`, `19,213-gene → 19,213 gene`), with
+  the special spellings of `config/typography.yaml → rewrite` first (`e-commerce → ecommerce`, `5-star → five star`, `start-up → startup`, `multi-omics → multiomics` ...); its `protected` list
+  (`scikit-learn`, `k-means`, `TF-IDF`, `gpt-oss`, `faster-whisper`, `Skip-gram`, `CIFAR-10`), the handles in your own profile links, number ranges (`3.9–3.11`), names with a
+  number (`GPT-4o`), URLs and e-mail addresses are never touched, and
+  neither is a hyphenated form that a JD keyword spells with the hyphen (the ATS looks for the JD's own spelling). The review screen
+  has a `Typography:` line (em dashes left: must be none; en dashes used as prose dashes; results in bold) and lists the hyphenated
+  words still in the PDF (none, unless a JD keyword spells it so). A project's award is printed in its heading only: it is
+  taken out of that project's bullets and results, and a model rewording that adds it to a bullet is refused.
+
+- **Selection** — bullets and projects are ranked by JD keywords plus the company domain and topics the JD names (customer,
+  consumer, behaviour, segmentation, validation, statistics, bank, payments ...; `tailoring/domain.py`): a bullet that names one that
+  no chosen bullet names yet gains like a keyword, and the score adds to its rank. The review screen prints the top 10 bullets and
+  the top 10 projects with their scores (keyword + domain; `*` = on the CV). Inside a role or project the chosen bullets are printed
+  in fact-bank order, not in the order they were picked.
+
 - **Bullets** — chosen in code by greedy marginal keyword gain (ties to the more recent entry): newest entry 4–5, the others
-  3–4 (`scoring.cv_bullets`), 3 projects with 2–3 bullets each. A bullet whose words overlap a chosen one (Jaccard ≥ 0.6) is
-  never added. Then bullets are added until page 2 is at least `scoring.min_fill_page2` (0.65) full, measured from the PDF
-  (y of the last text line on page 2 over the text area), or none are left: more experience bullets and more bullets of the
-  three projects first; a 4th project only with `scoring.cv_fill_extra_projects: true` (off: the CV never shows more than 3).
-  The shrink step runs only when the CV is over 2 pages. `cv_pages` and `page2_fill` go into `report.json` and the `jobs` table;
-  the tailor line says when the fact bank ran out of bullets before page 2 filled.
+  3–4 (`scoring.cv_bullets`), 5 projects (`scoring.cv_projects`) with 2–3 bullets each. A bullet whose words overlap a chosen
+  one (Jaccard ≥ 0.6) is never added. Then content is added until page 2 is at least `scoring.min_fill_page2` (0.96, within two lines of the bottom margin) full,
+  measured from the PDF (y of the last text line on page 2 over the text area), in this order: **further projects** (best JD
+  match first, up to `scoring.cv_projects_max` = 6), more bullets of the shown projects, **more experience bullets** (by
+  relevance), then the **optional fact-bank sections** (`publications`, `languages`, `research_focus`, in that order), and last
+  the **linespread**, raised from the reference's 1.03 in steps of 0.02 up to `scoring.cv_linespread_max` (1.09) and stopped at the first value
+  that fills page 2. Nothing is invented and the font is never shrunk below 11pt; if the content runs out the CV ends short
+  and says so. The shrink step runs only when the CV is over 2 pages. `cv_pages`, `page2_fill` and `fill`
+  (`added`, `sections`, `linespread`, `reached`) go into `report.json`; the review screen has a `Fill:` line (page-2 fill against
+  the target, projects shown, optional sections, linespread) and flags a CV below the target.
 - **Results** — give a bullet an optional `result:` in the fact bank (a measured outcome). The rephrase step may work it in;
   its numbers count as evidence for that bullet only. `report.json → needs_result` lists the bullets on that CV that have none
   (yours to fill in, never invented).
@@ -528,8 +632,9 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
   task stays on `gpt-oss-20b`, all letter checks unchanged); the review screen lists tokens per model. When all three drafts are rejected,
   `letter.on_failure` decides: `none` (default) = **no letter** — no PDF, review shows `NO LETTER — write your own or apply without`, and
   approving needs you to type `no letter` (`l` tries again); `template` = the flagged template fallback above (approve with `send fallback`).
-- **CV profile** — with more than two `profile_facts`, code picks the two most relevant to the JD (the same ranking) and the
-  model only words them. A project whose `award` text is already in its `name` prints it once.
+- **CV profile** — assembled in code (`tailoring/profile.py`), no model: the hook's `profile_line`, then one or two `profile_facts` chosen by
+  keyword score (the same ranking) as sentences ending in a full stop; a fact that repeats the title ("Data Scientist") or only restates the
+  sentences before it is left out. A project whose `award` text is already in its `name` prints it once.
 - **Letter opening** — the claim half of the opening sentence (after "mirrors", a dash, ":" or ";") may use only the two
   evidence bullets; `actionable insights, user-centric, tangible outcomes, instantly, accurately, precise, smooth
   integration, efficient, exactly what I built` are vague filler unless the evidence says them. Rejected → one retry naming
@@ -540,21 +645,69 @@ Order: Profile → Skills → Experience → Projects → Education → Certific
   exact form in the one bullet that carries its stem; the guard checks it like any rephrase and it is kept only if the score
   does not drop.
 
+### Importing your LinkedIn profile (`careerops import-linkedin`)
+
+Save your LinkedIn profile as a PDF (profile page → *Resources → Save to PDF*, or the browser's Print to PDF; click *Show all*
+on Experience, Education, Licenses & certifications and Projects first: LinkedIn prints only the first few) and run
+
+```
+careerops import-linkedin config/reference/linkedin.pdf     # --mock writes under data/mock; --fact-bank/--out/--diff override the paths
+```
+
+It extracts experience (title, organisation, employment type, dates, location, bullets), education (degree, dates, grade,
+modules, the "Research Focus" text), projects, certifications, publications and languages. It writes
+`config/profile/fact_bank.proposed.yaml` (fact-bank schema, git-ignored, never read by the pipeline; entries that match one in
+your bank keep its `id`; bullets carry LinkedIn's wording and an empty `terms:`) and `data/linkedin_diff.md`, which lists every
+mismatch with `fact_bank.yaml`: title, organisation, dates, location, employment type, degree, modules, grade, and what is on one
+side only. A section that LinkedIn printed only in part is reported as *unverified*, not as a mismatch. `fact_bank.yaml` is only
+read; you merge by hand. Limits: the parser reads pdftotext's output of LinkedIn's own layout and drops what it cannot place; a
+description LinkedIn cut off with "..." is marked in the diff; project technologies and links are not in the PDF.
+
+### The hook (`hook.enabled`, default on)
+
+Every CV carries **one hook**, taken from your **`hook_library`** (top level of `config/profile/fact_bank.yaml`, written by you) and **never
+written by a model**. An entry is `{id, proof (a bullet id), terms, headline, profile_line, letter_line}`. For each job code scores every entry as
+the **sum of keyword weight x [the keyword is one of its `terms`]** and picks the highest (a tie goes to the earlier entry; an entry that scores
+nothing is never picked), then uses its strings **word for word**: the `headline` as the **12pt navy line under the name**, the `profile_line` as
+**profile sentence 1**, the `proof` bullet **moved to the top of its role** (or project) with the entry's `situation:` opener, and the `letter_line`
+as **sentence 1 of the letter** when letters are on. Nothing is typeset or reworded. An entry whose proof bullet is not in the bank, or that names
+a deny-listed term, is skipped and `hook_notes` says why. The number is the first count-like string in the proof bullet's `result:` or `text`
+(a model version like "Haiku 4.5" is not a result), never invented; a proof with none carries the flag `hook has no number`. A bank with **no
+library, or no entry that matches the ad**, gets a hook from a fixed **code template** over the best proof bullets instead (checked: the number is
+in it, no new number, no deny-listed term, no unsupported qualifier or name, none of *passionate, proven, dynamic, results-driven, extensive,
+strong, skilled*, within its length, not a paste of any bullet), and the note says `no hook_library entry matched`. A reworded proof bullet that
+loses the number is kept in its fact-bank wording. `tests/golden/anaplan/` holds the hand-made Anaplan application (CV, letters A and B by hand, the ad,
+the keyword weights): the quality bar, checked by `tests/test_golden_anaplan.py` (strict ATS 72.5 within 0.1, the hook in all three places, two
+pages, letters of at most 250 words) and, on what the pipeline writes, by `tests/test_golden_pipeline.py`. `python -m careerops.golden <pipeline
+CV.pdf>` lists the lines only in your pipeline's CV and the lines only in the golden one.
+
+### The note (`data/outputs/<job>/note.md`)
+
+One page per job, written with the CV and kept current by edits and letter changes (`n` in review opens it): **Hook** (problem, proof, number),
+**ATS** (the three numbers and the gate, per letter variant), **Learn list** (the ad's terms the bank cannot claim, deny-listed ones marked
+*(confirmed absent)*), **Contact** (`TODO: you find on LinkedIn: hiring manager, <team>`: nothing here ever fetches linkedin.com), **Question**
+(one, naming a term of the ad), **Flags** (visa or sponsorship wording, location or office policy, seniority or years asked, security
+clearance, IR35, travel, the posting age, and anything the pipeline flagged) and **Gap** (empty now: letter B, the one that admitted a gap, is no longer made).
+
 ### Priority: sponsorship is a weight, never a filter
 
 I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
-not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". `priority.py` ranks instead:
+not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". And no job is dropped for being old.
+`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S inside it**.
 
-    P = F x S x R      F = honest ATS ceiling (0-1)      R = exp(-days since we first saw it / 14), 1.0 when the date is unknown
+    tier 0  posted at most 24 h ago      tier 1  at most 72 h      tier 2  at most 7 days      tier 3  older (or undated)
+    P = F x S      F = honest ATS ceiling (0-1)
     S = 1.00 exact register match · 0.90 fuzzy · 0.75 not on the register / agency / unknown · 0.65 the JD says no sponsorship
 
-(the lowest applicable S; weights and the 14 days are `priority.sponsor_weights` / `priority.recency_days` in `config/settings.yaml`).
-R counts from the day **discover first saw the job** (an alert's date, or the first discover run that read it; `data/discover/first_seen.json`,
-the inbox file's `First seen:` header), not from the board's publish date, which says nothing about how long you have known of it. A job still
-listed on the employer's own board (`Listed: yes`) never gets an R below `priority.open_listing_floor` (0.5): an open posting is not stale.
-P orders the `careerops live` inbox (it prints the order), `careerops discover`'s listing and `careerops status` (top open jobs).
-The review screen shows `Priority P=... = F ... x S ... x R ...` and, as an information line (not a flag), the sentences of the JD that
-speak of sponsorship or the right to work. The register notes ("Not on sponsor register", fuzzy match) are shown on the `Sponsor:` line,
+(the lowest applicable S; the weights are `priority.sponsor_weights` in `config/settings.yaml`). The old recency factor R = exp(-days / 14) is
+gone: it drove a 64-day-old posting that was still open down to 0.01. The age comes from **`posted_at`, the time the source says** (stored on the job
+with `posted_at_source`): Greenhouse `first_published` (not `updated_at`, which resets on a repost: the Anaplan ad was 69 days old, not 10),
+Lever `createdAt`, Ashby `publishedAt`, Reed `date`, Adzuna `created`, a Gmail alert's arrival time (an upper bound); anything else counts
+from the day discover first saw it (`First seen:`, `data/discover/first_seen.json`). The inbox file carries `Posted:` (an ISO date or time) and
+`Posted via:` headers. The order applies to the `careerops live` inbox (it prints tier, age and P), `careerops live --fresh` (tier 0 only),
+`careerops discover`'s listing, the manual queue, `careerops status`, and `discover --report` counts the tiers.
+The review screen shows `Priority P=... = F ... x S ...`, the age in hours (`Posted: posted 5 h ago (Greenhouse first_published), tier 0`) and, as an
+information line (not a flag), the sentences of the JD that speak of sponsorship or the right to work. The register notes ("Not on sponsor register", fuzzy match) are shown on the `Sponsor:` line,
 not under `FLAGS:`, and they no longer stop the judge gate from approving.
 
 ### Sponsor register
@@ -605,7 +758,18 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 
 ## What the review screen tells you
 
-- **ATS literal** — conservative whole-word match on the PDF's text layer, singular/plural (trailing *s*/*es*) taken as
+- **ATS strict CV / claimable ceiling / CV + letter** (`ats.py`) — the three numbers in percent. A keyword is **not a hit where it is only
+  mentioned in a negated way**: *not, no, never, haven't, have not, yet to, without, lack, gap, learning* (as a verb) within 6 tokens before it
+  in the same sentence ("I have not yet used LightGBM"), and a text that says it lacks a term anywhere does not claim it elsewhere. *Strict* is the
+  CV alone and is the one that is gated (band 70-85): below 70 with a ceiling of 70 or more, tailor once more; below 70 with a ceiling under 70,
+  **STRETCH**: kept and labelled, never dropped (a flag on the job, so the judge gate never auto-approves it); above 85, de-stuff. *Claimable
+  ceiling* is the weight share of the ad's keywords the fact bank backs (a deny-listed term never counts). *CV + letter* counts a keyword when the CV or
+  the letter has it; the *letter alone* is shown and never gated.
+- **Hook** — `Hook <hook id>: <problem> | proof <bullet> (<employer>) | number <n> [library|template]`, its headline, profile sentence 1 and letter sentence 1, and `!! hook missing from the CV` if one
+  of the three places did not take it (see "The hook" below).
+- **Letters** — A with its words and its CV + letter and letter-alone numbers, B as `none (why)`; `l` cycles A → none, `n` opens
+  `note.md`.
+- **ATS literal** — conservative whole-word match on the PDF's text layer (negation-aware, see above), singular/plural (trailing *s*/*es*) taken as
   one term (*prompt* = *prompts*); the 70–85 % band applies to this.
 - **ATS stemmed** — also equates *communicating/communicate*, *modelling/modeling*, *end-to-end/end to end*,
   *classifier/classification*, *visualisation/visualization*.
@@ -628,5 +792,6 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 | Full tailor loop → 2-page xelatex PDF, no hyphenated words | Live ATS forms (Greenhouse/Lever/Ashby markup varies) |
 | Router: JSON mode, auth header, 429 → fallback, daily quota | Adzuna quota and description length |
 | Playwright fills a test form, uploads both PDFs, never submits | |
+| Hook, negation-aware ATS, letters A / B, note, freshness tiers, scheduler script (fixture bank, MockLLM, fake network, a fake `careerops` for the script) | the real CV's strict ATS against the golden 72.5, a real Anaplan run, the Windows task itself |
 
 `career-ops` and this pipeline stay off every CV and letter — both are on the deny list.

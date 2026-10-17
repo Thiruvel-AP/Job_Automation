@@ -56,6 +56,28 @@ def _contains(hay: str, needle: str) -> bool:
     return re.search(r"(?<![\w])" + re.escape(needle) + r"(?![\w])", hay) is not None
 
 
+# Words that join the parts of a multiword keyword ("prototype TO production") and say nothing about the skill.
+_JOINERS = frozenset("a an the of to for in on and or with by at as".split())
+
+
+def words_covered(stem_tokens: frozenset[str], member: str) -> bool:
+    """Does a text (as the set of its stemmed words) carry every content word of a MULTIWORD keyword? The ad says
+    "time-series forecasting", a bullet's `terms` say "forecasting" and "time series" as two items: the phrase is not there, the
+    skill is. Both sides are normalised the same way (lower case, - _ / as spaces, stemmed). One-word keywords never match this way."""
+    words = [w for w in norm_stem(member).split() if w not in _JOINERS]
+    return len(words) >= 2 and all(w in stem_tokens for w in words)
+
+
+def keyword_hits(text: str, keywords: list["Keyword"]) -> frozenset[int]:
+    """Indexes of the keywords a bullet (its text and `terms`) carries, for CHOOSING content (never for the ATS score, which is
+    `score`): the keyword or one of its alternatives as a phrase (literal or stemmed), or all of a multiword one's words."""
+    lit, stm = norm_literal(text), norm_stem(text)
+    toks = frozenset(stm.split())
+    return frozenset(i for i, k in enumerate(keywords)
+                     if any(_contains(lit, norm_literal(w)) or _contains(stm, norm_stem(w)) or words_covered(toks, w)
+                            for w in k.members()))
+
+
 def _inflections(needle: str) -> list[str]:
     """The needle and its singular/plural twins (a trailing s or es), longest first. Only for the literal view: an ATS
     that finds "evaluation" for "evaluations" is not being generous, the JD's own word is one of the two."""
@@ -97,6 +119,7 @@ class Score:
     hits: list[str] = field(default_factory=list)
     misses: list[str] = field(default_factory=list)          # missing even after stemming
     wording_misses: list[str] = field(default_factory=list)  # present in substance, not literally
+    negated: list[str] = field(default_factory=list)         # in the text, but only as "not used X yet" (ats.score; always empty here)
 
 
 def score(text: str, keywords: list[Keyword], synonyms: bool = False) -> Score:

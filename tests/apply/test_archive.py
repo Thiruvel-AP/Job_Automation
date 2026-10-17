@@ -491,6 +491,25 @@ def test_fill_page_uploads_cv_and_letter_and_the_job_guard_passes(settings, db, 
     assert page.uploads == [r["cv_pdf"], r["letter_pdf"]]
 
 
+def test_note_md_is_never_uploaded_only_the_cv_pdf_and_the_chosen_letter_pdf(settings, db, make_job):
+    """note.md (the post-CV note, careerops/note.py) sits in the job's output folder beside the PDFs. It is for the user, not the employer:
+    whatever file fields a form has, only the CV PDF and the chosen letter PDF are ever handed to it."""
+    j, r = make_job()
+    note = Path(r["out_dir"]) / "note.md"
+    note.write_text("# note\nthe hook, the contact, the question to ask\n", encoding="utf-8")
+    page = FakePage(("input", "file", "Resume / CV"), ("input", "file", "Cover letter"),
+                    ("input", "file", "Additional documents"), ("input", "file", "Notes or anything else"))
+    rep = fill_page(page, APPLICANT, r["cv_pdf"], r["letter_pdf"], job=j)
+    assert page.uploads == [r["cv_pdf"], r["letter_pdf"]]                                   # exactly these two, in field order
+    assert all(Path(p).suffix == ".pdf" and Path(p).name != "note.md" for p in page.uploads)
+    assert len(rep["uploaded"]) == 2 and not any("note" in u.lower() for u in rep["uploaded"])
+    assert rep["manual"] == ["file: Additional documents", "file: Notes or anything else"]    # left to the user, nothing attached
+    page2 = FakePage(("input", "file", "Resume / CV"))                                       # no letter chosen: the CV alone
+    fill_page(page2, APPLICANT, r["cv_pdf"], None, job=j)
+    assert page2.uploads == [r["cv_pdf"]]
+    assert note.is_file()                                                                    # and nothing deleted it
+
+
 def test_wrong_jobs_letter_is_refused_and_nothing_is_uploaded_or_archived(settings, db, make_job):
     root = settings.path("applications")
     a, ra = make_job("gh:g:1", company="Lendable")
@@ -703,7 +722,7 @@ def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(sett
     assert Path(rep["letter_pdf"]).name == "Ada Quincy Lovelace Cover Letter.pdf"
     assert sorted(p.name for p in out.iterdir() if p.name != "llm_raw") == sorted(      # llm_raw: the model's raw replies
         ["Ada Quincy Lovelace CV.pdf", "Ada Quincy Lovelace CV.tex", "Ada Quincy Lovelace Cover Letter.pdf",
-         "Ada Quincy Lovelace Cover Letter.tex", "report.json"])            # no cv.pdf / letter.pdf left behind
+         "Ada Quincy Lovelace Cover Letter.tex", "report.json", "note.md"])  # note.md: the post-CV note (never uploaded, see above); no cv.pdf / letter.pdf left behind
     page = FakePage(("input", "file", "Resume / CV"), ("input", "file", "Cover letter"))
     fill_page(page, APPLICANT, rep["cv_pdf"], rep["letter_pdf"], job=db.job(job["id"]))     # real pdftotext guard
     res = record_application(db, settings, db.job(job["id"]), rep)

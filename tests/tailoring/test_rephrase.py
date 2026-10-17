@@ -1,6 +1,7 @@
 """Rephrase: bullets that can carry a JD keyword their text lacks are reworded by the model in batches of <= 5
 (text, terms, the keywords it may introduce) -> {id: new text}; every rewrite goes through the faithfulness guard;
 coverage is logged."""
+import copy
 import json
 import math
 from pathlib import Path
@@ -32,7 +33,7 @@ def _ask(fb, kws, llm, sel=None, cache=None, job=None):
     notes: list[str] = []
     job = job or {"title": "AI Engineer", "company": "Northwind"}
     proposed, stats = tailor.propose_rephrases(job, fb, sel or _everything(fb), kws, llm, cache if cache is not None
-                                               else {}, notes)
+                                               else {}, notes, introduce=True)      # the offers' machinery; the pipeline offers nothing
     return proposed, stats, notes
 
 
@@ -41,7 +42,7 @@ def test_bullets_go_to_the_model_in_batches_of_at_most_five(fb_fixture, spy_llm)
     kws = _kws(*_all_terms(fb_fixture))
     sel = _everything(fb_fixture)
     bidx = tailor.bullet_index(fb_fixture)
-    offers, _ = tailor.placement_offers(fb_fixture, sel, kws)      # each missed keyword goes to one bullet, <= 2 per bullet
+    offers, _ = tailor.placement_offers(fb_fixture, sel, kws, introduce=True)      # each missed keyword goes to one bullet, <= 2 per bullet
     eligible = [i for i in selected_ids(fb_fixture, sel) if offers.get(i)]
     assert len(eligible) > 10 and len(eligible) < len([i for i in selected_ids(fb_fixture, sel)
                                                        if missing_keywords(bidx[i], kws)])      # the fixture needs several batches
@@ -145,13 +146,14 @@ def test_a_later_attempt_never_asks_the_same_question_twice(fb_fixture, spy_llm)
 # ---------------------------------------------------------------- the guard
 LIES = {"a4": "Wrote a pytest framework with Kubernetes, cutting release time 40%.",           # deny + number
         "a3": "Deployed the agent with Terraform and integration testing on AWS Lambda.",     # deny + unevidenced keyword
-        "a1": "Built a tool-calling LLM agent (LangChain, AWS Bedrock) for a multi-omics cancer research platform, "
-              "covering agentic workflows, used by the whole research team."}                 # honest (keeps 'team')
+        "a1": "Built a tool-calling LLM agent (LangChain, AWS Bedrock) used by the whole research team for a multi-omics "
+              "cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation "
+              "and dataset lookup."}                                                         # honest: the same words, reordered
 
 
 def test_every_rewrite_goes_through_the_faithfulness_check(fb_fixture):
     fb = dict(fb_fixture, deny_terms=["kubernetes", "terraform"])
-    kws = _kws("pytest", "integration testing", "agentic")
+    kws = _kws("pytest", "integration testing")
     accepted, viol, _ = tailor.guard_rephrases(fb, LIES, kws)
     assert list(accepted) == ["a1"] and accepted["a1"] == LIES["a1"]
     assert any(v.startswith("a4:") and "kubernetes" in v for v in viol) and any("40%" in v for v in viol)
@@ -159,10 +161,21 @@ def test_every_rewrite_goes_through_the_faithfulness_check(fb_fixture):
     assert any(v.startswith("a3:") and "integration testing" in v and "not evidenced" in v for v in viol)   # a3 is not about testing
 
 
+def _with_results(fb):
+    """The fixture bank with a `result:` (words the text does not say) on every bullet: since the round of 17 Oct that is what a
+    rephrase call is made for (a bullet is no longer asked to introduce a keyword from its `terms:`)."""
+    fb = copy.deepcopy(fb)
+    for e in fb["experience"] + fb["projects"]:
+        for b in e["bullets"]:
+            b["result"] = "kept in daily use"
+    return fb
+
+
 @pytest.mark.slow
 def test_a_rejected_rewrite_leaves_the_canonical_bullet_on_the_cv(settings, fb_fixture, job, spy_llm):
     llm = spy_llm({"rephrase_bullets": lambda ctx: {b["id"]: b["text"].rstrip(".") + ", cutting cost 40%."
                                                     for b in ctx["bullets"]}})
+    fb_fixture = _with_results(fb_fixture)
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     bidx = tailor.bullet_index(fb_fixture)
     for e in rep["context"]["experience"] + rep["context"]["projects"]:
@@ -175,8 +188,9 @@ def test_a_rejected_rewrite_leaves_the_canonical_bullet_on_the_cv(settings, fb_f
 
 @pytest.mark.slow
 def test_an_accepted_rewrite_reaches_the_cv_and_the_coverage_counts_it(settings, fb_fixture, job, spy_llm):
-    llm = spy_llm({"rephrase_bullets": lambda ctx: {b["id"]: b["text"].rstrip(".") + ", covering "
-                                                    + ", ".join(b["introduce"]) + "." for b in ctx["bullets"]}})
+    llm = spy_llm({"rephrase_bullets": lambda ctx: {b["id"]: b["text"].rstrip(".") + ", " + b["result"] + "."
+                                                    for b in ctx["bullets"]}})
+    fb_fixture = _with_results(fb_fixture)
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     rec = rep["attempts"][0]
     cov, stats = rec["rephrase_coverage"], rec["rephrase"]

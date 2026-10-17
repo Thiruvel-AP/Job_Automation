@@ -1,100 +1,184 @@
 \documentclass[a4paper,11pt]{article}
-\#{ Two-page layout (default since 2026-10-06): the look of cv.tex.j2 at 11pt Carlito with 0.6in margins and bold uppercase
-   navy headings with a rule. Order: Profile, Skills, Experience, Projects, Education, Certifications. The margin below is
-   repeated in render.CV2_MARGIN_PT, which turns a PDF's last text line into the page-2 fill: change both together.
-   Only fact-bank values are inserted; optional fields are read with .get, so a missing one is skipped, never an error. }
+\#{ Two-page layout (the default). Preamble and macros are config/reference/cv_style_reference.tex (v2) line for line (Carlito 11pt,
+   palette navy / ink / muted, ragged2e RaggedRight, no hyphenation, section headings 13pt bold navy letter-spaced uppercase with
+   a 0.8pt rule, navy bullet dot, and the macros role, roleNoLoc, project, gh, badge, skillgroup, num and gap). Two additions only:
+   the needspace package (no heading or entry alone at the foot of a page) and the linespread value, which the fill step may
+   raise from 1.03 to 1.09 in steps of 0.02. test_cv_template.py compares both with the reference when that file is present.
+   Body: experience goes through role (roleNoLoc when the entry has no location), a project through project with its award or
+   coursework label as badge or its link as gh, a skills group through skillgroup (the label on its own navy bold line, the items
+   below it), education through roleNoLoc plus a muted small modules line, the certifications are one bullet joined with a middle
+   dot, years in italics, after one bold-led bullet per project that moved there for its award (render context `achievements`).
+   Only a bullet's result text is wrapped in num. Type scale: name 22pt, headline 12pt (one line), headings 13pt, contact line /
+   stack line / modules line 10pt (small), everything else 11pt. The vertical margin is repeated in render.CV2_MARGIN_PT (0.5in),
+   which turns a PDF's last text line into the page-2 fill: change both together. Only fact-bank values are inserted (after
+   typography.py has tidied the dashes and hyphens); optional fields are read with .get or default, so a missing one is skipped,
+   never an error. }
+
 \usepackage{fontspec}
 \setmainfont{Carlito}
-\usepackage[margin=0.6in]{geometry}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
 \usepackage{titlesec}
 \usepackage{enumitem}
-\usepackage{needspace}
-\usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage[colorlinks=true]{hyperref}
 \usepackage{microtype}
+\usepackage{ragged2e}
+\usepackage{needspace}
 
-\definecolor{headernavy}{RGB}{12, 83, 166}
-\definecolor{linkblue}{RGB}{0, 102, 204}
-\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+% ---- palette: one accent, one ink, one muted grey ----
+\definecolor{navy}{RGB}{12, 83, 166}
+\definecolor{ink}{RGB}{33, 37, 41}
+\definecolor{muted}{RGB}{96, 102, 110}
+\hypersetup{urlcolor=navy, linkcolor=navy}
+\color{ink}
 
-\titleformat{\section}{\color{headernavy}\fontsize{12}{14.4}\selectfont\bfseries}{}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
-\titlespacing{\section}{0pt}{9pt}{4pt}
-\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=1.2em, partopsep=0pt, parsep=1pt}
-\pagestyle{empty}
+% ---- ragged right, no hyphenation: even word spacing, no split words ----
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
 \setlength{\parindent}{0pt}
-% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
-\hyphenpenalty=10000
-\exhyphenpenalty=10000
-\emergencystretch=3em
+\pagestyle{empty}
+\linespread{\VAR{linespread|default(1.03)}}
+\AtBeginDocument{\RaggedRight}
 
-% entry heading: org (left) dates (right) / role (left) location (right); never alone at the foot of a page
-\newcommand{\entry}[4]{\needspace{4\baselineskip}\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
+% ---- type scale (ratio ~1.2): body 11 -> headline 12 -> section 13 -> name 22 ----
+\titleformat{\section}
+  {\color{navy}\fontsize{13}{15}\selectfont\bfseries\addfontfeature{LetterSpace=6}}
+  {}{0em}{\MakeUppercase}[{\color{navy}\vspace{1pt}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+
+\setlist[itemize]{label={\color{navy}\small\textbullet}, leftmargin=1.1em, labelsep=0.45em,
+  itemsep=1.5pt, parsep=0pt, topsep=2pt, partopsep=0pt}
+
+% ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
+  \textit{#4}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\hfill{\color{muted}#2}\\ \textit{#3}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag
+  \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{navy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{navy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
 
 \begin{document}
-\fontsize{11}{13.2}\selectfont
+\BLOCK{set res = results|default({})}
+\BLOCK{set dot = '\\nobreak\\ \\,\\textperiodcentered\\, '}
 
-% ---------------- HEADER ----------------
+% ================= HEADER =================
 \begin{center}
-  {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
-  \VAR{id.location|e} \,$|$\, \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \,$|$\, \href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\\[1pt]
-  \BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\VAR{id.links[k]|urlshow|e}}\BLOCK{if not loop.last} \,$|$\, \BLOCK{endif}\BLOCK{endfor}\BLOCK{if id.get('status_line')}\\[1pt]
-  \VAR{id.status_line|map('e')|join(' \\,$|$\\, ')}\BLOCK{endif}
+  {\fontsize{22}{26}\selectfont\bfseries\color{navy} \VAR{id.name|e}}\\[4pt]
+\BLOCK{if hook_headline|default('')}
+  {\fontsize{12}{14}\selectfont\color{navy} \VAR{hook_headline|hook_tex(hook_number|default(''), 'num')}}\\[4pt]
+\BLOCK{endif}
+  {\small
+  \VAR{id.location|e}\VAR{dot}\href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')}\VAR{dot}\href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\VAR{dot}\href{\VAR{id.links[k]|urlesc}}{\VAR{'Portfolio' if k == 'portfolio' else id.links[k]|urlshow|e}}\BLOCK{endfor}}\BLOCK{if id.get('status_line')}\\[3pt]
+  {\small\itshape\color{muted} \VAR{id.status_line|map('e')|join(dot)}}
+\BLOCK{endif}
 
 \end{center}
 
-% ---------------- PROFILE ----------------
-\section{Profile}
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
 \VAR{profile|e}
 
-% ---------------- SKILLS ----------------
-\section{Skills}
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
 \BLOCK{for group, items in skills.items()}
-\textbf{\VAR{group|e}:} \VAR{items|map('skill')|join(', ')}\BLOCK{if not loop.last}\\[2pt]\BLOCK{endif}
-
+\skillgroup{\VAR{group|e}}{\VAR{items|skill_row}}
 \BLOCK{endfor}
 
-% ---------------- EXPERIENCE ----------------
-\section{Experience}
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
 \BLOCK{for e in experience}
 \BLOCK{if not loop.first}
-\vspace{4pt}
+\gap
 \BLOCK{endif}
-\entry{\VAR{e.org|e}}{\VAR{e.dates|e}}{\VAR{e.title|e}}{\VAR{e.get('location', '')|e}}
+\BLOCK{set org = e|org_parts}
+\needspace{4\baselineskip}
+\BLOCK{if org[1]}
+\role{\VAR{org[0]|inline}}{\VAR{org[1]|inline}}{\VAR{e.dates|dates|e}}{\VAR{e|role_line|inline}}
+\BLOCK{else}
+\roleNoLoc{\VAR{org[0]|inline}}{\VAR{e.dates|dates|e}}{\VAR{e|role_line|inline}}
+\BLOCK{endif}
 \begin{itemize}
 \BLOCK{for b in e.bullets}
-  \item \VAR{b|e}
+  \item \VAR{e|bullet_at(loop.index0, res, 'num')}
 \BLOCK{endfor}
 \end{itemize}
 \BLOCK{endfor}
 
-% ---------------- PROJECTS ----------------
-\section{Projects}
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
 \BLOCK{for p in projects}
 \BLOCK{if not loop.first}
-\vspace{3pt}
+\gap
 \BLOCK{endif}
-\needspace{3\baselineskip}\noindent\textbf{\VAR{p.name|e}}\BLOCK{if p.get('stack')} -- \textit{\VAR{p.stack|e}}\BLOCK{endif} \hfill \BLOCK{if p|award}\textit{\VAR{(p|award)|e}}\BLOCK{elif p.get('github')}\href{\VAR{p.github|urlesc}}{GitHub}\BLOCK{endif}
-
+\BLOCK{set pp = p|project_parts}
+\BLOCK{set tag}\BLOCK{if pp[1]}\badge{\VAR{pp[1]|e}}\BLOCK{elif p.get('github')}\gh{\VAR{p.github|urlesc}}\BLOCK{endif}\BLOCK{endset}
+\needspace{4\baselineskip}
+\BLOCK{if p.get('stack')}
+\project{\VAR{pp[0]|inline}}{\VAR{p.stack|e}}{\VAR{tag}}
+\BLOCK{else}
+\textbf{\VAR{pp[0]|inline}}\hfill \VAR{tag}\par
+\BLOCK{endif}
 \begin{itemize}
 \BLOCK{for b in p.bullets}
-  \item \VAR{b|e}
+  \item \VAR{p|bullet_at(loop.index0, res, 'num')}
 \BLOCK{endfor}
 \end{itemize}
 \BLOCK{endfor}
 
-% ---------------- EDUCATION ----------------
-\section{Education}
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
 \BLOCK{for ed in education}
 \BLOCK{if not loop.first}
-\vspace{3pt}
+\gap
 \BLOCK{endif}
-\textbf{\VAR{ed.degree|e}}, \VAR{ed.org|e} \hfill \textbf{\VAR{ed.dates|e}}\BLOCK{if ed.get('details')}\\ \textit{\VAR{ed.details|e}}\BLOCK{endif}\BLOCK{if ed.get('grade') or ed.get('note')}\\ \textit{\VAR{(ed.get('grade') or ed.get('note'))|e}}\BLOCK{endif}\par
+\BLOCK{set el = ed|education_lines}
+\needspace{3\baselineskip}
+\roleNoLoc{\VAR{ed|school_line|inline}}{\VAR{ed.dates|dates|e}}{\VAR{el[0]|inline}}
+\BLOCK{if el[1]}
+{\color{muted}\small \VAR{el[1]|inline}}\par
+\BLOCK{endif}
+\BLOCK{endfor}
+\BLOCK{if research_focus|default('')}
+
+% ================= RESEARCH FOCUS (optional fact-bank section) =================
+\needspace{5\baselineskip}\section{Research Focus}
+\VAR{research_focus|e}
+\BLOCK{endif}
+\BLOCK{if publications|default([])}
+
+% ================= PUBLICATIONS (optional fact-bank section) =================
+\needspace{5\baselineskip}\section{Publications}
+\begin{itemize}
+\BLOCK{for pub in publications}
+  \item \VAR{pub|publication_tex}
+\BLOCK{endfor}
+\end{itemize}
+\BLOCK{endif}
+\BLOCK{if certifications or achievements|default([])}
+
+% ================= CERTIFICATIONS & ACHIEVEMENTS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+\BLOCK{for a in achievements|default([])}
+  \item \textbf{\VAR{a|achievement_head}}: \VAR{a.text|bullet(a.get('result', ''), 'num')}
 \BLOCK{endfor}
 \BLOCK{if certifications}
+  \item \VAR{certifications|map('cert_tex')|join(dot)}
+\BLOCK{endif}
+\end{itemize}
+\BLOCK{endif}
+\BLOCK{if languages|default([])}
 
-% ---------------- CERTIFICATIONS ----------------
-\section{Certifications \& Awards}
-\VAR{certifications|map('e')|join(' \\,$|$\\, ')}
+% ================= LANGUAGES (optional fact-bank section) =================
+\needspace{5\baselineskip}\section{Languages}
+\begin{itemize}
+  \item \VAR{languages|map('language_line')|map('e')|join(dot)}
+\end{itemize}
 \BLOCK{endif}
 
 \end{document}

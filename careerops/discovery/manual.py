@@ -20,7 +20,7 @@ REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "needs_country", "error"
 HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "role": "title", "job title": "title",
                "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
                "agency": "agency", "country": "country", "status": "status",
-               "first seen": "first_seen", "listed": "listed"}
+               "first seen": "first_seen", "listed": "listed", "posted via": "posted_source"}
 HEADER_LINE = re.compile(r"^\s*([A-Za-z ]{3,12}?)\s*:\s*(\S.*?)\s*$")
 
 
@@ -81,7 +81,8 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
 
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
            location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False,
-           work_country: str | None = None, seen_on: str | None = None, open_listing: bool = False) -> str:
+           work_country: str | None = None, seen_on: str | None = None, open_listing: bool = False,
+           posted_source: str | None = None) -> str:
     """Add a hand-made job (status 'new') and return its id. Raises JobExists when that job is already tailored or
     acted on, so adding a JD never resets work. Raises JDError for a company, title or URL that is a placeholder or too
     short (meta_problem)."""
@@ -94,9 +95,11 @@ def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = Non
     if have is not None and have["status"] not in REPLACEABLE:
         raise JobExists(f"{jid} ({company} / {title}) already exists with status '{have['status']}'")
     db.upsert_job({"id": jid, "source": source, "company": company, "title": title, "location": location,
-                   "url": url, "apply_url": url, "description": text, "posted_at": posted})
+                   "url": url, "apply_url": url, "description": text, "posted_at": posted,
+                   "posted_at_source": posted_source if posted else None})
     db.update_job(jid, description=text, status="new", source=source, agency=int(bool(agency)),
-                  **({"posted_at": posted} if posted else {}),
+                  **({"posted_at": posted, "posted_at_source": posted_source} if posted and posted_source else
+                     {"posted_at": posted} if posted else {}),
                   **({"seen_on": seen_on} if seen_on else {}), **({"open_listing": 1} if open_listing else {}),
                   **({"work_country": work_country, "work_evidence": f"{workcountry.SET_BY_YOU}: Country header"} if work_country else {}))
     return jid

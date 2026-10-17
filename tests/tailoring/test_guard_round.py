@@ -109,10 +109,10 @@ def test_an_inserted_keyword_takes_its_canonical_casing():
 
 
 def test_an_accepted_reword_is_written_in_canonical_casing():
-    kws = [Keyword("llm", 1, True)]
-    new = "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph for an llm app."
+    kws = [Keyword("nlp", 1, True)]
+    new = "Built nlp and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
     acc, _, _ = tailor.guard_rephrases(_bank(FL2), {"fl2": new}, kws)
-    assert acc == {"fl2": new.replace(" llm ", " LLM ")}
+    assert acc == {"fl2": new.replace("Built nlp", "Built NLP")}
 
 
 # ---------------------------------------------------------------- 3. team team

@@ -18,18 +18,14 @@ def test_the_mock_never_selects_and_never_rewords():
         raise AssertionError("the model no longer selects bullets: tailor_cv has no mock answer")
 
 
-def test_the_mock_profile_picks_the_first_two_facts_and_stays_within_45_words():
-    out = MockLLM().json("tailor_profile", "", "", {"facts": FACTS, "headline": "Data Scientist"})
-    assert out["facts"] == ["F1", "F2"]
-    assert out["profile"].startswith("Data Scientist with MSc Data Science") and len(out["profile"].split()) <= 45
-    long = [{"id": "F1", "text": "word " * 80}, FACTS[1]]
-    assert len(MockLLM().json("tailor_profile", "", "", {"facts": long, "headline": "AI Engineer"})["profile"].split()) <= 41
-
-
-def test_the_mock_profile_retry_returns_just_a_profile():
-    out = MockLLM().json("tailor_profile", "", "", {"profile_facts": [f["text"] for f in FACTS], "previous": "x",
-                                                    "problems": ["p"], "headline": "Data Scientist"})
-    assert set(out) == {"profile"} and out["profile"].startswith("Data Scientist with ")
+def test_the_mock_has_no_profile_and_no_hook_task_because_both_are_assembled_in_code():
+    for task in ("tailor_profile", "hook"):
+        try:
+            MockLLM().json(task, "", "", {})
+        except Exception as e:
+            assert f"no handler for task {task}" in str(e)
+        else:
+            raise AssertionError(f"{task} is no model task any more")
 
 
 def test_keywords_come_back_with_an_empty_team_by_default():

@@ -6,12 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from careerops import hook as hooks
 from careerops.tailoring import budget, selection, tailor
 from careerops.tailoring.render import page_count, pdf_text
 from careerops.tailoring.scorer import Keyword
 from careerops.tailoring.selection import (MOST_RECENT_BULLETS, OTHER_BULLETS, layout_from, missing_keywords, select_cv,
                                            selected_ids)
-from careerops.tailoring.skills import cv_skills
+from careerops.tailoring.skills import cv_skill_groups, skill_group_config
 
 
 def _kws(*terms, weight=2.0):
@@ -114,10 +115,16 @@ def test_the_model_is_never_asked_to_select_and_the_cv_follows_the_code_selectio
     assert "tailor_cv" not in [s["task"] for s in llm.sent]
     kws = [tailor.Keyword(**k) for k in rep["keywords"]]
     first = rep["attempts"][0]
-    assert first["proposal"]["selection"] == select_cv(                    # the family's project ids are not in this bank
-        fb_fixture, kws, skills=cv_skills(fb_fixture, kws, settings["scoring"]["max_skill_groups"])[0],
-        layout=layout_from(settings), jaccard_limit=settings["scoring"]["bullet_dedupe_jaccard"])
-    assert len(first["proposal"]["selection"]["projects"]) == settings["scoring"]["cv_projects"] == 3
+    # what the pipeline gives select_cv: the two-page CV's four skill groups, the bank without the award projects that moved to
+    # Achievements (unless the hook's proof is one), and the hook's proof bullet added to the picked selection
+    hk = hooks.Hook.from_dict(rep["hook"])
+    moved = tailor.achievement_projects(fb_fixture, kws, job["description"], hk)
+    fb_sel = {**fb_fixture, "projects": [p for p in fb_fixture["projects"] if p["id"] not in moved]}
+    groups, _, _ = cv_skill_groups(fb_fixture, kws, skill_group_config(settings), job["description"])
+    picked = select_cv(fb_sel, kws, tailor.role_prior(job, fb_fixture, settings)[3], skills=groups, layout=layout_from(settings),
+                       jaccard_limit=settings["scoring"]["bullet_dedupe_jaccard"], jd=job["description"])
+    assert moved == ["p2"] and first["proposal"]["selection"] == hooks.ensure_selected(picked, fb_fixture, hk)
+    assert len(first["proposal"]["selection"]["projects"]) == min(settings["scoring"]["cv_projects"], len(fb_sel["projects"]))
     saved = json.loads((Path(rep["out_dir"]) / "report.json").read_text(encoding="utf-8"))
     assert saved["attempts"][0]["selection"] == first["selection"]
 
@@ -183,9 +190,13 @@ def test_attempts_do_not_repeat_themselves_when_the_selection_would_not_change(s
 
 
 @pytest.mark.slow
-def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(settings, fb_fixture, broad_job,
+def test_later_attempts_reuse_rephrase_answers_and_no_model_writes_the_profile(settings, fb_fixture, broad_job,
                                                                                 broad_llm, monkeypatch):
     _below_band(settings)
+    fb_fixture = copy.deepcopy(fb_fixture)
+    for e in fb_fixture["experience"] + fb_fixture["projects"]:       # a `result:` the text does not say is what a rephrase call is still asked to work in
+        for b in e["bullets"]:
+            b["result"] = f"{b['id']} result"
     real, calls, first_kws = tailor.select_cv, [], []
 
     def rotating(fb, kws, preferred=None, **kw):           # a different selection each time, as a real boost may give
@@ -199,9 +210,9 @@ def test_later_attempts_reuse_rephrase_answers_and_the_profile_is_written_once(s
     monkeypatch.setattr(tailor, "select_cv", rotating)
     llm = broad_llm
     rep = tailor.tailor_job(broad_job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert len(rep["attempts"]) == settings["scoring"]["max_attempts"] == 3
+    assert len(rep["attempts"]) == settings["scoring"]["max_attempts"] == 2
     tasks = [s["task"] for s in llm.sent]
-    assert tasks.count("tailor_profile") == 1
+    assert "tailor_profile" not in tasks and "hook" not in tasks                       # the profile and the hook are assembled in code
     first, later = rep["attempts"][0]["rephrase"], rep["attempts"][1:]
     assert first["asked"] == first["eligible"] > 0 and first["calls"] >= 1
     assert all(a["rephrase"]["asked"] == 0 and a["rephrase"]["cached"] == a["rephrase"]["eligible"] for a in later)

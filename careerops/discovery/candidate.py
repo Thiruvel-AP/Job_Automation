@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from ..apply.naming import folder_key
-from . import gates
+from . import freshness, gates
 from .intake import Ad
 
 UK_WORDS = re.compile(r"\b(united kingdom|uk|u\.k\.|great britain|britain|england|scotland|wales|northern ireland)\b", re.I)
@@ -25,6 +25,7 @@ class Candidate:
     url: str
     description: str
     posted: str = ""                   # an ISO date or datetime, when the source says
+    posted_source: str = ""            # where `posted` comes from, one of freshness.TRUSTED ("greenhouse.first_published"); "" = not trusted
     agency: bool = False
     salary: str = ""
     ext_id: str = ""
@@ -34,6 +35,7 @@ class Candidate:
     board: str = ""                    # the job board it was read from, "ashby:openai" (which registry source it counts for)
     listed_only: bool = False          # outside the UK: written for the record (Country: / Status: listed_only), never applied to
     seen: str = ""                     # YYYY-MM-DD an alert about it reached the mailbox, when it was found through one
+    seen_at: str = ""                  # the same moment as an ISO datetime (the email's arrival): an upper bound for when it was posted
     first_seen: str = ""               # set by discover when the job is kept: the earliest of `seen` and the first run that saw it
     open_listing: bool = False         # still listed on the employer's own board (Greenhouse / Lever / Ashby) when it was read
 
@@ -41,10 +43,10 @@ class Candidate:
         return self.ext_id or hashlib.sha1(self.url.encode()).hexdigest()[:10]
 
     def to_ad(self) -> Ad:
-        posted = (self.posted or "")[:10]
+        posted = (self.posted or "").strip()
         return Ad(company=self.company, title=self.title, url=self.url, location=self.location, text=self.description,
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
-                  posted=posted if re.fullmatch(r"\d{4}-\d{2}-\d{2}", posted) else "",
+                  posted=posted if freshness.is_iso(posted) else "", posted_source=self.posted_source if freshness.is_iso(posted) else "",
                   country=self.country if self.listed_only else "", listed_only=self.listed_only,
                   first_seen=self.first_seen, open_listing=self.open_listing)
 

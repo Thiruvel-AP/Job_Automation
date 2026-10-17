@@ -30,9 +30,11 @@ and Ashby (answers, hits and misses, cached 30 days); the alert's title is then 
 
 The manual queue (paths.jds/manual_queue.csv, append-only, one row per link) lists what could not be resolved, for
 `careerops live --clipboard`: the best discover.manual_queue_max (10) of a run by title relevance x S, the rest in
-manual_queue_overflow.csv. Every title the role or place filter turned away is in paths.discover/filtered.csv with the reason.
-Sponsorship is never a filter here: the output is ordered by priority P = F x S x R (priority.py), where R counts from the day
-discover first saw the job (firstseen.py), not from the board's publish date.
+manual_queue_overflow.csv. Every title the role or place filter turned away is in paths.discover/filtered_<date>.csv with the reason (one
+file per day, holding the titles first turned away that day: the weekly look for a wrongly filtered role).
+Sponsorship is never a filter here: the output is ordered by freshness tier, then by priority P = F x S (priority.py). The tier counts
+from the source's own posting time (freshness.py: Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna
+created, a Gmail alert's arrival time), else from the day discover first saw the job (firstseen.py). Old jobs are never dropped.
 """
 from __future__ import annotations
 
@@ -54,7 +56,7 @@ from ..db import DB
 from . import ats as ats_mod
 from . import candidate as cand
 from . import boards as boards_mod
-from . import countries, firstseen, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
@@ -100,8 +102,10 @@ class Run:
     sources: dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))      # by the step that found it (ats, gmail ...)
     by_source: dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))    # by registry source id: new, listed_only, alerts
     notes: list[str] = field(default_factory=list)
+    failures: list[str] = field(default_factory=list)       # a source that could not be read at all (a lapsed Gmail sign-in, an error): the command exits 1
     written: list[tuple[Candidate, Path]] = field(default_factory=list)
     dry_run: bool = False
+    tiers: list[int] = field(default_factory=lambda: [0, 0, 0, 0])      # the freshness tiers (0 <= 24 h ... 3 older) of the ads written
 
     def count(self, source: str, what: str, n: int = 1) -> None:
         self.sources[source][what] += n
@@ -115,7 +119,7 @@ class Run:
         return int(c.get("new", 0)) + int(c.get("listed_only", 0))
 
     def as_json(self) -> dict:
-        return {"ts": self.started, "dry_run": self.dry_run, "sources": {s: dict(c) for s, c in self.sources.items()},
+        return {"ts": self.started, "dry_run": self.dry_run, "tiers": list(self.tiers), "failures": self.failures[:20], "sources": {s: dict(c) for s, c in self.sources.items()},
                 "by_source": {s: dict(c) for s, c in self.by_source.items()}, "notes": self.notes[:50]}
 
 
@@ -231,8 +235,18 @@ def overflow_path(settings) -> Path:
     return settings.path("jds") / "manual_queue_overflow.csv"
 
 
-def filtered_path(settings) -> Path:
-    return settings.path("discover") / "filtered.csv"
+def filtered_path(settings, day: str | None = None) -> Path:
+    """The role / place filter audit of one day: paths.discover/filtered_<YYYY-MM-DD>.csv (today's when `day` is not given)."""
+    return settings.path("discover") / f"filtered_{day or datetime.now(timezone.utc).date().isoformat()}.csv"
+
+
+def filtered_seen(settings) -> set[tuple]:
+    """(company, title, filter) of every row of every audit file so far, the older single filtered.csv included."""
+    out: set[tuple] = set()
+    folder = settings.path("discover")
+    for p in sorted(folder.glob("filtered*.csv")) if folder.exists() else []:
+        out |= {(r.get("company"), r.get("title"), r.get("filter")) for r in read_rows(p)}
+    return out
 
 
 def queue_key(row: dict) -> str:
@@ -416,9 +430,16 @@ def merge_boards(boards: list[ats_mod.Board], extra: list[ats_mod.Board]) -> lis
     return out
 
 
+POSTED_FIELD = {"greenhouse": "first_published", "lever": "createdAt", "lever_eu": "createdAt", "ashby": "publishedAt"}
+
+
 def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = "") -> Candidate:
+    """A board posting as a candidate, with the board's own posting time and where it comes from (freshness.py)."""
+    posted = p.posted_at or ""
     return Candidate(source=board.ats.replace("lever_eu", "lever"), company=board.name or p.company, title=p.title,
-                     location=p.location, url=p.url, description=p.description, posted=p.posted_at or "", ext_id=p.ext_id,
+                     location=p.location, url=p.url, description=p.description, posted=posted, ext_id=p.ext_id,
+                     posted_source=freshness.label(board.ats.replace("lever_eu", "lever"), POSTED_FIELD[board.ats])
+                     if posted and freshness.is_iso(posted) else "",
                      country=p.country, origin=origin, board=f"{board.ats}:{board.slug}")
 
 
@@ -469,7 +490,7 @@ class Discover:
         return False
 
     def filtered_out(self, source: str, company: str, title: str, location: str, link: str, which: str, reason: str) -> None:
-        """Note a title the role or place filter turned away (written to paths.discover/filtered.csv by flush_filtered)."""
+        """Note a title the role or place filter turned away (written to paths.discover/filtered_<date>.csv by flush_filtered)."""
         self.pending_filtered.append({"ts": self.today.isoformat(timespec="seconds"), "source": source, "company": company, "title": title,
                                       "location": location, "filter": which, "reason": reason, "link": link})
 
@@ -540,13 +561,15 @@ class Discover:
         self.run.credit(src.id if src else "other", "listed_only" if c.listed_only else "new")
 
     def to_queue(self, label: str, source: str, company: str, title: str, location: str, link: str, reason: str,
-                 relevance: float | None = None) -> None:
-        """Hold a link that could not be resolved. flush_queue() ranks the run's links by title relevance x S and writes the best
-        discover.manual_queue_max of them to manual_queue.csv, the rest to manual_queue_overflow.csv."""
+                 relevance: float | None = None, seen_at: str = "") -> None:
+        """Hold a link that could not be resolved. flush_queue() ranks the run's links like the inbox: the freshness tier of the alert's
+        arrival first (freshness.py; no time = tier 3), then title relevance x S (the stand-in for P = F x S: there is no ad to score), and
+        writes the best discover.manual_queue_max of them to manual_queue.csv, the rest to manual_queue_overflow.csv."""
         rel = cand.title_relevance(title, self.s) if relevance is None else relevance
+        tier = freshness.tier({"posted_at": seen_at or None, "posted_at_source": freshness.GMAIL if seen_at else None}, self.today)
         self.pending_queue.append({"label": label, "ts": self.today.isoformat(timespec="seconds"), "source": source, "company": company,
                                    "title": title, "location": location, "link": link, "reason": reason,
-                                   "score": round(rel * self.sponsor_weight(company), 3)})
+                                   "score": round(rel * self.sponsor_weight(company), 3), "tier": tier})
 
     def sponsor_weight(self, company: str) -> float:
         """S of priority.py for this employer: 1.0 on the register by name, 0.9 near, 0.75 otherwise (or when no register is loaded)."""
@@ -567,7 +590,7 @@ class Discover:
             if queue_key(r) not in have:
                 have.add(queue_key(r))
                 fresh.append(r)
-        ranked = sorted(fresh, key=lambda r: -r["score"])        # stable: equal scores keep their order of arrival
+        ranked = sorted(fresh, key=lambda r: (r.get("tier", 3), -r["score"]))      # stable: equal keys keep their order of arrival
         cap = max(0, int(self.s["discover"].get("manual_queue_max", 10)))
         keep, rest = ranked[:cap], ranked[cap:]
         for r in keep:
@@ -581,13 +604,13 @@ class Discover:
                 append_rows(overflow, OVERFLOW_COLUMNS, rest)
 
     def flush_filtered(self) -> None:
-        """Append the titles the filters turned away to paths.discover/filtered.csv; a (company, title, filter) already in the file is not
-        written again, so a board read every day adds its new titles only."""
+        """Append the titles the filters turned away to today's paths.discover/filtered_<date>.csv, with the reason of each; a (company, title,
+        filter) already in ANY audit file is not written again, so a board read every day adds its new titles only."""
         rows, self.pending_filtered = self.pending_filtered, []
         if not rows or self.dry_run:
             return
-        path = filtered_path(self.s)
-        have = {(r.get("company"), r.get("title"), r.get("filter")) for r in read_rows(path)}
+        path = filtered_path(self.s, self.today_day)
+        have = filtered_seen(self.s)
         fresh = []
         for r in rows:
             k = (r["company"], r["title"], r["filter"])
@@ -602,6 +625,9 @@ class Discover:
         self.flush_queue()
         self.flush_filtered()
         self.first_seen.save()
+        self.run.tiers = freshness.tier_counts(
+            ({"posted_at": c.posted or None, "posted_at_source": c.posted_source or None, "seen_on": c.first_seen or None}
+             for c, _ in self.run.written), self.today)
 
     # ---- sources
     @_finishing
@@ -709,7 +735,8 @@ class Discover:
                     c = Candidate(source="adzuna", company=str((j.get("company") or {}).get("display_name") or ""),
                                   title=html_to_text(j.get("title")), location=str((j.get("location") or {}).get("display_name") or ""),
                                   url=str(j.get("redirect_url") or ""), description=html_to_text(j.get("description")),
-                                  posted=str(j.get("created") or ""), ext_id=str(j.get("id") or ""), country="GB")   # the /gb/ endpoint
+                                  posted=str(j.get("created") or ""), ext_id=str(j.get("id") or ""), country="GB",   # the /gb/ endpoint
+                                  posted_source=freshness.label("adzuna", "created") if freshness.is_iso(j.get("created")) else "")
                     if self.adzuna_one(c, label) == "full":
                         return
                 if len(results) < 50:
@@ -728,10 +755,11 @@ class Discover:
 
     # ---- a link or a (company, title): look for the whole ad
     def resolve_link(self, label: str, kind: str, company: str, title: str, location: str, link: str, origin: str,
-                     counted: bool = False, default_country: str = "", source_id: str = "", seen: str = "") -> str:
+                     counted: bool = False, default_country: str = "", source_id: str = "", seen: str = "", seen_at: str = "") -> str:
         """Find the full ad for something that is only a pointer. Order: a CV-Library job link (C2), a Reed job link (with a key),
         the employer's own board (D1). Anything else goes to the manual queue, with the reason. `source_id` is who gets the credit in
-        the resolved-% report (default: `kind`); `seen` is the day the alert about it arrived (YYYY-MM-DD): R counts from it."""
+        the resolved-% report (default: `kind`); `seen` is the day the alert about it arrived (YYYY-MM-DD) and `seen_at` the same moment as an
+        ISO datetime: a job whose own source gave no trusted posting time is dated by it (freshness.GMAIL, an upper bound)."""
         host = (urlparse(link).hostname or "").lower()
         c: Candidate | None = None
         why = ""
@@ -765,13 +793,17 @@ class Discover:
                     why = f"no public job board known for {company}"
         if c is None:
             self.run.credit(source_id or kind, "unresolved")
-            self.to_queue(label, kind, company, title, location, link, why or "no company given")
+            self.to_queue(label, kind, company, title, location, link, why or "no company given", seen_at=seen_at)
             return "queued"
         self.run.count(label, "resolved")
         self.run.credit(source_id or kind, "resolved")
         c.origin = origin
         if seen:
             c.seen = seen
+        if seen_at:
+            c.seen_at = seen_at
+            if not c.posted_source:                            # no trusted time from the ad itself: the email's arrival
+                c.posted, c.posted_source = seen_at, freshness.GMAIL
         if default_country and not c.country:               # an alert from a one-country source: that country unless the place says another
             c.country = countries.detect(c.location) or default_country
         return self.accept(c, label, counted=counted)
@@ -797,6 +829,7 @@ class Discover:
             token = gmail.access_token(self.s)
         except gmail.GmailAuthError as e:
             self.run.notes.append(str(e))
+            self.run.failures.append(f"gmail: {e}")
             self.say(f"gmail: {e}")
             return
         seen_path = self.s.path("discover") / "gmail_seen.json"
@@ -808,6 +841,7 @@ class Discover:
             ids = gmail.list_message_ids(self.f, token, gmail.build_query(self.s, self.registry), int(g.get("max_messages", 60)))
         except (FetchError, Blocked) as e:
             self.run.notes.append(f"gmail: {e}")
+            self.run.failures.append(f"gmail: {e}")
             return
         done_now: list[str] = []
         for mid in ids:
@@ -819,7 +853,8 @@ class Discover:
             except (FetchError, Blocked) as e:
                 self.run.notes.append(f"gmail message {mid}: {e}")
                 break
-            alert_day = gmail.message_date(msg)
+            alert_time = gmail.message_time(msg)                  # an upper bound on when its jobs were posted
+            alert_day = alert_time[:10]
             src = self.alert_source(frm, subject)
             done_now.append(mid)
             if src is None:
@@ -833,7 +868,7 @@ class Discover:
                 self.run.count(label, "alerts_unparsed")
                 self.to_queue(label, src.id, "", (subject or "")[:120], "", gmail.web_link(mid),
                               f"alert email from {src.name}: no job links were recognised in it; open the email and add the ads you want",
-                              relevance=ALERT_EMAIL_RELEVANCE)
+                              relevance=ALERT_EMAIL_RELEVANCE, seen_at=alert_time)
             default_country = src.home_country if src.home_country not in ("", countries.UK) else ""
             for item in parsed:
                 self.run.count(label, "alerts")
@@ -849,7 +884,7 @@ class Discover:
                     self.filtered_out(kind, item.company, item.title, item.location, item.link, "role", role_reason(item.title))
                     continue
                 if self.resolve_link(label, kind, item.company, item.title, item.location, item.link, f"gmail:{kind}",
-                                     default_country=default_country, source_id=src.id, seen=alert_day) == "full":
+                                     default_country=default_country, source_id=src.id, seen=alert_day, seen_at=alert_time) == "full":
                     break
         if not self.dry_run:
             try:
@@ -914,15 +949,16 @@ class Discover:
                                        override=c.country if c.listed_only else "",
                                        rules=workcountry.rules_from(workcountry.applicant_visa(self.s)))
             job = {"id": c.ad_id(), "company": c.company, "description": c.description, "sponsor_match": match, "agency": c.agency,
-                   "posted_at": c.posted or None, "seen_on": c.first_seen or None, "open_listing": c.open_listing, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
+                   "posted_at": c.posted or None, "posted_at_source": c.posted_source or None, "seen_on": c.first_seen or None,
+                   "open_listing": c.open_listing, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
                    "work_country": work.country}
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
-        return sorted(out, key=lambda t: (-t[0].p, -(t[0].s * t[0].r), t[1].company, t[1].title))
+        return sorted(out, key=lambda t: (t[0].tier, -t[0].p, -t[0].s, t[1].company, t[1].title))
 
     def listing(self, n: int = 10) -> list[str]:
         lines = []
         for pr, c, path in self.ranked()[:n]:
-            lines.append(f"  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.r:.2f}  {c.company} | {c.title} | {c.location or '?'} | {c.url}  "
+            lines.append(f"  T{pr.tier} {pr.age():>7}  P {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f}  {c.company} | {c.title} | {c.location or '?'} | {c.url}  "
                          f"[{c.source}{', agency' if c.agency else ''}{', listed only' if c.listed_only else ''}; {pr.s_reason}]  {path.name}")
         return lines
 
@@ -975,6 +1011,22 @@ def read_runs(settings) -> list[dict]:
     return out
 
 
+def inbox_tiers(settings, now: datetime | None = None) -> list[int]:
+    """How many of the JD files in the inbox are in each freshness tier (0 <= 24 h ... 3 older or undated), read from their headers
+    (Posted / Posted via / First seen, else the file's own time). A file that cannot be read counts as tier 3."""
+    jobs = []
+    for p in sorted((settings.path("jds") / "inbox").glob("*.txt")):
+        try:
+            hdr = manual.header_fields(p.read_text(encoding="utf-8"))
+            written = datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+        except (OSError, ValueError):
+            jobs.append({})
+            continue
+        jobs.append({"posted_at": hdr.get("posted"), "posted_at_source": hdr.get("posted_source"), "seen_on": hdr.get("first_seen"),
+                     "first_seen": written})
+    return freshness.tier_counts(jobs, now)
+
+
 def format_report(settings) -> str:
     """Counts per source over all runs and for the last one, and what is in the manual queue (resolved vs sent to it)."""
     runs = read_runs(settings)
@@ -1000,6 +1052,10 @@ def format_report(settings) -> str:
         lines += table(f"All {len(runs)} run(s):", total)
         for n in runs[-1].get("notes", [])[:8]:
             lines.append(f"  note: {n}")
+    if runs and runs[-1].get("tiers") is not None:
+        lines.append("Freshness of the ads the last run wrote: " + freshness.counts_line(runs[-1]["tiers"]))
+    waiting = inbox_tiers(settings)
+    lines.append("Waiting in the inbox for `careerops live` (`live --fresh` takes tier 0): " + freshness.counts_line(waiting))
     resolved = sum(c.get("resolved", 0) for c in total.values())
     lines.append(f"Resolved to a full ad: {resolved} · in the manual queue: {len(queue)} "
                  f"({', '.join(f'{k} {v}' for k, v in sorted(Counter(r['source'] for r in queue).items())) or 'empty'})")

@@ -1,5 +1,6 @@
 """Tuning round 2: (1) a keyword the CV lacks is offered to a bullet whose own `terms` evidence it (max 2 per bullet, once
-overall) and its fate is reported, (2) a rewording is accepted only if its literal keyword hits are a superset of the text
+overall) and its fate is reported (`introduce=True`: the pipeline no longer offers anything since the round of 17 Oct, because a
+reworded bullet may not add a word its text lacks; see test_rephrase_no_new_claims.py), (2) a rewording is accepted only if its literal keyword hits are a superset of the text
 it replaces (the Lendable dc1/az4 case), (3) singular/plural in the literal score. No network, no model: spy MockLLM."""
 from careerops.tailoring import tailor
 from careerops.tailoring.faithfulness import check
@@ -29,7 +30,7 @@ def _sel(*ids):
 
 
 def _offers(fb, sel, kws, other_text=""):
-    return tailor.placement_offers(fb, sel, kws, other_text)
+    return tailor.placement_offers(fb, sel, kws, other_text, introduce=True)
 
 
 # ---------------------------------------------------------------- 1. placement from `terms`
@@ -68,7 +69,8 @@ def test_the_heavier_keyword_is_offered_first_when_room_is_short():
 
 def test_the_rephrase_prompt_lists_only_the_offered_keywords_and_a_bullet_with_none_is_not_sent(spy_llm):
     llm = spy_llm()
-    _, stats = tailor.propose_rephrases({"title": "AI Engineer"}, _fb(DC1, AZ4), _sel("dc1", "az4"), LENDABLE, llm, {}, [])
+    _, stats = tailor.propose_rephrases({"title": "AI Engineer"}, _fb(DC1, AZ4), _sel("dc1", "az4"), LENDABLE, llm, {}, [],
+                                         introduce=True)
     sent = {i["id"]: i for s in llm.sent for i in s["context"]["bullets"]}
     assert list(sent) == ["dc1"] and sent["dc1"]["introduce"] == ["communication", "prototyping"]
     assert "MAY INTRODUCE: communication, prototyping" in llm.sent[0]["user"]
@@ -89,8 +91,8 @@ def test_placement_report_says_placed_not_placed_or_blocked():
 # ---------------------------------------------------------------- 2. no regression (Lendable dc1 / az4)
 DC1_162044 = ("Proposed and prototyped an MCP-based agentic tool in Python using Ollama gpt-oss:20b and PostgreSQL, "
               "presenting the llm solution to stakeholders during a live communication demo.")
-DC1_190956 = ("Prototyping an MCP-based agentic tool in Python for a Madrid-based product start-up client, presenting to "
-              "stakeholders.")
+DC1_190956 = ("Prototyping an MCP-based agentic tool in Python with Ollama gpt-oss:20b for a Madrid-based product start-up client, "
+              "presenting to stakeholders.")       # fix round 2: keeps the "20" of gpt-oss:20b (a rewording that drops a number is refused)
 AZ4_162044 = ("Wrote a three-tier test framework of ~65 tests across 8 files, conducting evaluations during LLM provider "
               "migration from Groq to AWS Bedrock after rate-limit assessment.")
 AZ4_190956 = ("Wrote a three-tier test framework of ~65 tests across 8 files, validating LLM provider migration from Groq to "
@@ -125,7 +127,7 @@ def test_a_rewording_that_keeps_every_hit_and_adds_one_is_accepted():
 def test_a_rewording_that_drops_a_hit_the_canonical_bullet_had_is_refused():
     b = {"id": "k1", "text": "Built an LLM pipeline in Python with PostgreSQL.", "terms": ["llm", "python", "postgresql"]}
     kws = [Keyword("llm", 2, True), Keyword("python", 2, True), Keyword("postgresql", 1, False)]
-    acc, viol, warn = tailor.guard_rephrases(_fb(b), {"k1": "Built a language-model pipeline in Python with PostgreSQL."}, kws)
+    acc, viol, warn = tailor.guard_rephrases(_fb(b), {"k1": "Built a pipeline in Python with PostgreSQL."}, kws)
     assert acc == {} and viol == [] and any(tailor.NO_REGRESSION in w and "llm" in w for w in warn)
 
 

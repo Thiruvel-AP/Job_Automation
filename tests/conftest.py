@@ -144,6 +144,16 @@ def fixture(area: str, name: str) -> Path:
     return FIX / area / name
 
 
+def fixture_profile_settings() -> Settings:
+    """The shipped settings with only the two profile paths on the fictional profile, for module-scoped fixtures and helpers that
+    cannot take the `settings` fixture. A bare load_settings() hands tailor_job the user's real applicant.yaml (the letter's
+    relocation line is read from it)."""
+    s = load_settings()
+    s.raw["paths"]["fact_bank"] = str(PROFILE_FIX / "fact_bank.yaml")
+    s.raw["paths"]["applicant"] = str(PROFILE_FIX / "applicant.yaml")
+    return s
+
+
 @pytest.fixture
 def settings(tmp_path) -> Settings:
     s = load_settings()
@@ -234,26 +244,34 @@ def job(jd) -> dict:
             "description": jd}
 
 
+def with_results(fb: dict) -> dict:
+    """A copy of the bank with a `result:` the text does not say on every bullet. Since the round of 17 Oct a rephrase call is made only
+    for a bullet like that (a bullet is no longer asked to introduce a keyword from its `terms:`), so the tests that need the model to
+    be asked something about a bullet use this."""
+    fb = copy.deepcopy(fb)
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec, []):
+            for b in e["bullets"]:
+                b.setdefault("result", "kept in daily use")
+    return fb
+
+
 def _fabricating_llm():
-    """A model that tries to lie: rewordings with an invented number and a deny-listed tool, a profile with an invented
-    years-of-experience claim, and a keyword that is not in the JD."""
+    """A model that tries to lie: rewordings with an invented number and a deny-listed tool, and a keyword that is not in the JD."""
     def rephrase(ctx):
         out = {}
         for i, b in enumerate(ctx["bullets"]):
             if i == 0:                                   # the lie: a deny-listed tool and a number the bullet lacks
                 out[b["id"]] = "Deployed the agent with Docker and Kubernetes on AWS Lambda, cutting cost 40%."
-            else:                                        # an honest rewording: the same fact plus the keywords it may take
-                out[b["id"]] = b["text"].rstrip(".") + ", covering " + ", ".join(b["introduce"]) + "."
+            else:                                        # an honest rewording: the same fact plus the result the user wrote for it
+                out[b["id"]] = b["text"].rstrip(".") + ", " + b.get("result", "kept in daily use") + "."
         return out
-
-    def profile(ctx):
-        return {"facts": ["F1", "F2"], "profile": "AI engineer with 5 years of production experience in Kubernetes."}
 
     def keywords(ctx):
         return {"required": ["Python", "LLM agents", "made-up keyword not in JD", "Kubernetes"], "preferred": [],
                 "company_hook": "Northwind builds clinical decision-support tools for oncology researchers."}
 
-    return MockLLM({"rephrase_bullets": rephrase, "tailor_profile": profile, "extract_keywords": keywords})
+    return MockLLM({"rephrase_bullets": rephrase, "extract_keywords": keywords})
 
 
 BROAD_JD_TERMS = ["Python", "SQL", "pandas", "scikit-learn", "XGBoost", "PyTorch", "LangChain", "Docker", "MLflow",
@@ -275,9 +293,14 @@ def broad_llm(spy_llm):
 
 
 @pytest.fixture
-def one_page_run(settings, fb_fixture, broad_job, broad_llm):
-    """`--one-page`: the code selection for the broad JD overflows one page, so the shrink loop has work to do."""
+def one_page_run(settings, fb_fixture, broad_job, broad_llm, monkeypatch):
+    """`--one-page`: the code selection for the broad JD overflows one page, so the shrink loop has work to do. The layout is
+    roomier than production's ONE_PAGE (at least 4 / 2 bullets per entry, topped up whether or not they add keywords): the
+    selection also ranks by the JD's domain and topics now, and picks bullets short enough to fit one page without a shrink."""
+    from careerops.tailoring import tailor as tailor_module
     from careerops.tailoring.render import pdf_text
+    from careerops.tailoring.selection import Layout
+    monkeypatch.setattr(tailor_module, "ONE_PAGE", Layout((4, 5), (2, 3), 2, None))
     rep = tailor_job(broad_job, fb_fixture, broad_llm, settings, settings.path("outputs"), one_page=True)
     return rep, pdf_text(Path(rep["cv_pdf"]))
 

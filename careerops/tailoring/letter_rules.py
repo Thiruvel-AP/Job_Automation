@@ -45,6 +45,50 @@ def gap_display(gap: str, jd: str = "") -> str:
     return _GAP_CASE.get(g.lower(), m.group(0) if m else g)
 
 
+def _display_word(word: str, jd: str) -> str:
+    low = word.casefold()
+    if low in CANONICAL:
+        return CANONICAL[low]
+    if _GAP_CASE.get(low, low) != low:
+        return _GAP_CASE[low]
+    if low in _TECH:                                            # Python, Docker, Keras ...: the names the term-dump check wants capitalised
+        return _TECH[low]
+    m = re.search(r"(?<![\w])" + re.escape(word) + r"(?![\w])", jd or "", re.I)
+    return m.group(0) if m and any(c.isupper() for c in m.group(0)[1:]) else low
+
+
+def _display(term: str, jd: str) -> str:
+    """A term as it is written inside a sentence, word by word: a name keeps its spelling (AWS, MLOps, CI/CD, Docker), the ad's own
+    camel-case or capitals are kept (XGBoost, ETL), anything else is lower case ("aws lambda" -> "AWS lambda")."""
+    return " ".join(_display_word(w, jd) for w in term.split())
+
+
+def bank_names(fb: dict) -> list[str]:
+    """Every skill and project-stack name of the fact bank, in the user's own spelling (for `noun_phrase`'s `known`)."""
+    names: list[str] = []
+    for items in ((fb or {}).get("skills") or {}).values():
+        names += [str(s) for s in items] if isinstance(items, list) else []
+    for sec in ("experience", "projects"):
+        for e in (fb or {}).get(sec, []) or []:
+            names += [x.strip() for x in str(e.get("stack") or "").split(",") if x.strip()]
+    return names
+
+
+def noun_phrase(terms, jd: str = "", known=()) -> str:
+    """`terms` as a lower-case noun phrase for the middle of a sentence: "production, deployment and testing". Never title case:
+    only a name keeps its capitals (AWS, MLOps, CI/CD; and, from `known` -- the bank's own skill names -- a spelling like "AWS Lambda"
+    that is more than a first capital letter)."""
+    spelled = {" ".join(n.split()).casefold(): " ".join(n.split()) for n in known
+               if " ".join(n.split()) not in (" ".join(n.split()).capitalize(), " ".join(n.split()).lower())}
+    out: list[str] = []
+    for t in terms:
+        t = " ".join(str(t).split())
+        d = spelled.get(t.casefold()) or (_display(t, jd) if t else "")
+        if d and d.casefold() not in {x.casefold() for x in out}:
+            out.append(d)
+    return out[0] if len(out) == 1 else (", ".join(out[:-1]) + " and " + out[-1]) if out else ""
+
+
 # ------------------------------------------------------------------ grammar of a model draft
 _PREP = r"(?:on|in|at|with|as|for|across|from|during|to|of|through|using|around|that|which)"
 _MIRRORS_NOUN = re.compile(r"\b(?:mirror|reflect|match|echo)s?\s+my\s+(?:work|experience)\s+(?!" + _PREP + r"\b)(?!\w+ing\b)\w+",
@@ -160,3 +204,82 @@ def fallback_letter(job: dict, hook: str, evidence: list[dict], gaps: list[str],
         paras.append(f"I have not used {gap_display(gaps[0], jd)} yet.")
     paras.append(closing)
     return [p for p in paras if p.strip()]
+
+
+# ------------------------------------------------------------------ a pasted `terms:` list, and technologies in lower case
+# Fix round 2: a draft that reads "...mirrors my work on docker, containerised, containerized, aws lambda, serverless, mlops, cloud, iam,
+# security, production." is a fact-bank bullet's `terms:` list pasted into prose. Prose says what was done, not which words index it.
+TERM_RUN = 3                # this many comma-separated items in a row that are all some bullet's `terms` make a pasted list
+_TECH = {**{k: v for k, v in CANONICAL.items() if k != v}, **{w.lower(): w for w in (
+    "Docker", "Python", "Keras", "Kubernetes", "Terraform", "Streamlit", "Tableau", "Snowflake", "Databricks", "PySpark", "Airflow",
+    "LightGBM", "CatBoost", "Optuna", "Pydantic", "Flask", "Django", "Kafka", "MongoDB", "DynamoDB", "OpenCV", "Plotly", "Seaborn",
+    "Matplotlib")}}
+_TECH.pop("ai", None)       # "ai" is a word in other languages and in names; the other acronyms are not
+_COMMA = re.compile(r",(?!\d)|;")
+
+
+def bullet_terms(fb: dict) -> set[str]:
+    """Every `terms` entry of every bullet of the fact bank (experience and projects), as norm_literal text."""
+    return {norm_literal(str(t)).strip() for sec in ("experience", "projects") for e in (fb or {}).get(sec, []) or []
+            for b in e.get("bullets", []) for t in b.get("terms", []) or [] if str(t).strip()}
+
+
+def _segment(seg: str) -> str:
+    s = norm_literal(seg).strip(" .;:!?()\"'")
+    return re.sub(r"^(?:and|or|&)\s+", "", s).strip()
+
+
+def _kind(seg: str, terms: set[str]) -> str:
+    """exact: the segment is a term; suffix: it ends with one (the start of a list, "...my work on docker"); prefix: it starts with
+    one (the end of a list, "iam and then ..."); "" otherwise."""
+    if seg in terms:
+        return "exact"
+    words = seg.split()
+    for n in range(1, min(4, len(words)) + 1):
+        if " ".join(words[-n:]) in terms:
+            return "suffix"
+    for n in range(1, min(4, len(words)) + 1):
+        if " ".join(words[:n]) in terms:
+            return "prefix"
+    return ""
+
+
+def _sub_run(a: list[str], b: list[str]) -> bool:
+    return len(a) <= len(b) and any(b[i:i + len(a)] == a for i in range(len(b) - len(a) + 1))
+
+
+def term_dump_problems(paragraphs: list[str], fb: dict) -> list[str]:
+    """Problems that mark a letter as written from the `terms:` lists rather than from the work: a run of TERM_RUN or more
+    comma-separated items that are all some bullet's terms ("a list of terms"), an item repeated inside such a list or a short list
+    ("repeated"), and a known technology in lower case ("lower case 'docker'"). Empty for ordinary prose."""
+    terms = bullet_terms(fb)
+    text = " ".join(p for p in paragraphs if p)
+    out: list[str] = []
+    for sent in sentences(text):
+        segs = [_segment(x) for x in _COMMA.split(sent)]
+        kinds = [_kind(x, terms) if x else "" for x in segs]
+        i = 0
+        while i < len(segs):
+            if kinds[i] not in ("exact", "suffix"):
+                i += 1
+                continue
+            j = i + 1
+            while j < len(segs) and kinds[j] == "exact":
+                j += 1
+            end = j + 1 if j < len(segs) and kinds[j] == "prefix" else j
+            if end - i >= TERM_RUN:
+                out.append(f"a list of terms, not a sentence: '{sent.strip()[:70]}'")
+            exact = [segs[k].split() for k in range(i, j) if kinds[k] == "exact"]
+            if any(_sub_run(a, b) for x, a in enumerate(exact) for y, b in enumerate(exact) if x != y):
+                out.append(f"an item repeated inside one list: '{sent.strip()[:70]}'")
+            i = max(end, i + 1)
+        short = [s for s in segs if s and len(s.split()) <= 3]
+        if len(segs) >= 3 and len(set(short)) < len(short):
+            out.append(f"an item repeated inside one list: '{sent.strip()[:70]}'")
+        for a, b in zip(segs, segs[1:]):
+            if len(segs) >= 3 and b and len(b.split()) <= 3 and a.endswith(" " + b):
+                out.append(f"an item repeated inside one list: '{sent.strip()[:70]}'")
+    for low, canon in _TECH.items():
+        if re.search(r"(?<![\w/.-])" + re.escape(low) + r"(?![\w/-])", text):
+            out.append(f"lower case '{low}' (write {canon})")
+    return list(dict.fromkeys(out))

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from careerops.tailoring.tailor import regenerate_letter, tailor_job
 
-TASKS = {"extract_keywords", "tailor_profile", "rephrase_bullets", "cover_letter"}
+TASKS = {"extract_keywords", "cover_letter"}       # (no profile and no hook call any more; a rephrase call needs a bullet with an unused `result:`)
 
 
 pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)

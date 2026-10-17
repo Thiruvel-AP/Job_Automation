@@ -1,0 +1,212 @@
+10/11/26, 1:15 PM                          (1) Ada Lovelace | LinkedIn
+
+                                                                                   1
+
+Ada Lovelace She/Her
+
+Data Scientist | AI Engineer | MSc Data Science @ University of Northfield '26
+
+Bristol, United Kingdom · Contact info
+500+ connections
+
+Analytics
+
+    Private to you
+
+      353 profile views
+
+https://www.linkedin.com/in/ada-lovelace-test/                                                 1/11
+10/11/26, 1:15 PM          (1) Ada Lovelace | LinkedIn
+
+About
+
+I build systems that turn data into decisions.
+
+Top skills
+
+Artificial Intelligence (AI) � Data Science � Problem Solving
+
+Activity                                                                              Create a post
+
+Experience
+
+Data Scientist
+
+Northwind Research Lab � Indirect Contract
+May 2026 - Sep 2026 � 5 mos
+Bristol, England, United Kingdom � Remote
+
+1. Surveyed 14 heterogeneous source datasets spanning gene expression and nomenclature, owning the
+identity-spine datasets and setting metadata boundaries for downstream modelling.
+2. Built a deterministic guard architecture with live API resolution and a local parquet fallback behind
+circuit breakers, so answers stay reproducible during upstream outages.
+3. Deployed the agent as a Docker container on AWS Lambda with image pipelines, IAM roles and least-privilege
+policies across the cross-
+validation of every release.
+
+    Python (Programming Language), Pandas and +2 skills
+
+https://www.linkedin.com/in/ada-lovelace-test/                                                 3/11
+10/11/26, 1:15 PM          (1) Ada Lovelace | LinkedIn
+
+Data Consultant (AI Engineering)
+
+Bristol Pro Bono Consulting � Internship
+Sep 2025 - Dec 2025 � 4 mos
+Greater Bristol Area, United Kingdom � Remote
+
+1. Prototyped an MCP-based agentic tool in Python for a start-up client and presented it in a live
+stakeholder demo.
+2. Cleaned and joined donor, event and survey exports with pandas and SQL.
+
+    Data Science, Python (Programming Language) and +8 skills
+
+AI/ML Engineer
+
+Self Employed � Freelance
+Jan 2025 - Aug 2025 � 8 mos
+Chennai, Tamil Nadu, India � On-site
+
+1. Built scikit-learn pipelines and LSTM models, deployed as FastAPI services in Docker.
+
+    NumPy, Python (Programming Language) and +13 skills
+
+HARBOUR PAY
+
+Full-time � 1 yr 9 mos
+Chennai, Tamil Nadu, India � On-site
+
+Software Development Engineer
+
+Jun 2023 - Sep 2024 � 1 yr 4 mos
+
+1. Engineered a payments application integrating a market-data API and a bank-linking API.
+
+2. Secured backend communication with SSL pinning and single sign-on.
+
+https://www.linkedin.com/in/ada-lovelace-test/                                                           4/11
+10/11/26, 1:15 PM(1) Ada Lovelace | LinkedIn
+                  3. Delivered 10 reusable component templates across concurrent product timelines.
+
+                      iOS Development, JavaScript and +6 skills
+
+                Software Development Engineer Trainee
+
+                  Jan 2023 - May 2023 � 5 mos
+
+                  1. Built a web scraping pipeline in vanilla JavaScript whose output informed pricing.
+
+                      JSON, Python (Programming Language) and +6 skills
+
+Education
+
+University of Northfield
+
+Master of Science - MSc, Data Science
+Sep 2025 � Sep 2026
+
+Activities and societies: Research Focus: graph neural networks for multi-omics integration, using learnable
+adjacency matrices. Architecture: per-omics attention fusion.
+
+1. Large-Scale Data Engineering: distributed data pipelines, scalable storage
+2. Statistical Computing & Empirical Methods: probabilistic modelling, hypothesis testing,
+Bayesian inference
+3. AI & Text Analytics: NLP, transformer architectures
+
+Data Science, Data Analysis and +23 skills
+
+https://www.linkedin.com/in/ada-lovelace-test/                                                   5/11
+10/11/26, 1:15 PM  ata Sc e ce, ata a ys s a d (1)3Thsiruvesl Ada Lovelace | LinkedIn
+                         ata Sc e ce, ata         a ys s a d     3s      s
+
+St. Joseph's College Of Engineering
+
+B.E, Electrical and Electronics Engineering
+Aug 2019 � May 2023
+Grade: 91 %
+Activities and societies: IEEE volunteering and leadership
+
+    Embedded Systems, Python (Programming Language) and +5 skills
+
+                                           Show all 5 educations
+
+Licenses & certifications (5)
+
+          Model Context Protocol: Advanced Topics.
+
+            Anthropic
+            Issued Jun 2026
+
+                Model Context Protocol(MCP)
+
+Introduction to MCP
+
+Anthropic
+Issued Jun 2026
+
+    Projects (10)                                Show all 5 licenses
+
+https://www.linkedin.com/in/ada-lovelace-test/  Omics Graph: Multi-Omics Graph for Cancer Cell
+                                           Line Selection (PoC)
+
+                                           Jul 2026 � Aug 2026
+                                           Choosing the right cancer cell line for a gene of interest usually ...
+
+                                                 Associated with Northwind Research Lab
+
+                                                                                                                                                                        6/11
+10/11/26, 1:15 PM                       (1) Ada Lovelace | LinkedIn
+
+                           Mining Insights from Customer Feedback NLP &
+                           Unsupervised Analytics Pipeline
+
+                           Mar 2026 � May 2026
+                           Built an end-to-end unsupervised NLP pipeline on airline feedback tickets
+
+                                 Associated with University of Northfield
+
+                                                                Show all
+
+Volunteering
+
+          Graphic Designer
+
+            St. Joseph's College Of Engineering
+            Education
+
+Skills (100)
+
+     You've added the maximum number of skills
+
+Publications
+
+Modern Power System Operations in Effective Transmission Congestion Management via
+Optimal DG Capacity Using Firefly Algorithms.
+
+icees2023 EEE SSN � Mar 23, 2023
+
+  Show publication
+
+Managing transmission congestion is becoming more difficult as the power market grows.
+
+Courses
+
+AWS Academy Cloud foundation
+
+Languages
+
+English
+
+Professional working proficiency
+
+Tamil                                                                                                                      8/11
+https://www.linkedin.com/in/ada-lovelace-test/
+10/11/26, 1:15 PM                          (1) Ada Lovelace | LinkedIn
+
+     Tamil
+
+      Native or bilingual proficiency
+
+Interests
+
+  Top Voices Companies Groups Newsletters Schools

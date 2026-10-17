@@ -1,7 +1,10 @@
-"""Priority = what to look at first. Sponsorship is a weight on the order, never a filter.
+"""Priority = what to look at first. Fresh jobs first, then fit; sponsorship is a weight on the order, never a filter.
 
-  P = F x S x R
+  order  =  ( freshness tier,  then  P = F x S  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
 
+  tier  0 posted at most 24 h ago, 1 at most 72 h, 2 at most 7 days, 3 older or undated (discovery/freshness.py). The posting time is the
+        source's own (Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna created; a Gmail alert's arrival
+        time, an upper bound); anything else counts from the day discover first saw the job. Nothing is dropped for being old.
   F  the honest ATS ceiling, 0-1 (the LLM-checked ceiling once tailored, else the triage-time one; 0 when not known yet)
   S  how sure the employer is to sponsor, from `priority.sponsor_weights` in settings.yaml:
        exact    on the sponsor register by name                                  1.00
@@ -12,27 +15,21 @@
                   a job listed under another country)                                                                      0.50
      When several apply the lowest one is used. A holder of the UK Graduate visa can take any of these jobs, so none of them
      removes a job; they only move it down.
-  R  exp(-days / priority.recency_days), 1.0 when no date is known. The days run from the day WE first saw the job (an alert's date, or
-     the first discover run that read it: the job's `seen_on`), not from the board's own publish date; only a job with no such
-     day (a hand-added JD) falls back to `posted_at`. A job still listed on the employer's own board (`open_listing`) never gets
-     an R under priority.open_listing_floor (0.5): a posting that is open is not stale however long ago it was published.
 
-It orders the `live` inbox, `discover`'s listing and `status`; the review screen shows P and the three factors. Nothing here
-skips, drops or hides a job.
+There is no recency factor in P: the old R = exp(-days / 14) pushed a 64-day-old posting that was still open down to 0.01, and the
+tiers do the same job without hiding anything. It orders the `live` inbox, `discover`'s listing and `status`; the review screen shows P,
+its two factors and the posting age in hours. Nothing here skips, drops or hides a job.
 """
 from __future__ import annotations
 
-import math
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-from . import countries, workcountry
+from . import countries, freshness, workcountry
 
 DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
-DEFAULT_RECENCY_DAYS = 14.0
-DEFAULT_OPEN_LISTING_FLOOR = 0.5
 
 # ------------------------------------------------------------------ what the JD says about sponsorship (an info line, not a flag)
 _NEG = (r"(?:do(?:es)? not|don[’']t|doesn[’']t|cannot|can[’']t|can not|unable to|not able to|will not|won[’']t|"
@@ -98,33 +95,26 @@ def wording_line(jd: str) -> str | None:
 # ------------------------------------------------------------------ the score
 @dataclass
 class Priority:
-    p: float
+    p: float               # F x S
     f: float
     s: float
-    r: float
     s_reason: str          # why S is what it is
-    days: float | None     # days since first seen (else since posted), None when unknown
-    floored: bool = False  # R was raised to the open-listing floor
+    hours: float | None    # hours since the job was posted (freshness.py), None when unknown
+    tier: int              # 0 <= 24 h, 1 <= 72 h, 2 <= 7 d, 3 older or undated: the first key of the order
+    posted_via: str = ""   # where the posting time comes from (freshness.SOURCES), "" when unknown
+
+    def age(self) -> str:
+        return "date unknown" if self.hours is None else freshness.age_text(self.hours)
 
     def line(self) -> str:
-        age = "posting date unknown" if self.days is None else f"{self.days:.0f} d old"
-        age += ", still listed on the employer's board" if self.floored else ""
-        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x R {self.r:.2f} ({age})")
+        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) | "
+                f"age {self.age()} (tier {self.tier}, {freshness.TIER_NAMES[self.tier]}"
+                + (f", {self.posted_via}" if self.posted_via else "") + ")")
 
 
 def weights(settings) -> dict[str, float]:
     given = ((settings.raw.get("priority") or {}).get("sponsor_weights") or {}) if settings is not None else {}
     return {k: float(given.get(k, given.get("non_uk", v) if k == "non_home" else v)) for k, v in DEFAULT_WEIGHTS.items()}   # non_uk: its old name
-
-
-def recency_days(settings) -> float:
-    v = ((settings.raw.get("priority") or {}).get("recency_days") if settings is not None else None) or DEFAULT_RECENCY_DAYS
-    return float(v)
-
-
-def open_listing_floor(settings) -> float:
-    v = ((settings.raw.get("priority") or {}).get("open_listing_floor") if settings is not None else None)
-    return float(DEFAULT_OPEN_LISTING_FLOOR if v is None else v)
 
 
 def _get(job: Mapping[str, Any], key: str) -> Any:
@@ -166,25 +156,6 @@ def sponsor_factor(job: Mapping[str, Any], settings=None) -> tuple[float, str]:
     return min(options, key=lambda o: o[0])
 
 
-def _recency(job: Mapping[str, Any], settings=None, today: datetime | None = None) -> tuple[float, float | None, bool]:
-    """(R, days, floored). Days count from `seen_on` (the day discover first saw the job), else from `posted_at`; a job still listed on
-    the employer's board (`open_listing`) is never given less than the open-listing floor (floored says it was raised)."""
-    since = parse_date(_get(job, "seen_on")) or parse_date(_get(job, "posted_at"))
-    if since is None:
-        return 1.0, None, False
-    days = max(((today or datetime.now(timezone.utc)) - since).total_seconds() / 86400.0, 0.0)
-    r = math.exp(-days / recency_days(settings))
-    floor = open_listing_floor(settings)
-    if _get(job, "open_listing") and r < floor:
-        return floor, days, True
-    return r, days, False
-
-
-def recency_factor(job: Mapping[str, Any], settings=None, today: datetime | None = None) -> tuple[float, float | None]:
-    r, days, _ = _recency(job, settings, today)
-    return r, days
-
-
 def ats_factor(job: Mapping[str, Any], tailored: bool = True) -> float:
     c = _get(job, "ceiling") if tailored else None
     c = c if c is not None else _get(job, "ceiling_pre")
@@ -192,18 +163,19 @@ def ats_factor(job: Mapping[str, Any], tailored: bool = True) -> float:
 
 
 def priority(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> Priority:
-    """P = F x S x R for a job row (or dict with the same keys)."""
+    """P = F x S for a job row (or dict with the same keys), with its age in hours and its freshness tier (freshness.py)."""
     f = ats_factor(job, tailored)
     s, why = sponsor_factor(job, settings)
-    r, days, floored = _recency(job, settings, today)
-    return Priority(f * s * r, f, s, r, why, days, floored)
+    when, via = freshness.posted(job)
+    hours = freshness.age_hours(job, today)
+    return Priority(f * s, f, s, why, hours, freshness.tier_of(hours), freshness.SOURCES.get(via, "first seen" if via else ""))
 
 
 def sort_key(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> tuple:
-    """Ascending key: highest P first; ties go to the better S x R (so jobs with no ceiling yet still order by how sure and how
-    fresh they are), then to the older id for a stable order."""
+    """Ascending key, lexicographic: the freshness tier first (0 before 1 before 2 before 3), then highest P; ties go to the surer
+    employer S (so jobs with no ceiling yet still order by how sure they are), then to the id for a stable order."""
     pr = priority(job, settings, tailored, today)
-    return (-pr.p, -(pr.s * pr.r), str(_get(job, "id") or ""))
+    return (pr.tier, -pr.p, -pr.s, str(_get(job, "id") or ""))
 
 
 # ------------------------------------------------------------------ jobs that are not in the database yet
@@ -224,16 +196,21 @@ def file_job(path, settings, fb: dict, idx) -> dict | None:
         ceiling_pre = None
     work = workcountry.resolve(location=hdr.get("location", ""), description=text, title=hdr.get("title", ""),
                                override=hdr.get("country", ""), rules=workcountry.rules_from(workcountry.applicant_visa(settings)))
+    try:
+        written = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")   # no First seen: header: when the file came
+    except OSError:
+        written = None
     return {"id": str(path.name), "company": hdr.get("company", ""), "title": hdr.get("title", ""), "description": text,
-            "work_country": work.country, "seen_on": hdr.get("first_seen"),
+            "work_country": work.country, "seen_on": hdr.get("first_seen"), "first_seen": written,
             "open_listing": (hdr.get("listed") or "").lower() in ("yes", "true", "1"),
             "sponsor_match": match, "agency": (hdr.get("agency") or "").lower() in ("yes", "true", "1"),
-            "posted_at": hdr.get("posted"), "ceiling_pre": ceiling_pre, "country": hdr.get("country")}
+            "posted_at": hdr.get("posted"), "posted_at_source": hdr.get("posted_source"), "ceiling_pre": ceiling_pre,
+            "country": hdr.get("country")}
 
 
 def order_files(files, settings, db, fb: dict, today: datetime | None = None) -> list[tuple[Any, Priority | None]]:
-    """[(path, Priority or None)] best first: highest P, ties to the better S x R, then by file name. A file that cannot be read
-    as a JD has no priority and goes last (live then rejects it with its reason). Nothing is dropped."""
+    """[(path, Priority or None)] best first: freshness tier, then highest P, ties to the surer S, then by file name. A file that
+    cannot be read as a JD has no priority and goes last (live then rejects it with its reason). Nothing is dropped."""
     from . import register as sponsors
 
     idx = sponsors.load_index(db)
@@ -241,4 +218,5 @@ def order_files(files, settings, db, fb: dict, today: datetime | None = None) ->
     for f in files:
         job = file_job(f, settings, fb, idx)
         ranked.append((f, priority(job, settings, tailored=False, today=today) if job else None))
-    return sorted(ranked, key=lambda fp: (fp[1] is None, -(fp[1].p if fp[1] else 0), -(fp[1].s * fp[1].r if fp[1] else 0), fp[0].name))
+    return sorted(ranked, key=lambda fp: (fp[1] is None, fp[1].tier if fp[1] else 3, -(fp[1].p if fp[1] else 0),
+                                          -(fp[1].s if fp[1] else 0), fp[0].name))

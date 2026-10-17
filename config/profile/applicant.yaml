@@ -24,11 +24,28 @@ never_fill: ['sponsor', 'visa', 'right to work', 'work authori[sz]ation', 'salar
              'sexual', 'religio', 'nationality', 'citizenship', 'clearance', 'why do you want', 'cover letter']
 
 visa:
-  summary: >-
-    I have completed my MSc in Data Science at the University of Bristol and am moving onto the UK Graduate visa
-    (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship
-    and am flexible on how we arrange it.
-  answers:
-    sponsorship_now: "No"
-    sponsorship_future: "Yes"
-    right_to_work_now: "Yes"
+  home: GB                         # where you live; never printed, only used for the logic
+  by_country:
+    GB:
+      right_to_work: true
+      sponsorship_now: false
+      sponsorship_future: true
+      summary: "I have completed my MSc in Data Science at the University of Bristol and am moving onto the UK Graduate visa (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship and am flexible on how we arrange it."
+    default:
+      right_to_work: false
+      sponsorship_now: true
+      sponsorship_future: true
+      summary: "I would need a work visa for this location and am open to sponsorship."
+  remote:
+    label: "Remote"                # the only wording shown on forms, CV and review screen
+    unrestricted_uses: home        # unrestricted remote → answers for `home`
+
+equal_opportunities:
+  ethnicity:
+    answer: "Asian - Indian"
+    match_any:            # first option on the form that matches, in this order
+      - "Asian or Asian British - Indian"
+      - "Asian, Asian British or Asian Welsh: Indian"
+      - "Indian"
+      - "Asian"
+  # Only questions listed here get filled. Gender, disability, religion etc. are left blank for you.

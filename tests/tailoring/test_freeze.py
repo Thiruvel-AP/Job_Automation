@@ -144,7 +144,7 @@ def test_an_extraction_survives_a_tailoring_that_fails_after_it(queue, db, monke
     def boom(*a, **k):
         raise RuntimeError("xelatex exploded")
     with monkeypatch.context() as m:
-        m.setattr(tailor, "make_profile", boom)
+        m.setattr(tailor, "assemble_profile", boom)
         out, row = _tailor(queue, db, llm, monkeypatch, capsys)
     assert row["status"] == "error" and "xelatex exploded" in out
     assert row["analysis"] is not None and llm.extractions == 1             # frozen before anything could fail

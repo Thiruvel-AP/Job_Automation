@@ -21,7 +21,7 @@ Companion to [`PLAN.md`](PLAN.md) (what & why). This file is *how*: modules, sig
 | Check memory / ask before altering; no hallucination | fact bank = the memory; `faithfulness.check` | ✅ guard. New: keywords with *partial* evidence (stem match only in `terms`, not in text) become **review questions**: "Is it true you did X in bullet Y?" |
 | "Add all required skills and let me know so I'll keep learning" | **Resolved as:** never added to the CV; written to a per-job and a global **learning list** | Adding an unevidenced skill *is* a hallucination, so the two instructions only reconcile this way. See §5. |
 | Keep the structure | `templates/cv.tex.j2` | ✅ CV-2: the user's own one-page layout — Profile → Experience → Projects → Skills → Education → Certifications & Awards. |
-| Two A4 pages (CV, since 2026-10-06; `--one-page` for one) and one page (letter) | `render.page_count` + `render.page2_fill` + `tailor.fill_page2` + `_shrink`; `careerops tailor/run` prints both page counts and page-2 fill | ✅ §5d (`scoring.max_pages: 2`; CV-2 was 1) |
+| Two A4 pages (CV, since 2026-10-06; `--one-page` for one) and one page (letter) | `render.page_count` + `render.page2_fill` + `tailor.fill_page2` + `_shrink`; `careerops tailor/run` prints both page counts and page-2 fill | ✅ §5d (`scoring.max_pages: 2`; CV-2 was 1); page 2 >= 90% full and the reference preamble: §5l |
 | Output only the LaTeX | `data/outputs/<job>/CV.tex` (+ PDF) | Learning list and questions go to `report.json`/review, not into the CV. |
 | **Cover letter:** company from JD, ask if missing | gates + new status `needs_company` | Agency/unnamed employer (e.g. Adzuna "Recruiter", JD says "our client") → held until you name it. |
 | Hook, <250 words, no "I am writing to apply", specific CTA, human tone | `tailor._letter` | ✅ checks. New: hook must reference `company_hook` noun phrase; CTA must name a concrete next step (regex for call/chat/demo/walk-through + timeframe). |
@@ -223,15 +223,104 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
 - `careerops doctor` counts `# CONFIRM` markers like TODOs (`setup.fact_bank_open_items`).
 - The user's header has no headline line, so the family headline (M4b) now reaches the page only as the first words of the profile.
 
+## 5l. CV template round (2026-10-11) — reference preamble, fill to 90%, LinkedIn import — **done** (offline; never run live)
+
+**Template.** `templates/cv2.tex.j2` reuses the preamble of the user's `config/reference/resume.tex` verbatim (a test pins every
+line: 11pt, Carlito, `margin=0.6in, top=0.5in, bottom=0.5in`, headernavy/linkblue, titlesec 8pt/4pt, enumitem, `\linespread`,
+no hyphenation) and its body layout; `\needspace` and the `linespread` variable are the only additions. `\textbar` replaces
+`$|$` so Carlito is the only font in the PDF (math mode pulled in CMSY10). Separators use `\nobreak`: a line may end with one
+but never starts with one. `CV2_MARGIN_PT` is now 0.5in (the vertical margin; the old template's was 0.6in).
+Display helpers live in `render.py` (jinja filters `dates`, `org_line`, `role_line`, `school_line`, `degree_line`,
+`publication_line`, `language_line`, `bullet`): `dates_display` ("Mon YYYY – Mon YYYY", no invented months), the freelance
+heading (`employment_type: freelance`, or an org starting "Self-employed"/"Freelance"; the title loses a leading "Freelance "),
+bold numeric results (`bullet_latex`). New optional fact-bank fields (all read with `.get`): experience `location`,
+`employment_type`; education `location`, `modules`, `grade`; top level `publications`, `languages`, `research_focus`.
+**Fill.** `scoring.min_fill_page2: 0.90` (was 0.65), `cv_projects: 5`, `cv_projects_max: 6` (replaces `cv_fill_extra_projects`),
+`cv_linespread: 1.02`, `cv_linespread_max: 1.08`. `selection.fill_order(..., max_projects)` orders further projects first
+(best uncovered JD weight, then rank), then the shown projects' bullets, then experience bullets; `tailor.fill_tail` (after
+`fill_page2` ran out of bullets) adds `publications`, `languages`, `research_focus` one at a time (taken back if they push the CV
+to a third page), then raises `ctx["linespread"]` in steps of 0.02 to the ceiling, keeping the last value that fits two pages.
+`report["fill"]` gains `sections` and `linespread`; the review screen's `Fill:` line (`review.workflow.fill_lines`) shows the
+fill, the target, the project count, the optional sections and the linespread. The earlier "layout round" items (5 projects,
+bullet caps 4-5 / 3-4, modules, one-line certifications) had not been committed before this round and are part of it; the
+profile text is unchanged (45 words, guarded).
+**LinkedIn import.** `careerops import-linkedin PDF` (`tailoring/linkedin.py`): pdftotext text → sections (first occurrence of
+each heading) → entries found by their date lines; page headers/footers and the debris of a header printed over a line are
+dropped; a company with several roles shares its name and location. Writes `paths.fact_bank_proposed`
+(`config/profile/fact_bank.proposed.yaml`, git-ignored) and `paths.linkedin_diff` (`data/linkedin_diff.md`); the fact bank is only
+read (a test compares its sha256). Sections that LinkedIn prints only in part ("Projects (10)", two shown) give a warning and
+*unverified* rows. `.gitignore` gains `config/reference/` and the proposal file.
+Tests: `tests/tailoring/test_cv_template.py` (helpers, preamble, fill order, snapshots: 2 pages, page 2 >= 90%, Carlito only,
+no line starting with a separator, layout, freelance, bold numbers, optional sections, linespread), `test_linkedin_import.py`
+(fictional LinkedIn text `tests/fixtures/tailoring/linkedin_fixture.txt`, the CLI, read-only fact bank). Not verified: a
+tailoring run with the real model; the real bank's fill was only previewed with MockLLM (92% with 6 projects).
+
+## 5m. CV typography + selection round (2026-10-11) — **done** (offline; never run live)
+
+**Typography, at render time only** (`tailoring/typography.py`, `config/typography.yaml`, `cv.date_separator`). `render.render_cv`
+passes a copy of the context through `typography.typeset` (every prose string except links, e-mail, phone, dates and ids), so the
+faithfulness / claim checks and `report["context"]` see the original wording. `clean`: `dashes` (em dash, `--`, spaced hyphen ->
+comma / colon / parentheses; a number range keeps an en dash), then the `rewrite` table (whole word, case kept, a plural `s` kept),
+with `protected` terms, URLs and e-mails masked first; JD keywords spelt with a hyphen (`hyphen_keywords`) are not rewritten.
+`audit` (em dashes, prose en dashes, remaining hyphenated words) feeds `report["typography"]` (with `results_bold`,
+`results_unmatched`, `award_repeats`, `date_separator`, `keep`) and the review screen's `Typography:` lines
+(`review.workflow.typography_lines`); `apply_edits` re-renders with the same separator and keep list. `dates_display(text, sep)`.
+**Type scale** (`cv2.tex.j2`): `\namesize` 19pt, `\headsize` 13.2pt, `\smallsize` 10pt (contact + stack lines), 11pt body.
+**Bold / italics**: bold is the employer, school, project name, headings, skill-row labels and the bullet's `result:` text
+(`render.result_span`: the result's words in order with at most two extra words between; `ctx["results"]` carries the bank's
+results; the numeric auto-bold is gone); italics are the title, locations, degree name, stack line, certification issuer
+(`typography.parse_cert`), publication venue and `(Expected)` / `(coursework)` (`render.inline`). `language_line` also reads
+`{language, level}` (the real bank's spelling).
+**Selection**: `domain.TOPIC_GROUPS` (behaviour/segmentation, validation, statistics) join the company domains for ranking only
+(`jd_rank_weights`, `rank_overlap`; the letter's hook check still sees `DOMAIN_GROUPS` alone); `budget.relevance_parts` /
+`relevance_scores` / `rank_projects(..., jd)` / `ranking_table`; `selection._Picker` counts uncovered domain groups in the marginal
+gain (`select_cv(..., jd=)`, `fill_order(..., jd=)`); `report["ranking"]` and `review.workflow.ranking_lines` print the top 10.
+`tailor._context` and `fill_page2` (`_insert` / `_remove`) keep the chosen bullets of a role in fact-bank order. Award: `unused_result`
+strips the project's award from the result offered to the model, `guard_rephrases` refuses a bullet that adds it, and `typeset` takes
+a repeat out of a project's bullets and results.
+**Profile**: `qualifiers.QUALIFIER_LIST` gains `expert` and `passionate` (`proven`, `extensive` were there);
+`qualifiers.unsupported_qualifiers` is now part of `make_profile`'s checks (a retry, then the picked facts) and both profile prompts
+list the banned words. **Skills**: the first item of each row is capitalised (`render.skill_row`); `skills.cv_skills(..., jd)` never
+drops a Databases row when the JD mentions SQL or databases (`wants_databases`), and a skill is listed once in the first row that is
+shown (it used to vanish when only a dropped row had it); no Databases row in the bank adds an analysis warning.
+Tests: `test_typography.py`, `test_selection_round.py` (light) and `test_cv_typography.py` (xelatex snapshot: no em dash in the PDF,
+type scale measured from `pdftotext -bbox`, bold / italic lists, bank order, award once, Databases row, date separator); older
+snapshots in `test_cv_template.py` / `test_relevance_round.py` follow the new bold and size rules. Not verified: a run with the
+real model and the real bank (the review screen's hyphen list will show which words to add to `typography.yaml`).
+
+## 5n. Style-reference template round (2026-10-11) — **done** (offline; never run live)
+
+Supersedes the template, type-scale, bold/italic and linespread statements of §5l and §5m (`resume.tex`, 19pt / 13.2pt, `\entry`,
+`headernavy`, `cv_linespread: 1.02`).
+**Template.** `templates/cv2.tex.j2` renders with the preamble and macros of `config/reference/cv_style_reference.tex` (git-ignored)
+line for line; `tests/tailoring/test_cv_template.py::REFERENCE_PREAMBLE` pins the lines and, when the reference file exists, compares
+them to it. Additions: `\usepackage{needspace}` and `\linespread{\VAR{linespread|default(1.03)}}`. Body: experience -> `\role` (`\roleNoLoc`
+without a location; `render.org_parts`), projects -> `\project{name}{stack}{tag}` (`render.project_parts`: the award, else the project's `badge:` (`render.badge_shown`; same once-only rule), else a trailing
+"(MSc coursework)" of the name when the project has no link, as `\badge`; else `\gh`; a project with no stack prints name and tag
+without the empty stack line), skills -> `\skillrow`, education -> `\roleNoLoc` plus a muted `\small` line (`render.education_lines`:
+degree, grade, note / modules, details), certifications -> one bullet, `render.cert_tex` puts the date in italics (the issuer is plain)
+and a trailing year of a plain string is split off. `bullet_latex` / `bullet_at` take `wrap`: cv2 passes `num`, so only a bullet's
+`result:` text is in `\num{}` (the one-page template still gets `\textbf`). Separators are `\nobreak\ \,\textperiodcentered\, `, so
+a line may end with a dot but never starts with one. Header: 22pt navy name, `\small` contact line (short link text), italic muted status line.
+**Type scale**: 22pt name, 13pt headings (`\fontsize{22}{26}` / `\fontsize{13}{15}`), 10pt = `\small` (contact, stack, badge, GitHub
+link, modules line), 11pt the rest; the PDF's only font is Carlito (the reference's `$\rightarrow$` is not used).
+**Fill settings**: `cv_linespread: 1.03` (the reference's) and `cv_linespread_max: 1.09` (three steps of 0.02, as 1.02 -> 1.08 was);
+`tailor.LEADING_PT` and `review.workflow.fill_lines` follow. `CV2_MARGIN_PT` is unchanged (0.5in).
+Tests: `test_cv_template.py` (preamble and macros, body macros, `project_parts`, `education_lines`, `cert_tex`, and a snapshot of the
+fixture profile that reads section order, font names and the 22 / 13 / 11 / 10pt sizes back from `pdffonts` / `pdftotext -bbox`),
+`test_cv_typography.py` (bold / italic lists now check the macro arguments), `test_relevance_round.py`, `test_typography.py`.
+Not verified: the real bank's fill (the macros take slightly more vertical space than the old template, so it may pick a different
+number of projects), and ATS reading of the letter-spaced headings beyond what `pdftotext` shows in the test.
+
 ## 5d. Two full pages, outcome log, calibration fix round — **done** (2026-10-06; none of it run live)
 
 **Two pages.** `templates/cv2.tex.j2` is the default (`cv.tex.j2` only with `--one-page`). `scoring.max_pages: 2`,
-`min_fill_page2: 0.65` (the reference 2-page CV fills ~70% of page 2 and all experience bullets are already used, so a higher floor would need filler): `render.page2_fill` reads the rendered PDF (`pdftotext -bbox`, y of the lowest word on page 2 over
+`min_fill_page2: 0.65` (raised to 0.90 in §5l): `render.page2_fill` reads the rendered PDF (`pdftotext -bbox`, y of the lowest word on page 2 over
 the text area, `CV2_MARGIN_PT` must match the template's geometry). `selection.select_cv(fb, kws, preferred, skills, layout)`
 is greedy marginal gain with `Layout`s (`ONE_PAGE` 2-4 / 1-2 / 2 projects; `TWO_PAGE` from `scoring.cv_bullets`: 4-5 newest,
-3-4 others, 3 projects x 2-3 bullets), skips a bullet whose token Jaccard with a chosen one is >= `bullet_dedupe_jaccard`
+3-4 others, 5 projects x 2-3 bullets since §5l), skips a bullet whose token Jaccard with a chosen one is >= `bullet_dedupe_jaccard`
 (0.6) and returns `project_bullets`. `selection.fill_order` lists unused bullets (experience and the chosen projects' bullets by
-gain; bullets of a 4th project only with `cv_fill_extra_projects`, default false); `tailor.fill_page2` adds them in batches
+gain; since §5l further projects first, up to `cv_projects_max`); `tailor.fill_page2` adds them in batches
 sized by a line-count guess, renders, takes back what tipped the CV onto page 3, until page 2 is full or none are left; shrink
 runs only above `max_pages` and the fill is skipped after a shrink. `tailoring/skills.py`: `skills.core` pinned first row,
 case-insensitive dedupe, JD-first order, at most `max_skill_groups` other rows; `core_skill_problems` (doctor: deny-listed, or
@@ -540,6 +629,170 @@ file's total. Counters `to_manual_queue` / `to_manual_queue_overflow`. `queue_ma
 Tests: `tests/discovery/test_quality_round.py` (43), one in `tests/apply/test_live.py`; three older tests updated (`boards.json` instead of `company_boards.json`, the new headers, the
 `resolved` / `unresolved` counts). **Unverified:** a live run: token guesses on real boards, the Greenhouse name check, real alert dates.
 
+## 5s. Hooks, notes, negation-aware ATS, 24-hour freshness (2026-10-15) — **done** (offline tests only; never run on the real data or the real model)
+
+Spec: `docs/claude_code_round_hooks_freshness.md` (decisions in `docs/Career ops plan v4.md`). It supersedes the ordering rules of 5k and 5r
+(P = F x S x R, R from first-seen): there is no R any more.
+
+**Step 1 — golden fixture.** `tests/golden/anaplan/` (copy of `docs/golden/anaplan/`: `cv.tex`, `cv.txt`, `letter_A.tex`, `letter_B.tex`, `jd.txt`,
+`reference_ats_weights.py`) plus `keywords.yaml` (the reference's 38 weighted regexes spelt out as terms and alternatives, with `claimable`).
+`tests/test_golden_anaplan.py`: strict and claimable ATS 72.5 ±0.1 on `cv.txt`; the keyword file agrees with the reference scorer hit for hit; CV + letter
+B is 75.0 once the admitted gap is ignored (the reference reads 82.5); the hook ("prototype to production", "~65") is in the headline, profile line 1 and
+the first AstraZeneca bullet; the golden CV is two pages; both golden letters are at most 250 words (greeting and sign-off excluded, as the pipeline
+counts); and the pipeline's own output for the Anaplan ad (fixture fact bank, MockLLM) has the hook in all three places, two pages, letters A and B of
+at most 250 words, the three ATS numbers and `note.md`. `careerops/golden.py` (`python -m careerops.golden <CV pdf|txt>`) lists the lines only in one CV
+or only in the other.
+
+**Step 2 — `careerops/hook.py`.** *(The model-written strings described here were replaced by the user's `hook_library` on 2026-10-17: see 5u.)* `Hook(problem, proof_bullet_id, number, headline, profile_line, letter_sentence, ...)`. `choose_proof`: highest
+sum(weight x term hit) among bullets with a number or a `result:` (tie: more recent; a bullet with a deny-listed term is never used; no number anywhere:
+the best bullet and the flag `hook has no number`); `find_number` returns a string verbatim from the bullet (a `result:` first, then a count-like number,
+never a model version like "Haiku 4.5"). Strings: the `hook` task (prompts `HOOK_SYSTEM`/`HOOK_USER`) writes `problem`, `tail`, `profile_line`,
+`letter_sentence`; `problems()` checks each (number verbatim, no new number, deny list, `faithfulness.check` with the problem clause allowed to name the ad's
+own keywords, grounding, unsupported qualifiers, the vague adjectives, the em dash, length: headline <= 95 characters including the role title, profile
+line <= 35 words, letter sentence <= 45, problem <= 14 words with >= 2 words the ad uses, no 0.7 paste overlap with ANY fact-bank bullet); one retry
+naming the problems; then `template_strings` over the same checked pieces; None (no hook, nothing faked) if even that fails. Placement: `ensure_selected`
+puts the proof bullet in the selection, `proof_first` moves it to the top of its role (or project), `_shrink` and `fill_page2` keep it first, a rewording that
+drops the number is refused (`keeps_number`), `templates/cv2.tex.j2` / `cv.tex.j2` get a 12pt navy headline slot under the name (the number in bold),
+the profile is `<profile line> <the usual profile>`. `hook.enabled` (settings, default true); `llm.max_tokens.hook`; MockLLM answers `hook` with `{}`
+(the template). A proof bullet from a project goes first in its project, which goes first among the projects.
+
+**Step 3 — `careerops/ats.py`.** `score(text, kws)` = `scorer.score` with negation: a mention is negated when one of `not, no, never, haven't, yet to,
+without, lack(s/ing/ed), gap(s), learning` (as a verb: not after machine/deep/transfer/..., not before rate/models/...) stands within 6 tokens before it in the
+same sentence (sentences end at `. ! ? ;`, a bullet mark or a blank line); a text with any negated mention of a keyword does not claim it anywhere
+(`"I have not yet used LightGBM ... XGBoost shares LightGBM's ideas"` is no hit). `scores()` -> `AtsScores`: strict CV, claimable ceiling (the keywords the bank
+backs, deny list excluded), CV + letter (a keyword counts when the CV or the letter has it, each negation-aware), letter alone, `gate()`:
+`ok | above | retry | stretch`. Tailor: `ats.score` replaces `scorer.score` on every CV and letter text; the loop's retry is now ONE retry
+(`scoring.max_attempts: 2`); the ceiling is the claimable ceiling; `report["ats"]`, `report["stretch"]`, `report["claimable"]`; a stretch job gets the flag
+`Stretch: ...` (so the judge gate never auto-approves it) and is never dropped; `Score.negated`. Review: `ats_lines`, `refresh_ats` after edits.
+
+**Step 4 — freshness.** `discovery/freshness.py`: `posted_at` + `posted_at_source` per job (db column `posted_at_source`): Greenhouse `first_published`
+(never `updated_at`), Lever `createdAt`, Ashby `publishedAt`, Reed `date`, Adzuna `created`, Gmail alert `gmail.received` (the email's arrival, `gmail.message_time`),
+anything else `first_seen`. Only those sources are trusted (`TRUSTED`); an untrusted `Posted:` line counts from `First seen:`. Tier 0 <= 24 h, 1 <= 72 h,
+2 <= 7 d, 3 older or undated. `priority.py`: no R, no `recency_days`, no `open_listing_floor`; `Priority(p, f, s, s_reason, hours, tier, posted_via)`;
+`sort_key`/`order_files` = (tier, -P, -S, ...). Inbox headers `Posted:` (ISO date or datetime) and `Posted via:`; `Candidate.posted_source`, `Ad.posted_source`,
+`intake` records `first_published` / `createdAt` / `publishedAt` for `add-url`/`live --url`. `live --fresh` (tier 0 only; older files stay in the inbox), the review
+header `Posted: posted 5 h ago (Greenhouse first_published), tier 0 (<= 24 h)`, `discover --report` prints the tiers of the last run and of the inbox (`Run.tiers`,
+`inbox_tiers`), the manual queue is ranked tier first, `status` and the discover listing show `T<tier> <age>`.
+
+**Step 5 — letters.** `letter.mode: hook` (new default): `tailoring/letters.py`, see README "Letters". `make_letters` -> `{"A", "B", "choice"}` stored as
+`report["letters"]` / `report["letter_choice"]` (`report["letter"]` is the chosen one); `letter.greeting_hook`, `greeting_agency`, `closing_hook`;
+`applicant.yaml -> relocation`; 2 attempts for the body (then "none", no template letter in this mode) and 2 for B's gap sentence (then a template over
+the same two terms); `paste_problems` against ALL bullets; PDFs in `<job>/letters/A|B/<name> Cover Letter.pdf` (the same name whichever goes). Review: `l`
+cycles A -> B -> none (`review.cycle_letter`, no model call), `g` regenerates, status `declined` (you chose none) needs no confirmation and the archive goes without.
+`tailor.regenerate_letter` and `letter_pending` handle both variants. `letter_token_estimate` 7000 (not measured on the real model).
+
+**Step 6 — `careerops/note.py`.** `note.md` per job (sections Hook, ATS, Learn list, Contact, Question, Flags, Gap), written at the end of tailoring and rewritten by
+review edits and letter regeneration; `[n]` opens it. The contact is a TODO for you (nothing fetches linkedin.com).
+
+**Step 7 — doctor reminders** (`setup.reminder_checks`): from 2026-11-24 the MSc entry whose `note` still says "Expected"; the Gmail sign-in more than 6 days old
+(`gmail.token_age_days`, from `granted_at`, written at sign-in; an older token is aged by its file). Warnings only.
+
+**Step 8 — scheduler.** `scripts/discover.sh` (logs to `data/logs/discover_<date>.log`, exit code passed on), `docs/scheduler.md` (Windows Task Scheduler 07:45 / 17:45;
+the task is not created by this repo). `discover ... --report` now runs the sources first and then prints the report; the command exits 1 when a source failed
+(`Run.failures`: a lapsed Gmail sign-in, an exception).
+
+**Step 9 — discovery quality.** The token resolver and the capped queue were done in 5r; this round makes the queue tier-first and writes the filter audit to
+`data/discover/filtered_<date>.csv` (one file per day: the titles first turned away that day, with the reason).
+
+Not verified: a live `careerops live --dry-run --url https://job-boards.greenhouse.io/anaplan/jobs/8654662002` (real fact bank, real Groq): the hook model's output quality, the strict
+ATS of the real CV against the golden 72.5, and the diff against `tests/golden/anaplan/cv.txt` are for you to read on that run (`python -m careerops.golden`).
+
+## 5t. Fix round 2 (2026-10-16) — the Anaplan dry run missed the golden bar — **done** (offline tests only; never run on the real data or the real model)
+
+The dry run of `careerops live --dry-run --max 1 --url https://job-boards.greenhouse.io/anaplan/jobs/8654662002` had no headline, a profile that opened
+"Data Scientist skilled in building deployable ML models", a letter that pasted a `terms:` list, rewrites that changed facts and 15 hyphens. The golden test
+had passed because `tests/test_golden_anaplan.py` checks the golden files themselves. Each cause below was reproduced first (the real fact bank READ, never
+written, with the golden keywords and `MockLLM`), then a failing test, then the fix.
+
+1. **The golden test now tests the pipeline** (`tests/test_golden_pipeline.py`, fixture `tests/fixtures/golden/fact_bank_anaplan.yaml`: the real bank's shape, no real
+   person). It runs `tailor_job` on `tests/golden/anaplan/jd.txt` with a deterministic MockLLM and asserts on the generated files: a 12pt navy line under the name with
+   the number; sentence 1 of the profile with the number and every ad noun of the problem; the first bullet of the most relevant role is the proof bullet; sentence 1 of
+   letters A and B has the number; at most 250 words; no pasted list; B's gap is from the learn list and bridged to a claimable skill; no hyphen outside the exceptions;
+   the forecasting project is on the CV. It also runs two failure shapes (no number in the best role; no buildable hook). The old file keeps the golden-file checks.
+2. **The hook was lost silently.** Root cause: `hook.choose_proof` took "10" from "new 10-class head" (`_countish` read "class" as a plural) and "3" from "3rd
+   place"; the template then named the project with its em dash, the problem clause "deep learning" tripped the qualifier check ("deep"), and `build_hook` returned None
+   without a word. With no hook the CV has no headline slot, the profile no hook line, the proof bullet is not moved, and `letter.mode: hook` fell back to the old single
+   draft letter (the "old closing line"). Now: ordinals, hyphenated modifiers ("10-class", "5-star") and a first-word verb ("Ran 20 jobs") are handled in `find_number`;
+   `proof_candidates` ranks every usable bullet in four tiers (numbered bullet of the MOST RELEVANT ROLE, numbered bullet of another job, numbered project bullet, unnumbered) and `build_hook` tries
+   the best `MAX_PROOFS` (4) before giving up (the model is asked for the first only); a project is named without its subtitle or dash; a qualifier that is part of a JD
+   keyword the string names ("deep learning") is not praise; the template quotes at most `PHRASE_WORDS` (4) words and never ends on "behind/with/and"; the hook's strings are
+   typeset like the CV (hyphens closed) and written with the technologies' proper case (MLflow, not mlflow; `term_dump_problems` is part of `hook.problems`) so the report, the review screen and the PDF say the same. A hook that cannot be built is no longer silent: `report["hook_notes"]`,
+   an `analysis_warnings` line starting "hook: none could be built", and in letter mode `hook` both letters are "none" (`letters.none_letters`) instead of the old draft.
+   "skilled" is a vague adjective for hook text and a qualifier (`QUALIFIER_LIST`) for the profile and letters; `make_profile` also refuses the vague words.
+3. **The letter dumped `terms:`.** Root cause: `evidence_fields.fields()` sent the bullet's raw `terms` as its `method` field when the bank has no `method:` key, and the model
+   copied it ("mirrors my work on docker, containerised, containerized, aws lambda, serverless, mlops, cloud, iam, security, production"). No code interpolated `terms` into
+   letter text and `letter_rules.fallback_letter` uses bullet text, so there was no such template to delete; the raw-terms method field is gone (method = the terms the
+   bullet's own text names, in its spelling, joined by "; ", else "(not stated)"). New guard `letter_rules.term_dump_problems`, applied to the body, the gap sentence and the
+   old draft path: three or more comma-separated items in a row that are all some bullet's `terms`, an item repeated inside a list, and a known technology in lower case
+   (docker, aws, fastapi, python, tensorflow, keras and the `CANONICAL` / extra names) are refused. The prompts say so. In hook mode a letter that fails is "none"; B's gap sentence
+   also has no template any more (`template_gap` is deleted): two failed tries make B "none". `pick_bridge` takes a family neighbour only if the bank has places for it and does not
+   deny it (`config/evidence_families.txt` gained `gradient boosting | xgboost | lightgbm ...` and `dbt | sql | ...`); the gap sentence may name its bridge (`_lack_problems(..., bridge)`).
+   The gap itself was always the heaviest required, nameable tool of the learn list in the ad's order (here dbt, which is also deny-listed: a confirmed absence is a fine gap).
+4. **Rephrasing changed facts.** Root cause: `guard_rephrases` only rejected what a rewording ADDS (new numbers, deny terms, new keywords) and a few qualifiers. New
+   `rewrite_rules.must_keep_problems(new, text, result, award)` rejects a rewording that drops: any number (ordinals and the project's award excepted), the approximation mark of
+   an approximate number, any word of the bullet's `result:` (stem compared: "imbalance" ~ "imbalanced", "cut" ~ "cutting"), or deterministic / overfitting / held-out /
+   validated (any form) / under (or below, less than) / per. The original text is then used. Two earlier tests (`test_placement.py`) used a rewriting that dropped "20" of
+   `gpt-oss:20b`; their constant keeps it now, the tests' purpose (the no-regression rule) is unchanged.
+5. **Hyphens.** Root cause: `typography.clean` closed only the forms listed in `config/typography.yaml`. Now every word-word becomes word word at render time (after the claim
+   checks) except `protected` (scikit-learn, k-means, gpt-oss, faster-whisper, CIFAR-10, TF-IDF, Skip-gram, k-NN, the owner's handles), the handles in the CV's own profile links, number
+   ranges, letters-digits names (GPT-4o), a one-letter prefix (t-SNE) and proper-noun pairs (Rolls-Royce), and the JD's own hyphenated keywords. Special spellings in
+   `rewrite`: e-commerce -> ecommerce, 5-star -> five star, sign-on -> sign on. `typography.audit` uses the same exemptions.
+6. **Project selection.** Root causes: (a) `scorer.keyword_hits` — a multiword keyword had to appear as ONE phrase, so "time-series forecasting" never matched a bullet whose
+   `terms` say "forecasting" and "time series" separately; matching is now normalised on both sides (lower case, `-` `_` `/` as spaces, stemmed) and a multiword keyword
+   also matches when all its content words are there (used by selection, `budget.bullet_scores` and the hook's scores; the ATS `score` itself is unchanged). (b) a keyword the
+   skills line already covers added no gain, so a project that proves it tied with filler; a project now earns `SKILL_ONLY_CREDIT` (0.5) of the weight of such a keyword.
+
+Not verified: the real model's hook and letters, and a real `careerops live --dry-run` (that command opens the real `data/careerops.db`, spends Groq quota and fetches the
+page; CLAUDE.md forbids running it as a check). `scripts`-free offline stand-in: the real fact bank READ with `MockLLM` and the golden ad, outputs in a scratch folder (see the
+fix-round summary). To get the golden hook (deployment + ~65 tests) from the real bank, az4 or az1 needs a term/number the scorer can see (for example `prototype to production`
+in az4's `terms`): the real az1/az3 carry no number and the most relevant role by summed term score is `freelance`, which has none; a bank edit is yours to make.
+
+## 5u. Deterministic text round (2026-10-17) — hook, profile, rephrase, letter and skills without a model — **done** (offline tests only; never run on the real data or the real model)
+
+The Anaplan dry run of 17 Oct 13:56 showed that the deterministic parts work and every failure was in model-written free text: a hook that tied
+"~65 tests" to forecasting, two sentences fused into a profile that said "Data Scientist" twice, a bullet that gained "and MLOps practices" from its
+`terms:`, a letter that said Docker and AWS Lambda ran "the test suite", and a CV that listed "Kubernetes (AWS EKS)" and "Kubernetes". Each item had a
+failing test first (`tests/test_hook_library.py`, `tests/tailoring/test_profile_assembled.py`, `test_rephrase_no_new_claims.py`,
+`test_letter_assembled.py`, `test_skill_groups_round.py`); the fix replaces the free text with the user's own text.
+
+1. **Hooks come from `hook_library`** (`hook.py`). `library_scores` = sum of keyword weight x [the keyword is one of the entry's `terms`];
+   `pick_library_entry` takes the highest (a tie goes to the earlier entry, an entry that scores 0 is never picked, an entry whose proof bullet is not
+   in the bank, with a missing string or with a deny-listed term is skipped with a note); `library_hook` uses `headline`, `profile_line`, `letter_line` word for word
+   (no typesetting) and the entry's `proof` bullet first in its role (the existing `ensure_selected` / `proof_first`, with the entry's `situation:` opener).
+   `Hook.hook_id` and `source: library`. The problem phrase is the entry's own `terms` that the ad asked for, a lower-case noun phrase
+   (`letter_rules.noun_phrase`). No library, or no entry that matches: the code template (also no model). **Deleted:** the `hook` model call (`_model_strings`,
+   `ATTEMPTS`, `prompts.HOOK_*`, MockLLM's `hook`, `llm.max_tokens.hook`).
+2. **Profile is assembled** (`tailoring/profile.py`): `profile_line` + one or two `profile_facts` chosen by `fact_scores` (`pick_facts`, bank order on a
+   tie), each ending in a full stop; a fact that names a deny-listed term, repeats a role title (`ROLE_PHRASES`: "Data Scientist") or restates the
+   sentences before it (0.6 of its content words) is left out. `problems()` flags a title said twice or a sentence without punctuation. **Deleted:**
+   `make_profile`, the `tailor_profile` call and prompts, `shapes.normalise_profile`, MockLLM's `tailor_profile`, `llm.max_tokens.tailor_profile`; `careerops
+   doctor` / `llm-check` no longer ping that task.
+3. **Rephrasing may not add claims** (`rewrite_rules.added_word_problems`, called by `guard_rephrases`): every content word of a reworded bullet must be in the
+   original text or `result:` (any inflection: a shared 6-letter start or a doubled last letter counts as one word) or be an alternative spelling of a
+   keyword the original already hits. `placement_offers` offers nothing any more (`introduce=False`: the `MAY INTRODUCE` keywords were how az3 was asked for
+   "MLOps"; they are reported as unoffered); `introduce=True` keeps the old machinery for its unit tests. A rephrase call is now made only for a bullet with a
+   `result:` its text does not say (and by the wording and shorten passes, which only change forms and lengths).
+4. **Letter off by default, assembled when on.** `settings letter.mode: "off"`. `hook` mode (`letters.py`): `letter_line` + two sentences built from two selected
+   bullets (`assemble_body`: `<lead-in>: <where>, I <the longest cut of the bullet's text that keeps the paste overlap < 0.65>.`) + the call to action
+   (`letter.closing_hook` with the hook's problem phrase). Variant B (the model's gap sentence) is gone: always `none`. **The guard** `letters.claim_problems`
+   (also in the `draft` letter's checks): "our" / "we", "I help <Company>", and `link_problems` (an object phrase before "on / in / with / using ... <tool>" or after
+   "<tool> ran / hosted / served ..." whose words one bullet says and whose tool only a *different* bullet says). **Deleted:** `draft_body`, `draft_gap`,
+   `body_problems`, `gap_problems`, `prompts.LETTER_HOOK_*`, `GAP_*`, MockLLM's hook-mode letter answers. `draft` mode is unchanged apart from the guard.
+5. **Skills** (`skills.cv_skill_groups(fb, kws, cfg, jd)`): a name and its qualified form are one skill (the qualified one stays); `cv.skill_umbrellas` (AWS, GCP) go when
+   a specific skill of them is listed and hand over their pin; inside a group order = JD keyword weight, then the bank's order (a pin is no edge);
+   `cv.skills_when_asked` (TypeScript, JavaScript) are placed only when the ad names them; a group with no skill row of its own but `from_terms` (the client group) shows
+   the matching `terms:` the user wrote, capitalised, so all four groups render. The two failing tests of the 16 Oct suite
+   (`test_a_skill_listed_twice_renders_once_on_the_cv`, `test_the_model_is_never_asked_to_select_and_...`) compared the pipeline with the old one-page skills rows and with the
+   bank before award projects moved to Achievements; they now mirror the pipeline's inputs.
+6. **Review / note** print the hook id, the headline, profile sentence 1 and letter sentence 1, the CV PDF's creation time and `letter: off`.
+
+**Tests.** 2,800 collected (2,778 before the round): 69 new in six new files (`test_hook_library.py`, `test_profile_assembled.py`, `test_rephrase_no_new_claims.py`, `test_letter_assembled.py`, `test_skill_groups_round.py`, `tests/review/test_review_hook_lines.py`); 2,798 passed and 2 failed when every file ran on a fresh copy of the tree, and the 2 failures there (`test_a_test_that_swallows_the_error_still_fails_in_teardown` in `test_no_real_data.py` and `test_no_real_profile.py`) fail the same way on the tree from before the round and pass in the repo itself (19 passed together with `test_deletions.py`). Rewritten because the behaviour they pinned is gone: `test_hook.py` (model path), `test_profile_source.py`,
+`test_hook_letters.py` (run tests), `test_term_dump.py` (letter body / gap), `test_golden_pipeline.py` (library hook), `test_llm_shapes.py`, `test_tailor.py`, `test_rephrase.py`,
+`test_placement.py`, `test_budget.py` (they now give the bank a `result:` via `conftest.with_results`), the doctor tests (one task fewer).
+
+**Not verified.** The real model's keyword list for the Anaplan ad (the stand-in run uses MockLLM's taxonomy keywords, so the hook may differ from the live one); the real
+`careerops live --dry-run --retailor` (CLAUDE.md forbids running it against the real `data/`; the command to run is in the summary).
+
 ## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
 
 `apply/eo.py` + `assist.fill_page`. Reads `applicant.yaml → equal_opportunities`: `{key: {answer, match_any: [...], question: [regex]}}` (`question` built in for `ethnicity`:
@@ -648,3 +901,11 @@ consulted (free text ← `visa.summary`; Yes/No, dropdown or radio group ← `vi
 right_to_work_now]` by `classify_visa`; unclear type, `ask` or a share-code box → left empty). Each is outlined magenta and printed as
 `CHECK VISA ANSWER: <question> -> <value or EMPTY>`; `fill_page` returns them under `report["visa"]`. Other `never_fill` matches are
 unchanged. `setup.applicant_checks` adds three `careerops doctor` lines: placeholder email domain, `+44` followed by 0, a UK postcode in `location`.
+
+### CV template round v2 (16 Oct 2026): `cv_style_reference.tex` v2
+`templates/cv2.tex.j2` is the v2 preamble line for line (`REFERENCE_PREAMBLE` in `test_cv_template.py` updated with it) plus `needspace` and the linespread value. New: `\skillgroup{label}{items}` (label alone on a navy bold line), the 12pt headline kept to one line, the contact line's portfolio link text "Portfolio", project links only as `\gh` (never `\url`).
+**Skills.** `cv.skill_groups` / `skills_always` / `skill_group_max` in `settings.yaml` -> `skills.cv_skill_groups(fb, kws, cfg)`: four fixed groups; a skill goes to the group whose `skills` names it, else to the first group whose `banks` regex matches its fact-bank group's name, else (core only) to the `default` group; unclaimed fact-bank groups are listed in `report["skills"]["dropped_groups"]`, a configured group with no skills in `analysis_warnings`. The one-page CV and `cv_skills` are unchanged. The real fact bank has no "Client Delivery & Communication" skills group yet, so that group is left off until the user adds one (proposed in chat, not written: `fact_bank.yaml` is the user's).
+**Achievements.** `tailor.achievement_projects` (award project outside the JD's top three by `budget.rank_projects`, unless it holds the hook's proof bullet) and `achievement_entries`; the project is taken out of the selection and fill (`fb_sel`) and printed as `\item \textbf{name, award}: bullet` before the certifications bullet.
+**STAR.** `layout.with_openers` (render time, two-page only): the first bullet of an entry with `situation:` is "<situation>: " + the action with its first letter lower-cased (not an acronym). Checks and the report see the wording without it.
+**Length rules.** `layout.py` measures the rendered PDF (`pdftotext -bbox-layout`): headline lines, profile lines, lines per bullet. `tailor.fit_lengths` wraps every two-page render: headline -> `layout.headline_options` (trailing bracket / stack list, the `problem:` label, clauses, role alone); profile -> whole sentences dropped after the hook sentence; bullet -> fact-bank wording, `ctx["splits"]` (two bullets under one id, `layout.with_splits`), `shorten_pass` (REPHRASE prompt with a SHORTEN line, guarded by `guard_rephrases`), else a `length:` warning. Result in `report["lengths"]`. `scoring.min_fill_page2` 0.90 -> 0.96 (two lines of the 770pt text area).
+Tests: `tests/tailoring/test_cv_v2.py` (31), the updated `test_cv_template.py`, `test_two_page.py`, `test_cv_typography.py`; the fictional profile fixture gained `situation:` on `az` and `churn` and a "Client Delivery & Communication" skills group.

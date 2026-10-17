@@ -30,6 +30,7 @@ import threading
 import time
 import webbrowser
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -146,8 +147,27 @@ def authorize(settings, *, open_browser: Callable[[str], object] = webbrowser.op
         raise GmailAuthError(f"Google refused the sign-in (HTTP {r.status_code}); nothing was saved")
     _check_scope(body.get("scope", ""))
     _write_token(settings, {"refresh_token": body["refresh_token"], "access_token": body.get("access_token"),
-                            "expires_at": clock() + float(body.get("expires_in", 0)), "scope": body["scope"]})
+                            "expires_at": clock() + float(body.get("expires_in", 0)), "scope": body["scope"],
+                            "granted_at": datetime.now(timezone.utc).isoformat(timespec="seconds")})     # what `careerops doctor` ages
     say(f"Signed in. Token saved in {_secrets_dir(settings) / TOKEN_FILE} (git-ignored). career-ops can only read mail.")
+
+
+def token_age_days(settings, now: datetime | None = None) -> float | None:
+    """Days since you signed in (`--gmail-auth`): a token granted while the OAuth app is in Testing stops working after about 7 days. Read
+    from the token's own `granted_at`; for a token written before that was kept, the token file's age (a refresh rewrites the file, so
+    that is only a lower bound). None when there is no token file."""
+    path = _secrets_dir(settings) / TOKEN_FILE
+    now = now or datetime.now(timezone.utc)
+    tok = _read_token(settings) or {}
+    try:
+        granted = datetime.fromisoformat(str(tok.get("granted_at")))
+        granted = granted if granted.tzinfo else granted.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        try:
+            granted = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+        except OSError:
+            return None
+    return max((now - granted).total_seconds() / 86400.0, 0.0)
 
 
 def access_token(settings, *, post=requests.post, clock: Callable[[], float] = time.time) -> str:
@@ -237,22 +257,28 @@ def message_text(msg: dict) -> tuple[str, str, str, str]:
     return hdr.get("from", ""), hdr.get("subject", ""), "\n".join(html_parts), "\n".join(plain_parts)
 
 
-def message_date(msg: dict) -> str:
-    """YYYY-MM-DD the alert reached the mailbox (Gmail's internalDate, else the Date header), '' when neither can be read."""
+def message_time(msg: dict) -> str:
+    """The moment the alert reached the mailbox as an ISO UTC datetime (Gmail's internalDate, else the Date header), '' when neither
+    can be read. A job found through an alert was posted at or before this: an upper bound on its posting time."""
     from datetime import datetime, timezone
     from email.utils import parsedate_to_datetime
 
     try:
-        return datetime.fromtimestamp(int(msg["internalDate"]) / 1000, timezone.utc).date().isoformat()
+        return datetime.fromtimestamp(int(msg["internalDate"]) / 1000, timezone.utc).isoformat(timespec="seconds")
     except (KeyError, TypeError, ValueError, OSError, OverflowError):
         pass
     for h in (msg.get("payload") or {}).get("headers", []):
         if str(h.get("name", "")).lower() == "date":
             try:
-                return parsedate_to_datetime(h["value"]).astimezone(timezone.utc).date().isoformat()
+                return parsedate_to_datetime(h["value"]).astimezone(timezone.utc).isoformat(timespec="seconds")
             except (TypeError, ValueError, IndexError):
                 break
     return ""
+
+
+def message_date(msg: dict) -> str:
+    """YYYY-MM-DD the alert reached the mailbox (see `message_time`), '' when it cannot be read."""
+    return message_time(msg)[:10]
 
 
 def sender_kind(from_header: str) -> str | None:

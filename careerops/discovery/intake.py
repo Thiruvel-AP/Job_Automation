@@ -34,7 +34,7 @@ from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 
-from . import manual
+from . import freshness, manual
 from .robots import RobotsCache, RobotsError, never_fetch
 from .sources import UA, html_to_text
 
@@ -91,7 +91,8 @@ class Ad:
     ad_id: str
     salary: str = ""
     agency: bool = False               # the poster looks like a recruitment agency, not the employer
-    posted: str = ""                   # YYYY-MM-DD the ad was posted, when the source says
+    posted: str = ""                   # ISO date or datetime the ad was posted, when the source says (freshness.py)
+    posted_source: str = ""            # where `posted` comes from, one of freshness.TRUSTED ("greenhouse.first_published"); "" = not trusted
     country: str = ""                  # set only for a job outside the UK: written as `Country:` (live refuses it without a visa block)
     listed_only: bool = False          # written as `Status: listed_only`
     first_seen: str = ""               # YYYY-MM-DD discover first saw the job (an alert's date or the first run): what R counts from
@@ -221,12 +222,19 @@ def _http_url(candidate, fallback: str) -> str:
 
 
 # ------------------------------------------------------------------ the APIs
+def _first_published(j: dict) -> str:
+    """Greenhouse's first_published (never updated_at: it resets when a job is reposted), or "" when it is missing."""
+    v = str(j.get("first_published") or "").strip()
+    return v if freshness.is_iso(v) else ""
+
+
 def greenhouse_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
     j = _json(f"https://boards-api.greenhouse.io/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}",
               robots)
     return Ad(company=str(j.get("company_name") or "").strip() or _name(t.board), title=str(j.get("title") or "").strip(),
               url=_http_url(j.get("absolute_url"), t.url), location=str((j.get("location") or {}).get("name") or "").strip(),
-              text=html_to_text(j.get("content")), source="greenhouse", ad_id=t.ad_id)
+              text=html_to_text(j.get("content")), source="greenhouse", ad_id=t.ad_id,
+              posted=_first_published(j), posted_source=freshness.label("greenhouse", "first_published") if _first_published(j) else "")
 
 
 def lever_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
@@ -237,7 +245,9 @@ def lever_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
     parts.append(j.get("additionalPlain") or "")
     return Ad(company=_name(t.board), title=str(j.get("text") or "").strip(), url=_http_url(j.get("hostedUrl"), t.url),
               location=str((j.get("categories") or {}).get("location") or "").strip(),
-              text="\n\n".join(p for p in parts if p).strip(), source="lever", ad_id=t.ad_id)
+              text="\n\n".join(p for p in parts if p).strip(), source="lever", ad_id=t.ad_id,
+              posted=freshness.from_millis(j.get("createdAt")) or "",
+              posted_source=freshness.label("lever", "createdAt") if freshness.from_millis(j.get("createdAt")) else "")
 
 
 def ashby_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
@@ -248,7 +258,9 @@ def ashby_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
             loc = j.get("location") or ""
             return Ad(company=_name(t.board), title=str(j.get("title") or "").strip(),
                       url=_http_url(j.get("jobUrl"), t.url), location=str(loc.get("name") if isinstance(loc, dict) else loc).strip(),
-                      text=j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")), source="ashby", ad_id=t.ad_id)
+                      text=j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")), source="ashby", ad_id=t.ad_id,
+                      posted=str(j.get("publishedAt") or "") if freshness.is_iso(j.get("publishedAt")) else "",
+                      posted_source=freshness.label("ashby", "publishedAt") if freshness.is_iso(j.get("publishedAt")) else "")
     raise IntakeError(f"Ashby board {t.board}: no posting {t.ad_id} in its public list (closed, or not listed)")
 
 
@@ -522,6 +534,8 @@ def render(ad: Ad) -> str:
         head.append(f"Salary: {one_line(ad.salary)}")
     if ad.posted:
         head.append(f"Posted: {ad.posted}")
+        if ad.posted_source:
+            head.append(f"Posted via: {ad.posted_source}")
     if ad.first_seen:
         head.append(f"First seen: {ad.first_seen}")
     if ad.open_listing:

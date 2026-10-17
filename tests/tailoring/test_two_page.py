@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import fixture_profile_settings
 
-from careerops.config import load_settings, load_yaml
+from careerops.config import load_yaml
 from careerops.db import DB
 from careerops.llm import MockLLM
 from careerops.setup import core_skill_checks
@@ -35,7 +36,7 @@ def _b(bid, *words):
 def run2(tmp_path_factory):
     """The two-page default on the fictional bank that has enough bullets to fill page 2."""
     fb = load_yaml(FIX / "fact_bank_two_page.yaml")
-    s = load_settings()
+    s = fixture_profile_settings()
     job = {"id": "manual:two", "source": "manual", "company": "Northwind Health AI", "title": "AI Engineer",
            "location": "Bristol, UK", "url": "u", "apply_url": "u",
            "description": (FIX / "jd_northwind.txt").read_text(encoding="utf-8")}
@@ -44,29 +45,28 @@ def run2(tmp_path_factory):
     return rep, fb, s
 
 
-def test_defaults_are_two_pages_and_a_page_two_that_is_80_percent_full(settings):
-    assert settings["scoring"]["max_pages"] == 2 and settings["scoring"]["min_fill_page2"] == 0.65
+def test_defaults_are_two_pages_and_a_page_two_within_two_lines_of_the_bottom(settings):
+    assert settings["scoring"]["max_pages"] == 2 and settings["scoring"]["min_fill_page2"] == 0.96
 
 
-def test_the_fixture_bank_renders_exactly_two_pages_with_page_two_80_to_100_percent_full(run2):
+def test_the_fixture_bank_renders_exactly_two_pages_with_page_two_96_to_100_percent_full(run2):
     rep, _, s = run2
     pdf = Path(rep["cv_pdf"])
     assert rep["cv_pages"] == rep["final"]["pages"] == page_count(pdf) == 2
     fill = page2_fill(pdf)
     assert s["scoring"]["min_fill_page2"] <= fill <= 1.0
     assert rep["page2_fill"] == rep["final"]["page2_fill"] == pytest.approx(fill)
-    assert rep["fill"]["reached"] is True and rep["fill"]["added"]       # the targets alone did not fill it: bullets were added
+    assert rep["fill"]["reached"] is True       # (the hook's headline and profile line take room, so the fill may have little left to add)
     assert rep["attempts"][-1]["page2_fill"] == pytest.approx(fill)
 
 
-def test_the_fixture_cv_shows_three_projects_and_fills_page_two_from_their_bullets_not_a_fourth_project(run2):
+def test_the_fixture_cv_shows_five_projects_and_reaches_the_fill_target(run2):
     rep, fb, s = run2
     projects = rep["context"]["projects"]
-    assert len(projects) == s["scoring"]["cv_projects"] == 3
+    moved = rep["achievements"]                                                    # an award project outside the JD's top three
+    assert s["scoring"]["cv_projects"] == 5 and len(fb["projects"]) == 5 and len(projects) + len(moved) == 5      # the bank has five, all are shown
     assert all(len(p["bullet_ids"]) >= 2 for p in projects)
     assert rep["fill"]["reached"] is True and rep["page2_fill"] >= s["scoring"]["min_fill_page2"]
-    owner = {b["id"]: p["id"] for p in fb["projects"] for b in p["bullets"]}
-    assert {owner[b] for b in rep["fill"]["added"] if b in owner} <= {p["id"] for p in projects}     # no 4th project
     first = rep["attempts"][-1]["proposal"]["selection"]
     assert all(2 <= len(first["project_bullets"][p]) <= 3 for p in first["projects"])               # selection: 2-3 each
 
@@ -83,7 +83,7 @@ def test_page_two_fill_comes_from_the_rendered_pdf_not_from_character_counts(run
     assert page2_fill(pdf) == pytest.approx((max(ys) - CV2_MARGIN_PT) / area)
     # the constant matches the template's geometry: text starts at the top margin and page 1 runs to the bottom one
     top = min(float(y) for y in re.findall(r'yMin="([\d.]+)"', pages[0][1]))
-    assert CV2_MARGIN_PT - 1 <= top <= CV2_MARGIN_PT + 12
+    assert CV2_MARGIN_PT - 3 <= top <= CV2_MARGIN_PT + 12      # (the 22pt name's box reaches about 1pt above the margin)
     first, second = last_line_fills(pdf)
     assert 0.85 <= first <= 1.0 and second == pytest.approx(page2_fill(pdf))
 
@@ -131,10 +131,10 @@ def test_two_page_targets_are_four_to_five_for_the_newest_entry_three_to_four_fo
     kws = _kws(*[f"k{e}{i}" for e in ("e1", "e2", "e3") for i in range(7)], *[f"kp{j}{i}" for j in range(5) for i in range(3)])
     sel = select_cv(fb, kws, layout=TWO_PAGE)
     assert [len(sel["experience"][e]) for e in ("e1", "e2", "e3")] == [5, 4, 4]       # plenty to gain: the maximum
-    assert len(sel["projects"]) == 3 and all(len(b) == 3 for b in sel["project_bullets"].values())
+    assert len(sel["projects"]) == 5 and all(len(b) == 3 for b in sel["project_bullets"].values())
     none = select_cv(fb, _kws("zzz-nothing"), layout=TWO_PAGE)
     assert [len(none["experience"][e]) for e in ("e1", "e2", "e3")] == [4, 3, 3]      # nothing to gain: the minimum
-    assert len(none["projects"]) == 3 and all(len(b) == 2 for b in none["project_bullets"].values())
+    assert len(none["projects"]) == 5 and all(len(b) == 2 for b in none["project_bullets"].values())
 
 
 def test_an_entry_with_fewer_bullets_than_its_target_shows_all_of_them():
@@ -193,35 +193,44 @@ def test_the_shrink_floors_follow_the_layout():
 
 
 # ---------------------------------------------------------------- core skills
-def test_core_is_the_first_row_in_the_users_order_and_other_rows_list_every_skill_jd_relevant_first(run2):
-    rep, fb, _ = run2
-    rows = list(rep["context"]["skills"].items())
-    assert rows[0] == ("Core", ["Python", "pandas", "NumPy", "Docker"])
-    assert rep["skills"]["core"] == ["Python", "pandas", "NumPy", "Docker"] and rep["skills"]["rows"][0] == "Core"
+LABELS = ["Machine Learning, Deep Learning & Statistics", "Python, Data Quality & Cloud", "NLP, LLMs & Evaluation"]
+CLIENT = "Client Delivery & Communication"
+
+
+def test_the_two_page_cv_shows_the_fixed_groups_with_every_core_skill_pinned_in_one_of_them(run2):
+    rep, fb, s = run2
+    groups = rep["context"]["skills"]
+    assert list(groups) == LABELS + [CLIENT] == rep["skills"]["rows"]   # the fixture bank has no row for the fourth group: it shows the user's own terms
+    assert groups[CLIENT] and not any("Client Delivery" in w for w in rep["analysis_warnings"])
+    assert rep["skills"]["core"] == ["Python", "pandas", "NumPy", "Docker"]
+    shown = {x.casefold() for items in groups.values() for x in items}
+    assert {c.casefold() for c in rep["skills"]["core"]} <= shown        # core is pinned
     text = pdf_text(Path(rep["cv_pdf"]))
-    assert re.search(r"Core:\s+Python, pandas, NumPy, Docker", text)
-    for group, items in rows[1:]:                                       # nothing capped within a shown group
-        bank = [i for i in fb["skills"][group]]
-        assert set(items) <= set(bank) and len(items) == len([i for i in bank if i.lower() not in
-                                                              {c.lower() for c in fb["skills"]["core"]}])
+    for label, items in groups.items():                                 # the label on its own line, the items below it
+        assert re.search(r"^" + re.escape(label) + r"$", text, re.M)
+        written = {t.casefold() for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"] for t in b.get("terms", [])}
+        assert set(items) <= {i for g in fb["skills"].values() for i in g} | {"Python"} or (          # a bank skill, or (the client group) a term the user wrote
+            label == CLIENT and {i.casefold() for i in items} <= written)
+    assert set(rep["skills"]["dropped_groups"]) == {"Mobile & Web", "Visualisation"}     # bank groups no configured group claims (Matplotlib, always shown, is placed by name)
+    assert "Matplotlib" in groups["Python, Data Quality & Cloud"] and "Tableau" not in {x for g in groups.values() for x in g}
 
 
 def test_a_skill_appears_once_whatever_its_case_and_the_first_occurrence_wins(run2):
     rep, fb, _ = run2
     names = [s.casefold() for items in rep["context"]["skills"].values() for s in items]
     assert len(names) == len(set(names))
-    assert "Python" in rep["context"]["skills"]["Core"] and "Python" not in rep["context"]["skills"]["Languages"]
+    assert "Python" in rep["context"]["skills"]["Python, Data Quality & Cloud"]
     assert "python" in [s for s in fb["skills"]["Visualisation"]]       # the bank repeats it in lower case; the CV does not
     skills_block = re.search(r"SKILLS(.*?)EXPERIENCE", pdf_text(Path(rep["cv_pdf"])), re.S).group(1)
-    assert len(re.findall(r"\bpython\b", skills_block, re.I)) == 1
+    items_only = "".join(ln + chr(10) for ln in skills_block.splitlines() if ln.strip() not in rep["context"]["skills"])   # not the group labels
+    assert len(re.findall(r"\bpython\b", items_only, re.I)) == 1
 
 
-def test_at_most_five_other_rows_the_least_jd_relevant_group_goes(run2):
+def test_the_one_page_rows_stay_core_plus_at_most_five_groups_the_least_jd_relevant_goes(run2):
     rep, fb, s = run2
-    assert len(rep["context"]["skills"]) == 1 + s["scoring"]["max_skill_groups"] == 6
-    assert set(rep["skills"]["dropped_groups"]) == {"Mobile & Web", "Visualisation"}
     kws = [Keyword("swift", 2.0, True)]
-    rows, dropped = cv_skills(fb, kws, 5)
+    rows, dropped = cv_skills(fb, kws, s["scoring"]["max_skill_groups"])      # the older rows, still the one-page CV's
+    assert len(rows) == 1 + s["scoring"]["max_skill_groups"] == 6
     assert "Mobile & Web" in rows and "Mobile & Web" not in dropped      # relevant to this JD: it stays
     assert len(dropped) == 2 and "Core" in rows
 
@@ -305,7 +314,8 @@ def test_one_page_flag_renders_one_page_with_the_old_template_and_layout(setting
 def test_the_default_run_uses_the_two_page_template(run2):
     rep, _, _ = run2
     tex = Path(rep["cv_pdf"]).with_suffix(".tex").read_text(encoding="utf-8")
-    assert rep["one_page"] is False and "\\fontsize{11}{13.2}" in tex and "margin=0.6in" in tex
+    assert rep["one_page"] is False and "\\documentclass[a4paper,11pt]{article}" in tex       # the reference CV's preamble
+    assert "margin=0.6in, top=0.5in, bottom=0.5in" in tex and "\\linespread{1.03}" in tex
 
 
 # ---------------------------------------------------------------- result: as evidence

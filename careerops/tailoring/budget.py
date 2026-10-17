@@ -6,8 +6,8 @@ bullets; nothing here changes what the CV may claim: every bullet is a fact-bank
 """
 from __future__ import annotations
 
-from .domain import domain_overlap, jd_domain
-from .scorer import Keyword, score
+from .domain import domain_overlap, jd_domain, jd_rank_weights, rank_overlap
+from .scorer import Keyword, keyword_hits, score
 
 
 def bullet_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
@@ -17,7 +17,11 @@ def bullet_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
     for sec in ("experience", "projects"):
         for e in fb.get(sec, []):
             for b in e["bullets"]:
-                out[b["id"]] = round(score(b["text"] + " " + " ".join(b.get("terms", [])), kws).stemmed * total, 6)
+                text = b["text"] + " " + " ".join(b.get("terms", []))
+                found = score(text, kws)
+                seen = set(found.hits) | set(found.wording_misses)
+                extra = sum(kws[i].weight for i in keyword_hits(text, kws) if kws[i].term not in seen)       # a multiword keyword's words, split
+                out[b["id"]] = round(found.stemmed * total + extra, 6)
     return out
 
 
@@ -55,10 +59,32 @@ def fact_scores(facts: list[str], kws: list[Keyword], jd: str = "") -> list[floa
     return [round(score(f, kws).stemmed * total + DOMAIN_WEIGHT * domain_overlap(f, weights), 6) for f in facts]
 
 
-def rank_projects(fb: dict, kws: list[Keyword], preferred: list[str] | None = None) -> list[str]:
-    """Project ids, most relevant to the JD first: by the project's best bullet, then by the sum over its bullets;
-    the family's preferred projects only break exact ties."""
-    sc = bullet_scores(fb, kws)
+def relevance_parts(fb: dict, kws: list[Keyword], jd: str = "") -> dict[str, tuple[float, float]]:
+    """{bullet id: (keyword overlap, domain overlap)} for choosing the CV's content. Keyword overlap is `bullet_scores`; domain
+    overlap is DOMAIN_WEIGHT times the JD's weight of every company-domain or topic group (customer, consumer, behaviour,
+    segmentation, validation, statistics, bank, payments ...; domain.py) the bullet names in its text, its terms or the entry it
+    belongs to (a project's name, a job's org and title). Without a JD the second number is 0."""
+    kw = bullet_scores(fb, kws)
+    weights = jd_rank_weights(jd)
+    out = {}
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec, []):
+            where = entry_where(e)
+            for b in e["bullets"]:
+                dom = DOMAIN_WEIGHT * rank_overlap(" ".join([b["text"], *b.get("terms", []), where]), weights) if weights else 0.0
+                out[b["id"]] = (kw[b["id"]], round(dom, 6))
+    return out
+
+
+def relevance_scores(fb: dict, kws: list[Keyword], jd: str = "") -> dict[str, float]:
+    """{bullet id: keyword overlap + domain overlap} (`relevance_parts`)."""
+    return {b: round(k + d, 6) for b, (k, d) in relevance_parts(fb, kws, jd).items()}
+
+
+def rank_projects(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, jd: str = "") -> list[str]:
+    """Project ids, most relevant to the JD first: by the project's best bullet (keyword overlap plus the JD's domain and topics
+    when `jd` is given), then by the sum over its bullets; the family's preferred projects only break exact ties."""
+    sc = relevance_scores(fb, kws, jd)
     pref = list(preferred or [])
     order = {p["id"]: i for i, p in enumerate(fb.get("projects", []))}
 
@@ -67,3 +93,27 @@ def rank_projects(fb: dict, kws: list[Keyword], preferred: list[str] | None = No
         return (-max(s, default=0.0), -sum(s), 0 if p["id"] in pref else 1, order[p["id"]])
 
     return [p["id"] for p in sorted(fb.get("projects", []), key=key)]
+
+
+def ranking_table(fb: dict, kws: list[Keyword], jd: str, chosen: set[str], top: int = 10) -> dict:
+    """What the review screen prints: the `top` bullets and the `top` projects by relevance to the JD, each with its score
+    (keyword + domain) and whether the CV uses it. {"bullets": [{"id", "entry", "score", "keywords", "domain", "chosen", "text"}],
+    "projects": [{"id", "name", "score", "sum", "chosen"}]}; ties keep fact-bank order."""
+    parts = relevance_parts(fb, kws, jd)
+    rows = []
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec, []):
+            for b in e["bullets"]:
+                k, d = parts[b["id"]]
+                rows.append({"id": b["id"], "entry": e.get("org") or e.get("name") or "", "score": round(k + d, 2),
+                             "keywords": round(k, 2), "domain": round(d, 2), "chosen": b["id"] in chosen,
+                             "text": " ".join(b["text"].split())})
+    bullets = sorted(rows, key=lambda r: -r["score"])[:top]            # sorted is stable: fact-bank order within a tie
+    by_id = {r["id"]: r for r in rows}
+    projects = []
+    for p in fb.get("projects", []):
+        s = [by_id[b["id"]]["score"] for b in p["bullets"]]
+        projects.append({"id": p["id"], "name": p.get("name") or p["id"], "score": max(s, default=0.0), "sum": round(sum(s), 2),
+                         "chosen": any(by_id[b["id"]]["chosen"] for b in p["bullets"])})
+    projects.sort(key=lambda r: (-r["score"], -r["sum"]))
+    return {"bullets": bullets, "projects": projects[:top]}

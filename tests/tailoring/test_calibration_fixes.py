@@ -47,12 +47,14 @@ def test_dedupe_skills_is_case_insensitive_within_and_across_groups_and_keeps_th
 @pytest.mark.slow
 def test_a_skill_listed_twice_renders_once_on_the_cv(settings, fb_fixture, job, spy_llm):
     fb = copy.deepcopy(fb_fixture)
-    fb["skills"]["Languages"] += ["Zorblax", "ZORBLAX"]
+    fb["skills"]["ML & Stats"] += ["Zorblax", "ZORBLAX"]
     fb["skills"]["Engineering"] += ["zorblax"]
     rep = tailor_job(job, fb, spy_llm(), settings, settings.path("outputs"))
-    names = [s.casefold() for items in rep["context"]["skills"].values() for s in items]
+    groups = rep["context"]["skills"]                                                   # the four fixed groups of cv.skill_groups
+    names = [s.casefold() for items in groups.values() for s in items]
     assert names.count("zorblax") == 1 and len(names) == len(set(names))
-    assert rep["context"]["skills"]["Languages"][-1] == "Zorblax"                       # the first occurrence stays
+    home = [g for g, items in groups.items() if "Zorblax" in items]                     # the first occurrence stays, in its own casing
+    assert home == ["Machine Learning, Deep Learning & Statistics"]
     assert pdf_text(Path(rep["cv_pdf"])).casefold().count("zorblax") == 1
 
 

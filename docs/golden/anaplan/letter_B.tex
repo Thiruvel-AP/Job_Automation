@@ -1,0 +1,30 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fontspec}\setmainfont{Carlito}
+\usepackage[margin=0.9in, top=0.7in]{geometry}
+\usepackage{xcolor}\usepackage[colorlinks=true]{hyperref}\usepackage{ragged2e}
+\definecolor{navy}{RGB}{12, 83, 166}\definecolor{ink}{RGB}{33, 37, 41}\definecolor{muted}{RGB}{96, 102, 110}
+\hypersetup{urlcolor=navy}\color{ink}
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parindent}{0pt}\setlength{\parskip}{8pt}\pagestyle{empty}\linespread{1.08}
+\AtBeginDocument{\RaggedRight}
+\begin{document}
+{\fontsize{20}{24}\selectfont\bfseries\color{navy} Thiruvel Andagurunathan Pandian}\\[2pt]
+{\small Bristol, UK \,\textperiodcentered\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \,\textperiodcentered\, +44 7741 016954 \,\textperiodcentered\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p} \,\textperiodcentered\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}}
+
+{\color{muted}\small 15 October 2026 \,\textperiodcentered\, Data Scientist, Functional Analytics (REQ 26490), Anaplan, London}
+
+Dear Anaplan Functional Analytics team,
+
+Every client onboarding your engines go through means moving a model from prototype to reliable production on that client's data; at AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of \textbf{\textasciitilde65 automated tests}.
+
+On modelling, I built an LSTM time series forecaster with cyclic date encoding and TimeSeriesSplit tuning, served through a TensorFlow Serving REST API; an XGBoost propensity model with two stage Bayesian hyperparameter tuning; and scikit-learn pipelines with feature engineering on temporal features and target encoding. At the Lloyd's Banking Group Datathon (3rd place) I compared Isolation Forest with ensemble classifiers on 200:1 imbalanced data, tracking experiments in MLflow. My MSc Data Science at Bristol added PyTorch and Databricks coursework.
+
+Onboarding is also a client problem. At 180 Degrees Consulting I turned an ambiguous client brief into a Python prototype, then contributed it to the client's own production repository, where it is in live daily use; the engagement received a five star commendation from senior leadership.
+
+One honest gap: my forecasting has been on price series, not retail demand, and I have not yet used LightGBM. The validation habits carry over (TimeSeriesSplit, temporal features), and XGBoost shares LightGBM's gradient boosting ideas.
+
+I am ready to relocate to London. Could we take 20 minutes for me to walk you through how I would validate a cold start forecast for a new client, holding out whole products launched after a cutoff date rather than random rows?
+
+Kind regards,\\
+Thiruvel Andagurunathan Pandian
+\end{document}

@@ -29,6 +29,7 @@ skills:
   LLMs & Agents: [LangChain, LangGraph, AWS Bedrock, RAG, MCP, tool calling, LLM evaluation]
   Data & Cloud: [pandas, NumPy, PostgreSQL, AWS Lambda, ECR, IAM]
   Engineering: [FastAPI, Docker, GitHub Actions, pytest, React, Git, MLflow]
+  Client Delivery & Communication: [stakeholder demos, scoping with clients, code review, technical documentation]
 
 experience:
   - id: az
@@ -36,6 +37,7 @@ experience:
     org: Northwind Research Lab, University of Northfield
     dates: May 2026 – Sep 2026
     location: Bristol, UK
+    situation: "Needed an LLM agent a research team could trust before it shipped"
     bullets:
       - id: az1
         text: Built a tool-calling LLM agent (LangChain, AWS Bedrock) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset lookup, used by the whole research team.
@@ -113,6 +115,7 @@ projects:
     name: Customer churn prediction
     stack: Python, scikit-learn, XGBoost
     github: https://github.com/ada-lovelace-test/churn#readme
+    situation: "Needed to know which customers would leave"
     bullets:
       - id: churn1
         text: Built a churn classifier with scikit-learn and XGBoost on 7,043 customer records, comparing models with stratified cross-validation and tuning the decision threshold for recall.

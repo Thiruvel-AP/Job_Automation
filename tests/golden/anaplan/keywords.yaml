@@ -1,0 +1,41 @@
+# The 38 weighted keywords of the golden Anaplan ad, as ats.py reads them: term + any-of alternatives, weight, and whether the fact
+# bank backs the term (claimable). The same list, label for label, as reference_ats_weights.py (whose regexes this file spells out
+# as literal words); tests/test_golden_anaplan.py checks that the two agree hit for hit on the golden CV.
+- {term: Python, weight: 3, claimable: true}
+- {term: SQL, weight: 3, claimable: true}
+- {term: machine learning, weight: 3, claimable: true}
+- {term: deep learning, weight: 3, claimable: true}
+- {term: time series forecasting, weight: 3, alts: [time series, forecasting], claimable: true}
+- {term: XGBoost, weight: 3, claimable: true}
+- {term: LightGBM, weight: 3, claimable: false}
+- {term: PyTorch, weight: 3, claimable: true}
+- {term: pandas, weight: 3, claimable: true}
+- {term: feature engineering, weight: 3, claimable: true}
+- {term: prototype to production, weight: 3, claimable: true}
+- {term: MLflow, weight: 3, claimable: true}
+- {term: testing, weight: 2, alts: [test, pytest], claimable: true}
+- {term: CI/CD, weight: 2, alts: [CI, GitHub Actions], claimable: true}
+- {term: code review, weight: 2, alts: [reviewed pull requests], claimable: true}
+- {term: dbt, weight: 2, claimable: false}
+- {term: Snowflake, weight: 2, claimable: false}
+- {term: Databricks, weight: 2, claimable: true}
+- {term: data pipelines, weight: 2, alts: [pipeline], claimable: true}
+- {term: cloud, weight: 2, alts: [AWS, GCP, Azure], claimable: true}
+- {term: Parquet, weight: 2, claimable: true}
+- {term: Optuna, weight: 2, claimable: false}
+- {term: Prefect, weight: 2, alts: [Airflow], claimable: false}
+- {term: MLOps, weight: 2, claimable: true}
+- {term: model monitoring, weight: 2, alts: [monitor, monitoring, monitored], claimable: false}
+- {term: client, weight: 2, alts: [customer], claimable: true}
+- {term: demand, weight: 2, claimable: false}
+- {term: cold start, weight: 2, alts: [cold-start], claimable: false}
+- {term: hyperparameter tuning, weight: 2, alts: [hyperparameter, hyperparameters], claimable: true}
+- {term: data warehouse, weight: 2, alts: [warehouse], claimable: false}
+- {term: supply chain, weight: 1, claimable: false}
+- {term: retail, weight: 1, claimable: false}
+- {term: enterprise, weight: 1, claimable: false}
+- {term: MSc Data Science, weight: 1, claimable: true}
+- {term: transactional data, weight: 1, alts: [transaction, transactions], claimable: true}
+- {term: temporal signals, weight: 1, alts: [temporal, date encoding, seasonal], claimable: true}
+- {term: scalable, weight: 1, alts: [scale, scaling], claimable: true}
+- {term: statistics, weight: 1, alts: [statistical, statistic], claimable: true}

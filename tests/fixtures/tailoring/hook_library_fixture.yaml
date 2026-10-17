@@ -1,0 +1,22 @@
+# Fictional hook library for tests (the shape of `hook_library` in config/profile/fact_bank.yaml), written against the bullet ids of
+# fact_bank_fixture.yaml. The pipeline PICKS one entry per job by term overlap and uses its strings word for word.
+- id: h_prod_tests
+  proof: a4
+  terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype]
+  headline: "LLM agent shipped to AWS Lambda behind ~65 automated tests"
+  profile_line: "Data scientist who takes models from prototype to production: at Northwind I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests."
+  letter_line: "At Northwind I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests."
+
+- id: h_forecast
+  proof: p2a
+  terms: [forecasting, forecast, time series, timeseries, demand, lstm, temporal, sequence]
+  headline: "LSTM forecaster benchmarked against a seasonal baseline"
+  profile_line: "AI engineer who benchmarks forecasts honestly: an LSTM forecaster in PyTorch, compared with a seasonal baseline under rolling origin evaluation."
+  letter_line: "I built an LSTM forecaster for transaction volumes and benchmarked it against a seasonal baseline with a rolling origin evaluation."
+
+- id: h_client
+  proof: b2
+  terms: [client, clients, stakeholder, stakeholders, consulting, customer, delivery, requirements, communication, onboarding]
+  headline: "Findings agreed with non technical stakeholders in a single workshop"
+  profile_line: "Data scientist who turns findings into decisions: I presented segmentation results to non technical stakeholders and agreed three follow up analyses in one workshop."
+  letter_line: "I presented segmentation findings to non technical stakeholders and agreed three follow up analyses in a single workshop."

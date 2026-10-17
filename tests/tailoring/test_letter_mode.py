@@ -1,5 +1,6 @@
-"""letter.mode: off | draft. Off (the shipped default) asks for no letter: no letter call, no PDF, no fallback. Draft hands the
-model the evidence as fields (method, data, outcome), never as the bullet sentence, under the same letter checks."""
+"""letter.mode: off | draft | hook. Off asks for no letter: no letter call, no PDF, no fallback. Draft hands the model the evidence as
+fields (method, data, outcome), never as the bullet sentence, under the same letter checks. Hook assembles the letter in code
+(tests/tailoring/test_letter_assembled.py, test_hook_letters.py). The shipped default is off (round of 17 Oct)."""
 from pathlib import Path
 
 import pytest
@@ -31,14 +32,16 @@ def test_letter_mode_reads_the_setting(settings, value, want):
 
 def test_an_unknown_mode_is_refused_with_the_choices(settings):
     settings.raw["letter"]["mode"] = "auto"
-    with pytest.raises(ValueError, match="letter.mode must be one of off, draft, got 'auto'"):
+    with pytest.raises(ValueError, match="letter.mode must be one of off, draft, hook, got 'auto'"):
         tailor.letter_mode(settings)
 
 
 # ------------------------------------------------------------------ the evidence as fields
 def test_fields_come_from_the_fact_bank_keys_or_say_not_stated():
-    ev = {"id": "a1", "text": "Built a thing.", "terms": ["python", "sql"], "where": "Acme"}
-    assert ef.fields(ev) == {"method": "python, sql", "data": "(not stated)", "outcome": "(not stated)"}
+    ev = {"id": "a1", "text": "Built a thing with Python and SQL.", "terms": ["python", "sql", "etl"], "where": "Acme"}
+    # fix round 2: the `terms` the bullet's own text names, not the whole list (its synonyms and index words are not in the work)
+    assert ef.fields(ev) == {"method": "Python; SQL", "data": "(not stated)", "outcome": "(not stated)"}
+    assert ef.fields({**ev, "text": "Built a thing."})["method"] == "(not stated)"
     ev = {**ev, "result": "Cut review time by a third.", "data": "donor exports", "method": "pandas and SQL joins"}
     assert ef.fields(ev) == {"method": "pandas and SQL joins", "data": "donor exports", "outcome": "Cut review time by a third."}
     assert ef.fields({**ev, "outcome": "Used by the whole team."})["outcome"] == "Used by the whole team."     # outcome beats result
@@ -49,8 +52,8 @@ def test_the_block_numbers_the_items_and_never_carries_the_sentence():
     ev = [{"id": "a1", "text": "Built a tool-calling LLM agent for a research platform.", "terms": ["llm", "agent"]},
           {"id": "b1", "text": "Built a churn classifier.", "terms": ["scikit-learn"], "result": "AUC 0.84"}]
     out = ef.block(ev)
-    assert out == ("EVIDENCE 1\n  method: llm, agent\n  data: (not stated)\n  outcome: (not stated)\n"
-                   "EVIDENCE 2\n  method: scikit-learn\n  data: (not stated)\n  outcome: AUC 0.84")
+    assert out == ("EVIDENCE 1\n  method: LLM; agent\n  data: (not stated)\n  outcome: (not stated)\n"
+                   "EVIDENCE 2\n  method: (not stated)\n  data: (not stated)\n  outcome: AUC 0.84")
     assert all(e["text"] not in out for e in ev)
 
 

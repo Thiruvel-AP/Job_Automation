@@ -13,19 +13,23 @@ import os
 import platform
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
 import yaml
 
+from .. import ats
+from .. import note as note_mod
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
-from ..discovery import priority as prio
+from ..discovery import freshness, priority as prio
 from ..discovery.gates import is_sponsor_flag
 from ..tailoring.queue import order
-from ..tailoring.render import page2_fill, page_count, pdf_text, render_cv
+from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
-from ..tailoring.tailor import FALLBACK_MARK, regenerate_letter as _regenerate_letter
+from ..tailoring import letters as letters_mod
+from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
 from . import judge
 
 CONFIRM_FALLBACK = "send fallback"
@@ -59,7 +63,8 @@ class NoLetterError(RuntimeError):
 
 
 def letter_status(rep: dict) -> str:
-    """'ok', 'fallback', 'none' (no letter was produced: letter.on_failure) or 'off' (letter.mode: off, none was asked for).
+    """'ok', 'fallback', 'none' (no letter was produced: letter.on_failure), 'declined' (you chose none in review: hook mode) or 'off'
+    (letter.mode: off, none was asked for).
     Reports written before A1 have no status: judge them by their recorded problems."""
     letter = rep.get("letter") or {}
     if letter.get("status"):
@@ -90,6 +95,144 @@ def usage_lines(rep: dict) -> list[str]:
             for name, m in by_model.items()]
 
 
+def fill_lines(rep: dict, settings=None) -> list[str]:
+    """The review screen's page-2 fill: how full page 2 is (from the rendered PDF) against the target, and what filled it
+    (projects shown, optional fact-bank sections, linespread above the reference's). Nothing for a one-page CV."""
+    f = rep["final"]
+    if rep.get("one_page") or f.get("pages", 0) < 2 or f.get("page2_fill") is None:      # (a report from before the fill was measured)
+        return []
+    target = settings["scoring"].get("min_fill_page2") if settings is not None else None
+    fill = rep.get("fill") or {}
+    ctx = rep.get("context") or {}
+    bits = [f"page 2 {f['page2_fill']:.0%} full" + (f" (target {target:.0%})" if target else "")]
+    if ctx.get("projects") is not None:
+        bits.append(f"{len(ctx['projects'])} projects")
+    if fill.get("sections"):
+        bits.append("optional sections: " + ", ".join(fill["sections"]))
+    ls = ctx.get("linespread") or fill.get("linespread")
+    base = float(settings["scoring"].get("cv_linespread", 1.03)) if settings is not None else 1.03     # the reference CV's
+    if ls and float(ls) > base + 1e-9:
+        bits.append(f"linespread {float(ls):.2f}")
+    short = target is not None and f["page2_fill"] < target
+    return ["Fill: " + " | ".join(bits) + ("  !! below target: the fact bank has no more content to add" if short else "")]
+
+
+SHOWN_HYPHENS = 20                  # hyphenated words the review screen lists
+RANK_TEXT = 56                      # characters of a bullet shown in the ranking
+
+
+def typography_lines(rep: dict) -> list[str]:
+    """The review screen's typography: em dashes left in the PDF (there must be none), en dashes used as prose dashes, the hyphenated
+    words still on the page (add one to config/typography.yaml `rewrite` to close it up), the hyphenated JD keywords kept on
+    purpose, the bullets whose `result:` is not in bold because the bullet words it differently, and an award repeated in a bullet."""
+    t = rep.get("typography")
+    if not t:
+        return []
+    em = t.get("em_dashes", 0)
+    bits = [f"!! {em} EM DASH(ES) LEFT" if em else "no em dashes", f"{t.get('results_bold', 0)} result(s) in bold"]
+    if t.get("prose_en_dashes"):
+        bits.append(f"{len(t['prose_en_dashes'])} en dash(es) used as a prose dash")
+    lines = ["Typography: " + " | ".join(bits)]
+    if t.get("hyphens"):
+        shown = [f"{w} x{n}" if n > 1 else w for w, n in list(t["hyphens"].items())[:SHOWN_HYPHENS]]
+        more = len(t["hyphens"]) - SHOWN_HYPHENS
+        lines.append("  hyphens left: " + ", ".join(shown) + (f" (+{more} more)" if more > 0 else "")
+                     + "  [config/typography.yaml closes one up]")
+    if t.get("kept"):
+        lines.append("  hyphen kept (the JD spells the keyword with it): " + ", ".join(t["kept"]))
+    if t.get("prose_en_dashes"):
+        lines.append("  en dash in prose: " + "; ".join(f"'{c}'" for c in t["prose_en_dashes"][:3]))
+    if t.get("results_unmatched"):
+        lines.append("  result not in bold (the bullet words it differently): " + ", ".join(t["results_unmatched"]))
+    if t.get("award_repeats"):
+        lines.append("  !! the award is repeated inside the bullet of: " + ", ".join(t["award_repeats"]))
+    return lines
+
+
+def ranking_lines(rep: dict) -> list[str]:
+    """The top-10 bullets and projects by relevance to the JD, with their scores (keyword + domain overlap; `*` = on the CV)."""
+    r = rep.get("ranking")
+    if not r:
+        return []
+    lines = ["Ranking, top bullets (score = keyword + domain; * = on the CV):"]
+    for n, b in enumerate(r.get("bullets") or [], 1):
+        text = b["text"] if len(b["text"]) <= RANK_TEXT else b["text"][:RANK_TEXT - 1] + "…"
+        lines.append(f"  {n:>2}. {b['score']:>5.1f} ({b['keywords']:.1f}+{b['domain']:.1f}) {'*' if b['chosen'] else ' '} "
+                     f"{b['id']:<10} {text}")
+    lines.append("Ranking, projects:")
+    for n, p in enumerate(r.get("projects") or [], 1):
+        lines.append(f"  {n:>2}. {p['score']:>5.1f} (all bullets {p['sum']:.1f}) {'*' if p['chosen'] else ' '} {p['name']}")
+    return lines
+
+
+def letter_lines(rep: dict) -> list[str]:
+    """Hook mode: the two letter variants and which one is chosen. [] for a report with no variants."""
+    letters = rep.get("letters")
+    if not letters:
+        return []
+    choice = letters.get("choice", "none")
+    variants = (rep.get("ats") or {}).get("variants") or {}
+    out = [f"Letters (hook mode): chosen {choice if not letters.get('declined') else 'none (you chose to go without)'}"
+           "   [l] cycles A -> B -> none, [g] writes them again; the chosen one is uploaded"]
+    for v in ("A", "B"):
+        let = letters.get(v) or {}
+        if let.get("status") != "ok":
+            out.append(f"  {v}: {let.get('status', '?')} ({let.get('reason') or 'no reason recorded'})")
+            continue
+        nums = variants.get(v) or {}
+        bits = [f"{let['words']} words"]
+        if let.get("gap"):
+            bits.append(f"gap: {let['gap']} (bridge to {let['bridge']}; sentence by the {let.get('gap_source')})")
+        if nums.get("combined") is not None:
+            bits.append(f"CV + letter {nums['combined']:.1f}%")
+        if nums.get("letter") is not None:
+            bits.append(f"letter alone {nums['letter']:.1f}% (not gated)")
+        out.append(f"  {v}: ok | " + " | ".join(bits))
+    return out
+
+
+def ats_lines(rep: dict) -> list[str]:
+    """The three ATS numbers (ats.py: strict CV, claimable ceiling, CV + letter; the letter alone is shown, never gated), and the
+    STRETCH label for a job whose honest ceiling is under the band."""
+    a = rep.get("ats")
+    if not a:
+        return []
+    line = ("ATS strict CV {strict:.1f}% | claimable ceiling {ceiling:.1f}%".format(**a)
+            + (f" | CV + letter {a['combined']:.1f}%" if a.get("combined") is not None else "")
+            + (f" | letter alone {a['letter']:.1f}% (not gated)" if a.get("letter") is not None else ""))
+    out = [line]
+    if a.get("negated"):
+        out.append("  in the CV only as 'not ...' (not counted): " + ", ".join(a["negated"]))
+    if rep.get("stretch"):
+        lo = (rep.get("band_pct") or [70.0])[0]
+        out.append(f"STRETCH: the honest ceiling ({a['ceiling']:.0f}%) is under the {lo:.0f}% band. Kept, never dropped: "
+                   "expect a lower interview rate; the fact bank, not the CV, is what stops it.")
+    return out
+
+
+def hook_lines(rep: dict) -> list[str]:
+    """The hook (hook.py) as the review screen shows it: the problem, the proof bullet and its number, the headline, and anything
+    that did not land on the CV."""
+    if "hook" not in rep:
+        return []
+    hk = rep["hook"]
+    if not hk:
+        why = "; ".join(rep.get("hook_notes") or [])[:300]
+        return ["Hook: none (hook.enabled is off, or no bullet passed its checks): the CV and letter carry no hook",
+                *([f"  !! why: {why}"] if why else [])]
+    out = [f"Hook {hk.get('hook_id') or '(code template)'}: {hk['problem']} | proof {hk['proof_bullet_id']} ({hk['org']}) | number "
+           f"{hk['number'] or 'NONE'} [{hk['source']}]",
+           f"  headline: {hk['headline']}",
+           f"  profile sentence 1: {hk.get('profile_line', '')}",
+           f"  letter sentence 1: {hk['letter_sentence']}"]
+    placed = rep.get("hook_placed") or {}
+    missing = [k for k in ("headline", "profile", "bullet") if placed and not placed.get(k)]
+    if missing:
+        out.append("  !! hook missing from the CV: " + ", ".join(missing))
+    out += [f"  FLAG: {f}" for f in hk.get("flags") or []]
+    return out
+
+
 def work_country_lines(job, settings=None) -> list[str]:
     """W (the country the work is done in) with the evidence sentence, and the visa answers that country gets (apply/visa.py)."""
     if settings is None:
@@ -111,6 +254,14 @@ def shown_location(job, settings=None) -> str:
     return visa.displayed_location(job, workcountry.applicant_visa(settings)) or "?"
 
 
+def pdf_created(path) -> str:
+    """" (created 2026-10-17 16:03:12)" for a PDF that exists (its file time), else "": the review screen shows when the CV was made."""
+    try:
+        return " (created " + datetime.fromtimestamp(Path(path).stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S") + ")"
+    except (OSError, TypeError, ValueError):
+        return ""
+
+
 def summary(job, rep: dict, settings=None) -> str:
     f = rep["final"]
     all_flags = json.loads(job["flags"] or "[]")
@@ -127,12 +278,20 @@ def summary(job, rep: dict, settings=None) -> str:
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})"
         + (f" - {'; '.join(sponsor_notes)} (information only; a weight on priority, not a reason to skip)" if sponsor_notes else ""),
         pr.line(),
+        f"Posted: {freshness.describe(job)}",
         *work_country_lines(job, settings),
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
         f"| band: {f['band']} | pages {f['pages']}"
-        + (f" (page 2 {f['page2_fill']:.0%} full)" if f.get("page2_fill") else "") + f" | attempts {len(rep['attempts'])}",
+        + f" | attempts {len(rep['attempts'])}",
+        *ats_lines(rep),
+        *hook_lines(rep),
+        *letter_lines(rep),
+        *fill_lines(rep, settings),
+        *typography_lines(rep),
+        *ranking_lines(rep),
         (f"Letter score {letter['score']:.0%}" if letter.get("score") is not None
          else "Letter: off (letter.mode: off; write your own, or apply without)" if letter.get("status") == "off"
+         else "Letter: none (you chose to go without one)" if letter.get("status") == "declined"
          else "Letter: none")
         + (f" | letter issues: {letter['problems']}" if letter['problems'] else ""),
     ]
@@ -177,7 +336,9 @@ def summary(job, rep: dict, settings=None) -> str:
     warns = [w for a in rep["attempts"] for w in a["warnings"]]
     if warns:
         lines.append("Warnings: " + "; ".join(warns[:4]))
-    lines += [f"Profile: {rep['context']['profile']}", f"CV: {rep['cv_pdf']}", f"Letter: {rep['letter_pdf'] or '(none)'}"]
+    lines += [f"Profile: {rep['context']['profile']}", f"CV: {rep['cv_pdf']}{pdf_created(rep['cv_pdf'])}", f"Letter: {rep['letter_pdf'] or '(none)'}"]
+    if letter.get("status") == "off":
+        lines.append("letter: off")
     used = usage_lines(rep)
     if used:
         lines += ["LLM tokens by model:", *used]
@@ -254,8 +415,33 @@ def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings) -> dict:
     """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log."""
     rep = _regenerate_letter(job, fb, llm, settings, rep)
     db.update_job(job["id"], letter_score=rep["letter"]["score"])
-    db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"]})
+    db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"], **({"choice": rep["letter_choice"]} if rep.get("letters") else {})})
     return rep
+
+
+def cycle_letter(db: DB, job, rep: dict) -> dict:
+    """Review's `l` in hook mode: the chosen letter goes A -> B -> none -> A (a variant that was not produced is skipped). The choice
+    is what `report["letter"]` / `letter_pdf` show and so what the apply assist uploads and the archive keeps; no model is called.
+    Choosing none is yours: approving then needs no extra words."""
+    letters = rep.get("letters")
+    if not letters:
+        raise ValueError("this job has no letter variants (letter.mode is not hook)")
+    choice = letters_mod.next_choice(letters, letters.get("choice", "none"))
+    any_ok = any((letters.get(v) or {}).get("status") == "ok" for v in letters_mod.VARIANTS)
+    letters["choice"], letters["declined"] = choice, choice == "none" and any_ok
+    rep["letter_choice"], rep["letter"] = choice, letters_mod.current(letters)
+    rep["letter_pdf"] = rep["letter"].get("pdf")
+    cv = Path(rep["cv_pdf"])
+    if cv.exists():
+        refresh_ats(rep, pdf_text(cv))
+    (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    db.update_job(job["id"], letter_score=rep["letter"].get("score"))
+    db.log(job["id"], "review", {"letter_choice": choice})
+    return rep
+
+
+def note_path(rep: dict) -> Path:
+    return Path(rep["out_dir"]) / "note.md"
 
 
 def reject(db: DB, job, rep: dict, prefs: Path, reason: str) -> None:
@@ -291,9 +477,14 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
         _log(prefs, {"kind": "edit_pair", "job_id": job["id"], "bullet_id": "profile", "source": fb["profile_facts"],
                      "keywords": rep["keywords"], "chosen": edited["profile"].strip(), "rejected": ctx["profile"]})
         ctx["profile"] = edited["profile"].strip()
+    typo = rep.get("typography") or {}
+    sep, keep = typo.get("date_separator") or DATE_SEPARATOR, typo.get("keep") or []
     pdf = render_cv(ctx, Path(rep["out_dir"]), Path(rep["cv_pdf"]).stem,     # keep the CV's final file name and layout
-                    bool(rep.get("one_page")))
-    s = score(pdf_text(pdf), kws)
+                    bool(rep.get("one_page")), sep, keep)
+    rep["typography"] = typography_report(ctx, pdf_text(pdf), sep, keep)
+    s = ats.score(pdf_text(pdf), kws)
+    refresh_ats(rep, pdf_text(pdf))
+    note_mod.write(job, rep, fb, Path(rep["out_dir"]))                 # the note carries the ATS numbers: keep it current
     pages = page_count(pdf)
     rep["final"].update({"score": s.literal, "score_stemmed": s.stemmed, "pages": pages,
                          "page2_fill": page2_fill(pdf, pages), "edited": True})
@@ -304,8 +495,10 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
 
 
 # ---------------------------------------------------------------- interactive loop
-MENU = {"a": "[a]pprove", "e": "[e]dit", "r": "[r]eject", "l": "[l]etter regenerate", "o": "[o]pen PDFs", "s": "[s]kip",
-        "q": "[q]uit"}
+MENU = {"a": "[a]pprove", "e": "[e]dit", "r": "[r]eject", "l": "[l]etter regenerate", "g": "[g]enerate letters again",
+        "n": "[n]ote", "o": "[o]pen PDFs", "s": "[s]kip", "q": "[q]uit"}
+MENU_ORDER = "aerlgnosq"
+HOOK_L = "[l]etter A/B/none"              # `l` in hook mode: the label shown instead of MENU["l"]
 
 
 def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge.Verdict | None:
@@ -330,7 +523,7 @@ def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge
     return v
 
 
-def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlosq",
+def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlgnosq",
                skip_means_no: bool = False) -> str:
     """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'quit'. `allow` names the choices
     offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, s skip, q quit); `ask` answers the
@@ -350,13 +543,14 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
     verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)
     if (mode == "gate" and verdict is not None and verdict.yes
             and not [x for x in json.loads(job["flags"] or "[]") if not is_sponsor_flag(x)]
-            and letter_status(rep) in ("ok", "off")):
+            and letter_status(rep) in ("ok", "off", "declined")):
         approve(db, job, rep, prefs)
         judge.log_decision(settings, job, rep, verdict, "auto", "gate: judge yes, no flags")
         db.log(job["id"], "review", {"auto_approved_by_judge": verdict.model, "score": verdict.score})
         print("  Judge gate: approved without the prompt (judge yes, no flags). Whether to open the form is still yours.")
         return "approved"
-    menu = "  ".join(MENU[c] for c in "aerlosq" if c in allow)
+    hook_mode = bool(rep.get("letters"))
+    menu = "  ".join((HOOK_L if hook_mode and c == "l" else MENU[c]) for c in MENU_ORDER if c in allow and (c != "g" or hook_mode))
     while True:
         c = ask(f"{menu} > ").strip().lower()
         if c not in allow:
@@ -378,9 +572,22 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 continue
             judge.log_decision(settings, job, rep, verdict, "approve")
             return "approved"
-        elif c == "l":
+        elif c == "n":
+            if note_path(rep).exists():
+                open_file(str(note_path(rep)))
+                print(f"  note: {note_path(rep)}")
+            else:
+                print("  no note.md for this job (it is written when the job is tailored)")
+        elif c == "g" and not hook_mode:
+            print("  [g] writes the A / B letters again: it is for letter.mode: hook")
+        elif c == "l" and hook_mode:
+            rep = cycle_letter(db, job, rep)
+            job = db.job(job["id"])
+            print("\n".join(letter_lines(rep) + ats_lines(rep)[:1]))
+            verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # another letter: judge this version
+        elif c in ("l", "g"):
             if letter_status(rep) == "off":
-                print("  letter.mode is off: set letter.mode: draft in config/settings.yaml to have a letter drafted")
+                print("  letter.mode is off: set letter.mode: draft (or hook) in config/settings.yaml to have a letter drafted")
                 continue
             if make_llm is None:
                 print("  no LLM available for this run")

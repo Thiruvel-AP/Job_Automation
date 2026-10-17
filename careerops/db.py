@@ -116,7 +116,8 @@ COLUMNS = [
     ("jobs", "work_country", "TEXT"),    # W: ISO code of the country the work is done in (discovery/workcountry.py); NULL = unknown
     ("jobs", "work_evidence", "TEXT"),   # the header / sentence W rests on (home hidden for a remote role), or "set by you: ..."
     ("jobs", "seen_on", "TEXT"),         # YYYY-MM-DD discover first saw the job (an alert's date or the first run): R counts from here, not from posted_at
-    ("jobs", "open_listing", "INTEGER"), # 1 = it was on the employer's own board when discover read it: R never falls under priority.open_listing_floor
+    ("jobs", "open_listing", "INTEGER"), # 1 = it was on the employer's own board when discover read it: kept for the record: the posting is still open when discover read it (no longer a factor in the order)
+    ("jobs", "posted_at_source", "TEXT"),  # where posted_at comes from: greenhouse.first_published | lever.createdAt | ashby.publishedAt | reed.date | adzuna.created | gmail.received | first_seen (discovery/freshness.py)
     ("jobs", "work_location", "TEXT"),   # the location as it may be shown: the remote label for a remote role at home, else NULL (use `location`)
 ]
 
@@ -150,7 +151,7 @@ class DB:
             self.conn.commit()
             return False
         cols = ["id", "source", "company", "title", "location", "url", "apply_url",
-                "description", "posted_at"]
+                "description", "posted_at", "posted_at_source"]
         vals = [job.get(c) for c in cols]
         self.conn.execute(
             f"INSERT INTO jobs ({','.join(cols)}, first_seen, last_seen, updated_at) "

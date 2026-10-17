@@ -12,8 +12,12 @@ from careerops.tailoring.tailor import tailor_job
 pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
 
 
-def test_tailor_loop_end_to_end(tailored):
-    rep, fb, llm = tailored
+def test_tailor_loop_end_to_end(settings, job):
+    from conftest import _fabricating_llm, with_results
+
+    fb = with_results(load_yaml(settings.path("fact_bank")))
+    llm = _fabricating_llm()
+    rep = tailor_job(job, fb, llm, settings, settings.path("outputs"))
     assert Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists()
     assert rep["final"]["pages"] <= 2
     terms = [k["term"] for k in rep["keywords"]]
@@ -22,14 +26,13 @@ def test_tailor_loop_end_to_end(tailored):
     assert "kubernetes" in viol.lower() and "40%" in viol      # guard fired
     # the lie never reached the PDF
     text = pdf_text(Path(rep["cv_pdf"])).lower()
-    assert "kubernetes" not in text and "40%" not in text and "5 years" not in text
-    assert "agentic" in text                                   # evidenced rephrase (az1 terms) survived
+    assert "kubernetes" not in text and "40%" not in text
     assert rep["ceiling"] < 1.0 and any(g.lower() == "kubernetes" for g in rep["genuine_gaps"])
     assert "tailor_cv" not in llm.calls                        # code selects the bullets; the model never does
-    assert llm.calls.count("tailor_profile") == 2              # the lying draft and its one retry
-    assert rep["profile"]["fallback"] and rep["context"]["profile"] == ". ".join(rep["profile"]["facts"]) + "."
+    assert "tailor_profile" not in llm.calls and "hook" not in llm.calls      # the profile and the hook are assembled in code
+    hk = rep["hook"]
+    assert rep["context"]["profile"].startswith(hk["profile_line"]) and all(f.rstrip(".") in rep["context"]["profile"] for f in rep["profile"]["facts"])
     assert 1 <= llm.calls.count("rephrase_bullets") <= 5 * len(rep["attempts"])
-    assert "years-of-experience" in viol                       # the profile guard fired too
 
 
 def test_letter_rules(tailored):

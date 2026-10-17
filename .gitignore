@@ -9,3 +9,7 @@ __pycache__/
 # OAuth client / token files, wherever they end up
 client_secret*.json
 gmail_token.json
+
+# the user's hand-made reference CV and LinkedIn export (personal), and the LinkedIn import's proposal for the fact bank
+config/reference/
+config/profile/fact_bank.proposed.yaml

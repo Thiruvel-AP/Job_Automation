@@ -27,7 +27,7 @@ QUALIFIER_LIST = ("specialised", "specialized", "integrated", "extensive", "exte
                   "advanced", "sophisticated", "significant", "significantly", "substantial", "impressive", "powerful",
                   "innovative", "cutting-edge", "scalable", "efficient", "efficiently", "effective", "effectively",
                   "precise", "precisely", "accurate", "accurately", "instantly", "hands-on", "exceptional", "outstanding",
-                  "excellent", "rigorous", "rigorously", "highly")
+                  "excellent", "rigorous", "rigorously", "highly", "expert", "passionate", "skilled")
 QUALIFIERS = frozenset(QUALIFIER_LIST)
 
 _CLAIM = re.compile(r"^'([^']+)' \(claim\)")
@@ -45,6 +45,16 @@ _BROKEN = (re.compile(r"\b(?:a|an|the|my|our|its|their|with|of|in|on|for|to|at|b
 
 def is_qualifier(word: str) -> bool:
     return word.strip().lower() in QUALIFIERS
+
+
+def unsupported_qualifiers(text: str, source: str) -> list[str]:
+    """The qualifier words (QUALIFIER_LIST) that `text` uses and `source` (the facts it is written from) does not: a profile that
+    calls the candidate "expert", "passionate" or "proven" when no fact says so."""
+    src, out = norm_literal(source), []
+    for w in QUALIFIER_LIST:
+        if re.search(r"(?<![\w-])" + re.escape(w) + r"(?![\w-])", text, re.I) and not _contains(src, norm_literal(w)):
+            out.append(w)
+    return out
 
 
 def prompt_list(evidence_text: str = "") -> list[str]:

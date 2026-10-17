@@ -43,6 +43,8 @@ Rules:
   copying its numbers exactly. Use no number that is not in TEXT or RESULT.
 - An EXACT FORM line names a keyword the TEXT already says in another form (the TEXT has "prototyped", the keyword is
   "prototyping"): rewrite the sentence so it contains the keyword in exactly that form, and change nothing else.
+- A SHORTEN line gives a maximum number of words (the sentence prints too long): reword it to fit, dropping detail but keeping
+  the action, the tools it names and every number it states, and add nothing. It stays one sentence.
 - If a keyword does not fit naturally, return the bullet's TEXT unchanged.
 - Never mention: {deny}."""
 
@@ -50,21 +52,6 @@ REPHRASE_USER = """TARGET ROLE: {title}
 
 BULLETS:
 {bullets}"""
-
-PROFILE_SYSTEM = """You write the profile line of a CV from exactly two facts about the candidate.
-Return JSON: {"facts": ["F1", "F3"], "profile": "<HEADLINE> with ..."}
-Rules:
-- facts: the ids of the TWO facts in FACTS that matter most for the TARGET ROLE.
-- profile: 1-2 sentences, at most 45 words, starting with the HEADLINE and built only from those two facts.
-  No number, tool, employer, course or outcome that is not in them. No years-of-experience claim.
-  Do not copy phrases from the job description.
-- Never mention: {deny}."""
-
-PROFILE_USER = """TARGET ROLE: {title} at {company}
-HEADLINE: {headline}
-
-FACTS:
-{facts}"""
 
 LETTER_SYSTEM = """You write short cover letters from two pieces of evidence only.
 Return JSON: {"paragraphs": ["..", "..", ".."]}
@@ -101,7 +88,9 @@ Rules:
 LETTER_FIELDS_NOTE = """
 - Each EVIDENCE item is given as fields: method (tools and techniques), data (what was worked on) and outcome (the stated
   result). There is no ready sentence: write your own from the fields, using only what they say. A field marked
-  (not stated) is unknown: say nothing about it. Read "EVIDENCE lines" above as these items."""
+  (not stated) is unknown: say nothing about it. Read "EVIDENCE lines" above as these items.
+- method is a set of tools, not a sentence: never copy it back as a list. Three or more tool or skill names in a row, and a
+  technology written in lower case (write Docker, AWS, FastAPI, Python, TensorFlow, Keras), are rejected by the check."""
 
 LETTER_USER = """ROLE: {title} at {company}
 COMPANY HOOK (from JD): {company_hook}
@@ -109,16 +98,3 @@ GAPS (required tools/platforms/languages/frameworks, absent from the fact bank):
 AVOID (do not use these words, the evidence does not support them): {avoid}
 EVIDENCE:
 {evidence}"""
-
-PROFILE_RETRY_SYSTEM = """You rewrite ONE CV profile so that it passes a faithfulness check. Return JSON: {"profile": ".."}
-Rules:
-- 1-2 sentences, <= 45 words, written as "<HEADLINE> with ...".
-- Use only the SOURCE FACTS below. No numbers, tools, employers or outcomes that are not in them.
-- No years-of-experience claims. Do not copy phrases from the job description.
-- Fix every problem listed. Never mention: {deny}."""
-
-PROFILE_RETRY_USER = """HEADLINE: {headline}
-PREVIOUS PROFILE: {previous}
-PROBLEMS FOUND: {problems}
-SOURCE FACTS:
-{source}"""

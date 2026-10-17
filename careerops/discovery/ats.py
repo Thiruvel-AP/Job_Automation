@@ -76,7 +76,7 @@ class Posting:
     location: str
     url: str
     description: str
-    posted_at: str | None = None
+    posted_at: str | None = None        # the source's own posting time (freshness.py): Greenhouse first_published, Lever createdAt, Ashby publishedAt
     country: str = ""
     listed: bool = True
 
@@ -206,7 +206,7 @@ def parse_postings(ats: str, data, name: str) -> list[Posting]:
         for j in (data or {}).get("jobs", []) if isinstance(data, dict) else []:
             out.append(Posting(str(j.get("id")), name, str(j.get("title") or ""), str((j.get("location") or {}).get("name") or ""),
                                str(j.get("absolute_url") or ""), html_to_text(j.get("content")),
-                               j.get("first_published") or j.get("updated_at")))
+                               j.get("first_published")))             # never updated_at: it resets when a job is reposted
     elif ats in LEVER:
         for j in data if isinstance(data, list) else []:
             parts = [j.get("descriptionPlain") or html_to_text(j.get("description"))]

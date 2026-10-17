@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import subprocess
+from datetime import date, datetime
 from pathlib import Path
 
 import requests
@@ -203,7 +204,7 @@ def _feature_on(mode_of, settings) -> bool:
 
 
 def model_checks(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
-    """Doctor lines for every model a task can be sent to: extract_keywords, tailor_profile, rephrase_bullets, cover_letter,
+    """Doctor lines for every model a task can be sent to: extract_keywords, rephrase_bullets, cover_letter,
     judge (and any other task the settings name), on each provider the router may try for it. Each model answers a tiny
     request (a few tokens, counted against that model's own daily budget), once however many tasks it serves; a failure is
     reported per task with its kind (model_not_found, auth, timeout, unreachable, rate_limited ...) and what to do. A task
@@ -262,6 +263,33 @@ def judge_checks(settings) -> list[tuple[str, bool, str]]:
              f"(family {judge.model_family(judge.judge_model(settings)['model'])})", True, "")]
 
 
+MSC_RESULTS_DAY = date(2026, 11, 24)        # the day the MSc results come out: "Distinction (Expected)" must be replaced by the real grade
+GMAIL_TOKEN_WARN_DAYS = 6                   # a Gmail grant made while the OAuth app is in Testing lapses after about 7 days
+
+
+def reminder_checks(settings, today: date | None = None, now: datetime | None = None) -> list[tuple[str, object, str]]:
+    """Warnings only (they never fail the doctor), and only when one applies: (1) from 2026-11-24 on, the fact bank's MSc entry whose
+    `note` still says "Expected"; (2) the Gmail sign-in (paths.secrets/gmail_token.json) more than 6 days old. Read only."""
+    from .config import load_yaml
+    from .discovery import gmail
+
+    out: list[tuple[str, object, str]] = []
+    today = today or date.today()
+    path = settings.path("fact_bank")
+    if today >= MSC_RESULTS_DAY and path.exists():
+        for ed in (load_yaml(path) or {}).get("education") or []:
+            label = " ".join(str(ed.get(k) or "") for k in ("degree", "title", "name"))
+            if re.search(r"\bmsc\b", label, re.I) and re.search(r"\bexpected\b", str(ed.get("note") or ""), re.I):
+                out.append((f"fact bank: the MSc note still says \"{ed['note']}\" ({today:%d %b %Y}; the results were due "
+                            f"{MSC_RESULTS_DAY:%d %b %Y})", WARN,
+                            "replace it with your actual grade in config/profile/fact_bank.yaml (you edit that file; the pipeline never does)"))
+    age = gmail.token_age_days(settings, now)
+    if age is not None and age > GMAIL_TOKEN_WARN_DAYS:
+        out.append((f"Gmail sign-in is {age:.0f} days old (it lapses after about 7 while the OAuth app is in Testing)", WARN,
+                    "run `careerops discover --gmail-auth` again before the next `discover --gmail-alerts`"))
+    return out
+
+
 def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs. `ping` = also send each llm.models model a tiny
     request (the only check that spends provider quota)."""
@@ -289,6 +317,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += judge_checks(settings)
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += applicant_checks(settings.path("applicant"))
+    checks += reminder_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

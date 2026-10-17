@@ -4,6 +4,8 @@ so the size of the bank never reaches a prompt."""
 import pytest
 import copy
 
+from conftest import with_results
+
 from careerops.llm.pacing import estimate_tokens
 from careerops.tailoring import tailor
 
@@ -44,18 +46,18 @@ def test_fixture_fact_bank_calls_fit_the_budget(settings, fb_fixture, job, spy_l
     llm = spy_llm()
     tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
     _all_calls_fit(llm, settings)
-    assert {s["task"] for s in llm.sent} >= {"extract_keywords", "tailor_profile", "cover_letter"}
+    assert {s["task"] for s in llm.sent} >= {"extract_keywords", "cover_letter"} and "tailor_profile" not in {s["task"] for s in llm.sent}
 
 
 def test_a_real_sized_fact_bank_does_not_make_any_call_bigger(settings, fb_fixture, job, spy_llm):
-    big = _big_bank(fb_fixture)
+    big = with_results(_big_bank(fb_fixture))
     llm = spy_llm()
     tailor.tailor_job(job, big, llm, settings, settings.path("outputs"))
     _all_calls_fit(llm, settings)
     batches = [s for s in llm.sent if s["task"] == "rephrase_bullets"]
     assert batches and all(len(s["context"]["bullets"]) <= tailor.REPHRASE_BATCH == 5 for s in batches)
     small = spy_llm()
-    tailor.tailor_job({**job, "id": "manual:small"}, fb_fixture, small, settings, settings.path("outputs"))
+    tailor.tailor_job({**job, "id": "manual:small"}, with_results(fb_fixture), small, settings, settings.path("outputs"))
     biggest = lambda l: max(estimate_tokens(s["system"], s["user"]) for s in l.sent if s["task"] == "rephrase_bullets")
     assert biggest(llm) < 3 * biggest(small)                       # five long bullets, not eight careers
 

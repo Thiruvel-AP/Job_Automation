@@ -35,6 +35,8 @@ def test_settings_carry_the_letter_block(settings):
         "greeting": "Hi {company}{team} team", "greeting_fallback": "Dear {company} hiring team",
         "closing": "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?",
         "closing_fallback": "Could we find twenty minutes to talk about where I could contribute first at {company}?",
+        "greeting_hook": "Dear {company}{team} team", "greeting_agency": "Hi {company} team",     # hook mode (letters.py)
+        "closing_hook": "Could we take 20 minutes to talk about {problem}?",
         "signoff": "With regards", "on_failure": "none", "mode": "draft"}   # draft: the fixture turns the letter on
 
 
@@ -218,7 +220,6 @@ def test_keywords_prompt_asks_for_the_team():
 
 
 def test_cv_prompts_and_selection_follow_the_user_format():
-    assert "45 words" in P.PROFILE_SYSTEM and "starting with the HEADLINE" in P.PROFILE_SYSTEM
-    assert "{headline}" in P.PROFILE_USER and "past-tense" in P.REPHRASE_SYSTEM
+    assert "past-tense" in P.REPHRASE_SYSTEM                                # (the profile has no prompt: it is assembled in code)
     from careerops.tailoring.selection import MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS
     assert (MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS) == ((2, 4), (1, 2), 2)     # 2-4 / 1-2 bullets, exactly 2 projects

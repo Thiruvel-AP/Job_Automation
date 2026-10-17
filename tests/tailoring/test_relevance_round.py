@@ -104,17 +104,16 @@ def test_a_noun_led_bullet_becomes_a_first_person_clause_without_claiming_more_t
 
 
 # ---------------------------------------------------------------- 2. profile facts: same ranking, fixture profile
-def test_the_fixture_profile_gets_the_two_facts_most_relevant_to_the_bank_jd(settings, spy_llm):
+def test_the_fixture_profile_gets_the_two_facts_most_relevant_to_the_bank_jd(settings):
+    from careerops.tailoring.profile import assemble
+
     fb = load_yaml(settings.path("fact_bank"))                      # tests/fixtures/profile: four profile_facts
     facts = fb["profile_facts"]
     assert len(facts) > 2
-    llm = spy_llm({"tailor_profile": lambda ctx: {"facts": ["F1", "F2"], "profile": "Data Scientist with mobile FinTech work."}})
-    job = {"title": "Data Scientist", "company": "Monzo", "description": MONZO}
-    p = tailor.make_profile(job, fb, [Keyword("SQL", 2, True)], "Data Scientist", llm)
+    p = assemble(fb, [Keyword("SQL", 2, True)], MONZO)
     fintech = next(f for f in facts if "FinTech" in f)
-    assert fintech in p["facts"] and len(p["facts"]) == 2 and "F3:" not in llm.sent[0]["user"]
-    assert [f["text"] for f in llm.sent[0]["context"]["facts"]] == p["facts"]       # the model sees exactly those two
-    assert p["facts"] == [facts[i] for i in sorted(tailor.pick_facts(facts, [Keyword("SQL", 2, True)], [], 2, MONZO))]
+    assert fintech in p["facts"] and len(p["facts"]) == 2
+    assert set(p["facts"]) == {facts[i] for i in tailor.pick_facts(facts, [Keyword("SQL", 2, True)], [], 2, MONZO)}
 
 
 def test_two_or_fewer_profile_facts_are_all_used():
@@ -190,9 +189,11 @@ def test_the_lloyds_entry_prints_its_award_once_in_both_cv_templates(template):
 
     assert tex(LLOYDS).count("3rd place") == 1                               # in the name, not again beside it
     other = tex({**LLOYDS, "name": "Lloyd's Banking Group Datathon"})
-    assert other.count("3rd place") == 1 and r"\textit{3rd place}" in other   # an award the name lacks is still shown
+    shown = r"\textit{3rd place}" if template == "cv.tex.j2" else r"\badge{3rd place}"     # cv2: the reference's badge macro
+    assert other.count("3rd place") == 1 and shown in other                    # an award the name lacks is still shown
     gh = tex({**LLOYDS, "github": "https://github.com/x/y"})
-    assert gh.count("3rd place") == 1 and "GitHub" in gh                      # the freed slot shows the link
+    link = "GitHub" if template == "cv.tex.j2" else r"\gh{https://github.com/x/y}"      # cv2: the reference's link macro
+    assert gh.count("3rd place") == 1 and link in gh                          # the freed slot shows the link
 
 
 @pytest.mark.slow

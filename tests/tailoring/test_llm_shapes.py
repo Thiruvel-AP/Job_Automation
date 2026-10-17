@@ -1,8 +1,11 @@
-"""The model's JSON is read, not trusted: extract_keywords / rephrase_bullets / tailor_profile / cover_letter answers in
-unexpected shapes are normalised (drops reported in report.json), a model that fails or answers garbage never fails the
-job (canonical bullets, the two profile facts, the fallback letter), and every raw reply is kept under llm_raw/."""
+"""The model's JSON is read, not trusted: extract_keywords / rephrase_bullets / cover_letter answers in unexpected shapes are
+normalised (drops reported in report.json), a model that fails or answers garbage never fails the job (canonical bullets, the
+assembled profile, the fallback letter), and every raw reply is kept under llm_raw/. (No profile and no hook call since the round of
+17 Oct; a rephrase call is made for a bullet with a `result:` the text does not say: `with_results`.)"""
 import json
 from pathlib import Path
+
+from conftest import with_results
 
 import pytest
 
@@ -29,12 +32,11 @@ def _run(settings, fb, job, llm):
 @pytest.mark.slow
 def test_a_every_raw_reply_is_saved_as_the_model_sent_it(settings, fb_fixture, job, spy_llm):
     llm = spy_llm()
-    rep = _run(settings, fb_fixture, job, llm)
+    rep = _run(settings, with_results(fb_fixture), job, llm)
     names = sorted(p.name for p in (_final(rep) / "llm_raw").iterdir())
-    assert {"extract_keywords-1.json", "tailor_profile-1.json", "cover_letter-1.json"} <= set(names)
-    assert not any(n.startswith("tailor_cv") for n in names)                    # the model no longer selects
+    assert {"extract_keywords-1.json", "cover_letter-1.json"} <= set(names)
+    assert not any(n.startswith(("tailor_cv", "tailor_profile", "hook")) for n in names)    # the model no longer selects, writes the profile or the hook
     assert "rephrase_bullets-1.json" in names
-    assert json.loads(_raw(rep, "tailor_profile-1.json"))["facts"] == ["F1", "F2"]
     raw = json.loads(_raw(rep, "cover_letter-1.json"))["paragraphs"]            # exactly what the model sent ...
     assert rep["letter"]["paragraphs"][:-1] == raw[:-1]                          # ... its body is kept as sent
     assert rep["letter"]["paragraphs"][-1].endswith("?") and rep["letter"]["paragraphs"][-1] != raw[-1]   # its closing is ours
@@ -45,7 +47,7 @@ def _odd_shape(ctx):
     """Wrapped in a key, a list of objects, one with an unknown id, one without an id, one reworded with an invented
     number: every one of them is read or dropped, and what is read is still guarded."""
     first, *rest = ctx["bullets"]
-    items = [{"id": first["id"], "text": first["text"].rstrip(".") + ", covering " + ", ".join(first["introduce"]) + "."}]
+    items = [{"id": first["id"], "text": first["text"].rstrip(".") + ", " + first["result"] + "."}]
     if rest:
         items.append({"id": rest[0]["id"], "rephrased": rest[0]["text"].rstrip(".") + " and cut review time by 40%."})
     return {"rephrased": items + [{"id": "zz9", "text": "a bullet that does not exist"}, {"note": "no id at all"}]}
@@ -53,17 +55,17 @@ def _odd_shape(ctx):
 
 @pytest.mark.slow
 def test_b_odd_shapes_are_read_and_the_reworded_text_is_still_checked(settings, fb_fixture, job, spy_llm):
-    rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
+    rep = _run(settings, with_results(fb_fixture), job, spy_llm({"rephrase_bullets": _odd_shape}))
     rec = rep["attempts"][0]
     assert rec["rephrase"]["accepted"] >= 1 and rec["rephrase"]["blocked"] >= 1
     assert any("new numbers ['40%']" in v for v in rec["violations"])
     texts = " ".join(b for e in rep["context"]["experience"] + rep["context"]["projects"] for b in e["bullets"])
-    assert "40%" not in texts and "covering" in texts
+    assert "40%" not in texts and "kept in daily use" in texts
 
 
 @pytest.mark.slow
 def test_b_every_drop_is_a_warning_in_report_json(settings, fb_fixture, job, spy_llm):
-    rep = _run(settings, fb_fixture, job, spy_llm({"rephrase_bullets": _odd_shape}))
+    rep = _run(settings, with_results(fb_fixture), job, spy_llm({"rephrase_bullets": _odd_shape}))
     saved = json.loads((_final(rep) / "report.json").read_text(encoding="utf-8"))
     warn = saved["attempts"][0]["warnings"]
     assert "rephrase_bullets: answer was wrapped in 'rephrased'; read it" in warn
@@ -88,16 +90,15 @@ GARBAGE = {"profile": "x", "experience": "a1", "projects": 3, "rephrase": 7}
 
 
 @pytest.mark.slow
-def test_c_garbage_answers_leave_canonical_bullets_a_fact_profile_and_a_fallback_letter(settings, fb_fixture, job,
+def test_c_garbage_answers_leave_canonical_bullets_an_assembled_profile_and_a_fallback_letter(settings, fb_fixture, job,
                                                                                       spy_llm):
     settings.raw["letter"]["on_failure"] = "template"          # this test is about the fallback letter
-    llm = spy_llm({"rephrase_bullets": lambda ctx: GARBAGE, "tailor_profile": lambda ctx: GARBAGE,
-                   "cover_letter": lambda ctx: GARBAGE})
-    rep = _run(settings, fb_fixture, job, llm)
+    llm = spy_llm({"rephrase_bullets": lambda ctx: GARBAGE, "cover_letter": lambda ctx: GARBAGE})
+    rep = _run(settings, with_results(fb_fixture), job, llm)
     bidx = tailor.bullet_index(fb_fixture)
     for e in rep["context"]["experience"] + rep["context"]["projects"]:
         assert e["bullets"] == [bidx[i]["text"] for i in e["bullet_ids"]]
-    assert rep["profile"]["fallback"] and len(rep["profile"]["facts"]) == 2
+    assert 1 <= len(rep["profile"]["facts"]) <= 2 and not rep["profile"]["fallback"]       # the profile never depended on the model
     assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] <= settings["scoring"]["max_pages"]
 
 
@@ -107,10 +108,10 @@ def test_c_a_model_that_is_down_for_every_task_still_gets_a_cv_and_a_letter(sett
     def down(ctx):
         raise RuntimeError("all providers failed")
 
-    llm = spy_llm({t: down for t in ("extract_keywords", "rephrase_bullets", "tailor_profile", "cover_letter")})
-    rep = _run(settings, fb_fixture, job, llm)
+    llm = spy_llm({t: down for t in ("extract_keywords", "rephrase_bullets", "cover_letter")})
+    rep = _run(settings, with_results(fb_fixture), job, llm)
     assert Path(rep["cv_pdf"]).exists() and Path(rep["letter_pdf"]).exists() and rep["letter"]["status"] == "fallback"
-    assert rep["profile"]["fallback"] and any("LLM failed" in w for w in rep["attempts"][0]["warnings"])
+    assert rep["profile"]["facts"] and rep["context"]["profile"].startswith(rep["hook"]["profile_line"])
     assert any("failed (all providers failed); canonical wording kept" in w for w in rep["attempts"][0]["warnings"])
 
 
@@ -131,7 +132,7 @@ def test_c_the_raw_answers_of_a_failed_job_are_kept_next_to_it_and_nothing_half_
     failed = next(p for p in out_root.iterdir() if p.name.endswith(".failed"))
     assert sorted(p.name for p in out_root.iterdir()) == [failed.name]          # no job folder, no .partial
     raw = {p.name for p in (failed / "llm_raw").iterdir()}
-    assert {"extract_keywords-1.json", "tailor_profile-1.json"} <= raw
+    assert "extract_keywords-1.json" in raw and "tailor_profile-1.json" not in raw
     assert str(failed / "llm_raw") in str(e.value)
 
 

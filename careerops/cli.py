@@ -36,6 +36,9 @@
                                 the funnel applied -> any reply -> screen -> interview -> offer with 95% Wilson
                                 intervals, split by role family, tier, cv_pages, sponsor_match; --import-archive lists
                                 the archive folders as approximate 'applied' events (dry run; --apply writes the DB only)
+  careerops import-linkedin PDF [--mock] [--fact-bank F] [--out F] [--diff F]
+                                a LinkedIn profile saved as PDF -> config/profile/fact_bank.proposed.yaml (fact-bank schema)
+                                and data/linkedin_diff.md (every mismatch with fact_bank.yaml); fact_bank.yaml is only read
   careerops export              write the Excel view (Jobs, Summary, Outcomes)
   careerops export-prefs        preference log → DPO pairs jsonl
   careerops run                 discover + tailor + export (what cron calls)
@@ -59,6 +62,7 @@ import traceback
 from datetime import date
 from pathlib import Path
 
+from . import ats
 from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
@@ -73,6 +77,8 @@ from .reporting.excel import export
 from .tailoring.queue import order, select_for_run
 from .llm import BudgetExhausted, MockLLM, Router
 from .setup import doctor, init, load_dotenv
+
+STRETCH_FLAG = "Stretch"      # job flag: the honest ATS ceiling is under the band (kept and labelled, never dropped)
 
 
 def _ctx(args):
@@ -207,8 +213,8 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     from .discovery.robots import RobotsCache
 
     s, db = _ctx(args)
-    if getattr(args, "report", False):
-        print(disc.format_report(s))
+    if getattr(args, "report", False) and not sources_asked and not getattr(args, "gmail_auth", False):
+        print(disc.format_report(s))                    # --report alone: counts only; with a source flag it runs the sources first (below)
         return
     if getattr(args, "gmail_auth", False):
         try:
@@ -228,6 +234,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
             fn()
         except Exception as e:  # noqa: BLE001 — one source failing must not lose what the others found
             d.run.notes.append(f"{label}: {type(e).__name__}: {e}")
+            d.run.failures.append(f"{label}: {type(e).__name__}: {e}")
             print(f"  ! {label}: {e}")
         c = d.run.sources.get(label, {})
         print("  " + (", ".join(f"{k} {v}" for k, v in c.items() if v) or "nothing found"))
@@ -243,18 +250,23 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
     print("\n".join(lines))
     if len(d.run.written) > len(lines):
-        print(f"  (the top {len(lines)} of {len(d.run.written)} by priority P = F x S x R)")
+        print(f"  (the top {len(lines)} of {len(d.run.written)} by freshness tier, then priority P = F x S)")
     queued = sum(c.get("to_manual_queue", 0) for c in d.run.sources.values())
     over = sum(c.get("to_manual_queue_overflow", 0) for c in d.run.sources.values())
     if queued or over:
         print(f"{queued + over} link(s) could not be resolved to a full ad: the best {queued} are in {disc.manual_queue_path(s)} "
               "(copy each ad and run `careerops live --clipboard`)" + (f", {over} more in {disc.overflow_path(s)}" if over else ""))
     if any(c.get("role_filtered") or c.get("place_filtered") for c in d.run.sources.values()) and not d.dry_run:
-        print(f"Titles the role / place filters turned away, with the reason: {disc.filtered_path(s)}")
+        print(f"Titles the role / place filters turned away, with the reason: {disc.filtered_path(s, disc.firstseen.day(d.today))}")
     if not d.dry_run:
         disc.save_run(s, d.run)
     if d.run.written and not d.dry_run:
         print("Next: careerops live   (works through the inbox best priority first)")
+    if getattr(args, "report", False):
+        print("\n" + disc.format_report(s))             # the counts per source and the freshness tiers, after this run
+    if d.run.failures:                                  # a scheduled run (scripts/discover.sh) must show as failed
+        print("\nFAILED: " + "; ".join(d.run.failures[:5]), file=sys.stderr)
+        sys.exit(1)
 
 
 def _print_health(s, reg, *, run=None, fetcher=None, cache=None, save: bool = True) -> list:
@@ -438,10 +450,13 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
             off = rep["letter"]["status"] == "off"              # letter.mode: off, no letter was asked for
+            flags = [x for x in json.loads(job["flags"] or "[]") if not x.startswith(STRETCH_FLAG)]
+            if rep.get("stretch"):         # an honest ceiling under the band: kept and labelled, never dropped (and never auto-approved)
+                flags.append(f"{STRETCH_FLAG}: honest ceiling {rep['ceiling']:.0%} is under the {s['scoring']['band'][0]:.0%} band")
             db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
                           ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
                           letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"],
-                          cv_pages=rep["cv_pages"], page2_fill=rep["page2_fill"])
+                          cv_pages=rep["cv_pages"], page2_fill=rep["page2_fill"], flags=flags)
             db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"],
                                          "letter": rep["letter"]["status"]})
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
@@ -451,9 +466,11 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             over = cv_pages > max_pages or (letter_pages != 1 and not pending and not no_letter and not off)
             if rep["letter"]["status"] in ("fallback", "none"):
                 print(f"  letter {letter_summary(rep['letter'])}")
+            if rep.get("ats"):
+                print("  " + ats.AtsScores(**{k: v for k, v in rep["ats"].items() if k in ats.AtsScores.__dataclass_fields__}).line())
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s)"
-                  + (f", page 2 {rep['page2_fill']:.0%} full" + (" (fact bank has no more bullets to add)" if short else "")
+                  + (f", page 2 {rep['page2_fill']:.0%} full" + (" (the fact bank has no more content to add)" if short else "")
                      if not rep["one_page"] else "") + ", "
                   + (f"letter {letter_summary(rep['letter'])}: the job waits as letter_pending" if pending
                      else f"{letter_summary(rep['letter'])}: review asks for 'no letter' to approve" if no_letter
@@ -570,7 +587,7 @@ def cmd_live(args):
             tailor_jobs(db, s, fb, llm, [job], mock=args.mock, re_extract=getattr(args, "re_extract", False))
 
     def review_it(jid: str) -> str:
-        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelosq",
+        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelgnosq",
                                  skip_means_no=True)           # live has no reject key: a skipped job is a "no" for the judge log
 
     def preflight_it(jid: str) -> None:
@@ -592,10 +609,12 @@ def cmd_live(args):
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
               + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now
+              + (" --fresh" if getattr(args, "fresh", False) else "")
               + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else ""))      # resume: not --retailor
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
                              mark_applied=mark_applied_it),
-                max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only).run()
+                max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
+                fresh=getattr(args, "fresh", False)).run()
     if code:
         sys.exit(code)
 
@@ -812,6 +831,34 @@ def cmd_companies(args):
         raise NotImplementedError("M3 — manual queue listing")
 
 
+def cmd_import_linkedin(args):
+    from .tailoring import linkedin
+
+    s = load_settings(args.config)
+    if args.mock:
+        s = mockroot.mock_settings(s)          # the proposal and the diff go under data/mock; the fact bank stays the real one, read-only
+    pdf = Path(args.pdf)
+    if not pdf.is_file():
+        _fail(f"{pdf} not found")
+    fact_bank = Path(args.fact_bank) if args.fact_bank else s.path("fact_bank")
+    out = Path(args.out) if args.out else s.path("fact_bank_proposed")
+    diff = Path(args.diff) if args.diff else s.path("linkedin_diff")
+    try:
+        r = linkedin.import_linkedin(pdf, fact_bank, out, diff)
+    except linkedin.LinkedInError as e:
+        _fail(str(e))
+    p = r["parsed"]
+    print(f"LinkedIn: {len(p['experience'])} experience, {len(p['education'])} education, {len(p['projects'])} projects, "
+          f"{len(p['certifications'])} certifications, {len(p['publications'])} publications, {len(p['languages'])} languages")
+    for w in r["warnings"]:
+        print(f"  ! {w}")
+    print(f"vs {fact_bank.name}: {r['matched']} match, {r['mismatches']} mismatches, {r['unverified']} unverified "
+          f"(the PDF holds only part of that section)")
+    print(f"proposal -> {out}")
+    print(f"mismatches -> {diff}")
+    print(f"{fact_bank.name} was not modified: merge by hand.")
+
+
 def cmd_learning(args):
     from .tailoring import learning
 
@@ -849,7 +896,7 @@ def cmd_judge_report(args):
 
 
 def priority_lines(db: DB, s, n: int = 10) -> list[str]:
-    """The n highest-priority jobs still open (not applied, rejected or skipped): P with its three factors. A weight, not a filter:
+    """The n first jobs still open (not applied, rejected or skipped): freshness tier and age, then P = F x S. An order, not a filter:
     every job is ranked, none is left out."""
     from .discovery import priority as prio
 
@@ -858,7 +905,7 @@ def priority_lines(db: DB, s, n: int = 10) -> list[str]:
     out = []
     for j in ranked:
         p = prio.priority(j, s, tailored=bool(j["out_dir"]))
-        out.append(f"  {p.p:.2f} = {p.f:.2f} x {p.s:.2f} x {p.r:.2f}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
+        out.append(f"  T{p.tier} {p.age():>7}  {p.p:.2f} = {p.f:.2f} x {p.s:.2f}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
     return out
 
 
@@ -879,7 +926,7 @@ def cmd_status(args):
         print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
     top = priority_lines(db, s)
     if top:
-        print("\nTop jobs by priority P = F x S x R (not yet applied):")
+        print("\nTop jobs, freshest tier first, then P = F x S (not yet applied):")
         print("\n".join(top))
     archived = list(db.conn.execute(
         "SELECT c.folder, COUNT(*) AS n FROM archive_index r JOIN archive_index c ON c.kind='company' "
@@ -985,6 +1032,8 @@ def main(argv=None):
     lv = sub.add_parser("live", help="interactive batch: JD files in data/jds/inbox through add-jd, tailor, review, apply "
                                      "assist, with an archive check after every job")
     lv.add_argument("--max", type=int, default=5, help="at most N JD files this session (default 5)")
+    lv.add_argument("--fresh", action="store_true", help="tier 0 only: the inbox files posted at most 24 hours ago (older files stay "
+                                                         "in the inbox, untouched); the order is still P = F x S")
     lv.add_argument("--dry-run", action="store_true", help="stop after tailor + review: no apply step")
     lv.add_argument("--retailor", action="store_true", help="a job already started from this JD is tailored again "
                     "(CV, letter, review) instead of resumed; never an applied job")
@@ -1024,6 +1073,14 @@ def main(argv=None):
                      "(never to the archive)")
     os_.add_argument("--mock", action="store_true", help="use the isolated data/mock database and archive")
     os_.set_defaults(fn=cmd_outcomes)
+    il = sub.add_parser("import-linkedin", help="LinkedIn profile PDF -> fact_bank.proposed.yaml + a list of every mismatch "
+                        "with fact_bank.yaml (read-only towards it)")
+    il.add_argument("pdf", help="the profile saved as PDF, e.g. config/reference/linkedin.pdf")
+    il.add_argument("--fact-bank", help="default: paths.fact_bank (only read)")
+    il.add_argument("--out", help="default: paths.fact_bank_proposed")
+    il.add_argument("--diff", help="default: paths.linkedin_diff")
+    il.add_argument("--mock", action="store_true", help="write the proposal and the diff under data/mock")
+    il.set_defaults(fn=cmd_import_linkedin)
     sub.add_parser("export").set_defaults(fn=cmd_export)
     e = sub.add_parser("export-prefs"); e.add_argument("--out", default="data/feedback/dpo_pairs.jsonl")
     e.set_defaults(fn=cmd_export_prefs)

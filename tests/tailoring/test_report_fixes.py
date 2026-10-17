@@ -386,15 +386,12 @@ def test_normalise_json_reaches_every_string():
 
 @pytest.mark.slow
 def test_llm_text_is_normalised_before_scoring_and_rendering(settings, fb_fixture, job):
-    dirty = "Data Scientist with LLM agent work, it’s real work."
-
-    llm = MockLLM({"tailor_profile": lambda ctx: {"facts": ["F1", "F2"], "profile": dirty},
-                   "extract_keywords": lambda ctx: {"required": [], "preferred": [], "team": "",
+    llm = MockLLM({"extract_keywords": lambda ctx: {"required": [], "preferred": [], "team": "",
                                                     "company_hook": "Northwind’s tools help “oncology” teams."},
                    "cover_letter": lambda ctx: {"paragraphs": ["It’s the work I do.", "I built a non‑linear agent.",
                                                                 "Could we talk briefly?"]}})
     rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
-    assert rep["context"]["profile"] == "Data Scientist with LLM agent work, it's real work."
+    assert rep["context"]["profile"].startswith(rep["hook"]["profile_line"])           # assembled from the bank and the hook, no model text in it
     assert rep["company_hook"] == 'Northwind\'s tools help "oncology" teams.'
     assert rep["letter"]["paragraphs"][0] == "It's the work I do." and " " not in rep["letter"]["paragraphs"][2]
     text = pdf_text(Path(rep["cv_pdf"])) + pdf_text(Path(rep["letter_pdf"]))

@@ -160,7 +160,7 @@ def test_llm_check_checks_the_letter_model_as_well_as_each_provider(groq_setting
 def test_doctor_asks_every_model_a_task_can_use_once_and_reports_it_per_task(groq_settings):
     lines = [(n, ok, h) for n, ok, h in model_checks(groq_settings) if "answers" in n]
     assert [n.split(" (")[0] for n, _, _ in lines] == [
-        "groq/openai/gpt-oss-20b answers for extract_keywords", "groq/openai/gpt-oss-20b answers for tailor_profile",
+        "groq/openai/gpt-oss-20b answers for extract_keywords",
         "groq/openai/gpt-oss-20b answers for rephrase_bullets", f"groq/{LETTER_MODEL} answers for cover_letter",
         "groq/openai/gpt-oss-20b answers for judge"]
     assert all(ok for _, ok, _ in lines) and all("served by" in n for n, _, _ in lines)
@@ -185,7 +185,7 @@ def test_doctor_fails_without_the_key_and_sends_nothing(groq_settings, monkeypat
 
 def test_doctor_no_ping_sends_nothing_and_says_so(groq_settings):
     lines = model_checks(groq_settings, ping=False)
-    assert len(lines) == 5 and all(ok and "not asked (--no-ping)" in n for n, ok, _ in lines) and _S.bodies == []
+    assert len(lines) == 4 and all(ok and "not asked (--no-ping)" in n for n, ok, _ in lines) and _S.bodies == []
     assert any(n.startswith(f"groq/{LETTER_MODEL} for cover_letter") for n, _, _ in lines)
 
 
@@ -210,7 +210,7 @@ def test_doctor_names_a_models_entry_whose_provider_does_not_exist(groq_settings
 def test_doctor_still_asks_the_providers_own_model_when_no_task_has_a_model_of_its_own(groq_settings):
     del groq_settings.raw["llm"]["models"]
     lines = model_checks(groq_settings)
-    assert len(lines) == 5 and all(ok for _, ok, _ in lines) and [b["model"] for b in _S.bodies] == ["openai/gpt-oss-20b"]
+    assert len(lines) == 4 and all(ok for _, ok, _ in lines) and [b["model"] for b in _S.bodies] == ["openai/gpt-oss-20b"]
 
 
 def test_a_connection_failure_is_a_failed_check_not_a_crash(groq_settings, monkeypatch):
@@ -251,7 +251,7 @@ def test_a_task_with_a_feature_that_is_off_asks_nothing(groq_settings):
     groq_settings.raw["review"]["judge"] = "off"
     lines = model_checks(groq_settings)
     answered = [n.split(" (")[0] for n, _, _ in lines if "answers" in n]
-    assert answered == [f"groq/openai/gpt-oss-20b answers for {t}" for t in ("extract_keywords", "tailor_profile", "rephrase_bullets")]
+    assert answered == [f"groq/openai/gpt-oss-20b answers for {t}" for t in ("extract_keywords", "rephrase_bullets")]
     assert ("cover_letter: no model asked (letter.mode is off)", True, "") in lines
     assert ("judge: no model asked (review.judge is off)", True, "") in lines
     assert LETTER_MODEL not in [b["model"] for b in _S.bodies]
@@ -271,7 +271,7 @@ def test_doctor_asks_each_provider_a_task_may_use(settings, db, server, monkeypa
     assert [(p.name, m) for p, m in r.serving("judge")] == [("ollama", "qwen2.5-7b-8k")]
     names = [n.split(" (")[0] for n, ok, _ in model_checks(settings) if "answers" in n]
     assert "ollama/qwen2.5-7b-8k answers for judge" in names and "groq/openai/gpt-oss-20b answers for extract_keywords" in names
-    assert "ollama/qwen2.5-7b-8k answers for extract_keywords" in names and len(names) == 8
+    assert "ollama/qwen2.5-7b-8k answers for extract_keywords" in names and len(names) == 6
 
 
 # ---------------------------------------------------------------- reasoning parameters belong to the model that reasons

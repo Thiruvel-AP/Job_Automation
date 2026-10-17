@@ -14,7 +14,7 @@ CHECK_TIMEOUT_S = 60       # a tiny request: a model that needs longer than this
                            # local model loading onto the GPU is the slow case)
 
 # Every task the pipeline sends to a model. A task listed in llm.models / llm.task_providers but not here is checked too.
-TASKS = ("extract_keywords", "tailor_profile", "rephrase_bullets", "cover_letter", "judge")
+TASKS = ("extract_keywords", "rephrase_bullets", "cover_letter", "judge")
 
 # The kinds `kind` can take, and what to do about each.
 ADVICE = {

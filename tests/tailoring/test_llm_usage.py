@@ -3,6 +3,7 @@ import pytest
 import json
 from pathlib import Path
 
+from conftest import with_results
 from careerops.llm import MockLLM
 from careerops.tailoring import tailor
 from careerops.tailoring.tailor import regenerate_letter
@@ -55,7 +56,7 @@ def test_regenerating_the_letter_adds_its_call_to_the_jobs_usage(settings, fb_fi
 
 def test_usage_is_summed_per_task_with_each_calls_prompt_tokens_in_order(settings, fb_fixture, job):
     llm = UsageLLM()
-    rep = tailor.tailor_job(job, fb_fixture, llm, settings, settings.path("outputs"))
+    rep = tailor.tailor_job(job, with_results(fb_fixture), llm, settings, settings.path("outputs"))
     by = rep["llm_usage"]["by_task"]
     assert list(by) == list(dict.fromkeys(llm.calls))                            # one entry per task, first-call order
     for task, t in by.items():
@@ -89,5 +90,5 @@ def test_the_tailor_command_prints_the_prompt_tokens_of_every_call_by_task(setti
     cli.main(["tailor", "--limit", "1"])
     out = capsys.readouterr().out
     assert "    extract_keywords: 1 call(s), prompt tokens 50, total 70" in out
-    assert "    tailor_profile: 1 call(s), prompt tokens 50, total 70" in out
+    assert "tailor_profile" not in out and "hook:" not in out                     # the profile and the hook are assembled in code
     assert "    cover_letter: 1 call(s), prompt tokens 50, total 70" in out

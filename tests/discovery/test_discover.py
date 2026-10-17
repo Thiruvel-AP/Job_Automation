@@ -87,8 +87,9 @@ def test_the_inbox_file_has_the_headers_live_reads_and_the_ad_text(cfg, db):
     text = read_inbox(cfg, "acme-analytics-ltd-data-scientist-101.txt")
     text2, _ = manual.read_jd(cfg.path("jds") / "inbox" / "acme-analytics-ltd-data-scientist-101.txt")
     assert manual.header_fields(text2) == {"company": "Acme Analytics Ltd", "title": "Data Scientist", "location": "London, UK",
-                                           "url": "https://job-boards.greenhouse.io/acme/jobs/101", "source": "greenhouse", "posted": "2026-10-08",
+                                           "url": "https://job-boards.greenhouse.io/acme/jobs/101", "source": "greenhouse",
                                            "first_seen": "2026-10-10", "listed": "yes"}      # first seen = the run's day; on an employer's board
+    assert "Posted" not in text.split("\n\n")[0]            # this fixture has no first_published (only updated_at, which resets on a repost): no posting time is claimed
     assert text.startswith("Company: Acme Analytics Ltd\nTitle: Data Scientist\nURL: https://job-boards.greenhouse.io/acme/jobs/101\nSource: greenhouse\n")
     assert "Python, SQL and scikit-learn" in text and "<p>" not in text
 
@@ -375,7 +376,7 @@ def test_the_command_prints_the_ten_best_by_priority(cmd, seeded, capsys):
         net.add(f"boards/corp{i:02d}/jobs", board)
     cmd(net, "--ats", "--dry-run", "--limit", "12")
     out = capsys.readouterr().out
-    assert "12 new ad(s) would be written" in out and "(the top 10 of 12 by priority" in out
+    assert "12 new ad(s) would be written" in out and "(the top 10 of 12 by freshness tier, then priority" in out
     assert sum(" | https://" in line for line in out.splitlines() if " x " in line) == 10
 
 

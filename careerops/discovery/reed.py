@@ -16,6 +16,7 @@ import re
 from datetime import datetime, timezone
 from typing import Iterator
 
+from . import freshness
 from .candidate import Candidate, posted_date
 from .http import FetchError, Fetcher
 from .sources import html_to_text
@@ -79,6 +80,7 @@ def to_candidate(d: dict, agency: bool, today: datetime | None = None) -> Candid
         source="reed", company=str(d.get("employerName") or "").strip(), title=str(d.get("jobTitle") or "").strip(),
         location=str(d.get("locationName") or "").strip(), url=str(d.get("jobUrl") or f"https://www.reed.co.uk/jobs/{d.get('jobId')}"),
         description=html_to_text(d.get("jobDescription") or d.get("description")), posted=_iso(d.get("date")),
+        posted_source=freshness.label("reed", "date") if _iso(d.get("date")) else "",
         agency=agency, salary=_salary(d), ext_id=str(d.get("jobId") or ""), closed=_expired(d, today),
         country="GB")                                                    # reed.co.uk is a UK site: any town in it is in the UK
 
