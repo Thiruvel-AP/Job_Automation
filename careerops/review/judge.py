@@ -160,7 +160,7 @@ def cv_text(ctx: dict) -> str:
     skills = ctx.get("skills") or {}
     if skills:
         lines.append("SKILLS")
-        lines += [f"{group}: {', '.join(map(str, items))}" for group, items in skills.items()]
+        lines += [f"{group}: {items if isinstance(items, str) else ', '.join(map(str, items))}" for group, items in skills.items()]
         lines.append("")
     for title, section in (("EXPERIENCE", "experience"), ("PROJECTS", "projects")):
         entries = ctx.get(section) or []

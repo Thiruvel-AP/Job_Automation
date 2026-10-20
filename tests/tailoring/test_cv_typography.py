@@ -114,7 +114,9 @@ def test_hyphens_are_closed_up_by_the_table_and_protected_terms_stay(run):
         if hyphenated in kept:
             continue                                       # a JD keyword spelt with the hyphen is left alone, and listed
         assert hyphenated not in flat and closed in flat, hyphenated
-    assert "scikit-learn" in flat and "https://" not in text
+    urls = re.findall(r"https://\S+", text)                                              # only the project URLs (18 Oct); the header links are short
+    assert "scikit-learn" in flat and "https://github.com/ada-lovelace-test/churn#readme" in urls
+    assert all(u.startswith("https://github.com/ada-lovelace-test/") for u in urls)
     assert "linkedin.com/in/ada-lovelace-test" in flat                              # a URL is never touched
     left = {w.casefold() for w in rep["typography"]["hyphens"]}
     assert "scikit-learn" not in left and "start-up" not in left or "start-up" in kept     # protected terms are not "left over"
@@ -218,7 +220,8 @@ def test_bold_is_only_the_employer_school_project_name_labels_badges_and_results
     body = tex.split(r"\begin{document}")[1]
     t = typography.typeset(rep["context"])                                                  # what the template was given
     lead = re.compile(r"\\item \\textbf\{[^{}]*}")
-    assert len(lead.findall(body)) == len(rep["achievements"]) == 1 and r"\textbf" not in lead.sub("", body)
+    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln)             # the project-link layout (18 Oct) sets its own bold
+    assert len(lead.findall(body)) == len(rep["achievements"]) == 1 and r"\textbf" not in lead.sub("", plain)
     employers = {render.org_parts(e)[0] for e in t["experience"]}
     schools = {render.school_line(e) for e in t["education"]}
     roles, no_loc = _macro(body, "role", 4), _macro(body, "roleNoLoc", 3)
@@ -271,7 +274,7 @@ def test_the_italic_list(run):
     assert any(_plain(s).startswith("Python, scikit-learn") for _, s, _ in _macro(body, "project", 3))   # a stack line
     fonts = subprocess.run(["pdffonts", str(rep["cv_pdf"])], capture_output=True, text=True, check=True).stdout
     names = [ln.split()[0].split("+")[-1] for ln in fonts.splitlines()[2:] if ln.strip()]
-    assert any("Italic" in n for n in names) and any("Bold" in n for n in names) and all(n.startswith("Carlito") for n in names)
+    assert any("Italic" in n for n in names) and any("Bold" in n for n in names) and all(n.startswith(("Carlito", "LMMono10")) for n in names)   # LMMono10: the default \url font, project URLs only
 
 
 # ---------------------------------------------------------------------------------------------------------------- selection

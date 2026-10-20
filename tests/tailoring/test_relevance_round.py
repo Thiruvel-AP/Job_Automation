@@ -192,8 +192,11 @@ def test_the_lloyds_entry_prints_its_award_once_in_both_cv_templates(template):
     shown = r"\textit{3rd place}" if template == "cv.tex.j2" else r"\badge{3rd place}"     # cv2: the reference's badge macro
     assert other.count("3rd place") == 1 and shown in other                    # an award the name lacks is still shown
     gh = tex({**LLOYDS, "github": "https://github.com/x/y"})
-    link = "GitHub" if template == "cv.tex.j2" else r"\gh{https://github.com/x/y}"      # cv2: the reference's link macro
-    assert gh.count("3rd place") == 1 and link in gh                          # the freed slot shows the link
+    link = r"\url{https://github.com/x/y}"                                     # both templates print the URL itself (18 Oct)
+    assert link in gh and "badge" not in gh.split(r"\begin{document}")[1]       # the freed slot shows the link, not the award again
+    if template == "cv.tex.j2":
+        assert gh.count("3rd place") == 1
+    # (cv2 writes the name once per fit/overflow layout of the link; the PDF test below counts what prints)
 
 
 @pytest.mark.slow
@@ -205,6 +208,9 @@ def test_the_lloyds_entry_prints_its_award_once_in_the_pdf(tmp_path):
            "education": [{"degree": "MSc", "org": "Uni", "dates": "2026"}], "certifications": []}
     text = pdf_text(compile_tex(env().get_template("cv2.tex.j2").render(**ctx), tmp_path, "cv"))
     assert text.count("3rd place") == 1
+    ctx["projects"] = [{**LLOYDS, "github": "https://github.com/x/y", "bullets": ["Anomaly detection."]}]          # with a link: the URL takes the tag
+    text = pdf_text(compile_tex(env().get_template("cv2.tex.j2").render(**ctx), tmp_path, "cv_link"))
+    assert text.count("3rd place") == 1 and "https://github.com/x/y" in text
 
 
 # ---------------------------------------------------------------- 5. hook sanity: mirrors / reflects / aligns needs a shared domain term

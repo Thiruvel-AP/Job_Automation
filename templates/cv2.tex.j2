@@ -8,6 +8,10 @@
    coursework label as badge or its link as gh, a skills group through skillgroup (the label on its own navy bold line, the items
    below it), education through roleNoLoc plus a muted small modules line, the certifications are one bullet joined with a middle
    dot, years in italics, after one bold-led bullet per project that moved there for its award (render context `achievements`).
+   A project with a github value prints that URL (url, the default url font) as its right-hand tag; the macro gh stays in the preamble
+   because the preamble is the reference file line for line, but nothing calls it. When the bold name and the URL do not fit on one
+   line the URL goes to the stack line, right-aligned, and when the stack and the URL do not fit together it gets a line of its own:
+   TeX measures both with boxes, so the two never overlap (tailor checks the rendered PDF with layout.link_problems).
    Only a bullet's result text is wrapped in num. Type scale: name 22pt, headline 12pt (one line), headings 13pt, contact line /
    stack line / modules line 10pt (small), everything else 11pt. The vertical margin is repeated in render.CV2_MARGIN_PT (0.5in),
    which turns a PDF's last text line into the page-2 fill: change both together. Only fact-bank values are inserted (after
@@ -116,12 +120,33 @@
 \gap
 \BLOCK{endif}
 \BLOCK{set pp = p|project_parts}
-\BLOCK{set tag}\BLOCK{if pp[1]}\badge{\VAR{pp[1]|e}}\BLOCK{elif p.get('github')}\gh{\VAR{p.github|urlesc}}\BLOCK{endif}\BLOCK{endset}
 \needspace{4\baselineskip}
+\BLOCK{if not pp[1] and p.get('github')}
+\setbox0=\hbox{\textbf{\VAR{pp[0]|inline}}\hspace{1em}\url{\VAR{p.github|urlesc}}}%
 \BLOCK{if p.get('stack')}
-\project{\VAR{pp[0]|inline}}{\VAR{p.stack|e}}{\VAR{tag}}
+\setbox2=\hbox{{\small\textit{\VAR{p.stack|e}}}\hspace{1em}{\small\url{\VAR{p.github|urlesc}}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{\VAR{pp[0]|inline}}\\ {\color{muted}\small\textit{\VAR{p.stack|e}}}\\ \hfill{\small\url{\VAR{p.github|urlesc}}}\par
+\else
+\textbf{\VAR{pp[0]|inline}}\\ {\color{muted}\small\textit{\VAR{p.stack|e}}}\hfill{\small\url{\VAR{p.github|urlesc}}}\par
+\fi
+\else
+\project{\VAR{pp[0]|inline}}{\VAR{p.stack|e}}{\url{\VAR{p.github|urlesc}}}
+\fi
 \BLOCK{else}
-\textbf{\VAR{pp[0]|inline}}\hfill \VAR{tag}\par
+\ifdim\wd0>\linewidth
+\textbf{\VAR{pp[0]|inline}}\\ \hfill\url{\VAR{p.github|urlesc}}\par
+\else
+\textbf{\VAR{pp[0]|inline}}\hfill\url{\VAR{p.github|urlesc}}\par
+\fi
+\BLOCK{endif}
+\BLOCK{else}
+\BLOCK{if p.get('stack')}
+\project{\VAR{pp[0]|inline}}{\VAR{p.stack|e}}{\BLOCK{if pp[1]}\badge{\VAR{pp[1]|e}}\BLOCK{endif}}
+\BLOCK{else}
+\textbf{\VAR{pp[0]|inline}}\hfill \BLOCK{if pp[1]}\badge{\VAR{pp[1]|e}}\BLOCK{endif}\par
+\BLOCK{endif}
 \BLOCK{endif}
 \begin{itemize}
 \BLOCK{for b in p.bullets}

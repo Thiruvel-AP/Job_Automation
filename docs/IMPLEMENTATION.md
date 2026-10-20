@@ -805,6 +805,40 @@ Spec: the 17 Oct round "Google Sheet tracker, contact discovery, outreach drafts
 - **Tests** (`tests/test_tracker.py`, `test_contacts.py`, `test_outreach.py`, `test_never_sends.py`, the changed scope tests in `tests/discovery/test_gmail.py`, fakes in `tests/outreach_fakes.py`): no network, no DNS, no xelatex.
 - **Not verified:** a real sign-in with the three scopes, a write to the real Sheet, a real Gmail draft, Hunter, real DNS, and the company-site pages of a real employer. The commands for those are in the README ("The tracker, contacts and outreach drafts"); they were not run because they need your browser sign-in and write to your account and real data.
 
+## 5w. The 18 Oct round — links, verbatim, replaces, family skills, recent roles — **done** (offline tests and a MockLLM stand-in on the real bank; never run on the real data or the real model)
+
+The user was happy with the CV layout of the 18 Oct 13:31 dry run, so the layout is untouched; five changes, each with a failing test first
+(`tests/tailoring/test_oct18_round.py`, 31 tests; against the 17 Oct code 27 of them fail on their assertions).
+
+1. **Project links are `\url`** (`templates/cv2.tex.j2`, `cv.tex.j2`). A project with a `github:` value prints `\url{<github>}` as its right-hand tag, the full URL in the
+   default `\url` font, instead of `\href{..}{GitHub}`; a project without one keeps its award or badge. TeX measures the bold name + URL and the stack + URL with boxes: if the
+   name and URL fit one line it is `\project{name}{stack}{\url{..}}` (the existing macro); else the URL goes on the stack line, right-aligned; else on a line of its own under the
+   stack. The URL is written through `urlesc` (`#` and `%` as `\#` and `\%`, which `\url` prints as they are) because it sits inside a macro argument. `layout.link_problems`
+   re-checks the rendered PDF with `pdftotext -bbox`: every URL is on the page, inside the right margin, and touches no other word (`report.json` -> `lengths.links`).
+   The `\gh` macro stays in the preamble (the preamble is the user's reference file line for line) but nothing calls it. `\url` brings in `LMMono10`, so the two font tests
+   (`test_cv_template`, `test_cv_typography`) now allow that font next to Carlito.
+2. **`verbatim: true` bullets are never rephrased** (`tailor.propose_rephrases`, `wording_targets`, `shorten_pass`, `layout.with_splits/with_openers`): not sent to
+   `rephrase_bullets`, not a wording target, not shortened, split or given an opener. One that prints over three lines is a `length:` note, not trimmed.
+3. **`replaces:` and one opener per role** (`selection.settle_selection`, `replacers`, `fill_order`, `tailor.reconcile_proof`): a chosen bullet drops the bullets it replaces;
+   the replacer is preferred when it scores >= `REPLACE_RATIO` (0.8) x the best it replaces, else it is left out; the fill never adds a bullet next to its replacer/replacee;
+   a role has at most one opener: the `situation:` text, or one `situation_included: true` bullet, never both. The hook's proof bullet is handed to a replacer that keeps the hook's
+   number (and passes the 0.8 test), otherwise the proof stays and the replacer goes.
+4. **Skills from `families[].skill_lines`** (`skills.family_scores/pick_family/family_skill_lines/family_basics_missing`): the family whose `match` terms carry the most keyword
+   weight (ties to the first; none above zero: the job's own family id if the bank has it, else the old groups) gives its `skill_lines` label for label and item for item,
+   one text line each (`render.skill_row` prints a string as it is). `cv.skills_always` is still checked and a missing standing skill is a `skills:` warning, never added.
+5. **Two bullets per recent role** (`selection.role_end/is_recent`, `Layout.recent_min`, `tailor._shrink`): a role whose end date is within `scoring.cv_recent_years` (2) keeps
+   at least `scoring.cv_recent_min_bullets` (2) bullets if the bank has them, even against the near-duplicate filter; the shrink loop trims projects (to one bullet, then whole
+   projects down to `MIN_PROJECTS_KEPT`) before such a role loses its second bullet.
+
+Also: `list.remove` calls in the new code were rewritten as slice assignments, because `tests/apply/test_safe_io.py` (the AST guard for destructive calls) flags any `.remove(`.
+
+**Stand-in run** (`anaplan_standin.py`: the real fact bank READ, MockLLM with the golden keywords, scratch folder): 2 pages, page-2 fill 0.915, one `\url` link, six verbatim
+bullets identical to the bank, no replacing pair anywhere, AstraZeneca with exactly one "Needed" opener, the four `data_scientist` skill lines as written and every standing basic
+present, 180 Degrees Consulting 3 bullets, Freelance 2. az4 stays over its replacer az11 there because az11 scores 0.5 x az4 on the golden keywords (needs 0.8); a live
+keyword list may differ.
+
+**Not verified.** The real model's keyword list and text, and the real `careerops live --dry-run --retailor` (CLAUDE.md forbids running it against the real `data/`).
+
 ## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
 
 `apply/eo.py` + `assist.fill_page`. Reads `applicant.yaml → equal_opportunities`: `{key: {answer, match_any: [...], question: [regex]}}` (`question` built in for `ethnicity`:

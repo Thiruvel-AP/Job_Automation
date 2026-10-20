@@ -200,8 +200,9 @@ def test_the_body_uses_the_reference_macros():
     body = tex.split(r"\begin{document}")[1]
     assert "\\role{Acme}{Bristol, UK}{Jan 2025 \u2013 Feb 2025}{Analyst}" in body
     assert r"\roleNoLoc{Solo}{2024}{Dev}" in body                                   # no location: the macro without one
-    assert r"\item Replied in \num{3 seconds}." in body and r"\textbf" not in body.replace(r"\textbf{No stack}", "")
-    assert r"\project{Thing}{Python}{\gh{https://github.com/a/b\#c}}" in body
+    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln)           # the project-link layout (18 Oct) sets its own bold
+    assert r"\item Replied in \num{3 seconds}." in body and r"\textbf" not in plain.replace(r"\textbf{No stack}", "")
+    assert r"\project{Thing}{Python}{\url{https://github.com/a/b\#c}}" in body and "{GitHub}" not in body    # the URL itself (18 Oct), not \gh
     assert r"\project{Prize}{R}{\badge{3rd place}}" in body
     assert r"\project{Course work}{Torch}{\badge{MSc Coursework}}" in body           # the coursework label is the badge
     assert r"\textbf{No stack}\hfill \par" in body                                  # no stack: no empty stack line
@@ -329,9 +330,10 @@ def test_snapshot_the_only_font_is_carlito(fixture_run):
     rep, _ = fixture_run
     out = subprocess.run(["pdffonts", str(rep["cv_pdf"])], capture_output=True, text=True, check=True).stdout
     names = [ln.split()[0] for ln in out.splitlines()[2:] if ln.strip()]
-    assert names and all(re.sub(r"^[A-Z]{6}\+", "", n).startswith("Carlito") for n in names), names
+    assert names and all(re.sub(r"^[A-Z]{6}\+", "", n).startswith(("Carlito", URL_FONT)) for n in names), names     # \url's own font: the URLs
 
 
+URL_FONT = "LMMono10"                                                               # the default \url font: used for the project URLs and nothing else
 SECTIONS = ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]
 SIZES = (22, 13, 12, 11, 10)      # the reference's type scale: name, headings, the hook headline under the name (hook.py), body, contact / stack / modules lines
 _WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</word>')
@@ -378,7 +380,7 @@ def test_snapshot_section_order_fonts_and_sizes_from_the_bounding_boxes(fixture_
     # fonts: Carlito, regular / bold / italic, and nothing else
     fonts = subprocess.run(["pdffonts", str(pdf)], capture_output=True, text=True, check=True).stdout
     names = [re.sub(r"^[A-Z]{6}\+", "", ln.split()[0]) for ln in fonts.splitlines()[2:] if ln.strip()]
-    assert names and all(n.startswith("Carlito") for n in names), names
+    assert names and all(n.startswith(("Carlito", URL_FONT)) for n in names), names         # \url's default font (18 Oct) prints the project URLs
     assert {"Carlito-Regular", "Carlito-Bold", "Carlito-Italic"} <= set(names)
 
 
@@ -403,16 +405,19 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
              if re.match(r"^Northwind Research Lab, University of Northfield \u00b7 Bristol, UK\s+May 2026 \u2013 Sep 2026$", ln.strip()))
     assert lines[i + 1].strip() == "Data Scientist (MSc dissertation)"
     assert "\\role{Northwind Research Lab, University of Northfield}{Bristol, UK}{May 2026 \u2013 Sep 2026}{Data Scientist (MSc dissertation)}" in tex
-    # a project: bold name with GitHub at the right, an italic stack line, then bullets
-    assert r"\project{Customer churn prediction}{Python, scikit-learn, XGBoost}{\gh{https://github.com/ada-lovelace-test/churn\#readme}}" in tex
-    assert re.search(r"^Customer churn prediction\s+GitHub$", text, re.M)
+    # a project: bold name with its GitHub URL at the right (\url, 18 Oct), an italic stack line, then bullets
+    assert r"\project{Customer churn prediction}{Python, scikit-learn, XGBoost}{\url{https://github.com/ada-lovelace-test/churn\#readme}}" in tex
+    assert "{GitHub}" not in tex
+    assert re.search(r"^Customer churn prediction\s+https://github\.com/ada-lovelace-test/churn#readme$", text, re.M)
     assert re.search(r"^Python, scikit-learn, XGBoost$", text, re.M)
     # a skill group: the navy label on a line of its own, the items on the lines below it
     assert r"\skillgroup{Machine Learning, Deep Learning \& Statistics}{" in tex and r"\skillgroup{Python, Data Quality \& Cloud}{" in tex
     assert re.search(r"^Machine Learning, Deep Learning & Statistics$", text, re.M)
     # the name in navy; short header links
     assert r"{\fontsize{22}{26}\selectfont\bfseries\color{navy} Ada Lovelace}" in tex and "linkedin.com/in/ada-lovelace-test" in text
-    assert "https://" not in text
+    urls = re.findall(r"https://\S+", text)                                         # only the project URLs: the header links are short
+    assert "https://github.com/ada-lovelace-test/churn#readme" in urls
+    assert all(u.startswith("https://github.com/ada-lovelace-test/") for u in urls)
     # certifications: one bullet joined with a middle dot, the years in italics
     cert = text.split("CERTIFICATIONS & ACHIEVEMENTS")[1]
     assert cert.count("\u2022") == 2 and " \u00b7 " in cert            # the award project's line, then the one certifications bullet

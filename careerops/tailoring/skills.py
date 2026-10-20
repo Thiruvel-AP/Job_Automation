@@ -1,5 +1,11 @@
-"""The CV's skills section: `skills.core` is pinned (first row, the user's order, never dropped), skill names appear once
-across all rows, and the other groups are ordered by the JD. Also the fact-bank checks `careerops doctor` runs on `core`."""
+"""The CV's skills section. Two ways to get it:
+
+  * the role family (`families:` in the fact bank): the family whose `match` terms carry the most JD keyword weight gives its `skill_lines`
+    ({label, items}) label for label and item for item as the user wrote them, no model, no regrouping (`pick_family`, `family_skill_lines`)
+  * without a matching family: `skills.core` is pinned (first row, the user's order, never dropped), skill names appear once across all rows,
+    and the other groups are ordered by the JD (`cv_skill_groups`, `cv_skills`)
+
+Also the fact-bank checks `careerops doctor` runs on `core`."""
 from __future__ import annotations
 
 import re
@@ -76,6 +82,42 @@ def core_skill_problems(fb: dict) -> list[str]:
 
 def _key(skill) -> str:
     return " ".join(str(skill).split()).casefold()
+
+
+# ------------------------------------------------------------------------------------------------------------ role families
+def families(fb: dict) -> list[dict]:
+    """The fact bank's `families` that have an id and `skill_lines`, in the user's order."""
+    return [f for f in fb.get("families") or [] if isinstance(f, dict) and f.get("id") and f.get("skill_lines")]
+
+
+def family_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
+    """{family id: the summed weight of the JD keywords that one of the family's `match` terms carries}, in the user's order."""
+    return {str(f["id"]): round(sum(kws[i].weight for i in set().union(*(_hits(str(t), kws) for t in f.get("match") or []))), 6)
+            for f in families(fb)}
+
+
+def pick_family(fb: dict, kws: list[Keyword], job_family: str | None = None) -> dict | None:
+    """The family with the highest `family_scores` (the earlier one on a tie); when none scores above zero, the family named `job_family`
+    (the job's role family from settings, "data_scientist") if the bank has one; else None."""
+    fams, scores = families(fb), family_scores(fb, kws)
+    best = max(fams, key=lambda f: (scores[str(f["id"])], -fams.index(f)), default=None)
+    if best is not None and scores[str(best["id"])] > 0:
+        return best
+    return next((f for f in fams if job_family and str(f["id"]) == job_family), None)
+
+
+def family_skill_lines(fb: dict, kws: list[Keyword], job_family: str | None = None) -> dict[str, str] | None:
+    """{label: items} of the picked family's `skill_lines`, exactly as written (items is one line of text, not a list), or None."""
+    fam = pick_family(fb, kws, job_family)
+    return {str(l["label"]): str(l["items"]) for l in fam["skill_lines"]} if fam else None
+
+
+def family_basics_missing(lines: dict[str, str], fb: dict, always: list[str]) -> list[str]:
+    """The standing skills (settings cv.skills_always) that the fact bank lists but the family's lines do not mention. The lines are the
+    user's words and are never amended: the pipeline reports this, the user decides."""
+    listed = norm_literal(" ".join(str(s) for items in (fb.get("skills") or {}).values() for s in items))
+    text = norm_literal(" ".join(lines.values()))
+    return [s for s in always if has_literal(listed, norm_literal(s)) and not has_literal(text, norm_literal(s))]
 
 
 def skill_weight(skill: str, kws: list[Keyword]) -> float:

@@ -56,7 +56,7 @@ def test_the_header_has_a_portfolio_label_short_link_forms_and_a_headline_line()
     assert r"\href{https://a-b.example.org/portfolio/}{Portfolio}" in body and "example.org/portfolio/}" not in body.replace(
         r"\href{https://a-b.example.org/portfolio/}", "")                                       # the link text is only "Portfolio"
     assert r"{\fontsize{12}{14}\selectfont\color{navy} Data Scientist \u00b7 " .replace(r"\u00b7", "\u00b7") in body
-    assert r"\url" not in body and r"\gh{https://github.com/a-b/p}" in body                     # project links are \gh, never \url
+    assert r"\project{P}{R}{\url{https://github.com/a-b/p}}" in body and r"\gh{" not in body     # project links are the URL itself (18 Oct), never \gh
 
 
 def test_a_skill_group_puts_its_label_on_a_line_of_its_own():
@@ -408,8 +408,9 @@ def test_the_fixture_cv_follows_the_v2_reference(base):
     for label in LABELS:
         i = lines.index(label)
         assert lines[i + 1] and lines[i + 1] not in LABELS and not lines[i + 1].startswith(label)
-    # no \url (and so no monospace full URL in the PDF); project links read "GitHub"
-    assert r"\url" not in tex and "https://" not in text and re.search(r"^Customer churn prediction\s+GitHub$", text, re.M)
+    # project links are the full URL in \url's default font (18 Oct), never the word "GitHub"
+    assert r"\url{https://github.com/ada-lovelace-test/churn\#readme}" in tex and "{GitHub}" not in tex     # (# is escaped for TeX; the PDF shows it)
+    assert re.search(r"^Customer churn prediction\s+https://github\.com/ada-lovelace-test/churn#readme$", text, re.M)
     # a one-line headline, and the Portfolio label
     assert rep["hook"]["headline"] and layout.measure(pdf).headline_lines == 1 and "Portfolio" in text and "portfolio#top" not in text
     # no hyphenated compound outside the exception list (and the URL / e-mail handles)

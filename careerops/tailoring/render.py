@@ -342,7 +342,10 @@ def achievement_head(a: dict) -> str:
 
 
 def skill_row(items) -> str:
-    """One skills row: every entry as `skill_display` shows it, the first with a capital letter."""
+    """One skills row: every entry as `skill_display` shows it, the first with a capital letter. A row that is one line of text (a role
+    family's `skill_lines` item, as the user wrote it) is printed as it is: its commas are not turned into slashes."""
+    if isinstance(items, str):
+        return inline(items)
     shown = [skill_display(s) for s in items]
     if shown and shown[0][:1].islower():
         shown[0] = shown[0][0].upper() + shown[0][1:]

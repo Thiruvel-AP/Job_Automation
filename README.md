@@ -574,7 +574,11 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   job title in italics on the next line. A project is `\project{name}{stack}{tag}`: the bold name, an italic muted stack line
   and a tag at the right, which is the award, else the project's own `badge:` (a short label you write in the fact bank, e.g. `Open source`;
   printed once if its text is already in the name), or a `(coursework)` / `(MSc coursework)` ending of the name as a navy `\badge`
-  (`MSc Coursework`; a project with a GitHub link keeps its name and shows the link instead), else the link as `\gh` (`GitHub`).
+  (`MSc Coursework`; a project with a GitHub link keeps its name and shows the link instead), else its `github:` URL itself, `\url{https://github.com/...}`
+  in the default `\url` font (since 18 Oct; the `\gh` macro stays in the preamble, which is the reference file line for line, but nothing calls
+  it). When the bold name and the URL do not fit one line the URL moves to the stack line, right-aligned, and when the stack and the URL do not fit
+  together it gets a line of its own: TeX measures both with boxes, so they never overlap, and `layout.link_problems` re-checks the rendered
+  PDF's word boxes (`pdftotext -bbox`): every URL is on the page, inside the margin, touching no other word (`report.json` → `lengths.links`).
   A skills group is `\skillgroup`: the navy bold label on a line of its own and its items below it (the first item of each group
   starts with a capital). There are four groups, in this order: Machine Learning, Deep Learning & Statistics · Python, Data Quality &
   Cloud · NLP, LLMs & Evaluation · Client Delivery & Communication (`cv.skill_groups` in `config/settings.yaml`: each fact-bank skill
@@ -584,9 +588,20 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   specific skill of it (AWS Lambda) is listed; TypeScript and JavaScript (`cv.skills_when_asked`) are shown only when the ad names them; a group
   with no skill row of its own but `from_terms` shows the matching `terms:` you wrote on your bullets, e.g. Client Delivery & Communication).
   A group the fact bank has nothing for is left off and the review
-  screen says so. A project with an `award:` that the JD does not rank in its top three moves to Certifications & Achievements as a
+  screen says so. **Role families (18 Oct):** when the fact bank has `families:` (each `id`, `match` terms, `skill_lines` of `label` + `items`), the
+  family whose `match` terms carry the most JD keyword weight (ties to the first, none above zero: the job's own role family if the bank has one of
+  that id, else the groups above) gives the Skills section: its `skill_lines` label for label and item for item, as one line of text each, no
+  model and no regrouping, in the same `\skillgroup` layout. `skills_always` is still checked: a standing skill the bank lists but the lines do
+  not mention is a `skills:` warning, never added to your words (`report.json` → `skills.family`). A project with an `award:` that the JD does not rank in its top three moves to Certifications & Achievements as a
   bold first line. An experience or project with `situation:` in the fact bank opens its first bullet with "<situation>: " (STAR);
-  the model never writes it. Length rules, measured on the PDF: a bullet is at most 3 lines (longer: back to its fact-bank wording,
+  the model never writes it. Bullet flags in the fact bank (18 Oct): `verbatim: true` = the bullet is used word for word (never reworded by
+  `rephrase_bullets`, the wording pass or the shorten pass, never split, never given an opener; one that prints over three lines is reported, not
+  trimmed); `replaces: [ids]` = the bullet stands in for those older ones: when it is chosen they are never on the CV, and where one of them would
+  have been chosen the replacer is chosen instead if it scores at least 0.8 x the best bullet it replaces (a replacer below that is left out; the
+  hook's proof bullet is handed over to a replacer that says the hook's number, else it stays and the replacer goes); `situation_included: true` =
+  the bullet starts with its own situation: at most one per role, and then the role's `situation:` text is not added. A role dated within the last
+  two years (`scoring.cv_recent_years`) keeps at least two bullets (`scoring.cv_recent_min_bullets`) if the bank has them: the shrink loop trims
+  the projects (to one bullet, then whole projects) before such a role loses its second bullet. Length rules, measured on the PDF: a bullet is at most 3 lines (longer: back to its fact-bank wording,
   else split at a sentence or semicolon, else reworded shorter by the model, else reported), the profile at most 7 lines (the hook
   sentence first), the 12pt headline exactly one line (its trailing stack list is dropped first). The contact line shows the
   portfolio as just "Portfolio". Education is `\roleNoLoc` (school with its location, dates, the degree with its grade and note) and, below, a muted

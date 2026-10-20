@@ -5,7 +5,11 @@
                never cut mid-clause. A bullet that still does not fit is reported, not trimmed.
   * profile  — at most MAX_PROFILE_LINES lines, the hook sentence first; whole sentences after it are dropped until it fits.
   * headline — one line (the 12pt line under the name); the tail is shortened a clause at a time, the trailing stack list first.
-  * STAR     — an experience or project entry with `situation:` in the fact bank opens its first bullet with "<situation>: ".
+  * STAR     — an experience or project entry with `situation:` in the fact bank opens its first bullet with "<situation>: ", unless that
+               bullet is `verbatim` (never touched) or the entry shows a `situation_included` bullet (it has its own opener: one per role).
+  * links    — a project's GitHub URL is printed in the right-hand tag, or on the stack line when the name leaves no room (the template
+               decides with TeX's own box widths); `link_problems` checks the rendered PDF's word boxes: every URL is there, inside the
+               margin, and touches no other word.
 
 Measuring uses `pdftotext -bbox-layout` (the line boxes the PDF really has): the 12pt headline lines, the lines between the PROFILE
 and SKILLS headings, and the lines of every bullet (a bullet starts at a line whose first word is the bullet dot and goes on
@@ -27,6 +31,21 @@ DOT = "•"
 _LINE = re.compile(r'<line xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</line>', re.S)
 _WORD = re.compile(r"<word [^>]*>(.*?)</word>", re.S)
 _PAGE = re.compile(r"<page [^>]*>(.*?)</page>", re.S)
+_BOXED_PAGE = re.compile(r'<page width="([\d.]+)" height="[\d.]+">(.*?)</page>', re.S)
+_BOXED_WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">(.*?)</word>', re.S)
+SIDE_MARGIN_PT = 0.6 * 72            # templates/cv2.tex.j2: geometry margin=0.6in
+
+
+@dataclass
+class Word:
+    """One word of the PDF with its box in points (pdftotext -bbox), and the width of its page."""
+    page: int
+    x0: float
+    y0: float
+    x1: float
+    y1: float
+    text: str
+    page_w: float = 595.276
 
 
 @dataclass
@@ -59,6 +78,34 @@ def pdf_lines(pdf: Path) -> list[Line]:
                 out[-1].x = min(out[-1].x, r.x)
             else:
                 out.append(r)
+    return out
+
+
+def pdf_words(pdf: Path) -> list[Word]:
+    """Every word of the PDF with its box, in reading order (`pdftotext -bbox`)."""
+    xml = subprocess.run(["pdftotext", "-bbox", str(pdf), "-"], capture_output=True, text=True).stdout
+    return [Word(n, float(m[1]), float(m[2]), float(m[3]), float(m[4]), html.unescape(m[5]), float(width))
+            for n, (width, body) in enumerate(_BOXED_PAGE.findall(xml), 1) for m in _BOXED_WORD.finditer(body)]
+
+
+def _touch(a: Word, b: Word, pad: float = 0.3) -> bool:
+    return a.page == b.page and a.x0 < b.x1 - pad and b.x0 < a.x1 - pad and a.y0 < b.y1 - pad and b.y0 < a.y1 - pad
+
+
+def link_problems(pdf: Path, urls: list[str]) -> list[str]:
+    """What is wrong with the project links on the rendered PDF, from its word boxes (never from the source text): a URL that is not on the
+    page, one that reaches past the right margin, one whose box touches another word's box. [] = all clear."""
+    words, out = pdf_words(pdf), []
+    for url in urls:
+        mine = [w for w in words if w.text == url]
+        if not mine:
+            out.append(f"{url} is not on the page")
+        for w in mine:
+            if w.x1 > w.page_w - SIDE_MARGIN_PT + 1.5:
+                out.append(f"{url} runs past the right margin")
+            clash = [o.text for o in words if o is not w and _touch(w, o)]
+            if clash:
+                out.append(f"{url} overlaps {', '.join(clash[:3])}")
     return out
 
 
@@ -164,13 +211,17 @@ def opener(situation) -> str:
 def with_openers(ctx: dict) -> dict:
     """A copy of `ctx` in which the first bullet of every experience entry and project that has a `situation:` starts with
     "<situation>: " and the (rephrased) action and result after it. Only the first bullet of an entry, once; the model never
-    writes a situation, it is the fact bank's own text."""
+    writes a situation, it is the fact bank's own text. Not when the entry shows a bullet with its own opener (`ctx["situated"]`, the
+    ids of the `situation_included` bullets: one opener per role), and never on a `verbatim` bullet (`ctx["verbatim"]`)."""
     out = dict(ctx)
+    situated, verbatim = set(ctx.get("situated") or ()), set(ctx.get("verbatim") or ())
     for sec in ("experience", "projects"):
         entries = []
         for e in ctx.get(sec) or []:
             sit = opener(e.get("situation"))
-            if sit and e["bullets"] and not e["bullets"][0].startswith(sit):
+            ids = e.get("bullet_ids") or []
+            if (sit and e["bullets"] and not e["bullets"][0].startswith(sit) and not situated & set(ids)
+                    and not (ids and ids[0] in verbatim)):
                 e = {**e, "bullets": [f"{sit}: {_lower_first(e['bullets'][0])}", *e["bullets"][1:]]}
             entries.append(e)
         out[sec] = entries

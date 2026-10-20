@@ -215,6 +215,8 @@ scoring:
   cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
     most_recent: [4, 5]       # the first (newest) entry
     other: [3, 4]             # every other entry; an entry with fewer bullets in the fact bank just shows them all
+  cv_recent_min_bullets: 2    # a role dated within the last cv_recent_years years keeps at least this many bullets (if the bank has them) before any project is added; the shrink loop trims projects first
+  cv_recent_years: 2          # how far back "recent" goes, from today, by the end date of the role
   cv_projects: 5              # projects the two-page CV starts with (by JD relevance)
   cv_project_bullets: [2, 3]  # [min, max] bullets per project (a project with fewer shows them all)
   cv_projects_max: 6          # fill may add projects (best JD match first) up to this many before it adds experience bullets
