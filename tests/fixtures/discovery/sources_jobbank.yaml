@@ -1,0 +1,6 @@
+# The registry the Job Bank tests use: one enabled jobbank_csv source, so they do not depend on the user's own config/sources.yaml
+# (where jobbank-ca is switched off while the search is UK-only).
+sources:
+  - {id: jobbank-ca, name: Job Bank Canada, url: "https://www.jobbank.gc.ca", country: CA, method: jobbank_csv,
+     dataset: ea639e28-c0fc-48bf-b5dd-b8899bd43072,
+     note: "Test copy: the real entry is disabled."}

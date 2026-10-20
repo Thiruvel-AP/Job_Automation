@@ -62,7 +62,7 @@ def fetcher(net, **kw):
 
 @pytest.fixture
 def cfg(settings):
-    shutil.copy(ROOT / "config" / "sources.yaml", Path(settings.raw["paths"]["sources"]))
+    shutil.copy(ROOT / "tests" / "fixtures" / "discovery" / "sources_jobbank.yaml", Path(settings.raw["paths"]["sources"]))
     settings.raw["discover"].update(alert_probes_per_run=0, sources=[])
     return settings
 
@@ -241,6 +241,12 @@ def test_discover_jobbank_prints_the_counts_and_where_the_rows_are(cfg, monkeypa
     net = net_with()
     monkeypatch.setattr(http.requests, "get", lambda url, **kw: net.get(url, **kw))
     monkeypatch.setattr(http.time, "sleep", lambda s: None)
+
+    class Frozen(datetime):                                                                # the CLI reads the clock; the rows are dated October 2026
+        @classmethod
+        def now(cls, tz=None):
+            return TODAY
+    monkeypatch.setattr(disc, "datetime", Frozen)
     cli.main(["discover", "--jobbank"])
     out = capsys.readouterr().out
     assert "discover: jobbank ..." in out and "listed_only 3" in out and "Source health:" in out
