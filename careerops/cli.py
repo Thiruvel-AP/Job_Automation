@@ -188,7 +188,8 @@ def cmd_discover(args):
     """`discover` with a source flag (--ats --reed --adzuna --gmail-alerts) writes ads to data/jds/inbox/; --report prints the counts;
     --gmail-auth signs in to Google once (Gmail read, Gmail drafts, Sheets; never sends). With none of them it keeps its older job: the boards in sources: into the
     database, then triage (what `run` and cron call)."""
-    sources_asked = [n for n in ("ats", "reed", "adzuna", "gmail_alerts", "jobbank") if getattr(args, n, False)]
+    # Alerts first: they are the fresh jobs, and a run takes at most discover.max_new_per_run new files; the boards (older ads) fill what is left.
+    sources_asked = [n for n in ("gmail_alerts", "reed", "adzuna", "ats", "jobbank") if getattr(args, n, False)]
     if getattr(args, "report", False) or getattr(args, "gmail_auth", False) or sources_asked:
         return _discover_inbox(args, sources_asked)
     from .discovery import discover as disc
@@ -217,6 +218,7 @@ def cmd_discover(args):
 
 
 def _discover_inbox(args, sources_asked: list[str]) -> None:
+    from .discovery import applykind
     from .discovery import discover as disc
     from .discovery import gmail
     from .discovery.http import Fetcher
@@ -232,7 +234,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         except gmail.GmailAuthError as e:
             _fail(str(e))
         return
-    fetcher = Fetcher(RobotsCache(s.path("robots")))
+    fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH)       # linkedin, indeed, cv-library and Workday: never asked
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
                       limit=getattr(args, "limit", None))
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
@@ -254,7 +256,11 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         print(f"  note: {n}")
     d.finish()
     if any(c.get("resolved") or c.get("unresolved") for c in d.run.by_source.values()):
-        print("\n".join(disc.resolution_lines(d.run.by_source, "Alerts resolved to a full ad (per source):")))
+        print("\n".join(disc.resolution_lines(d.run.by_source, "Alerts resolved to the employer's page (per source):")))
+        print("\n".join(disc.step_lines(d.run.sources, "Alerts resolved by step:")))
+    alert_check = d.board_check_lines(d.lookup.findings)
+    if alert_check:
+        print("\n".join(alert_check).replace("ats: ", "alerts: ", 1))
     _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
@@ -627,7 +633,7 @@ def cmd_live(args):
             tailor_jobs(db, s, fb, llm, [job], mock=args.mock, re_extract=getattr(args, "re_extract", False))
 
     def review_it(jid: str) -> str:
-        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelgnosq",
+        return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelgnowsq",
                                  skip_means_no=True)           # live has no reject key: a skipped job is a "no" for the judge log
 
     def preflight_it(jid: str) -> None:

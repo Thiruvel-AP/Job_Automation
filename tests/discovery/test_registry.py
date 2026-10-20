@@ -11,7 +11,8 @@ from careerops.discovery import countries, registry
 from careerops.discovery.candidate import Candidate
 from careerops.discovery.registry import Registry, RegistryError, Source
 
-SHIPPED = ROOT / "config" / "sources.yaml"
+SHIPPED = ROOT / "config" / "sources.yaml"                     # yours to edit: only its shape is tested
+FROZEN = ROOT / "tests" / "fixtures" / "discovery" / "sources_registry.yaml"      # the registry as committed on 2026-10-13: what the behaviour tests read
 
 # the sources the registry was asked to seed, by the name the health table shows
 ASKED = ["LinkedIn", "CV-Library", "AIApply", "Greenhouse boards", "Indeed UK", "Glassdoor UK", "Welcome to the Jungle", "Wellfound",
@@ -21,8 +22,16 @@ ASKED = ["LinkedIn", "CV-Library", "AIApply", "Greenhouse boards", "Indeed UK", 
 
 @pytest.fixture
 def shipped(settings) -> Registry:
-    shutil.copy(SHIPPED, Path(settings.raw["paths"]["sources"]))
+    shutil.copy(FROZEN, Path(settings.raw["paths"]["sources"]))
     return registry.load(settings)
+
+
+def test_the_live_registry_file_is_valid_and_lists_each_source_once(settings):
+    """config/sources.yaml is edited by hand (sources switched off, added, removed): it must load, and no id or name may repeat."""
+    shutil.copy(SHIPPED, Path(settings.raw["paths"]["sources"]))
+    live = registry.load(settings)
+    assert len(live) and len({s.id for s in live}) == len(live) and len({s.name for s in live}) == len(live)
+    assert all(s.method in registry.METHODS and s.url.startswith("https://") for s in live)
 
 
 def entry(**kw) -> dict:

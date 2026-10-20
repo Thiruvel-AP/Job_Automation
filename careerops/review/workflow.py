@@ -23,7 +23,7 @@ from .. import ats
 from .. import note as note_mod
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
-from ..discovery import freshness, priority as prio
+from ..discovery import applykind, freshness, priority as prio
 from ..discovery.gates import is_sponsor_flag
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
@@ -275,9 +275,12 @@ def summary(job, rep: dict, settings=None) -> str:
         f"{job['company']} — {job['title']}  [{shown_location(job, settings)}]",
         (f"T{rep['tier']} · {rep['headline']}" if rep.get("tier") else "Tier: out of target families"),
         f"{job['url']}",
+        applykind.line(prio._get(job, "apply_url") or job["url"], prio._get(job, "apply_kind")),
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})"
         + (f" - {'; '.join(sponsor_notes)} (information only; a weight on priority, not a reason to skip)" if sponsor_notes else ""),
         pr.line(),
+        *([f"{pr.flag()} (L {pr.l:.2f}: P is multiplied by it, the ATS score cannot see seniority; edit priority.level_factor in settings.yaml)"]
+          if pr.flag() else []),
         f"Posted: {freshness.describe(job)}",
         *work_country_lines(job, settings),
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
@@ -374,6 +377,23 @@ def wsl_open(p: str) -> bool:
         return False
     subprocess.Popen([explorer, win])
     return True
+
+
+def open_url(url: str) -> bool:
+    """Review's `w`: open an apply page in the default Windows browser, through wslview, else explorer.exe. It only opens the page: nothing
+    is clicked, filled or submitted, and this tool sends no request to it. A link that is not http(s) is never handed to a program. False
+    (with the link printed) when there is no program to open it with."""
+    if urlparse(url or "").scheme not in ("http", "https") or not urlparse(url).netloc:
+        return False
+    if shutil.which("wslview"):
+        subprocess.Popen(["wslview", url])
+        return True
+    explorer = shutil.which("explorer.exe") or (EXPLORER_FALLBACK if Path(EXPLORER_FALLBACK).exists() else None)
+    if explorer:
+        subprocess.Popen([explorer, url])
+        return True
+    print(f"  open manually: {url}")
+    return False
 
 
 def open_file(p: str) -> None:
@@ -510,8 +530,8 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
 
 # ---------------------------------------------------------------- interactive loop
 MENU = {"a": "[a]pprove", "e": "[e]dit", "r": "[r]eject", "l": "[l]etter regenerate", "g": "[g]enerate letters again",
-        "n": "[n]ote", "o": "[o]pen PDFs", "s": "[s]kip", "q": "[q]uit"}
-MENU_ORDER = "aerlgnosq"
+        "n": "[n]ote", "o": "[o]pen PDFs", "w": "[w] open apply page", "s": "[s]kip", "q": "[q]uit"}
+MENU_ORDER = "aerlgnowsq"
 HOOK_L = "[l]etter A/B/none"              # `l` in hook mode: the label shown instead of MENU["l"]
 
 
@@ -537,10 +557,10 @@ def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge
     return v
 
 
-def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlgnosq",
+def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlgnowsq",
                skip_means_no: bool = False) -> str:
     """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'quit'. `allow` names the choices
-    offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, s skip, q quit); `ask` answers the
+    offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, w open the apply page in the browser, s skip, q quit); `ask` answers the
     prompts (default: input). A skip changes nothing in the database: what a skip means is the caller's business; with
     `skip_means_no` (live: a skipped job is finished) the judge log records it as a rejection.
 
@@ -588,6 +608,12 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
             judge.log_decision(settings, job, rep, verdict, "approve")
             contacts_step(db, job, settings, ask)
             return "approved"
+        elif c == "w":
+            url = prio._get(job, "apply_url") or job["url"]
+            if not url:
+                print("  no application page for this job: apply by hand")
+            elif not open_url(url):
+                print(f"  could not open {url}" if urlparse(url).scheme in ("http", "https") else f"  not a web link, not opened: {url}")
         elif c == "n":
             if note_path(rep).exists():
                 open_file(str(note_path(rep)))

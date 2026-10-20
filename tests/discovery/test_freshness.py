@@ -115,7 +115,7 @@ def test_live_without_fresh_takes_every_file_in_tier_order(db, settings, inbox):
     lines = []
     ordered = make_live(db, settings, False, lines)._by_priority(list(reversed(inbox)))
     assert [f.name for f in ordered] == ["a_new.txt", "b_two_days.txt", "c_old.txt"]            # nothing dropped; the 69-day-old one is last
-    assert lines[0] == "Inbox order by freshness tier, then priority P = F x S:"
+    assert lines[0] == "Inbox order by freshness tier, then the ESTIMATE of P = F x S x L (before tailoring; the review order uses the final P):"
 
 
 def test_live_fresh_takes_tier_0_only_and_leaves_the_rest_in_the_inbox(db, settings, inbox):

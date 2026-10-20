@@ -138,6 +138,7 @@ COLUMNS = [
     ("jobs", "seen_on", "TEXT"),         # YYYY-MM-DD discover first saw the job (an alert's date or the first run): R counts from here, not from posted_at
     ("jobs", "open_listing", "INTEGER"), # 1 = it was on the employer's own board when discover read it: kept for the record: the posting is still open when discover read it (no longer a factor in the order)
     ("jobs", "posted_at_source", "TEXT"),  # where posted_at comes from: greenhouse.first_published | lever.createdAt | ashby.publishedAt | reed.date | adzuna.created | gmail.received | first_seen (discovery/freshness.py)
+    ("jobs", "apply_kind", "TEXT"),      # greenhouse | lever | ashby | workday | employer_other | aggregator_only: where the application is made (discovery/applykind.py)
     ("jobs", "work_location", "TEXT"),   # the location as it may be shown: the remote label for a remote role at home, else NULL (use `location`)
 ]
 

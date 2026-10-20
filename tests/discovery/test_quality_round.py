@@ -28,7 +28,7 @@ def make(cfg, db, net, today=TODAY, **kw):
 
 @pytest.fixture
 def cfg(settings):
-    shutil.copy(ROOT / "config" / "sources.yaml", Path(settings.raw["paths"]["sources"]))
+    shutil.copy(ROOT / "tests" / "fixtures" / "discovery" / "sources_registry.yaml", Path(settings.raw["paths"]["sources"]))
     settings.raw["sources"].update(greenhouse=[], lever=[], lever_eu=[], ashby=[])
     settings.raw["discover"].update(alert_probes_per_run=20, sources=[], listed_only={"enabled": False})
     settings.raw["discover"]["gmail"]["senders"] = []
@@ -159,7 +159,8 @@ def test_a_board_found_by_a_guessed_token_must_be_the_companys_not_another_with_
     d.from_gmail()
     assert d.run.written == []
     (row,) = rows(cfg.path("jds") / "manual_queue.csv")
-    assert row["company"] == "Arc Analytics" and "no posting titled like this" in row["reason"]
+    assert row["company"] == "Arc Analytics"
+    assert "board_unverified" in row["reason"] and "Arc Capital Partners" in row["reason"]      # the shortened slug `arc` found another company's board
 
 
 def test_a_guessed_boards_posting_in_another_town_than_the_alerts_is_not_the_alerts_job(cfg, db):
@@ -199,7 +200,7 @@ def test_resolved_percent_is_reported_per_source_for_the_run_and_over_all_runs(c
 
 
 def test_the_shipped_defaults_are_the_agreed_ones(settings):
-    assert settings["discover"]["title_match"] == 0.8 and settings["discover"]["manual_queue_max"] == 10
+    assert settings["discover"]["title_match"] == 0.9 and settings["discover"]["manual_queue_max"] == 10
     assert settings["discover"]["ats"]["board_cache_days"] == 30
 
 

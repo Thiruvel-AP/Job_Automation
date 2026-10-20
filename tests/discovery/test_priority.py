@@ -286,7 +286,8 @@ def test_live_goes_through_the_inbox_in_priority_order_and_says_so(settings, db,
                 out=lines.append)
     ordered = live._by_priority(list(inbox_files.values()))
     assert [f.name for f in ordered][0] == "c.txt" and len(ordered) == 4
-    assert lines[0] == "Inbox order by freshness tier, then priority P = F x S:" and any("c.txt" in ln and "=" in ln and "T0" in ln for ln in lines[1:])
+    assert lines[0].startswith("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L")
+    assert any("c.txt" in ln and "estimate P" in ln and "=" in ln and "T0" in ln for ln in lines[1:])
     assert any("d.txt (unreadable)" in ln for ln in lines)
 
 

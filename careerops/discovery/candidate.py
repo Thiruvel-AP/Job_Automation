@@ -38,6 +38,8 @@ class Candidate:
     seen_at: str = ""                  # the same moment as an ISO datetime (the email's arrival): an upper bound for when it was posted
     first_seen: str = ""               # set by discover when the job is kept: the earliest of `seen` and the first run that saw it
     open_listing: bool = False         # still listed on the employer's own board (Greenhouse / Lever / Ashby) when it was read
+    apply_url: str = ""                # where to apply: the employer's page for a posting read off its board ("" = the url)
+    apply_kind: str = ""               # greenhouse | lever | ashby | workday | employer_other | aggregator_only (applykind.py)
 
     def ad_id(self) -> str:
         return self.ext_id or hashlib.sha1(self.url.encode()).hexdigest()[:10]
@@ -48,7 +50,7 @@ class Candidate:
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
                   posted=posted if freshness.is_iso(posted) else "", posted_source=self.posted_source if freshness.is_iso(posted) else "",
                   country=self.country if self.listed_only else "", listed_only=self.listed_only,
-                  first_seen=self.first_seen, open_listing=self.open_listing)
+                  first_seen=self.first_seen, open_listing=self.open_listing, apply_url=self.apply_url, apply_kind=self.apply_kind)
 
 
 def norm_title(title: str) -> str:
@@ -61,6 +63,15 @@ def norm_place(place: str) -> str:
     """The town or region only: 'London, UK' and 'London (Hybrid)' are both 'london'; '' when it names no place."""
     first = re.split(r"[,;|/(–-]", place.lower().strip(), maxsplit=1)[0]
     return re.sub(r"\s+", " ", _PLACE_NOISE.sub(" ", first)).strip()
+
+
+def places_agree(a: str, b: str) -> bool:
+    """Do two places not contradict each other? A missing place agrees with anything; otherwise the towns are the same, or one place is
+    named inside the other ('Manchester' is inside 'London, UK or Manchester, UK')."""
+    na, nb = norm_place(a or ""), norm_place(b or "")
+    if not na or not nb or na == nb:
+        return True
+    return na in (b or "").lower() or nb in (a or "").lower()
 
 
 def dedupe_key(company: str, title: str, location: str) -> tuple[str, str, str]:

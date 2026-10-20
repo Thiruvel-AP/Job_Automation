@@ -23,7 +23,7 @@ def test_approve_returns_approved_and_sets_the_status(tailored, settings, db, jo
     ask = scripted("a")
     assert review.review_job(db, db.job(job["id"]), settings, fb, ask=ask) == "approved"
     assert db.job(job["id"])["status"] == "approved"
-    assert ask.prompts == ["[a]pprove  [e]dit  [r]eject  [l]etter regenerate  [n]ote  [o]pen PDFs  [s]kip  [q]uit > "]
+    assert ask.prompts == ["[a]pprove  [e]dit  [r]eject  [l]etter regenerate  [n]ote  [o]pen PDFs  [w] open apply page  [s]kip  [q]uit > "]
 
 
 def test_skip_and_quit_change_nothing_in_the_database(tailored, settings, db, job):

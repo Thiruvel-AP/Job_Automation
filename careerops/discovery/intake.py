@@ -97,6 +97,8 @@ class Ad:
     listed_only: bool = False          # written as `Status: listed_only`
     first_seen: str = ""               # YYYY-MM-DD discover first saw the job (an alert's date or the first run): what R counts from
     open_listing: bool = False         # written as `Listed: yes`: the job is on the employer's own board (R never falls under the floor)
+    apply_url: str = ""                # written as `Apply URL:` when it is not the `URL:` itself
+    apply_kind: str = ""               # written as `Apply kind:` (discovery/applykind.py)
 
 
 # ------------------------------------------------------------------ network (tests replace _get / _sleep / _clock)
@@ -524,6 +526,10 @@ def file_name(ad: Ad) -> str:
 def render(ad: Ad) -> str:
     one_line = lambda s: " ".join(str(s).split())          # noqa: E731 — a header value is one line
     head = [f"Company: {one_line(ad.company)}", f"Title: {one_line(ad.title)}", f"URL: {ad.url}", f"Source: {one_line(ad.source)}"]
+    if ad.apply_kind:
+        head.append(f"Apply kind: {one_line(ad.apply_kind)}")
+    if ad.apply_url and ad.apply_url != ad.url:
+        head.append(f"Apply URL: {one_line(ad.apply_url)}")
     if one_line(ad.location):
         head.append(f"Location: {one_line(ad.location)}")
     if one_line(ad.country):

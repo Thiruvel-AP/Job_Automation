@@ -88,7 +88,7 @@ def test_the_inbox_file_has_the_headers_live_reads_and_the_ad_text(cfg, db):
     text2, _ = manual.read_jd(cfg.path("jds") / "inbox" / "acme-analytics-ltd-data-scientist-101.txt")
     assert manual.header_fields(text2) == {"company": "Acme Analytics Ltd", "title": "Data Scientist", "location": "London, UK",
                                            "url": "https://job-boards.greenhouse.io/acme/jobs/101", "source": "greenhouse",
-                                           "first_seen": "2026-10-10", "listed": "yes"}      # first seen = the run's day; on an employer's board
+                                           "first_seen": "2026-10-10", "listed": "yes", "apply_kind": "greenhouse"}      # first seen = the run's day; on an employer's board
     assert "Posted" not in text.split("\n\n")[0]            # this fixture has no first_published (only updated_at, which resets on a repost): no posting time is claimed
     assert text.startswith("Company: Acme Analytics Ltd\nTitle: Data Scientist\nURL: https://job-boards.greenhouse.io/acme/jobs/101\nSource: greenhouse\n")
     assert "Python, SQL and scikit-learn" in text and "<p>" not in text
@@ -192,7 +192,8 @@ def test_the_board_list_is_cached_and_reused(cfg, db):
 # ------------------------------------------------------------------ ats: seeds (archive folder names, discover.sources, register)
 def monzo_net():
     """Monzo's Greenhouse board and nothing else: every other token is a 404 (what the real APIs answer for an unknown board)."""
-    return Net(strict=False).add("boards/monzo/jobs", fixture_json("gh_jobs_monzo.json"))
+    return (Net(strict=False).add("boards/monzo/jobs", fixture_json("gh_jobs_monzo.json"))
+            .add("boards/monzo", {"name": "Monzo Bank Ltd"}))            # `monzo` is a shortened slug of "Monzo Bank Ltd": the board must say it is that company
 
 
 @pytest.fixture
@@ -544,7 +545,7 @@ def cv_library_pages(monkeypatch):
     return seen
 
 
-def test_alerts_are_resolved_through_the_employers_board_cv_library_and_reed_and_the_rest_is_queued(signed_in, db, monkeypatch):
+def test_alerts_are_resolved_through_the_employers_board_and_reed_cv_library_is_never_fetched_and_the_rest_is_queued(signed_in, db, monkeypatch):
     cfg = signed_in
     monkeypatch.setenv("REED_API_KEY", "k")
     cv_seen = cv_library_pages(monkeypatch)
@@ -554,7 +555,7 @@ def test_alerts_are_resolved_through_the_employers_board_cv_library_and_reed_and
     d.from_gmail()
     written = {(c.company, c.title, c.source) for c, _ in d.run.written}
     assert ("Acme Analytics Ltd", "Data Scientist", "greenhouse") in written                   # LinkedIn -> Acme's own board
-    assert ("Brightwell Analytics Ltd", "Data Scientist", "cvlibrary") in written              # CV-Library link -> C2
+    assert not any(w[2] == "cvlibrary" for w in written)                                      # a CV-Library link is never fetched (round 8): it is queued
     assert ("Birch Health", "Data Scientist", "reed") in written                               # Reed link -> the Reed API
     rows = disc.read_manual_queue(cfg.path("jds") / "manual_queue.csv")
     by_title = {(r["source"], r["title"]): r for r in rows}
@@ -562,7 +563,8 @@ def test_alerts_are_resolved_through_the_employers_board_cv_library_and_reed_and
     assert "no public job board known for Unknown Startup Ltd" in by_title[("linkedin", "Senior AI Engineer")]["reason"]
     assert ("indeed", "Machine Learning Engineer") in by_title and by_title[("indeed", "Machine Learning Engineer")]["link"].startswith("https://uk.indeed.com/viewjob?jk=")
     assert ("reed", "AI Engineer") in by_title and "no ad" in by_title[("reed", "AI Engineer")]["reason"]
-    assert ("cvlibrary", "Machine Learning Engineer") in by_title                                # its page was a 404
+    assert ("cvlibrary", "Machine Learning Engineer") in by_title and ("cvlibrary", "Data Scientist") in by_title
+    assert by_title[("cvlibrary", "Data Scientist")]["apply_kind"] == "aggregator_only" and cv_seen == []      # no CV-Library page was requested
     assert not any(k[1] in ("Retail Store Manager", "Data Analyst") for k in by_title)         # outside the role families: not queued
     c = d.run.sources["gmail"]
     assert c["alerts_linkedin"] == 3 and c["alerts_cvlibrary"] == 2 and c["alerts_indeed"] == 2 and c["alerts_reed"] == 2

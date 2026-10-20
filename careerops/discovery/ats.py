@@ -114,14 +114,32 @@ TOKEN_STRIP = {"ltd", "limited", "plc", "group", "uk", "holdings", "technologies
 TOKEN_FIRST_WORD_MIN = 3            # a one- or two-letter first word ("ai", "bt") is a board of some other company far too often
 
 
+LEGAL_WORDS = {"ltd", "limited", "plc", "llp", "inc", "incorporated", "corp", "corporation", "uk"}
+
+
+def _name_words(name: str) -> list[str]:
+    text = unicodedata.normalize("NFKD", re.split(r"\s+t/a\s+|\s+trading as\s+", name, flags=re.I)[0])
+    text = text.encode("ascii", "ignore").decode().lower().replace("'", "")
+    return re.findall(r"[a-z0-9]+", re.sub(r"\([^)]*\)", " ", text))
+
+
+def full_name_tokens(name: str) -> set[str]:
+    """The slugs that spell the WHOLE name: its words joined and hyphenated, with only a legal ending (Ltd, Limited, plc, UK) and a
+    leading 'The' left out. 'Octagon Group' -> {octagongroup, octagon-group}: the slug `octagon` drops a word, so it is a shortened slug
+    and the board it finds must prove it is this company (boards.verify_shortened)."""
+    words = _name_words(name)
+    kept = [w for w in words if w not in LEGAL_WORDS] or words
+    if len(kept) > 1 and kept[0] == "the":
+        kept = kept[1:]
+    return {t for t in ("".join(kept), "-".join(kept)) if t and SLUG_OK.match(t)}
+
+
 def board_tokens(name: str, hint: str | None = None) -> list[str]:
     """≤4 board-token guesses for a company or folder name, best first: 'Monzo Bank Ltd' → ['monzobank', 'monzo-bank', 'monzo'].
     Lower-case, accents and punctuation removed, Ltd / Limited / plc / Group / UK / Holdings / Technologies dropped; then the words
     joined, hyphenated, the first word (3+ letters, name of more than one word) and the first two words (name of more than two).
     `hint` (a slug already verified for this company) goes first."""
-    text = unicodedata.normalize("NFKD", re.split(r"\s+t/a\s+|\s+trading as\s+", name, flags=re.I)[0])
-    text = text.encode("ascii", "ignore").decode().lower().replace("'", "")
-    words = re.findall(r"[a-z0-9]+", re.sub(r"\([^)]*\)", " ", text))
+    words = _name_words(name)
     kept = [w for w in words if w not in TOKEN_STRIP] or words
     if len(kept) > 1 and kept[0] == "the":
         kept = kept[1:]

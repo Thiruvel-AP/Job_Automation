@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ..config import load_yaml
 from ..db import DB
-from . import gates, workcountry
+from . import applykind, gates, workcountry
 from . import register as sponsors
 
 MIN_NAME_CHARS = 2                     # a company or title shorter than this is a stray keystroke, not a name
@@ -20,7 +20,9 @@ REPLACEABLE = ("new", "triaged", "skipped", "needs_jd", "needs_country", "error"
 HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "role": "title", "job title": "title",
                "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
                "agency": "agency", "country": "country", "status": "status",
-               "first seen": "first_seen", "listed": "listed", "posted via": "posted_source"}
+               "first seen": "first_seen", "listed": "listed", "posted via": "posted_source",
+               "apply url": "apply_url", "apply kind": "apply_kind"}
+HEADER_WINDOW = 10                     # a header is looked for in the first lines; a block that starts there is read to its end
 HEADER_LINE = re.compile(r"^\s*([A-Za-z ]{3,12}?)\s*:\s*(\S.*?)\s*$")
 
 
@@ -54,12 +56,16 @@ def read_jd(path: str | Path) -> tuple[str, str]:
 
 
 def header_fields(text: str) -> dict[str, str]:
-    """`Company:`, `Title:`, `URL:`, `Location:` lines among the first ten lines of a JD file, if it has them."""
+    """`Company:`, `Title:`, `URL:`, `Location:` ... lines at the top of a JD file, if it has them: among its first HEADER_WINDOW lines,
+    and a run of header lines that is still going at the end of that window is read to its end (an inbox ad has up to 16)."""
     out: dict[str, str] = {}
-    for line in text.splitlines()[:10]:
+    for i, line in enumerate(text.splitlines()):
         m = HEADER_LINE.match(line)
-        if m and m.group(1).strip().lower() in HEADER_KEYS:
-            out.setdefault(HEADER_KEYS[m.group(1).strip().lower()], m.group(2))
+        key = HEADER_KEYS.get(m.group(1).strip().lower()) if m else None
+        if i >= HEADER_WINDOW and not (key and out):
+            break
+        if key:
+            out.setdefault(key, m.group(2))
     return out
 
 
@@ -82,7 +88,7 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
            location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False,
            work_country: str | None = None, seen_on: str | None = None, open_listing: bool = False,
-           posted_source: str | None = None) -> str:
+           posted_source: str | None = None, apply_url: str | None = None, apply_kind: str | None = None) -> str:
     """Add a hand-made job (status 'new') and return its id. Raises JobExists when that job is already tailored or
     acted on, so adding a JD never resets work. Raises JDError for a company, title or URL that is a placeholder or too
     short (meta_problem)."""
@@ -95,9 +101,10 @@ def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = Non
     if have is not None and have["status"] not in REPLACEABLE:
         raise JobExists(f"{jid} ({company} / {title}) already exists with status '{have['status']}'")
     db.upsert_job({"id": jid, "source": source, "company": company, "title": title, "location": location,
-                   "url": url, "apply_url": url, "description": text, "posted_at": posted,
+                   "url": url, "apply_url": apply_url or url, "description": text, "posted_at": posted,
                    "posted_at_source": posted_source if posted else None})
-    db.update_job(jid, description=text, status="new", source=source, agency=int(bool(agency)),
+    kind = apply_kind if apply_kind in applykind.KINDS else applykind.kind_of(apply_url or url)
+    db.update_job(jid, description=text, status="new", source=source, agency=int(bool(agency)), apply_kind=kind or None,
                   **({"posted_at": posted, "posted_at_source": posted_source} if posted and posted_source else
                      {"posted_at": posted} if posted else {}),
                   **({"seen_on": seen_on} if seen_on else {}), **({"open_listing": 1} if open_listing else {}),

@@ -2,7 +2,12 @@
 
 A token counts for a provider only when its API answers 200 with a jobs list (ats.is_board): a 404, an error body or an empty Lever
 list is "no board there". Every answer, hit or miss, is kept for `discover.ats.board_cache_days` in paths.discover/boards.json, so
-a company is not asked about again for a month. An answer that is not an answer (a blocked host, a 5xx, no connection) is NOT kept:
+a company is not asked about again for a month.
+
+A token that spells the whole company name (ats.full_name_tokens) is taken at its word. A SHORTENED token (the first word, the first two
+words, the name without Group / Holdings / Technologies: `octagon` for Octagon Group) often finds another company's board, so it is
+accepted only when the board's own name (the Greenhouse API gives one; Lever and Ashby do not) matches the company at
+`discover.ats.board_name_match` (0.9). Otherwise it is `board_unverified`: no ad is read from it and the report lists it. An answer that is not an answer (a blocked host, a 5xx, no connection) is NOT kept:
 it is reported as an error and asked again next run. Requests go through discovery/http.py: robots.txt, one a second per host.
 """
 from __future__ import annotations
@@ -10,12 +15,16 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from difflib import SequenceMatcher
 from typing import Callable
 
 from . import ats as ats_mod
 from .ats import Board, Posting
 from .http import FetchError, Fetcher
+from .register import normalise
 from .seeds import Seed
+
+BOARD_NAME_MATCH = 0.9             # default of discover.ats.board_name_match
 
 
 class BoardIndex:
@@ -24,6 +33,7 @@ class BoardIndex:
     def __init__(self, settings, clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)):
         self.path = settings.path("discover") / "boards.json"
         self.days = float(settings["discover"].get("ats", {}).get("board_cache_days", 30))
+        self.name_match = float(settings["discover"].get("ats", {}).get("board_name_match", BOARD_NAME_MATCH))
         self.clock = clock
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
@@ -44,6 +54,15 @@ class BoardIndex:
     def put(self, ats: str, token: str, found: bool) -> None:
         self.data[f"{ats}:{token}"] = {"ts": self.clock().isoformat(timespec="seconds"), "found": found}
 
+    def name(self, ats: str, token: str) -> str | None:
+        """The company name the board gave itself ('' = it has none), kept with the answer; None when it was never asked."""
+        e = self.data.get(f"{ats}:{token}")
+        return e.get("name") if e and self.get(ats, token) is not None else None
+
+    def set_name(self, ats: str, token: str, name: str) -> None:
+        if f"{ats}:{token}" in self.data:
+            self.data[f"{ats}:{token}"]["name"] = name
+
     def save(self) -> None:
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -59,31 +78,72 @@ class Finding:
     tokens: list[str] = field(default_factory=list)
     cached: set[str] = field(default_factory=set)         # tokens answered from boards.json, no request sent
     boards: list[Board] = field(default_factory=list)
+    unverified: list[tuple[Board, str]] = field(default_factory=list)   # boards a shortened slug found whose name did not match: (board, why)
     errors: list[str] = field(default_factory=list)
     matched: int = 0                                      # postings in a target role family and a UK / remote-UK place
 
     def line(self) -> str:
         tried = ", ".join(t + (" (cached)" if t in self.cached else "") for t in self.tokens) or "-"
         board = ", ".join(f"{b.ats}/{b.slug}" for b in self.boards) or "none"
-        extra = f" | {len(self.errors)} error(s): {self.errors[0]}" if self.errors else ""
+        extra = f" | board_unverified: {', '.join(f'{b.ats}/{b.slug}' for b, _ in self.unverified)}" if self.unverified else ""
+        extra += f" | {len(self.errors)} error(s): {self.errors[0]}" if self.errors else ""
         reg = ", register" if self.seed.on_register else ""
         return f"  {self.seed.name} [{self.seed.origin}{reg}] | tried: {tried} | board: {board} | {self.matched} matched{extra}"
 
 
+def names_match(board_name: str, company: str, threshold: float = BOARD_NAME_MATCH) -> bool:
+    """Is this board's own company name the company's? Normalised (case, punctuation, Ltd / plc) and compared at `threshold`."""
+    a, b = normalise(board_name or ""), normalise(company or "")
+    return bool(a and b) and SequenceMatcher(None, a, b).ratio() >= threshold
+
+
+def board_name(ats: str, token: str, fetcher: Fetcher, index: BoardIndex) -> str | None:
+    """The company name a board gives itself: Greenhouse's API has one (one request, then kept with the cached answer); Lever's and
+    Ashby's do not. None when there is none or it could not be read."""
+    if ats != "greenhouse":
+        return None
+    cached = index.name(ats, token)
+    if cached is not None:
+        return cached or None
+    try:
+        data = fetcher.json(f"{ats_mod.GH}/{token}", what=f"Greenhouse board {token}")
+    except FetchError:                                       # not an answer: not remembered
+        return None
+    name = str(data["name"]) if isinstance(data, dict) and data.get("name") else ""
+    index.set_name(ats, token, name)
+    return name or None
+
+
+def verify_shortened(board: Board, company: str, fetcher: Fetcher, index: BoardIndex) -> tuple[bool, str]:
+    """(accepted, why not) for a board found through a shortened slug: its own name must match the company's."""
+    name = board_name(board.ats, board.slug, fetcher, index)
+    if not name:
+        if board.ats != "greenhouse":
+            return False, (f"{board.ats}/{board.slug} gives no company name, so the shortened slug '{board.slug}' cannot be checked "
+                           f"against '{company}'")
+        return False, f"{board.ats}/{board.slug}: the board's name could not be read to check the shortened slug against '{company}'"
+    if names_match(name, company, index.name_match):
+        return True, ""
+    return False, f"the {board.ats} board '{board.slug}' is called '{name}', not '{company}' (needs a {index.name_match:.2f} match)"
+
+
 def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[[Board, list[Posting]], None] | None = None) -> Finding:
     """Try the company's tokens in order; the first token that is a board for any provider ends the search (all four providers
-    are asked for that token). `on_postings(board, postings)` gets the list a fresh request already returned."""
+    are asked for that token). `on_postings(board, postings)` gets the list a fresh request already returned. A board found through a
+    shortened token goes to `unverified` unless its name matches (see the top of this file)."""
     f = Finding(seed)
+    full = ats_mod.full_name_tokens(seed.name)
     for token in ats_mod.board_tokens(seed.name, seed.hint):
         f.tokens.append(token)
         asked = False
+        hits: list[tuple[Board, list[Posting] | None]] = []
         for ats in ats_mod.PROVIDERS:
             known = index.get(ats, token)
             if known is False:
                 continue
             board = Board(ats, token, seed.name, seed.origin)
             if known is True:
-                f.boards.append(board)
+                hits.append((board, None))
                 continue
             asked = True
             url, params, what = ats_mod.board_request(ats, token)
@@ -95,9 +155,15 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             found = ats_mod.is_board(ats, data)
             index.put(ats, token, found)
             if found:
-                f.boards.append(board)
-                if on_postings:
-                    on_postings(board, ats_mod.parse_postings(ats, data, seed.name))
+                hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
+        for board, posts in hits:
+            ok, why = (True, "") if token in full or token == seed.hint else verify_shortened(board, seed.name, fetcher, index)
+            if not ok:
+                f.unverified.append((board, why))
+                continue
+            f.boards.append(board)
+            if posts is not None and on_postings:
+                on_postings(board, posts)
         if not asked:
             f.cached.add(token)
         if f.boards:

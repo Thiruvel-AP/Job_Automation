@@ -60,9 +60,10 @@ def _verified_slugs(db: DB) -> dict[str, str]:
 
 
 def seeds(settings, db: DB) -> list[Seed]:
-    """The companies to look for a board of: archive folders, then discover.sources, each once; register data only for those."""
+    """The companies to look for a board of: archive folders, then discover.sources, each once; register data only for those. A name in
+    discover.ignore_companies is skipped (a folder that is not a company: 'New folder'); the folder itself is never touched."""
     out: list[Seed] = []
-    seen: set[str] = set()
+    seen: set[str] = {folder_key(str(n)) for n in settings["discover"].get("ignore_companies") or [] if folder_key(str(n))}   # never looked for
     for origin, names in (("archive", archive_names(settings.path("applications"))), ("config", config_names(settings))):
         for name in names:
             key = folder_key(name)

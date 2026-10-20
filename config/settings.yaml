@@ -116,13 +116,15 @@ discover:
   cache_hours: 6                   # a board's posting list is reused this long
   max_new_per_run: 40              # at most this many new inbox files per run (--limit)
   alert_probes_per_run: 100        # companies named by alerts / Adzuna whose board is looked for (up to 4 tokens x Greenhouse, Lever, Ashby), per run; answers are cached board_cache_days; 0 = never look
-  title_match: 0.8                 # an alert's title is taken for a posting on the employer's board at this normalised-title similarity (and the same level words)
+  title_match: 0.9                 # an alert's title is taken for a posting on the employer's board at this normalised-title similarity (and the same level words, and a place that agrees)
   manual_queue_max: 10             # unresolved alerts of one run kept in manual_queue.csv (best title relevance x S first); the rest go to manual_queue_overflow.csv
   # `discover --ats` looks for a job board of these companies, in this order: (1) the folder names directly under paths.applications
   # (names only, nothing inside is read), (2) `sources` below, (3) sponsor-register companies, only if they are also in (1) or (2).
   sources: []                      # employers to look for beside the archive folders: ["Monzo", "Wise", {name: "Octopus Energy"}]
+  ignore_companies: []             # names `discover --ats` skips, for archive folders that are not companies: ["New folder", "AI Engineer"]. The folders are never touched
   ats:
     board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
+    board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
   reed:
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
     location: null                 # Reed's locationName; null = all of the UK
@@ -158,6 +160,13 @@ priority:
     unknown: 0.75          # not on the register, a recruitment agency, or no register loaded
     no_sponsorship: 0.65   # the JD itself says it does not sponsor / requires the right to work without sponsorship
     non_home: 0.50         # the work is not where you live (W is not visa.home in applicant.yaml): ranked below home jobs of the same fit
+  # L, the level fit: P = F x S x L. The ATS score cannot see seniority, so the title words do (the highest level word wins). Edit the values;
+  # a job is only ever moved down by it, never dropped.
+  level_factor:
+    manager: 0.3           # manager | director | head in the title
+    lead: 0.4              # lead | principal | staff | architect
+    senior: 0.6            # senior | sr
+    other: 1.0             # no level word
 
 cv:
   # What stands between the two dates of a range on the CV: " – " (an en dash, the default) or " to ". One space is kept each side.

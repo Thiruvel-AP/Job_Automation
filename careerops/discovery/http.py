@@ -51,13 +51,14 @@ def _real_get(url: str, **kw) -> requests.Response:
 class Fetcher:
     def __init__(self, robots: RobotsCache | None = None, get: Callable[..., Any] | None = None,
                  sleep: Callable[[float], None] | None = None, clock: Callable[[], float] | None = None,
-                 gap_s: float = MIN_HOST_GAP_S):
+                 gap_s: float = MIN_HOST_GAP_S, never: tuple[str, ...] = ()):
         self.robots = robots if robots is not None else RobotsCache(None)
         # looked up when called, not when defined, so a test can replace requests.get / time.sleep after import
         self._get = get or (lambda url, **kw: _real_get(url, **kw))
         self._sleep = sleep or (lambda s: time.sleep(s))
         self._clock = clock or (lambda: time.monotonic())
         self.gap_s = gap_s
+        self.never = never                            # hosts (and their subdomains) that are refused before anything is sent
         self.last: dict[str, float] = {}
         self.host_gap: dict[str, float] = {}          # host -> the Crawl-delay its robots.txt asks for, when longer than gap_s
         self.backed_off: dict[str, int] = {}          # host -> the 401 / 403 / 429 it answered
@@ -106,6 +107,8 @@ class Fetcher:
             gone = never_fetch(url)
             if gone:
                 raise Blocked(gone)
+            if any(host == h or host.endswith("." + h) for h in self.never):
+                raise Blocked(f"{what}: {host} is never requested by this tool (it is only recorded as the place to apply)")
             if host in self.backed_off:
                 raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} earlier in this run; not asked again")
             if robots:

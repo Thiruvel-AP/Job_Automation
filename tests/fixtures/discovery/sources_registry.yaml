@@ -1,0 +1,98 @@
+# A frozen copy of config/sources.yaml as committed on 2026-10-13 (24 sources). The tests of how sources are read, matched and checked use this,
+# not the live file: config/sources.yaml is yours to edit (sources switched off, added, removed) and a test must not move with it.
+# Source registry: every place careerops looks for jobs, and HOW (docs/IMPLEMENTATION.md, "Source registry").
+# One entry per source. `careerops discover` and `careerops sources check` run a health check on each and save the table
+# to data/discover/health/<date>.csv. Only allowed access is used: public/official APIs, pages robots.txt allows, your own
+# Gmail read-only. A 401/403 or a robots.txt "no" stops that source and is never worked around.
+#
+#   id        short unique slug (a-z, 0-9, -)
+#   name      what the health table shows
+#   url       the source's home page (documentation only; never fetched unless the method needs it)
+#   country   ISO code of the country the source lists jobs for, or `multi` (many countries; each job's own place is read)
+#   method    greenhouse | ashby | lever | reed | jobbank_csv | gmail_alerts | dedupe_only
+#               greenhouse / ashby / lever   the public job-board API; with `token` that one company's board, without it the
+#                                            boards `discover --ats` finds for your archive companies
+#               reed                         the Reed Jobseeker API (REED_API_KEY in .env)
+#               jobbank_csv                  Canada's Job Bank open-data monthly CSV (`discover --jobbank`)
+#               gmail_alerts                 the job-alert emails of this source, read through the read-only Gmail API
+#               dedupe_only                  never searched; its list of jobs you applied to is only used to skip duplicates
+#   domains   (gmail_alerts) sender domains of the alert emails; any other method may also list them to read its alerts
+#   subject_contains   (optional) the alert is this source's only when the subject has one of these words (a shared sender)
+#   parser    (optional) linkedin | cvlibrary | indeed | reed: the dedicated alert parser; without it a generic one reads the links
+#   token     (greenhouse | ashby | lever) the company's board token
+#   dataset   (jobbank_csv) the open.canada.ca dataset id
+#   enabled   false = listed but skipped (no check, no search)
+#   note      what was verified and what was not
+#
+# Sender domains marked "unverified" are my best knowledge of where the alerts come from, not read off a real email: run
+# `careerops sources check`; "alerts 7d = 0" for a source you receive alerts from means its domain here is wrong.
+sources:
+  - {id: linkedin, name: LinkedIn, url: "https://www.linkedin.com/jobs", country: multi, method: gmail_alerts,
+     domains: [linkedin.com], parser: linkedin,
+     note: "Never fetched (its robots.txt disallows automation); alert emails only, each resolved to the employer's own board."}
+  - {id: cv-library, name: CV-Library, url: "https://www.cv-library.co.uk", country: GB, method: gmail_alerts,
+     domains: [cv-library.co.uk], parser: cvlibrary,
+     note: "Alert emails; a CV-Library job page is fetched only where its robots.txt allows."}
+  - {id: aiapply, name: AIApply, url: "https://aiapply.co", country: multi, method: dedupe_only,
+     note: "Never searched. data/aiapply_applied.csv (paths.aiapply_applied; company + title columns) is used to skip jobs it already applied to."}
+  - {id: greenhouse, name: Greenhouse boards, url: "https://boards.greenhouse.io", country: multi, method: greenhouse,
+     note: "No token: the Greenhouse boards `discover --ats` finds for the companies in your archive and discover.sources."}
+  - {id: indeed-uk, name: Indeed UK, url: "https://uk.indeed.com", country: GB, method: gmail_alerts,
+     domains: [indeed.com, indeed.co.uk], parser: indeed,
+     note: "Alert emails only; indeed pages are never fetched."}
+  - {id: glassdoor-uk, name: Glassdoor UK, url: "https://www.glassdoor.co.uk", country: GB, method: gmail_alerts,
+     domains: [glassdoor.com, glassdoor.co.uk],
+     note: "Alert emails only (generic parser; sender domains unverified)."}
+  - {id: wttj, name: Welcome to the Jungle, url: "https://www.welcometothejungle.com", country: multi, method: gmail_alerts,
+     domains: [welcometothejungle.com, wttj.co],
+     note: "Alert emails only (generic parser; sender domains unverified)."}
+  - {id: wellfound, name: Wellfound, url: "https://wellfound.com", country: multi, method: gmail_alerts,
+     domains: [wellfound.com, angel.co],
+     note: "Alert emails only (generic parser; sender domains unverified)."}
+  - {id: yc-waas, name: YC Work at a Startup, url: "https://www.workatastartup.com", country: multi, method: gmail_alerts,
+     domains: [workatastartup.com, ycombinator.com],
+     note: "Alert emails only (generic parser; sender domains unverified)."}
+  - {id: eures, name: EURES, url: "https://eures.europa.eu", country: multi, method: gmail_alerts,
+     domains: [europa.eu],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: stepstone-de, name: StepStone DE, url: "https://www.stepstone.de", country: DE, method: gmail_alerts,
+     domains: [stepstone.de],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: stepstone-nl, name: StepStone NL, url: "https://www.stepstone.nl", country: NL, method: gmail_alerts,
+     domains: [stepstone.nl],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: irishjobs, name: IrishJobs, url: "https://www.irishjobs.ie", country: IE, method: gmail_alerts,
+     domains: [irishjobs.ie],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: jobbank-ca, name: Job Bank Canada, url: "https://www.jobbank.gc.ca", country: CA, method: jobbank_csv,
+     dataset: ea639e28-c0fc-48bf-b5dd-b8899bd43072,
+     note: "Open-data monthly CSV (Open Government Licence - Canada). Verified 2026-10-13: UTF-16 tab-separated, ~46 MB, titles and places but NO employer name, link or ad text, so rows are listed in data/discover/listed_only.csv, never written as inbox ads."}
+  - {id: seek-au, name: SEEK AU, url: "https://www.seek.com.au", country: AU, method: gmail_alerts,
+     domains: [seek.com.au],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: seek-nz, name: SEEK NZ, url: "https://www.seek.co.nz", country: NZ, method: gmail_alerts,
+     domains: [seek.co.nz],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: mycareersfuture, name: MyCareersFuture, url: "https://www.mycareersfuture.gov.sg", country: SG, method: gmail_alerts,
+     domains: [mycareersfuture.gov.sg],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: govuk-fja, name: GOV.UK Find a Job, url: "https://findajob.dwp.gov.uk", country: GB, method: gmail_alerts,
+     domains: [findajob.dwp.gov.uk, notifications.service.gov.uk], subject_contains: [job, jobs],
+     note: "Alert emails only (generic parser; sender domains unverified). notifications.service.gov.uk is shared by other GOV.UK services, hence subject_contains."}
+  - {id: nhs-jobs, name: NHS Jobs, url: "https://www.jobs.nhs.uk", country: GB, method: gmail_alerts,
+     domains: [jobs.nhs.uk],
+     note: "Alert emails only (generic parser; sender domain unverified)."}
+  - {id: openai, name: OpenAI, url: "https://openai.com/careers", country: multi, method: ashby, token: openai,
+     note: "Verified 2026-10-13: api.ashbyhq.com/posting-api/job-board/openai answers HTTP 200 (a ~13 MB list; kept 6 h in the board cache)."}
+  - {id: google-deepmind, name: Google DeepMind, url: "https://deepmind.google/about/careers/", country: multi, method: gmail_alerts,
+     domains: [deepmind.google, greenhouse-mail.io, greenhouse.io], subject_contains: [DeepMind],
+     note: "Greenhouse token NOT found: boards-api.greenhouse.io/v1/boards/{deepmind, googledeepmind, google-deepmind, deepmindtechnologies, deepmind-technologies} all answered 404 on 2026-10-13, though job-boards.greenhouse.io/deepmind pages exist. Alerts only (sender domains unverified; greenhouse domains are shared, hence subject_contains). Re-try a token with method: greenhouse if DeepMind publishes one."}
+  - {id: blackrock, name: BlackRock, url: "https://careers.blackrock.com", country: multi, method: gmail_alerts,
+     domains: [blackrock.com, myworkday.com], subject_contains: [BlackRock],
+     note: "Workday careers site: no public job API here. Alerts only (sender domains unverified; myworkday.com is shared, hence subject_contains)."}
+  - {id: jpmorgan, name: JPMorgan Chase, url: "https://careers.jpmorgan.com", country: multi, method: gmail_alerts,
+     domains: [jpmorgan.com, jpmchase.com],
+     note: "No public job API. Alerts only (sender domains unverified)."}
+  - {id: reed, name: Reed, url: "https://www.reed.co.uk", country: GB, method: reed,
+     domains: [reed.co.uk], parser: reed,
+     note: "Jobseeker API (REED_API_KEY); its alert emails are read as well."}

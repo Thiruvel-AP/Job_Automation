@@ -40,13 +40,14 @@ career-ops/
 │   │   ├── sources.py            Greenhouse · Lever · Ashby · Adzuna fetchers
 │   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
 │   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
+│   │   ├── applykind.py          apply_kind (greenhouse | lever | ashby | workday | employer_other | aggregator_only) from a URL; the hosts alert resolution never fetches
 │   │   ├── http.py               the polite client discovery shares: 1 req/s per host, robots, a 401/403/429 stops the host
 │   │   ├── discover.py           `discover --ats --reed --adzuna --gmail-alerts --jobbank`: filters, dedupe, inbox files, manual queue, report
 │   │   ├── registry.py · health.py   config/sources.yaml (every source and how it is read) · the health check of each source
 │   │   ├── countries.py · jobbank.py country names/codes/places (the `listed_only` rule) · Canada's Job Bank open-data CSV
 │   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
-│   │   ├── priority.py           freshness tier, then P = F x S: orders the live inbox, discover's listing and status
+│   │   ├── priority.py           freshness tier, then P = F x S x L (L = level fit from the title): orders the live inbox, discover's listing and status
 │   │   ├── freshness.py          posted_at from the source (Greenhouse first_published, Lever createdAt ...), age in hours, tiers 0-3
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── hook.py                   the hook: the `hook_library` entry that fits the ad, used word for word (headline, profile line 1, its proof bullet first, letter sentence 1); no model
@@ -248,26 +249,39 @@ finds and ranks without writing, and every run is listed best priority first.
   answer, found or not, is kept 30 days (`discover.ats.board_cache_days`) in `data/discover/boards.json`, so a company is asked about
   once a month; a blocked host or an error is not kept. The run prints, per company, the tokens tried, the board found
   (`greenhouse/monzo`) or none and the jobs that matched the role and place, then the top 10 by priority P with title, company,
-  location and URL. A token is a guess: a board with the right token but another company's name is read as this company, so look at
-  the printed board before applying. The boards named token by token in `sources:` are still read. Posting lists are cached for 6
+  location and URL. A token is a guess, so a board found only through a SHORTENED token (the first word, the first two words, the name
+  without Group / Holdings / Technologies: `octagon` for Octagon Group, `focus` for Focus Group) is accepted only if the board's own
+  company name matches the folder's at `discover.ats.board_name_match` (0.9). Greenhouse's API gives a name; Lever's and Ashby's do not, so
+  a shortened token never vouches for itself there. Otherwise the board is `board_unverified`: no ad is read from it and the run lists
+  it ("N board(s) rejected by the board-name check"). If one of them is the right company, name its token under `sources:` in
+  settings.yaml (those boards are never name-checked). `discover.ignore_companies` (names, case and spacing ignored) lists archive folders
+  that are not companies ("New folder", "AI Engineer"): `--ats` skips them; the folders themselves are never touched. The boards named
+  token by token in `sources:` are still read. Posting lists are cached for 6
   hours. **Workable is not read**: its API needs the account owner's token and no public posting API is documented.
 - **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
   recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
   (`details_per_run`). An expired posting is closed.
 - **`--adzuna`** uses the Adzuna API (`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `sources.adzuna.queries`). Its descriptions are snippets, so a
   result is a **link**: it is looked for on the employer's own board (a known board, else the company's name is turned into up to four
-  board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); a CV-Library address is read like `add-url`;
-  anything else goes to the manual queue. Adzuna's own redirect links are never followed.
+  board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); anything else goes to the manual queue. Adzuna's own
+  redirect links are never followed.
 - **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
-  title, company and link. LinkedIn and Indeed pages are **never fetched**: the job is looked for on the employer's own board by title
-  (as for Adzuna); CV-Library job links go through the CV-Library reader; Reed links through the Reed API. A job that cannot be
-  resolved is appended to `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason`, one row per link, never
-  rewritten) for you to open, copy the ad and run `careerops live --clipboard`. **Resolving**: for every alert's company, up to four
-  board tokens (`Monzo Bank Ltd` -> `monzobank`, `monzo-bank`, `monzo`) are asked of the public Greenhouse, Lever and Ashby APIs (hits
-  and misses cached 30 days in `data/discover/boards.json`, one request a second per host); the alert's title must match an open posting
-  at normalised-title similarity >= `discover.title_match` (0.8) with the same level words ("Data Scientist" is not "Senior Data
-  Scientist"). A board found only through a guessed token is also held to the alert's town and, on Greenhouse, to the board's own
-  company name. The run prints, per source, how many alerts were resolved (`linkedin 12 of 20 (60%)`; `discover --report` adds all runs).
+  title, company and link. **linkedin.com, Indeed, CV-Library and Workday hosts (`*.myworkdayjobs.com`, `*.myworkday.com`) are never
+  fetched**, to resolve an alert or for anything else in discover: the job is looked for on the employer's own board by title (as for
+  Adzuna); Reed links go through the Reed API. A job that cannot be resolved stays in the queue (nothing is dropped): it is appended to
+  `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason, apply_kind`, one row per link; a file from before
+  `apply_kind` gets the column added to its header, its rows kept) for you to open, copy the ad and run `careerops live --clipboard`. A
+  job that WAS resolved but did not fit in the run's `max_new_per_run` is queued the same way, with the employer's page as its link (it
+  used to be dropped; the alerts are now read first, so the fresh jobs get the room before the older board ads). **Resolving**: for every
+  alert's company, up to four board tokens (`Monzo Bank Ltd` -> `monzobank`, `monzo-bank`, `monzo`) are asked of the public Greenhouse,
+  Lever and Ashby APIs (hits and misses cached 30 days in `data/discover/boards.json`, one request a second per host; a shortened token
+  must pass the board-name check above); the alert's title must match an open posting at normalised-title similarity >=
+  `discover.title_match` (0.9) with the same level words ("Data Scientist" is not "Senior Data Scientist") and a place that agrees (a
+  posting in another town is another job; a missing place agrees with anything). What is found carries `apply_url` and `apply_kind`
+  (`greenhouse | lever | ashby | workday | employer_other | aggregator_only`; a Workday host is `workday`, recorded and never fetched).
+  The run prints, per source, how many alerts were resolved (`linkedin 12 of 20 (60%)`) and by which step (`board_known`: a board you,
+  the archive or the register named; `board_guessed`: found from the company's name; `reed`); `discover --report` adds all runs and
+  the manual queue by `apply_kind`.
   **The queue is capped**: a run keeps its best `discover.manual_queue_max` (10) unresolved links in `manual_queue.csv`, ranked by title
   relevance (role tier 1 = 1.0, tier 2 = 0.8, tier 3 = 0.6, halved for a level the triage excludes) x S, and writes the rest to
   `data/jds/manual_queue_overflow.csv` (same columns plus `score`). **Filter audit**: every title the role or place filter turned away is
@@ -298,11 +312,14 @@ queue as a link to the email). Google DeepMind has no Greenhouse token that answ
 `quiet` (no alerts in 7 days) for a source whose alerts you do receive, correct its `domains` (the note in the file says which are
 unverified).
 
-`careerops sources check` and the end of every `careerops discover` run print one row per source (source, method, status, new jobs)
-and save the full table (reachable, robots.txt, credentials, alerts in the last 7 days, postings, detail) to
-`data/discover/health/<date>.csv` (a second check the same day appends its rows). Status: `ok`, `quiet` (works, found nothing),
-`blocked` (robots.txt, 401 / 403 / 429), `unreachable`, `no_credentials` (no `REED_API_KEY`, not signed in to Gmail), `not_found`,
-`no_file`, `error`, `disabled`. A source failing never stops the others, and a failing check never fails the command it ends.
+`careerops sources check` and the end of every `careerops discover` run print one row per source (source, method, status, alerts, jobs
+parsed, new jobs) and save the full table (reachable, robots.txt, credentials, alerts in the last 7 days, postings, detail, `jobs_parsed`)
+to `data/discover/health/<date>.csv` (a second check the same day appends its rows; a file from before a column existed gets it added).
+For a `gmail_alerts` source `alerts` is its mails in the last `discover.health.alert_days`, `jobs parsed` the jobs read out of them in
+that time (from the saved runs plus the one being checked) and `new` the ads written. It is `ok` only if jobs were parsed; mails that held
+no job (a welcome or account mail) give `parsed_none`, with the first subject line in the detail column. Status: `ok`, `quiet` (works,
+found nothing), `parsed_none`, `blocked` (robots.txt, 401 / 403 / 429), `unreachable`, `no_credentials` (no `REED_API_KEY`, not signed in
+to Gmail), `not_found`, `no_file`, `error`, `disabled`. A source failing never stops the others, and a failing check never fails the command it ends.
 
 #### Jobs outside the UK, and AIApply
 
@@ -434,13 +451,21 @@ file is rejected).
 Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it), or fetch
 one with `careerops add-url`. The
 first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
-`careerops live` takes the files best first (freshness tier, then P = F x S; it prints the order), up to `--max` (default 5), and for each one:
+`careerops live` takes the files best first (freshness tier, then the **estimate** of P = F x S x L; it prints the order), up to `--max`
+(default 5). It works in two passes. **Pass 1** tailors the selected jobs, nothing else is asked but the rule-skip question. The
+estimate (F is only the triage-time ceiling) cannot tell which tailoring will be good (an estimate of 0.86 became 0.25), so **pass 2**
+sorts the tailored jobs by freshness tier, then the **final P**, prints the table (company, role, age, tier, `LEVEL:` flag, ATS ceiling,
+P, and an `Apply:` line each) and only then reviews them. Nothing is dropped; a spent LLM budget in pass 1 still lets you review what was
+tailored. For each job:
 
 1. checks the file (missing, under 500 bytes, not UTF-8 → moved to `rejected/` with a `.reason.txt` beside it, loop continues);
-2. snapshots the archive (`paths.applications`; read-only `os.walk`: path, size, mtime);
+2. snapshots the archive (`paths.applications`; read-only `os.walk`: path, size, mtime), in each pass;
 3. adds the job (the internal `add-jd` function; the job id is passed on as a value, never read from printed output) and triages it;
-4. tailors exactly that id, then asks you to review it: **approve / edit / skip** (plus `l` to pick the letter A / B / none, `n` to open
-   the note, `o` to open the PDFs); skip leaves the job `skipped` and files the JD in `done/`;
+4. tailors exactly that id (pass 1), then asks you to review it (pass 2): **approve / edit / skip** (plus `l` to pick the letter A / B /
+   none, `n` to open the note, `o` to open the PDFs, `w` to open the apply page in your default Windows browser through `wslview`, else
+   `explorer.exe`: it only opens the page, never clicks, fills or submits, and the tool sends no request to it); the review screen prints
+   `Apply: <kind> <apply_url>` and, for a title with a level word, `LEVEL: manager | lead | senior`; skip leaves the job `skipped` and
+   files the JD in `done/`;
 5. unless `--dry-run`, and only after approval: you confirm *Open the application form?*, the existing apply assist fills the
    basics (it never submits), every `CHECK VISA ANSWER` line is printed, and *Did YOU submit the form? [y/N]* decides:
    `y` → mark-applied (archive + `applied`); anything else → status `ready_not_submitted`, nothing recorded as sent;
@@ -755,13 +780,16 @@ clearance, IR35, travel, the posting age, and anything the pipeline flagged) and
 
 I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
 not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". And no job is dropped for being old.
-`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S inside it**.
+`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S x L inside it**.
 
     tier 0  posted at most 24 h ago      tier 1  at most 72 h      tier 2  at most 7 days      tier 3  older (or undated)
-    P = F x S      F = honest ATS ceiling (0-1)
+    P = F x S x L      F = honest ATS ceiling (0-1)
     S = 1.00 exact register match · 0.90 fuzzy · 0.75 not on the register / agency / unknown · 0.65 the JD says no sponsorship
+    L = 0.3 manager|director|head · 0.4 lead|principal|staff|architect · 0.6 senior|sr · 1.0 any other title
 
-(the lowest applicable S; the weights are `priority.sponsor_weights` in `config/settings.yaml`). The old recency factor R = exp(-days / 14) is
+(the lowest applicable S; the weights are `priority.sponsor_weights` in `config/settings.yaml`. L is the level fit: the ATS score cannot see
+seniority, so the title words do; the highest level word wins, the values are `priority.level_factor` and yours to edit. Like S it only
+moves a job down: nothing is dropped, and `LEVEL: manager` etc. is shown in the review screen and the final table.). The old recency factor R = exp(-days / 14) is
 gone: it drove a 64-day-old posting that was still open down to 0.01. The age comes from **`posted_at`, the time the source says** (stored on the job
 with `posted_at_source`): Greenhouse `first_published` (not `updated_at`, which resets on a repost: the Anaplan ad was 69 days old, not 10),
 Lever `createdAt`, Ashby `publishedAt`, Reed `date`, Adzuna `created`, a Gmail alert's arrival time (an upper bound); anything else counts

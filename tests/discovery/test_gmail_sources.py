@@ -27,7 +27,7 @@ def make(cfg, db, net):
 
 @pytest.fixture
 def cfg(settings):
-    shutil.copy(ROOT / "config" / "sources.yaml", Path(settings.raw["paths"]["sources"]))
+    shutil.copy(ROOT / "tests" / "fixtures" / "discovery" / "sources_registry.yaml", Path(settings.raw["paths"]["sources"]))
     settings.raw["sources"].update(greenhouse=[{"slug": "acme", "name": "Acme Analytics Ltd"}], lever=[], lever_eu=[], ashby=[])
     settings.raw["discover"].update(alert_probes_per_run=0, sources=[])
     settings.raw["discover"]["gmail"]["senders"] = []
@@ -115,7 +115,8 @@ def test_a_glassdoor_alert_is_resolved_on_the_employers_board_or_queued_with_its
     assert (row["source"], row["title"]) == ("glassdoor-uk", "Senior AI Engineer")
     assert row["link"].startswith("https://www.glassdoor.co.uk/job-listing/senior-ai-engineer") and "utm_" not in row["link"]
     assert d.run.sources["gmail"]["alerts_glassdoor-uk"] == 2
-    assert dict(d.run.by_source["glassdoor-uk"]) == {"alerts": 2, "new": 1, "resolved": 1, "unresolved": 1}    # "new" is the health table's column
+    assert dict(d.run.by_source["glassdoor-uk"]) == {"alerts": 2, "new": 1, "resolved": 1, "unresolved": 1,      # "new" is the health table's column
+                                                     "mails": 1, "parsed": 2, "via_board_known": 1}
     assert not [u for u in net.urls(True) if "glassdoor" in u]                           # an alert's own site is never fetched
 
 
@@ -152,7 +153,8 @@ def test_an_alert_from_a_one_country_source_gives_the_job_that_country_unless_it
 
 
 def test_a_posting_whose_place_says_another_country_keeps_that_one(cfg, db):
-    net = mail_net({"s1": ("SEEK <jobmail@seek.com.au>", "New jobs", fixture_text("alert_seek.html"))},
+    alert = fixture_text("alert_seek.html").replace("Sydney NSW", "Auckland")      # the alert's place must agree with the posting's (round 8)
+    net = mail_net({"s1": ("SEEK <jobmail@seek.com.au>", "New jobs", alert)},
                    {"boards-api.greenhouse.io/v1/boards/maple/jobs": maple_board("Auckland"),
                     "boards-api.greenhouse.io/v1/boards/maple": {"name": "Maple Analytics", "content": ""}})
     cfg.raw["sources"]["greenhouse"].append({"slug": "maple", "name": "Maple Analytics"})

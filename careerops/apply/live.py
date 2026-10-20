@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..db import DB
-from ..discovery import countries, freshness, manual
+from ..discovery import applykind, countries, freshness, manual
 from . import snapshot
 from .errors import ArchiveError
 
@@ -43,6 +43,7 @@ EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", "rejected")
 NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error")
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
+AWAITING = ("needs_review", "approved")             # tailored: what pass 2 of the session (review, then apply) works on
 RETAILOR_FROM = ("needs_review", "approved", "skipped", "ready_not_submitted", "letter_pending", "error")
 
 
@@ -71,6 +72,7 @@ class JobResult:
     role: str = "-"
     status: str = ""
     sponsor: str = "n/a"
+    pass1_done: bool = False            # tailored in pass 1 of the session (a --retailor must not send it back to triaged again)
     visa: list[str] = field(default_factory=list)
     archive: str = "n/a"
     note: str = ""
@@ -212,14 +214,35 @@ class Live:
         except Exception as e:  # noqa: BLE001
             self.out(f"(inbox order by priority not available: {e}; going by file name)")
             return [] if self.fresh else files
-        self.out("Inbox order by freshness tier, then priority P = F x S:")
+        self.out("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L (before tailoring; the review order uses the final P):")
         for f, pr in ranked:
-            self.out(f"  T{pr.tier} {pr.age():>7}  {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
+            self.out(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = F {pr.f:.2f} x S {pr.s:.2f} x L {pr.l:.2f}"
+                     f"{'  ' + pr.flag() if pr.flag() else ''}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
         if self.fresh:
             keep = [f for f, pr in ranked if pr is not None and pr.tier == 0]
             self.out(f"--fresh: {len(keep)} file(s) posted at most 24 h ago (tier 0); {len(ranked) - len(keep)} older file(s) stay in the inbox.")
             return keep
         return [f for f, _ in ranked]
+
+    def _review_order(self, pending: list[tuple[Path, JobResult]]) -> list[tuple[Path, JobResult]]:
+        """Pass 2's order: the tailored jobs by freshness tier, then the FINAL P = F x S x L (F is the ceiling tailoring found), ties to the
+        surer employer. Prints the table before the first prompt. Nothing is dropped: the same jobs come back, in another order."""
+        from ..discovery import priority as prio
+
+        if not pending:
+            return []
+        rows = []
+        for f, r in pending:
+            job = self.db.job(r.job_id)
+            rows.append((prio.sort_key(job, self.s, tailored=True), f, r, job, prio.priority(job, self.s, tailored=True)))
+        rows.sort(key=lambda t: t[0][:3])                       # tier, -P, -S; a tie keeps the order of pass 1 (tier, estimate, name)
+        self.out("Review queue by freshness tier, then final P (P = F x S x L; F is the ATS ceiling after tailoring, not the estimate):")
+        self.out("     company | role | age | tier | level | ATS ceiling | P")
+        for n, (_, f, r, job, pr) in enumerate(rows, 1):
+            self.out(f"  {n}. {job['company']} | {job['title']} | {pr.age()} | T{pr.tier} | {pr.flag() or '-'} | "
+                     f"ATS ceiling {pr.f:.2f} | P {pr.p:.2f}")
+            self.out("     " + applykind.line(job["apply_url"] or job["url"], job["apply_kind"]))
+        return [(f, r) for _, f, r, _, _ in rows]
 
     def _loop(self) -> None:
         files = ([self.only] if self.only is not None else self._by_priority(
@@ -229,17 +252,36 @@ class Live:
         if not files:
             self.out(f"Nothing in {self.dirs.inbox}: put one JD per .txt file there (optional first lines "
                      "`Company: ...`, `Title: ...`, `URL: ...`).")
-        counted = 0
+        # Pass 1: the selected files (tier, then the estimate, at most --max) are added, triaged and tailored; nothing is asked yet but the
+        # rule-skip question. Pass 2: the tailored jobs are reviewed (and applied to) best FINAL P first. The estimate of P cannot tell which
+        # tailoring will be good (an estimate of 0.86 became 0.25), the final one can.
+        counted, pending, deferred = 0, [], None
         for f in files:
             if counted >= self.max_jobs:
                 self.out(f"--max {self.max_jobs} reached; {len(files) - files.index(f)} file(s) left in the inbox.")
                 break
-            r = self._one(f)
+            try:
+                r = self._one(f, stop_before_review=True)
+            except StopSession as e:
+                if e.code != EXIT_BUDGET or not pending:
+                    raise
+                deferred = (e, dict(self.current))             # budget spent: review what is tailored, then stop
+                self.out(f"  {e.reason}")
+                break
             if r is not None:
                 counted += 1
+                if r.status in AWAITING:
+                    pending.append((f, r))
+        for f, r in self._review_order(pending):
+            self._one(f, r=r)
+        if deferred:
+            self.current = deferred[1]
+            raise deferred[0]
 
-    def _one(self, f: Path) -> JobResult | None:
-        """Process one file. Returns None when it was rejected or already done (it does not count towards --max)."""
+    def _one(self, f: Path, *, stop_before_review: bool = False, r: JobResult | None = None) -> JobResult | None:
+        """Process one file. Returns None when it was rejected or already done (it does not count towards --max).
+        `stop_before_review` is pass 1 of the session: add, triage and tailor, then stop with the job awaiting its review (status
+        'needs_review', or 'approved' from an earlier dry run); `r` is the result that pass returned, which pass 2 carries on with."""
         self.current = {"file": f.name, "job_id": None, "stage": "validate"}
         self.before = None
         try:
@@ -266,12 +308,15 @@ class Live:
                                           note=refusal))
             return None
 
-        r = JobResult(f.name)
-        self.results.append(r)
+        if r is None:
+            r = JobResult(f.name)
+            self.results.append(r)
+        else:
+            r.archive = "n/a"                                                      # pass 2 is checked again from its own snapshot
         self.before = snapshot.take(self.root)                                     # 1. archive snapshot
         self.dir_before = None
         try:
-            status = self._advance(f, text, sha, entry, r)
+            status = self._advance(f, text, sha, entry, r, stop_before_review)
         except StopSession:
             self._fill(r)
             raise
@@ -332,8 +377,8 @@ class Live:
         cur, jid = self.current, self.current.get("job_id")
         job = self.db.job(jid) if jid else None
         ok = True
-        r = self.results[-1] if self.results else None
-        if r is not None and r.file == cur.get("file"):
+        r = next((x for x in reversed(self.results) if x.file == cur.get("file")), None)      # pass 2 revisits earlier results
+        if r is not None:
             if not r.status:
                 r.status = f"stopped at {cur.get('stage')}"
             self._fill(r)
@@ -391,6 +436,10 @@ class Live:
                 meta["posted_source"] = hdr["posted_source"]
         if re.fullmatch(r"\d{4}-\d{2}-\d{2}", hdr.get("first_seen") or ""):
             meta["seen_on"] = hdr["first_seen"]
+        if hdr.get("apply_url"):
+            meta["apply_url"] = hdr["apply_url"]
+        if (hdr.get("apply_kind") or "").lower() in applykind.KINDS:
+            meta["apply_kind"] = hdr["apply_kind"].lower()
         if (hdr.get("listed") or "").lower() in ("yes", "true", "1"):
             meta["open_listing"] = True
         if (hdr.get("agency") or "").lower() in ("yes", "true", "1"):
@@ -399,7 +448,7 @@ class Live:
             meta["work_country"] = countries.place_code(hdr["country"])     # a `Country:` header is W, as you gave it
         return meta, ""
 
-    def _advance(self, f: Path, text: str, sha: str, entry: dict, r: JobResult) -> str:
+    def _advance(self, f: Path, text: str, sha: str, entry: dict, r: JobResult, stop_before_review: bool = False) -> str:
         db = self.db
         self._stage("add-jd")
         if not (entry.get("job_id") and db.job(entry["job_id"])):
@@ -422,7 +471,7 @@ class Live:
         self.current["job_id"] = jid
         self.dir_before = db.job(jid)["application_dir"]
         self.out(f"\n== {entry.get('company')} | {entry.get('title')}  [{jid}]  ({f.name})")
-        if self.retailor and db.job(jid)["status"] in RETAILOR_FROM:
+        if self.retailor and not r.pass1_done and db.job(jid)["status"] in RETAILOR_FROM:     # once: not again at the review pass
             self.out(f"  --retailor: '{db.job(jid)['status']}' -> 'triaged'; the earlier tailoring of this job is replaced.")
             db.update_job(jid, status="triaged")
             db.log(jid, "live", "retailor: sent back to triaged")
@@ -465,6 +514,9 @@ class Live:
                                       "run live again after the budget resets", EXIT_BUDGET)
                 if after == "error":
                     return "error"
+            elif st in AWAITING and stop_before_review:
+                r.pass1_done = True
+                return st                                                           # pass 2 reviews it, in the order of the final P
             elif st == "needs_review":
                 self._stage("review")
                 choice = self.h.review(jid)                                         # 4. review exactly this id

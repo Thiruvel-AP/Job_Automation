@@ -141,7 +141,7 @@ def test_gmail_alerts_without_a_sign_in_say_so_and_ask_gmail_nothing(settings):
 def test_alerts_seen_in_the_last_seven_days_are_counted_with_a_read_only_list_call(signed_in):
     net = Net(strict=False).add("users/me/messages", {"messages": [{"id": "a"}, {"id": "b"}, {"id": "c"}]})
     row = one(signed_in, GM, net)
-    assert (row.status, row.alerts, row.credentials, row.reachable) == ("ok", 3, "present", "yes")
+    assert (row.status, row.alerts, row.credentials, row.reachable) == ("parsed_none", 3, "present", "yes")       # mails, but no job read from them (tests/discovery/test_alert_health.py)
     (req,) = [r for r in net.requests if "gmail" in r["url"]]
     assert req["params"]["q"] == "from:glassdoor.co.uk newer_than:7d" and req["headers"]["Authorization"] == "Bearer at"
     assert req["url"].endswith("/users/me/messages")                               # a list, never a read of a message or any write
@@ -242,7 +242,7 @@ def test_the_table_has_source_method_status_and_new_jobs_and_explains_what_is_no
     rows = check(settings, [src(id="a", name="Acme board", token="acme"), src(id="b", name="Missing board", token="nosuch")], acme_net())
     text = health.format_table(rows)
     head = text.splitlines()[0].split()
-    assert head == ["source", "method", "status", "new", "jobs"]
+    assert head == ["source", "method", "status", "alerts", "jobs", "parsed", "new", "jobs"]
     assert any(l.startswith("Acme board") and " ok " in l for l in text.splitlines())
     assert "Missing board: not_found:" in text and "Acme board:" not in text
 
@@ -261,7 +261,7 @@ def test_the_check_is_saved_to_a_csv_named_by_the_date_and_a_second_check_append
 # ------------------------------------------------------------------ the commands
 @pytest.fixture
 def cmd(settings, monkeypatch):
-    shutil.copy(ROOT / "config" / "sources.yaml", Path(settings.raw["paths"]["sources"]))
+    shutil.copy(ROOT / "tests" / "fixtures" / "discovery" / "sources_registry.yaml", Path(settings.raw["paths"]["sources"]))
     monkeypatch.setattr(cli, "load_settings", lambda path=None: settings)
     monkeypatch.setattr(cli, "load_dotenv", lambda p: None)
     monkeypatch.delenv("REED_API_KEY", raising=False)

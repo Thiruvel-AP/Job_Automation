@@ -529,7 +529,7 @@ R for those jobs could look fresher than the posting is (5r: R now counts from t
 the result has no agency field) then `/jobs/{id}`; `expirationDate` passed = closed. **D3** Adzuna is treated as snippets (docs unreachable from here; the
 third-party descriptions say "truncated"): a description of >= 1500 characters that does not end in an ellipsis is taken as the ad, anything else is a link
 resolved through the employer's board (never by following Adzuna's redirect) or queued. **D4** alerts: LinkedIn / Indeed through the employer's board by
-title (>= 0.8 similar since 5r; was 0.88), CV-Library through `intake.fetch_ad` (C2), Reed through the API; `data/jds/manual_queue.csv` for the rest. **D5** `Known`:
+title (>= 0.8 similar since 5r, 0.9 since 5x; was 0.88), CV-Library through `intake.fetch_ad` (C2; removed in 5x: never fetched), Reed through the API; `data/jds/manual_queue.csv` for the rest. **D5** `Known`:
 DB + inbox/done/rejected headers + archive folder names (company + role, any place) + this run; closed = Reed `expirationDate`, Ashby `isListed: false`.
 **D6** `runs.jsonl` + `discover --report`. **D7** README "Getting a Reed API key", "Getting Gmail access". **D8** `discover --ats` seeds (no random register sampling any more): `discovery/seeds.py` (`seeds`: top-level folder NAMES of `paths.applications`, then `discover.sources`, then register companies only when they match one of those, which adds `on_register` and the slug `resolve` verified, tried first) and `discovery/boards.py` (`BoardIndex`: `paths.discover/boards.json`, one entry per `provider:token`, hit or miss, `discover.ats.board_cache_days` = 30; `find`: up to four tokens per company from `ats.board_tokens`, the first token that is a board for any provider ends the search; `Finding` is the per-company report row). `ats.py` gained `board_tokens`, `PROVIDERS`, `board_request`, `is_board` (200 + `jobs` list; an empty Lever list is not told apart from an unknown site) and `parse_postings` (`board_postings` is now request + parse). A blocked host, a 5xx or a connection error is reported and NOT cached. `Discover.from_boards` reads the `sources:` boards, then one seed at a time; `ats_report()` prints boards found first; `listing()` is the top 10 and shows the URL. The `discover.ats.probe_per_run` setting is gone. Tests: `tests/discovery/test_{ats,discover}.py`. Tests: `tests/discovery/test_{http,ats,reed,gmail,discover}.py`.
 Judgement calls: the documented API hosts are exempt from the *unreadable robots.txt* refusal only (Ashby's `/robots.txt` answers 401 while its API is documented as
@@ -838,6 +838,47 @@ present, 180 Degrees Consulting 3 bullets, Freelance 2. az4 stays over its repla
 keyword list may differ.
 
 **Not verified.** The real model's keyword list and text, and the real `careerops live --dry-run --retailor` (CLAUDE.md forbids running it against the real `data/`).
+
+## 5x. Round 8 — go-live blockers (2026-10-20) — **done** (offline tests only; no live discover run, no real mailbox, no real form)
+
+114 new tests (`test_level` 28, `test_live_order` 8, `test_board_check` 17, `test_alert_resolution` 41, `test_apply_page` 11, `test_alert_health` 8, one in `test_registry`); the full suite
+ran as 128 files on WSL's own disk (3,040 tests, 0 failures).
+
+Evidence from the user's run of `discover --ats --gmail-alerts --report` on 2026-10-20: 8 of 89 alert jobs resolved (indeed-uk 5 of 65,
+linkedin 3 of 24), 38 went to the manual queue, the freshest jobs were the hardest to open. Each item had a failing test first.
+
+0. **The one failing test.** `tests/discovery/test_jobbank.py` copied the real `config/sources.yaml`, where `jobbank-ca` is now `enabled: false`
+   (9 tests of the file failed, not one), and `test_discover_jobbank_prints_the_counts...` also read the real clock against rows dated October 2026
+   (the 5 October row aged out of the 14-day window on 20 October). Fix: `tests/fixtures/discovery/sources_jobbank.yaml` and a frozen clock. No assertion changed.
+1. **Alert resolution** (`discover.resolve_link`, `applykind.py`). Read first: the only step that can resolve an Indeed or LinkedIn alert is the employer-board
+   lookup; the run record did not say which board it was, so resolutions are now counted per step (`resolved_via_board_known | board_guessed | reed`,
+   `discover --report` prints them). Found in the same read: 3 of the 8 resolved alerts were dropped silently because the `ats` step had already used the run's
+   40 new-file allowance (`accept() == "full"`, no counter), and the mail was marked seen so they never came back. Now a resolved job with no room goes to
+   the manual queue (employer page as its link, its reason says so), and `discover` reads the alerts BEFORE the boards. The CV-Library page fetch (C2) is gone:
+   linkedin.com, indeed, cv-library and Workday hosts are never requested (`applykind.NEVER_FETCH`; the CLI's `Fetcher(never=...)` refuses them too). The title
+   must match at `discover.title_match` 0.9 (was 0.8) with the same level words and a place that agrees (`candidate.places_agree`). Every candidate and inbox ad
+   carries `apply_url` / `apply_kind` (`Apply kind:` / `Apply URL:` headers; `header_fields` reads a header run past line ten); `jobs.apply_kind` is a new additive column;
+   `manual_queue.csv` has an `apply_kind` column (an older file's header is extended, rows kept). Review prints `Apply: <kind> <url>`; `[w]` opens it (`review.open_url`).
+2. **Order after tailoring** (`live.py`). Pass 1 tailors the selected files (tier, then the estimate, `--max`); pass 2 reviews them sorted by tier and FINAL P and prints the
+   table first. The inbox listing says "estimate". `Live._one(f, stop_before_review=..., r=...)`; `--retailor` re-tailors once, not again in pass 2.
+   Existing tests that fixed the old one-job-at-a-time order were changed to the new order (the archive guard, snapshot order, quit at review).
+3. **Level fit** (`priority.level_of/level_factor`, `priority.level_factor` in settings): P = F x S x L; shown as `LEVEL: ...`; nothing dropped. (Triage still skips a
+   senior / manager title with "Tailor it anyway?"; that rule is `roles.levels.exclude`, yours.)
+4. **Wrong-company boards** (`boards.verify_shortened`, `ats.full_name_tokens`, `discover.ignore_companies`, `discover.ats.board_name_match`). A board found only
+   through a shortened slug is accepted only if the board's own name matches at 0.9. Greenhouse's API gives a name; Lever's and Ashby's do not, so a shortened slug
+   found on those is `board_unverified` (the user's evidence cases `ashby/applied`, `ashby/focus`, `ashby/build`, `ashby/arch` are all Ashby). A board you name under
+   `sources:` is never name-checked. Applies to the alert lookup too.
+5. **Honest alert health** (`health.py`). `alerts`, `jobs parsed`, `new`; `ok` only if jobs were parsed over `discover.health.alert_days`, else `parsed_none` with the first subject.
+
+Also: 13 tests of `test_registry` / `test_gmail_sources` / `test_health` / `test_quality_round` were already failing against the user's uncommitted `config/sources.yaml` (sources
+switched off or removed, four added). They now read `tests/fixtures/discovery/sources_registry.yaml`, a frozen copy of the registry as committed on 2026-10-13, and one new test
+checks that the live file loads and lists each source once. `append_rows` extends a CSV header in place (a plain rewrite, no `os.replace`: `tests/test_deletions.py` guards moves).
+
+**Stand-ins** (CLAUDE.md forbids the live runs): a scratch script ran the real `cli.main(["discover", "--gmail-alerts", "--ats", "--report"])` over scratch folders, the tests' fake
+network and three made-up mails (it printed the board-check lines, `Alerts resolved by step`, the health table with `alerts / jobs parsed / new jobs`, and no banned host in
+the hosts asked); `careerops live --mock --max 3` over three mock JDs printed the final-P table with `LEVEL:` flags and an `Apply:` line each.
+
+**Not verified.** Every live behaviour: which boards the real names resolve to, the real resolution rate, a real mailbox's subjects, `wslview` / `explorer.exe` opening a page.
 
 ## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
 

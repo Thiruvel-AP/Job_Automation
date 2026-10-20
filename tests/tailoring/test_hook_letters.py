@@ -246,7 +246,7 @@ def test_the_review_screen_lists_the_letter_and_says_why_there_is_no_b_and_the_m
         return "s"
 
     review.review_job(db, db.job(job["id"]), hook_settings, fb_fixture, ask=ask)
-    assert prompts[0] == "[a]pprove  [e]dit  [r]eject  [l]etter A/B/none  [g]enerate letters again  [n]ote  [o]pen PDFs  [s]kip  [q]uit > "
+    assert prompts[0] == "[a]pprove  [e]dit  [r]eject  [l]etter A/B/none  [g]enerate letters again  [n]ote  [o]pen PDFs  [w] open apply page  [s]kip  [q]uit > "
 
 
 # ------------------------------------------------------------------ the note

@@ -223,7 +223,9 @@ def test_a_deletion_a_modification_or_a_stray_addition_stops_the_whole_loop(db, 
     fake = Fake(db, settings, yes(), archive=mode)
     live, lines = session(db, settings, fake)
     assert live.run() == EXIT_ARCHIVE
-    assert [j["company"] for j in db.jobs()] == ["Acme"]                       # the second JD was never started
+    assert [j["company"] for j in db.jobs()] == ["Acme", "Beta"]               # both were tailored first (pass 1) ...
+    assert [n for n, _ in fake.calls if n in ("review", "preflight", "assist", "mark_applied")] == ["review", "preflight", "assist", "mark_applied"]
+    assert db.jobs()[1]["status"] == "needs_review"                           # ... but the second was never reviewed or applied to
     assert (inbox / "2.txt").exists() and (inbox / "1.txt").exists()          # nor was the first one filed away as done
     assert not (settings.path("jds") / "done").exists() or not list((settings.path("jds") / "done").iterdir())
     r = live.results[0]
@@ -272,7 +274,7 @@ def test_the_snapshot_is_taken_before_add_jd_and_compared_after_the_last_step(db
     fake = Fake(db, settings, yes())
     live, _ = session(db, settings, fake)
     live.run()
-    assert order == ["snapshot", "add_jd", "snapshot"]
+    assert order == ["snapshot", "add_jd", "snapshot", "snapshot", "snapshot"]           # pass 1 (tailor): take, add, compare; pass 2 (review, apply): take, compare
 
 
 # ------------------------------------------------------------------ dry run and the 'did you submit' gate
@@ -401,7 +403,8 @@ def test_quit_at_the_review_prompt_stops_the_session_and_keeps_the_job_in_review
     fake = Fake(db, settings, review="quit")
     live, lines = session(db, settings, fake)
     assert live.run() == 0
-    assert [j["status"] for j in db.jobs()] == ["needs_review"] and (inbox / "1.txt").exists() and (inbox / "2.txt").exists()
+    assert [j["status"] for j in db.jobs()] == ["needs_review", "needs_review"]            # both were tailored in pass 1; the quit stopped the reviews
+    assert (inbox / "1.txt").exists() and (inbox / "2.txt").exists()
     assert any("Resume with:  careerops live --max 5" in l for l in lines)
 
 

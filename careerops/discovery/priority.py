@@ -1,10 +1,12 @@
 """Priority = what to look at first. Fresh jobs first, then fit; sponsorship is a weight on the order, never a filter.
 
-  order  =  ( freshness tier,  then  P = F x S  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
+  order  =  ( freshness tier,  then  P = F x S x L  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
 
   tier  0 posted at most 24 h ago, 1 at most 72 h, 2 at most 7 days, 3 older or undated (discovery/freshness.py). The posting time is the
         source's own (Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna created; a Gmail alert's arrival
         time, an upper bound); anything else counts from the day discover first saw the job. Nothing is dropped for being old.
+  L  level fit, from the title words (the ATS score cannot see seniority), `priority.level_factor` in settings.yaml:
+       manager|director|head 0.3 · lead|principal|staff|architect 0.4 · senior|sr 0.6 · anything else 1.0 (the highest level word wins)
   F  the honest ATS ceiling, 0-1 (the LLM-checked ceiling once tailored, else the triage-time one; 0 when not known yet)
   S  how sure the employer is to sponsor, from `priority.sponsor_weights` in settings.yaml:
        exact    on the sponsor register by name                                  1.00
@@ -30,6 +32,11 @@ from typing import Any, Mapping
 from . import countries, freshness, workcountry
 
 DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
+DEFAULT_LEVELS = {"manager": 0.3, "lead": 0.4, "senior": 0.6, "other": 1.0}
+# Title words per level, highest level first: "Senior Manager" is a manager, "Manager, Applied AI Architects" too. Whole words only.
+LEVEL_WORDS = [("manager", re.compile(r"\b(?:manager|director|head)\b", re.I)),
+               ("lead", re.compile(r"\b(?:lead|principal|staff|architect)\b", re.I)),
+               ("senior", re.compile(r"\b(?:senior|sr)\b", re.I))]
 
 # ------------------------------------------------------------------ what the JD says about sponsorship (an info line, not a flag)
 _NEG = (r"(?:do(?:es)? not|don[’']t|doesn[’']t|cannot|can[’']t|can not|unable to|not able to|will not|won[’']t|"
@@ -95,19 +102,25 @@ def wording_line(jd: str) -> str | None:
 # ------------------------------------------------------------------ the score
 @dataclass
 class Priority:
-    p: float               # F x S
+    p: float               # F x S x L
     f: float
     s: float
     s_reason: str          # why S is what it is
     hours: float | None    # hours since the job was posted (freshness.py), None when unknown
     tier: int              # 0 <= 24 h, 1 <= 72 h, 2 <= 7 d, 3 older or undated: the first key of the order
     posted_via: str = ""   # where the posting time comes from (freshness.SOURCES), "" when unknown
+    l: float = 1.0         # level fit from the title words (level_factor); 1.0 for a title without any
+    level: str = "other"   # manager | lead | senior | other
+
+    def flag(self) -> str:
+        """'LEVEL: manager' (and so on) for the review screen and the final table; '' for a title without a level word."""
+        return f"LEVEL: {self.level}" if self.level != "other" else ""
 
     def age(self) -> str:
         return "date unknown" if self.hours is None else freshness.age_text(self.hours)
 
     def line(self) -> str:
-        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) | "
+        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x L {self.l:.2f} ({self.level}) | "
                 f"age {self.age()} (tier {self.tier}, {freshness.TIER_NAMES[self.tier]}"
                 + (f", {self.posted_via}" if self.posted_via else "") + ")")
 
@@ -115,6 +128,21 @@ class Priority:
 def weights(settings) -> dict[str, float]:
     given = ((settings.raw.get("priority") or {}).get("sponsor_weights") or {}) if settings is not None else {}
     return {k: float(given.get(k, given.get("non_uk", v) if k == "non_home" else v)) for k, v in DEFAULT_WEIGHTS.items()}   # non_uk: its old name
+
+
+def level_of(title: str) -> str:
+    """manager | lead | senior | other, from whole words in the title; the highest level that has a word wins."""
+    for level, rx in LEVEL_WORDS:
+        if rx.search(title or ""):
+            return level
+    return "other"
+
+
+def level_factor(title: str, settings=None) -> tuple[float, str]:
+    """(L, level) for a title. The values are `priority.level_factor` in settings.yaml; one that is missing uses its default."""
+    given = ((settings.raw.get("priority") or {}).get("level_factor") or {}) if settings is not None else {}
+    level = level_of(title)
+    return float(given.get(level, DEFAULT_LEVELS[level])), level
 
 
 def _get(job: Mapping[str, Any], key: str) -> Any:
@@ -163,12 +191,13 @@ def ats_factor(job: Mapping[str, Any], tailored: bool = True) -> float:
 
 
 def priority(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> Priority:
-    """P = F x S for a job row (or dict with the same keys), with its age in hours and its freshness tier (freshness.py)."""
+    """P = F x S x L for a job row (or dict with the same keys), with its age in hours and its freshness tier (freshness.py)."""
     f = ats_factor(job, tailored)
     s, why = sponsor_factor(job, settings)
+    l, level = level_factor(str(_get(job, "title") or ""), settings)
     when, via = freshness.posted(job)
     hours = freshness.age_hours(job, today)
-    return Priority(f * s, f, s, why, hours, freshness.tier_of(hours), freshness.SOURCES.get(via, "first seen" if via else ""))
+    return Priority(f * s * l, f, s, why, hours, freshness.tier_of(hours), freshness.SOURCES.get(via, "first seen" if via else ""), l, level)
 
 
 def sort_key(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> tuple:
