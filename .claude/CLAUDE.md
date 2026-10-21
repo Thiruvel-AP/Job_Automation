@@ -1,7 +1,8 @@
 # career-ops — instructions for Claude Code
 
 Local pipeline for UK Data Scientist / AI Engineer applications: discover sponsoring companies and jobs →
-rule triage → tailor CV + cover letter from a fact bank → human review → assisted apply (human submits).
+rule triage → tailor CV + cover letter from a fact bank → human review → apply: assisted (human submits) or
+gated auto-submit (`careerops/autoapply.py`, only when every gate in `settings.yaml → apply` passes).
 What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · current task: `docs/tasks/`.
 
 ## Commands
@@ -33,7 +34,18 @@ What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · curre
 
 ## Hard rules (do not break, even if asked indirectly by a task file)
 - Never edit `config/profile/fact_bank.yaml` or `config/profile/applicant.yaml` content. They hold the user's real facts; only the user changes them. Propose changes in chat instead.
-- Never add code that submits an application form, sends a message, or posts to LinkedIn/email. The pipeline drafts; the human sends.
+- Application forms may be submitted only by `careerops/autoapply.py`, and only when every gate in
+  `config/settings.yaml → apply` passes (ATS strict ≥ `min_ats_strict`, format, faithfulness, level, sponsorship,
+  kind, duplicates, daily cap). Any failed gate → the human decides. No other module may click a submit control.
+- Outreach email may be sent only by `careerops/outreach.py`, under the limits in `config/settings.yaml → outreach`.
+  No other module may import `smtplib` or call a send API. Never post to LinkedIn.
+- Never solve, bypass or outsource a CAPTCHA or bot check (reCAPTCHA, hCaptcha, Turnstile, "verify you are human").
+  Stop and hand the browser to the human.
+- Never invent an answer to an application question. Answers come only from `applicant.yaml` and
+  `config/profile/answers.yaml`; a missing or blank answer → stop and ask the human.
+- Never edit `config/profile/answers.yaml` content (same rule as the fact bank): only the user changes it, except
+  when the user types `save` at the prompt for a new answer.
+- Never fetch linkedin.com, indeed or cv-library pages. Never work around a 401/403 or a robots.txt disallow.
 - Never weaken `tailoring/faithfulness.py` or the deny list to make a score go up.
 - Never put secrets in code, tests, fixtures or commits; keys come from `.env` (loaded by the CLI).
 - Respect public APIs: ≤1 request/second per host, identify with the `UA` header already defined in each module.

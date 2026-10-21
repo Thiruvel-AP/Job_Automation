@@ -4,14 +4,19 @@ Per JD file: validate -> archive snapshot -> add-jd (internal function, the job 
 tailor that id -> review that id (approve / edit / skip) -> [not --dry-run] the apply assist, which never submits ->
 "Did YOU submit the form?" -> mark-applied only on a `y` -> archive snapshot again and compare -> move the JD to done/.
 
+With `--auto` (hooks `auto_gate` and `auto_apply`) a tailored job meets the gate first (apply/autogate.py). Every gate passed: the form is
+filled and, unless `--no-submit`, submitted by autoapply.py, and mark-applied runs on the confirmation. Any gate failed: `AUTO BLOCKED: ...`
+is printed and the job goes to the review prompt and the assist exactly as without `--auto`. A CAPTCHA or a question nobody answered makes the
+job `needs_user`; a click without a confirmation page makes it `submit_unconfirmed` (never retried, never marked applied).
+
 A file marked as outside the UK (a `Country:` header that is not the UK, or `Status: listed_only`, which `careerops discover` writes for
 a job in another country) is not worked on: it stays in inbox/, is not counted towards --max and is listed in the summary as
 `listed_only`, unless applicant.yaml has a `visa.by_country.<country>` block for that country (you add those yourself).
 
-Nothing here submits anything, answers a gate for the user, or writes to the archive. The archive is only read (a snapshot
-is os.walk + lstat); the one permitted write to it, for a job the user says they submitted, is mark-applied's own
-(`record_application`, injected as a hook). If the archive differs afterwards in any way other than that job's one new
-<Company>/<Role> folder, the whole loop stops with exit code 3.
+Nothing in this module submits anything (only autoapply.py clicks a submit control, through the `auto_apply` hook), answers a review gate
+for the user, or writes to the archive. The archive is only read (a snapshot is os.walk + lstat); the one permitted write to it, for a job
+submitted by the user or by the gated auto-apply, is mark-applied's own (`record_application`, injected as a hook). If the archive differs
+afterwards in any way other than that job's one new <Company>/<Role> folder, the whole loop stops with exit code 3.
 
 The heavy steps are hooks (tailor, review, preflight, assist, mark_applied) that each take a JOB ID, so the loop never has
 to read another command's output, and tests can put fakes in their place.
@@ -29,19 +34,24 @@ import shutil
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from ..db import DB
 from ..discovery import applykind, countries, freshness, manual
-from . import snapshot
+from . import autolog, snapshot
 from .errors import ArchiveError
+
+if TYPE_CHECKING:
+    from ..autoapply import AutoResult
+    from .autogate import Gates
 
 EXIT_BUDGET = 1               # the day's LLM budget is spent: nothing half-done, run again later
 EXIT_ARCHIVE = 3              # the archive changed in a way the pipeline never does
 EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 
-FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", "rejected")
-NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error")
+FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", "rejected", "submit_unconfirmed")
+NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error", "needs_user", "auto_filled (not submitted)",
+                "auto_ready (dry run)")
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
 AWAITING = ("needs_review", "approved")             # tailored: what pass 2 of the session (review, then apply) works on
 RETAILOR_FROM = ("needs_review", "approved", "skipped", "ready_not_submitted", "letter_pending", "error")
@@ -62,6 +72,8 @@ class Hooks:
     preflight: Callable[[str], None]                    # raises ArchiveError before a form is opened
     assist: Callable[[str], dict]                       # {"confirmation": str, "visa": [{"question", "value"}]}; never submits
     mark_applied: Callable[[str, str | None], bool]     # archive + mark applied; False = archive incomplete
+    auto_gate: "Callable[[str], Gates] | None" = None   # `--auto`: the gate for this job (apply/autogate.py); None = no auto-apply in this session
+    auto_apply: "Callable[[str], AutoResult] | None" = None    # `--auto`: fill the form and, unless --no-submit, submit it (autoapply.py)
 
 
 @dataclass
@@ -142,6 +154,7 @@ class Live:
         self.current: dict = {}
         self.before: snapshot.Snapshot | None = None
         self.dir_before: str | None = None
+        self._auto_tried: set[str] = set()                # a job meets the auto gate once per session; a decline falls through to the review prompt
 
     # ------------------------------------------------------------------ files
     def _inside_archive(self, p: Path) -> bool:
@@ -389,9 +402,15 @@ class Live:
                     self.out("  " + line)
         self.out(f"\nSTOPPED at stage '{cur.get('stage')}' of {cur.get('file')}"
                  + (f" (job {jid}, status '{job['status']}')" if job is not None else " (no job yet)") + ".")
-        self.out("The JD is still in inbox/ and the job keeps the status it reached; nothing was submitted by this command.")
+        if cur.get("stage") == "auto-fill":
+            self.out("The JD is still in inbox/. The form may already have been submitted automatically: look at the last rows of "
+                     f"{autolog.path(self.s)} and at the confirmation e-mail before anything else.")
+        else:
+            self.out("The JD is still in inbox/ and the job keeps the status it reached; nothing was submitted by this command.")
         if cur.get("stage") in ("assist", "confirm-submitted", "mark-applied") and jid:
             self.out(f"If you already pressed Submit in the browser, run: careerops mark-applied --id {jid}")
+        elif cur.get("stage") == "auto-fill" and jid:
+            self.out(f"If the form went through, run: careerops mark-applied --id {jid}")
         self.out(f"Resume with:  {self.resume_cmd}")
         return ok
 
@@ -517,7 +536,16 @@ class Live:
             elif st in AWAITING and stop_before_review:
                 r.pass1_done = True
                 return st                                                           # pass 2 reviews it, in the order of the final P
+            elif st == "needs_user":
+                self.out(f"  This job needs you: {job['reason']}. Finish the form by hand (careerops apply --id {jid}); once submitted: "
+                         f"careerops mark-applied --id {jid}")
+                return "needs_user"
             elif st == "needs_review":
+                if self.h.auto_gate is not None and jid not in self._auto_tried:
+                    self._auto_tried.add(jid)
+                    done = self._try_auto(jid, r)
+                    if done:
+                        return done
                 self._stage("review")
                 choice = self.h.review(jid)                                         # 4. review exactly this id
                 if choice == "quit":
@@ -534,6 +562,65 @@ class Live:
             else:                                                                   # applied, rejected, ready_not_submitted, ...
                 return st
         return db.job(jid)["status"]
+
+    def _try_auto(self, jid: str, r: JobResult) -> str | None:
+        """The gate, then the automatic fill (and submit). Returns the job's final status, or None when the job is for the review prompt
+        (a gate failed, the form step was refused, the user declined the submit, or the page could not be driven)."""
+        db = self.db
+        self._stage("auto-gate")
+        gates = self.h.auto_gate(jid)
+        if not gates.ok:
+            r.note = gates.line()
+            self.out("  " + r.note)
+            return None
+        if self.dry_run:
+            self.out("  AUTO READY: every gate passed. --dry-run opens no browser and submits nothing; this JD stays in inbox/.")
+            return "auto_ready (dry run)"
+        self._stage("preflight")
+        try:
+            self.h.preflight(jid)
+        except ArchiveError as e:
+            r.note = f"AUTO BLOCKED: archive: {e}"
+            self.out("  " + r.note)
+            return None
+        self._stage("auto-fill")
+        try:
+            res = self.h.auto_apply(jid)
+        except ArchiveError as e:                                                   # the wrong-file guard, an unknown work country
+            r.note = f"AUTO BLOCKED: {e}"
+            self.out("  " + r.note)
+            return None
+        db.log(jid, "autoapply", {"status": res.status, "reason": res.reason, "screenshots": res.screenshots, "filled": res.filled,
+                                  "left_blank": res.blank})
+        for shot in res.screenshots:
+            self.out(f"  screenshot: {shot}")
+        if res.blank:
+            self.out("  left empty (optional, no answer): " + "; ".join(res.blank[:8]))
+        if res.status == autolog.SUBMITTED:
+            self.out(f"  Submitted and confirmed: {res.reason}.")
+            self._stage("mark-applied")
+            ok = self.h.mark_applied(jid, res.confirmation or None)
+            return "applied" if ok else "applied (archive incomplete)"
+        if res.status == autolog.NOT_SUBMITTED:
+            self.out(f"  {res.reason}. Nothing was submitted; the job keeps its status and this JD stays in inbox/.")
+            return "auto_filled (not submitted)"
+        if res.status == autolog.UNCONFIRMED:
+            db.update_job(jid, status="submit_unconfirmed", reason=res.reason)
+            r.note = res.reason
+            self.out(f"  SUBMIT CLICKED, NOT CONFIRMED: {res.reason}\n  Look at the screenshots and your e-mail; if it went through, run: "
+                     f"careerops mark-applied --id {jid}")
+            return "submit_unconfirmed"
+        if res.status == autolog.NEEDS_USER:
+            db.update_job(jid, status="needs_user", reason=res.reason)
+            r.note = res.reason
+            self.out(f"  NEEDS YOU: {res.reason}\n  Finish the form by hand (careerops apply --id {jid}); once submitted: careerops mark-applied --id {jid}")
+            return "needs_user"
+        if res.status == autolog.DECLINED:
+            self.out("  You declined the submit: the review prompt follows.")
+            return None
+        r.note = f"AUTO FAILED: {res.reason}"
+        self.out("  " + r.note + " (nothing was submitted); the review prompt follows.")
+        return None
 
     def _apply(self, jid: str, job, r: JobResult) -> str:
         db = self.db

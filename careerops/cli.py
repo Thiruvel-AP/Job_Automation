@@ -22,7 +22,7 @@
   careerops add-url URL [--company C] [--title T]
                                 fetch one job ad (Greenhouse, Lever, Ashby API; else the page) into data/jds/inbox/
   careerops judge-report        the LLM judge vs your review decisions: agreement, kappa, false approves (review.judge)
-  careerops live [--max N] [--dry-run] [--url URL | --clipboard]
+  careerops live [--max N] [--dry-run] [--auto [--no-submit] [--confirm]] [--url URL | --clipboard]
                                 every JD in data/jds/inbox/ through add-jd → tailor → review → apply assist, one job at
                                 a time, with you at every gate and an archive check after each job (see README)
   careerops tailor [--limit N | --id JOB] [--one-page]
@@ -73,6 +73,7 @@ from datetime import date
 from pathlib import Path
 
 from . import ats
+from .apply import autogate
 from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
@@ -597,6 +598,17 @@ def cmd_live(args):
         _fail("live never answers a gate for you: --yes is not available (approve, skip and 'did you submit' are yours)")
     if args.max < 1:
         _fail("--max must be at least 1")
+    try:
+        cfg = autogate.config(load_settings(args.config))              # before the database is opened: a refused run touches nothing
+    except autogate.GateConfigError as e:
+        _fail(str(e))
+    if (args.no_submit or args.confirm) and not args.auto:
+        _fail("--no-submit and --confirm only mean something with --auto")
+    if args.auto and cfg.mode == "off":
+        _fail("apply.mode is `off` in settings.yaml, so --auto is not available (use `assist`, or `auto` to let it submit)")
+    if args.auto and not args.no_submit and cfg.mode != "auto":
+        _fail(f"apply.mode is `{cfg.mode}`: --auto may submit forms only when settings.yaml says `apply: mode: auto` (you set that, it is never the "
+              "default). To fill the forms and photograph them without clicking Submit, run: careerops live --auto --no-submit")
     if args.url and args.mock:
         _fail("--url fetches the ad over the network; --mock never uses the network (put a JD file in the mock inbox instead)")
     if args.url and args.clipboard:
@@ -618,9 +630,11 @@ def cmd_live(args):
             _fail(str(e))
         print(f"{'Saved' if created else 'Already in the inbox:'} {only.name}  ({ad.company} | {ad.title}, "
               f"{len(ad.text):,} characters from the clipboard)")
-    dry_run = args.dry_run or args.mock
+    dry_run = args.dry_run or args.mock or cfg.mode == "off"
     if args.mock and not args.dry_run:
         print("--mock implies --dry-run: the mock data root has no real application form to open.")
+    elif cfg.mode == "off" and not args.dry_run:
+        print("apply.mode is `off`: jobs are tailored and reviewed, no application form is opened (as with --dry-run).")
     llm = _llm(args, s, db)
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
@@ -653,12 +667,31 @@ def cmd_live(args):
         export(db, s.path("excel"), floor=s["roles"]["floor"])
         return ok
 
+    auto_gate_it = auto_apply_it = None
+    if args.auto:
+        from . import autoapply, tracker
+
+        applicant = load_yaml(s.path("applicant"))
+        use_tracker = tracker.configured(s) and not mockroot.is_mock(s)
+
+        def auto_gate_it(jid: str):
+            job = db.job(jid)
+            return autogate.evaluate(db, s, job, review.load_report(job), fb, submitting=not args.no_submit,
+                                     tracker=(lambda: tracker.sheet_job_ids(s)) if use_tracker else None)
+
+        def auto_apply_it(jid: str):
+            job = db.job(jid)
+            rep = review.load_report(job)
+            return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
+                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"))
+
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
               + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now
               + (" --fresh" if getattr(args, "fresh", False) else "")
-              + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else ""))      # resume: not --retailor
+              + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else "")      # resume: not --retailor
+              + (" --auto" if args.auto else "") + (" --no-submit" if args.no_submit else "") + (" --confirm" if args.confirm else ""))
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
-                             mark_applied=mark_applied_it),
+                             mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
                 fresh=getattr(args, "fresh", False)).run()
     if code:
@@ -1204,6 +1237,13 @@ def main(argv=None):
     lv.add_argument("--title", help="with --url: the job title to use instead of the page's")
     lv.add_argument("--clipboard", action="store_true", help="read the job text from the Windows clipboard (from WSL), "
                     "ask for company / title / URL, save it to the inbox and work on that one file only")
+    lv.add_argument("--auto", action="store_true", help="gated auto-apply for Greenhouse / Ashby / Lever: a job that passes every gate in "
+                    "settings.yaml `apply` is filled and submitted without a review prompt; any other job goes to the normal review and assist "
+                    "with `AUTO BLOCKED: ...` printed first. Submitting needs `apply: mode: auto`")
+    lv.add_argument("--no-submit", dest="no_submit", action="store_true", help="with --auto: fill the forms and screenshot them, never click "
+                    "Submit (run this first; it works with apply.mode assist)")
+    lv.add_argument("--confirm", action="store_true", help="with --auto: ask `Submit? [y/N]` before every submit, not only the first "
+                    "apply.confirm_first_n ones")
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
     lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
     lv.set_defaults(fn=cmd_live)

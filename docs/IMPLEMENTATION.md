@@ -880,6 +880,40 @@ the hosts asked); `careerops live --mock --max 3` over three mock JDs printed th
 
 **Not verified.** Every live behaviour: which boards the real names resolve to, the real resolution rate, a real mailbox's subjects, `wslview` / `explorer.exe` opening a page.
 
+## 5y. Round 9 — gated auto-apply for Greenhouse, Ashby and Lever (2026-10-21) — **done** (fixture forms in headless Chromium and fixture reports; never a real form, the real model or the real data)
+
+The hard rule that no code submits an application was replaced (in `.claude/CLAUDE.md`, by the user) by: forms may be submitted only by `careerops/autoapply.py`, only when every gate in
+`settings.yaml → apply` passes; never solve, bypass or outsource a CAPTCHA; never invent an answer. A test (`test_click_on_a_submit_control_appears_only_in_autoapply_py`, and one that finds the single
+`_click_submit` call by AST) holds the first part. README, "Auto-apply", is the user's description; this is the build record.
+
+- **Settings** (`apply:` block, new; `paths.answers`, new): `mode: off | assist | auto` (default `assist`), `min_ats_strict: 70`, `max_auto_per_day: 5`, `confirm_first_n: 3`, `kinds`. `apply/autogate.config()` reads them with
+  the defaults and refuses a wrong kind of value by name (`GateConfigError`). The mock root keeps `answers` as the user's file (`mockroot.KEEP_AS_IS`).
+- **`apply/autogate.py`**: `evaluate(db, settings, job, rep, fb, today=, tracker=, submitting=) -> Gates`, eight `Gate`s in the order of the table, `Gates.line()` = `AUTO BLOCKED: ATS 58 < 70; level: senior`. ATS = `rep["ats"]["strict"]`;
+  format = `pdf_problems()` (`pdfinfo` pages == 2, `pdffonts` emb column, `pdftotext -bbox` word boxes for overlap and the margins of `cv2.tex.j2`, `pdftotext -layout` lines for the name, the e-mail and
+  `expected_headings(ctx)` in order); faithfulness = the chosen attempt's `violations` and `warnings` empty and the letter status; level = `priority.level_factor` is 1.0; sponsorship =
+  `priority.says_no_sponsorship`; kind = `apply_kind`, else `applykind.kind_of(apply_url)`; duplicates = job row / outcomes / `archive_index` / `discover.archive_pairs` / AIApply export / `applied_auto.csv` /
+  `tracker.sheet_job_ids` (new, read only; an unreadable Sheet fails closed only when `submitting`); cap = `autolog.clicked_on(today)`.
+- **`apply/answers.py`**: reads the user's `answers.yaml` (`answer.yaml` if that is what exists); `AnswerBook.resolve(question, job)`; whole-word, case- and punctuation-insensitive, longest match wins; blank = unknown;
+  `answer_numeric`, `overrides`, `options` (`pick_option`: equal, else whole words), `{source}` `{company}` `{role}`; `save()` appends one entry in the file's own list indentation after checking that exactly one
+  entry was added (the only write to that file, only on the user's `save`).
+- **`autoapply.py`**: `run(job, rep, applicant, settings, submit=, confirm=, ask=, launch=, ...) -> AutoResult`. Order: visa plan and wrong-file guard -> open (`Throttle`: 1 request/s/host) -> `captcha_reason` (selectors and
+  text; looks only) -> `fill_form` -> `still_empty` -> `captcha_reason` -> screenshot -> [`submit=False`: stop] -> [first N ever / `confirm`: `Submit? [y/N]`] -> `captcha_reason` -> `_click_submit` -> poll 30 s for
+  the confirmation -> screenshot. Every outcome appends one row to `data/live/applied_auto.csv` (`apply/autolog.py`). On `needs_user` the browser stays open until the user presses Enter.
+- **`apply/live.py`**: `Hooks.auto_gate` / `Hooks.auto_apply` (both optional); `Live._try_auto` before the review prompt of a `needs_review` job. Statuses added: `needs_user`, `submit_unconfirmed` (finished: the JD is filed,
+  never retried), `auto_filled (not submitted)`, `auto_ready (dry run)`. A decline or an `error` falls through to the review prompt.
+- **`cli.py`**: `live --auto [--no-submit] [--confirm]`. `--auto` that could submit needs `apply.mode: auto`; `--auto --no-submit` also runs in `assist`; `off` refuses `--auto` and makes `live` a dry run; the check runs
+  before the database is opened. `--dry-run` / `--mock` open no browser (the gate runs and prints `AUTO READY` / `AUTO BLOCKED`).
+- **`scripts/auto_census.py`**: read-only census of the real database against the per-job gates (the numbers in the README).
+
+Tests: 138 new tests (`test_answers` 20, `test_autogate` 63, `test_autoapply` 30, `test_live_auto` 17, `test_live_auto_cli` 8); the full suite then ran as 133 files on WSL's own disk on 2026-10-21 (3,176 tests, 0 failures).
+
+**Done when.** The full suite has 0 failures (counts above). `careerops live --auto --no-submit --max 3` on the real inbox was NOT run: it tailors with the real model and opens real pages, which the project rules keep
+for the user. What was run: `careerops run --mock --limit 1` (tailored the seeded fixture job), `live --mock --auto --no-submit` in the tests (prints `AUTO BLOCKED: ... kind: employer_other`, opens no browser), and
+the census script on the real database (read only).
+
+**Not verified.** A real Greenhouse, Ashby or Lever page: field labels, script-built drop-downs (`_combobox` is written for the common `role=combobox` pattern, tested on no real site), confirmation wording, an invisible
+reCAPTCHA (it counts as a bot check, so such a form stays manual), the tracker Sheet read.
+
 ## 5q. Equal-opportunities answers (2026-10-13) — **done** (offline tests only; no real form opened)
 
 `apply/eo.py` + `assist.fill_page`. Reads `applicant.yaml → equal_opportunities`: `{key: {answer, match_any: [...], question: [regex]}}` (`question` built in for `ethnicity`:

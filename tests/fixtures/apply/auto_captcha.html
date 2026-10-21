@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Apply</title></head><body>
+<!-- A form with a bot check on it. ?text = the check is only words ("verify you are human"); ?hcaptcha / ?turnstile = those widgets;
+     otherwise a reCAPTCHA iframe. Every element counts what was done to it in window.__touched. -->
+<h1>Apply</h1>
+<form id="application" novalidate>
+  <label for="first_name">First Name *</label><input id="first_name" name="first_name" required>
+  <label for="email">Email *</label><input id="email" type="email" name="email" required>
+  <label for="resume">Resume/CV *</label><input id="resume" type="file" name="resume" required>
+  <div id="check"></div>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__clicks = 0; window.__touched = 0;
+  const q = location.search, box = document.getElementById('check');
+  if (q.includes('text')) box.innerHTML = '<p id="widget">Please verify you are human to continue.</p>';
+  else if (q.includes('hcaptcha')) box.innerHTML = '<iframe id="widget" src="about:blank#hcaptcha" title="hCaptcha"></iframe>';
+  else if (q.includes('turnstile')) box.innerHTML = '<iframe id="widget" src="about:blank#challenges.cloudflare.com" title="x"></iframe>';
+  else box.innerHTML = '<iframe id="widget" src="about:blank#recaptcha" title="reCAPTCHA"></iframe>';
+  for (const ev of ['click', 'mousedown', 'focus', 'keydown'])
+    box.addEventListener(ev, () => { window.__touched += 1; }, true);
+  document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); window.__clicks += 1; });
+</script>
+</body></html>

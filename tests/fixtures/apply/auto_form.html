@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Apply: AI Engineer</title></head><body>
+<!-- A Greenhouse-shaped application form for tests/test_autoapply.py. Query: ?noconfirm = stay on the page after Submit;
+     ?captcha_after = a challenge appears after Submit; ?unknown = one more required question nobody answered. -->
+<h1>Apply: AI Engineer</h1>
+<form id="application" novalidate>
+  <label for="first_name">First Name *</label><input id="first_name" name="first_name" required>
+  <label for="last_name">Last Name *</label><input id="last_name" name="last_name" required>
+  <label for="email">Email *</label><input id="email" type="email" name="email" required>
+  <label for="phone">Phone</label><input id="phone" type="tel" name="phone">
+  <label for="li">LinkedIn Profile</label><input id="li" name="urls[LinkedIn]">
+  <label for="resume">Resume/CV *</label><input id="resume" type="file" name="resume" required>
+  <label for="cl">Cover Letter</label><input id="cl" type="file" name="cover_letter">
+  <label for="visa_future">Will you now or in the future require visa sponsorship? *</label>
+  <select id="visa_future" name="visa_future" required><option value=""></option><option>Yes</option><option>No</option></select>
+  <label for="notice">Notice period *</label><input id="notice" name="notice" required>
+  <label for="salary">Salary expectations (figure in GBP) *</label><input id="salary" name="salary" type="number" required>
+  <label for="how">How did you hear about us? *</label>
+  <select id="how" name="how" required><option value="">Select...</option><option>LinkedIn</option><option>Greenhouse</option><option>Other</option></select>
+  <label for="gender">Gender</label>
+  <select id="gender" name="gender"><option value=""></option><option>Female</option><option>Male</option><option>Prefer not to say</option></select>
+  <label for="county">County (for example Essex)</label><input id="county" name="county">
+  <fieldset><legend>Are you willing to relocate? *</legend>
+    <label><input type="radio" name="relocate" value="Yes" required> Yes</label>
+    <label><input type="radio" name="relocate" value="No" required> No</label></fieldset>
+  <label><input type="checkbox" name="privacy" id="privacy" required> I agree to the privacy notice *</label>
+  <div id="extra"></div>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__clicks = 0;
+  const q = location.search;
+  if (q.includes('unknown')) {
+    document.getElementById('extra').innerHTML =
+      '<label for="licence">Do you hold a full UK driving licence? *</label><input id="licence" name="licence" required>';
+  }
+  document.getElementById('application').addEventListener('submit', e => {
+    e.preventDefault();
+    window.__clicks += 1;
+    if (q.includes('noconfirm')) return;
+    if (q.includes('captcha_after')) {
+      document.body.insertAdjacentHTML('beforeend', '<iframe src="about:blank#recaptcha-challenge" title="challenge"></iframe>');
+      return;
+    }
+    location.href = 'auto_done.html';
+  });
+</script>
+</body></html>

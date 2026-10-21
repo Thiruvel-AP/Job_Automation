@@ -66,7 +66,9 @@ career-ops/
 │   │   └── learning.py           M4 ranked skills-gap list
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
+│   ├── autoapply.py              gated auto-apply (Greenhouse / Ashby / Lever): the ONLY module that clicks a submit control, only for a job that passed the gate
 │   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
+│   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
 │   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
 │   └── training/rewards.py       Phase 2 GRPO reward functions
@@ -74,10 +76,10 @@ career-ops/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
 │   ├── typography.yaml           CV typography: special hyphen spellings, the protected terms (every other hyphen is closed up when the PDF is rendered)
 │   ├── taxonomy.txt              ATS keyword vocabulary
-│   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml
+│   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml · answers.yaml (your answers to form questions, for `live --auto`)
 ├── templates/                    cv.tex.j2 · cover_letter.tex.j2
 ├── docs/                         PLAN.md · IMPLEMENTATION.md
-├── scripts/crontab.example
+├── scripts/crontab.example · auto_census.py (read-only: how the database's jobs fare against the auto-apply gates)
 ├── tests/                        mirrors the package; fixtures/<area>/…; no network, no model
 └── data/                         generated, git-ignored — created by `careerops init`
     ├── careerops.db              jobs · companies · events · LLM quota
@@ -92,7 +94,7 @@ career-ops/
     ├── discover/                 boards/ (posting lists, 6 h) · boards.json (token answers, 30 d) · first_seen.json · filtered.csv · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
     ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read mail, create drafts, edit the Sheet); git-ignored like all of data/
     ├── outreach/                 do_not_contact.csv (`value,note`: addresses and domains no draft goes to; `careerops init` creates it)
-    ├── live/                     state.json (resume) · one summary .md per live session
+    ├── live/                     state.json (resume) · one summary .md per live session · applied_auto.csv (every auto-apply run)
     ├── browser-profile/          Playwright logins for ATS sites
     └── logs/                     cron.log
 ```
@@ -208,6 +210,8 @@ careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --l
 careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
 careerops live --fresh             # tier 0 only: the inbox files posted at most 24 hours ago (older ones stay in the inbox, untouched)
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
+careerops live --auto --no-submit  # gated auto-apply, step 1: fill the forms of the jobs that pass every gate and screenshot them, never click Submit (see "Auto-apply")
+careerops live --auto              # step 2, needs `apply: mode: auto`: jobs that pass every gate are submitted; the rest go to your review as before (`--confirm`: ask before every submit)
 careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job
 careerops live --retailor --re-extract   # ... and the JD's keywords are extracted again (a job keeps its FIRST extraction otherwise, so --retailor gives the same keywords and ATS)
 careerops tailor --id JOB --re-extract   # the same flag on tailor / run
@@ -479,6 +483,85 @@ the JD stays in `inbox/`, and a rerun continues the same job at the status it re
 content hash in `data/live/state.json`, so the same text dropped in again is not redone. A dry run, a pending letter and a refused
 apply also leave the JD in `inbox/`. Each session ends with a summary (id, company, role, status, sponsor-register match,
 visa lines, archive check), printed and written to `data/live/<timestamp>.md`.
+
+### Auto-apply (`careerops live --auto`, Greenhouse / Ashby / Lever only)
+
+`careerops live` still works as above. With `--auto`, a tailored job meets a **gate** first; a job that passes every line of it is filled
+and submitted by `careerops/autoapply.py` (the only module that may click a submit control) with no review prompt; any other job gets
+`AUTO BLOCKED: ...` printed and goes to the normal review and assist, where you decide. Nothing else changes: `careerops apply` and the
+assist still never submit.
+
+**Modes** (`apply.mode` in `config/settings.yaml`; the shipped default is `assist`, you set `auto` yourself):
+
+| `apply.mode` | what `careerops live` does |
+|---|---|
+| `off` | tailors and reviews, opens no application form (as `--dry-run`); `--auto` is refused |
+| `assist` | the assist fills the form, you press Submit. `--auto --no-submit` is allowed; `--auto` that could submit is refused |
+| `auto` | `--auto` submits the jobs that pass every gate; everything else is as in `assist` |
+
+**The gate** (`careerops/apply/autogate.py`; all must pass, each failure is named in the `AUTO BLOCKED:` line):
+
+| Gate | Rule | Setting |
+|---|---|---|
+| ATS | strict CV score (the CV's own text, negation-aware) at least the minimum; the claimable ceiling does not count | `min_ats_strict: 70` |
+| Format | exactly 2 pages; every font embedded; no two words overlap and none sits outside the margins (`pdftotext -bbox`); the PDF's text holds the name, the e-mail and every section heading, in order | |
+| Faithfulness | the chosen attempt's claim guard has no violation and no warning; a letter that exists passed its own check (`ok`, not `fallback` / `pending`, no problems) | |
+| Level | L = 1.0: no manager / lead / senior word in the title | `priority.level_factor` |
+| Sponsorship | the JD has no "no sponsorship" line | |
+| Kind | `apply_kind` is one of the listed kinds (Workday and every other site: no) | `kinds: [greenhouse, ashby, lever]` |
+| Duplicates | not applied to before: the database (this job, or the same company and title), the archive (this job's folder, or a `<Company>/<Role>` folder), the AIApply export, `applied_auto.csv`, and the tracker Sheet. An unreadable Sheet blocks a real submit (a duplicate cannot be ruled out); `--no-submit` goes on without it | |
+| Daily cap | fewer than N auto-submits today (rows of `applied_auto.csv` whose button was clicked) | `max_auto_per_day: 5` |
+
+**Filling the form** (a headed Chromium with its profile in `data/secrets/browser/`, one request per second per host):
+
+- Name, e-mail, phone, LinkedIn, GitHub, location: `applicant.yaml`. The CV PDF of this job is uploaded, and the letter PDF only if one exists.
+- Right to work and sponsorship: the booleans of `applicant.yaml` `visa.by_country` for the job's work country (as in the assist).
+- **Every other question is answered only from `config/profile/answers.yaml`**, a file you write (`answer.yaml` is found too, if that is the name
+  you gave it). A question matches an entry when it holds one of its `match` texts as whole words, case and punctuation ignored (so `sex` never
+  matches "Essex"); the longest matching text wins. `answer_numeric` is used when the field only takes a number; `overrides` gives one company a
+  different answer; `options` are the drop-down or radio texts to pick (an option equal to one of them, else one holding it as whole words, so "Male" is
+  never "Female"); `{source}`, `{company}` and `{role}` are filled per job. A blank `answer` means unknown.
+- **A required question with no exact answer stops the run**: it prints the question, asks in the terminal, uses what you type on this form only, and
+  appends it to `answers.yaml` only if you then type `save`. A blank reply stops the job (`needs_user`). An optional question with no answer is left empty.
+  Nothing is invented, and an answer that matches none of a drop-down's options is not rounded to the nearest one.
+- **A CAPTCHA or bot check** (a reCAPTCHA, hCaptcha or Turnstile frame, or "verify you are human" on the page) stops the run before anything is filled
+  or clicked; the program only looks for it and never touches it. The browser stays open for you, and the job is `needs_user`. An invisible reCAPTCHA
+  frame counts, so a form that has one stays manual.
+
+**Submitting**: a full-page screenshot of the filled form is saved in the job's output folder first. The first `confirm_first_n` (3) auto-submits ever,
+or every one with `--confirm`, show its path and ask `Submit? [y/N]`. Then the button is clicked and the confirmation page awaited for 30 seconds; its
+screenshot is saved. A confirmation runs `mark-applied` (the archive, the outcome log, the tracker row, the outreach drafts if switched on). No
+confirmation in 30 s is `submit_unconfirmed`: the job is not marked applied, is never retried, and you check the form and your e-mail. Every run, whatever
+its outcome, appends a row to `data/live/applied_auto.csv` (time, job id, company, role, ATS strict, screenshots, result).
+
+**Run order**
+
+1. `careerops live --auto --no-submit --max 3`: fills the forms of the jobs that pass every gate and screenshots them (look at the PNGs in each job's
+   output folder), never clicks Submit; prints `AUTO BLOCKED: ...` for the rest, which go to your review. Works with `apply.mode: assist`.
+2. Set `apply: mode: auto` in `config/settings.yaml`, then `careerops live --auto --max 3`. Add `--confirm` to be asked before every submit.
+3. `careerops live --auto --dry-run` evaluates the gates and prints `AUTO READY` / `AUTO BLOCKED` without opening a browser.
+
+**What stays manual**: a CAPTCHA; a required question `answers.yaml` cannot answer; Workday, a company's own site and every other ATS; a job under the
+ATS minimum, with a senior / lead / manager title, saying no sponsorship, already applied to, or whose CV fails the format or faithfulness check; the
+sixth auto-submit of a day.
+
+**Measured** (`python scripts/auto_census.py`, read only, 2026-10-21, on the 9 jobs in `data/careerops.db`; it opens the database with `mode=ro` and writes nothing):
+
+| What | Number |
+|---|---|
+| jobs on a Greenhouse, Ashby or Lever apply page | 6 of 9 (Greenhouse 3, Ashby 2, Lever 1); the other 3: employer site 1, job board 1, no URL 1 |
+| tailored jobs with a strict ATS score recorded | 4 of 9 (20.0, 35.7, 56.0, 58.1); the other 5 reports pre-date the score |
+| strict ATS at least 70 | 0 of 4 |
+| CVs that pass the format gate | 5 of 9; the 4 that fail are the CVs made on 3, 10, 10 and 15 October |
+| jobs failing each per-job gate | ATS 9, format 4, faithfulness 5, kind 3, sponsorship 1 |
+| jobs passing all six per-job gates (duplicates and the cap are not in the census) | 0 of 9 |
+
+So with today's CVs no job in the database would be auto-submitted: the ATS gate alone stops all of them. Tests added: 138 new tests (`test_answers` 20, `test_autogate` 63, `test_autoapply` 30, `test_live_auto` 17, `test_live_auto_cli` 8); the full suite then ran as 133 files on WSL's own disk on 2026-10-21 (3,176 tests, 0 failures).
+
+**Not verified**: no real Greenhouse, Ashby or Lever page has been opened. The form logic ran against local fixture forms in headless Chromium and the
+gate against fixture reports and PDFs. How those three sites label their fields, whether their drop-downs are real `<select>` elements, how their
+confirmation pages read and whether a form's reCAPTCHA is invisible are for `--no-submit` to show on a real job. The tracker duplicate check, the Sheet
+read, has only run against a fake sheet.
 
 ### Doctor: every task's model answers
 
@@ -882,6 +965,7 @@ fixture job (the Northwind AI Engineer JD), so it never touches your real jobs. 
 | Full tailor loop → 2-page xelatex PDF, no hyphenated words | Live ATS forms (Greenhouse/Lever/Ashby markup varies) |
 | Router: JSON mode, auth header, 429 → fallback, daily quota | Adzuna quota and description length |
 | Playwright fills a test form, uploads both PDFs, never submits | |
+| Gated auto-apply on local fixture forms in headless Chromium: fills, screenshots, submits, confirms, stops at a CAPTCHA and at an unknown question; the gate on fixture reports and real rendered PDFs | a real Greenhouse / Ashby / Lever page: field labels, script-built drop-downs, confirmation text, an invisible reCAPTCHA; the tracker Sheet read |
 | Hook, negation-aware ATS, letters A / B, note, freshness tiers, scheduler script (fixture bank, MockLLM, fake network, a fake `careerops` for the script) | the real CV's strict ATS against the golden 72.5, a real Anaplan run, the Windows task itself |
 
 `career-ops` and this pipeline stay off every CV and letter — both are on the deny list.

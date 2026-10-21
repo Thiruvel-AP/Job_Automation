@@ -264,6 +264,25 @@ def _cell(v: Any) -> Any:
     return "" if v is None else v
 
 
+def sheet_job_ids(settings, *, sheet: Sheet | None = None, tab: str | None = None) -> set[str]:
+    """The Job IDs already in the tracker Sheet (its `Job ID` column), for the auto-apply duplicate gate. Reads only. Raises TrackerError for a
+    missing sheet id, no sign-in, or a Google refusal."""
+    from .discovery.gmail import GmailAuthError
+    from .googleapi import GoogleError
+
+    try:
+        if sheet is None:
+            sheet, tab = client(settings)
+        tab = tab or settings_for(settings)[1]
+        header = [str(h).strip() for h in ((sheet.get_values(f"{_q(tab)}!1:1") or [[]])[0])]
+        if KEY not in header:
+            return set()
+        col = column_letter(header.index(KEY))
+        return {str(r[0]).strip() for r in (sheet.get_values(f"{_q(tab)}!{col}2:{col}") or []) if r and str(r[0]).strip()}
+    except (GmailAuthError, GoogleError) as e:
+        raise TrackerError(str(e)) from None
+
+
 def sync(db: DB, settings, job_ids: list[str] | None = None, *, sheet: Sheet | None = None, tab: str | None = None,
          say=print) -> dict[str, str]:
     """Upsert the given applied jobs (default: every job the database holds as applied). -> {job id: added | updated | unchanged}.
