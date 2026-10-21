@@ -840,3 +840,67 @@ def test_first_seen_and_listed_headers_reach_the_job(db, settings, inbox, archiv
     assert why == "" and meta["posted"] == "2026-08-07" and meta["seen_on"] == "2026-10-09" and meta["open_listing"] is True
     plain, _ = live._meta(f, text.replace("Listed: yes", "Listed: no").replace("First seen: 2026-10-09", "First seen: soon"))
     assert "seen_on" not in plain and "open_listing" not in plain
+
+
+# ------------------------------------------------------------------ a crash after the form was opened
+def crashed_after_opening(db, settings, inbox, jd):
+    """A first session whose assist step dies (the person closed the browser, the program crashed) after the apply page was opened."""
+    put(inbox, "one.txt", jd)
+    fake = Fake(db, settings, yes())
+    fake.raise_in["assist"] = RuntimeError("the browser went away")
+    live, _ = session(db, settings, fake)
+    with pytest.raises(RuntimeError):
+        live.run()
+    return db.jobs()[0]["id"]
+
+
+def test_the_next_run_first_asks_whether_you_submitted_the_job_it_crashed_on_and_y_marks_it_applied(db, settings, inbox, archive, jd):
+    jid = crashed_after_opening(db, settings, inbox, jd)
+    assert db.job(jid)["status"] == "approved"
+    fake = Fake(db, settings, {"Did you submit Acme AI Engineer? [y/N]": ["y"]})
+    live, lines = session(db, settings, fake)
+    assert live.run() == 0
+    assert fake.calls == [("mark_applied", jid)] and db.job(jid)["status"] == "applied"
+    assert [r.status for r in live.results] == ["applied"]
+    assert not (inbox / "one.txt").exists() and [p.name for p in (settings.path("jds") / "done").iterdir()] == [f"{jid.replace(':', '_')}-one.txt"]
+    again = Fake(db, settings, {})                                  # asked once: the next session has nothing to ask
+    assert session(db, settings, again)[0].run() == 0 and again.calls == []
+
+
+def test_n_to_the_question_does_not_mark_it_and_it_is_not_asked_again(db, settings, inbox, archive, jd):
+    jid = crashed_after_opening(db, settings, inbox, jd)
+    fake = Fake(db, settings, {"Did you submit Acme AI Engineer": ["n"], "Open the application form": ["n"]})
+    live, _ = session(db, settings, fake)
+    assert live.run() == 0
+    assert "mark_applied" not in fake.names() and db.job(jid)["status"] == "ready_not_submitted"
+    assert (inbox / "one.txt").exists() or any((settings.path("jds") / "done").iterdir())          # it went on as any approved job would
+    fake = Fake(db, settings, {"Did you submit": []})
+    session(db, settings, fake)[0].run()                            # a prompt here would raise: no answer is queued
+
+
+def test_a_job_whose_assist_finished_is_never_asked_about(db, settings, inbox, archive, jd):
+    put(inbox, "one.txt", jd)
+    fake = Fake(db, settings, yes(**{"Did YOU submit": ["n"]}))
+    session(db, settings, fake)[0].run()
+    nxt = Fake(db, settings, {"Did you submit": []})
+    session(db, settings, nxt)[0].run()
+    assert "mark_applied" not in nxt.names()
+
+
+def test_a_dry_run_does_not_ask_about_an_earlier_crash(db, settings, inbox, archive, jd):
+    jid = crashed_after_opening(db, settings, inbox, jd)
+    fake = Fake(db, settings, {"Did you submit": []})
+    session(db, settings, fake, dry_run=True)[0].run()
+    assert db.job(jid)["status"] == "approved" and fake.calls == []
+
+
+def test_a_file_discovery_marked_as_a_duplicate_is_rejected_not_worked_on(db, settings, inbox, archive, jd):
+    path = put(inbox, "graphcore-1.txt", jd, company="Graphcore", title="Graduate Machine Learning Engineer 2027")
+    path.write_text(path.read_text().replace("Location:", "Duplicate of: graphcore-early-careers-2.txt\nLocation:"), encoding="utf-8")
+    fake = Fake(db, settings, {})
+    live, lines = session(db, settings, fake)
+    assert live.run() == 0
+    assert fake.calls == [] and db.jobs() == [] and not path.exists()
+    rejected = settings.path("jds") / "rejected"
+    assert "duplicate of graphcore-early-careers-2.txt" in (rejected / "graphcore-1.reason.txt").read_text()
+    assert live.results[0].status == "rejected (duplicate)" and any(l.startswith("DUPLICATE") for l in lines)

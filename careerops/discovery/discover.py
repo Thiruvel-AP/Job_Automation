@@ -132,18 +132,33 @@ class Run:
 
 
 # ------------------------------------------------------------------ what is already known
+@dataclass
+class Waiting:
+    """An inbox file nobody has worked on yet, and when its ad was posted: what a newer copy of the same job on another board replaces."""
+    path: Path
+    name: str                  # the company name as this board spells it (folder_key)
+    posted: str
+
+
 class Known:
     """Jobs already seen: in the database, in the inbox / done / rejected folders, in the application archive and in this run.
-    A job is the same when its company, normalised title and place agree; a place that is missing on either side matches any."""
+    A job is the same when its company family (candidate.family_key: "Graphcore Early Careers" is "Graphcore"), normalised title and place
+    agree; a place that is missing on either side matches any. The same job under another board's spelling of the employer is the same
+    whatever its place says (the two boards of one employer write the place differently)."""
 
     def __init__(self):
-        self.full: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)       # (company, title) -> {place: where}
+        self.full: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)       # (company family, title) -> {place: where}
+        self.spellings: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)  # (company family, title) -> {folder_key(company): where}
+        self.waiting: dict[tuple[str, str], list[Waiting]] = defaultdict(list)     # inbox files still to be worked on
         self.notes: list[str] = []                                                 # what could not be read while loading
 
-    def add(self, company: str, title: str, location: str, where: str) -> None:
+    def add(self, company: str, title: str, location: str, where: str, *, path: Path | None = None, posted: str = "") -> None:
         c, t, p = cand.dedupe_key(company, title, location)
         if c and t:
             self.full[(c, t)].setdefault(p, where)
+            self.spellings[(c, t)].setdefault(folder_key(company), where)
+            if path is not None:
+                self.waiting[(c, t)].append(Waiting(path, folder_key(company), posted))
 
     def where(self, company: str, title: str, location: str) -> str | None:
         c, t, p = cand.dedupe_key(company, title, location)
@@ -154,7 +169,24 @@ class Known:
             return places[p]
         if p == "" or "" in places:
             return next(iter(places.values()))
+        return next((w for k, w in self.spellings[(c, t)].items() if k != folder_key(company)), None)
+
+    def older_copy(self, company: str, title: str, posted: str) -> Waiting | None:
+        """An inbox file of the same job under another board's name that was posted before `posted` (both times must be read): the copy a
+        newer one replaces."""
+        c, t, _ = cand.dedupe_key(company, title, "")
+        mine, new = folder_key(company), freshness.parse(posted)
+        if new is None:
+            return None
+        for w in self.waiting.get((c, t), []):
+            old = freshness.parse(w.posted)
+            if w.name != mine and old is not None and old < new:
+                return w
         return None
+
+    def forget(self, w: Waiting) -> None:
+        for lst in self.waiting.values():
+            lst[:] = [x for x in lst if x is not w]
 
 
 def _header_of(path: Path) -> dict[str, str]:
@@ -164,6 +196,16 @@ def _header_of(path: Path) -> dict[str, str]:
     except OSError:
         return {}
     return manual.header_fields(head)
+
+
+def mark_duplicate(path: Path, of_name: str) -> None:
+    """Add `Duplicate of: <of_name>` to the header block of an inbox file this discovery wrote. The ad below it is not touched. (Written in place:
+    discovery code deletes and moves nothing; a file cut short by a crash is rejected by `live` as too short.)"""
+    text = path.read_text(encoding="utf-8")
+    head, sep, body = text.partition("\n\n")
+    if re.search(r"^Duplicate of:", head, re.M):
+        return
+    path.write_text(f"{head}\nDuplicate of: {of_name}{sep}{body}", encoding="utf-8", newline="\n")
 
 
 def archive_pairs(root: Path) -> list[tuple[str, str]]:
@@ -195,7 +237,9 @@ def load_known(settings, db: DB) -> Known:
             for p in d.glob("*.txt"):
                 h = _header_of(p)
                 if h.get("company") and h.get("title"):
-                    k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/{sub}")
+                    waits = sub == "inbox" and not h.get("duplicate_of")
+                    k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/{sub}",
+                          path=p if waits else None, posted=h.get("posted", ""))
     for company, role in archive_pairs(settings.path("applications")):
         k.add(company, role, "", "already applied (application archive)")
     add_aiapply(settings, k)
@@ -523,11 +567,24 @@ class Discover:
         return "" if country in ("", countries.UK) else country
 
     def duplicate(self, c: Candidate, label: str) -> bool:
+        """Seen before? Not when it is a NEWER copy of an inbox file (the same job on another board of the employer): that one replaces it."""
         where = self.known.where(c.company, c.title, c.location)
-        if where:
+        if where and self.known.older_copy(c.company, c.title, c.posted) is None:
             self.run.count(label, "duplicate")
             return True
         return False
+
+    def supersede(self, older: Waiting, new_path: Path, label: str) -> None:
+        """Keep the newer copy: the older inbox file gets a `Duplicate of: <newer file>` header (`careerops live` does not work on it). Its ad is
+        not changed. A dry run only counts."""
+        self.run.count(label, "superseded")
+        self.known.forget(older)
+        if self.dry_run:
+            return
+        try:
+            mark_duplicate(older.path, new_path.name)
+        except OSError as e:
+            self.run.notes.append(f"{older.path.name}: could not be marked as a duplicate of {new_path.name} ({type(e).__name__})")
 
     def accept(self, c: Candidate, label: str, counted: bool = False) -> str:
         """Run one candidate through the filters and write it. Returns 'written', 'exists', 'dropped' (filtered / closed /
@@ -539,6 +596,7 @@ class Discover:
         if c.closed:
             self.run.count(label, "closed")
             return "dropped"
+        older = self.known.older_copy(c.company, c.title, c.posted)
         if self.duplicate(c, label):
             return "dropped"
         c.first_seen = self.first_seen.record(c.company, c.title, c.location, firstseen.day(c.seen) or self.today_day)
@@ -553,9 +611,12 @@ class Discover:
             self.run.count(label, "needs_full_text")
             return "dropped"
         if self.dry_run:
-            self.known.add(c.company, c.title, c.location, "found earlier in this run")
+            would = self.inbox / intake.file_name(c.to_ad())
+            self.known.add(c.company, c.title, c.location, "found earlier in this run", path=would, posted=c.posted)
+            if older is not None:
+                self.supersede(older, would, label)
             self.wrote(c, label)
-            self.run.written.append((c, self.inbox / intake.file_name(c.to_ad())))
+            self.run.written.append((c, would))
             return "written"
         try:
             path, created = intake.write_inbox(self.inbox, c.to_ad())
@@ -563,10 +624,12 @@ class Discover:
             self.run.count(label, "bad_header")
             self.run.notes.append(f"{c.company} | {c.title}: {e}")
             return "dropped"
-        self.known.add(c.company, c.title, c.location, "found earlier in this run")
+        self.known.add(c.company, c.title, c.location, "found earlier in this run", path=path, posted=c.posted)
         if not created:
             self.run.count(label, "already_in_inbox")
             return "exists"
+        if older is not None:
+            self.supersede(older, path, label)
         self.wrote(c, label)
         self.run.written.append((c, path))
         return "written"

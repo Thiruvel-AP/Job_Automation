@@ -369,7 +369,7 @@ def test_apply_command_archives_after_confirmation_but_not_after_x(settings, db,
     answers = {"gh:a:1": "REF-A", "gh:a:2": "x"}
     monkeypatch.setattr("builtins.input", lambda *_a: "y")
     monkeypatch.setattr("careerops.apply.assist.assist",
-                        lambda job, rep, applicant, profile: {"confirmation": answers[job["id"]], "uploaded": []})
+                        lambda job, rep, applicant, profile, **kw: {"confirmation": answers[job["id"]], "uploaded": []})
     run_cli(settings, tmp_path, monkeypatch, "apply", "--id", "gh:a:1")
     run_cli(settings, tmp_path, monkeypatch, "apply", "--id", "gh:a:2")
     assert (root / "Lendable" / "Data Scientist" / "job.json").exists() and not (root / "Monzo").exists()

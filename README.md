@@ -67,7 +67,7 @@ career-ops/
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
 │   ├── autoapply.py              gated auto-apply (Greenhouse / Ashby / Lever): the ONLY module that clicks a submit control, only for a job that passed the gate
-│   ├── apply/assist.py           Playwright: fill basics, upload PDFs, never submit
+│   ├── apply/assist.py · filler.py   Playwright: fill, upload PDFs, never submit · the ONE field filler (applicant.yaml, then answers.yaml) that assist and autoapply share
 │   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
 │   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
@@ -505,11 +505,11 @@ assist still never submit.
 |---|---|---|
 | ATS | strict CV score (the CV's own text, negation-aware) at least the minimum; the claimable ceiling does not count | `min_ats_strict: 70` |
 | Format | exactly 2 pages; every font embedded; no two words overlap and none sits outside the margins (`pdftotext -bbox`); the PDF's text holds the name, the e-mail and every section heading, in order | |
-| Faithfulness | the chosen attempt's claim guard has no violation and no warning; a letter that exists passed its own check (`ok`, not `fallback` / `pending`, no problems) | |
+| Faithfulness | the final CV has no claim-guard violation and no warning (a rewrite the guard BLOCKED never reached the CV: it is counted apart, as `blocked rewrites`, and printed, but does not gate); a letter that exists passed its own check (`ok`, not `fallback` / `pending`, no problems) | |
 | Level | L = 1.0: no manager / lead / senior word in the title | `priority.level_factor` |
 | Sponsorship | the JD has no "no sponsorship" line | |
 | Kind | `apply_kind` is one of the listed kinds (Workday and every other site: no) | `kinds: [greenhouse, ashby, lever]` |
-| Duplicates | not applied to before: the database (this job, or the same company and title), the archive (this job's folder, or a `<Company>/<Role>` folder), the AIApply export, `applied_auto.csv`, and the tracker Sheet. An unreadable Sheet blocks a real submit (a duplicate cannot be ruled out); `--no-submit` goes on without it | |
+| Duplicates | not applied to before (the company is its family: "Graphcore Early Careers" is "Graphcore"): the database (this job, or the same company family and title), the archive (this job's folder, or a `<Company>/<Role>` folder), the AIApply export, `applied_auto.csv`, and the tracker Sheet. An unreadable Sheet blocks a real submit (a duplicate cannot be ruled out); `--no-submit` goes on without it | |
 | Daily cap | fewer than N auto-submits today (rows of `applied_auto.csv` whose button was clicked) | `max_auto_per_day: 5` |
 
 **Filling the form** (a headed Chromium with its profile in `data/secrets/browser/`, one request per second per host):
@@ -540,6 +540,12 @@ its outcome, appends a row to `data/live/applied_auto.csv` (time, job id, compan
    output folder), never clicks Submit; prints `AUTO BLOCKED: ...` for the rest, which go to your review. Works with `apply.mode: assist`.
 2. Set `apply: mode: auto` in `config/settings.yaml`, then `careerops live --auto --max 3`. Add `--confirm` to be asked before every submit.
 3. `careerops live --auto --dry-run` evaluates the gates and prints `AUTO READY` / `AUTO BLOCKED` without opening a browser.
+
+**Pre-flight**: `live` checks at its start that the Google sign-in may edit the tracker Sheet (the `spreadsheets` scope in the token file; no network). Without it
+one line says to run `careerops discover --gmail-auth`, and the run goes on in assist mode only: `--auto` is switched off, because the duplicate gate cannot
+read the Sheet and a duplicate cannot be ruled out. The assist fills the same fields as the auto-apply (applicant.yaml: full name, first and last name, e-mail,
+phone, links, location; then `answers.yaml`) and leaves a free-text question to you. If the browser is closed (or the program dies) after the form was opened,
+the confirmation question is still asked, and the next `live` starts with `Did you submit <company> <role>? [y/N]` for that job.
 
 **What stays manual**: a CAPTCHA; a required question `answers.yaml` cannot answer; Workday, a company's own site and every other ATS; a job under the
 ATS minimum, with a senior / lead / manager title, saying no sponsorship, already applied to, or whose CV fails the format or faithfulness check; the

@@ -24,6 +24,12 @@ def run(cfg, *argv):
 
 
 @pytest.fixture(autouse=True)
+def signed_in_to_google(monkeypatch):
+    """`live` checks the Google sign-in can edit the tracker Sheet and drops --auto when it cannot (tests/test_live_tracker_auth.py)."""
+    monkeypatch.setattr(tracker, "scope_problem", lambda settings: None)
+
+
+@pytest.fixture(autouse=True)
 def no_browser_no_model(monkeypatch):
     monkeypatch.setattr(autoapply, "playwright_launch", lambda *a, **k: pytest.fail("a browser was opened"))
     monkeypatch.setattr(cli, "_llm", lambda args, s, db: MockLLM())

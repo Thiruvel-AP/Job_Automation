@@ -1,5 +1,5 @@
 """A job found by a discovery source, before it becomes an inbox file: the shape every source produces, the filters
-(target role family + UK / remote-UK) and the key that tells two sightings of one job apart (company + title + place)."""
+(target role family + UK / remote-UK) and the key that tells two sightings of one job apart (company family + title + place)."""
 from __future__ import annotations
 
 import hashlib
@@ -74,8 +74,25 @@ def places_agree(a: str, b: str) -> bool:
     return na in (b or "").lower() or nb in (a or "").lower()
 
 
+# What a board adds to an employer's name: "Graphcore Early Careers", "Acme Careers", "Acme UK Ltd". Stripped from the end, one phrase at a time.
+_FAMILY_NOISE = re.compile(r"[\s,/-]+(?:early[ -]careers?|graduate (?:programmes?|schemes?)|careers?|jobs|recruitment|u\.?k\.?|gb|great britain|"
+                           r"united kingdom|ltd|limited|plc|llp|lp|inc|incorporated|llc|corp|corporation|gmbh|sa|bv|ag)\.?$")
+
+
+def family_key(name: str) -> str:
+    """The employer behind a board's company name, for telling one job on two boards apart: lower case, `&` -> `and`, `(...)` dropped, the
+    trailing "Early Careers", "Careers", "UK", "Ltd" ... stripped, only [a-z0-9] kept. A name that is nothing but such words keeps them."""
+    s = re.sub(r"\([^)]*\)", " ", (name or "").lower().replace("&", " and ")).strip()
+    while True:
+        t = _FAMILY_NOISE.sub("", s).strip(" ,/-")
+        if t == s or not t:
+            break
+        s = t
+    return re.sub(r"[^a-z0-9]", "", s) or folder_key(name)
+
+
 def dedupe_key(company: str, title: str, location: str) -> tuple[str, str, str]:
-    return (folder_key(company), norm_title(title), norm_place(location))
+    return (family_key(company), norm_title(title), norm_place(location))
 
 
 def family_of(c: Candidate, settings) -> str | None:

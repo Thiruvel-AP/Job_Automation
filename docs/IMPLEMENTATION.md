@@ -1030,3 +1030,38 @@ unchanged. `setup.applicant_checks` adds three `careerops doctor` lines: placeho
 **STAR.** `layout.with_openers` (render time, two-page only): the first bullet of an entry with `situation:` is "<situation>: " + the action with its first letter lower-cased (not an acronym). Checks and the report see the wording without it.
 **Length rules.** `layout.py` measures the rendered PDF (`pdftotext -bbox-layout`): headline lines, profile lines, lines per bullet. `tailor.fit_lengths` wraps every two-page render: headline -> `layout.headline_options` (trailing bracket / stack list, the `problem:` label, clauses, role alone); profile -> whole sentences dropped after the hook sentence; bullet -> fact-bank wording, `ctx["splits"]` (two bullets under one id, `layout.with_splits`), `shorten_pass` (REPHRASE prompt with a SHORTEN line, guarded by `guard_rephrases`), else a `length:` warning. Result in `report["lengths"]`. `scoring.min_fill_page2` 0.90 -> 0.96 (two lines of the 770pt text area).
 Tests: `tests/tailoring/test_cv_v2.py` (31), the updated `test_cv_template.py`, `test_two_page.py`, `test_cv_typography.py`; the fictional profile fixture gained `situation:` on `az` and `churn` and a "Client Delivery & Communication" skills group.
+
+## 5y. Round 10 — fixes from the first live run (2026-10-21) — **done** (offline tests only; no live form, no live discover, no real model)
+
+Each item had a failing test first. Evidence: the user's first live run.
+
+1. **A closed browser must not lose the record.** `assist.assist(..., launch=, ask=)`: the launcher's `close()` and the call to it swallow `playwright.Error`; a
+   page that fails before the prompt (the window closed) still reaches "paste confirmation". `Live` writes `apply_opened` into `state.json` when the apply page is
+   opened and clears it when "Did YOU submit?" is answered; a session that finds it set asks `Did you submit <company> <role>? [y/N]` first (not in a dry run),
+   `y` runs the same `mark_applied` hook (archive, outcome log, tracker row), `n` clears it. `tests/apply/test_assist_closed_browser.py`, 4 in `test_live.py`.
+2. **One filler.** New `apply/filler.py`: `fill_field` (standard fields from applicant.yaml, including the single "Name" box = first + last; then answers.yaml for
+   text, drop-downs, radio groups, check boxes) used by `autoapply.fill_form` and `assist.fill_page`; `Ctx.strict` is the only difference (auto asks for a required
+   question nobody answered, the assist leaves it for you and marks it red). The click on a script-built drop-down's option stays in `autoapply._combobox`
+   (the "only autoapply.py clicks" test still holds). `assist(book=, history=)`; `cli._assist_answers` passes answers.yaml. `tests/apply/test_assist_filler.py`
+   (Ashby fixture `ashby_form.html`).
+3. **Output folder names.** `tailor.folder_name`: `<Company>_<Role, cut>_<job id>`, the id never cut (company + role take `60 - len(id) - 1`, at least 24).
+   `tailor.swap_in`: a folder rename that raises PermissionError is retried 3 times, 1 s apart, then the files are copied into the folder and the `.partial` deleted;
+   the file Windows holds is printed; an earlier output is only given up once the new one is complete. `tests/tailoring/test_output_folder.py`.
+4. **Cross-board duplicates.** `candidate.family_key` (strips a trailing Early Careers / Careers / UK / Ltd / ...) is the company part of `dedupe_key`;
+   `Known.where` also matches the same family + title under another board's spelling whatever the place says. Discovery keeps the NEWER copy (`posted`): the older
+   inbox file gets `Duplicate of: <newer file>` (header, ad untouched; counter `superseded`), `live` moves a marked file to `rejected/`. The auto-apply duplicate
+   gate uses the same key. `tests/discovery/test_cross_board_duplicates.py`. No new database column: the mark lives in the inbox file.
+5. **Tracker auth pre-flight.** `tracker.scope_problem(settings)` reads the token file; `cmd_live` prints one line and runs `--auto`-less when the scope is missing
+   (not on the mock root). `tests/test_live_tracker_auth.py`.
+6. **Faithfulness gate.** `autogate.split_violations`: a violation of a rewrite the model proposed and the CV does not carry is a *blocked rewrite* (information,
+   `Gate.info`, printed by `live`); every other violation, and one of a rewrite that reached the CV, is an *issue in the final CV* and gates. `faithfulness.py` and the
+   deny list are untouched.
+7. **CV-Library alerts.** The real alert (`tests/fixtures/discovery/cvlibrary_alert_2026-10-21.html`, personal data and tracking tokens removed) has no `/job/<id>`
+   link: every link is on `clicks.cv-library.co.uk/f/a/`. `gmail.job_link` accepts such a link as the job's pointer (never requested); a tracking link counts as a job
+   only with a company and a place after it; header/footer links are noise. `tests/discovery/test_cvlibrary_alert.py`.
+8. **Ashby 401.** `discovery/blocklog.py` (`data/discover/blocked_hosts.json`): host, status, time, requests before the refusal. `Fetcher(blocklog=)` writes it and,
+   for 7 days, keeps 2 s between requests to that host; the health row says when it was last seen refusing. The same-run rule (no request after a 401) was already in
+   `http.py` and now has a test. The message in the evidence came from the health probe of the bare Ashby API path, not from a board request.
+   `tests/discovery/test_blocked_hosts.py`.
+
+Not verified (needs the real world): a live Ashby form, a real closed browser, a Windows lock on a PDF, the live Gmail token, a second CV-Library alert shape.

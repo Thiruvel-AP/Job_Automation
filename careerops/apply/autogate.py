@@ -3,7 +3,8 @@
   ATS            the strict CV score (the CV's own text, negation-aware) is at least apply.min_ats_strict, not just the ceiling
   format         exactly 2 pages; every font embedded; no two words overlap and none sits outside the margins (pdftotext -bbox); the
                  PDF's text layer holds the name, the e-mail and every section heading, in order
-  faithfulness   the claim guard of the chosen attempt has no violation and no warning, and a letter that exists passed its own check
+  faithfulness   the final CV has no claim-guard violation and no warning, and a letter that exists passed its own check. A rewrite the
+                 guard BLOCKED never reached the CV: those are counted apart ("blocked rewrites", information) and do not gate
   level          L = 1.0: no manager, lead or senior word in the title
   sponsorship    the JD has no "no sponsorship" line
   kind           apply_kind is in apply.kinds
@@ -76,6 +77,7 @@ class Gate:
     name: str
     ok: bool
     why: str = ""            # the failure in a few words; "" when it passed
+    info: str = ""           # what the gate measured, shown whether it passed or not (live prints it)
 
 
 @dataclass
@@ -206,6 +208,27 @@ def _plural(n: int, word: str) -> str:
     return f"{n} {word}{'' if n == 1 else 's'}"
 
 
+def _final_bullets(rep: Mapping[str, Any]) -> dict[str, str]:
+    """{bullet id: the text it has on the final CV}, from the CV's own context."""
+    ctx, out = rep.get("context") or {}, {}
+    for entry in [*(ctx.get("experience") or []), *(ctx.get("projects") or [])]:
+        out.update(zip(entry.get("bullet_ids") or [], entry.get("bullets") or []))
+    return out
+
+
+def split_violations(rep: Mapping[str, Any], rec: Mapping[str, Any]) -> tuple[list[str], list[str]]:
+    """(blocked, in the final CV): a violation is "<bullet id>: <problem>" for a rewrite the model proposed. When that rewrite is not what
+    the CV says now, the guard blocked it and the fact-bank wording stands (information). Every other violation, and one of a rewrite
+    that did reach the CV, is an issue in the final CV."""
+    proposed = (rec.get("proposal") or {}).get("rephrase") or {}
+    final = _final_bullets(rep)
+    blocked, issues = [], []
+    for v in rec.get("violations") or []:
+        bid = str(v).split(":", 1)[0].strip()
+        (blocked if bid in proposed and final.get(bid) != proposed[bid] else issues).append(v)
+    return blocked, issues
+
+
 def _faithfulness(rep: Mapping[str, Any]) -> Gate:
     attempts = rep.get("attempts") or []
     chosen = (rep.get("final") or {}).get("chosen_attempt")
@@ -214,15 +237,17 @@ def _faithfulness(rep: Mapping[str, Any]) -> Gate:
         rec = attempts[chosen - 1]
     if rec is None:
         return Gate("faithfulness", False, "faithfulness: no recorded attempt to check")
+    blocked, issues = split_violations(rep, rec)
+    info = f"faithfulness: {_plural(len(issues), 'issue')} in the final CV; {_plural(len(blocked), 'blocked rewrite')} (the guard kept the fact-bank wording)"
     bad = []
-    if rec.get("violations"):
-        bad.append(_plural(len(rec["violations"]), "claim-guard violation"))
+    if issues:
+        bad.append(_plural(len(issues), "claim-guard violation") + " in the final CV")
     if rec.get("warnings"):
         bad.append(_plural(len(rec["warnings"]), "claim-guard warning"))
     letter = rep.get("letter") or {}
     if letter.get("status") in ("fallback", "pending") or (letter.get("status") == "ok" and letter.get("problems")):
         bad.append(f"letter: {letter.get('status')}" + (" with problems" if letter.get("problems") else ""))
-    return Gate("faithfulness", not bad, "faithfulness: " + ", ".join(bad) if bad else "")
+    return Gate("faithfulness", not bad, "faithfulness: " + ", ".join(bad) if bad else "", info)
 
 
 def _level(job: Mapping[str, Any], settings) -> Gate:

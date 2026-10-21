@@ -22,7 +22,9 @@ The heavy steps are hooks (tailor, review, preflight, assist, mark_applied) that
 to read another command's output, and tests can put fakes in their place.
 
 State lives in paths.live/state.json, keyed by the sha256 of the JD file: a started job keeps its id (so a rerun resumes it
-at whatever status it reached) and a finished one is skipped. A JD is moved to done/ only when its job is finished; a job
+at whatever status it reached) and a finished one is skipped. The moment the apply page is opened the entry gets `apply_opened`; it is
+cleared when "Did YOU submit?" has been answered. If the session died in between (a closed browser, a crash), the next session starts by
+asking "Did you submit <company> <role>? [y/N]" for that job, and a `y` marks it applied (archive and tracker included). A JD is moved to done/ only when its job is finished; a job
 stopped by Ctrl-C, a dry run, a pending letter or an error stays in inbox/.
 """
 from __future__ import annotations
@@ -150,6 +152,7 @@ class Live:
         self.root = settings.path("applications")
         self.dirs = folders(settings)
         self.state: State | None = None
+        self.entry: dict = {}                             # the state entry of the job in hand (its `apply_opened` flag lives there)
         self.results: list[JobResult] = []
         self.current: dict = {}
         self.before: snapshot.Snapshot | None = None
@@ -257,7 +260,44 @@ class Live:
             self.out("     " + applykind.line(job["apply_url"] or job["url"], job["apply_kind"]))
         return [(f, r) for _, f, r, _, _ in rows]
 
+    def _opened(self, on: bool) -> None:
+        """Remember in the state file that the apply page of the job in hand is (not any more) open."""
+        if on:
+            self.entry["apply_opened"] = datetime.now().isoformat(timespec="seconds")
+        else:
+            self.entry.pop("apply_opened", None)
+        self.state.save()
+
+    def _ask_unconfirmed(self) -> None:
+        """First thing in a session: a job whose apply page an earlier session opened and never got an answer for. Asks "Did you submit ...?";
+        `y` marks it applied. Nothing is asked in a dry run (it cannot have been the one that opened a form)."""
+        if self.dry_run or self.state is None:
+            return
+        for sha, entry in list(self.state.jobs.items()):
+            if not entry.get("apply_opened") or entry.get("done"):
+                continue
+            job = self.db.job(entry.get("job_id")) if entry.get("job_id") else None
+            entry.pop("apply_opened")
+            if job is None or job["status"] in FINISHED:
+                self.state.save()
+                continue
+            self.current = {"file": entry.get("file"), "job_id": job["id"], "stage": "confirm-submitted"}
+            self.out(f"\n{job['company']} | {job['title']} [{job['id']}]: the last session opened its application form and ended before "
+                     "you answered whether you submitted it.")
+            r = JobResult(entry.get("file") or "-", job["id"], job["company"], job["title"])
+            self.results.append(r)
+            self.state.save()                                                      # asked once: a Ctrl-C here does not ask again next time
+            if self.h.ask(f"  Did you submit {job['company']} {job['title']}? [y/N] ").strip().lower() not in ("y", "yes"):
+                self.out("  Noted: not submitted. The job keeps its status.")
+                r.status = job["status"]
+                continue
+            self._stage("mark-applied")
+            ok = self.h.mark_applied(job["id"], None)
+            r.status = "applied" if ok else "applied (archive incomplete)"
+            self._finish_file(self.dirs.inbox / (entry.get("file") or ""), sha, entry, r.status)
+
     def _loop(self) -> None:
+        self._ask_unconfirmed()
         files = ([self.only] if self.only is not None else self._by_priority(
                  [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]))
         if self.fresh and not files and self.only is None:
@@ -305,12 +345,20 @@ class Live:
             self.results.append(JobResult(f.name, status="rejected (invalid file)", note=str(e)))
             return None
         entry = self.state.jobs.get(sha) or {"file": f.name, "job_id": None, "done": False}
+        self.entry = entry
         if entry.get("done"):
             if not self.dry_run:
                 self._finish_file(f, sha, entry, entry.get("status", "done"))
             self.out(f"SKIP {f.name}: already done as job {entry.get('job_id')} ({entry.get('status')})")
             self.results.append(JobResult(f.name, entry.get("job_id") or "-", entry.get("company", "-"),
                                           entry.get("title", "-"), f"already done ({entry.get('status')})"))
+            return None
+
+        twin = manual.header_fields(text).get("duplicate_of")
+        if twin:                                                                   # discovery found a newer copy of this job on another board
+            reason = f"duplicate of {twin}: the same job on another board of the employer, posted later; work on that file"
+            self.out(f"DUPLICATE {f.name}: {reason}  ({self._reject(f, reason)})")
+            self.results.append(JobResult(f.name, status="rejected (duplicate)", note=reason))
             return None
 
         refusal = self._outside_uk(text)
@@ -569,6 +617,9 @@ class Live:
         db = self.db
         self._stage("auto-gate")
         gates = self.h.auto_gate(jid)
+        for g in gates.items:
+            if g.info:
+                self.out("  " + g.info)
         if not gates.ok:
             r.note = gates.line()
             self.out("  " + r.note)
@@ -635,6 +686,7 @@ class Live:
             if self.h.ask("  Open the application form? [y/N] ").strip().lower() not in ("y", "yes"):
                 return self._not_submitted(jid, "form not opened")
             self._stage("assist")
+            self._opened(True)                                                      # until "Did YOU submit?" is answered, a crash is asked about next time
             res = self.h.assist(jid)                                                # 5. the existing assist; it never submits
             r.visa = [f"CHECK VISA ANSWER: {v['question'][:150]} -> {v.get('value') or 'EMPTY'}" for v in res.get("visa") or []]
         else:
@@ -645,6 +697,7 @@ class Live:
         confirmation = (res.get("confirmation") or "").strip()
         self._stage("confirm-submitted")
         submitted = confirmation.lower() != "x" and self.h.ask("  Did YOU submit the form? [y/N] ").strip().lower() in ("y", "yes")
+        self._opened(False)
         if not submitted:
             return self._not_submitted(jid, "you did not submit")
         self._stage("mark-applied")

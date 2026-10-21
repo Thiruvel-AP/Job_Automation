@@ -9,6 +9,10 @@ applicant.yaml `visa.by_country[W]` (else `.default`) and nothing else; a job wh
 visa field is highlighted and printed as `CHECK VISA ANSWER [W=XX]: question -> answer`; for a remote role at home XX is the remote label
 (`visa.remote.label`), never the home country.
 
+Every other field is filled by apply/filler.py, the same code the gated auto-apply uses: the standard fields from applicant.yaml (full
+name, first name, last name, e-mail, phone, links, location), then the user's answers.yaml. A free-text question nobody has an answer for
+("Describe an LLM feature ...") stays empty and is marked for you.
+
 Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` lists them (ethnicity first), with
 the first form option that equals one of the `match_any` texts you wrote (case- and dash-insensitive); no match, or a question that is not
 listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
@@ -20,47 +24,18 @@ import re
 from pathlib import Path
 
 from ..discovery import countries
-from . import eo
+from . import answers as answers_mod
+from . import eo, filler
+from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
 from .visa import VisaPlan, plan_for, require_plan, work_for
-
-LABEL_JS = """el => {
-  const bits = [];
-  if (el.id) { const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`); if (l) bits.push(l.innerText); }
-  const wrap = el.closest('label'); if (wrap) bits.push(wrap.innerText);
-  const lb = el.getAttribute('aria-labelledby');
-  if (lb) lb.split(' ').forEach(i => { const n = document.getElementById(i); if (n) bits.push(n.innerText); });
-  ['aria-label','placeholder','name','id'].forEach(a => { const v = el.getAttribute(a); if (v) bits.push(v); });
-  if (!bits.length) { const p = el.closest('div,fieldset,li'); if (p) bits.push(p.innerText.slice(0,120)); }
-  return bits.join(' | ');
-}"""
-
-# The group's question for a radio button, whose own label is only its option ("Yes").
-QUESTION_JS = """el => {
-  const g = el.closest('fieldset, [role=radiogroup], [role=group]');
-  if (g) {
-    const l = g.querySelector('legend'); if (l) return l.innerText;
-    const lb = g.getAttribute('aria-labelledby');
-    if (lb) { const n = document.getElementById(lb.split(' ')[0]); if (n) return n.innerText; }
-    return g.getAttribute('aria-label') || g.innerText.slice(0, 200);
-  }
-  const p = el.closest('div,li,p'); return p ? p.innerText.slice(0, 200) : '';
-}"""
 
 # A field is a visa question when its label says so. These are answered from applicant.yaml -> visa.by_country, never from never_fill.
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
 EO_COLOUR = "3px solid blue"
 APPLY_BUTTON = re.compile(r"^\s*(apply( for this job| now)?|i'?m interested)\s*$", re.I)
-
-
-def _matches(label: str, patterns: list[str]) -> bool:
-    return any(re.search(p, label, re.I) for p in patterns)
-
-
-def _norm(text: str) -> str:
-    return re.sub(r"\s+", " ", text or "").strip()
 
 
 KIND_KEY = {"right_to_work_now": "right_to_work", "sponsorship_now": "sponsorship_now", "sponsorship_future": "sponsorship_future"}
@@ -153,12 +128,23 @@ def _answer_eo(page, el, typ: str, entry: "eo.Entry | None") -> tuple[str | None
     return pick, texts, ""
 
 
+class _Filled:
+    """The `filled` / `blank` lists the shared filler writes to."""
+
+    def __init__(self):
+        self.filled: list[str] = []
+        self.blank: list[str] = []
+
+
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
-              letter_text: str | None = None, job=None, plan: VisaPlan | None = None) -> dict:
+              letter_text: str | None = None, job=None, plan: VisaPlan | None = None,
+              book: "answers_mod.AnswerBook | None" = None, history=None) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
 
     With `job`, the wrong-file guard runs first: nothing is uploaded unless the CV and letter belong to that job.
     A cover-letter file field gets the letter PDF; a cover-letter text box gets `letter_text` (when still empty).
+    Every other field is filled by apply/filler.py: applicant.yaml first, then `book` (the user's answers.yaml; none = no answers);
+    `history(company)` says whether the user applied to that company before (answers.yaml's "previously applied" question).
     Visa fields are answered from `plan` (the visa plan of W); without one it is worked out from `job`, and with neither, from the
     home block (`visa.home`). A job whose W is unknown has no plan: every visa field stays empty.
     """
@@ -172,7 +158,9 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
     seen_groups: set = set()
     listed_eo = eo.entries(applicant)
-    never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
+    never = applicant.get("never_fill", [])
+    ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
+                     letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False)
 
     for el in page.query_selector_all("input, textarea, select"):
         tag = el.evaluate("e => e.tagName").lower()
@@ -247,16 +235,15 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             report["filled" if picked else "manual"].append(f"{short} = eo" if picked else short)
             continue
 
+        before = len(ctx.result.filled)
+        filler.fill_field(page, el, tag, typ, label, short, question, filler.is_required(el, label.split("|")[0]), ctx, seen_groups)
+        if len(ctx.result.filled) > before:                                        # applicant.yaml or answers.yaml answered it
+            report["filled"].extend(ctx.result.filled[before:])
+            continue
+
         if _matches(label, never):
             el.evaluate("e => e.style.outline = '3px solid orange'")
             report["manual"].append(short)
-            continue
-
-        key = next((k for k, pats in lmap.items() if _matches(label, pats)), None)
-        if key and applicant.get(key) and typ in ("text", "email", "tel", "url", "textarea", "search", ""):
-            if not (el.input_value() or "").strip():
-                el.fill(str(applicant[key]))
-                report["filled"].append(f"{short} = {key}")
             continue
 
         required = el.get_attribute("required") is not None or el.get_attribute("aria-required") == "true"
@@ -268,8 +255,30 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     return report
 
 
-def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
-    from playwright.sync_api import sync_playwright
+def playwright_launch(profile_dir: Path):
+    """(page, close) of a headed Chromium with a persistent profile. `close` never raises a Playwright error: a window the person has
+    already closed (they submitted and closed it) is not a failure."""
+    from playwright.sync_api import Error as PlaywrightError, sync_playwright
+
+    pw = sync_playwright().start()
+    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
+    page = ctx.pages[0] if ctx.pages else ctx.new_page()
+
+    def close() -> None:
+        for stop in (ctx.close, pw.stop):
+            try:
+                stop()
+            except PlaywrightError:
+                pass
+    return page, close
+
+
+def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None) -> dict:
+    """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
+    after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
+    error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
+    `book` is the user's answers.yaml (answers.load), `history(company)` whether they applied there before (autoapply.default_history)."""
+    from playwright.sync_api import Error as PlaywrightError
 
     url = job["apply_url"] or job["url"]
     cv = rep.get("cv_pdf")
@@ -278,22 +287,30 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path) -> dict:
     check_job_files(job, cv, letter)                       # refuse before a browser even opens
     print(plan.work.line() + f"\n{plan.describe()}")
     letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
-    with sync_playwright() as pw:
-        ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
-        page = ctx.pages[0] if ctx.pages else ctx.new_page()
-        page.goto(url, wait_until="domcontentloaded")
-        page.wait_for_timeout(2500)
-        if not page.query_selector("input[type=file], input[type=email]"):
-            for a in page.query_selector_all("a, button"):
-                if APPLY_BUTTON.match(a.inner_text() or ""):
-                    a.click()
-                    page.wait_for_timeout(2500)
-                    break
-        r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan)
-        print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
-        print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
-        print("\nReview everything in the browser and press Submit yourself.")
-        conf = input("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
-        ctx.close()
+    page, close = (launch or playwright_launch)(profile_dir)
+    r = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
+    try:
+        try:
+            page.goto(url, wait_until="domcontentloaded")
+            page.wait_for_timeout(2500)
+            if not page.query_selector("input[type=file], input[type=email]"):
+                for a in page.query_selector_all("a, button"):
+                    if APPLY_BUTTON.match(a.inner_text() or ""):
+                        a.click()
+                        page.wait_for_timeout(2500)
+                        break
+            r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history)
+            print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
+            print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
+            print("\nReview everything in the browser and press Submit yourself.")
+        except PlaywrightError as e:                        # the window is gone or the page failed: the prompt below is still asked
+            print(f"\n(the browser or the page stopped answering: {str(e).splitlines()[0][:120]}). If you submitted the form, paste the "
+                  "confirmation below; 'x' = did not submit.")
+        conf = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
+    finally:
+        try:
+            close()
+        except PlaywrightError:                             # already closed by the person: nothing left to tear down
+            pass
     r["confirmation"] = conf
     return r

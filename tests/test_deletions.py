@@ -24,8 +24,10 @@ ALLOWED = {
     ("tailoring/render.py", "os.replace"): (1, "renames this run's cv.pdf/cv.tex to their final names inside the same work folder"),
     ("tailoring/tailor.py", "shutil.rmtree"): (1, "_discard: <job>.partial/.old/.failed directly inside the outputs folder, "
                                                     "refuses any other path"),
-    ("tailoring/tailor.py", "os.replace"): (2, "swaps this run's finished <job>.partial folder in (the previous output goes "
-                                                "to <job>.old first, then _discard)"),
+    ("tailoring/tailor.py", "os.replace"): (1, "_rename: swaps this run's finished <job>.partial folder in (the previous output goes "
+                                                "to <job>.old first, then _discard), retried when Windows holds a file"),
+    ("tailoring/tailor.py", "shutil.copy2"): (1, "_copy_over: when Windows will not rename the folder, this run's finished files are copied into "
+                                                 "<job>/ (new, or the previous output being replaced); the .partial is then _discard-ed"),
     ("apply/archive.py", "shutil.copyfile"): (1, "copies the files to archive into a fresh tempfile.mkdtemp folder under paths.tmp: "
                                                   "the destination is new, nothing is overwritten"),
     ("setup.py", "shutil.copy"): (1, "`careerops init` copies .env.example to .env only when .env does not exist"),

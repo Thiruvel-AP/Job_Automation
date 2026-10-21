@@ -121,6 +121,17 @@ def configured(settings) -> bool:
     return bool(str(((settings.raw.get("tracker") or {}) if hasattr(settings, "raw") else {}).get("sheet_id") or "").strip())
 
 
+def scope_problem(settings) -> str | None:
+    """None when the Google sign-in on disk may edit the tracker Sheet; else one line saying what is wrong and how to fix it. Reads the
+    token file only (no network): the scope list Google granted is kept in it."""
+    token = gmail._read_token(settings)
+    if not token or not token.get("refresh_token"):
+        return "not signed in to Google: run `careerops discover --gmail-auth` (tick every box)"
+    if gmail.SCOPE_SHEETS not in str(token.get("scope") or "").split():
+        return f"the Google sign-in lacks {gmail.SCOPE_SHEETS}: run `careerops discover --gmail-auth` (tick every box)"
+    return None
+
+
 def client(settings, api: GoogleAPI | None = None) -> tuple[SheetsClient, str]:
     sheet_id, tab = settings_for(settings)
     return SheetsClient(api or GoogleAPI(settings, need=(gmail.SCOPE_SHEETS,)), sheet_id), tab

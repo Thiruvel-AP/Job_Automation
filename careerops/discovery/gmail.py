@@ -319,7 +319,12 @@ JOB_LINK = {
     "indeed": (r"indeed\.(?:com|co\.uk)$", None, "https://uk.indeed.com/viewjob?jk={}"),
 }
 NOISE = re.compile(r"^(view job|view|apply|easy apply|apply now|new|actively recruiting|promoted|save|see all jobs|unsubscribe|"
-                   r"your job alert|job alert|\d+ (?:new )?jobs?.*|be an early applicant|\d+ (?:school alumni|connections?).*)$", re.I)
+                   r"your job alert|job alert|instant job alert|manage your preferences|unsubscribe here\.?|"
+                   r"\d+ (?:new )?jobs?.*|be an early applicant|\d+ (?:school alumni|connections?).*)$", re.I)
+# CV-Library's alert mail links everything through its click tracker (https://clicks.cv-library.co.uk/f/a/<token>~~/<id>~/<token>~~): no link in it
+# is a /job/<id> page. Such a link is only a pointer to the mail's job (it is never requested; discovery looks for the employer's own board).
+CV_TRACKING_HOST = "clicks.cv-library.co.uk"
+CV_TRACKING_PATH = "/f/a/"
 SALARY = re.compile(r"[£$€]\s?\d")
 
 
@@ -333,7 +338,15 @@ def job_link(kind: str, href: str) -> str | None:
         jk = (parse_qs(u.query).get("jk") or [""])[0]
         return template.format(jk) if re.fullmatch(r"[0-9a-f]{8,}", jk) else None
     m = re.search(path_rx, u.path)
-    return template.format(next(g for g in m.groups() if g)) if m else None
+    if m:
+        return template.format(next(g for g in m.groups() if g))
+    if kind == "cvlibrary" and (u.hostname or "").lower() == CV_TRACKING_HOST and u.path.startswith(CV_TRACKING_PATH):
+        return f"{u.scheme}://{u.netloc}{u.path}"
+    return None
+
+
+def is_cv_tracking(link: str) -> bool:
+    return urlparse(link).hostname == CV_TRACKING_HOST
 
 
 class _Flow(HTMLParser):
@@ -434,6 +447,8 @@ def parse_alert(kind: str, html: str, text: str = "", message_id: str = "", link
             company, place = _split_company_place(pieces[0])
             if not place and len(pieces) > 1:
                 place = pieces[1]
+        if kind == "cvlibrary" and is_cv_tracking(link) and not (company and place):
+            continue                       # every link of the mail is a tracker link: only one followed by a company and a place is a job
         seen.add(link)
         out.append(AlertItem(kind, title, company, place, link, message_id))
     return out

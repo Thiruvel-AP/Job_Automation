@@ -78,6 +78,7 @@ from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
 from .discovery import gates, manual, sources
+from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
 from .discovery import register as sponsors
 from .review import judge
 from .review import workflow as review
@@ -235,7 +236,8 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         except gmail.GmailAuthError as e:
             _fail(str(e))
         return
-    fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH)       # linkedin, indeed, cv-library and Workday: never asked
+    fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH,       # linkedin, indeed, cv-library and Workday: never asked
+                      blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE))
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
                       limit=getattr(args, "limit", None))
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
@@ -298,7 +300,8 @@ def _print_health(s, reg, *, run=None, fetcher=None, cache=None, save: bool = Tr
         return []
     print("\nSource health:")
     try:
-        rows = health.check_all(s, reg, fetcher or Fetcher(RobotsCache(s.path("robots"))), run=run, cache=cache, say=print)
+        rows = health.check_all(s, reg, fetcher or Fetcher(RobotsCache(s.path("robots")), blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE)),
+                                run=run, cache=cache, say=print)
         print(health.format_table(rows))
         if save:
             print(f"saved to {health.save(s, rows)}")
@@ -589,8 +592,23 @@ def _archive_files(db: DB, s, job, rep: dict, confirmation: str | None, applied_
     return True
 
 
+def _assist_answers(db: DB, s) -> dict:
+    """What the apply assist fills from besides applicant.yaml: the user's answers.yaml and whether they applied to a company before (the same
+    two things the gated auto-apply uses). An answers file that cannot be read is reported and the assist goes on without it."""
+    from . import autoapply
+    from .apply import answers as answers_mod
+
+    try:
+        book = answers_mod.load(answers_mod.path_for(s))
+    except answers_mod.AnswersError as e:
+        print(f"  answers.yaml not used: {e}", file=sys.stderr)
+        book = None
+    return {"book": book, "history": autoapply.default_history(db, s)}
+
+
 def cmd_live(args):
     """Interactive batch: every JD in data/jds/inbox through add-jd -> tailor -> review -> apply assist, one job at a time."""
+    from . import tracker
     from .apply.assist import assist
     from .apply.live import Hooks, Live
 
@@ -635,6 +653,13 @@ def cmd_live(args):
         print("--mock implies --dry-run: the mock data root has no real application form to open.")
     elif cfg.mode == "off" and not args.dry_run:
         print("apply.mode is `off`: jobs are tailored and reviewed, no application form is opened (as with --dry-run).")
+    auto = args.auto
+    if tracker.configured(s) and not mockroot.is_mock(s):         # pre-flight: a sign-in that cannot edit the Sheet has never written the tracker
+        problem = tracker.scope_problem(s)
+        if problem:
+            print(f"tracker: {problem}." + (" This run is in assist mode only (no auto-submit, because a duplicate cannot be ruled out "
+                                            "without the tracker)." if args.auto else " The tracker row is not updated until then."))
+            auto = False
     llm = _llm(args, s, db)
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
@@ -657,7 +682,7 @@ def cmd_live(args):
 
     def assist_it(jid: str) -> dict:
         job = db.job(jid)
-        r = assist(job, review.load_report(job), load_yaml(s.path("applicant")), s.path("browser_profile"))
+        r = assist(job, review.load_report(job), load_yaml(s.path("applicant")), s.path("browser_profile"), **_assist_answers(db, s))
         db.log(jid, "apply", r)
         return r
 
@@ -668,8 +693,8 @@ def cmd_live(args):
         return ok
 
     auto_gate_it = auto_apply_it = None
-    if args.auto:
-        from . import autoapply, tracker
+    if auto:
+        from . import autoapply
 
         applicant = load_yaml(s.path("applicant"))
         use_tracker = tracker.configured(s) and not mockroot.is_mock(s)
@@ -719,7 +744,7 @@ def cmd_apply(args):
         print(review.summary(job, rep, s))
         if input("Open application form? [y/N] ").strip().lower() != "y":
             continue
-        r = assist(job, rep, applicant, s.path("browser_profile"))
+        r = assist(job, rep, applicant, s.path("browser_profile"), **_assist_answers(db, s))
         if r["confirmation"].lower() == "x":
             db.log(job["id"], "apply", {"aborted": True, **r})
             continue

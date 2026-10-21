@@ -6,6 +6,7 @@ import math
 import os
 import re
 import shutil
+import time
 from dataclasses import asdict, replace as dc_replace
 from datetime import date
 from pathlib import Path
@@ -91,6 +92,18 @@ def bullet_positions(fb: dict, first: str | None = None) -> dict[str, int]:
 
 def slug(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", s).strip("_")[:60]
+
+
+FOLDER_MAX = 60          # the company and role part of an output folder name, and the whole name when the id is short
+
+
+def folder_name(job: dict) -> str:
+    """`<Company>_<Role, truncated>_<job id>`: only the company and role are cut to fit, never the id, so two jobs of one company never
+    share a folder (the old name cut the whole string at 60 characters and lost the id: "...Engineer_2027" became "...Engineer_2")."""
+    tail = re.sub(r"[^A-Za-z0-9]+", "_", str(job["id"]).split(":")[-1]).strip("_") or "job"
+    room = max(24, FOLDER_MAX - 1 - len(tail))
+    head = re.sub(r"[^A-Za-z0-9]+", "_", f"{job['company']}_{job['title']}").strip("_")[:room].rstrip("_")
+    return f"{head}_{tail}"
 
 
 # ------------------------------------------------------------------ 1. JD analysis
@@ -1439,6 +1452,73 @@ def _discard(path: Path, root: Path) -> None:
     shutil.rmtree(p, ignore_errors=True)
 
 
+RENAME_RETRIES = 3       # a folder rename that Windows refuses (a viewer or the virus scanner holds a file in it) is tried again this often,
+RENAME_WAIT_S = 1.0      # this many seconds apart, before the files are copied instead
+
+
+def _rename(src: Path, dst: Path) -> bool:
+    """os.replace, retried on PermissionError; False when it still fails."""
+    for attempt in range(RENAME_RETRIES + 1):
+        try:
+            os.replace(src, dst)
+            return True
+        except PermissionError:
+            if attempt < RENAME_RETRIES:
+                time.sleep(RENAME_WAIT_S)
+    return False
+
+
+def _files(folder: Path) -> list[Path]:
+    return sorted(p for p in folder.rglob("*") if p.is_file())
+
+
+def _locked(folder: Path) -> list[str]:
+    """The files of `folder` that Windows will not let this process open for writing."""
+    out = []
+    for f in _files(folder):
+        try:
+            open(f, "ab").close()
+        except PermissionError:
+            out.append(f.relative_to(folder).as_posix())
+    return out
+
+
+def _copy_over(src: Path, dst: Path) -> None:
+    for f in _files(src):
+        target = dst / f.relative_to(src)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(f, target)
+
+
+def swap_in(work: Path, final: Path, root: Path, out: Callable[[str], None] = print) -> None:
+    """Put the finished staging folder `work` in place of `final` (an earlier output, moved aside to <final>.old first). A rename that
+    Windows refuses is retried; if it still fails the files are copied into `final` and the staging folder is deleted, and the file
+    Windows holds is printed. An earlier output that was moved aside is only deleted once the new one is complete."""
+    old = final.with_name(final.name + ".old")
+    _discard(old, root)
+    aside = final.exists() and _rename(final, old)
+    if final.exists() and not aside:
+        out(f"  Windows will not move {final.name} aside (locked: {', '.join(_locked(final)) or 'a file in it'}); "
+            "the new files are copied over it instead.")
+    elif not _rename(work, final):
+        held = _locked(work)
+        out(f"  Windows will not rename {work.name} (locked: {', '.join(held) or 'a file in it'}); its files are copied into {final.name} instead.")
+    else:
+        _discard(old, root)
+        return
+    try:
+        _copy_over(work, final)
+    except Exception:
+        if aside:                                               # the earlier output is still there, whole, as <job>.old
+            out(f"  The copy failed; the earlier output is kept as {old.name}.")
+        raise
+    _discard(work, root)
+    if work.exists():
+        out(f"  Windows has locked {', '.join(p.relative_to(work).as_posix() for p in _files(work))} in {work.name}: the new folder "
+            f"{final.name} is complete; delete {work.name} by hand when the file is free.")
+    _discard(old, root)
+
+
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
                one_page: bool = False, on_extracted: Callable[[dict], None] | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
@@ -1446,17 +1526,12 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
     earlier successful output folder exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
     analysis (freeze.record) as soon as the model has given it, before anything else can fail, unless `frozen` was used
     or the model call failed (a taxonomy-only list is never frozen)."""
-    final = out_root / slug(f"{job['company']}_{job['title']}_{job['id'].split(':')[-1]}")
+    final = out_root / folder_name(job)
     work = final.with_name(final.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
         report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted)
-        old = final.with_name(final.name + ".old")
-        _discard(old, out_root)
-        if final.exists():
-            os.replace(final, old)
-        os.replace(work, final)
-        _discard(old, out_root)                                 # the output this one replaces
+        swap_in(work, final, out_root)                          # the earlier output goes (.old), or is copied over when Windows holds it
         _discard(final.with_name(final.name + ".failed"), out_root)    # superseded by this success
         return report
     except BaseException as exc:

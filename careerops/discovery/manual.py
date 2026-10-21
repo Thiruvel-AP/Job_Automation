@@ -21,7 +21,7 @@ HEADER_KEYS = {"company": "company", "employer": "company", "title": "title", "r
                "url": "url", "link": "url", "location": "location", "source": "source", "salary": "salary", "posted": "posted",
                "agency": "agency", "country": "country", "status": "status",
                "first seen": "first_seen", "listed": "listed", "posted via": "posted_source",
-               "apply url": "apply_url", "apply kind": "apply_kind"}
+               "apply url": "apply_url", "apply kind": "apply_kind", "duplicate of": "duplicate_of"}
 HEADER_WINDOW = 10                     # a header is looked for in the first lines; a block that starts there is read to its end
 HEADER_LINE = re.compile(r"^\s*([A-Za-z ]{3,12}?)\s*:\s*(\S.*?)\s*$")
 

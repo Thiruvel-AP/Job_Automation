@@ -67,6 +67,8 @@ ALLOWED = {
                                            ".partial/.old; out_root is paths.outputs, never paths.applications",
     ("tailoring/tailor.py", "_discard"): "the only rmtree in tailoring: <job>.partial/.old/.failed directly inside the "
                                          "outputs folder, anything else raises",
+    ("tailoring/tailor.py", "_rename"): "os.replace of <job>.partial -> <job> (or <job> -> <job>.old) inside paths.outputs, retried when "
+                                        "Windows holds a file; swap_in is its only caller",
     ("apply/archive.py", "_remove_staging"): "deletes data/tmp/archive-*; refuses anything outside paths.tmp",
     ("apply/live.py", "_move"): "moves a JD .txt between inbox/done/rejected under paths.jds; refuses any path in or under "
                                 "the archive root and never overwrites",

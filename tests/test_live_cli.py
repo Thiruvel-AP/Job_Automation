@@ -204,7 +204,7 @@ def test_live_applies_through_the_real_preflight_and_archive_when_you_say_you_su
     from careerops.llm import MockLLM
     cfg, real, mock = world
     monkeypatch.setattr(cli, "_llm", lambda args, s, db: MockLLM())
-    monkeypatch.setattr(assist_mod, "assist", lambda job, rep, applicant, profile: {
+    monkeypatch.setattr(assist_mod, "assist", lambda job, rep, applicant, profile, **kw: {
         "confirmation": "REF-42", "visa": [{"question": "Do you require sponsorship?", "value": "Yes"}], "filled": [],
         "manual": [], "uploaded": [], "required_empty": []})
     inbox = real / "jds" / "inbox"

@@ -32,6 +32,7 @@ from . import discover as disc
 from . import gmail, jobbank, reed
 from .http import Blocked, FetchError, Fetcher
 from .registry import ATS_METHODS, Registry, Source
+from .robots import host_of
 
 COLUMNS = ["ts", "source", "name", "method", "country", "status", "new_jobs", "reachable", "robots", "credentials", "alerts",
            "postings", "detail", "jobs_parsed"]
@@ -255,6 +256,11 @@ def check_source(src: Source, ctx: Context) -> Row:
         _blocked(row, e)
     except Exception as e:  # noqa: BLE001 — one source's failure is its row, never the end of the check
         row.status, row.detail = "error", f"{type(e).__name__}: {e}"
+    log = getattr(ctx.fetcher, "blocklog", None)
+    if log is not None and src.method in API_PROBE:               # a host that refused a script lately: when, and the slower pace that follows
+        note = log.describe(host_of(API_PROBE[src.method]))
+        if note:
+            row.detail = f"{row.detail}; {note}" if row.detail else note
     return row
 
 

@@ -151,6 +151,35 @@ def test_a_claim_guard_violation_or_warning_in_the_chosen_attempt_blocks(setting
     assert names(g) == ["faithfulness"] and "2 claim-guard warnings" in g.line()
 
 
+BLOCKED = {"attempt": 1, "warnings": [], "proposal": {"rephrase": {"p_ql1": "Built the pipeline for 3.1m rows", "p_ql2": "Used Kubernetes"}},
+           "violations": ["p_ql1: new numbers ['3.1m']", "p_ql2: keyword 'Kubernetes' not evidenced by source"]}
+
+
+def final_cv(**bullets):
+    return {"id": {"name": "Ada Lovelace", "email": "ada.lovelace@example.org"}, "profile": "p", "skills": {"a": ["b"]}, "experience": [{}],
+            "projects": [{"bullet_ids": list(bullets), "bullets": list(bullets.values())}], "education": [{}]}
+
+
+def test_rewrites_the_guard_blocked_are_information_and_do_not_gate(settings, db):
+    rep = make_rep(attempts=[BLOCKED], context=final_cv(p_ql1="Built the pipeline", p_ql2="Used Python"))
+    g = autogate.evaluate(db, settings, make_job(), rep, FB, today=TODAY)
+    assert g.ok and g.line() == ""
+    faith = next(x for x in g.items if x.name == "faithfulness")
+    assert "2 blocked rewrites" in faith.info and "0 issues in the final CV" in faith.info
+
+
+def test_an_issue_in_the_final_cv_gates_next_to_the_blocked_rewrites(settings, db):
+    rec = {**BLOCKED, "violations": [*BLOCKED["violations"], "p_ql9: deny-listed term 'Spark'"]}
+    g = run(settings, db, rep={"attempts": [rec], "context": final_cv(p_ql1="Built the pipeline", p_ql9="Used Spark")})
+    assert names(g) == ["faithfulness"] and "1 claim-guard violation" in g.line() and "2 claim-guard" not in g.line()
+    assert "2 blocked rewrites" in next(x for x in g.items if x.name == "faithfulness").info
+
+
+def test_a_violating_rewrite_that_reached_the_final_cv_is_an_issue_there(settings, db):
+    g = run(settings, db, rep={"attempts": [BLOCKED], "context": final_cv(p_ql1="Built the pipeline for 3.1m rows", p_ql2="Used Python")})
+    assert names(g) == ["faithfulness"] and "1 claim-guard violation" in g.line()
+
+
 def test_an_attempt_that_was_not_chosen_does_not_count(settings, db):
     rep = {"attempts": [{"violations": ["old"], "warnings": ["old"]}, {"violations": [], "warnings": []}], "final": {"chosen_attempt": 2}}
     assert run(settings, db, rep=rep).ok

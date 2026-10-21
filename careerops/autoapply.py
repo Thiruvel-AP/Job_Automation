@@ -6,7 +6,7 @@ What it will not do, whatever a form asks for:
   * Solve, bypass or hand off a CAPTCHA or bot check. A challenge on the page (reCAPTCHA, hCaptcha, Turnstile, "verify you are human") stops
     the run before anything is clicked; the browser stays open for the user and the job becomes `needs_user`. Nothing on the challenge is touched.
   * Invent an answer. A field is filled from applicant.yaml (name, e-mail, phone, links, location, and the visa booleans for the job's work
-    country) or from the user's answers.yaml (apply/answers.py). A required question with no exact answer stops the run and asks in the terminal;
+    country) or from the user's answers.yaml (apply/answers.py); the fields are filled by apply/filler.py, the same code the assist uses. A required question with no exact answer stops the run and asks in the terminal;
     the typed answer is used once, and written to answers.yaml only if the user then types `save`. An optional question with no answer stays empty.
   * Click anything else than the submit button: the only other click is an "Apply" link that opens the form, and the options of a drop-down.
 
@@ -25,10 +25,11 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo
+from .apply import autogate, autolog, eo, filler
 from .apply import visa as visa_mod
-from .apply.assist import (APPLY_BUTTON, LABEL_JS, QUESTION_JS, VISA_FIELD, _answer_eo, _answer_visa, _matches, _norm,
-                           about_another_country, classify_visa, visa_value)
+from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
+from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
+                           is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
 from .apply.guard import check_job_files
 from .discovery import discover
@@ -49,12 +50,6 @@ CONFIRMATION = re.compile(r"thank you for (?:applying|your application|submittin
 CONFIRMATION_URL = re.compile(r"confirm|thank|submitted|success", re.I)
 SUBMIT_TEXT = re.compile(r"^\s*(submit( application)?|apply( now)?|send application|submit your application)\s*$", re.I)
 SUBMIT_SELECTORS = ('[data-qa="btn-submit"]', "#btn-submit", "button[type=submit]", "input[type=submit]")
-TEXT_TYPES = ("text", "email", "tel", "url", "textarea", "search", "number", "")
-YES = ("yes", "y", "true", "tick", "ticked", "agree", "i agree", "accept", "i accept", "consent")
-
-
-class NeedsUser(Exception):
-    """The run cannot go on without the person: a challenge on the page, or a question nobody has answered."""
 
 
 @dataclass
@@ -148,104 +143,7 @@ def _confirmed(page) -> bool:
     return bool(CONFIRMATION_URL.search(urlparse(page.url or "").path))
 
 
-# ------------------------------------------------------------------ the context of one form
-@dataclass
-class Ctx:
-    job: Mapping[str, Any]
-    applicant: Mapping[str, Any]
-    book: answers_mod.AnswerBook
-    book_path: Path
-    plan: visa_mod.VisaPlan | None
-    cv_pdf: str | None
-    letter_pdf: str | None
-    letter_text: str | None
-    ask: Callable[[str], str]
-    out: Callable[[str], None]
-    history: Callable[[str], bool]                    # has the user applied to this company before?
-    result: AutoResult = field(default_factory=lambda: AutoResult(autolog.ERROR, "the run was interrupted before it finished"))
-
-    def typed(self, prompt: str) -> str:
-        try:
-            return (self.ask(prompt) or "").strip()
-        except EOFError:
-            return ""
-
-    def unknown(self, question: str, why: str, options: list[str] | None = None) -> str:
-        """A required question with no exact answer: say so, ask, and return what the user typed. Blank = stop. The answer is saved to
-        answers.yaml only when the user then types `save`."""
-        self.out(f"\n  QUESTION WITH NO ANSWER: {question}\n  ({why})" + (f"\n  Options: {' | '.join(options[:15])}" if options else ""))
-        typed = self.typed("  Your answer for this form (blank = stop here; nothing is guessed): ")
-        if not typed:
-            raise NeedsUser(f"no answer for the required question: {question}")
-        return typed
-
-    def offer_save(self, question: str, typed: str) -> None:
-        if self.typed("  Type `save` to keep this answer in answers.yaml for next time (anything else: used on this form only): ").lower() == "save":
-            try:
-                answers_mod.save(self.book_path, question, typed)
-            except answers_mod.AnswersError as e:
-                self.out(f"  not saved: {e}")
-            else:
-                self.out(f"  saved to {self.book_path.name}")
-                self.book = answers_mod.load(self.book_path)
-
-
-def _decide(ctx: Ctx, question: str, required: bool, *, options: list[str] | None = None, numeric: bool = False) -> str | None:
-    """The text to enter (or the option to pick) for a question, from answers.yaml only; None = leave it empty (optional and unanswered).
-    A required question with no exact answer asks the user (Ctx.unknown) and raises NeedsUser if they give none."""
-    r = ctx.book.resolve(question, ctx.job)
-    why = "no entry in answers.yaml matches this question"
-    if r is not None and not r.known and r.entry_id == "previously_applied" and not ctx.history(str(ctx.job.get("company") or "")):
-        r = answers_mod.Resolved(r.entry_id, r.pattern, "No", r.numeric, r.options)          # no earlier application to this company in the database or archive
-    if r is not None and r.known:
-        if options is not None:
-            pick = answers_mod.pick_option(options, r)
-            if pick is not None:
-                return pick
-            why = f"answers.yaml says {r.text!r} but no option matches it"
-        elif numeric and not r.numeric:
-            why = "the field takes a number and the answers.yaml entry has no answer_numeric"
-        else:
-            return r.numeric if numeric else r.text
-    elif r is not None:
-        why = f"the entry {r.entry_id!r} in answers.yaml is blank"
-    if not required:
-        ctx.result.blank.append(question)
-        return None
-    typed = ctx.unknown(question, why, options)
-    if options is not None:
-        pick = answers_mod.pick_option(options, answers_mod.Resolved("typed", "", typed, None, ()))
-        if pick is None:
-            raise NeedsUser(f"the answer typed for {question!r} matches none of the options: {' | '.join(options[:15])}")
-        ctx.offer_save(question, typed)
-        return pick
-    ctx.offer_save(question, typed)
-    return typed
-
-
 # ------------------------------------------------------------------ the fields
-def _is_required(el, label: str) -> bool:
-    return el.get_attribute("required") is not None or el.get_attribute("aria-required") == "true" or label.rstrip().endswith("*")
-
-
-def _numeric_only(el, typ: str, label: str) -> bool:
-    return typ == "number" or (el.get_attribute("inputmode") or "") in ("numeric", "decimal") or \
-        bool(re.search(r"\b(?:numbers? only|digits only|numeric|figure)\b|£|\bGBP\b", label, re.I))
-
-
-def _group(page, el, typ: str) -> list:
-    name = el.get_attribute("name")
-    return page.query_selector_all(f'input[type={typ}][name="{name}"]') if name else [el]
-
-
-def _label_of(el) -> str:
-    return _norm((el.evaluate(LABEL_JS) or "").split("|")[0])
-
-
-def _fill_text(el, value: str) -> None:
-    el.fill(value)
-
-
 def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: bool) -> bool:
     """A right-to-work / sponsorship field, answered from the visa booleans of the job's work country. True = handled."""
     plan = ctx.plan
@@ -274,43 +172,9 @@ def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required
     elif required:
         options = [_norm(o.inner_text()) for o in el.query_selector_all("option") if _norm(o.inner_text())] if typ == "select" else None
         value = _decide(ctx, question, True, options=options)
-        el.select_option(label=value) if typ == "select" else _fill_text(el, value)
+        el.select_option(label=value) if typ == "select" else el.fill(value)
         ctx.result.filled.append(f"{question[:80]} -> {value} (typed)")
     return True
-
-
-def _choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: bool) -> None:
-    """A radio group, a group of check boxes, or one check box (a consent line)."""
-    name = el.get_attribute("name")
-    group = _group(page, el, typ)
-    if typ == "radio" or len(group) > 1:
-        if name and ("choice", name) in seen:
-            return
-        seen.add(("choice", name))
-        q = _norm(el.evaluate(QUESTION_JS)).rstrip(" *") or question
-        labels = [_label_of(g) for g in group]
-        req = any(_is_required(g, q) for g in group)
-        pick = _decide(ctx, q, req, options=labels)
-        if pick is not None:
-            next(g for g in group if _label_of(g) == pick).check()
-            ctx.result.filled.append(f"{q[:80]} -> {pick}")
-        return
-    if el.is_checked():
-        return
-    value = _decide(ctx, question, required)
-    if value is not None and value.strip().lower() in YES:
-        el.check()
-        ctx.result.filled.append(f"{question[:80]} -> ticked")
-    elif value is not None:
-        ctx.result.blank.append(f"{question} (answer {value!r}: left unticked)")
-
-
-def _select(el, question: str, ctx: Ctx, required: bool) -> None:
-    options = [_norm(o.inner_text()) for o in el.query_selector_all("option") if _norm(o.inner_text())]
-    pick = _decide(ctx, question, required, options=options)
-    if pick is not None:
-        el.select_option(label=next(o.inner_text() for o in el.query_selector_all("option") if _norm(o.inner_text()) == pick))
-        ctx.result.filled.append(f"{question[:80]} -> {pick}")
 
 
 def _combobox(page, el, question: str, ctx: Ctx, required: bool) -> None:
@@ -330,9 +194,8 @@ def _combobox(page, el, question: str, ctx: Ctx, required: bool) -> None:
 
 def fill_form(page, ctx: Ctx) -> None:
     """Fill every visible field the way the module docstring says; raises NeedsUser at the first required question nobody has answered."""
-    applicant = ctx.applicant
-    never, lmap = applicant.get("never_fill", []), applicant.get("label_map", {})
-    listed_eo = eo.entries(applicant)
+    listed_eo = eo.entries(ctx.applicant)
+    ctx.combobox = _combobox
     seen: set = set()
     for el in page.query_selector_all("input, textarea, select"):
         tag = el.evaluate("e => e.tagName").lower()
@@ -368,24 +231,6 @@ def fill_form(page, ctx: Ctx) -> None:
             _visa_field(page, el, typ, question, ctx, seen, required)
             continue
 
-        if typ in ("radio", "checkbox"):
-            _choice(page, el, typ, question, ctx, seen, required)
-            continue
-
-        if typ in TEXT_TYPES and not _matches(label, never):
-            key = next((k for k, pats in lmap.items() if _matches(label, pats)), None)
-            if key and applicant.get(key):
-                if not (el.input_value() or "").strip():
-                    el.fill(str(applicant[key]))
-                    ctx.result.filled.append(f"{short} <- {key}")
-                continue
-
-        if tag == "input" and (el.get_attribute("role") == "combobox") and typ in TEXT_TYPES:
-            _combobox(page, el, question, ctx, required)
-            continue
-        if typ in TEXT_TYPES and (el.input_value() or "").strip():
-            continue                                                            # the form (or a saved profile) already holds something
-
         r = ctx.book.resolve(question, ctx.job)
         if (r is None or not r.known) and eo.is_eo_field(f"{question} {label}") and tag == "select":
             entry = eo.entry_for(f"{question} {label}", listed_eo)
@@ -393,15 +238,7 @@ def fill_form(page, ctx: Ctx) -> None:
             if picked:
                 ctx.result.filled.append(f"{question[:80]} -> {picked} (applicant.yaml)")
                 continue
-        if tag == "select":
-            _select(el, question, ctx, required)
-        elif typ in TEXT_TYPES:
-            value = _decide(ctx, question, required, numeric=_numeric_only(el, typ, label))
-            if value is not None:
-                el.fill(value)
-                ctx.result.filled.append(f"{question[:80]} -> {value[:60]}")
-        elif required:
-            raise NeedsUser(f"a required field this module does not fill ({typ}): {short}")
+        filler.fill_field(page, el, tag, typ, label, short, question, required, ctx, seen)       # standard fields, then answers.yaml
 
 
 def still_empty(page) -> list[str]:
@@ -484,7 +321,8 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     book_path = answers_mod.path_for(settings)
     ctx = Ctx(job, applicant, answers_mod.load(book_path), book_path, plan, cv, letter,
               "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None, ask, out,
-              history or (lambda company: True))
+              history or (lambda company: True),
+              AutoResult(autolog.ERROR, "the run was interrupted before it finished"))
     log = autolog.rows(settings)
     cfg = autogate.config(settings)
     ask_to_confirm = confirm or autolog.clicked_total(log) < cfg.confirm_first_n

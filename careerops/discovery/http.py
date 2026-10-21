@@ -6,7 +6,8 @@
     its own and not a crawler's;
   * linkedin.com is never contacted;
   * an HTTP 401 / 403 / 429 stops that host for the rest of the run: `Blocked` is raised, nothing is retried or worked around, and
-    later requests to the host raise at once without sending anything;
+    later requests to the host raise at once without sending anything. With a `blocklog` (blocklog.py) the refusal is written down (time,
+    requests to that host before it), and the next runs keep at least blocklog.SLOW_GAP_S between requests to it;
   * a connection error is retried once; other statuses are returned for the caller to read;
   * a `Crawl-delay` in the host's robots.txt (up to MAX_CRAWL_DELAY_S) is the gap to that host instead of one second.
 
@@ -15,11 +16,13 @@ Tests replace `get`, `sleep` and `clock`, so no test touches the network.
 from __future__ import annotations
 
 import time
+from collections import Counter
 from typing import Any, Callable
 from urllib.parse import urljoin, urlparse
 
 import requests
 
+from .blocklog import SLOW_GAP_S, BlockLog
 from .robots import DOCUMENTED_API_HOSTS, RobotsCache, RobotsError, host_of, never_fetch
 from .sources import UA
 
@@ -51,7 +54,7 @@ def _real_get(url: str, **kw) -> requests.Response:
 class Fetcher:
     def __init__(self, robots: RobotsCache | None = None, get: Callable[..., Any] | None = None,
                  sleep: Callable[[float], None] | None = None, clock: Callable[[], float] | None = None,
-                 gap_s: float = MIN_HOST_GAP_S, never: tuple[str, ...] = ()):
+                 gap_s: float = MIN_HOST_GAP_S, never: tuple[str, ...] = (), blocklog: BlockLog | None = None):
         self.robots = robots if robots is not None else RobotsCache(None)
         # looked up when called, not when defined, so a test can replace requests.get / time.sleep after import
         self._get = get or (lambda url, **kw: _real_get(url, **kw))
@@ -63,6 +66,19 @@ class Fetcher:
         self.host_gap: dict[str, float] = {}          # host -> the Crawl-delay its robots.txt asks for, when longer than gap_s
         self.backed_off: dict[str, int] = {}          # host -> the 401 / 403 / 429 it answered
         self.requests = 0
+        self.by_host: Counter = Counter()             # requests actually sent, per host (robots.txt included)
+        self.blocklog = blocklog                      # the memory of refusals between runs (None: this run only)
+        for host in (blocklog.slow_hosts() if blocklog is not None else []):
+            self.host_gap[host] = SLOW_GAP_S          # it refused us recently: a slower pace, however the robots.txt reads
+
+    def _refused(self, host: str, status: int) -> None:
+        """A host said no: remember it for the rest of this run, and write down when and after how many requests."""
+        self.backed_off[host] = status
+        if self.blocklog is not None:
+            try:
+                self.blocklog.record(host, status, max(self.by_host[host] - 1, 0), sum(self.by_host.values()))
+            except OSError:
+                pass                                  # the memory is a courtesy; the refusal is honoured either way
 
     # ---- pacing
     def _throttle(self, host: str) -> None:
@@ -77,12 +93,13 @@ class Fetcher:
         if host in self.backed_off:
             return self.backed_off[host], ""
         self._throttle(host)
+        self.by_host[host] += 1
         try:
             r = self._get(url, headers=UA)
         except requests.RequestException:
             return None, ""
         if r.status_code in BLOCKED_STATUSES and (r.status_code == 429 or host not in DOCUMENTED_API_HOSTS):
-            self.backed_off[host] = r.status_code          # the host said no to a script: not asked again this run
+            self._refused(host, r.status_code)             # the host said no to a script: not asked again this run
         return r.status_code, (r.text[:500_000] if getattr(r, "ok", False) else "")
 
     def robots_state(self, url: str) -> str:
@@ -121,11 +138,12 @@ class Fetcher:
                     raise Blocked(str(e)) from None
                 delay = self.robots.crawl_delay(url)
                 if delay and delay > self.gap_s:
-                    self.host_gap[host] = min(delay, MAX_CRAWL_DELAY_S)
+                    self.host_gap[host] = max(self.host_gap.get(host, 0.0), min(delay, MAX_CRAWL_DELAY_S))
             r = None
             for attempt in (0, 1):
                 self._throttle(host)
                 self.requests += 1
+                self.by_host[host] += 1
                 try:
                     r = self._get(url, headers={**UA, **(headers or {})}, params=params if _hop == 0 else None, auth=auth,
                                   **({"stream": True} if stream else {}))
@@ -134,7 +152,7 @@ class Fetcher:
                     if attempt == 1 or not isinstance(e, requests.ConnectionError):
                         raise FetchError(f"{what}: could not be fetched ({type(e).__name__})") from None
             if r.status_code in BLOCKED_STATUSES:
-                self.backed_off[host] = r.status_code
+                self._refused(host, r.status_code)
                 raise Blocked(f"{what}: HTTP {r.status_code}: {host} blocks automated access; it is not asked again this run",
                               r.status_code)
             where = (getattr(r, "headers", None) or {}).get("Location") if r.status_code in REDIRECT_STATUSES else None
