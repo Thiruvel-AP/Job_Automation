@@ -306,7 +306,7 @@ def default_history(db, settings=None) -> Callable[[str], bool]:
 def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], settings, *, submit: bool = True, confirm: bool = False,
         ask: Callable[[str], str] = input, out: Callable[[str], None] = print, launch: Callable[[Path], Session] | None = None,
         history: Callable[[str], bool] | None = None, throttle: Throttle | None = None, ats_strict: float | None = None,
-        now: Callable[[], datetime] = datetime.now) -> AutoResult:
+        now: Callable[[], datetime] = datetime.now, freetext=None) -> AutoResult:
     """Fill the form of one gated job; submit it unless `submit` is False. Always appends one row to applied_auto.csv. Raises ArchiveError
     (wrong files, unknown work country) before a browser is opened."""
     job = dict(job)
@@ -323,6 +323,9 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
               "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None, ask, out,
               history or (lambda company: True),
               AutoResult(autolog.ERROR, "the run was interrupted before it finished"))
+    if freetext is not None:                                              # free-text questions: drafted, guarded, used only on the person's `y`
+        freetext.ask, freetext.out = ask, out
+        ctx.freetext = freetext
     log = autolog.rows(settings)
     cfg = autogate.config(settings)
     ask_to_confirm = confirm or autolog.clicked_total(log) < cfg.confirm_first_n

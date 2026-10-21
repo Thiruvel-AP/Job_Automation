@@ -159,7 +159,7 @@ def fixture_profile_settings() -> Settings:
 def settings(tmp_path) -> Settings:
     s = load_settings()
     raw = copy.deepcopy(s.raw)
-    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover", "aiapply_applied", "outreach"):   # register_dir: M1 writes snapshots
+    for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover", "aiapply_applied", "outreach", "answers_library"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
     raw["paths"]["applications"] = str(tmp_path / "Companies")

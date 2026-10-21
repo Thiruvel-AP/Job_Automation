@@ -14,6 +14,7 @@ paths:
   fact_bank: config/profile/fact_bank.yaml
   applicant: config/profile/applicant.yaml
   answers: config/profile/answers.yaml    # your answers to application-form questions (autoapply reads it; only `save` at the prompt appends to it)
+  answers_library: data/answers/library.jsonl   # free-text form answers YOU approved or wrote (apply/freetext.py): reused for a similar question; runtime data, never answers.yaml
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies
@@ -321,6 +322,7 @@ llm:
     rephrase_bullets: 1200     # <= 5 reworded bullets per call; a reasoning model also spends some of it thinking
     judge: 800                 # {would_send, score, issues}: a short JSON answer
     cover_letter: 3000         # gpt-oss-20b spends reasoning tokens first; run 152700 (Zone & Co) was cut off at 1500
+    free_text_answer: 1500     # one short form answer + the ad phrases it quotes (apply/freetext.py); a reasoning model spends some thinking
     default: 1000
   # Estimated tokens for tailoring one job (keywords + profile + rephrase batches + letter; a below-band retry adds
   # batches). Before each job the router checks today's tokens + this against every provider's tpd; none left -> use

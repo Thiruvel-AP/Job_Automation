@@ -134,7 +134,9 @@ def test_save_appends_one_entry_and_leaves_the_rest_of_the_file_byte_for_byte(tm
     p.write_text(original, encoding="utf-8", newline="\n")
     answers.save(p, "Do you hold a full UK driving licence?", "Yes")
     text = p.read_text(encoding="utf-8")
-    assert text.startswith(original)
+    rest = iter(text.splitlines())
+    assert all(line in rest for line in original.splitlines())          # every line of the user's file, unchanged and in order (the entry joins the list
+    assert len(text.splitlines()) - len(original.splitlines()) <= 6      # before `motivations:`, where other top-level keys follow `answers:`)
     b = answers.load(p)
     r = b.resolve("Do you hold a full UK driving licence?", JOB)
     assert r.text == "Yes" and r.entry_id.startswith("saved_")
@@ -177,3 +179,19 @@ def test_save_refuses_a_blank_answer_and_a_blank_question(tmp_path):
     with pytest.raises(answers.AnswersError):
         answers.save(p, "  ?! ", "Yes")
     assert p.read_text(encoding="utf-8") == "answers: []\n"
+
+
+def test_save_puts_the_entry_at_the_end_of_the_answers_list_when_other_top_level_keys_follow_it(tmp_path):
+    """The user's file has `motivations:` and `style:` after `answers:`: a new entry must join the list, not land inside `style`."""
+    f = tmp_path / "answers.yaml"
+    f.write_text("answers:\n  - id: a\n    match: [\"alpha\"]\n    answer: \"one\"\n\n# Reasons in your own words.\nmotivations:\n  - \"I like it.\"\n\n"
+                 "style:\n  avoid: [passionate]\n  person: first\n", encoding="utf-8")
+    before = f.read_text(encoding="utf-8")
+    entry = answers.save(f, "Do you hold a full UK driving licence?", "Yes")
+    after = f.read_text(encoding="utf-8")
+    raw = yaml.safe_load(after)
+    assert [e["id"] for e in raw["answers"]] == ["a", entry] and raw["answers"][1]["answer"] == "Yes"
+    assert raw["motivations"] == ["I like it."] and raw["style"] == {"avoid": ["passionate"], "person": "first"}
+    assert after.index(entry) < after.index("# Reasons in your own words.")           # before the comment that belongs to `motivations`
+    assert after.replace(after[after.index("\n  # saved"):after.index("# Reasons")], "\n") .startswith(before[:before.index("# Reasons")].rstrip("\n"))
+    assert answers.load(f).motivations == ["I like it."] and answers.load(f).style["person"] == "first"

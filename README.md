@@ -67,6 +67,7 @@ career-ops/
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
 │   ├── autoapply.py              gated auto-apply (Greenhouse / Ashby / Lever): the ONLY module that clicks a submit control, only for a job that passed the gate
+│   ├── apply/freetext.py         drafts free-text form answers from the fact bank, guards them, you approve once (data/answers/library.jsonl)
 │   ├── apply/assist.py · filler.py   Playwright: fill, upload PDFs, never submit · the ONE field filler (applicant.yaml, then answers.yaml) that assist and autoapply share
 │   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
@@ -546,6 +547,16 @@ one line says to run `careerops discover --gmail-auth`, and the run goes on in a
 read the Sheet and a duplicate cannot be ruled out. The assist fills the same fields as the auto-apply (applicant.yaml: full name, first and last name, e-mail,
 phone, links, location; then `answers.yaml`) and leaves a free-text question to you. If the browser is closed (or the program dies) after the form was opened,
 the confirmation question is still asked, and the next `live` starts with `Did you submit <company> <role>? [y/N]` for that job.
+
+**Free-text questions** (a required text area, or a text box with room for over 100 characters, that `answers.yaml` does not answer): `apply/freetext.py`
+reads the limit from the label and the field ("1-2 sentences", "max 200 words", `maxlength`; none stated = 120 words) and the kind of question (project,
+challenge, why company, why role; anything else is asked, never drafted). An answer you approved for a similar question (same kind, similarity 0.85) is reused
+as it is. Otherwise it picks the 1-3 fact-bank entries that fit (the hook proof of this job's CV first), drafts from them in the first person following
+`answers.yaml -> style`, and checks the draft like the CV: every number, tool, organisation and name must be in those entries, no deny-listed term, no style-avoid
+word, the limit, no "we/our" and no pasted list of terms. A "Why {company}?" claim must be words the job ad itself contains, and without `motivations` in
+`answers.yaml` you are asked. One redraft, then you; then it shows the question, limit, sources and draft: `[y] use · [e] edit · [r] redraft · [s] I'll write
+it`. Only `y` (or text you typed) is used and kept in `data/answers/library.jsonl` (`paths.answers_library`; runtime data, never `answers.yaml`). A new draft is
+therefore never submitted without your `y`; a "why company" answer is only reused for the same company (a "why role" one only for the same job).
 
 **What stays manual**: a CAPTCHA; a required question `answers.yaml` cannot answer; Workday, a company's own site and every other ATS; a job under the
 ATS minimum, with a senior / lead / manager title, saying no sponsorship, already applied to, or whose CV fails the format or faithfulness check; the

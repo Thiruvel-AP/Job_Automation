@@ -10,6 +10,8 @@ autoapply.py handles): nothing is ever worked out, guessed or generated.
   overrides        company name -> answer, for that company only (the name is compared normalised)
   options          for a dropdown or radio group: the option equal to one of these, else the first option with one of them as whole words
   {source} {company} {role}   filled per job
+  motivations      (top level) your reasons, in your words: the only source "Why {company}?" may draw on besides the job ad (apply/freetext.py)
+  style            (top level) how free-text answers are written: `avoid` (words never used), `person`, `voice` (apply/freetext.py)
 """
 from __future__ import annotations
 
@@ -87,6 +89,8 @@ def _fill(text: str, job: Mapping[str, Any]) -> str:
 @dataclass
 class AnswerBook:
     entries: list[Entry] = field(default_factory=list)
+    motivations: list[str] = field(default_factory=list)          # read only: free-text answers about the company are drawn from these and the ad
+    style: Mapping[str, Any] = field(default_factory=dict)         # read only: {avoid: [words], person: first, voice: text}
 
     def resolve(self, question: str, job: Mapping[str, Any]) -> Resolved | None:
         """The entry whose longest pattern is a whole-word run of the question, answered for this job; None when no pattern matches."""
@@ -128,7 +132,10 @@ def load(path: Path) -> AnswerBook:
             numeric=None if numeric in (None, "") else str(numeric),
             overrides={norm(str(k)): str(v) for k, v in (r.get("overrides") or {}).items()},
             options=tuple(str(o) for o in (r.get("options") or []))))
-    return AnswerBook(entries)
+    motivations = raw.get("motivations") if isinstance(raw, dict) else None
+    style = raw.get("style") if isinstance(raw, dict) else None
+    return AnswerBook(entries, [str(m).strip() for m in motivations if str(m).strip()] if isinstance(motivations, list) else [],
+                      style if isinstance(style, dict) else {})
 
 
 def pick_option(options: list[str], r: Resolved) -> str | None:
@@ -149,6 +156,20 @@ def pick_option(options: list[str], r: Resolved) -> str | None:
     return None
 
 
+def _end_of_answers(text: str) -> int | None:
+    """Where a new list item goes when another top-level key follows `answers:` (the user's file has `motivations:` and `style:` after it): the
+    start of the comment lines that belong to that next key (or of the key). None = `answers:` is the last key, the item goes at the end."""
+    start = re.search(r"^answers:", text, re.M)
+    nxt = re.search(r"^(?!answers:)[A-Za-z_][\w-]*:", text[start.end():], re.M) if start else None
+    if nxt is None:
+        return None
+    at = start.end() + nxt.start()
+    lines = text[:at].split("\n")
+    while len(lines) > 1 and (lines[-2].lstrip().startswith("#")):             # the comment block right above that key belongs to it
+        lines.pop(-2)
+    return len("\n".join(lines[:-1])) + 1 if len(lines) > 1 else 0
+
+
 def save(path: Path, question: str, answer: str) -> str:
     """Append one entry for `question` to the user's file (only after the user typed `save`); returns its id. Everything above is untouched."""
     pattern = norm(question)
@@ -166,7 +187,8 @@ def save(path: Path, question: str, answer: str) -> str:
     block = ("\n" if text and not text.endswith("\n") else "") + (
         f"\n{pad}# saved by autoapply when you typed `save` for this question\n"
         f"{pad}- id: {entry_id}\n{pad}  match: [{json.dumps(pattern)}]\n{pad}  answer: {json.dumps(answer.strip(), ensure_ascii=False)}\n")
-    new = text + block
+    after = _end_of_answers(text)                                              # other top-level keys (motivations, style) may follow the list
+    new = text + block if after is None else text[:after].rstrip("\n") + "\n" + block + "\n" + text[after:]
     try:
         rows = (yaml.safe_load(new) or {}).get("answers") or []
         before = (yaml.safe_load(text) or {}).get("answers") or []
@@ -174,7 +196,7 @@ def save(path: Path, question: str, answer: str) -> str:
         raise AnswersError(f"{Path(path).name} was not changed: the new entry would not fit its layout ({e})") from None
     if len(rows) != len(before) + 1 or rows[-1].get("id") != entry_id:
         raise AnswersError(f"{Path(path).name} was not changed: the new entry would not become a separate entry in its layout")
-    if empty or not Path(path).exists():
+    if empty or after is not None or not Path(path).exists():
         Path(path).write_text(new, encoding="utf-8", newline="\n")
     else:
         with open(path, "a", encoding="utf-8", newline="\n") as f:                # the user's text above is never rewritten

@@ -138,7 +138,7 @@ class _Filled:
 
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
               letter_text: str | None = None, job=None, plan: VisaPlan | None = None,
-              book: "answers_mod.AnswerBook | None" = None, history=None) -> dict:
+              book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
 
     With `job`, the wrong-file guard runs first: nothing is uploaded unless the CV and letter belong to that job.
@@ -160,7 +160,8 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     listed_eo = eo.entries(applicant)
     never = applicant.get("never_fill", [])
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
-                     letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False)
+                     letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
+                     freetext=freetext)
 
     for el in page.query_selector_all("input, textarea, select"):
         tag = el.evaluate("e => e.tagName").lower()
@@ -273,7 +274,7 @@ def playwright_launch(profile_dir: Path):
     return page, close
 
 
-def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None) -> dict:
+def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
     after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
     error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
@@ -287,6 +288,8 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     check_job_files(job, cv, letter)                       # refuse before a browser even opens
     print(plan.work.line() + f"\n{plan.describe()}")
     letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
+    if freetext is not None:
+        freetext.ask = ask
     page, close = (launch or playwright_launch)(profile_dir)
     r = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
     try:
@@ -299,7 +302,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                         a.click()
                         page.wait_for_timeout(2500)
                         break
-            r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history)
+            r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext)
             print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
             print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
             print("\nReview everything in the browser and press Submit yourself.")

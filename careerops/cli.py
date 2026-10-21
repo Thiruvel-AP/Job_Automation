@@ -609,6 +609,8 @@ def _assist_answers(db: DB, s) -> dict:
 def cmd_live(args):
     """Interactive batch: every JD in data/jds/inbox through add-jd -> tailor -> review -> apply assist, one job at a time."""
     from . import tracker
+    from .apply import answers as answers_mod
+    from .apply import freetext
     from .apply.assist import assist
     from .apply.live import Hooks, Live
 
@@ -682,7 +684,10 @@ def cmd_live(args):
 
     def assist_it(jid: str) -> dict:
         job = db.job(jid)
-        r = assist(job, review.load_report(job), load_yaml(s.path("applicant")), s.path("browser_profile"), **_assist_answers(db, s))
+        rep = review.load_report(job)
+        kw = _assist_answers(db, s)
+        kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input)
+        r = assist(job, rep, load_yaml(s.path("applicant")), s.path("browser_profile"), **kw)
         db.log(jid, "apply", r)
         return r
 
@@ -708,7 +713,8 @@ def cmd_live(args):
             job = db.job(jid)
             rep = review.load_report(job)
             return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
-                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"))
+                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"),
+                                 freetext=freetext.for_job(job, rep, fb, llm, s, answers_mod.load(answers_mod.path_for(s)), ask=input))
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
               + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now

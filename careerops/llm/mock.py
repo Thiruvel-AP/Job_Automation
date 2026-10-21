@@ -54,6 +54,9 @@ class MockLLM:
                    f"alongside the tools I already use."] if gaps else []),
                 "Could we find twenty minutes next week to talk about where I could contribute first?",
             ]}
+        if task == "free_text_answer":                         # the first chosen source as it stands: plumbing only, never a real answer
+            src = ctx.get("sources") or []
+            return {"answer": src[0]["text"] if src else "", "ad_phrases": []}
         if task == "judge":                                    # a fixed second opinion: plumbing only, never a real judgement
             return {"would_send": True, "score": 4, "issues": []}
         raise LLMError(f"MockLLM has no handler for task {task}")

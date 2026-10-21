@@ -46,3 +46,14 @@ answers:
   - id: relocate
     match: ["relocate"]
     answer: "Yes"
+
+# Reasons in your own words: the only source (with the job ad) that a "Why <company>?" answer may draw on.
+motivations:
+  - "I want to build AI systems that are trustworthy in production, not just demos: tested, measured and safe when their dependencies fail."
+  - "I am drawn to applied AI in domains where correctness matters, such as healthcare and biomedical research."
+
+# How free-text answers are written.
+style:
+  avoid: [passionate, excited, leverage, synergy, cutting-edge]
+  person: first
+  voice: plain, specific, no adjectives without evidence

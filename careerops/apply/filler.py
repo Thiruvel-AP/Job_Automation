@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from . import answers as answers_mod
+from . import freetext as freetext_mod
 
 TEXT_TYPES = ("text", "email", "tel", "url", "textarea", "search", "number", "")
 STANDARD_TYPES = ("text", "email", "tel", "url", "textarea", "search", "")      # a number box is never a name or an address
@@ -94,6 +95,7 @@ class Ctx:
     result: Any                                       # anything with `filled` and `blank` lists (autoapply.AutoResult, or the assist's own)
     strict: bool = True                               # True: a required question nobody answered is asked, and stops the run if not answered
     combobox: Callable[..., None] | None = None       # fills a script-built drop-down (picks an option = a click, which only autoapply.py may do)
+    freetext: Any = None                              # apply/freetext.FreeText of this job: drafts, guards and asks about a required free-text question
 
     def typed(self, prompt: str) -> str:
         try:
@@ -247,6 +249,11 @@ def select(el, question: str, ctx: Ctx, required: bool) -> None:
         ctx.result.filled.append(f"{question[:80]} -> {pick}")
 
 
+def _answered(ctx: Ctx, question: str) -> bool:
+    r = ctx.book.resolve(question, ctx.job)
+    return r is not None and r.known
+
+
 def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: str, required: bool, ctx: Ctx, seen: set) -> None:
     """Fill one visible field that is not a file box, not the cover-letter box, not a visa question and not an equal-opportunities question
     (the callers handle those their own way): a standard field from applicant.yaml, else the answers.yaml answer. What it did is added to
@@ -271,6 +278,16 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
     if tag == "select":
         select(el, question, ctx, required)
     elif typ in TEXT_TYPES:
+        maxlength = el.get_attribute("maxlength")
+        if ctx.freetext is not None and required and freetext_mod.is_free_text(typ, maxlength) and not _answered(ctx, question):
+            # a long required question answers.yaml has no answer for: drafted from the fact bank, guarded, and used only when the person says y
+            text = ctx.freetext.answer(question, label, maxlength, strict=ctx.strict)
+            if text:
+                el.fill(text)
+                ctx.result.filled.append(f"{question[:80]} -> free text ({ctx.freetext.last})")
+            else:
+                ctx.stop(f"no answer for the required question: {question}")
+            return
         value = decide(ctx, question, required, numeric=numeric_only(el, typ, label))
         if value is not None:
             el.fill(value)

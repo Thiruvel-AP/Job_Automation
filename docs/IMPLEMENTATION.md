@@ -1065,3 +1065,27 @@ Each item had a failing test first. Evidence: the user's first live run.
    `tests/discovery/test_blocked_hosts.py`.
 
 Not verified (needs the real world): a live Ashby form, a real closed browser, a Windows lock on a PDF, the live Gmail token, a second CV-Library alert shape.
+
+## 5z. Round 11 — the agent drafts free-text answers (2026-10-21) — **done** (MockLLM and fixture forms only; no real model, no live form)
+
+New `apply/freetext.py`, called by `apply/filler.fill_field` for a REQUIRED text area (or a text box with `maxlength` over 100) that answers.yaml does not answer;
+the same code serves `autoapply.fill_form` (strict: a missing answer stops the run, `needs_user`) and `assist.fill_page` (not strict: it leaves the field for
+you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywords and hook, fact bank, the run's model, `answers.yaml`).
+
+1. **Question.** `read_limits` ("1-2 sentences" -> 2, "max 200 words", `maxlength`, "at least N" ignored, none = 120 words); `classify` -> project | challenge |
+   why_company | why_role | other.
+2. **Plan, draft.** `FreeText.plan`: bullets scored with the CV's own keyword matching (`scorer.keyword_hits`) on the job's keywords plus the question's words, the hook
+   proof first, at most 3; a challenge prefers entries with a `situation` or a `result`; a "why" answer draws on the ad sentences (`ad_snippets`), `answers.yaml ->
+   motivations` and the hook. One call of task `free_text_answer` (`llm.max_tokens.free_text_answer`), JSON `{answer, ad_phrases}`.
+3. **Guard.** `Guard.problems`: `faithfulness.check` (deny list, new numbers, JD keywords not evidenced), the limit, `style.avoid`, first person, every bank tool / taxonomy
+   tool in the draft in the chosen entries, every capitalised name in them, a "why" claim = 4+ words in a row from the ad (each sentence naming the company too),
+   `letters.claim_problems` (no we/our, no "I help X") and `term_dump_problems`. Redraft once with the problems; a second failure goes to the person with no draft.
+   `faithfulness.py` and the deny list are untouched.
+4. **Approve, store, reuse.** `[y] use · [e] edit · [r] redraft · [s] I'll write it`; only `y` or typed text is used. `Library` (`paths.answers_library`, JSON lines,
+   append-only): question, normalised question, answer, company, job id, source ids, date, `approved: true` (+ class, origin). Reuse: same class, `similarity` >= 0.85 (words
+   after synonyms: shipped/built/deployed are one), still inside the new limit; why_company only for the same company, why_role only for the same job. A file that does
+   not exist yet starts with the two Limbic answers approved on 2026-10-21 (job `manual:177a9a1afcc1`), word for word. `answers.AnswerBook` now also reads `motivations` and `style`.
+5. **Tests.** `tests/apply/test_freetext.py` (68: limits, classes, similarity, seeds, plan, guard, approval, reuse, why_company/why_role), `tests/test_autoapply_freetext.py`
+   (6, Chromium: a new draft is not used without `y` and nothing is submitted; a reused answer goes through).
+
+Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
