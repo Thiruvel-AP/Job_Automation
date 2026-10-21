@@ -74,22 +74,64 @@ sources:
 
 roles:
   # Lower tier = higher priority. Patterns are case-insensitive regexes on the job TITLE.
-  # Families are tried in tier order, so an ambiguous title ("Data Scientist / ML Engineer") takes the higher tier.
+  # Families are matched in LIST order, first match wins, so the list is ordered most specific first on purpose ("Data Science
+  # Consultant" must reach data_consultant before 'data scien' catches it): do not re-sort it. `tier` and `priority` never decide a match.
+  # `priority` (1-15) is your ranking of the family; it only feeds the role factor R below (priority.role_step).
+  # `skills_from` = the fact-bank family whose skill_lines this role family prints (the bank has skill_lines for data_scientist and
+  # ai_engineer only); a bank family with the same name as the role family is used instead.
   # `projects` = preferred fact-bank project ids for that family (a prior for tailoring, not an order);
   # every id must exist in fact_bank.yaml or triage/tailor stop with a clear error.
   families:
-    - {name: data_scientist, tier: 1, headline: Data Scientist,
+    - {name: genai_engineer, tier: 1, priority: 3, skills_from: ai_engineer, headline: Generative AI Engineer,
+       title: ['\bgen ?ai engineer', 'generative ai (engineer|developer)', '\bgen ?ai developer'],
+       projects: [agenticfriend, mcpsearch, coverfit, gtaigraph]}
+    - {name: ai_consultant, tier: 2, priority: 7, skills_from: ai_engineer, headline: AI Consultant,
+       title: ['\b(gen(erative)? )?ai (strategy |solutions )?consultant', 'machine learning consultant', '\bml consultant'],
+       projects: [mcpsearch, coverfit, agenticfriend, gtaigraph]}
+    - {name: data_consultant, tier: 2, priority: 6, skills_from: data_scientist, headline: Data Consultant,
+       title: ['data (science |analytics )?consultant', 'analytics consultant', 'insights consultant'],
+       projects: [churn, coverfit, lloyds, mcpsearch]}
+    - {name: forward_deployed_engineer, tier: 2, priority: 5, skills_from: ai_engineer, headline: Forward Deployed Engineer,
+       title: ['forward[- ]deployed', '\bfde\b'],
+       projects: [mcpsearch, coverfit, agenticfriend, gtaigraph]}
+    # add your CNN image-classification project id to projects
+    - {name: computer_vision_engineer, tier: 3, priority: 8, skills_from: data_scientist, headline: Computer Vision Engineer,
+       title: ['computer vision', '\bvision (ml |ai )?engineer', 'perception engineer'],
+       projects: [gtaigraph, bitcoin]}
+    # add your QLoRA project id to projects
+    - {name: ai_research_scientist, tier: 3, priority: 9, skills_from: ai_engineer, headline: AI Research Scientist,
+       title: ['\bai research scien', 'research scientist.{0,20}\b(ai|artificial intelligence|llms?)\b'],
+       projects: [gtaigraph, agenticfriend, mcpsearch]}
+    # add your QLoRA project id to projects
+    - {name: ml_research_scientist, tier: 3, priority: 10, skills_from: data_scientist, headline: Machine Learning Research Scientist,
+       title: ['\b(ml|machine learning) research (scien|engineer)', 'research (scientist|engineer).{0,20}(machine learning|\bml\b)'],
+       projects: [gtaigraph, bitcoin, churn]}
+    - {name: ai_automation_engineer, tier: 3, priority: 11, skills_from: ai_engineer, headline: AI Automation Engineer,
+       title: ['\bai automation', 'automation engineer.{0,20}\b(ai|llm)\b', 'intelligent automation'],
+       projects: [mcpsearch, agenticfriend, coverfit]}
+    - {name: sde_ai, tier: 3, priority: 14, skills_from: ai_engineer, headline: Software Development Engineer (AI),
+       title: ['software (development )?engineer.{0,25}\b(ai|llm|gen ?ai)\b', '\bsde\b.{0,15}\bai\b'],
+       projects: [mcpsearch, coverfit, agenticfriend]}
+    - {name: sde_ml, tier: 3, priority: 15, skills_from: ai_engineer, headline: Software Development Engineer (ML),
+       title: ['software (development )?engineer.{0,25}\b(ml|machine learning)\b', '\bsde\b.{0,15}\bml\b'],
+       projects: [coverfit, bitcoin, churn]}
+    - {name: data_scientist, tier: 1, priority: 1, skills_from: data_scientist, headline: Data Scientist,
        title: ['data scien', 'decision scien'],
        projects: [churn, bitcoin, lloyds, gtaigraph]}
-    - {name: ai_engineer, tier: 1, headline: AI Engineer,
-       title: ['\bai engineer', '\bai/ml engineer', '\b(llm|genai|generative ai) engineer', 'applied ai', '\bai (software )?(engineer|developer)', 'agent(ic)? (ai )?engineer'],
+    - {name: ai_engineer, tier: 1, priority: 2, skills_from: ai_engineer, headline: AI Engineer,
+       title: ['\bai engineer', '\bai/ml engineer', 'applied ai (engineer|developer)', '\bai (software )?(engineer|developer)', 'agent(ic)? (ai )?engineer', '\bllm engineer'],
        projects: [agenticfriend, mcpsearch, coverfit, lloyds]}
-    - {name: ml_engineer, tier: 2, headline: Machine Learning Engineer,
+    - {name: ml_engineer, tier: 2, priority: 4, skills_from: ai_engineer, headline: Machine Learning Engineer,
        title: ['machine learning engineer', '\bml engineer', '\bmlops', 'applied scientist', '\bnlp engineer'],
        projects: [agenticfriend, bitcoin, gtaigraph, coverfit]}
-    - {name: data_analyst, tier: 3, headline: Data Analyst,
-       title: ['data analyst', 'insights? analyst', 'product analyst', 'analytics engineer', '\bbi analyst', 'business intelligence analyst', 'reporting analyst'],
+    # add your AWS word-frequency pipeline project id to projects
+    - {name: data_engineer, tier: 3, priority: 13, skills_from: data_scientist, headline: Data Engineer,
+       title: ['data engineer', 'analytics engineer', 'data platform engineer'],
+       projects: [gtaigraph, churn, bitcoin]}
+    - {name: data_analyst, tier: 3, priority: 12, skills_from: data_scientist, headline: Data Analyst,
+       title: ['data analyst', 'insights? analyst', 'product analyst', '\bbi analyst', 'business intelligence analyst', 'reporting analyst'],
        projects: [churn, lloyds, bitcoin, coverfit]}
+
   levels:
     # Junior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
     exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
@@ -164,6 +206,9 @@ priority:
     non_home: 0.50         # the work is not where you live (W is not visa.home in applicant.yaml): ranked below home jobs of the same fit
   # L, the level fit: P = F x S x L. The ATS score cannot see seniority, so the title words do (the highest level word wins). Edit the values;
   # a job is only ever moved down by it, never dropped.
+  # R, the role fit: P = F x S x L x R, R = max(0.5, 1 - role_step x (family priority - 1)): priority 1 -> 1.00, 5 -> 0.88, 12 -> 0.67,
+  # 15 -> 0.58. A title that matches no family has no R. Like the others it only moves a job down, never drops it.
+  role_step: 0.03
   level_factor:
     manager: 0.3           # manager | director | head in the title
     lead: 0.4              # lead | principal | staff | architect

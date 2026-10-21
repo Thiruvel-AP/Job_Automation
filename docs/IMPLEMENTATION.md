@@ -198,6 +198,12 @@ where w = 2 (required) or 1 (preferred). Sorting by priority answers "which sing
   preferred project ids against the fact bank), `gates.pre_ceiling(jd, fb, settings)`.
 - `jobs` gains `family`, `tier`, `ceiling_pre` (additive `ALTER TABLE` via `db.COLUMNS`).
 - `careerops/tailoring/queue.py`: `queue_key`, `order(jobs, settings, tailored=False)`, `select_for_run`.
+- **Role families, 15 (Oct 21).** `roles.families` is matched in LIST order, first match wins (`gates.match_family`, `classify_role`); it is no longer
+  sorted by tier. `priority` (1-15) is the user's ranking and never decides a match. `Family` gains `priority` and `skills_from`.
+  `priority.role_factor(title, settings)`: R = max(0.5, 1 - `priority.role_step` x (priority - 1)); P = F x S x L x R; a title with no family has no R
+  (`Priority.r is None`). R is printed by `Priority.role_text()` in the live inbox estimate, the final-P table, the review screen, discover's
+  listing and status. `skills.pick_family/family_skill_lines(..., skills_from)`: a role family without a bank family of its own uses the bank
+  family named by `skills_from` (the bank is never edited); `discover --report` prints the family of each ad the run wrote (`Run.as_json()["written"]`).
   k(j) = (1[c_j < floor], tier_j, −c_j, −posted_or_first_seen_j) with c = `ceiling_pre` for the tailor queue and
   COALESCE(`ceiling`, `ceiling_pre`) for review / apply / Excel. Quota: tier 3 ≤ ⌊share·N⌋ slots, then fills
   whatever tiers 1–2 leave empty.

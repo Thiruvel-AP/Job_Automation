@@ -47,7 +47,7 @@ career-ops/
 │   │   ├── countries.py · jobbank.py country names/codes/places (the `listed_only` rule) · Canada's Job Bank open-data CSV
 │   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
-│   │   ├── priority.py           freshness tier, then P = F x S x L (L = level fit from the title): orders the live inbox, discover's listing and status
+│   │   ├── priority.py           freshness tier, then P = F x S x L x R (L = level fit, R = role fit from the title's family): orders the live inbox, discover's listing and status
 │   │   ├── freshness.py          posted_at from the source (Greenhouse first_published, Lever createdAt ...), age in hours, tiers 0-3
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── hook.py                   the hook: the `hook_library` entry that fits the ad, used word for word (headline, profile line 1, its proof bullet first, letter sentence 1); no model
@@ -456,7 +456,7 @@ file is rejected).
 Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it), or fetch
 one with `careerops add-url`. The
 first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
-`careerops live` takes the files best first (freshness tier, then the **estimate** of P = F x S x L; it prints the order), up to `--max`
+`careerops live` takes the files best first (freshness tier, then the **estimate** of P = F x S x L x R; it prints the order), up to `--max`
 (default 5). It works in two passes. **Pass 1** tailors the selected jobs, nothing else is asked but the rule-skip question. The
 estimate (F is only the triage-time ceiling) cannot tell which tailoring will be good (an estimate of 0.86 became 0.25), so **pass 2**
 sorts the tailored jobs by freshness tier, then the **final P**, prints the table (company, role, age, tier, `LEVEL:` flag, ATS ceiling,
@@ -716,7 +716,11 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   screen says so. **Role families (18 Oct):** when the fact bank has `families:` (each `id`, `match` terms, `skill_lines` of `label` + `items`), the
   family whose `match` terms carry the most JD keyword weight (ties to the first, none above zero: the job's own role family if the bank has one of
   that id, else the groups above) gives the Skills section: its `skill_lines` label for label and item for item, as one line of text each, no
-  model and no regrouping, in the same `\skillgroup` layout. `skills_always` is still checked: a standing skill the bank lists but the lines do
+  model and no regrouping, in the same `\skillgroup` layout. The bank has `skill_lines` for `data_scientist` and `ai_engineer` only; every
+  other role family in settings has `skills_from:` naming one of the two (data_scientist, data_consultant, computer_vision_engineer,
+  ml_research_scientist, data_analyst, data_engineer → `data_scientist`; the rest → `ai_engineer`) and prints that family's lines word for word,
+  whatever the ad says. A bank family with the same id as the role family replaces the mapping. The CV headline is the hook library's, word for
+  word; the role family's `headline` is only the fallback and no model writes it. `skills_always` is still checked: a standing skill the bank lists but the lines do
   not mention is a `skills:` warning, never added to your words (`report.json` → `skills.family`). A project with an `award:` that the JD does not rank in its top three moves to Certifications & Achievements as a
   bold first line. An experience or project with `situation:` in the fact bank opens its first bullet with "<situation>: " (STAR);
   the model never writes it. Bullet flags in the fact bank (18 Oct): `verbatim: true` = the bullet is used word for word (never reworded by
@@ -880,16 +884,23 @@ clearance, IR35, travel, the posting age, and anything the pipeline flagged) and
 
 I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
 not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". And no job is dropped for being old.
-`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S x L inside it**.
+`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S x L x R inside it**.
 
     tier 0  posted at most 24 h ago      tier 1  at most 72 h      tier 2  at most 7 days      tier 3  older (or undated)
-    P = F x S x L      F = honest ATS ceiling (0-1)
+    P = F x S x L x R      F = honest ATS ceiling (0-1)
     S = 1.00 exact register match · 0.90 fuzzy · 0.75 not on the register / agency / unknown · 0.65 the JD says no sponsorship
     L = 0.3 manager|director|head · 0.4 lead|principal|staff|architect · 0.6 senior|sr · 1.0 any other title
+    R = max(0.5, 1 - role_step x (family priority - 1))      role_step 0.03: priority 1 -> 1.00 · 5 -> 0.88 · 12 -> 0.67 · 15 -> 0.58
 
 (the lowest applicable S; the weights are `priority.sponsor_weights` in `config/settings.yaml`. L is the level fit: the ATS score cannot see
 seniority, so the title words do; the highest level word wins, the values are `priority.level_factor` and yours to edit. Like S it only
-moves a job down: nothing is dropped, and `LEVEL: manager` etc. is shown in the review screen and the final table.). The old recency factor R = exp(-days / 14) is
+moves a job down: nothing is dropped, and `LEVEL: manager` etc. is shown in the review screen and the final table.)
+**R is the role fit** (`priority.role_step` in settings): each family in `roles.families` has a `priority` from 1 to 15, your ranking of the role, and the
+title's family sets R. It is shown as `x R 0.88 (forward_deployed_engineer, #5)` in the inbox estimate, the final-P table, the review screen, `discover`'s
+listing and `status`; a title with no family has no R (it counts as 1). **Matching and ranking are separate:** the family list is matched in **list
+order, first match wins**, and it is ordered most specific first on purpose (a "Data Science Consultant" must reach `data_consultant` before `data scien`
+catches it), so do not re-sort it by priority or tier. The `priority` key is never used for matching. `careerops discover --report` lists the family of
+each ad the run wrote. (The old recency factor, also called R, was exp(-days / 14) and is
 gone: it drove a 64-day-old posting that was still open down to 0.01. The age comes from **`posted_at`, the time the source says** (stored on the job
 with `posted_at_source`): Greenhouse `first_published` (not `updated_at`, which resets on a repost: the Anaplan ad was 69 days old, not 10),
 Lever `createdAt`, Ashby `publishedAt`, Reed `date`, Adzuna `created`, a Gmail alert's arrival time (an upper bound); anything else counts

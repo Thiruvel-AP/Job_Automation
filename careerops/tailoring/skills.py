@@ -96,19 +96,26 @@ def family_scores(fb: dict, kws: list[Keyword]) -> dict[str, float]:
             for f in families(fb)}
 
 
-def pick_family(fb: dict, kws: list[Keyword], job_family: str | None = None) -> dict | None:
+def pick_family(fb: dict, kws: list[Keyword], job_family: str | None = None, skills_from: str | None = None) -> dict | None:
     """The family with the highest `family_scores` (the earlier one on a tie); when none scores above zero, the family named `job_family`
-    (the job's role family from settings, "data_scientist") if the bank has one; else None."""
+    (the job's role family from settings, "data_scientist") if the bank has one; else None.
+    A role family the bank has no family for (the bank has skill_lines for two only) uses the bank family named by `skills_from`
+    (settings roles.families[*].skills_from) outright, whatever the ad says; with no such family in the bank, the pick above stands.
+    A bank family named like the role family is the user's own for that role, so the mapping is not used and the pick above stands."""
     fams, scores = families(fb), family_scores(fb, kws)
+    if job_family and skills_from and not any(str(f["id"]) == job_family for f in fams):
+        mapped = next((f for f in fams if str(f["id"]) == skills_from), None)
+        if mapped is not None:
+            return mapped
     best = max(fams, key=lambda f: (scores[str(f["id"])], -fams.index(f)), default=None)
     if best is not None and scores[str(best["id"])] > 0:
         return best
     return next((f for f in fams if job_family and str(f["id"]) == job_family), None)
 
 
-def family_skill_lines(fb: dict, kws: list[Keyword], job_family: str | None = None) -> dict[str, str] | None:
+def family_skill_lines(fb: dict, kws: list[Keyword], job_family: str | None = None, skills_from: str | None = None) -> dict[str, str] | None:
     """{label: items} of the picked family's `skill_lines`, exactly as written (items is one line of text, not a list), or None."""
-    fam = pick_family(fb, kws, job_family)
+    fam = pick_family(fb, kws, job_family, skills_from)
     return {str(l["label"]): str(l["items"]) for l in fam["skill_lines"]} if fam else None
 
 

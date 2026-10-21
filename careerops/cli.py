@@ -282,7 +282,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if d.run.written and not d.dry_run:
         print("Next: careerops live   (works through the inbox best priority first)")
     if getattr(args, "report", False):
-        print("\n" + disc.format_report(s))             # the counts per source and the freshness tiers, after this run
+        print("\n" + disc.format_report(s, d.run))             # the counts per source and the freshness tiers, after this run
     if d.run.failures:                                  # a scheduled run (scripts/discover.sh) must show as failed
         print("\nFAILED: " + "; ".join(d.run.failures[:5]), file=sys.stderr)
         sys.exit(1)
@@ -1110,7 +1110,7 @@ def priority_lines(db: DB, s, n: int = 10) -> list[str]:
     out = []
     for j in ranked:
         p = prio.priority(j, s, tailored=bool(j["out_dir"]))
-        out.append(f"  T{p.tier} {p.age():>7}  {p.p:.2f} = {p.f:.2f} x {p.s:.2f}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
+        out.append(f"  T{p.tier} {p.age():>7}  {p.p:.2f} = {p.f:.2f} x {p.s:.2f}{' ' + p.role_text() if p.r is not None else ''}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
     return out
 
 
@@ -1131,7 +1131,7 @@ def cmd_status(args):
         print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
     top = priority_lines(db, s)
     if top:
-        print("\nTop jobs, freshest tier first, then P = F x S (not yet applied):")
+        print("\nTop jobs, freshest tier first, then P = F x S x R (not yet applied):")
         print("\n".join(top))
     archived = list(db.conn.execute(
         "SELECT c.folder, COUNT(*) AS n FROM archive_index r JOIN archive_index c ON c.kind='company' "

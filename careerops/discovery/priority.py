@@ -1,12 +1,15 @@
 """Priority = what to look at first. Fresh jobs first, then fit; sponsorship is a weight on the order, never a filter.
 
-  order  =  ( freshness tier,  then  P = F x S x L  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
+  order  =  ( freshness tier,  then  P = F x S x L x R  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
 
   tier  0 posted at most 24 h ago, 1 at most 72 h, 2 at most 7 days, 3 older or undated (discovery/freshness.py). The posting time is the
         source's own (Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna created; a Gmail alert's arrival
         time, an upper bound); anything else counts from the day discover first saw the job. Nothing is dropped for being old.
   L  level fit, from the title words (the ATS score cannot see seniority), `priority.level_factor` in settings.yaml:
        manager|director|head 0.3 · lead|principal|staff|architect 0.4 · senior|sr 0.6 · anything else 1.0 (the highest level word wins)
+  R  role fit, from the family the title matches (roles.families, matched in list order) and the user's ranking of it:
+       R = max(0.5, 1 - priority.role_step x (priority - 1)); 1.00 for priority 1, 0.88 for 5, 0.58 for 15 with the step 0.03.
+       A title that matches no family is given no R (it counts as 1). The ranking never decides which family a title belongs to.
   F  the honest ATS ceiling, 0-1 (the LLM-checked ceiling once tailored, else the triage-time one; 0 when not known yet)
   S  how sure the employer is to sponsor, from `priority.sponsor_weights` in settings.yaml:
        exact    on the sponsor register by name                                  1.00
@@ -33,6 +36,8 @@ from . import countries, freshness, workcountry
 
 DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
 DEFAULT_LEVELS = {"manager": 0.3, "lead": 0.4, "senior": 0.6, "other": 1.0}
+DEFAULT_ROLE_STEP = 0.03
+ROLE_FLOOR = 0.5
 # Title words per level, highest level first: "Senior Manager" is a manager, "Manager, Applied AI Architects" too. Whole words only.
 LEVEL_WORDS = [("manager", re.compile(r"\b(?:manager|director|head)\b", re.I)),
                ("lead", re.compile(r"\b(?:lead|principal|staff|architect)\b", re.I)),
@@ -111,6 +116,13 @@ class Priority:
     posted_via: str = ""   # where the posting time comes from (freshness.SOURCES), "" when unknown
     l: float = 1.0         # level fit from the title words (level_factor); 1.0 for a title without any
     level: str = "other"   # manager | lead | senior | other
+    r: float | None = None  # role fit from the family's priority (role_factor); None = no family matched, no R
+    family: str | None = None
+    rank: int | None = None  # the family's priority (1-15)
+
+    def role_text(self) -> str:
+        """'x R 0.88 (forward_deployed_engineer, #5)' for the inbox, the final table and the review screen; '' without an R."""
+        return f"x R {self.r:.2f} ({self.family}, #{self.rank})" if self.r is not None else ""
 
     def flag(self) -> str:
         """'LEVEL: manager' (and so on) for the review screen and the final table; '' for a title without a level word."""
@@ -120,7 +132,8 @@ class Priority:
         return "date unknown" if self.hours is None else freshness.age_text(self.hours)
 
     def line(self) -> str:
-        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x L {self.l:.2f} ({self.level}) | "
+        return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x L {self.l:.2f} ({self.level})"
+                + (f" {self.role_text()}" if self.r is not None else "") + " | "
                 f"age {self.age()} (tier {self.tier}, {freshness.TIER_NAMES[self.tier]}"
                 + (f", {self.posted_via}" if self.posted_via else "") + ")")
 
@@ -143,6 +156,27 @@ def level_factor(title: str, settings=None) -> tuple[float, str]:
     given = ((settings.raw.get("priority") or {}).get("level_factor") or {}) if settings is not None else {}
     level = level_of(title)
     return float(given.get(level, DEFAULT_LEVELS[level])), level
+
+
+@dataclass
+class Role:
+    family: str
+    rank: int
+    r: float
+
+
+def role_factor(title: str, settings=None) -> Role | None:
+    """R for a title: the first family (list order) its title matches and that has a `priority`, else None. The step is
+    `priority.role_step` in settings.yaml. Needs settings: without them no family is known."""
+    if settings is None:
+        return None
+    from . import gates     # lazy: gates imports the tailoring package
+
+    fam = gates.match_family(str(title or ""), settings)
+    if fam is None or fam.priority is None:
+        return None
+    step = float(((settings.raw.get("priority") or {}).get("role_step", DEFAULT_ROLE_STEP)))
+    return Role(fam.name, fam.priority, max(ROLE_FLOOR, 1 - step * (fam.priority - 1)))
 
 
 def _get(job: Mapping[str, Any], key: str) -> Any:
@@ -191,13 +225,17 @@ def ats_factor(job: Mapping[str, Any], tailored: bool = True) -> float:
 
 
 def priority(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> Priority:
-    """P = F x S x L for a job row (or dict with the same keys), with its age in hours and its freshness tier (freshness.py)."""
+    """P = F x S x L x R for a job row (or dict with the same keys), with its age in hours and its freshness tier (freshness.py).
+    R is left out (counts as 1) for a title that matches no role family."""
     f = ats_factor(job, tailored)
     s, why = sponsor_factor(job, settings)
     l, level = level_factor(str(_get(job, "title") or ""), settings)
+    role = role_factor(str(_get(job, "title") or ""), settings)
     when, via = freshness.posted(job)
     hours = freshness.age_hours(job, today)
-    return Priority(f * s * l, f, s, why, hours, freshness.tier_of(hours), freshness.SOURCES.get(via, "first seen" if via else ""), l, level)
+    return Priority(f * s * l * (role.r if role else 1.0), f, s, why, hours, freshness.tier_of(hours),
+                    freshness.SOURCES.get(via, "first seen" if via else ""), l, level,
+                    role.r if role else None, role.family if role else None, role.rank if role else None)
 
 
 def sort_key(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> tuple:

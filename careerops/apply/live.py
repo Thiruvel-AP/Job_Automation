@@ -230,9 +230,10 @@ class Live:
         except Exception as e:  # noqa: BLE001
             self.out(f"(inbox order by priority not available: {e}; going by file name)")
             return [] if self.fresh else files
-        self.out("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L (before tailoring; the review order uses the final P):")
+        self.out("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L x R (before tailoring; the review order uses the final P):")
         for f, pr in ranked:
             self.out(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = F {pr.f:.2f} x S {pr.s:.2f} x L {pr.l:.2f}"
+                     f"{' ' + pr.role_text() if pr.r is not None else ''}"
                      f"{'  ' + pr.flag() if pr.flag() else ''}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
         if self.fresh:
             keep = [f for f, pr in ranked if pr is not None and pr.tier == 0]
@@ -252,11 +253,11 @@ class Live:
             job = self.db.job(r.job_id)
             rows.append((prio.sort_key(job, self.s, tailored=True), f, r, job, prio.priority(job, self.s, tailored=True)))
         rows.sort(key=lambda t: t[0][:3])                       # tier, -P, -S; a tie keeps the order of pass 1 (tier, estimate, name)
-        self.out("Review queue by freshness tier, then final P (P = F x S x L; F is the ATS ceiling after tailoring, not the estimate):")
-        self.out("     company | role | age | tier | level | ATS ceiling | P")
+        self.out("Review queue by freshness tier, then final P (P = F x S x L x R; F is the ATS ceiling after tailoring, not the estimate):")
+        self.out("     company | role | age | tier | level | ATS ceiling | P | role factor")
         for n, (_, f, r, job, pr) in enumerate(rows, 1):
             self.out(f"  {n}. {job['company']} | {job['title']} | {pr.age()} | T{pr.tier} | {pr.flag() or '-'} | "
-                     f"ATS ceiling {pr.f:.2f} | P {pr.p:.2f}")
+                     f"ATS ceiling {pr.f:.2f} | P {pr.p:.2f} | {pr.role_text() or 'no role factor'}")
             self.out("     " + applykind.line(job["apply_url"] or job["url"], job["apply_kind"]))
         return [(f, r) for _, f, r, _, _ in rows]
 

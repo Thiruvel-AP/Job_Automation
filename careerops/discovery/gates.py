@@ -51,6 +51,8 @@ class Family:
     headline: str
     title: list[str]
     projects: list[str]
+    priority: int | None = None        # the user's ranking, 1 (best) to 15: feeds the role factor R of the priority, never the match
+    skills_from: str | None = None     # the fact-bank family whose skill_lines this role family prints (a bank family of its own name wins)
 
 
 def verdict_status(v: Verdict) -> str:
@@ -83,10 +85,12 @@ def min_years_required(jd: str) -> int | None:
 
 # ---------------------------------------------------------------- role families (M4b)
 def load_roles(settings, fb: dict | None = None) -> list[Family]:
-    """Families from `settings.roles`, sorted by tier (stable, so config order breaks ties).
+    """Families from `settings.roles`, in LIST order: the list is ordered most specific first on purpose ("Data Science Consultant" must
+    reach data_consultant before 'data scien' catches it). `priority` ranks the families; it never decides a match.
     With a fact bank, every preferred project id must exist in it — the user may rename ids."""
-    fams = sorted((Family(f["name"], int(f["tier"]), f["headline"], list(f["title"]), list(f.get("projects", [])))
-                   for f in settings["roles"]["families"]), key=lambda f: f.tier)
+    fams = [Family(f["name"], int(f["tier"]), f["headline"], list(f["title"]), list(f.get("projects", [])),
+                   int(f["priority"]) if f.get("priority") is not None else None, f.get("skills_from"))
+            for f in settings["roles"]["families"]]
     if fb is not None:
         known = [p["id"] for p in fb.get("projects", [])]
         for f in fams:
@@ -101,10 +105,21 @@ def family(settings, name: str | None) -> Family | None:
     return next((f for f in load_roles(settings) if f.name == name), None)
 
 
+def match_family(title: str, settings) -> Family | None:
+    """The first family, in settings list order, whose title pattern matches; None if out of scope."""
+    return next((f for f in load_roles(settings) if _any(f.title, title)), None)
+
+
 def classify_role(title: str, settings) -> tuple[str, int] | None:
-    """(family, tier) of the first family, in tier order, whose title pattern matches; None if out of scope."""
-    f = next((f for f in load_roles(settings) if _any(f.title, title)), None)
+    """(family, tier) of the first family, in list order, whose title pattern matches; None if out of scope."""
+    f = match_family(title, settings)
     return (f.name, f.tier) if f else None
+
+
+def skills_from(settings, name: str | None) -> str | None:
+    """The fact-bank family whose skill_lines the role family `name` prints (settings roles.families[*].skills_from), or None."""
+    f = family(settings, name)
+    return f.skills_from if f else None
 
 
 def level_excluded(title: str, settings) -> str | None:

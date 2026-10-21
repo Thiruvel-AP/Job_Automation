@@ -399,6 +399,7 @@ def test_the_listing_is_ordered_by_priority_and_a_sponsor_with_the_same_ad_comes
     assert ranked[0][1].company == "Northwind Health AI" and ranked[0][1].ext_id == "101"
     line = d.listing()[0]
     assert "Northwind Health AI | Data Scientist" in line and " = " in line and "exact register match" in line
+    assert "x R 1.00 (data_scientist, #1)" in line                      # the role factor, with the family and its priority
 
 
 def test_nothing_is_dropped_for_sponsorship_the_job_with_the_worst_s_is_listed(cfg, db, fb_fixture):
@@ -689,3 +690,21 @@ def test_gmail_auth_command_reports_a_missing_client_file_as_an_error(cmd, cfg, 
     with pytest.raises(SystemExit) as e:
         cmd(Net(), "--gmail-auth")
     assert e.value.code == 1 and "gmail_client.json not found" in capsys.readouterr().err
+
+
+def test_discover_report_shows_the_role_family_of_each_ad_written(cmd, cfg, capsys):
+    cmd(gh_net(), "--ats", "--report")
+    out = capsys.readouterr().out
+    section = out.split("Role family of each ad the last run wrote:\n", 1)[1]
+    rows = [ln for ln in section.splitlines() if ln.startswith("  ")][:3]
+    assert len(rows) == 3
+    assert any("data_scientist (#1)" in r and "Acme Analytics Ltd | Data Scientist" in r for r in rows), rows
+    assert all(r.split("(#")[0].strip() in {f["name"] for f in cfg.raw["roles"]["families"]} for r in rows)
+
+
+def test_discover_report_reads_the_families_from_the_saved_run_too(cmd, cfg, capsys):
+    cmd(gh_net(), "--ats")
+    capsys.readouterr()
+    cmd(gh_net(), "--report")                                   # no run of its own: the last saved run's ads
+    assert "Role family of each ad the last run wrote:" in capsys.readouterr().out
+    assert all("written" in r for r in disc.read_runs(cfg))

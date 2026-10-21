@@ -128,7 +128,8 @@ class Run:
     def as_json(self) -> dict:
         return {"ts": self.started, "dry_run": self.dry_run, "tiers": list(self.tiers), "failures": self.failures[:20], "sources": {s: dict(c) for s, c in self.sources.items()},
                 "by_source": {s: dict(c) for s, c in self.by_source.items()}, "notes": self.notes[:50],
-                "no_job_subjects": dict(self.no_job_subjects)}
+                "no_job_subjects": dict(self.no_job_subjects),
+                "written": [{"company": c.company, "title": c.title, "file": p.name} for c, p in self.written]}
 
 
 # ------------------------------------------------------------------ what is already known
@@ -1075,7 +1076,7 @@ class Discover:
     def listing(self, n: int = 10) -> list[str]:
         lines = []
         for pr, c, path in self.ranked()[:n]:
-            lines.append(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.l:.2f}  {c.company} | {c.title} | "
+            lines.append(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = {pr.f:.2f} x {pr.s:.2f} x {pr.l:.2f}{' ' + pr.role_text() if pr.r is not None else ''}  {c.company} | {c.title} | "
                          f"{c.location or '?'} | {c.url}  "
                          f"[{c.source}{', agency' if c.agency else ''}{', listed only' if c.listed_only else ''}; {pr.s_reason}"
                          f"{'; ' + pr.flag() if pr.flag() else ''}]  {path.name}")
@@ -1146,8 +1147,20 @@ def inbox_tiers(settings, now: datetime | None = None) -> list[int]:
     return freshness.tier_counts(jobs, now)
 
 
-def format_report(settings) -> str:
-    """Counts per source over all runs and for the last one, and what is in the manual queue (resolved vs sent to it)."""
+def family_lines(settings, written: list[dict]) -> list[str]:
+    """'  data_scientist (#1)  Company | Title  file' for each ad a run wrote: the role family its title matches (roles.families, list
+    order) and the user's priority of it, or 'no family' (a title that no longer matches, e.g. after the patterns were edited)."""
+    out = []
+    for w in written:
+        fam = gates.match_family(str(w.get("title") or ""), settings)
+        label = f"{fam.name} (#{fam.priority})" if fam and fam.priority is not None else fam.name if fam else "no family"
+        out.append(f"  {label}  {w.get('company', '')} | {w.get('title', '')}  {w.get('file', '')}".rstrip())
+    return out
+
+
+def format_report(settings, run: Run | None = None) -> str:
+    """Counts per source over all runs and for the last one, the role family of each ad that run wrote (`run`, else the last saved
+    run), and what is in the manual queue (resolved vs sent to it)."""
     runs = read_runs(settings)
     queue = read_manual_queue(settings.path("jds") / "manual_queue.csv")
     lines = []
@@ -1173,6 +1186,9 @@ def format_report(settings) -> str:
             lines.append(f"  note: {n}")
     if runs and runs[-1].get("tiers") is not None:
         lines.append("Freshness of the ads the last run wrote: " + freshness.counts_line(runs[-1]["tiers"]))
+    wrote = run.as_json()["written"] if run is not None else runs[-1].get("written") if runs else None
+    if wrote:
+        lines += ["Role family of each ad the last run wrote:", *family_lines(settings, wrote)]
     waiting = inbox_tiers(settings)
     lines.append("Waiting in the inbox for `careerops live` (`live --fresh` takes tier 0): " + freshness.counts_line(waiting))
     resolved = sum(c.get("resolved", 0) for c in total.values())

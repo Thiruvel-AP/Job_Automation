@@ -1614,9 +1614,10 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     gaps = [g for g in all_gaps if g not in possible]
     jd = job["description"] or ""
     groups_cfg = {} if one_page else skill_group_config(settings)
-    fam = None if one_page else pick_family(fb, kws, family)         # the role family whose `match` terms carry the most weight for the ad
+    from_family = gates.skills_from(settings, family)       # the bank family a role family without skill_lines of its own prints
+    fam = None if one_page else pick_family(fb, kws, family, from_family)   # the bank family whose `match` terms carry the most weight for the ad
     if fam:                     # its skill_lines, word for word (the bank's own labels and items; nothing regrouped or reordered)
-        skills, dropped_groups = family_skill_lines(fb, kws, family) or {}, []
+        skills, dropped_groups = family_skill_lines(fb, kws, family, from_family) or {}, []
         left = family_basics_missing(skills, fb, list((groups_cfg or {}).get("skills_always") or []))
         if left:
             analysis_warnings.append(f"skills: the '{fam['id']}' family's skill_lines do not mention {', '.join(left)}, which the fact bank "

@@ -48,11 +48,12 @@ def test_the_shipped_weights_are_the_agreed_ones(settings):
 
 # ------------------------------------------------------------------ the order: tier first, then P
 def test_there_is_no_recency_factor_in_p(settings):
-    """R = exp(-days / 14) took a 64-day-old posting that was still open to 0.01. P is F x S whatever the age."""
+    """R = exp(-days / 14) took a 64-day-old posting that was still open to 0.01. P is F x S x L x R whatever the age (R is the ROLE factor of
+    test_role_factor.py, nothing to do with the posting's age)."""
     old = job_(posted_at="2026-08-01T00:00:00Z", posted_at_source="greenhouse.first_published")
     new = job_(posted_at="2026-10-10T08:00:00Z", posted_at_source="greenhouse.first_published")
     a, b = prio.priority(old, settings, today=NOW), prio.priority(new, settings, today=NOW)
-    assert a.p == b.p == pytest.approx(0.80 * 1.0) and not hasattr(a, "r")
+    assert a.p == b.p == pytest.approx(0.80 * 1.0) and not hasattr(a, "recency")
     assert (a.tier, b.tier) == (3, 0)
 
 
@@ -180,7 +181,7 @@ def test_the_review_screen_shows_p_with_f_and_s_the_age_and_the_wording_as_infor
                   sponsor_match="exact", posted_at="2026-10-01T00:00:00+00:00", posted_at_source="ashby.publishedAt")
     lines = text.splitlines()
     pline = next(ln for ln in lines if ln.startswith("Priority P="))
-    assert "F " in pline and "S 0.65 (JD says no sponsorship)" in pline and " R " not in pline and "tier 3" in pline
+    assert "F " in pline and "S 0.65 (JD says no sponsorship)" in pline and "recency" not in pline.lower() and "tier 3" in pline
     assert any(ln.startswith("Posted:") and " h ago" in ln and "Ashby publishedAt" in ln and "tier 3" in ln for ln in lines)
     wording = next(ln for ln in lines if ln.startswith("Sponsorship wording in the JD"))
     assert "right to work in the UK without sponsorship" in wording and "(information only)" in wording
@@ -311,8 +312,8 @@ def test_status_lists_the_open_jobs_by_priority_with_their_factors(settings, db,
         db.update_job(jid, status="applied" if jid == "m:3" else "triaged", ceiling_pre=ceiling, sponsor_match=match, tier=1)
     cli.main(["status"])
     out = capsys.readouterr().out
-    section = out.split("Top jobs, freshest tier first, then P = F x S (not yet applied):\n", 1)[1]
+    section = out.split("Top jobs, freshest tier first, then P = F x S x R (not yet applied):\n", 1)[1]
     lines = [ln for ln in section.splitlines() if ln.startswith("  ")][:3]
-    assert "Strong Non Sponsor" in lines[0] and "0.60 = 0.80 x 0.75" in lines[0] and "not on the register" in lines[0] and "T0" in lines[0]
-    assert "Weak Sponsor" in lines[1] and "0.45 = 0.45 x 1.00" in lines[1]
+    assert "Strong Non Sponsor" in lines[0] and "0.58 = 0.80 x 0.75 x R 0.97 (ai_engineer, #2)" in lines[0] and "not on the register" in lines[0] and "T0" in lines[0]
+    assert "Weak Sponsor" in lines[1] and "0.44 = 0.45 x 1.00 x R 0.97" in lines[1]
     assert "Done Already" not in section                                    # applied jobs are not listed

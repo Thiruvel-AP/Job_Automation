@@ -17,8 +17,8 @@ EXAMPLES = [
     ("AI Engineer", "ai_engineer", 1),
     ("AI/ML Engineer", "ai_engineer", 1),
     ("LLM Engineer", "ai_engineer", 1),
-    ("GenAI Engineer", "ai_engineer", 1),
-    ("Generative AI Engineer", "ai_engineer", 1),
+    ("GenAI Engineer", "genai_engineer", 1),
+    ("Generative AI Engineer", "genai_engineer", 1),
     ("Applied AI Engineer", "ai_engineer", 1),
     ("AI Software Engineer", "ai_engineer", 1),
     ("Machine Learning Engineer", "ml_engineer", 2),
@@ -32,7 +32,7 @@ EXAMPLES = [
     ("Insights Analyst", "data_analyst", 3),
     ("BI Analyst", "data_analyst", 3),
     ("Business Intelligence Analyst", "data_analyst", 3),
-    ("Analytics Engineer", "data_analyst", 3),
+    ("Analytics Engineer", "data_engineer", 3),
     ("Reporting Analyst", "data_analyst", 3),
 ]
 
@@ -70,7 +70,7 @@ def test_international_and_internal_not_excluded(settings, job):
         assert v.family == fam
 
 
-@pytest.mark.parametrize("title", ["Data Engineer", "Research Scientist", "Software Engineer"])
+@pytest.mark.parametrize("title", ["Data Platform Manager", "Research Scientist", "Software Engineer"])
 def test_out_of_family_titles_skip_with_family_reason(settings, job, title):
     assert gates.classify_role(title, settings) is None
     v = _triage(settings, job, title)
@@ -80,13 +80,16 @@ def test_out_of_family_titles_skip_with_family_reason(settings, job, title):
 
 def test_shipped_roles_config_validates(settings):
     fams = gates.load_roles(settings, load_yaml(settings.path("fact_bank")))
-    assert [f.tier for f in fams] == sorted(f.tier for f in fams)
-    assert {f.name for f in fams} == {"data_scientist", "ai_engineer", "ml_engineer", "data_analyst"}
+    assert [f.name for f in fams] == [f["name"] for f in settings.raw["roles"]["families"]]       # list order, not tier order
+    assert {f.name for f in fams} == {"data_scientist", "ai_engineer", "genai_engineer", "ml_engineer", "data_analyst", "data_engineer",
+                                      "forward_deployed_engineer", "data_consultant", "ai_consultant", "computer_vision_engineer",
+                                      "ai_research_scientist", "ml_research_scientist", "ai_automation_engineer", "sde_ai", "sde_ml"}
+    assert sorted(f.priority for f in fams) == list(range(1, 16))                                  # the user's ranking, each rank once
 
 
 def test_unknown_project_id_is_clear_load_error(settings):
     raw = copy.deepcopy(settings.raw)
-    raw["roles"]["families"][1]["projects"].append("no_such_project")
+    next(f for f in raw["roles"]["families"] if f["name"] == "ai_engineer")["projects"].append("no_such_project")
     bad = Settings(raw=raw, root=settings.root)
     with pytest.raises(ValueError, match=r"ai_engineer.*unknown project id 'no_such_project'"):
         gates.load_roles(bad, load_yaml(settings.path("fact_bank")))
@@ -100,7 +103,7 @@ def _insert(db, job, jid, title, status, **extra):
 
 def test_retriage_backfills_and_never_touches_applied(settings, db, job):
     _insert(db, job, "t:ok", "Data Scientist", "triaged")
-    _insert(db, job, "t:de", "Data Engineer", "triaged")
+    _insert(db, job, "t:de", "Software Engineer", "triaged")
     _insert(db, job, "t:skip", "AI Engineer", "skipped", reason="title not DS/AI")
     _insert(db, job, "t:rev", "Senior Data Scientist", "needs_review", flags=["existing flag"])
     _insert(db, job, "t:appl", "Senior Data Scientist", "applied")

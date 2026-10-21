@@ -53,7 +53,7 @@ def test_the_inbox_listing_calls_the_number_an_estimate(db, settings, inbox, arc
     live, lines = session(db, settings, Tailoring(db, settings, review="skipped"))
     live.run()
     listing = [l for l in lines if "1.txt" in l and "estimate" in l]
-    assert listing and "estimate P 0.71" in listing[0]          # 0.95 x S 0.75 (no register in the test)
+    assert listing and "estimate P 0.69" in listing[0]          # 0.95 x S 0.75 (no register in the test) x R 0.97 (AI Engineer is priority 2)
     assert any("estimate" in l and "tailoring" in l for l in lines)       # the heading says it is not the final P
 
 
@@ -131,3 +131,18 @@ def test_a_retailor_run_tailors_once_not_again_at_the_review_pass(db, settings, 
     again = Tailoring(db, settings, review="skipped")
     session(db, settings, again, retailor=True)[0].run()
     assert again.names() == ["tailor", "review"]            # sent back to triaged and tailored once; the review pass does not do it twice
+
+
+# ------------------------------------------------------------------ the role factor R (priority.role_step)
+def test_the_inbox_estimate_and_the_final_table_show_r_with_the_family_and_its_priority(db, settings, inbox, archive, jd):
+    put(inbox, "1.txt", jd + "\nMARK-Alpha\n", company="Alpha", title="Forward Deployed Engineer", n=1)
+    put(inbox, "2.txt", jd + "\nMARK-Beta\n", company="Beta", title="Software Engineer", n=2)       # no family: no R
+    fake = Tailoring(db, settings, {"Tailor it anyway": ["y", "y"]}, review="skipped")
+    live, lines = session(db, settings, fake)
+    live.run()
+    est = next(l for l in lines if "1.txt" in l and "estimate P" in l)
+    assert "estimate P 0.63 = F 0.95 x S 0.75 x L 1.00 x R 0.88 (forward_deployed_engineer, #5)" in est
+    assert " x R " not in next(l for l in lines if "2.txt" in l and "estimate P" in l)
+    row = next(l for l in lines if re.match(r"\s+\d+\. Alpha", l))
+    assert "x R 0.88 (forward_deployed_engineer, #5)" in row
+    assert " x R " not in next((l for l in lines if re.match(r"\s+\d+\. Beta", l)), "")
