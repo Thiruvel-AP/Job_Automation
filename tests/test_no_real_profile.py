@@ -15,7 +15,7 @@ from careerops.tailoring.tailor import fact_text
 from conftest import PROFILE_FIX, REAL_PROFILE, real_profile_hits
 
 TESTS = Path(__file__).parent
-REAL_FILES = [ROOT / "config" / "profile" / "fact_bank.yaml", ROOT / "config" / "profile" / "applicant.yaml"]
+REAL_FILES = [ROOT / "config" / "profile" / n for n in ("fact_bank.yaml", "applicant.yaml", "answers.yaml", "answer.yaml")]
 
 
 def test_the_settings_fixture_points_at_the_fictional_profile(settings):
@@ -45,7 +45,7 @@ def test_the_guard_blocks_reading_the_real_fact_bank_and_applicant_however_the_p
         monkeypatch.chdir(ROOT)
         with pytest.raises(PermissionError):
             open("config/profile/applicant.yaml", "rb")                                          # relative either
-        assert len(hits) == 6                                                                     # 2 files x (open, read_text) + 2
+        assert len(hits) == 10                                                                    # 4 files x (open, read_text) + 2
     assert set(REAL_PROFILE) == {str(p.resolve()) for p in REAL_FILES}
 
 

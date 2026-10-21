@@ -15,7 +15,7 @@ from .config import Settings
 from .setup import DATA_DIRS, FILE_PARENTS
 
 DEFAULT_MOCK_ROOT = "data/mock"
-KEEP_AS_IS = ("fact_bank", "applicant", "sources", "mock_root")      # config the user owns; read-only for the pipeline
+KEEP_AS_IS = ("fact_bank", "applicant", "answers", "sources", "mock_root")      # config the user owns; read-only for the pipeline
 SEED_DIR = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "tailoring"
 SEED_JOB_ID = "mock:northwind-ai-engineer"
 

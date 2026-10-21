@@ -13,6 +13,7 @@ paths:
   sources: config/sources.yaml            # the source registry: every place jobs are looked for and how (discovery/registry.py)
   fact_bank: config/profile/fact_bank.yaml
   applicant: config/profile/applicant.yaml
+  answers: config/profile/answers.yaml    # your answers to application-form questions (autoapply reads it; only `save` at the prompt appends to it)
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies
@@ -370,3 +371,12 @@ tracker:
 outreach:
   mode: off              # off = no draft after mark-applied (`careerops outreach draft JOB` still works by hand); drafts = make them
   follow_up_days: 7      # the Sheet's Follow-up due is the day you applied plus this many days
+
+# Gated auto-apply (careerops/autoapply.py, Greenhouse / Ashby / Lever only). `careerops live --auto` submits a form only when EVERY gate below passes;
+# a job that fails any gate goes to the normal review prompt with the failed gates printed at the top (`AUTO BLOCKED: ATS 58 < 70; level: senior`).
+apply:
+  mode: assist          # off = review only, no form is opened | assist = you press Submit | auto = `live --auto` may submit (you set this; it is never the default)
+  min_ats_strict: 70    # the strict CV score (the CV's own text, negation-aware), not the claimable ceiling
+  max_auto_per_day: 5   # auto-submits per calendar day, counted from data/live/applied_auto.csv
+  confirm_first_n: 3    # the first N auto-submits ever (rows in applied_auto.csv) ask `Submit? [y/N]` after showing the filled-form screenshot
+  kinds: [greenhouse, ashby, lever]   # apply_kind values that may be auto-submitted; Workday and every other site stay manual

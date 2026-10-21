@@ -20,7 +20,8 @@ PROFILE_FIX = FIX / "profile"          # fictional fact_bank.yaml + applicant.ya
 # A 2026-10-03 `careerops run --mock` against the real data/ overwrote a real tailored job (see docs/status.md); tests
 # must use tmp_path. An audit hook sees every open() / os.open() / sqlite3.connect(), including ones made in C.
 REAL_DATA = os.path.realpath(ROOT / "data")
-REAL_PROFILE = tuple(os.path.realpath(ROOT / "config" / "profile" / n) for n in ("fact_bank.yaml", "applicant.yaml"))
+REAL_PROFILE = tuple(os.path.realpath(ROOT / "config" / "profile" / n)
+                     for n in ("fact_bank.yaml", "applicant.yaml", "answers.yaml", "answer.yaml"))
 _guard = {"on": False, "hits": [], "profile_hits": [], "heavy": []}
 
 
@@ -173,6 +174,7 @@ def settings(tmp_path) -> Settings:
     # (it gained Kubernetes), and tests about gaps and guards must not move with it.
     raw["paths"]["fact_bank"] = str(PROFILE_FIX / "fact_bank.yaml")
     raw["paths"]["applicant"] = str(PROFILE_FIX / "applicant.yaml")
+    raw["paths"]["answers"] = str(PROFILE_FIX / "answers.yaml")      # read only: a test that saves an answer copies it to tmp_path first
     # The shipped default is letter.mode: off (no letter is asked for). The suite's letter tests are about the drafting, so the
     # fixture turns it on; tests/tailoring/test_letter_mode.py checks the shipped default and the off path.
     raw["letter"]["mode"] = "draft"

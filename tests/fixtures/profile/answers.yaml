@@ -1,0 +1,48 @@
+# Fictional answers for tests (same shape as config/profile/answers.yaml). Tests never read the real one.
+answers:
+  - id: notice_period
+    match: ["notice period", "earliest start", "when can you start", "availability"]
+    answer: "Available immediately"
+  - id: current_location
+    match: ["current location", "where are you based"]
+    answer: "Bristol, UK"
+  - id: salary_expectation
+    match: ["salary expectation", "salary expectations", "expected salary", "desired salary"]
+    answer: "I'd welcome a discussion about salary once the scope of the role is clearer."
+    answer_numeric: 50000
+    currency: GBP
+    period: year
+  - id: current_salary
+    match: ["current salary"]
+    answer: ""
+  - id: portfolio
+    match: ["portfolio", "website"]
+    answer: "https://ada-lovelace-test.example.org/portfolio"
+  - id: how_heard
+    match: ["how did you hear", "where did you find"]
+    answer: "{source}"
+  - id: why_company
+    match: ["why do you want to work"]
+    answer: "I like {company} and the {role} role."
+  - id: previously_employed
+    match: ["previously worked for", "former employee"]
+    answer: "No"
+    overrides:
+      Northwind Health AI: "Northwind Health AI (MSc dissertation, indirect contact)"
+  - id: previously_applied
+    match: ["applied to", "applied before"]
+    answer: ""
+  - id: privacy_consent
+    match: ["privacy notice", "i agree"]
+    answer: ""
+  - id: eo_gender
+    match: ["gender", "sex"]
+    answer: "Female"
+    options: ["Female", "Woman"]
+  - id: eo_disability
+    match: ["disability"]
+    answer: "No"
+    options: ["No"]
+  - id: relocate
+    match: ["relocate"]
+    answer: "Yes"
