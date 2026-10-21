@@ -11,7 +11,7 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 
-from .config import Settings
+from .config import DEFAULT_PATHS, Settings
 from .setup import DATA_DIRS, FILE_PARENTS
 
 DEFAULT_MOCK_ROOT = "data/mock"
@@ -29,6 +29,8 @@ def mock_settings(s: Settings) -> Settings:
     """A copy of `s` whose generated-data paths all live under the mock root. The original is not modified."""
     raw = copy.deepcopy(s.raw)
     root, data = mock_root(s), s.root / "data"
+    for key, default in DEFAULT_PATHS.items():        # a key the settings file leaves out is redirected too
+        raw["paths"].setdefault(key, default)
     for key in list(raw["paths"]):
         if key in KEEP_AS_IS:
             continue

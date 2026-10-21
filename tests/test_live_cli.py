@@ -22,10 +22,13 @@ def world(tmp_path, settings, jd):
     raw = settings.raw
     raw["paths"].update({"db": str(real / "careerops.db"), "outputs": str(real / "outputs"),
                          "excel": str(real / "exports" / "companies.xlsx"), "tmp": str(real / "tmp"),
-                         "applications": str(real / "Companies"), "jds": str(real / "jds"), "live": str(real / "live"),
+                         "applications": str(real / "Companies"), "applications_auto": str(real / "Auto"),
+                         "jds": str(real / "jds"), "live": str(real / "live"),
                          "mock_root": str(mock)})
     (real / "Companies" / "Old Co").mkdir(parents=True)
     (real / "Companies" / "Old Co" / "CV.pdf").write_bytes(b"SUBMITTED")
+    (real / "Auto").mkdir()
+    raw["apply"] = {**raw["apply"], "mode": "assist"}             # explicit: these tests never depend on what the user set in the real file
     cfg = tmp_path / "settings.yaml"
     cfg.write_text(yaml.safe_dump(raw), encoding="utf-8")
     return cfg, real, mock
@@ -218,9 +221,10 @@ def test_live_applies_through_the_real_preflight_and_archive_when_you_say_you_su
     db = DB(real / "careerops.db")
     (job,) = db.jobs()
     assert job["status"] == "applied" and job["confirmation"] == "REF-42"
-    folder = real / "Companies" / "Northwind Health AI" / "AI Engineer"
+    folder = real / "Auto" / "Northwind Health AI" / "AI Engineer"          # written to paths.applications_auto
     assert job["application_dir"] == str(folder) and (folder / "JD.txt").is_file() and (folder / "job.json").is_file()
     assert _hash(real / "Companies" / "Old Co") == old                              # the old submission is untouched
+    assert sorted(p.name for p in (real / "Companies").iterdir()) == ["Old Co"]     # paths.applications got nothing new
     summary = next((real / "live").glob("*.md")).read_text()
     assert "- status: applied" in summary and "- archive check: ok (" in summary
     assert not (inbox / "northwind.txt").exists() and len(list((real / "jds" / "done").iterdir())) == 1
@@ -239,4 +243,4 @@ def test_live_does_not_archive_when_you_did_not_submit(world, jd, monkeypatch, c
     cli.main(["--config", str(cfg), "live", "--max", "1"])
     (job,) = DB(real / "careerops.db").jobs()
     assert job["status"] == "ready_not_submitted" and job["applied_at"] is None and job["application_dir"] is None
-    assert sorted(p.name for p in (real / "Companies").iterdir()) == ["Old Co"]
+    assert sorted(p.name for p in (real / "Companies").iterdir()) == ["Old Co"] and list((real / "Auto").iterdir()) == []

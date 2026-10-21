@@ -11,7 +11,7 @@ import yaml
 from careerops import cli
 from careerops.discovery import gates
 from careerops.discovery import register as reg
-from conftest import fixture
+from conftest import SETTINGS_FIX, fixture
 
 PAGE = fixture("discovery", "register_page.html").read_text(encoding="utf-8")
 D1, D2 = fixture("discovery", "register_d1.csv"), fixture("discovery", "register_d2.csv")
@@ -345,5 +345,5 @@ def test_careerops_sponsors_prints_the_summary_line_and_a_second_run_says_unchan
 
 
 def test_the_shipped_snapshot_location_is_data_register_dated_csv_gz():
-    shipped = yaml.safe_load((Path(__file__).resolve().parents[2] / "config" / "settings.yaml").read_text(encoding="utf-8"))
+    shipped = yaml.safe_load(SETTINGS_FIX.read_text(encoding="utf-8"))          # the test copy: the real settings file is never read
     assert shipped["paths"]["register_dir"] == "data/register"                  # M1: data/register/YYYY-MM-DD.csv.gz

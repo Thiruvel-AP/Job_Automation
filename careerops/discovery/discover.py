@@ -52,7 +52,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterable
 from urllib.parse import urlparse
 
 from ..apply.naming import folder_key
@@ -209,21 +209,23 @@ def mark_duplicate(path: Path, of_name: str) -> None:
     path.write_text(f"{head}\nDuplicate of: {of_name}{sep}{body}", encoding="utf-8", newline="\n")
 
 
-def archive_pairs(root: Path) -> list[tuple[str, str]]:
-    """(company folder, role folder) names in the application archive. READ ONLY: directory listings, nothing is opened,
-    written, renamed or moved. A role folder 'AI Engineer' or a version folder below it ('v2') both name the role."""
+def archive_pairs(root: Path | Iterable[Path]) -> list[tuple[str, str]]:
+    """(company folder, role folder) names in the application archive (one folder, or several: `Settings.archive_roots()`). READ ONLY:
+    directory listings, nothing is opened, written, renamed or moved. A role folder 'AI Engineer' or a version folder below it ('v2')
+    both name the role."""
     out: list[tuple[str, str]] = []
-    try:
-        companies = [e for e in os.scandir(root) if e.is_dir()]
-    except OSError:
-        return out
-    for c in companies:
+    for one in ([root] if isinstance(root, (str, os.PathLike)) else root):
         try:
-            for r in os.scandir(c.path):
-                if r.is_dir():
-                    out.append((c.name, r.name))
+            companies = [e for e in os.scandir(one) if e.is_dir()]
         except OSError:
             continue
+        for c in companies:
+            try:
+                for r in os.scandir(c.path):
+                    if r.is_dir():
+                        out.append((c.name, r.name))
+            except OSError:
+                continue
     return out
 
 
@@ -241,7 +243,7 @@ def load_known(settings, db: DB) -> Known:
                     waits = sub == "inbox" and not h.get("duplicate_of")
                     k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/{sub}",
                           path=p if waits else None, posted=h.get("posted", ""))
-    for company, role in archive_pairs(settings.path("applications")):
+    for company, role in archive_pairs(settings.archive_roots()):
         k.add(company, role, "", "already applied (application archive)")
     add_aiapply(settings, k)
     return k

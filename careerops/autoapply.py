@@ -289,7 +289,7 @@ def _shot(page, folder: Path, stem: str, stamp: str, result: AutoResult) -> Path
 def default_history(db, settings=None) -> Callable[[str], bool]:
     """True when an application to this company is on record: a job of that company marked applied, or a company folder in the archive
     (a directory listing, nothing is opened). An empty company name counts as seen, so the question is asked rather than answered."""
-    in_archive = {answers_mod.norm(c) for c, _ in discover.archive_pairs(settings.path("applications"))} if settings is not None else set()
+    in_archive = {answers_mod.norm(c) for c, _ in discover.archive_pairs(settings.archive_roots())} if settings is not None else set()
 
     def seen(company: str) -> bool:
         key = answers_mod.norm(company)

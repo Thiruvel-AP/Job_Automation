@@ -1,0 +1,433 @@
+# TEST COPY of config/settings.yaml. No test reads the real file (tests/test_no_real_settings.py): conftest.py points
+# CAREEROPS_SETTINGS here, so a value the user changes in the real file (apply.mode: auto) cannot change a test.
+# Keep it in step with the shipped file by hand when a new key is added there; apply.mode stays `assist`.
+paths:
+  # Everything under data/ is generated, git-ignored, and re-creatable by `careerops init`.
+  db: data/careerops.db
+  register_dir: data/register             # daily UKVI snapshots: YYYY-MM-DD.csv.gz
+  sponsors_csv: data/register/latest.csv  # most recent register CSV (used by gates)
+  companies_house_dir: data/companies_house  # monthly bulk zips: YYYY-MM/
+  outputs: data/outputs                   # one folder per job: CV.tex/.pdf, Cover_Letter.tex/.pdf, report.json
+  excel: data/exports/companies.xlsx      # export view only — SQLite is the source of truth
+  learning: data/exports/learning_list.md
+  preferences: data/feedback/preferences.jsonl
+  browser_profile: data/browser-profile   # Playwright's persistent login state for ATS sites
+  logs: data/logs
+  sources: config/sources.yaml            # the source registry: every place jobs are looked for and how (discovery/registry.py)
+  fact_bank: config/profile/fact_bank.yaml
+  applicant: config/profile/applicant.yaml
+  answers: config/profile/answers.yaml    # your answers to application-form questions (autoapply reads it; only `save` at the prompt appends to it)
+  answers_library: data/answers/library.jsonl   # free-text form answers YOU approved or wrote (apply/freetext.py): reused for a similar question; runtime data, never answers.yaml
+  # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
+  # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
+  applications: /mnt/d/Professional/UK/Companies   # READ only: history, company list, duplicate check (never written)
+  applications_auto: data/applications_auto        # where the pipeline writes its archive (the only folder it writes to)
+  judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
+  jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
+  live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
+  outreach: data/outreach                 # do_not_contact.csv: addresses and domains no outreach draft goes to (contacts.py, outreach.py)
+  discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), boards.json, first_seen.json, filtered_<date>.csv, manual_queue_overflow.csv, gmail_seen.json, runs.jsonl, health/<date>.csv, listed_only.csv
+  aiapply_applied: data/aiapply_applied.csv   # optional export of the jobs AIApply applied to (company + title columns): read only, used to skip duplicates
+  robots: data/robots                     # robots.txt rules per host, <host>.json, kept 24 h before a page is fetched (discovery/robots.py)
+  secrets: data/secrets                   # gitignored (data/): the Gmail OAuth client file and token (`discover --gmail-alerts`); never in git
+  tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
+  linkedin_diff: data/linkedin_diff.md    # `careerops import-linkedin`: every mismatch between the LinkedIn export and the fact bank
+  fact_bank_proposed: config/profile/fact_bank.proposed.yaml   # `careerops import-linkedin`: the LinkedIn export in fact-bank schema, for you to merge by hand (git-ignored)
+  calibration: data/calibration           # M5 calibration JDs, manifest, reports (careerops calibrate)
+  # Frozen keyword lists, one <jd-id>.yaml per calibration JD (`careerops calibrate --freeze-keywords`). They are
+  # hand-curated INPUTS that decide every later run's ceilings, so they live under config/ and are tracked in git, not in
+  # data/ with the runtime output. `calibrate` reads them whenever the folder exists and refuses to run if a JD's file
+  # is missing; `--mock` redirects this folder under mock_root like every other generated path.
+  frozen_keywords: config/calibration/keywords
+  # `--mock` runs redirect every path above that points at generated data (db, outputs, excel, archive, ...) under
+  # this folder, so a mock run cannot touch real jobs. fact_bank and applicant stay read-only. Safe to delete.
+  mock_root: data/mock
+
+sponsors:
+  # The register's CSV link changes daily; we scrape the publication page for it.
+  page_url: https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers
+  route: Skilled Worker
+  fuzzy_threshold: 0.92            # difflib ratio on normalised names; a match below 1.0 is stored as fuzzy(score), never as exact
+
+companies:                         # Track A — sponsor-first company discovery (M2/M3)
+  ch_bulk_page: https://download.companieshouse.gov.uk/en_output.html
+  sponsor_ratings: ["A"]           # A-rated only (B = on a Home Office compliance action plan)
+  sic_allow:                       # SIC 2007 codes; descriptions verified against the ONS condensed list
+    software: [58290, 62011, 62012, 62020, 62030, 62090]
+    data: [63110, 63120]
+    finance: [64191, 64999, 66190]
+    insurance: [65110, 65120]
+    pharma_research: [21200, 72110, 72190, 72200]
+    consulting: [70229]
+    health: [86101, 86900]
+  public_sector_pattern: '\b(nhs|university|council|trust|authority|agency|college|ministry)\b'
+  probe_rate_per_s: 1.0
+  probe_limit_per_run: 300
+  reprobe_after_days: 30
+
+sources:
+  greenhouse: []                   # board tokens, e.g. [monzo, deliveroo] — slug in job-boards.greenhouse.io/<slug>
+  lever: []                        # site slugs, e.g. [palantir]  — slug in jobs.lever.co/<slug>
+  lever_eu: []                     # jobs.eu.lever.co/<slug>
+  ashby: []                        # e.g. [synthesia] — slug in jobs.ashbyhq.com/<slug>
+  adzuna:
+    enabled: false                 # needs ADZUNA_APP_ID / ADZUNA_APP_KEY env vars (free at developer.adzuna.com)
+    queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
+    pages_per_query: 2
+    max_days_old: 7
+
+roles:
+  # Lower tier = higher priority. Patterns are case-insensitive regexes on the job TITLE.
+  # Families are matched in LIST order, first match wins, so the list is ordered most specific first on purpose ("Data Science
+  # Consultant" must reach data_consultant before 'data scien' catches it): do not re-sort it. `tier` and `priority` never decide a match.
+  # `priority` (1-15) is your ranking of the family; it only feeds the role factor R below (priority.role_step).
+  # `skills_from` = the fact-bank family whose skill_lines this role family prints (the bank has skill_lines for data_scientist and
+  # ai_engineer only); a bank family with the same name as the role family is used instead.
+  # `projects` = preferred fact-bank project ids for that family (a prior for tailoring, not an order);
+  # every id must exist in fact_bank.yaml or triage/tailor stop with a clear error.
+  families:
+    - {name: genai_engineer, tier: 1, priority: 3, skills_from: ai_engineer, headline: Generative AI Engineer,
+       title: ['\bgen ?ai engineer', 'generative ai (engineer|developer)', '\bgen ?ai developer'],
+       projects: [agenticfriend, mcpsearch, coverfit, gtaigraph]}
+    - {name: ai_consultant, tier: 2, priority: 7, skills_from: ai_engineer, headline: AI Consultant,
+       title: ['\b(gen(erative)? )?ai (strategy |solutions )?consultant', 'machine learning consultant', '\bml consultant'],
+       projects: [mcpsearch, coverfit, agenticfriend, gtaigraph]}
+    - {name: data_consultant, tier: 2, priority: 6, skills_from: data_scientist, headline: Data Consultant,
+       title: ['data (science |analytics )?consultant', 'analytics consultant', 'insights consultant'],
+       projects: [churn, coverfit, lloyds, mcpsearch]}
+    - {name: forward_deployed_engineer, tier: 2, priority: 5, skills_from: ai_engineer, headline: Forward Deployed Engineer,
+       title: ['forward[- ]deployed', '\bfde\b'],
+       projects: [mcpsearch, coverfit, agenticfriend, gtaigraph]}
+    # add your CNN image-classification project id to projects
+    - {name: computer_vision_engineer, tier: 3, priority: 8, skills_from: data_scientist, headline: Computer Vision Engineer,
+       title: ['computer vision', '\bvision (ml |ai )?engineer', 'perception engineer'],
+       projects: [gtaigraph, bitcoin]}
+    # add your QLoRA project id to projects
+    - {name: ai_research_scientist, tier: 3, priority: 9, skills_from: ai_engineer, headline: AI Research Scientist,
+       title: ['\bai research scien', 'research scientist.{0,20}\b(ai|artificial intelligence|llms?)\b'],
+       projects: [gtaigraph, agenticfriend, mcpsearch]}
+    # add your QLoRA project id to projects
+    - {name: ml_research_scientist, tier: 3, priority: 10, skills_from: data_scientist, headline: Machine Learning Research Scientist,
+       title: ['\b(ml|machine learning) research (scien|engineer)', 'research (scientist|engineer).{0,20}(machine learning|\bml\b)'],
+       projects: [gtaigraph, bitcoin, churn]}
+    - {name: ai_automation_engineer, tier: 3, priority: 11, skills_from: ai_engineer, headline: AI Automation Engineer,
+       title: ['\bai automation', 'automation engineer.{0,20}\b(ai|llm)\b', 'intelligent automation'],
+       projects: [mcpsearch, agenticfriend, coverfit]}
+    - {name: sde_ai, tier: 3, priority: 14, skills_from: ai_engineer, headline: Software Development Engineer (AI),
+       title: ['software (development )?engineer.{0,25}\b(ai|llm|gen ?ai)\b', '\bsde\b.{0,15}\bai\b'],
+       projects: [mcpsearch, coverfit, agenticfriend]}
+    - {name: sde_ml, tier: 3, priority: 15, skills_from: ai_engineer, headline: Software Development Engineer (ML),
+       title: ['software (development )?engineer.{0,25}\b(ml|machine learning)\b', '\bsde\b.{0,15}\bml\b'],
+       projects: [coverfit, bitcoin, churn]}
+    - {name: data_scientist, tier: 1, priority: 1, skills_from: data_scientist, headline: Data Scientist,
+       title: ['data scien', 'decision scien'],
+       projects: [churn, bitcoin, lloyds, gtaigraph]}
+    - {name: ai_engineer, tier: 1, priority: 2, skills_from: ai_engineer, headline: AI Engineer,
+       title: ['\bai engineer', '\bai/ml engineer', 'applied ai (engineer|developer)', '\bai (software )?(engineer|developer)', 'agent(ic)? (ai )?engineer', '\bllm engineer'],
+       projects: [agenticfriend, mcpsearch, coverfit, lloyds]}
+    - {name: ml_engineer, tier: 2, priority: 4, skills_from: ai_engineer, headline: Machine Learning Engineer,
+       title: ['machine learning engineer', '\bml engineer', '\bmlops', 'applied scientist', '\bnlp engineer'],
+       projects: [agenticfriend, bitcoin, gtaigraph, coverfit]}
+    # add your AWS word-frequency pipeline project id to projects
+    - {name: data_engineer, tier: 3, priority: 13, skills_from: data_scientist, headline: Data Engineer,
+       title: ['data engineer', 'analytics engineer', 'data platform engineer'],
+       projects: [gtaigraph, churn, bitcoin]}
+    - {name: data_analyst, tier: 3, priority: 12, skills_from: data_scientist, headline: Data Analyst,
+       title: ['data analyst', 'insights? analyst', 'product analyst', '\bbi analyst', 'business intelligence analyst', 'reporting analyst'],
+       projects: [churn, lloyds, bitcoin, coverfit]}
+
+  levels:
+    # Junior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
+    exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
+              '\bmanager\b', '\bvp\b', '\b(iii|iv)\b', '\bintern(ship)?\b']
+  floor: 0.70                 # same as scoring.band[0]; jobs whose honest ceiling can't reach it queue last
+  tier3_max_share: 0.20       # tier 3 gets at most 20 % of a run's tailoring slots unless tiers 1–2 run out
+
+gates:
+  locations_ok: ['united kingdom', '\buk\b', 'england', 'london', 'bristol', 'remote', 'manchester', 'cambridge', 'oxford', 'edinburgh', 'bath', 'cardiff', 'birmingham', 'leeds', 'scotland', 'wales']
+  max_years_required: 3
+  require_sponsor_match: true      # note (never skip, never block) on the review screen a job whose employer is not on the sponsor register, or when no register snapshot exists
+  # (regex, action, reason). action: skip = never apply; flag = still tailor, but review shows the reason in red.
+  # Sponsorship is deliberately NOT a rule here: a JD that says "no sponsorship" or "right to work without sponsorship" keeps its
+  # job eligible; it only lowers the priority weight S (priority.sponsor_weights below) and is shown as an info line.
+  jd_rules:
+    - ['\b(sc|dv|security) clearance\b', flag, 'Clearance mentioned — check residency/eligibility']
+    - ['british (citizen|national)s? only|must be a british', skip, 'Nationality restriction']
+    - ['\bon[- ]call\b', flag, 'On-call duties mentioned']
+    - ['site reliability|\bsre\b|observability ownership', skip, 'SRE-framed role (standing exclusion)']
+    - ['direct reports|line manag(e|ement)|people manag', skip, 'People-management requirement (standing exclusion)']
+
+discover:
+  # `careerops discover --ats --reed --adzuna --gmail-alerts`: every ad that passes goes to data/jds/inbox/ (see discovery/discover.py).
+  # Kept: a title in roles.families and a UK or remote-UK place. Dropped: closed postings and jobs already in the DB, the inbox/done/
+  # rejected folders or the application archive. Sponsorship is never a filter (priority: below).
+  cache_hours: 6                   # a board's posting list is reused this long
+  max_new_per_run: 40              # at most this many new inbox files per run (--limit)
+  alert_probes_per_run: 100        # companies named by alerts / Adzuna whose board is looked for (up to 4 tokens x Greenhouse, Lever, Ashby), per run; answers are cached board_cache_days; 0 = never look
+  title_match: 0.9                 # an alert's title is taken for a posting on the employer's board at this normalised-title similarity (and the same level words, and a place that agrees)
+  manual_queue_max: 10             # unresolved alerts of one run kept in manual_queue.csv (best title relevance x S first); the rest go to manual_queue_overflow.csv
+  # `discover --ats` looks for a job board of these companies, in this order: (1) the folder names directly under paths.applications
+  # (names only, nothing inside is read), (2) `sources` below, (3) sponsor-register companies, only if they are also in (1) or (2).
+  sources: []                      # employers to look for beside the archive folders: ["Monzo", "Wise", {name: "Octopus Energy"}]
+  ignore_companies: []             # names `discover --ats` skips, for archive folders that are not companies: ["New folder", "AI Engineer"]. The folders are never touched
+  ats:
+    board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
+    board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
+  reed:
+    queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
+    location: null                 # Reed's locationName; null = all of the UK
+    pages_per_query: 1             # pages of 100 per query, for direct employers and again for agencies
+    details_per_run: 60            # full ads fetched per run (one request each, one per second)
+  gmail:
+    senders: []                    # [] = the alert emails of every source in config/sources.yaml that lists sender domains; or restrict to the older built-in kinds, e.g. [linkedin, reed]
+    query_days: 14
+    max_messages: 60
+
+  # A job outside the UK is not dropped: it is written to the inbox with `Country:` and `Status: listed_only` headers so you can see the
+  # market. `careerops live` will not tailor or apply to it unless applicant.yaml has a `visa.by_country.<country>` block for that country.
+  listed_only:
+    enabled: true                  # false = jobs outside the UK are dropped as before
+    max_per_run: 20                # at most this many such ads per run, counted apart from max_new_per_run so they never crowd out UK ones
+  jobbank:                         # `discover --jobbank`: Canada's Job Bank open-data CSV (rows are listed in listed_only.csv; it has no employer or ad text)
+    language: en
+    max_days_old: 14               # only postings first posted this recently
+    max_rows_per_run: 50
+    max_mb: 150                    # stop reading a file larger than this (the September 2026 file is ~46 MB)
+  health:
+    alert_days: 7                  # the health check counts a source's alert emails of the last this many days
+
+priority:
+  # The order of the live inbox, discover's listing and status (discovery/priority.py, discovery/freshness.py): the FRESHNESS TIER first
+  # (0 = posted at most 24 h ago, 1 = at most 72 h, 2 = at most 7 days, 3 = older), then P = F x S inside a tier. Old jobs are never
+  # dropped. The posting time is the source's own (Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna
+  # created, a Gmail alert's arrival time); anything else counts from the day discover first saw the job. F is the honest ATS ceiling.
+  # Sponsorship is a weight, never a filter: I hold the UK Graduate visa, so every one of these jobs stays eligible.
+  sponsor_weights:
+    exact: 1.00            # employer found on the sponsor register by exact name
+    fuzzy: 0.90            # found by a near match
+    unknown: 0.75          # not on the register, a recruitment agency, or no register loaded
+    no_sponsorship: 0.65   # the JD itself says it does not sponsor / requires the right to work without sponsorship
+    non_home: 0.50         # the work is not where you live (W is not visa.home in applicant.yaml): ranked below home jobs of the same fit
+  # L, the level fit: P = F x S x L. The ATS score cannot see seniority, so the title words do (the highest level word wins). Edit the values;
+  # a job is only ever moved down by it, never dropped.
+  # R, the role fit: P = F x S x L x R, R = max(0.5, 1 - role_step x (family priority - 1)): priority 1 -> 1.00, 5 -> 0.88, 12 -> 0.67,
+  # 15 -> 0.58. A title that matches no family has no R. Like the others it only moves a job down, never drops it.
+  role_step: 0.03
+  level_factor:
+    manager: 0.3           # manager | director | head in the title
+    lead: 0.4              # lead | principal | staff | architect
+    senior: 0.6            # senior | sr
+    other: 1.0             # no level word
+
+cv:
+  # What stands between the two dates of a range on the CV: " – " (an en dash, the default) or " to ". One space is kept each side.
+  # The rest of the typography (no em dashes, which hyphens are closed up) is config/typography.yaml.
+  date_separator: " – "
+  # The four Skills groups of the two-page CV, in this order (config/reference/cv_style_reference.tex v2). Each fact-bank skill goes to one
+  # group: by name (`skills`, which also places the pinned `skills.core` ones), else by the fact-bank group it sits in (`banks`: regexes
+  # on that group's name), else, for a core skill no group names, to the `default` group. A fact-bank group no group claims is not
+  # shown. A group with no skills in the fact bank is left off and the review screen says so (add a fact-bank skills group named
+  # like it). Inside a group the skills are ordered by the JD keyword weight they carry, then by the fact bank's own order (a pinned
+  # skill has no edge). `from_terms` (regexes): a group with no skill of its own shows the `terms:` the user wrote on the fact-bank
+  # bullets that match, capitalised, so the group is never empty when the bank evidences it (a skills row named like the group wins).
+  skill_groups:
+    - label: Machine Learning, Deep Learning & Statistics
+      banks: ['\bML\b', 'machine learning', 'statistic']
+      skills: [Machine Learning, Deep Learning, Statistics, scikit-learn, PyTorch, TensorFlow, Keras, XGBoost]
+    - label: Python, Data Quality & Cloud
+      default: true
+      banks: ['language', 'data', 'cloud', 'mlops', 'engineering']
+    - label: NLP, LLMs & Evaluation
+      banks: ['\bLLMs?\b', '\bNLP\b']
+      skills: [NLP, LLMs, RAG, LangChain, LangGraph]
+    - label: Client Delivery & Communication
+      banks: ['client', 'delivery', 'communication']
+      from_terms: ['stakeholder', 'client', 'consult', 'requirement', 'communicat', 'present', 'deliver']
+  # Always on the CV when the fact bank lists them anywhere (never dropped by the cap below), next to every `skills.core` skill.
+  skills_always: [Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, Docker, Kubernetes]
+  skill_group_max: 22         # skills per group; the pinned ones above are never cut, the rest go lowest JD weight first
+  # A name that stands for a family is dropped when the CV lists a more specific skill of it: "AWS" goes when "AWS Lambda" is shown (the
+  # specific skill takes its pin). "Kubernetes" and "Kubernetes (AWS EKS)" are one skill whatever this says: the qualified form stays.
+  skill_umbrellas: [AWS, GCP]
+  # Languages shown only when the ad names them (a whole word in the JD): they join the Python group then, and are left off otherwise.
+  skills_when_asked: [TypeScript, JavaScript]
+
+hook:
+  # Every CV carries one hook (careerops/hook.py), taken from `hook_library` in the fact bank, never written by a model: the entry whose
+  # `terms` carry the most keyword weight for the ad, used word for word. It shows as a 12pt navy headline under the name (its
+  # `headline`), as sentence 1 of the profile (its `profile_line`), as its `proof` bullet moved to the top of its role (with the entry's
+  # `situation:` opener) and, when letters are on, as sentence 1 of the cover letter (its `letter_line`). A bank with no library, or no
+  # entry that matches, gets a code-made template hook (also no model).
+  # false = none of that: no headline slot, no hook line, no reordering.
+  enabled: true
+
+files:
+  name_style: full   # full = identity.name, short = first word of identity.name (CV / cover-letter file names)
+
+scoring:
+  band: [0.70, 0.85]
+  max_attempts: 2             # the first try and ONE retry (below the band with an honest ceiling that reaches it: the keywords the bank evidences but the CV missed are ranked double)
+  max_keywords: 25            # JD keywords kept (most important by weight, then by how often the JD says them): a short, specific list a one-page CV can honestly hit
+  required_weight: 2.0
+  preferred_weight: 1.0
+  max_pages: 2                # two full pages by default (recruiters respond to a 2-page CV); the shrink loop runs only above this. `--one-page` forces 1 with the old template
+  min_fill_page2: 0.96        # page 2 must be at least this full: its last text line within 2 lines (2 x 14pt of a 770pt text area) of the bottom margin (y of that line / text-area height, measured from the PDF). Fill order: more projects, then more experience bullets, then the optional fact-bank sections (publications, languages, research_focus), then linespread (cv_linespread_max); nothing is invented, so a bank that runs out of content ends short and says so
+  cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
+    most_recent: [4, 5]       # the first (newest) entry
+    other: [3, 4]             # every other entry; an entry with fewer bullets in the fact bank just shows them all
+  cv_recent_min_bullets: 2    # a role dated within the last cv_recent_years years keeps at least this many bullets (if the bank has them) before any project is added; the shrink loop trims projects first
+  cv_recent_years: 2          # how far back "recent" goes, from today, by the end date of the role
+  cv_projects: 5              # projects the two-page CV starts with (by JD relevance)
+  cv_project_bullets: [2, 3]  # [min, max] bullets per project (a project with fewer shows them all)
+  cv_projects_max: 6          # fill may add projects (best JD match first) up to this many before it adds experience bullets
+  cv_linespread: 1.03         # the reference CV's linespread (config/reference/cv_style_reference.tex); raised only when the fact bank has no more content to fill page 2 (the font never shrinks below 11pt)
+  cv_linespread_max: 1.09     # ceiling for that raise, in steps of 0.02 (three steps above the reference 1.03)
+  max_skill_groups: 5         # grouped skill rows besides the pinned `skills.core` row; the groups least relevant to the JD are left off
+  bullet_dedupe_jaccard: 0.6  # a bullet whose word-set overlap (Jaccard) with an already chosen bullet reaches this is not added
+  letter_max_words: 250
+
+letter:
+  # off = no letter is asked for: no letter call is made, no letter PDF is written, review says "Letter: off" and approving needs
+  # no extra words. draft = the model drafts one from the evidence as fields (method, data, outcome), not as the bullet
+  # sentence, and every letter check still applies. hook = TWO letters per job (tailoring/letters.py): A (strengths only) and
+  # B (A plus exactly one honest gap and a bridge to a skill the fact bank has), each opening with the hook's sentence
+  # (hook.py), at most scoring.letter_max_words words, ending with a 20-minute ask that names a problem from the ad; review's
+  # `l` cycles A -> B -> none and the chosen one is what the apply assist uploads. A draft that pastes a bullet (overlap 0.7 or
+  # more with ANY fact-bank bullet) is regenerated once, then the variant is "none" (no template letter in hook mode).
+  # Default off: a live run uploads the CV only. hook = the letter is ASSEMBLED, no model writes it: the hook entry's letter_line, two
+  # sentences each built from one selected bullet's own words, and the call to action (its problem phrase = the hook entry's terms, lower
+  # case). draft = the model drafts one (legacy, under every letter check and the same our/we/"I help <Company>"/linked-noun-phrase guard).
+  mode: "off"                # off | draft | hook (quoted: an unquoted off is the boolean false in YAML)
+  # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
+  greeting_hook: "Dear {company}{team} team"
+  greeting_agency: "Hi {company} team"
+  # hook mode: the call to action, written here and never by the model. {problem} = the hook's problem clause (what the ad hires for).
+  closing_hook: "Could we take 20 minutes to talk about {problem}?"
+  # {company} = job company; {team} = " <team name>" when the JD names one (leading space included), else "".
+  greeting: "Hi {company}{team} team"
+  greeting_fallback: "Dear {company} hiring team"     # used when the JD names no team
+  # The closing question is written here, never by the model: a small model's call to action was the most common reason a
+  # letter was rejected. {team} = the team name the JD gives (no leading space).
+  closing: "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?"
+  closing_fallback: "Could we find twenty minutes to talk about where I could contribute first at {company}?"     # no team named
+  signoff: "With regards"
+  # What a letter becomes when all 3 drafts were rejected by the checks. none = no letter is produced: no PDF, review shows
+  # "NO LETTER", and approving needs the words 'no letter' (regenerate with `l`, write your own, or apply without).
+  # template = the deterministic template letter is written instead, flagged as a fallback in review.
+  on_failure: none
+
+review:
+  # off = no judge. shadow = a second model reads the CV and letter, its verdict is shown on the review screen and logged beside
+  # your decision (paths.judge/log.csv); `careerops judge-report` says how well it agrees with you. gate = a judge "yes" approves
+  # the job without the prompt; refused in code until the log holds 60 human-labelled reviews and not one false approve (judge
+  # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge (local Ollama qwen2.5-7b-8k), and must be
+  # another family than gpt-oss.
+  judge: shadow               # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML)
+
+llm:
+  # Tried in order; on 429 / 5xx / quota exhausted the router falls through to the next.
+  # All three speak the OpenAI chat-completions dialect.
+  providers:
+    - name: groq
+      base_url: https://api.groq.com/openai/v1
+      api_key_env: GROQ_API_KEY
+      model: openai/gpt-oss-20b    # check console.groq.com/docs/models — free-tier model list changes
+      # Context window in tokens (prompt + completion). Before each request the router estimates input + max_tokens; a
+      # request that would not fit is not sent to this provider (it goes to the next, or fails with the reason).
+      # 131072 per Groq's model docs; its 8K TPM limit is separate and already paced by tpm below.
+      context_tokens: 131072
+      # Limits the router paces itself to. Groq's x-ratelimit-* response headers override them while present; these are
+      # used before the first reply and when headers are missing. tpm and rpm default to 8000 and 30 if left out;
+      # null/0 = unlimited. tpd = tokens per day: a job is not started if its estimated cost no longer fits.
+      # Free tier per Groq docs: 30 RPM, 1K RPD, 8K TPM, 200K TPD (console.groq.com/settings/limits).
+      tpm: 8000
+      rpm: 30
+      rpd: 1000
+      tpd: 200000
+      json_mode: true
+      # gpt-oss is a reasoning model: hidden reasoning tokens count against max_tokens. "low" keeps them small and
+      # include_reasoning: false drops the reasoning text from the reply. Both are sent in the request body; they
+      # default to low/false for any gpt-oss model, and to not sent for other models.
+      reasoning_effort: low
+      include_reasoning: false
+    - name: ollama
+      base_url: http://localhost:11434/v1
+      api_key_env: null
+      # Built from config/ollama/Modelfile (FROM qwen2.5:7b-instruct, num_ctx 8192): `ollama create qwen2.5-7b-8k -f
+      # config/ollama/Modelfile`. The OpenAI /v1 endpoint cannot set num_ctx and Ollama's default is 4096, so the
+      # context lives in the Modelfile. ~4.7 GB Q4_K_M, fits the RTX 4060's 8 GB at 100% GPU. `careerops doctor` checks
+      # the model exists and that its num_ctx is at least context_tokens.
+      model: qwen2.5-7b-8k
+      context_tokens: 8192         # must equal the Modelfile's num_ctx; Ollama silently truncates a longer prompt
+      tpm: null                    # local model: no token budget to pace
+      rpm: 1000
+      rpd: 1000000
+      json_mode: true
+  # Completion cap per task. Groq admits a call against the token budget as input + max_tokens, so a tight cap lets
+  # more calls through per minute. A reasoning model spends part of it thinking; if a task is cut off the router says
+  # which entry to raise. `default` covers any task not listed.
+  max_tokens:
+    extract_keywords: 2000
+    rephrase_bullets: 1200     # <= 5 reworded bullets per call; a reasoning model also spends some of it thinking
+    judge: 800                 # {would_send, score, issues}: a short JSON answer
+    cover_letter: 3000         # gpt-oss-20b spends reasoning tokens first; run 152700 (Zone & Co) was cut off at 1500
+    free_text_answer: 1500     # one short form answer + the ad phrases it quotes (apply/freetext.py); a reasoning model spends some thinking
+    default: 1000
+  # Estimated tokens for tailoring one job (keywords + profile + rephrase batches + letter; a below-band retry adds
+  # batches). Before each job the router checks today's tokens + this against every provider's tpd; none left -> use
+  # the next provider, else stop the run. 10000: calibration round 1 measured a mean of 6,911 and a max of 8,378
+  # tokens per JD, before the hook (one ~1K call) and the two hook-mode letters (~3-5K): expect ~12K a job now and
+  # re-measure with `careerops calibrate` before relying on this number.
+  job_token_estimate: 10000
+  # Tasks that may only run on the named providers. cover_letter is written by Groq's model alone: the local model's
+  # letters were not fit to send. When none of the named providers can take the call (no key, daily budget spent, rate
+  # limited) the CV is still built and the job waits as status `letter_pending` until `careerops tailor` finds the budget
+  # back; no other provider ever writes the letter. Tasks not listed here use every provider, in order.
+  task_providers:
+    cover_letter: [groq]
+    judge: [ollama]            # the judge's model runs on this provider only; no other provider's model may answer for it
+  # A task may use another model than its provider's own `model`: {task: {provider, model}}. The cover letter is written by
+  # the larger gpt-oss-120b on Groq (a small model's letters were the ones most often rejected by the checks, which are
+  # unchanged); every other task keeps the provider's model. Groq limits each model on its own, so the router counts, paces
+  # and budgets this one under its own key "groq/openai/gpt-oss-120b"; the review screen lists tokens per model, and
+  # `careerops doctor` / `llm-check` send it a tiny request to see that it answers.
+  models:
+    cover_letter: {provider: groq, model: openai/gpt-oss-120b}
+    # The judge must be a different family from the generator (gpt-oss): the local Ollama qwen2.5-7b-8k (the ollama provider's
+    # own model, 8192-token context). Groq's llama-3.3-70b-versatile answered 404 model_not_found for this account, and a local
+    # judge spends no quota and sends nothing out. The judge input is fitted to that context (review/judge.py); `careerops
+    # doctor` sends the model a tiny request. Ollama down or an answer that is not JSON: retried once, then "no verdict"
+    # (logged); that never blocks a review.
+    judge: {provider: ollama, model: qwen2.5-7b-8k}
+  # Tokens a job's letters alone need, for finishing a `letter_pending` job. draft mode: up to three cover_letter drafts (~1.5K each
+  # in the first Monzo live run). hook mode: the two paragraphs (a draft and one regeneration) and B's gap sentence (two tries,
+  # ~0.5K each): ~5K at most, 7K with room. Not measured on the real model yet (`careerops calibrate` will say).
+  letter_token_estimate: 7000
+  # Every task runs at temperature 0 with a fixed seed: a small model that is asked the same question should answer the
+  # same way, so a calibration run (careerops calibrate) measures the prompts, not the dice. A provider entry may set its
+  # own `seed` (null = send none, for a provider that rejects it).
+  temperature: 0
+  seed: 7
+  timeout_s: 120
+  # A 429 is retried after its Retry-After (else 2 s, 4 s, 8 s). A Retry-After longer than this (a spent daily quota)
+  # is not waited for; the router goes straight to the next provider.
+  max_retry_wait_s: 60
+
+# Application tracker (careerops/tracker.py): `mark-applied` and `careerops tracker sync` write one row per applied job to this Google Sheet.
+tracker:
+  sheet_id: 1zAhQn8YxMXawEufa3JFHdX8oTLHY8wJbuOEjpwHejNM   # not a secret; the tab and its 36 headers already exist (README, "Tracker")
+  tab: Applications                                          # the tab holding the table; row 1 is the header, matched by text not position
+
+# Outreach drafts (careerops/outreach.py): Gmail DRAFTS to the people behind a job after you apply. Nothing is ever sent by this tool.
+outreach:
+  mode: off              # off = no draft after mark-applied (`careerops outreach draft JOB` still works by hand); drafts = make them
+  follow_up_days: 7      # the Sheet's Follow-up due is the day you applied plus this many days
+
+# Gated auto-apply (careerops/autoapply.py, Greenhouse / Ashby / Lever only). `careerops live --auto` submits a form only when EVERY gate below passes;
+# a job that fails any gate goes to the normal review prompt with the failed gates printed at the top (`AUTO BLOCKED: ATS 58 < 70; level: senior`).
+apply:
+  mode: assist          # off = review only, no form is opened | assist = you press Submit | auto = `live --auto` may submit (you set this; it is never the default)
+  min_ats_strict: 70    # the strict CV score (the CV's own text, negation-aware), not the claimable ceiling
+  max_auto_per_day: 5   # auto-submits per calendar day, counted from data/live/applied_auto.csv
+  confirm_first_n: 3    # the first N auto-submits ever (rows in applied_auto.csv) ask `Submit? [y/N]` after showing the filled-form screenshot
+  kinds: [greenhouse, ashby, lever]   # apply_kind values that may be auto-submitted; Workday and every other site stay manual

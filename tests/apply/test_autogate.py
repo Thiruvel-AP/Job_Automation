@@ -210,7 +210,7 @@ def test_a_job_whose_form_was_submitted_but_not_confirmed_is_a_duplicate_too(set
 
 
 def test_the_archive_index_row_for_this_job_is_a_duplicate(settings, db):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     (root / "Acme Ltd" / "Data Scientist").mkdir(parents=True)
     db.upsert_job(make_job())
     db.conn.execute("INSERT INTO archive_index VALUES (?,?,?,?,?)", ("Acme Ltd/Data Scientist", "role", "acme", "greenhouse:acme-1", "x"))
@@ -300,9 +300,13 @@ def test_defaults_when_the_apply_block_is_missing(settings):
     assert (c.mode, c.min_ats_strict, c.max_auto_per_day, c.confirm_first_n, c.kinds) == ("assist", 70.0, 5, 3, ("greenhouse", "ashby", "lever"))
 
 
-def test_the_shipped_settings_default_to_assist_never_auto():
+def test_the_built_in_default_is_assist_never_auto(tmp_path):
+    """The default is tested on a settings file with no apply section; never on the real config/settings.yaml, where the user sets
+    `apply.mode: auto` on purpose."""
     from careerops.config import load_settings
-    c = autogate.config(load_settings())
+    bare = tmp_path / "settings.yaml"
+    bare.write_text("paths: {}\n", encoding="utf-8")
+    c = autogate.config(load_settings(bare))
     assert c.mode == "assist" and c.min_ats_strict == 70 and c.max_auto_per_day == 5 and c.confirm_first_n == 3
     assert c.kinds == ("greenhouse", "ashby", "lever")
 

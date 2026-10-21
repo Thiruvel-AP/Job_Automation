@@ -1,6 +1,6 @@
 """A1 application archive. Rule 0: the archive root is append-only.
 
-Everything here runs against tmp_path (the `settings` fixture redirects paths.applications). Most tests use small fake
+Everything here runs against tmp_path (the `settings` fixture redirects paths.applications_auto). Most tests use small fake
 PDFs and a stand-in for pdftotext; the end-to-end tests at the bottom use real xelatex/pdftotext output.
 """
 import hashlib
@@ -34,7 +34,7 @@ SEVEN = {"Ada Fixture CV.pdf", "Ada Fixture CV.tex", "Ada Fixture Cover Letter.p
 @pytest.fixture(autouse=True)
 def append_only_guard(settings, monkeypatch):
     """Any delete/rename/replace aimed at a path under the archive root fails the test on the spot."""
-    root = settings.path("applications").resolve()
+    root = settings.path("applications_auto").resolve()
 
     def under(p) -> bool:
         if not isinstance(p, (str, bytes, os.PathLike)):
@@ -140,7 +140,7 @@ def run_cli(settings, tmp_path, monkeypatch, *argv):
 
 # ------------------------------------------------------------------ 1. new company
 def test_new_company_creates_company_role_all_seven_files_and_index_rows(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     job, rep = make_job()
     res = record_application(db, settings, job, rep, confirmation="REF-1")
     role = root / "Lendable" / "AI Engineer"
@@ -167,14 +167,14 @@ def test_new_company_creates_company_role_all_seven_files_and_index_rows(setting
 def test_archive_writes_no_marker_files_and_leaves_no_staging(settings, db, make_job):
     job, rep = make_job()
     record_application(db, settings, job, rep)
-    assert [p for p in settings.path("applications").rglob("*") if p.name.startswith(".")] == []
+    assert [p for p in settings.path("applications_auto").rglob("*") if p.name.startswith(".")] == []
     assert not list(settings.path("tmp").glob("archive-*"))
     assert Path(rep["cv_pdf"]).exists()                    # copy, not move: the working copy stays
 
 
 # ------------------------------------------------------------------ 2. company spelling
 def test_existing_company_under_another_spelling_is_reused(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     a, ra = make_job("gh:co:1", company="checkout.com", title="Data Scientist")
     record_application(db, settings, a, ra)
     b, rb = make_job("gh:co:2", company="Checkout.com Ltd", title="ML Engineer")
@@ -185,7 +185,7 @@ def test_existing_company_under_another_spelling_is_reused(settings, db, make_jo
 
 
 def test_near_miss_creates_new_folder_and_flags_never_merges(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     hand_made(root, "Blending Spoons/hand.pdf"); hand_made(root, "BCG X/hand.pdf"); hand_made(root, "CGI/hand.pdf")
     a, ra = make_job("gh:bs:1", company="Bending Spoons")
     b, rb = make_job("gh:bcg:1", company="BCG")
@@ -201,7 +201,7 @@ def test_near_miss_creates_new_folder_and_flags_never_merges(settings, db, make_
 
 # ------------------------------------------------------------------ 3. role naming
 def test_role_naming_collisions_and_hand_made_folders_never_written_into(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     hand = hand_made(root, "Lendable/Python Developer - AI/CV hand.pdf")
     d = date(2026, 10, 5)
     names = []
@@ -215,7 +215,7 @@ def test_role_naming_collisions_and_hand_made_folders_never_written_into(setting
 
 
 def test_id6_collision_gets_numeric_suffix_and_multi_colon_ids_stay_ntfs_safe(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     jid = "greenhouse:acme:7"
     for taken in ("Data Scientist", "Data Scientist – 2026-10-05", f"Data Scientist – {id6(jid)}"):
         (root / "Lendable" / taken).mkdir(parents=True)
@@ -231,7 +231,7 @@ def test_id6_collision_gets_numeric_suffix_and_multi_colon_ids_stay_ntfs_safe(se
     ("T" * 200, "T" * 80),
 ])
 def test_unsafe_titles_become_one_valid_folder(settings, db, make_job, title, expect):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     j, r = make_job("gh:n:1", company="Lendable", title=title)
     res = record_application(db, settings, j, r)
     assert res.folder.parent == root / "Lendable" and res.folder.name == expect
@@ -240,18 +240,18 @@ def test_unsafe_titles_become_one_valid_folder(settings, db, make_job, title, ex
 
 
 def test_company_name_is_sanitised_too(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     j, r = make_job("gh:n:2", company="R/D: Labs*", title="AI Engineer")
     res = record_application(db, settings, j, r)
     assert res.folder.parent.name == "R-D- Labs-" and [p.name for p in root.iterdir()] == ["R-D- Labs-"]
 
 
 def test_long_root_shortens_the_role_to_keep_every_path_within_240(settings, db, make_job, tmp_path):
-    base = settings.path("applications")
+    base = settings.path("applications_auto")
     pad = 240 - len(str(base)) - 1 - 40 - 28 - len("Lendable") - 6
     deep = base / ("p" * (pad - 1))
     deep.mkdir()
-    settings.raw["paths"]["applications"] = str(deep)
+    settings.raw["paths"]["applications_auto"] = str(deep)
     j, r = make_job("gh:long:1", company="Lendable", title="T" * 200)
     res = record_application(db, settings, j, r)
     assert 12 <= len(res.folder.name) < 80
@@ -259,10 +259,10 @@ def test_long_root_shortens_the_role_to_keep_every_path_within_240(settings, db,
 
 
 def test_path_too_long_even_for_a_short_role_is_refused_before_creating_anything(settings, db, make_job):
-    base = settings.path("applications")
+    base = settings.path("applications_auto")
     deep = base / ("a" * 80) / ("b" * 80) / ("c" * 80)
     deep.mkdir(parents=True)
-    settings.raw["paths"]["applications"] = str(deep)
+    settings.raw["paths"]["applications_auto"] = str(deep)
     j, r = make_job("gh:long:2", company="Lendable", title="AI Engineer")
     with pytest.raises(ArchiveError, match="240"):
         record_application(db, settings, j, r)
@@ -288,7 +288,7 @@ def test_same_job_archived_twice_goes_to_v2_v3_and_originals_are_unchanged(setti
 
 # ------------------------------------------------------------------ 5. adoption
 def test_unmarked_hand_made_company_folder_is_adopted_without_touching_it(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     hand = hand_made(root, "Checkout.com/old CV.pdf")
     before = snapshot(root)
     j, r = make_job("gh:co:9", company="Checkout.com Ltd", title="Data Scientist")
@@ -304,7 +304,7 @@ def test_unmarked_hand_made_company_folder_is_adopted_without_touching_it(settin
 
 
 def test_two_unmarked_folders_with_the_same_key_use_the_first_and_flag(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     hand_made(root, "Zone & Co/a.pdf"); hand_made(root, "Zone and Co/b.pdf")
     j, r = make_job("gh:z:1", company="Zone and Co")
     res = record_application(db, settings, j, r)
@@ -317,7 +317,7 @@ def test_two_unmarked_folders_with_the_same_key_use_the_first_and_flag(settings,
 def test_missing_archive_root_is_refused_and_nothing_is_created(settings, db, make_job, tmp_path):
     j, r = make_job()
     gone = tmp_path / "NotThere" / "Companies"
-    settings.raw["paths"]["applications"] = str(gone)
+    settings.raw["paths"]["applications_auto"] = str(gone)
     with pytest.raises(ArchiveRootMissing, match="careerops init"):
         record_application(db, settings, j, r)
     assert not gone.exists() and not gone.parent.exists() and not settings.path("tmp").exists()
@@ -328,7 +328,7 @@ def test_missing_archive_root_is_refused_and_nothing_is_created(settings, db, ma
 # ------------------------------------------------------------------ 7. mark-applied
 def test_mark_applied_archives_without_the_assist_and_date_controls_the_folder(settings, db, make_job, tmp_path,
                                                                               monkeypatch):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     a, _ = make_job("gh:m:1", company="Lendable", title="Data Scientist")
     b, _ = make_job("gh:m:2", company="Lendable", title="Data Scientist")
     run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "gh:m:1", "--ref", "EMAIL-7")
@@ -363,7 +363,7 @@ def test_mark_applied_unknown_job_or_untailored_job_exits_1(settings, db, make_j
 
 
 def test_apply_command_archives_after_confirmation_but_not_after_x(settings, db, make_job, tmp_path, monkeypatch):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     a, ra = make_job("gh:a:1", company="Lendable", title="Data Scientist")
     b, rb = make_job("gh:a:2", company="Monzo", title="Data Scientist")
     answers = {"gh:a:1": "REF-A", "gh:a:2": "x"}
@@ -380,7 +380,7 @@ def test_apply_command_archives_after_confirmation_but_not_after_x(settings, db,
 # ------------------------------------------------------------------ 8. interrupted archive
 def test_interrupted_archive_changes_nothing_old_keeps_partial_folder_and_flags_job(settings, db, make_job,
                                                                                     monkeypatch):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     hand_made(root, "Acme/Existing Role/old.pdf")
     before = snapshot(root)
     j, r = make_job("gh:acme:9", company="Acme", title="AI Engineer")
@@ -444,11 +444,11 @@ def test_init_creates_a_missing_archive_root_and_never_touches_an_existing_one(s
     from careerops.setup import init
     for k in ("register_dir", "companies_house_dir", "browser_profile", "logs", "learning"):
         settings.raw["paths"][k] = str(tmp_path / "data" / k)
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     keep = hand_made(root, "Acme/cv.pdf")
     init(settings)
     assert keep.read_bytes() == b"hand-made CV"
-    settings.raw["paths"]["applications"] = str(tmp_path / "Fresh" / "Companies")
+    settings.raw["paths"]["applications_auto"] = str(tmp_path / "Fresh" / "Companies")
     assert any("Companies" in m for m in init(settings)) and (tmp_path / "Fresh" / "Companies").is_dir()
 
 
@@ -511,7 +511,7 @@ def test_note_md_is_never_uploaded_only_the_cv_pdf_and_the_chosen_letter_pdf(set
 
 
 def test_wrong_jobs_letter_is_refused_and_nothing_is_uploaded_or_archived(settings, db, make_job):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     a, ra = make_job("gh:g:1", company="Lendable")
     b, rb = make_job("gh:g:2", company="Monzo")
     page = FakePage(("input", "file", "Resume / CV"), ("input", "file", "Cover letter"))
@@ -534,7 +534,7 @@ def test_letter_for_another_company_inside_this_out_dir_is_refused(settings, db,
         record_application(db, settings, a, ra)
     with pytest.raises(WrongFileError):
         fill_page(FakePage(("input", "file", "Cover letter")), APPLICANT, ra["cv_pdf"], ra["letter_pdf"], job=a)
-    assert list(settings.path("applications").iterdir()) == []
+    assert list(settings.path("applications_auto").iterdir()) == []
 
 
 def test_paths_outside_the_jobs_out_dir_are_refused_even_with_the_right_company(settings, db, make_job, tmp_path):
@@ -561,7 +561,7 @@ def test_record_application_without_a_letter_raises_letter_missing(settings, db,
     j, r = make_job(letter=False)
     with pytest.raises(LetterMissing):
         record_application(db, settings, j, r)
-    assert list(settings.path("applications").iterdir()) == [] and db.job(j["id"])["status"] == "approved"
+    assert list(settings.path("applications_auto").iterdir()) == [] and db.job(j["id"])["status"] == "approved"
 
 
 def test_a_job_approved_with_no_letter_is_archived_without_the_no_letter_flag(settings, db, make_job):
@@ -594,7 +594,7 @@ def test_a_missing_letter_file_is_still_refused_when_the_report_says_the_letter_
 
 def test_mark_applied_without_letter_exits_1_and_no_letter_overrides_and_records_it(settings, db, make_job, tmp_path,
                                                                                     monkeypatch):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     make_job("gh:nl:1", company="Lendable", letter=False)
     with pytest.raises(SystemExit) as e:
         run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "gh:nl:1")
@@ -641,7 +641,7 @@ def test_fill_page_leaves_a_filled_cover_letter_box_alone_and_handles_forms_with
 
 # ------------------------------------------------------------------ 12. THE append-only guarantee
 def test_every_archive_scenario_leaves_the_existing_tree_untouched(settings, db, make_job, tmp_path, monkeypatch):
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
     for rel in ("83zero Ltd/Python Developer - AI/CV hand.pdf", "83zero Ltd/notes.txt",
                 "Checkout.com/Data Scientist/CV hand.pdf", "Checkout.com/cover.docx",
                 "Zone & Co/a.pdf", "Zone and Co/b.pdf", "Blending Spoons/AI Engineer/x.pdf",
@@ -690,7 +690,7 @@ def test_every_archive_scenario_leaves_the_existing_tree_untouched(settings, db,
             record_application(db, settings, *j16)
     refused = make_job("gh:17", company="Newco", title="No root yet")
     with monkeypatch.context() as m:                                                 # missing root: refused, nothing created
-        m.setitem(settings.raw["paths"], "applications", str(tmp_path / "missing"))
+        m.setitem(settings.raw["paths"], "applications_auto", str(tmp_path / "missing"))
         with pytest.raises(ArchiveRootMissing):
             record_application(db, settings, *refused)
 
@@ -730,7 +730,7 @@ def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(sett
     for uploaded in page.uploads:
         archived = res.folder / Path(uploaded).name
         assert archived.name == Path(uploaded).name and sha(archived) == sha(Path(uploaded))
-    assert res.folder == settings.path("applications") / "Northwind Health AI" / "AI Engineer"
+    assert res.folder == settings.path("applications_auto") / "Northwind Health AI" / "AI Engineer"
 
 
 @pytest.mark.slow

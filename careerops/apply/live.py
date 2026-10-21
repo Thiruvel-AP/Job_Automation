@@ -149,20 +149,22 @@ class Live:
         self.fresh = fresh                              # `live --fresh`: tier 0 only (posted at most 24 h ago); the rest stays in the inbox
         self.only = only                                # `live --url`: work on this one inbox file, leave the rest
         self.max_jobs, self.dry_run, self.resume_cmd, self.out = max_jobs, dry_run, resume_cmd, out
-        self.root = settings.path("applications")
+        self.root = settings.path("applications_auto")      # the one folder this pipeline writes its archive to
+        self.own_root = settings.path("applications")       # the user's own folder: read-only, snapshotted and checked unchanged
         self.dirs = folders(settings)
         self.state: State | None = None
         self.entry: dict = {}                             # the state entry of the job in hand (its `apply_opened` flag lives there)
         self.results: list[JobResult] = []
         self.current: dict = {}
         self.before: snapshot.Snapshot | None = None
+        self.before_own: snapshot.Snapshot | None = None
         self.dir_before: str | None = None
         self._auto_tried: set[str] = set()                # a job meets the auto gate once per session; a decline falls through to the review prompt
 
     # ------------------------------------------------------------------ files
     def _inside_archive(self, p: Path) -> bool:
-        r, a = p.resolve(), self.root.resolve()
-        return r == a or a in r.parents
+        r = p.resolve()
+        return any(r == a or a in r.parents for a in (self.root.resolve(), self.own_root.resolve()))
 
     def _move(self, src: Path, dest_dir: Path, name: str, extra: tuple[str, ...] = ()) -> Path:
         """Move a JD file between the folders under paths.jds. Never into or out of the archive, never over a file."""
@@ -337,7 +339,7 @@ class Live:
         `stop_before_review` is pass 1 of the session: add, triage and tailor, then stop with the job awaiting its review (status
         'needs_review', or 'approved' from an earlier dry run); `r` is the result that pass returned, which pass 2 carries on with."""
         self.current = {"file": f.name, "job_id": None, "stage": "validate"}
-        self.before = None
+        self.before = self.before_own = None
         try:
             text, sha = manual.read_jd(f)
         except manual.JDError as e:
@@ -375,7 +377,8 @@ class Live:
             self.results.append(r)
         else:
             r.archive = "n/a"                                                      # pass 2 is checked again from its own snapshot
-        self.before = snapshot.take(self.root)                                     # 1. archive snapshot
+        self.before = snapshot.take(self.root)                                     # 1. archive snapshots (ours, and yours)
+        self.before_own = snapshot.take(self.own_root)
         self.dir_before = None
         try:
             status = self._advance(f, text, sha, entry, r, stop_before_review)
@@ -431,6 +434,10 @@ class Live:
         now_dir = job["application_dir"] if job is not None else None
         allowed = snapshot.role_folder(self.root, now_dir) if now_dir and now_dir != self.dir_before else None
         check = snapshot.compare(self.before or {}, after, allowed)
+        mine = snapshot.compare(self.before_own or {}, snapshot.take(self.own_root))           # your folder: no addition at all is allowed
+        check.removed += [f"{self.own_root.name}/{p}" for p in mine.removed]
+        check.modified += [f"{self.own_root.name}/{p}" for p in mine.modified]
+        check.stray += [f"{self.own_root.name}/{p}" for p in mine.stray]
         r.archive = check.summary()
         return check
 

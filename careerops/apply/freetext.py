@@ -5,7 +5,8 @@ The form filler (apply/filler.py) hands every REQUIRED free-text field that answ
   1. read the question and its limit ("1-2 sentences", "max 200 words", the field's maxlength; nothing stated = 120 words) and classify it
      (project | challenge | why_company | why_role | other);
   2. an answer YOU approved or wrote for a similar question (same class, similarity >= 0.85, still inside this question's limit) is reused as it
-     is. "Why {company}?" is only ever reused for the same company;
+     is. "Why {company}?" is only ever reused for the same company; and an answer is not reused when a fact-bank entry (or motivation)
+     it was built from has changed since you approved it;
   3. otherwise PLAN which fact-bank entries it may draw on (the ones whose terms best overlap the question and the ad's keywords; the hook proof
      of this job's CV first, so the answer and the CV agree), DRAFT it with one model call, and GUARD the draft as strictly as the CV: every
      number, tool, organisation and name must be in the chosen entries (for a "why" answer: the ad, your `motivations`, the CV's hook), no
@@ -20,6 +21,7 @@ or applicant.yaml: the library is runtime data. "Other" questions (hobbies, "any
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -44,6 +46,7 @@ MAX_PLAN = 3                      # fact-bank entries one answer may draw on
 MAX_REDRAFTS = 3                  # redrafts the person may ask for with `r`
 AD_RUN_WORDS = 4                  # a claim about the company must contain this many words in a row that the ad contains
 MENU = "  [y] use · [e] edit · [r] redraft · [s] I'll write it  > "
+JOB_SOURCES = ("ad", "hook")      # sources of a plan that belong to the job, not to you: only the rest are checked for change
 
 
 # ------------------------------------------------------------------ the limit of a question
@@ -173,11 +176,18 @@ class Record:
     approved: bool
     cls: str = "other"
     origin: str = "draft"                  # draft (approved as drafted) | edited | written | seed
+    digests: dict[str, str] = field(default_factory=dict)       # sha256 of each of your sources (fact-bank entry, motivation) when approved
 
     @classmethod
     def new(cls, question: str, answer: str, kind: str, company: str, job_id: str, source_ids: list[str], day: date,
-            origin: str = "draft") -> "Record":
-        return cls(question, normalise(question), answer, company, job_id, list(source_ids), day.isoformat(), True, kind, origin)
+            origin: str = "draft", digests: Mapping[str, str] | None = None) -> "Record":
+        return cls(question, normalise(question), answer, company, job_id, list(source_ids), day.isoformat(), True, kind, origin,
+                   dict(digests or {}))
+
+    def stale(self, current: Mapping[str, str]) -> bool:
+        """Built from a fact-bank entry (or motivation) that has changed since approval, is gone, or whose state was never recorded?
+        `current` = id -> digest of every source of yours as it is now. An answer with no such source (a seeded one) is never stale."""
+        return any(i not in self.digests or current.get(i) != self.digests[i] for i in self.source_ids if i not in JOB_SOURCES)
 
 
 SEED_JOB = "manual:177a9a1afcc1"
@@ -228,14 +238,18 @@ class Library:
         with open(self.path, "a", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(asdict(rec), ensure_ascii=False) + "\n")
 
-    def find(self, question: str, cls: str, company: str, limit: Limit, threshold: float = SIMILAR, job_id: str = "") -> Record | None:
+    def find(self, question: str, cls: str, company: str, limit: Limit, threshold: float = SIMILAR, job_id: str = "",
+             current: Mapping[str, str] | None = None) -> Record | None:
         """The approved answer for a question like this one: same class, similarity >= threshold, inside `limit`; the best, the latest on a tie.
         A why_company answer is only found for the same company (and then any "why this company" wording is the same question), a why_role
-        answer only for the same job: both quote that employer's ad."""
+        answer only for the same job: both quote that employer's ad. An answer built from a source of yours that has changed since approval
+        is skipped (`current`: id -> digest now; none given = nothing is known to be unchanged)."""
         best: tuple[float, int, Record] | None = None
         for n, r in enumerate(self.records()):
             if r.cls != cls or (cls == "why_company" and answers_mod.norm(r.company) != answers_mod.norm(company)) or \
                     (cls == "why_role" and (not job_id or r.job_id != job_id)):
+                continue
+            if r.stale(current or {}):
                 continue
             sim = 1.0 if cls == "why_company" else similarity(question, r.question)
             if sim >= threshold and not limit.problems(r.answer) and (best is None or (sim, n) >= best[:2]):
@@ -264,6 +278,14 @@ class Plan:
 
     def allowed(self) -> str:
         return " ".join(s.text + " " + " ".join(s.terms) for s in self.sources)
+
+    def digests(self) -> dict[str, str]:
+        """Digest of each source of yours this answer is built from (the ad and the hook are this job's: not kept)."""
+        return {s.id: source_digest(s) for s in self.sources if s.id not in JOB_SOURCES}
+
+
+def source_digest(s: Source) -> str:
+    return hashlib.sha256("\n".join([s.id, s.text, *map(str, s.terms)]).encode("utf-8")).hexdigest()
 
 
 def bullet_source(entry: Mapping[str, Any], b: Mapping[str, Any]) -> Source:
@@ -303,6 +325,10 @@ def ad_snippets(ad: str, kws: list[Keyword], question: str, company: str, n: int
 # ------------------------------------------------------------------ the guard
 _NAME = re.compile(r"[A-Za-z][A-Za-z0-9+#]*(?:[-'’][A-Za-z0-9+#]+)*")
 _FIRST_PERSON = re.compile(r"\b(?:I|I'm|I've|I'd|my|me|mine)\b")
+# A sentence that says what the user did or used ("I used X", "I've built Y", "my experience with Z"): a claim about them.
+_CLAIM = re.compile(r"\bI(?:'ve|'d| have| had)?\s+(?:\w+\s+){0,2}?(?:used|built|worked|deployed|shipped|developed|wrote|written|trained|ran|run|"
+                    r"managed|led|designed|implemented|created|delivered|maintained|configured|tested|migrated|measured|achieved|reduced|"
+                    r"improved|applied|owned|launched|automated|analysed|analyzed)\b|\bmy\s+(?:experience|work|background|projects?)\b", re.I)
 
 
 def _runs(text: str, ad: str, n: int = AD_RUN_WORDS) -> bool:
@@ -347,13 +373,21 @@ class Guard:
                     out.append(f"mentions '{tool}', which the chosen entries do not")
                 elif why and not _contains(corpus, tool) and not _contains(norm_literal(f"{self.company} {self.title}"), tool):
                     out.append(f"mentions '{tool}', which the fact bank does not")
+        mine = ""                                                                  # what the user may be said to have done or used
+        if why:                                                                    # the ad is allowed for the company and the role, never for the user
+            mine = " ".join([_fact_corpus(self.fb), *(f"{s.text} {' '.join(s.terms)}" for s in plan.sources if s.id != "ad"), self.company, self.title])
+            for sent in split_sentences(t):
+                if _CLAIM.search(sent):
+                    out += faithfulness.check(sent, mine, [], self.deny, self.kws, vocabulary="", max_growth=1000.0).violations
+        mine_lit = norm_literal(mine)
         for sent in split_sentences(t):
+            pool = mine_lit if why and _CLAIM.search(sent) else allowed_lit
             names = _NAME.findall(sent)
             for w in names[1:]:                                                   # the first word of a sentence is capitalised anyway
                 if not w[0].isupper() or w == "I" or w.startswith(("I'", "I’")):
                     continue
                 base = re.sub(r"['’]s$", "", w)
-                if not all(_contains(allowed_lit, norm_literal(p)) or (p.endswith("s") and _contains(allowed_lit, norm_literal(p[:-1])))
+                if not all(_contains(pool, norm_literal(p)) or (p.endswith("s") and _contains(pool, norm_literal(p[:-1])))
                            for p in re.split(r"[-'’]", base) if p):
                     out.append(f"names '{w}', which is not in the chosen entries")
         if plan.cls in ("why_company", "why_role"):
@@ -397,6 +431,13 @@ class FreeText:
         self.style = dict(book.style or {})
         self.guard = Guard.build(fb, self.kws, self.style.get("avoid") or [], self.company, self.title, self.ad)
         self.last = ""                                  # how the last answer came about: reused | approved | edited | written | ""
+
+    def _current(self) -> dict[str, str]:
+        """id -> digest of every fact-bank bullet (with the entry it sits in) and motivation of yours as they are now."""
+        now = {str(b["id"]): source_digest(bullet_source(e, b)) for sec in ("experience", "projects") for e in self.fb.get(sec, [])
+               for b in e["bullets"]}
+        now.update({f"m{i}": source_digest(Source(f"m{i}", m)) for i, m in enumerate(self.book.motivations, 1)})
+        return now
 
     # ---- the plan
     def plan(self, cls: str, question: str) -> Plan:
@@ -469,7 +510,8 @@ class FreeText:
                  f"  Draft:\n    {text}")
 
     def _store(self, question: str, text: str, cls: str, plan: Plan, origin: str) -> None:
-        self.lib.add(Record.new(question, text, cls, self.company, str(self.job.get("id") or ""), plan.ids, self.today, origin))
+        self.lib.add(Record.new(question, text, cls, self.company, str(self.job.get("id") or ""), plan.ids, self.today, origin,
+                                plan.digests()))
         self.last = {"draft": "approved"}.get(origin, origin)
 
     def _write(self, question: str, cls: str, plan: Plan, limit: Limit, strict: bool, why: str) -> str:
@@ -492,7 +534,7 @@ class FreeText:
         self.last = ""
         question = " ".join(question.split())
         cls, limit = classify(question, self.company), read_limits(f"{question} {label}", maxlength)
-        hit = self.lib.find(question, cls, self.company, limit, job_id=str(self.job.get("id") or ""))
+        hit = self.lib.find(question, cls, self.company, limit, job_id=str(self.job.get("id") or ""), current=self._current())
         if hit is not None:
             self.last = "reused"
             self.out(f"  free text: reused the answer you approved on {hit.date} for \"{hit.question[:70]}\" ({cls})")

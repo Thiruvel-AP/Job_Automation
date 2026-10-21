@@ -804,10 +804,17 @@ def cmd_outcomes(args):
     if args.apply and not args.import_archive:
         _fail("--apply goes with --import-archive")
     if args.import_archive:
-        try:
-            props, skipped = outcomes.propose_from_archive(db, s.path("applications"))
-        except outcomes.OutcomeError as e:
-            _fail(str(e))
+        roots = [r for r in s.archive_roots() if r.is_dir()]
+        if not roots:
+            _fail(f"archive folder not found: {s.path('applications')}")
+        props, skipped = [], []
+        for root in roots:
+            try:
+                more, seen = outcomes.propose_from_archive(db, root)
+            except outcomes.OutcomeError as e:
+                _fail(str(e))
+            props += more
+            skipped += seen
         if skipped:
             print(f"{len(skipped)} folder(s) already have a job and are skipped.")
         for p in props:
@@ -1298,7 +1305,7 @@ def main(argv=None):
     ou.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
     ou.set_defaults(fn=cmd_outcome)
     os_ = sub.add_parser("outcomes", help="the application funnel with 95%% Wilson intervals; --import-archive backfills")
-    os_.add_argument("--import-archive", action="store_true", help="list <paths.applications>/<Company>/<Role> folders and "
+    os_.add_argument("--import-archive", action="store_true", help="list <paths.applications>/ and <paths.applications_auto>/<Company>/<Role> folders and "
                      "propose manual jobs + 'applied' events dated by folder mtime (dry run)")
     os_.add_argument("--apply", action="store_true", help="with --import-archive: write the proposals to the database "
                      "(never to the archive)")

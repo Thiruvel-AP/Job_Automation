@@ -224,7 +224,7 @@ careerops contact add JOB "First Last" --role "Hiring Manager" [--email x@y]   #
 careerops outreach draft JOB [--to you@gmail.com]   # Gmail drafts with the CV attached, never sent; --to = one test draft to that address
 careerops outcome --id JOB --event screen --date 2026-10-12 --note "phone"   # applied|acknowledged|screen|interview|offer|rejected|withdrawn
 careerops outcomes                 # the funnel applied → any reply → screen → interview → offer: counts, rates, 95% Wilson intervals
-careerops outcomes --import-archive          # DRY RUN: list <paths.applications>/<Company>/<Role> as approximate 'applied' events
+careerops outcomes --import-archive          # DRY RUN: list <paths.applications> and <paths.applications_auto> /<Company>/<Role> as approximate 'applied' events
 careerops outcomes --import-archive --apply  # write them to the database only (the archive is only listed, never written)
 careerops import-linkedin config/reference/linkedin.pdf   # LinkedIn profile PDF → config/profile/fact_bank.proposed.yaml + data/linkedin_diff.md (see below)
 careerops export                   # data/exports/companies.xlsx (Jobs, Summary, Outcomes)
@@ -246,7 +246,7 @@ normalised title + place). Sponsorship is never a filter (see "Priority"). `--li
 finds and ranks without writing, and every run is listed best priority first.
 
 - **`--ats`** reads Greenhouse, Lever and Ashby boards through their documented public APIs. It starts from your companies, in this
-  order and no other: (1) the top-level folder names under `paths.applications` (`D:\Professional\UK\Companies`; names only, nothing
+  order and no other: (1) the top-level folder names under `paths.applications` (your own folder of past submissions, read-only) and `paths.applications_auto` (the pipeline's archive; names only, nothing
   inside a folder is opened), (2) the employers you list in `discover.sources` (settings.yaml), (3) sponsor-register companies, only
   when they are also one of those (the register is never sampled). For each company it guesses up to four board tokens from the name
   (lower-case, Ltd / Limited / plc / Group / UK / Holdings / Technologies dropped, spaces and punctuation removed: `Monzo Bank Ltd` ->
@@ -464,7 +464,7 @@ P, and an `Apply:` line each) and only then reviews them. Nothing is dropped; a 
 tailored. For each job:
 
 1. checks the file (missing, under 500 bytes, not UTF-8 → moved to `rejected/` with a `.reason.txt` beside it, loop continues);
-2. snapshots the archive (`paths.applications`; read-only `os.walk`: path, size, mtime), in each pass;
+2. snapshots the archives (`paths.applications_auto`, where the job's one new folder may appear, and `paths.applications`, your own folder, which must not change at all; read-only `os.walk`: path, size, mtime), in each pass;
 3. adds the job (the internal `add-jd` function; the job id is passed on as a value, never read from printed output) and triages it;
 4. tailors exactly that id (pass 1), then asks you to review it (pass 2): **approve / edit / skip** (plus `l` to pick the letter A / B /
    none, `n` to open the note, `o` to open the PDFs, `w` to open the apply page in your default Windows browser through `wslview`, else

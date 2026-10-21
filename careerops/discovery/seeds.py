@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterable
 
 from ..apply.naming import folder_key
 from ..db import DB
@@ -29,12 +30,17 @@ class Seed:
     hint: str | None = None          # a board slug already verified for this company (ats.resolve), tried first
 
 
-def archive_names(root: Path) -> list[str]:
-    """The names of the folders directly under the archive root, sorted. READ ONLY: one directory listing, nothing opened."""
-    try:
-        names = [e.name for e in os.scandir(root) if e.is_dir() and not e.name.startswith(".")]
-    except OSError:
-        return []
+def archive_names(root: Path | Iterable[Path]) -> list[str]:
+    """The names of the folders directly under the archive root (or roots), sorted, each name once. READ ONLY: one directory listing
+    per root, nothing opened."""
+    names: dict[str, str] = {}
+    for one in ([root] if isinstance(root, (str, os.PathLike)) else root):
+        try:
+            for e in os.scandir(one):
+                if e.is_dir() and not e.name.startswith("."):
+                    names.setdefault(e.name, e.name)
+        except OSError:
+            continue
     return sorted(names, key=str.casefold)
 
 
@@ -64,7 +70,7 @@ def seeds(settings, db: DB) -> list[Seed]:
     discover.ignore_companies is skipped (a folder that is not a company: 'New folder'); the folder itself is never touched."""
     out: list[Seed] = []
     seen: set[str] = {folder_key(str(n)) for n in settings["discover"].get("ignore_companies") or [] if folder_key(str(n))}   # never looked for
-    for origin, names in (("archive", archive_names(settings.path("applications"))), ("config", config_names(settings))):
+    for origin, names in (("archive", archive_names(settings.archive_roots())), ("config", config_names(settings))):
         for name in names:
             key = folder_key(name)
             if key and key not in seen:

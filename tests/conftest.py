@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from careerops.config import ROOT, Settings, load_settings
+from careerops.config import ROOT, SETTINGS_ENV, Settings, load_settings
 from careerops.config import load_yaml
 from careerops.db import DB
 from careerops.llm import MockLLM
@@ -15,6 +15,8 @@ from careerops.tailoring.tailor import tailor_job
 
 FIX = Path(__file__).parent / "fixtures"
 PROFILE_FIX = FIX / "profile"          # fictional fact_bank.yaml + applicant.yaml: what every test uses as "the profile"
+SETTINGS_FIX = FIX / "config" / "settings.yaml"     # a bare load_settings() reads this, never the real config/settings.yaml
+os.environ[SETTINGS_ENV] = str(SETTINGS_FIX)
 
 # ---- guard: no test may open anything under the real data/ folder (careerops.db, outputs/, exports/ ...) ----------
 # A 2026-10-03 `careerops run --mock` against the real data/ overwrote a real tailored job (see docs/status.md); tests
@@ -22,7 +24,10 @@ PROFILE_FIX = FIX / "profile"          # fictional fact_bank.yaml + applicant.ya
 REAL_DATA = os.path.realpath(ROOT / "data")
 REAL_PROFILE = tuple(os.path.realpath(ROOT / "config" / "profile" / n)
                      for n in ("fact_bank.yaml", "applicant.yaml", "answers.yaml", "answer.yaml"))
-_guard = {"on": False, "hits": [], "profile_hits": [], "heavy": []}
+# The real config/settings.yaml is the user's to change (apply.mode: auto, their paths): no test may read it. A test that wants
+# settings loads the test copy (a bare load_settings() already does), or writes its own file in tmp_path.
+REAL_SETTINGS = os.path.realpath(ROOT / "config" / "settings.yaml")
+_guard = {"on": False, "hits": [], "profile_hits": [], "settings_hits": [], "heavy": []}
 
 
 def _under_real_data(target) -> bool:
@@ -34,6 +39,10 @@ def _under_real_data(target) -> bool:
 
 def _is_real_profile(target) -> bool:
     return isinstance(target, (bytes, str, os.PathLike)) and os.path.realpath(os.fsdecode(target)) in REAL_PROFILE
+
+
+def _is_real_settings(target) -> bool:
+    return isinstance(target, (bytes, str, os.PathLike)) and os.path.realpath(os.fsdecode(target)) == REAL_SETTINGS
 
 
 def _heavy(event, args) -> str | None:
@@ -55,6 +64,9 @@ def _audit(event, args):
     if _guard["on"] and event in ("open", "sqlite3.connect") and args and _under_real_data(args[0]):
         _guard["hits"].append(f"{event}: {os.fsdecode(args[0])}")
         raise PermissionError(f"test touched the real data/ folder ({event} {os.fsdecode(args[0])}); use tmp_path")
+    if _guard["on"] and event == "open" and args and _is_real_settings(args[0]):
+        _guard["settings_hits"].append(f"{event}: {os.fsdecode(args[0])}")
+        raise PermissionError(f"test read the real settings ({os.fsdecode(args[0])}); use tests/fixtures/config/settings.yaml or a tmp copy")
     if _guard["on"] and event == "open" and args and _is_real_profile(args[0]):
         _guard["profile_hits"].append(f"{event}: {os.fsdecode(args[0])}")
         raise PermissionError(f"test read the real profile ({os.fsdecode(args[0])}); use tests/fixtures/profile/")
@@ -93,16 +105,21 @@ def no_real_data():
     """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
     _guard["hits"].clear()
     _guard["profile_hits"].clear()
+    _guard["settings_hits"].clear()
     _guard["on"] = True
     yield
     _guard["on"] = False
     hits, _guard["hits"] = list(_guard["hits"]), []
     profile_hits, _guard["profile_hits"] = list(_guard["profile_hits"]), []
+    settings_hits, _guard["settings_hits"] = list(_guard["settings_hits"]), []
     if hits:
         pytest.fail("test opened the real data/ folder:\n  " + "\n  ".join(hits), pytrace=False)
     if profile_hits:
         pytest.fail("test read the real fact bank / applicant (config/profile/); use tests/fixtures/profile/:\n  "
                     + "\n  ".join(profile_hits), pytrace=False)
+    if settings_hits:
+        pytest.fail("test read the real config/settings.yaml; use tests/fixtures/config/settings.yaml or a tmp copy:\n  "
+                    + "\n  ".join(settings_hits), pytrace=False)
 
 
 @contextmanager
@@ -112,6 +129,15 @@ def real_data_hits():
         yield _guard["hits"]
     finally:
         _guard["hits"].clear()                              # expected hits: the probing test is not a failure
+
+
+@contextmanager
+def real_settings_hits():
+    """For the guard's own test: yields the list of real-settings reads and lets the probing test pass."""
+    try:
+        yield _guard["settings_hits"]
+    finally:
+        _guard["settings_hits"].clear()
 
 
 @contextmanager
@@ -162,14 +188,16 @@ def settings(tmp_path) -> Settings:
     for k in ("db", "outputs", "excel", "preferences", "sponsors_csv", "register_dir", "jds", "live", "judge", "robots", "secrets", "discover", "aiapply_applied", "outreach", "answers_library"):   # register_dir: M1 writes snapshots
         raw["paths"][k] = str(tmp_path / Path(raw["paths"][k]).name)
     # The archive root is the user's real folder of submitted CVs (see CLAUDE.md): tests never get near it.
-    raw["paths"]["applications"] = str(tmp_path / "Companies")
+    raw["paths"]["applications"] = str(tmp_path / "Companies")          # read-only: history, company list, duplicate check
+    raw["paths"]["applications_auto"] = str(tmp_path / "Auto")          # the only archive folder the pipeline writes to
     raw["paths"]["tmp"] = str(tmp_path / "stage")
     # No source registry unless a test brings one (tests/discovery/test_registry.py copies the shipped config/sources.yaml): the
     # shipped one names OpenAI's Ashby board and 20 alert senders, which no other test wants to read or to fake.
     raw["paths"]["sources"] = str(tmp_path / "sources.yaml")
     raw["paths"]["calibration"] = str(tmp_path / "calibration")
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords
-    (tmp_path / "Companies").mkdir()                      # only `careerops init` creates the real one
+    (tmp_path / "Companies").mkdir()                      # the user's own folder: init never creates it
+    (tmp_path / "Auto").mkdir()                           # only `careerops init` creates the real one
     # A fictional profile, never the user's real one (config/profile/): the real bank changes as the user adds skills
     # (it gained Kubernetes), and tests about gaps and guards must not move with it.
     raw["paths"]["fact_bank"] = str(PROFILE_FIX / "fact_bank.yaml")

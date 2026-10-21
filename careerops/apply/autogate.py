@@ -284,7 +284,7 @@ def duplicate_reason(db, settings, job: Mapping[str, Any], log: list[dict[str, s
         return "already applied (database)"
     if db.conn.execute("SELECT 1 FROM outcomes WHERE job_id=? AND event='applied'", (jid,)).fetchone():
         return "already applied (outcome log)"
-    if _own_role(db, settings.path("applications"), jid):
+    if _own_role(db, settings.path("applications_auto"), jid):
         return "already applied (archive)"
     if jid in autolog.clicked_ids(log):
         return "already auto-submitted (data/live/applied_auto.csv)"
@@ -292,7 +292,7 @@ def duplicate_reason(db, settings, job: Mapping[str, Any], log: list[dict[str, s
     for r in db.conn.execute("SELECT id, company, title, location FROM jobs WHERE id<>? AND (status IN (?,?,?) OR applied_at IS NOT NULL)",
                              (jid, *APPLIED_STATUSES)):
         known.add(r["company"], r["title"], r["location"] or "", f"already applied (database: {r['id']})")
-    for company, role in discover.archive_pairs(settings.path("applications")):
+    for company, role in discover.archive_pairs(settings.archive_roots()):
         known.add(company, role, "", f"already applied (archive: {company}/{role})")
     discover.add_aiapply(settings, known)
     where = known.where(str(job.get("company") or ""), str(job.get("title") or ""), str(job.get("location") or ""))

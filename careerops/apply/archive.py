@@ -135,7 +135,11 @@ def preflight(db: DB, settings, job, rep: dict, *, applied_on: date | None = Non
     """Everything that can be checked without writing: archive root, letter, wrong-file guard, folder choice, path
     length. Raises ArchiveError (nothing has changed). Run before opening a form and again before archiving."""
     job = dict(job)
-    root = settings.path("applications")
+    root = settings.path("applications_auto")
+    ro = settings.path("applications")                   # the user's own folder: read-only, the archive never goes in or around it
+    if _inside(root, ro) or _inside(ro, root):
+        raise ArchiveError(f"paths.applications_auto ({root}) and paths.applications ({ro}) must not contain each other: "
+                           f"paths.applications is read-only")
     if not root.is_dir():
         raise ArchiveRootMissing(f"archive root {root} does not exist — run `careerops init` to create it "
                                  f"(nothing was created or changed)")

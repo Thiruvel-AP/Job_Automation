@@ -52,7 +52,7 @@ def test_the_guard_blocks_reading_the_real_fact_bank_and_applicant_however_the_p
 def test_the_guard_allows_the_fixture_profile_and_the_rest_of_config(tmp_path):
     assert yaml.safe_load((PROFILE_FIX / "fact_bank.yaml").read_text(encoding="utf-8"))["identity"]["name"] == "Ada Lovelace"
     assert yaml.safe_load((PROFILE_FIX / "applicant.yaml").read_text(encoding="utf-8"))["first_name"] == "Ada"
-    assert (ROOT / "config" / "settings.yaml").read_text(encoding="utf-8")
+    assert (ROOT / "config" / "sources.yaml").read_text(encoding="utf-8")
 
 
 def test_the_fixture_profile_passes_the_same_doctor_checks_as_a_real_one():

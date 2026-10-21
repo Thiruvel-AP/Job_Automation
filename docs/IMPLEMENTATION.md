@@ -1095,3 +1095,23 @@ you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywo
    (6, Chromium: a new draft is not used without `y` and nothing is submitted; a reused answer goes through).
 
 Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
+
+## 5aa. Round 12 — the write folder, tests that never read your settings, stale answers (2026-10-21) — **done** (offline tests only; no live form, no real model, no real data)
+
+1. **`paths.applications_auto`.** `paths.applications` is the user's own folder of past submissions and is READ only. The pipeline writes its archive (`apply/archive.py`:
+   `preflight`, `record_application`) only to `paths.applications_auto`; both are read for the duplicate check (`autogate`, `discover.Known`), the `discover --ats` company
+   list (`seeds.archive_names`), `autoapply.default_history` and `outcomes --import-archive`. `config.Settings.archive_roots()` lists both; `Settings.path("applications_auto")`
+   falls back to the built-in `data/applications_auto` when the settings file has no such key (`config.DEFAULT_PATHS`), so an old settings file can never send a write to the
+   user's folder. `preflight` refuses an `applications_auto` inside or around `applications`. `live` snapshots both folders around each job: one new Company/Role folder may
+   appear in `applications_auto`; any change at all in `applications` stops the session (`EXIT_ARCHIVE`). `careerops init` creates `applications_auto`, never `applications`.
+   `--mock` redirects `applications_auto` under `data/mock/` even when the key is absent. `config/settings.yaml` is the user's: add `applications_auto: data/applications_auto`
+   there by hand (the code works without it).
+2. **Tests never read the real `config/settings.yaml`.** `tests/conftest.py` points `CAREEROPS_SETTINGS` (read by `config.load_settings` when no path is given) at
+   `tests/fixtures/config/settings.yaml` (a copy; `apply.mode: assist` explicit) and its audit hook fails any test that opens the real file, even if it swallows the error
+   (`tests/test_no_real_settings.py`). The two tests that failed when `apply.mode: auto` was set now test the built-in default on a settings file with no `apply` section, and
+   the `world` fixture of `tests/test_live_cli.py` writes `apply.mode: assist` itself. A new settings key must be added to the test copy by hand.
+3. **Free-text claims and stale answers** (`apply/freetext.py`). Guard: in a "why" answer a sentence that says what the user did or used ("I used X", "my experience") is checked
+   against the fact bank, the chosen entries, the company and the title, never the job ad (before this, a tool outside the taxonomy that only the ad names passed). A library
+   record keeps a sha256 of each fact-bank entry (with its bullet) and motivation it was built from (`Record.digests`); `Library.find` skips a record whose source changed, was
+   removed, or whose digest was never recorded (lines written before this round are asked about once more). The ad and the hook are the job's own and are not digested.
+   Tests: `tests/apply/test_freetext.py` (+17), `tests/apply/test_applications_auto.py`, `tests/test_no_real_settings.py`.

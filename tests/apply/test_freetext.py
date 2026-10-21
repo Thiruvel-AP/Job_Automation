@@ -1,13 +1,14 @@
 """Free-text form answers (apply/freetext.py): read the question and its limit, classify it, plan which fact-bank entries it may draw on, draft
 with the model (MockLLM here), guard the draft as strictly as the CV, have the person approve it once, and reuse what they approved. No network,
 no real model: `MockLLM` handlers stand in for the model and `ask` is a script."""
+import copy
 import json
 from datetime import date
 from pathlib import Path
 
 import pytest
 import yaml
-from conftest import PROFILE_FIX
+from conftest import PROFILE_FIX, SETTINGS_FIX
 
 from careerops.apply import answers as answers_mod
 from careerops.apply import freetext as ft
@@ -53,9 +54,9 @@ def llm_with(*drafts, ad_phrases=()):
 
 @pytest.fixture
 def make(settings):
-    def build(llm, *replies, job=None, rep=None, book=BOOK):
+    def build(llm, *replies, job=None, rep=None, book=BOOK, fb=FB):
         ask, out = Script(*replies), []
-        f = ft.for_job({**JOB, **(job or {})}, rep if rep is not None else REP, FB, llm, settings, book, ask=ask, out=out.append, today=TODAY)
+        f = ft.for_job({**JOB, **(job or {})}, rep if rep is not None else REP, fb, llm, settings, book, ask=ask, out=out.append, today=TODAY)
         f.script, f.lines = ask, out
         return f
     return build
@@ -374,7 +375,7 @@ def test_the_library_is_runtime_data_not_answers_yaml(settings, make):
     before = (PROFILE_FIX / "answers.yaml").read_bytes()
     make(llm_with(OK_LLM), "y").answer("Describe an LLM feature you are proud of", "", None)
     assert (PROFILE_FIX / "answers.yaml").read_bytes() == before and settings.path("answers_library").is_file()
-    assert "answers_library" in load_yaml(Path(ft.__file__).resolve().parents[2] / "config" / "settings.yaml")["paths"]
+    assert "answers_library" in load_yaml(SETTINGS_FIX)["paths"]               # the test copy: the real settings file is never read
 
 
 def test_freetext_only_reads_the_users_files_and_writes_only_the_library():
@@ -382,3 +383,141 @@ def test_freetext_only_reads_the_users_files_and_writes_only_the_library():
     assert "answers_mod.save" not in src and ".save(" not in src                      # answers.yaml: only the `save` prompt of the filler appends to it
     assert src.count("open(") == 2 and 'open(self.path, "x"' in src and 'open(self.path, "a"' in src      # the library: created once, appended to
     assert "write_text" not in src and "yaml" not in src.replace("answers.yaml", "").replace("fact_bank.yaml", "").replace("applicant.yaml", "").replace(".yaml", "")
+
+
+# ------------------------------------------------------------------ the claim guard: the ad is never evidence about you
+def with_ad(extra: str) -> dict:
+    return {"description": JD + "\n" + extra}
+
+
+@pytest.mark.parametrize("tool", ["Databricks", "Palantir Foundry"])
+@pytest.mark.parametrize("question,draft_for", [
+    ("Describe an LLM feature you are proud of", "I built a tool-calling LLM agent (LangChain, AWS Bedrock) at Northwind Research Lab on {tool}."),
+    ("Why are you interested in this role?", "I want to build and evaluate LLM agents on a research data platform, and I used {tool} for that at Northwind Research Lab."),
+    ("Why Northwind Health AI?", f"Northwind Health AI {AD_PHRASE}, and I used {{tool}} to do the same kind of work."),
+])
+def test_a_draft_that_claims_a_tool_only_the_job_ad_names_is_rejected(make, tool, question, draft_for):
+    """The ad may be quoted for claims about the company and the role, never for what the user did or used."""
+    draft = draft_for.format(tool=tool)
+    llm = llm_with(draft, ad_phrases=[AD_PHRASE])
+    f = make(llm, "", job=with_ad(f"You will work with {tool} every day."))
+    assert tool in f.ad and tool.lower() not in ft._fact_corpus(FB).lower()           # it is in the ad and nowhere in the user's sources
+    assert f.answer(question, "", None) == "" and len(llm.seen) == 2                    # both drafts fail: nothing is offered
+    assert not any("[y] use" in p for p in f.script.prompts)
+    assert tool.split()[0].lower() in " ".join(llm.seen[1]["problems"]).lower()
+    assert not [r for r in f.lib.records() if tool in r.answer]
+
+
+def test_the_same_tool_is_fine_once_it_is_in_the_fact_bank(make):
+    fb = copy.deepcopy(FB)
+    fb["skills"]["Data & Cloud"].append("Databricks")
+    fb["experience"][0]["bullets"][0]["text"] += " Ran the evaluation jobs on Databricks."
+    draft = "I built a tool-calling LLM agent (LangChain, AWS Bedrock) at Northwind Research Lab and ran the evaluation jobs on Databricks."
+    f = make(llm_with(draft), "y", job=with_ad("You will work with Databricks every day."), fb=fb)
+    assert f.answer("Describe an LLM feature you are proud of", "", None) == draft
+
+
+# ------------------------------------------------------------------ a stored answer goes stale when its sources change
+Q_NEW = "Tell us about an LLM feature you are proud of"
+Q_OLD = "Describe an LLM feature you are proud of"
+
+
+def approve_one(make, settings):
+    first = make(llm_with(OK_LLM), "y")
+    assert first.answer(Q_OLD, "", None) == OK_LLM and first.last == "approved"
+    (rec,) = [r for r in records(settings) if r["company"] == "Northwind Health AI"]
+    return rec
+
+
+def reuse_attempt(make, **kw):
+    llm = llm_with("a fresh draft: never shown")
+    return make(llm, **kw), llm
+
+
+def edit_bullet(fb, bullet_id, **change):
+    for sec in ("experience", "projects"):
+        for e in fb[sec]:
+            for b in e["bullets"]:
+                if b["id"] == bullet_id:
+                    b.update({k: b.get(k, "") + v for k, v in change.items()})
+
+
+def test_an_approved_answer_records_what_it_was_built_from(make, settings):
+    rec = approve_one(make, settings)
+    assert rec["source_ids"] and set(rec["digests"]) == set(rec["source_ids"]) and all(len(d) == 64 for d in rec["digests"].values())
+    again, llm = reuse_attempt(make)
+    assert again.answer(Q_NEW, "", None) == OK_LLM and again.last == "reused" and llm.seen == []       # unchanged: reused
+
+
+def test_a_stale_library_answer_is_not_reused_when_a_fact_bank_bullet_it_came_from_changed(make, settings):
+    rec = approve_one(make, settings)
+    fb = copy.deepcopy(FB)
+    edit_bullet(fb, rec["source_ids"][0], text=" Also presented it at a conference.")
+    again, llm = reuse_attempt(make, fb=fb)
+    again.answer(Q_NEW, "", None)
+    assert again.last != "reused" and len(llm.seen) >= 1                                              # drafted afresh, never the old text
+
+
+def test_a_stale_library_answer_is_not_reused_when_the_entry_around_the_bullet_changed(make, settings):
+    rec = approve_one(make, settings)
+    fb = copy.deepcopy(FB)
+    for sec in ("experience", "projects"):
+        for e in fb[sec]:
+            if any(b["id"] == rec["source_ids"][0] for b in e["bullets"]):
+                e["situation"] = "A different situation than the one the answer was approved against"
+    again, llm = reuse_attempt(make, fb=fb)
+    again.answer(Q_NEW, "", None)
+    assert again.last != "reused" and llm.seen
+
+
+def test_a_stale_library_answer_is_not_reused_when_a_source_entry_was_removed(make, settings):
+    rec = approve_one(make, settings)
+    fb = copy.deepcopy(FB)
+    for sec in ("experience", "projects"):
+        for e in fb[sec]:
+            e["bullets"] = [b for b in e["bullets"] if b["id"] != rec["source_ids"][0]]
+    again, llm = reuse_attempt(make, fb=fb)
+    again.answer(Q_NEW, "", None)
+    assert again.last != "reused" and llm.seen
+
+
+def test_a_change_to_an_entry_the_answer_did_not_use_leaves_it_reusable(make, settings):
+    rec = approve_one(make, settings)
+    fb = copy.deepcopy(FB)
+    other = next(b["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"] if b["id"] not in rec["source_ids"])
+    edit_bullet(fb, other, text=" Changed after approval.")
+    again, llm = reuse_attempt(make, fb=fb)
+    assert again.answer(Q_NEW, "", None) == OK_LLM and again.last == "reused" and llm.seen == []
+
+
+def test_an_answer_stored_without_a_record_of_its_sources_is_not_reused(make, settings):
+    """A library line written before digests were kept cannot be shown to be unchanged: it is asked about again, not reused."""
+    approve_one(make, settings)
+    path = settings.path("answers_library")
+    lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    for d in lines:
+        d.pop("digests", None)
+    path.write_text("\n".join(json.dumps(d) for d in lines) + "\n", encoding="utf-8")
+    again, llm = reuse_attempt(make)
+    again.answer(Q_NEW, "", None)
+    assert again.last != "reused" and llm.seen
+
+
+def test_the_seeded_answers_have_no_source_of_yours_to_go_stale(make):
+    fb = copy.deepcopy(FB)
+    for e in fb["experience"]:
+        e["situation"] = "changed"
+    f = make(llm_with("never used"), fb=fb)
+    assert f.answer("Tell us about an LLM system you shipped", "", None) == SEED_A1 and f.last == "reused"
+
+
+def test_a_why_company_answer_goes_stale_when_a_motivation_changed(make):
+    make(llm_with(WHY, ad_phrases=[AD_PHRASE]), "y").answer("Why Northwind Health AI?", "", None)
+    same = make(llm_with("x"))
+    assert same.answer("Why Northwind Health AI?", "", None) == WHY and same.last == "reused"
+    changed = answers_mod.AnswerBook(BOOK.entries, ["I now want something else entirely."] + list(BOOK.motivations[1:]), BOOK.style)
+    llm = llm_with(WHY, ad_phrases=[AD_PHRASE])
+    again = make(llm, "", book=changed)
+    again.answer("Why Northwind Health AI?", "", None)
+    assert again.last != "reused" and llm.seen
+

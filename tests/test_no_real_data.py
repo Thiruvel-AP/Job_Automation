@@ -39,7 +39,7 @@ def test_guard_blocks_open_sqlite_pathlib_os_open_and_relative_paths(monkeypatch
 def test_guard_allows_tmp_paths_and_the_rest_of_the_repo(tmp_path):
     DB(tmp_path / "x.db")
     (tmp_path / "f.txt").write_text("ok")
-    assert (ROOT / "config" / "settings.yaml").read_text(encoding="utf-8")
+    assert (ROOT / "config" / "sources.yaml").read_text(encoding="utf-8")
     assert not str(tmp_path).startswith(REAL_DATA)
 
 

@@ -14,8 +14,9 @@ import requests
 # ("# CONFIRM"), so a marker directly followed by a quote is not an item.
 OPEN_ITEM = re.compile(r'TODO|#\s*CONFIRM\b(?!")')
 
-# `applications` is the user's archive root: init creates it only if missing and never touches existing contents.
-DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications", "tmp",
+# `applications_auto` is where the pipeline writes its archive: init creates it only if missing and never touches existing contents.
+# `applications` is the user's own folder of past submissions: read-only, init never creates it.
+DATA_DIRS = ("register_dir", "companies_house_dir", "outputs", "browser_profile", "logs", "applications_auto", "tmp",
              "calibration")
 CALIBRATION_SUBDIRS = ("jds", "reference")      # inside paths.calibration; init adds them, never touches what is in them
 FILE_PARENTS = ("db", "excel", "learning", "preferences")

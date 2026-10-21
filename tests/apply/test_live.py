@@ -66,7 +66,7 @@ class Fake:
     def mark_applied(self, jid, confirmation):
         self._enter("mark_applied", jid)
         job = self.db.job(jid)
-        root = self.s.path("applications")
+        root = self.s.path("applications_auto")                  # the folder the pipeline writes its archive to
         role = root / job["company"] / job["title"]
         role.mkdir(parents=True)
         (role / "CV.pdf").write_bytes(b"cv")
@@ -93,8 +93,8 @@ class Fake:
 
 @pytest.fixture
 def archive(settings):
-    """A small archive of 'submitted' applications that no test may change."""
-    root = settings.path("applications")
+    """A small archive of 'submitted' applications (in paths.applications_auto) that no test may change."""
+    root = settings.path("applications_auto")
     role = root / "Old Co" / "Data Scientist"
     role.mkdir(parents=True)
     (role / "CV.pdf").write_bytes(b"submitted CV")
@@ -267,7 +267,8 @@ def test_the_snapshot_is_taken_before_add_jd_and_compared_after_the_last_step(db
     order = []
     from careerops.apply import live as live_mod, snapshot
     real = snapshot.take
-    monkeypatch.setattr(live_mod.snapshot, "take", lambda root: order.append("snapshot") or real(root))
+    auto = settings.path("applications_auto")                    # the user's own folder is snapshotted beside it; the order is about the one that is written to
+    monkeypatch.setattr(live_mod.snapshot, "take", lambda root: (order.append("snapshot") if root == auto else None) or real(root))
     orig_add = manual.add_jd
     monkeypatch.setattr(live_mod.manual, "add_jd", lambda *a, **k: order.append("add_jd") or orig_add(*a, **k))
     put(inbox, "1.txt", jd)
