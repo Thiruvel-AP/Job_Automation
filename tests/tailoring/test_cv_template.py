@@ -465,6 +465,10 @@ def _bank_with(per_job: int, per_project: int, projects: int = 5) -> dict:
     fb = _bank()
     fb["experience"] = [{**e, "bullets": e["bullets"][:per_job]} for e in fb["experience"]]
     fb["projects"] = [{**p, "bullets": p["bullets"][:per_project]} for p in fb["projects"][:projects]]
+    from careerops.hook import find_number
+    kept = [b["id"] for e in fb["experience"] for b in e["bullets"] if find_number(b)]
+    for entry in fb["hook_library"]:                                  # the library's proof bullet must still be in the cut bank
+        entry["proof"] = kept[0] if entry["proof"] not in [b["id"] for e in fb["experience"] for b in e["bullets"]] else entry["proof"]
     return fb
 
 

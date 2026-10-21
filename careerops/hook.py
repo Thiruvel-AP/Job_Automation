@@ -15,16 +15,16 @@ a numbered project bullet, a bullet without a number (the hook then carries the 
 to the more recent bullet (the fact bank lists the newest entry first). `build_hook` tries the best MAX_PROOFS of them.
 
 How the strings are made: NO MODEL WRITES THEM. The fact bank's `hook_library` (the user's own wording, one entry per idea: `id`,
-`proof` bullet id, `terms`, `headline`, `profile_line`, `letter_line`) is the only source. The entry with the highest sum of keyword
-weight x [the keyword is one of its `terms`] wins (a tie goes to the earlier entry; an entry that scores nothing is not picked), and
-its three strings are used word for word: the headline under the name, profile sentence 1, letter sentence 1. An entry whose proof
-bullet is not in the bank, or that names a deny-listed term, is skipped with a note. The problem phrase (the call to action's
-subject) is the entry's own terms that the ad asked for, as a lower-case noun phrase. When the bank has no library, or no entry
-matches the ad, the strings come from a fixed code template over the same checked pieces (`template_strings`; `problems` checks them:
-the number is in it verbatim, no number the proof does not have, no deny-listed term, no unsupported qualifier or name, none of the
-vague adjectives, within its length, not the proof bullet pasted back); if even the template fails for every proof tried the hook is
-None and `notes` says why (the run reports it, see tailor._tailor). Nothing here writes the fact bank: rephrasing is allowed, facts
-are not.
+`proof` bullet id, `terms`, `headline`, `profile_line`, `letter_line`) is the only source. An entry is ELIGIBLE only when its `terms`
+hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords (weight, then the list order the analysis gave). Among the eligible
+the highest sum of keyword weight x [the keyword is one of its `terms`] wins (a tie goes to the earlier entry), and its three strings are
+used word for word: the headline under the name, profile sentence 1, letter sentence 1. `Hook.reason` says why it won: the overlapping
+top keywords and their weights. An entry whose proof bullet is not in the bank, or that names a deny-listed term, is skipped with a
+note. The problem phrase (the call to action's subject) is the entry's own terms that the ad asked for, as a lower-case noun phrase.
+When no entry is eligible (or the bank has no library) there is NO hook: build_hook returns None, `notes` says why, and the CV keeps
+the role family's headline (no number, no hook line, no proof bullet moved, no hook letter; see tailor._tailor). Nothing writes a new
+hook: no model and no code template (`template_strings` and `problems` remain only as helpers, build_hook no longer calls them).
+`headline_lint` warns (never rewrites) about a library headline that is long, carries several numbers or names a hardware unit.
 """
 from __future__ import annotations
 
@@ -50,6 +50,11 @@ MIN_AD_NOUNS = 2               # words of the problem clause that the ad also us
 PROBLEM_TERMS = 3              # entry terms the ad asked for that name a library hook's problem phrase
 PHRASE_WORDS = 4               # words of the bullet a template hook quotes from the number on (short, so it is not a paste)
 MAX_PROOFS = 4                 # proof bullets tried, best first, before the template hook is given up
+TOP_KEYWORDS = 10              # a library hook is judged against the ad's heaviest keywords only
+MIN_OVERLAP = 2                # ... and is eligible only when its terms hit at least this many of them
+LINT_HEADLINE_MAX = 60         # characters; a longer library headline gets a lint warning (the CV limit is HEADLINE_MAX)
+_LINT_NUMBER = re.compile(r"(?<![A-Za-z0-9])\d+(?:[.,:]\d+)*")                                  # "65", "11,459", "8.2", "200:1"; not the 4 of "T4"
+_LINT_UNIT = re.compile(r"(?<![A-Za-z])(?:(?i:gb|mb|ram|gpu|cpu)|ms)(?![A-Za-z])")             # a hardware or resource unit
 _STOP = frozenset("""with that this from have been into their over using used which what when where while also about than then
     them they were will would could should your more most such each some team work works working role roles help helps
     and the for you our are not but all can has how its new may who use""".split())
@@ -71,7 +76,9 @@ class Hook:
     flags: list[str] = field(default_factory=list)
     source: str = "template"                      # library (the user's hook_library, word for word) | template (code, no library match)
     notes: list[str] = field(default_factory=list)     # why a library entry or a template was refused
-    hook_id: str = ""                             # the hook_library entry's id ("" for a template hook)
+    hook_id: str = ""                             # the hook_library entry's id
+    overlap: list[list] = field(default_factory=list)  # [[keyword, weight], ...]: the ad's top keywords the entry's terms hit
+    reason: str = ""                              # why this entry won, printed on the review screen
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -388,18 +395,59 @@ def find_bullet(fb: dict, bullet_id: str) -> tuple[str, dict, dict] | None:
     return next(((kind, e, b) for kind, e, b, _ in _entries(fb) if b["id"] == bullet_id), None)
 
 
+def top_keyword_overlap(entry: dict, kws: list[Keyword]) -> list[tuple[str, float]]:
+    """[(keyword, weight)] for the ad's TOP_KEYWORDS heaviest keywords (weight, then list order) that the entry's `terms` hit, heaviest first."""
+    top = sorted(range(len(kws)), key=lambda i: (-kws[i].weight, i))[:TOP_KEYWORDS]
+    hit = _hits(" ".join(str(t) for t in entry.get("terms") or []), kws)
+    return [(kws[i].term, float(kws[i].weight)) for i in top if i in hit]
+
+
+def _weights(pairs) -> str:
+    return ", ".join(f"'{t}' ({w:g})" for t, w in pairs)
+
+
+def selection_reason(entry_id: str, overlap, score: float) -> str:
+    """Why a library entry won, for the review screen: the overlapping top keywords with their weights."""
+    total = sum(w for _, w in overlap)
+    return (f"{entry_id} won: its terms hit {len(overlap)} of the ad's top {TOP_KEYWORDS} keywords, {_weights(overlap)} "
+            f"(top-keyword weight {total:g}; all-keyword score {score:g})")
+
+
+def headline_lint(headline: str) -> list[str]:
+    """Warnings about a hook headline; it is never rewritten. Over LINT_HEADLINE_MAX characters, more than one number, or a hardware or
+    resource unit (GB, MB, RAM, GPU, ms, CPU)."""
+    text = _clean(headline)
+    out = []
+    if len(text) > LINT_HEADLINE_MAX:
+        out.append(f"{len(text)} characters > {LINT_HEADLINE_MAX}")
+    nums = _LINT_NUMBER.findall(text)
+    if len(nums) > 1:
+        out.append(f"more than one number ({', '.join(nums)})")
+    units = list(dict.fromkeys(_LINT_UNIT.findall(text)))
+    if units:
+        out.append(f"hardware or resource unit ({', '.join(units)})")
+    return out
+
+
+def library_lint(fb: dict) -> list[tuple[str, str]]:
+    """[(entry id, warning)] for every hook_library headline that headline_lint complains about (read only)."""
+    return [(str(e["id"]), w) for e in library(fb) for w in headline_lint(str(e.get("headline") or ""))]
+
+
 def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = None) -> dict | None:
-    """The library entry to use for this ad: {"entry", "score", "kind", "bullet_entry", "bullet"}, or None. Highest score first, a tie to
-    the earlier entry in the library; an entry that scores nothing is never picked. An entry is skipped (and `notes` says why) when
-    its proof bullet is not in the fact bank, when a string is missing, or when it (or its proof bullet) names a deny-listed term."""
+    """The library entry to use for this ad: {"entry", "score", "kind", "bullet_entry", "bullet", "overlap", "reason"}, or None. Only an
+    entry whose terms hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords is eligible. Highest score first, a tie to
+    the earlier entry in the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a
+    string is missing, or when it (or its proof bullet) names a deny-listed term. None adds a note naming the closest entry."""
     notes = notes if notes is not None else []
     deny = fb.get("deny_terms", [])
     scores = library_scores(fb, kws)
     entries = library(fb)
+    overlaps = {str(e["id"]): top_keyword_overlap(e, kws) for e in entries}
     for e in sorted(entries, key=lambda e: (-scores[str(e["id"])], entries.index(e))):
         score, eid = scores[str(e["id"])], str(e["id"])
-        if score <= 0:
-            break
+        if len(overlaps[eid]) < MIN_OVERLAP:
+            continue
         found = find_bullet(fb, str(e.get("proof") or ""))
         if found is None:
             notes.append(f"hook_library '{eid}': proof bullet {e.get('proof')!r} is not in the fact bank; entry skipped")
@@ -413,7 +461,12 @@ def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = N
         if denied:
             notes.append(f"hook_library '{eid}': names a deny-listed term ({', '.join(denied)}); entry skipped")
             continue
-        return {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet}
+        return {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet, "overlap": overlaps[eid],
+                "reason": selection_reason(eid, overlaps[eid], score)}
+    if entries:
+        best = max(entries, key=lambda e: (len(overlaps[str(e["id"])]), -entries.index(e)))
+        notes.append(f"no hook_library entry hits at least {MIN_OVERLAP} of the ad's top {TOP_KEYWORDS} keywords (closest: '{best['id']}' "
+                     f"with {len(overlaps[str(best['id'])])}: {_weights(overlaps[str(best['id'])]) or 'none'})")
     return None
 
 
@@ -442,39 +495,21 @@ def library_hook(picked: dict, fb: dict, kws: list[Keyword], jd: str, notes: lis
     role = most_relevant_role(fb, bullet_hook_scores(fb, kws))
     return Hook(entry_problem(e, kws, jd, bank_names(fb)), bullet["id"], number, _clean(e["headline"]), _clean(e["profile_line"]), _clean(e["letter_line"]),
                 owner["id"], kind, org_short(owner, kind), role, picked["score"], [] if number else [NO_NUMBER_FLAG], "library",
-                list(notes), str(e["id"]))
+                list(notes), str(e["id"]), [[t, w] for t, w in picked["overlap"]], picked["reason"])
 
 
 def build_hook(job: dict, kws: list[Keyword], fb: dict, llm=None, role: str = "", team: str = "", company_hook: str = "",
                notes: list[str] | None = None) -> Hook | None:
-    """The hook for this job. From the fact bank's `hook_library` when an entry matches the ad (see the module docstring): its strings
-    are used word for word and no model is called (`llm` is accepted for the old signature and never used). Without a library, or with
-    no matching entry, the strings come from the code template over the best proof bullets; None when the fact bank has no usable bullet
-    or not even the template passes its checks for any of the MAX_PROOFS best proofs (then the CV and letter have no hook; nothing is
-    faked, and `notes` -- when given -- says why, so that the run can report it)."""
+    """The hook for this job: the fact bank's `hook_library` entry that hits at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest
+    keywords (see the module docstring), its strings word for word, no model. None when no entry qualifies (or there is no library):
+    nothing is written instead, the CV keeps the role family's headline with no number, and `notes` says why so that the run can
+    report it. `llm`, `role`, `team` and `company_hook` are accepted for the old signature and never used."""
     notes = notes if notes is not None else []
-    jd = job.get("description") or ""
     picked = pick_library_entry(fb, kws, notes)
     if picked:
-        return library_hook(picked, fb, kws, jd, notes)
-    if library(fb):
-        notes.append("no hook_library entry matched the ad's keywords: the code template is used")
-    candidates = proof_candidates(fb, kws)[:MAX_PROOFS]
-    if not candidates:
-        notes.append("no usable bullet in the fact bank (every bullet names a deny-listed term, or there is none)")
-        return None
-    role = role or fb["identity"].get("headline", "")
-    for proof in candidates:
-        entry, bullet = proof["entry"], proof["bullet"]
-        strings = template_strings(proof, kws, fb, role, job["company"], team, jd)
-        hk = Hook(strings["problem"], bullet["id"], proof["number"], strings["headline"], strings["profile_line"], strings["letter_sentence"],
-                  entry["id"], proof["kind"], org_short(entry, proof["kind"]), proof["relevant_role"], proof["score"],
-                  [] if proof["number"] else [NO_NUMBER_FLAG], "template", list(notes))
-        bad = problems(hk, fb, kws, jd, job["company"], role, company_hook)
-        if not bad:
-            hk.notes = list(notes)
-            return _typeset(hk, kws)
-        notes.append(f"hook template rejected (proof {bullet['id']}): " + "; ".join(bad)[:300])
+        return library_hook(picked, fb, kws, job.get("description") or "", notes)
+    if not library(fb):
+        notes.append("the fact bank has no hook_library")
     return None
 
 

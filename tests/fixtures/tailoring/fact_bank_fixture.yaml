@@ -166,3 +166,15 @@ deny_terms:
   - kubernetes
   - terraform
   - dbt
+
+# One broad hook for every test that tailors with this bank. A hook needs 2 of the ad's top 10 keywords and nothing writes one any more,
+# so this entry's terms name the skills the fixture ads and the mock keyword lists ask for. Tests about "no hook" pop `hook_library`;
+# tests/fixtures/tailoring/hook_library_fixture.yaml is the library the hook tests use instead.
+hook_library:
+  - id: h_fixture
+    proof: a4
+    terms: [python, llm agents, llm, llms, agents, agentic, aws, lambda, docker, fastapi, sql, pandas, pytorch, scikit-learn, mlflow, pytest, testing,
+            production, deployment, forecasting, evaluation, machine learning]
+    headline: "LLM agent shipped to AWS Lambda behind ~65 automated tests"
+    profile_line: "Data scientist who takes models from prototype to production: at Northwind I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests."
+    letter_line: "At Northwind I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests."

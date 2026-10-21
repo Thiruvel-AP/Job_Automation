@@ -1632,14 +1632,14 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             analysis_warnings.append("skills: the JD mentions SQL or databases but the fact bank has no Databases skill row to show")
     sep, keep = date_separator(settings), hyphen_keywords(kws)
     cv_name, letter_name = _names(fb, settings)
-    # the hook (hook.py): the fact bank's hook_library entry for this ad, word for word (a code template without one): in the headline,
-    # profile line 1, the first bullet of its role and sentence 1 of the letter. No model writes any of it.
+    # the hook (hook.py): the fact bank's hook_library entry for this ad, word for word: in the headline, profile line 1, the first
+    # bullet of its role and sentence 1 of the letter. No model and no template writes any of it; no qualifying entry = the family headline.
     hook_notes: list[str] = []
     hk = hooks.build_hook(job, kws, fb, llm, headline, team, hook, notes=hook_notes) if hooks.enabled(settings) else None
-    hook_failed = hooks.enabled(settings) and hk is None          # on, but nothing passed its checks: say so, never drop it silently
+    hook_failed = hooks.enabled(settings) and hk is None          # on, but no entry qualified: say so, never drop it silently
     if hook_failed:
-        analysis_warnings.append("hook: none could be built, so there is no headline, no hook line, no proof bullet first and no hook "
-                                 "letter (" + "; ".join(hook_notes)[:400] + ")")
+        analysis_warnings.append(f"hook: no library hook qualifies, so the CV headline is the role family's '{headline}' with no number, "
+                                 "and there is no hook line, no proof bullet first and no hook letter (" + "; ".join(hook_notes)[:400] + ")")
     profile = assemble_profile(fb, kws, jd, hk)                  # the hook's profile line + profile_facts sentences, in code
     profile_text = profile["text"]
     # an award project moves to Certifications & Achievements unless the JD ranks it in the top three (or it holds the hook's proof):
@@ -1657,7 +1657,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                                          "family": fam["id"] if fam else None},
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")},
-                              "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes}
+                              "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
+                              "hook_family_headline": headline if hook_failed else ""}
 
     jac = sc["bullet_dedupe_jaccard"]
     ranking, best, cache = kws, None, {}

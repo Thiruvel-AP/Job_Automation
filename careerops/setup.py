@@ -139,6 +139,23 @@ def core_skill_checks(path: Path) -> list[tuple[str, bool, str]]:
     return [(f"core skills ({len(core_skills(fb))}) all evidenced and none denied", True, "")]
 
 
+def hook_lint_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor lines for the headlines of `hook_library` in the fact bank (read only): one warning per lint finding (hook.headline_lint:
+    over 60 characters, more than one number, a hardware or resource unit), or one passing line. A warning never fails the run, and
+    nothing is rewritten."""
+    from .config import load_yaml
+    from .hook import library, library_lint
+
+    if not path.exists():
+        return [("hook library headlines", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    found = library_lint(fb)
+    if found:
+        return [(f"hook '{eid}' headline: {msg}", WARN, "the lint never rewrites; edit the headline in fact_bank.yaml if you agree")
+                for eid, msg in found]
+    return [(f"hook library headlines ({len(library(fb))}) pass the lint", True, "")]
+
+
 PLACEHOLDER_DOMAINS = ("example.com", "example.org", "example.net")
 UK_POSTCODE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.I)
 
@@ -324,6 +341,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += model_checks(settings, ping)
     checks += judge_checks(settings)
     checks += core_skill_checks(settings.path("fact_bank"))
+    checks += hook_lint_checks(settings.path("fact_bank"))
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))

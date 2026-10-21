@@ -83,7 +83,7 @@ def test_the_call_to_action_names_the_problem_from_the_hook_entry_terms(hk, sett
     assert cta == f"Could we take 20 minutes to talk about {hk.problem}?"
     terms = {t.lower() for t in LIBRARY[0]["terms"]}
     assert {w.lower() for w in hk.problem.replace(",", " ").split()} - {"and"} <= terms
-    assert not any(w[0].isupper() and w not in ("AWS", "MLOps", "CI/CD") for w in hk.problem.replace(",", " ").split())
+    assert not any(w[0].isupper() and w not in ("AWS", "MLOps", "CI/CD", "Python", "SQL", "PyTorch") for w in hk.problem.replace(",", " ").split())
 
 
 # ---------------------------------------------------------------- the two sentences

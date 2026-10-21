@@ -230,38 +230,16 @@ def _run_on(bank: dict, tmp_path, llm: MockLLM):
 
 
 @pytest.mark.slow
-def test_a_bank_with_no_numbers_in_its_best_role_still_gets_a_hook_a_headline_and_a_letter(tmp_path):
-    """The real run lost its hook: the only numbered bullets were awkward (a '10-class head', a '3rd place', a project with a dash in its
-    name), the template failed its own checks and build_hook returned None without a word. Same shape here: no number in the role
-    that the ad matches best. The hook must still be built (from the next numbered bullet), and the letter must still be made."""
+def test_when_no_hook_qualifies_the_run_says_so_and_makes_no_old_style_letter(tmp_path):
     fb = load_yaml(FIXTURE)
-    for b in fb["experience"][0]["bullets"]:
-        b.pop("result", None)
-    az4 = next(b for b in fb["experience"][0]["bullets"] if b["id"] == "az4")
-    az4["text"] = "Took the agent from prototype to production on AWS Lambda, validated by a three-tier test framework (tool-level, API/integration, live agent)."
-    az5 = next(b for b in fb["experience"][0]["bullets"] if b["id"] == "az5")
-    az5["text"] = "Surveyed and explored heterogeneous source datasets, owning the identity-spine datasets and setting metadata boundaries."
-    fb.pop("hook_library", None)
-    rep = _run_on(fb, tmp_path, MockLLM())                                     # no library: the code template is used
-    hk = H.Hook.from_dict(rep["hook"])
-    assert rep["hook"] is not None and hk.source == "template" and hk.number, rep["hook_notes"]
-    assert rep["hook_placed"] == {"headline": True, "profile": True, "bullet": True, "number_in_pdf": True}
-    assert "—" not in hk.headline + hk.profile_line + hk.letter_sentence
-    a = rep["letters"]["A"]
-    assert a["status"] == "ok", (a["reason"], a["problems"])
-    assert hk.number in a["paragraphs"][0] and rep["letters"]["B"]["status"] == "none"
-
-
-@pytest.mark.slow
-def test_when_no_hook_can_be_built_the_run_says_so_and_makes_no_old_style_letter(tmp_path, monkeypatch):
-    monkeypatch.setattr(H, "template_strings", lambda *a, **k: {"problem": "x", "headline": "Data Scientist · x", "profile_line": "x",
-                                                               "letter_sentence": "x"})
-    rep = _run_on(load_yaml(FIXTURE), tmp_path, MockLLM())
-    assert rep["hook"] is None and rep["hook_notes"] and any(w.startswith("hook: none could be built") for w in rep["analysis_warnings"])
+    fb.pop("hook_library", None)                                              # nothing writes a hook: no library, no hook
+    rep = _run_on(fb, tmp_path, MockLLM())
+    assert rep["hook"] is None and rep["hook_notes"] and any(w.startswith("hook: no library hook qualifies") for w in rep["analysis_warnings"])
+    assert rep["hook_family_headline"] == rep["headline"] and "hook_headline" not in rep["context"]
     assert rep["letters"]["choice"] == "none" and rep["letter_pdf"] is None
     assert rep["letters"]["A"]["status"] == rep["letters"]["B"]["status"] == "none" and "no hook" in rep["letters"]["A"]["reason"]
     assert rep["letter"]["status"] == "none"
     from careerops.review import workflow
 
     lines = workflow.hook_lines(rep)
-    assert lines[0].startswith("Hook: none") and any(x.startswith("  !! why:") for x in lines), lines          # the review screen says why
+    assert lines[0].startswith("Hook: none qualifies") and any(x.startswith("  why:") for x in lines), lines          # the review screen says why

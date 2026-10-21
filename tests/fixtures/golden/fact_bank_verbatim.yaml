@@ -339,7 +339,7 @@ families:
 hook_library:
   - id: h_prod_tests
     proof: az4
-    terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype]
+    terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype, python, sql]
     headline: "ML from prototype to production: deployed on AWS behind ~65 tests"
     profile_line: "Data scientist who takes models from prototype to production: at Northfield Pharma Research I deployed an agent on AWS Lambda behind ~65 tests."
     letter_line: "Anaplan needs models taken from prototype to production, and at Northfield Pharma Research I did that for an agent, behind ~65 tests."

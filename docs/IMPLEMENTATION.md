@@ -766,7 +766,10 @@ failing test first (`tests/test_hook_library.py`, `tests/tailoring/test_profile_
    in the bank, with a missing string or with a deny-listed term is skipped with a note); `library_hook` uses `headline`, `profile_line`, `letter_line` word for word
    (no typesetting) and the entry's `proof` bullet first in its role (the existing `ensure_selected` / `proof_first`, with the entry's `situation:` opener).
    `Hook.hook_id` and `source: library`. The problem phrase is the entry's own `terms` that the ad asked for, a lower-case noun phrase
-   (`letter_rules.noun_phrase`). No library, or no entry that matches: the code template (also no model). **Deleted:** the `hook` model call (`_model_strings`,
+   (`letter_rules.noun_phrase`). **Changed 21 Oct:** an entry is eligible only when its `terms` hit at least 2 of the ad's top 10 weighted keywords (`top_keyword_overlap`, `MIN_OVERLAP`);
+   `Hook.overlap` / `Hook.reason` say why it won (shown on the review screen); `headline_lint` warns (review screen, `careerops doctor`; never rewrites) about a
+   headline over 60 characters, with more than one number or with GB / MB / RAM / GPU / ms / CPU. No eligible entry (or no library): NO hook, the family headline
+   with no number (`report["hook_family_headline"]`), no hook letter; the code template is no longer called by `build_hook` (`template_strings` and `problems` remain as helpers). **Deleted:** the `hook` model call (`_model_strings`,
    `ATTEMPTS`, `prompts.HOOK_*`, MockLLM's `hook`, `llm.max_tokens.hook`).
 2. **Profile is assembled** (`tailoring/profile.py`): `profile_line` + one or two `profile_facts` chosen by `fact_scores` (`pick_facts`, bank order on a
    tie), each ending in a full stop; a fact that names a deny-listed term, repeats a role title (`ROLE_PHRASES`: "Data Scientist") or restates the

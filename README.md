@@ -858,15 +858,17 @@ description LinkedIn cut off with "..." is marked in the diff; project technolog
 
 Every CV carries **one hook**, taken from your **`hook_library`** (top level of `config/profile/fact_bank.yaml`, written by you) and **never
 written by a model**. An entry is `{id, proof (a bullet id), terms, headline, profile_line, letter_line}`. For each job code scores every entry as
-the **sum of keyword weight x [the keyword is one of its `terms`]** and picks the highest (a tie goes to the earlier entry; an entry that scores
-nothing is never picked), then uses its strings **word for word**: the `headline` as the **12pt navy line under the name**, the `profile_line` as
+the **sum of keyword weight x [the keyword is one of its `terms`]**, but an entry is **eligible only when its `terms` hit at least 2 of the ad's top 10
+weighted keywords**; code picks the highest-scoring eligible one (a tie goes to the earlier entry), then uses its strings **word for word**: the `headline` as the **12pt navy line under the name**, the `profile_line` as
 **profile sentence 1**, the `proof` bullet **moved to the top of its role** (or project) with the entry's `situation:` opener, and the `letter_line`
 as **sentence 1 of the letter** when letters are on. Nothing is typeset or reworded. An entry whose proof bullet is not in the bank, or that names
 a deny-listed term, is skipped and `hook_notes` says why. The number is the first count-like string in the proof bullet's `result:` or `text`
-(a model version like "Haiku 4.5" is not a result), never invented; a proof with none carries the flag `hook has no number`. A bank with **no
-library, or no entry that matches the ad**, gets a hook from a fixed **code template** over the best proof bullets instead (checked: the number is
-in it, no new number, no deny-listed term, no unsupported qualifier or name, none of *passionate, proven, dynamic, results-driven, extensive,
-strong, skilled*, within its length, not a paste of any bullet), and the note says `no hook_library entry matched`. A reworded proof bullet that
+(a model version like "Haiku 4.5" is not a result), never invented; a proof with none carries the flag `hook has no number`. With **no
+library, or no eligible entry**, there is **no hook** and nothing is written in its place: the CV headline is the **role family's headline** (e.g.
+"Data Scientist") with no number, no hook line, no proof bullet moved and no hook letter; the report's `hook_notes` and the review screen name the closest
+entry. The review screen prints **why the hook won** (the overlapping top keywords and their weights) and a **lint warning** (never a rewrite) when its
+headline is over 60 characters, has more than one number, or names a hardware or resource unit (GB, MB, RAM, GPU, ms, CPU); `careerops doctor` lints every
+`hook_library` headline the same way. A reworded proof bullet that
 loses the number is kept in its fact-bank wording. `tests/golden/anaplan/` holds the hand-made Anaplan application (CV, letters A and B by hand, the ad,
 the keyword weights): the quality bar, checked by `tests/test_golden_anaplan.py` (strict ATS 72.5 within 0.1, the hook in all three places, two
 pages, letters of at most 250 words) and, on what the pipeline writes, by `tests/test_golden_pipeline.py`. `python -m careerops.golden <pipeline

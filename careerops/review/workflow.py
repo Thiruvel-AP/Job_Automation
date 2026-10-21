@@ -25,6 +25,7 @@ from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
 from ..discovery import applykind, freshness, priority as prio
 from ..discovery.gates import is_sponsor_flag
+from ..hook import headline_lint
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
@@ -218,11 +219,16 @@ def hook_lines(rep: dict) -> list[str]:
     hk = rep["hook"]
     if not hk:
         why = "; ".join(rep.get("hook_notes") or [])[:300]
-        return ["Hook: none (hook.enabled is off, or no bullet passed its checks): the CV and letter carry no hook",
-                *([f"  !! why: {why}"] if why else [])]
+        family = rep.get("hook_family_headline")
+        if family:
+            return [f"Hook: none qualifies, so the CV headline is the role family's '{family}' with no number (no hook line, no hook letter)",
+                    *([f"  why: {why}"] if why else [])]
+        return ["Hook: none (hook.enabled is off): the CV and letter carry no hook", *([f"  !! why: {why}"] if why else [])]
     out = [f"Hook {hk.get('hook_id') or '(code template)'}: {hk['problem']} | proof {hk['proof_bullet_id']} ({hk['org']}) | number "
            f"{hk['number'] or 'NONE'} [{hk['source']}]",
+           *([f"  why it won: {hk['reason']}"] if hk.get("reason") else []),
            f"  headline: {hk['headline']}",
+           *[f"  LINT WARNING (headline): {w}" for w in headline_lint(hk["headline"])],
            f"  profile sentence 1: {hk.get('profile_line', '')}",
            f"  letter sentence 1: {hk['letter_sentence']}"]
     placed = rep.get("hook_placed") or {}

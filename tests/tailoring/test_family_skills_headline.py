@@ -128,7 +128,7 @@ def test_the_family_headline_is_only_the_fallback_a_library_hook_headline_is_pri
     assert "Forward Deployed" not in hk.headline
 
 
-def test_with_no_library_entry_the_hook_headline_starts_from_the_family_headline_and_no_model_is_asked(settings, fb_fixture):
+def test_with_no_library_entry_there_is_no_hook_and_no_model_is_asked(settings, fb_fixture):
     class Boom:
         def json(self, *a, **k):
             raise AssertionError("no model writes a headline")
@@ -136,8 +136,9 @@ def test_with_no_library_entry_the_hook_headline_starts_from_the_family_headline
     fb = copy.deepcopy(fb_fixture)
     fb.pop("hook_library", None)
     kws = [Keyword("forecasting", 3.0, True), Keyword("demand", 2.0, True)]
-    hk = H.build_hook(fde_job(), kws, fb, Boom(), role="Forward Deployed Engineer")
-    assert hk is not None and hk.source == "template" and hk.headline.startswith("Forward Deployed Engineer · ")
+    notes: list[str] = []
+    assert H.build_hook(fde_job(), kws, fb, Boom(), role="Forward Deployed Engineer", notes=notes) is None      # the CV keeps the family headline
+    assert notes == ["the fact bank has no hook_library"]
 
 
 def test_a_title_in_no_family_falls_back_to_the_identity_headline(settings, fb_fixture):

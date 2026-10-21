@@ -59,11 +59,12 @@ def test_the_score_is_the_sum_of_weight_times_hit_over_the_entry_terms(bank):
 
 
 def test_a_tie_goes_to_the_entry_earlier_in_the_library(bank):
-    bank["hook_library"] = [entry("late", "a4", ["alpha"]), entry("early", "p2a", ["alpha"])]
+    kws = [Keyword("alpha", 2, True), Keyword("beta", 2, True)]
+    bank["hook_library"] = [entry("late", "a4", ["alpha", "beta"]), entry("early", "p2a", ["alpha", "beta"])]
     bank["hook_library"].reverse()                                                    # now: early, late
-    assert H.pick_library_entry(bank, [Keyword("alpha", 2, True)])["entry"]["id"] == "early"
+    assert H.pick_library_entry(bank, kws)["entry"]["id"] == "early"
     bank["hook_library"].reverse()
-    assert H.pick_library_entry(bank, [Keyword("alpha", 2, True)])["entry"]["id"] == "late"
+    assert H.pick_library_entry(bank, kws)["entry"]["id"] == "late"
 
 
 def test_no_entry_that_scores_nothing_is_picked(bank):
@@ -71,8 +72,8 @@ def test_no_entry_that_scores_nothing_is_picked(bank):
 
 
 def test_an_entry_whose_proof_bullet_is_not_in_the_bank_or_names_a_deny_listed_term_is_skipped(bank):
-    bank["hook_library"] = [entry("gone", "zz9", ["alpha", "beta"]), entry("denied", "a3", ["alpha"], headline="Docker and kubernetes at scale"),
-                            entry("fine", "a4", ["alpha"])]
+    bank["hook_library"] = [entry("gone", "zz9", ["alpha", "beta"]), entry("denied", "a3", ["alpha", "beta"], headline="Docker and kubernetes at scale"),
+                            entry("fine", "a4", ["alpha", "beta"])]
     notes: list[str] = []
     picked = H.pick_library_entry(bank, [Keyword("alpha", 2, True), Keyword("beta", 2, True)], notes)
     assert picked["entry"]["id"] == "fine"
@@ -109,19 +110,19 @@ def test_there_is_no_hook_model_call(bank):
 def test_the_problem_phrase_is_a_lower_case_noun_phrase_of_the_entry_terms_the_ad_asked_for(bank):
     hk = H.build_hook(anaplan_job(), golden_keywords(), bank, role="Data Scientist")
     words = hk.problem.replace(",", " ").split()
-    assert words and all(w.islower() or w in {"AWS", "CI/CD", "MLOps"} for w in words), hk.problem        # never "Production, Testing"
+    assert words and all(w.islower() or w in {"AWS", "CI/CD", "MLOps", "Python", "SQL", "PyTorch"} for w in words), hk.problem        # never "Production, Testing"
     assert "," in hk.problem or " and " in hk.problem
     assert {w.lower() for w in words} - {"and"} <= {t.lower() for t in bank["hook_library"][0]["terms"]}
 
 
-def test_a_bank_without_a_library_or_with_no_matching_entry_still_gets_the_code_template_hook(fb_fixture):
-    hk = H.build_hook(anaplan_job(), golden_keywords(), fb_fixture, role="Data Scientist")
-    assert hk is not None and hk.source == "template" and hk.hook_id == ""
+def test_a_bank_without_a_library_or_with_no_matching_entry_gets_no_hook_and_no_template(fb_fixture):
     bank = copy.deepcopy(fb_fixture)
+    bank.pop("hook_library")
+    assert H.build_hook(anaplan_job(), golden_keywords(), bank, role="Data Scientist") is None
     bank["hook_library"] = [entry("x", "a4", ["kubernetes-only-term"])]
     notes: list[str] = []
-    hk = H.build_hook(anaplan_job(), golden_keywords(), bank, role="Data Scientist", notes=notes)
-    assert hk.source == "template" and any("no hook_library entry" in n for n in notes), notes
+    assert H.build_hook(anaplan_job(), golden_keywords(), bank, role="Data Scientist", notes=notes) is None
+    assert any("no hook_library entry hits at least 2" in n for n in notes), notes
 
 
 def test_the_hook_id_survives_the_report_round_trip(bank):

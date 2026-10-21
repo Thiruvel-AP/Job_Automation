@@ -1,8 +1,9 @@
 # Fictional hook library for tests (the shape of `hook_library` in config/profile/fact_bank.yaml), written against the bullet ids of
-# fact_bank_fixture.yaml. The pipeline PICKS one entry per job by term overlap and uses its strings word for word.
+# fact_bank_fixture.yaml. The pipeline PICKS one entry per job by term overlap (an entry needs 2 of the ad's top 10 keywords; python, sql and pytorch
+# are in the first entry so that the golden Anaplan ad, whose top 10 are generic skills, qualifies it) and uses its strings word for word.
 - id: h_prod_tests
   proof: a4
-  terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype]
+  terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype, python, sql, pytorch]
   headline: "LLM agent shipped to AWS Lambda behind ~65 automated tests"
   profile_line: "Data scientist who takes models from prototype to production: at Northwind I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests."
   letter_line: "At Northwind I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests."

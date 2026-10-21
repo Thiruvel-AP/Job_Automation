@@ -1,8 +1,9 @@
 """The hook (careerops/hook.py): problem + one proof bullet + its number, in the headline, profile line 1, the first bullet of its
 role and sentence 1 of the letter.
 
-This file covers the CODE side: the number, the proof bullet and the template hook a bank without a `hook_library` (or without a
-matching entry) gets; tests/test_hook_library.py covers the library. No model writes a hook any more.
+This file covers the CODE side: the number and the proof bullet; tests/test_hook_library.py covers the library and
+tests/test_hook_selection.py the eligibility rule, the lint and the family-headline fallback. No model and no code template writes a
+hook any more: a bank without a `hook_library` (or without an eligible entry) gets no hook.
 
 Pure-logic tests use the fictional fact bank (tests/fixtures/tailoring/fact_bank_fixture.yaml) and a hand-made keyword list; the
 tailoring tests at the bottom render with xelatex (marked slow). No network, no model.
@@ -78,6 +79,7 @@ def test_with_no_number_the_best_bullet_is_used_and_flagged():
     fb = bank(entry("e1", "Acme", b("a1", "Deployed on AWS with Docker.", ["aws", "docker"]), b("a2", "Used Python.", ["python"])))
     proof = H.choose_proof(fb, KWS)
     assert proof["bullet"]["id"] == "a1" and proof["number"] == ""
+    fb["hook_library"] = [{"id": "x", "proof": "a1", "terms": ["aws", "docker"], "headline": "h", "profile_line": "p", "letter_line": "l"}]
     hk = H.build_hook(JOB, KWS, fb)
     assert hk is not None and H.NO_NUMBER_FLAG in hk.flags and hk.number == ""
 
@@ -104,21 +106,6 @@ def test_a_project_bullet_can_be_the_proof():
 def hook_bank():
     return bank(entry("e1", "Acme", b("a1", "Wrote a test framework of ~65 tests across 8 files for an LLM agent deployed on AWS.",
                                       ["llm agents", "aws", "pytest", "testing"], result="~65 tests across 8 files")))
-
-
-# ---------------------------------------------------------------- the template
-def test_template_hook_passes_every_check_and_carries_the_number_in_all_three_strings(fb_fixture):
-    from careerops.tailoring.scorer import taxonomy_keywords
-
-    jd = (Path(__file__).parent / "fixtures" / "tailoring" / "jd_northwind.txt").read_text(encoding="utf-8")
-    kws = taxonomy_keywords(jd)
-    job = {**JOB, "description": jd}
-    hk = H.build_hook(job, kws, fb_fixture, llm=None, role="AI Engineer")
-    assert hk is not None and hk.source == "template"
-    assert H.problems(hk, fb_fixture, kws, jd, job["company"], "AI Engineer") == []
-    assert hk.number and all(hk.number in s for s in (hk.headline, hk.profile_line, hk.letter_sentence))
-    assert len(hk.headline) <= H.HEADLINE_MAX and hk.headline.startswith("AI Engineer · ")
-    assert len(H._ad_nouns(hk.problem, jd)) >= H.MIN_AD_NOUNS
 
 
 def test_no_hook_rather_than_a_fake_one_when_there_is_no_bullet():
@@ -165,7 +152,7 @@ def test_keeps_number():
 def test_a_tailored_cv_carries_the_hook_in_all_three_places(settings, fb_fixture, job, tmp_path):
     rep = tailor.tailor_job(job, fb_fixture, MockLLM(), settings, settings.path("outputs"))
     hk = H.Hook.from_dict(rep["hook"])
-    assert hk.source == "template" and rep["hook_placed"] == {"headline": True, "profile": True, "bullet": True, "number_in_pdf": True}
+    assert hk.source == "library" and rep["hook_placed"] == {"headline": True, "profile": True, "bullet": True, "number_in_pdf": True}
     flat = " ".join(pdf_text(Path(rep["cv_pdf"])).split())
     assert " ".join(hk.headline.split()) in flat and " ".join(hk.profile_line.split()) in flat
     assert rep["context"]["profile"].startswith(hk.profile_line) and rep["context"]["hook_headline"] == hk.headline
@@ -226,58 +213,11 @@ def test_skilled_is_a_vague_adjective():
     assert "skilled" in H.VAGUE_ADJECTIVES
 
 
-def project_bank():
-    fb = bank(entry("e1", "Acme", b("a1", "Used Python.", ["python"])))
-    fb["projects"] = [{"id": "pj", "name": "Image Classification — CNN and Transfer Learning", "bullets": [
-        b("pj1", "Trained a CNN on CIFAR-10 and 2,500 held-out images, compared with ResNet50 transfer learning.",
-          ["deep learning", "pytorch"], result="2,500 held-out images")]}]
-    return fb
-
-
-def test_the_template_hook_survives_a_dash_in_the_project_name_and_a_deep_learning_keyword():
-    kws = [Keyword("deep learning", 3, True), Keyword("PyTorch", 3, True)]
-    jd = "We need deep learning and PyTorch skills to build models. " * 2
-    job = {**JOB, "description": jd}
-    notes: list[str] = []
-    hk = H.build_hook(job, kws, project_bank(), None, "Data Scientist", notes=notes)
-    assert hk is not None, notes
-    assert "—" not in hk.profile_line + hk.letter_sentence + hk.headline
-    assert hk.number == "2,500" and H.problems(hk, project_bank(), kws, jd, job["company"], "Data Scientist") == []
-
-
 def test_a_hook_that_cannot_be_built_says_why():
     fb = bank(entry("e1", "Acme", b("a1", "Ran 90 dbt models on AWS.", ["aws"])), deny=["dbt"])
     notes: list[str] = []
     assert H.build_hook(JOB, KWS, fb, None, "AI Engineer", notes=notes) is None
-    assert notes and "no usable" in notes[0], notes
-
-
-def test_a_template_that_fails_every_check_is_reported_not_dropped(monkeypatch):
-    monkeypatch.setattr(H, "template_strings", lambda *a, **k: {"problem": "x", "headline": "AI Engineer · x", "profile_line": "x",
-                                                                "letter_sentence": "x"})
-    notes: list[str] = []
-    assert H.build_hook(JOB, KWS, hook_bank(), None, "AI Engineer", notes=notes) is None
-    assert any("template rejected" in n for n in notes), notes
-
-
-def test_when_the_best_proof_fails_the_next_one_is_tried():
-    """A proof whose template cannot pass (here: its own sentence is the whole bullet) does not lose the hook while another
-    numbered bullet is fine."""
-    fb = bank(entry("e1", "Acme",
-                    b("a1", "Wrote ~65 tests.", ["aws", "docker", "python", "pytest"], result="~65 tests"),
-                    b("a2", "Ran 12 nightly AWS jobs for the Python team.", ["aws", "python"], result="12 nightly jobs")))
-    real = H.problems
-
-    def picky(hk, *a, **k):
-        return ["forced failure"] if hk.proof_bullet_id == "a1" else real(hk, *a, **k)
-
-    import careerops.hook as mod
-    old, mod.problems = mod.problems, picky
-    try:
-        hk = H.build_hook(JOB, KWS, fb, None, "AI Engineer")
-    finally:
-        mod.problems = old
-    assert hk is not None and hk.proof_bullet_id == "a2"
+    assert notes == ["the fact bank has no hook_library"], notes
 
 
 # ---------------------------------------------------------------- the proof comes from the most relevant role
@@ -309,16 +249,6 @@ def test_work_for_an_employer_outranks_a_project_when_the_best_role_has_no_numbe
     proof = H.choose_proof(fb, KWS)
     assert proof["relevant_role"] == "e1" and proof["bullet"]["id"] == "b1" and proof["kind"] == "experience"
     assert [c["bullet"]["id"] for c in H.proof_candidates(fb, KWS)] == ["b1", "p1a", "a1"]
-
-
-def test_the_template_hook_names_technologies_with_their_proper_case():
-    """The ad's keywords are lower case in the taxonomy ("mlflow"); the hook's problem clause, headline and letter sentence say MLflow."""
-    kws = [Keyword("mlflow", 3, True), Keyword("deep learning", 3, True)]
-    jd = "We track every experiment in MLflow and build deep learning models for forecasting."
-    fb = bank(entry("e1", "Acme", b("a1", "Tracked 40 experiments in MLflow for deep learning models.", ["mlflow", "deep learning"],
-                                    result="40 experiments")))
-    hk = H.build_hook({**JOB, "description": jd}, kws, fb, None, "Data Scientist")
-    assert hk is not None and "MLflow" in hk.problem and "mlflow" not in hk.headline + hk.profile_line + hk.letter_sentence
 
 
 def test_a_number_that_describes_the_next_word_is_not_a_result_even_without_a_hyphen():
