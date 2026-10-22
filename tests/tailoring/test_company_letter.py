@@ -1,6 +1,6 @@
 """letter.mode: company (tailoring/company_letter.py): P1 the hook's letter line (else the role family's profile line), P2 why this company (the
-job ad is its only source), P3 and P4 two fact-bank bullets each tied to a named ad requirement, P5 closing_hook; 360-420 words; one redraft;
-no letter (and review says why) after a second rejection. MockLLM only: no network, no model. The guards are called directly (fast); the
+job ad is its only source), P3 and P4 two fact-bank bullets each tied to a named ad requirement, P5 closing_hook; 360-420 words; up to three drafts;
+no letter (and review says why) after the third rejection. MockLLM only: no network, no model. The guards are called directly (fast); the
 tests that make a PDF are marked slow (xelatex)."""
 import copy
 from pathlib import Path
@@ -251,7 +251,7 @@ def test_a_draft_without_three_paragraphs_is_rejected(world):
     assert problems == ["expected 3 paragraphs (P2, P3, P4), got 1"] and sources == []
 
 
-# ------------------------------------------------------------------ the model call: draft, redraft once, then no letter
+# ------------------------------------------------------------------ the model call: draft, redraft (up to three drafts), then no letter
 def writer(world, responses: list):
     """A cover_letter handler that answers with the next entry of `responses` (a list of [P2, P3, P4]) and records the contexts it was given."""
     seen = []
@@ -296,17 +296,6 @@ def test_a_rejected_draft_is_redrafted_once_with_the_rejections_named_and_the_se
     pdf, letter = run(world, llm)
     assert llm.calls == ["cover_letter", "cover_letter"] and letter["status"] == "ok" and letter["retry"]["outcome"] == "ok after redraft"
     assert letter["retry"]["count"] == 1 and len(letter["retry"]["failures"]) == 1 and pdf.is_file()
-
-
-def test_two_rejected_drafts_are_no_letter_and_the_reason_is_recorded(world):
-    bad = body(world, 400, p2="Anaplan serves insurance customers across Europe with 9,000 employees.")
-    handler, seen = writer(world, [bad, bad])
-    llm = MockLLM({"cover_letter": handler})
-    pdf, letter = run(world, llm)
-    assert pdf is None and letter["status"] == "none" and letter["paragraphs"] == [] and llm.calls == ["cover_letter"] * 2     # asked twice, never a third time
-    assert "2 draft(s) rejected by the company guards" in letter["reason"] and "9000" in letter["reason"] + " ".join(letter["problems"])
-    assert [f["attempt"] for f in letter["retry"]["failures"]] == [1, 2] and letter["retry"]["outcome"] == "no letter"
-    assert any("redrafting once" in n for n in letter["notes"])
 
 
 @pytest.mark.slow
@@ -409,3 +398,141 @@ def test_tailor_job_in_company_mode_without_a_hook_writes_the_letter_from_the_fa
 
 def _first_person(bullet: str) -> str:
     return i_clause(L._fragments(bullet)[-1]) + "."          # the shortest cut of the bullet: the sentence stays well under the paste limit
+
+
+# ------------------------------------------------------------------ round of 22 Oct: P2 is extractive, the company guard checks facts, three drafts
+SKIP = CL.stems(f"Anaplan {JOB['title']} {TEAM}")
+
+
+def test_the_prompt_offers_the_ads_about_and_role_sentences_and_not_its_skills_or_notices():
+    offered = CL.about_sentences(JD, "Anaplan")
+    assert 3 <= len(offered) <= CL.ABOUT_LIMIT and len(set(offered)) == len(offered)
+    assert any(s.startswith("At Anaplan, we are a team of innovators") for s in offered)              # before the first heading
+    assert any(s.startswith("The core mission of our team") for s in offered)                          # under "About The Role"
+    assert any(s.startswith("In this role, you will develop") for s in offered)
+    text = " ".join(offered)
+    for left_out in ("Strong predictive modeling foundation", "Cloud & Data Infrastructure", "diversity, equity", "fraudulent", "Candidate data processed"):
+        assert left_out not in text, left_out                      # skills, diversity, fraud and privacy sections are not about the company
+
+
+def test_an_ad_without_headings_offers_its_sentences_in_order():
+    jd = "Acme makes forecasting software for retailers. The team is hiring a data scientist to improve demand models. Python and SQL are needed."
+    assert CL.about_sentences(jd, "Acme") == ["Acme makes forecasting software for retailers.", "The team is hiring a data scientist to improve demand models.",
+                                              "Python and SQL are needed."]
+    assert CL.about_sentences("", "Acme") == []
+
+
+def test_p2_that_quotes_or_follows_two_of_the_offered_sentences_passes_and_says_which(world):
+    offered = CL.about_sentences(JD, "Anaplan", world.kws)
+    assert CL.extractive_problems(P2, offered, SKIP) == []
+    used = CL.used_sentences(P2, offered, SKIP)
+    assert len(used) >= 2 and all(u in offered for u in used)
+    assert any(u.startswith("At Anaplan, we are a team of innovators") for u in used) and any(u.startswith("The core mission") for u in used)
+
+
+def test_p2_that_follows_only_one_offered_sentence_or_none_is_rejected(world):
+    offered = CL.about_sentences(JD, "Anaplan", world.kws)
+    one = "Anaplan builds an AI-infused scenario planning and analysis platform so its customers can outpace their competition and the market."
+    problems = CL.extractive_problems(one, offered, SKIP)
+    assert problems and problems[0].startswith("P2 follows 1 of the ad's About / role sentences; it must quote or closely follow 2 or 3")
+    skills_only = "Anaplan works with cloud infrastructure on AWS, GCP or Azure and handles columnar data formats like Parquet."
+    assert CL.company_problems(skills_only, JD, SKIP) == []                                  # true to the ad, but not from its About / role sentences
+    assert CL.extractive_problems(skills_only, offered, SKIP)[0].startswith("P2 follows 0 of")
+    assert any(p.startswith("P2 follows 0 of") for p in check(world, body(world, 400, p2=skills_only)))
+
+
+def test_with_one_offered_sentence_p2_need_only_follow_that_one_and_with_none_nothing_is_asked():
+    only = ["Acme makes forecasting software for retailers."]
+    assert CL.extractive_problems("Acme makes forecasting software for retailers.", only) == []
+    assert CL.extractive_problems("Acme sells boats.", only) and CL.extractive_problems("Anything at all.", []) == []
+
+
+def test_the_prompt_lists_the_numbered_sentences_the_allowed_vocabulary_and_the_filler_words(world):
+    sent = []
+
+    class Spy(MockLLM):
+        def json(self, task, system, user, context=None):
+            sent.append((system, user, context))
+            return super().json(task, system, user, context)
+    handler, _ = writer(world, [body(world, 400, p2="Anaplan sells boats.")])                    # rejected: no PDF is made, the prompt is what is looked at
+    run(world, Spy({"cover_letter": handler}))
+    system, user, ctx = sent[0]
+    assert "[1] At Anaplan, we are a team of innovators" in user and "[2] " in user and "ABOUT / ROLE SENTENCES (P2 quotes or closely follows 2 or 3 of these)" in user
+    assert ctx["about_sentences"] == CL.about_sentences(JD, "Anaplan", world.kws)
+    assert "ALLOWED VOCABULARY" in user and "the ad's skill terms:" in user and "from the chosen bullets:" in user
+    assert "NEVER USE (filler): robust, seamless, cutting-edge, passionate, leverage, synergy" in user
+    assert "No filler words: robust, seamless, cutting-edge, passionate, leverage, synergy" in system and "EXTRACTIVE" in system
+    assert "{" not in system.replace('{"paragraphs"', "")                                    # every placeholder was filled
+
+
+def test_the_allowed_vocabulary_is_the_chosen_bullets_tools_plus_the_ads_skill_terms(world):
+    text = CL.allowed_vocabulary(world.plan.evidence, world.kws)
+    mine, ad = text.split("\n")
+    assert mine.startswith("from the chosen bullets: ") and ad.startswith("the ad's skill terms: ")
+    assert "Python" in ad and "XGBoost" in ad
+    assert not set(CL.FILLER) & {w.strip().lower() for w in (mine + ", " + ad).split(",")}
+
+
+# the company guard checks facts; plain connecting phrases about the role are not claims
+@pytest.mark.parametrize("p2", [
+    "The role involves forecasting.",
+    "The role involves designing and developing functional analytic capabilities that integrate directly into Anaplan Applications.",
+    "This team requires a Data Scientist who can build ML models and pipelines, and you will work with customers on onboardings.",
+    "You will develop ML models and pipelines to drive automated insights at scale.",
+])
+def test_connecting_phrases_about_the_role_are_not_claims(p2):
+    assert CL.company_problems(p2, JD, SKIP) == []
+
+
+def test_a_connecting_phrase_does_not_excuse_a_fact_the_ad_does_not_state():
+    problems = CL.company_problems("The role involves selling robotic lawnmowers to hospitals.", JD, SKIP)
+    assert problems and "lawnmow" in problems[0]
+
+
+def test_saas_that_is_neither_in_the_ad_nor_the_fact_bank_still_fails(world):
+    assert "saas" not in JD.lower() and "saas" not in str(world.fb).lower()
+    p2 = "Anaplan builds a SaaS scenario planning and analysis platform so its customers can outpace their competition and the market."
+    problems = check(world, body(world, 400, p2=p2))
+    assert any("SaaS" in p for p in problems), problems
+
+
+def test_seamless_in_the_user_paragraphs_still_fails(world):
+    problems = check(world, body(world, 400, p3=world.own[0] + " I made the whole pipeline seamless for the team."))
+    assert any("vague filler 'seamless'" in p for p in problems), problems
+
+
+def test_the_role_involves_with_ad_content_passes_the_whole_letter_guard(world):
+    p2 = ("The role involves designing and developing functional analytic capabilities that integrate directly into Anaplan Applications to solve complex "
+          "enterprise business problems. Anaplan builds an AI-infused scenario planning and analysis platform so its customers can outpace their competition.")
+    assert check(world, body(world, 400, p2=p2)) == []
+
+
+# three drafts, then no letter, with every draft's reasons shown
+def test_three_rejected_drafts_are_no_letter_and_the_reasons_are_shown(world):
+    bad = body(world, 400, p2="Anaplan serves insurance customers across Europe with 9,000 employees.")
+    handler, seen = writer(world, [bad, bad, bad])
+    llm = MockLLM({"cover_letter": handler})
+    pdf, letter = run(world, llm)
+    assert CL.ATTEMPTS == 3 and pdf is None and letter["status"] == "none" and llm.calls == ["cover_letter"] * 3          # never a fourth
+    assert "3 draft(s) rejected by the company guards" in letter["reason"] and "9000" in letter["reason"] + " ".join(letter["problems"])
+    assert [f["attempt"] for f in letter["retry"]["failures"]] == [1, 2, 3] and letter["retry"]["outcome"] == "no letter"
+    assert all(f["problems"] for f in letter["retry"]["failures"]) and letter["retry"]["count"] == 2
+    assert sum("redrafting (2 of 3)" in n for n in letter["notes"]) == 1 and sum("redrafting (3 of 3)" in n for n in letter["notes"]) == 1
+
+
+@pytest.mark.slow
+def test_the_third_draft_is_used_when_the_first_two_are_rejected(world):
+    bad = body(world, 400, p2="Anaplan serves insurance customers across Europe with 9,000 employees.")
+    handler, seen = writer(world, [bad, bad, body(world)])
+    pdf, letter = run(world, MockLLM({"cover_letter": handler}))
+    assert letter["status"] == "ok" and letter["retry"]["outcome"] == "ok after redraft" and len(letter["retry"]["failures"]) == 2 and len(seen) == 3
+    assert len(letter["p2_used"]) >= 2 and letter["p2_used"] == CL.used_sentences(P2, CL.about_sentences(JD, "Anaplan", world.kws), SKIP)
+
+
+def test_review_prints_which_about_sentences_p2_followed(world):
+    used = CL.used_sentences(P2, CL.about_sentences(JD, "Anaplan", world.kws), SKIP)
+    letter = {"mode": "company", "status": "ok", "words": 398, "target_words": 400, "hook_source": "library", "requirements": [["Python"], ["PyTorch"]],
+              "p2_sources": CL.p2_sources(P2, JD, SKIP), "p2_used": used}
+    text = "\n".join(workflow.company_letter_lines(letter))
+    assert "P2 quotes or closely follows these About / role sentences of the ad:" in text and f"[1] {used[0]}" in text and f"[2] {used[1]}" in text
+    assert "quotes or closely follows" not in "\n".join(workflow.company_letter_lines({**letter, "p2_used": []}))

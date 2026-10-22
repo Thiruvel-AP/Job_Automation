@@ -96,6 +96,12 @@ class Ctx:
     strict: bool = True                               # True: a required question nobody answered is asked, and stops the run if not answered
     combobox: Callable[..., None] | None = None       # fills a script-built drop-down (picks an option = a click, which only autoapply.py may do)
     freetext: Any = None                              # apply/freetext.FreeText of this job: drafts, guards and asks about a required free-text question
+    tracker: Any = None                               # apply/verify.Tracker: every field filled is noted, then read back once the form is filled
+
+    def track(self, el, label: str, kind: str = "text", value: str = "") -> None:
+        """Note a field this run filled, so that it is read back (and filled once more if the form emptied it) before anyone is told it is done."""
+        if self.tracker is not None:
+            self.tracker.add(el, label, kind, value)
 
     def typed(self, prompt: str) -> str:
         try:
@@ -228,7 +234,9 @@ def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: boo
         req = any(is_required(g, q) for g in group)
         pick = decide(ctx, q, req, options=labels)
         if pick is not None:
-            next(g for g in group if label_of(g) == pick).check()
+            chosen = next(g for g in group if label_of(g) == pick)
+            chosen.check()
+            ctx.track(chosen, q, "check")
             ctx.result.filled.append(f"{q[:80]} -> {pick}")
         return
     if el.is_checked():
@@ -236,6 +244,7 @@ def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: boo
     value = decide(ctx, question, required)
     if value is not None and value.strip().lower() in YES:
         el.check()
+        ctx.track(el, question, "check")
         ctx.result.filled.append(f"{question[:80]} -> ticked")
     elif value is not None:
         ctx.result.blank.append(f"{question} (answer {value!r}: left unticked)")
@@ -246,6 +255,7 @@ def select(el, question: str, ctx: Ctx, required: bool) -> None:
     pick = decide(ctx, question, required, options=options)
     if pick is not None:
         el.select_option(label=next(o.inner_text() for o in el.query_selector_all("option") if _norm(o.inner_text()) == pick))
+        ctx.track(el, question, "select", pick)
         ctx.result.filled.append(f"{question[:80]} -> {pick}")
 
 
@@ -265,6 +275,7 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
     if done is not None:
         key, filled = done
         if filled:
+            ctx.track(el, short, "text", standard_value(ctx.applicant, key))
             ctx.result.filled.append(f"{short} <- {key}")
         return
     if tag == "input" and el.get_attribute("role") == "combobox" and typ in TEXT_TYPES:
@@ -284,6 +295,7 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
             text = ctx.freetext.answer(question, label, maxlength, strict=ctx.strict)
             if text:
                 el.fill(text)
+                ctx.track(el, short, "text", text)
                 ctx.result.filled.append(f"{question[:80]} -> free text ({ctx.freetext.last})")
             else:
                 ctx.stop(f"no answer for the required question: {question}")
@@ -291,6 +303,7 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
         value = decide(ctx, question, required, numeric=numeric_only(el, typ, label))
         if value is not None:
             el.fill(value)
+            ctx.track(el, short, "text", value)
             ctx.result.filled.append(f"{question[:80]} -> {value[:60]}")
     elif required:
         ctx.stop(f"a required field this module does not fill ({typ}): {short}")

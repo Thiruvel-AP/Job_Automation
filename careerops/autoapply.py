@@ -27,7 +27,7 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, filler, formfind
+from .apply import autogate, autolog, eo, filler, formfind, verify
 from .apply import visa as visa_mod
 from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
@@ -139,16 +139,20 @@ def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required
         for r in group:
             if want and want in (_norm(r.evaluate(LABEL_JS).split("|")[0]).lower(), (r.get_attribute("value") or "").lower()):
                 r.check()
+                ctx.track(r, question, "check")
                 ctx.result.filled.append(f"{question[:80]} -> {value}")
                 return True
         if any(_is_required(r, question) for r in group):
             labels = [_label_of(r) for r in group]
             pick = _decide(ctx, question, True, options=labels)
-            next(r for r in group if _label_of(r) == pick).check()
+            chosen = next(r for r in group if _label_of(r) == pick)
+            chosen.check()
+            ctx.track(chosen, question, "check")
             ctx.result.filled.append(f"{question[:80]} -> {pick} (typed)")
         return True
     held = _answer_visa(el, typ, question, plan)
     if held:
+        ctx.track(el, question, "select" if typ == "select" else "text", held)
         ctx.result.filled.append(f"{question[:80]} -> {held}")
     elif required:
         options = [_norm(o.inner_text()) for o in el.query_selector_all("option") if _norm(o.inner_text())] if typ == "select" else None
@@ -173,38 +177,60 @@ def _combobox(page, el, question: str, ctx: Ctx, required: bool) -> None:
     ctx.result.filled.append(f"{question[:80]} -> {pick}")
 
 
-def fill_form(page, ctx: Ctx) -> None:
-    """Fill every visible field the way the module docstring says; raises NeedsUser at the first required question nobody has answered."""
+def upload_files(page, ctx: Ctx) -> bool:
+    """Pass 1 of fill_form: every file field, before any text field (an upload can make the form re-render and wipe what was typed). The
+    "Autofill from resume" control is never used: the CV goes only to the real Resume / CV field. True when a file was set."""
+    sent = False
+    for el in page.query_selector_all("input, textarea, select"):
+        tag = el.evaluate("e => e.tagName").lower()
+        if tag != "input" or (el.get_attribute("type") or "").lower() != "file":
+            continue
+        label = (el.evaluate(LABEL_JS) or "").strip()
+        short = label.split("|")[0].strip()[:60] or "file"
+        required = _is_required(el, label.split("|")[0])
+        if verify.is_autofill(el):
+            ctx.out(f"  skipped the autofill upload control (never used): {short}")
+        elif re.search(r"cover", label, re.I):
+            if ctx.letter_pdf:
+                el.set_input_files(ctx.letter_pdf)
+                ctx.result.filled.append(f"{short} <- cover letter")
+                sent = True
+            elif required:
+                raise NeedsUser(f"a cover letter file is required but this job has no letter PDF ({short})")
+        elif re.search(r"resume|résumé|\bcv\b|curriculum", label, re.I) and ctx.cv_pdf:
+            el.set_input_files(ctx.cv_pdf)
+            ctx.result.filled.append(f"{short} <- CV")
+            sent = True
+        elif required:
+            raise NeedsUser(f"a required file upload that is neither the CV nor a cover letter: {short}")
+    return sent
+
+
+def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
+    """Fill every visible field the way the module docstring says; raises NeedsUser at the first required question nobody has answered.
+    The files go first, then the form is left to settle (`quiet_ms` without a DOM change), then the other fields (apply/verify.py);
+    `verify_filled` reads them back."""
     listed_eo = eo.entries(ctx.applicant, ctx.book)        # applicant.yaml first, then the eo_* entries of answers.yaml
     ctx.combobox = _combobox
+    if ctx.tracker is None:
+        ctx.tracker = verify.Tracker()
+    if upload_files(page, ctx) and not verify.wait_quiet(page, quiet_ms):
+        ctx.out(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back after)")
     seen: set = set()
     for el in page.query_selector_all("input, textarea, select"):
         tag = el.evaluate("e => e.tagName").lower()
         typ = (el.get_attribute("type") or ("text" if tag == "input" else tag)).lower()
-        if typ in ("hidden", "submit", "button", "image", "reset") or (not el.is_visible() and typ != "file"):
+        if typ in ("hidden", "submit", "button", "image", "reset", "file") or not el.is_visible():
             continue
         label = (el.evaluate(LABEL_JS) or "").strip()
         short = label.split("|")[0].strip()[:60] or typ
         question = _norm(el.evaluate(QUESTION_JS) if typ == "radio" else label.split("|")[0]).rstrip(" *")
         required = _is_required(el, label.split("|")[0])
 
-        if typ == "file":
-            if re.search(r"cover", label, re.I):
-                if ctx.letter_pdf:
-                    el.set_input_files(ctx.letter_pdf)
-                    ctx.result.filled.append(f"{short} <- cover letter")
-                elif required:
-                    raise NeedsUser(f"a cover letter file is required but this job has no letter PDF ({short})")
-            elif re.search(r"resume|résumé|\bcv\b|curriculum", label, re.I) and ctx.cv_pdf:
-                el.set_input_files(ctx.cv_pdf)
-                ctx.result.filled.append(f"{short} <- CV")
-            elif required:
-                raise NeedsUser(f"a required file upload that is neither the CV nor a cover letter: {short}")
-            continue
-
         if ctx.letter_text and typ == "textarea" and re.search(r"cover\s*letter", label, re.I):
             if not (el.input_value() or "").strip():
                 el.fill(ctx.letter_text)
+                ctx.track(el, short, "text", ctx.letter_text)
                 ctx.result.filled.append(f"{short} <- cover letter text")
             continue
 
@@ -215,11 +241,20 @@ def fill_form(page, ctx: Ctx) -> None:
         r = ctx.book.resolve(question, ctx.job)
         if (r is None or not r.known) and eo.is_eo_field(f"{question} {label}") and tag == "select":
             entry = eo.entry_for(f"{question} {label}", listed_eo)
-            picked, _, _ = _answer_eo(page, el, typ, entry)
+            picked, _, _ = _answer_eo(page, el, typ, entry, track=lambda e, kind, value, q=question: ctx.track(e, q, kind, value))
             if picked:
                 ctx.result.filled.append(f"{question[:80]} -> {picked} (applicant.yaml)")
                 continue
         filler.fill_field(page, el, tag, typ, label, short, question, required, ctx, seen)       # standard fields, then answers.yaml
+
+
+def verify_filled(page, ctx: Ctx) -> list[str]:
+    """Read back every field `fill_form` filled (apply/verify.py): an empty one is filled once more, and prints VERIFIED or LOST.
+    Returns the labels of the LOST ones, which stop the run: nothing is submitted with a field the form swallowed."""
+    if ctx.tracker is None or not ctx.tracker.fills:
+        return []
+    ctx.out("  Reading back every field that was filled:")
+    return ctx.tracker.verify(page, ctx.out)[1]
 
 
 def still_empty(page) -> list[str]:
@@ -328,6 +363,9 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         page = session.page
         open_form(page, url, throttle, job.get("apply_kind"))
         fill_form(page, ctx)
+        lost = verify_filled(page, ctx)
+        if lost:
+            raise NeedsUser("the form emptied field(s) after they were filled: " + "; ".join(lost[:5]))
         empty = still_empty(page)
         if empty:
             raise NeedsUser("required fields still empty: " + "; ".join(empty[:5]))

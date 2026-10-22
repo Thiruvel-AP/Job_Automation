@@ -188,3 +188,51 @@ def test_an_eo_entry_with_a_blank_answer_types_nothing(page, applicant):
     form(page, '<label for="gen">Gender</label><input id="gen" name="gen">')
     fill_page(page, applicant, None, None, book=answers.AnswerBook([answers.Entry("eo_gender", ("gender",), "", None, {}, ("Man", "Male"))]))
     assert page.input_value("#gen") == ""
+
+
+# ------------------------------------------------------------------ a single check box whose answer is No stays unchecked, and is not EMPTY
+def checkbox(id_, label):
+    return f'<label for="{id_}"><input type="checkbox" id="{id_}" name="{id_}"> {html.escape(label)}</label>'
+
+
+def eo_book(*rows):
+    return answers.AnswerBook([answers.Entry(key, patterns, answer, None, {}, options) for key, patterns, answer, options in rows])
+
+
+NO_BOOK = eo_book(("eo_disability", ("disability",), "No", ("No",)), ("eo_veteran", ("veteran",), "No", ("No",)))
+
+
+@pytest.mark.parametrize("label, key", [("Person with disability", "eo_disability"), ("Veteran", "eo_veteran")])
+def test_a_single_checkbox_whose_answer_is_no_is_left_unchecked_and_not_called_empty(page, applicant, capsys, label, key):
+    form(page, checkbox("cb", label))
+    r = fill_page(page, applicant, None, None, book=NO_BOOK)
+    assert page.is_checked("#cb") is False
+    out = capsys.readouterr().out
+    assert f"CHECK EO ANSWER [{key}]: {label} -> left unchecked (answer: No)" in out and "EMPTY" not in out
+    assert r["eo"] == [{"question": label, "key": key, "value": "No", "options": [label]}]
+    assert label not in r["manual"] and label not in r["required_empty"] and outline(page, "#cb") == BLUE
+
+
+def test_a_required_single_checkbox_answered_no_is_not_listed_as_required_and_empty(page, applicant):
+    form(page, '<label for="cb"><input type="checkbox" id="cb" name="cb" required> Person with disability</label>')
+    r = fill_page(page, applicant, None, None, book=NO_BOOK)
+    assert r["required_empty"] == [] and r["manual"] == []
+
+
+def test_a_single_checkbox_that_is_not_listed_is_still_empty(page, applicant, capsys):
+    form(page, checkbox("cb", "Veteran"))
+    r = fill_page(page, applicant, None, None)
+    assert page.is_checked("#cb") is False and "CHECK EO ANSWER [not listed]: Veteran -> EMPTY" in capsys.readouterr().out and "Veteran" in r["manual"]
+
+
+def test_a_single_checkbox_answered_yes_is_not_ticked_by_the_no_rule(page, applicant, capsys):
+    form(page, checkbox("cb", "Veteran"))
+    r = fill_page(page, applicant, None, None, book=eo_book(("eo_veteran", ("veteran",), "Yes", ("Yes",))))
+    assert page.is_checked("#cb") is False and "left unchecked" not in capsys.readouterr().out and r["eo"][0]["value"] is None
+
+
+def test_a_group_of_checkboxes_answered_no_picks_the_no_option(page, applicant):
+    form(page, '<fieldset><legend>Do you have a disability?</legend>'
+               '<label><input type="checkbox" name="d" value="y"> Yes</label><label><input type="checkbox" name="d" value="n"> No</label></fieldset>')
+    fill_page(page, applicant, None, None, book=NO_BOOK)
+    assert page.evaluate("[...document.querySelectorAll('input[name=d]')].map(e => e.checked)") == [False, True]

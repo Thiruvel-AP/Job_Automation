@@ -1099,6 +1099,36 @@ you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywo
 
 Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
 
+## 5af. Round 17 — the 22 Oct loveholidays run (Ashby): fill order and read-back, an extractive P2 (2026-10-22) — **done** (offline tests; Chromium fixture forms, MockLLM; no live form, no real model)
+1. **Fill order** (`apply/verify.py`, used by `assist.fill_page` and `autoapply.fill_form`). Pass 1: every file field. The "Autofill from resume" control is never given a file
+   (`verify.is_autofill`: its id / name / aria-label / label says autofill, or the text of the smallest container around it that holds no other field and no other file input does;
+   printed `skipped the autofill upload control (never used)`, `report["skipped"]`); the CV goes only to the real Resume / CV field, the letter PDF to a cover-letter file field. Then, only when
+   a file was set, `verify.wait_quiet`: no DOM mutation (a MutationObserver) for `QUIET_MS = 2000`, at most `QUIET_MAX_MS = 15000`. Pass 2: the text fields, selects, boxes (fresh element
+   handles, the form may have replaced its nodes). `fill_page(..., quiet_ms=)` / `fill_form(..., quiet_ms=)` shorten the wait for tests.
+2. **Read-back.** Every field a run filled is noted in a `verify.Tracker` (`Ctx.track`, called by `filler` for standard fields, answers.yaml text / select / radio / checkbox and free text, and by
+   the assist and the auto-apply for the cover-letter box, visa fields and equal-opportunities fields). After the fill each is read back (`input_value()`; a select by its selected option text; a
+   check box / radio by `is_checked()`); an empty one is filled once more and read again. Prints `VERIFIED  <field>` (`(filled again)` when the second fill was needed) or `LOST      <field>`.
+   The assist adds every LOST field to `required_empty` (REQUIRED + EMPTY, outlined red; `report["verified"]`, `report["lost"]`). The auto-apply (`autoapply.verify_filled`) stops with
+   `needs_user` ("the form emptied field(s) after they were filled") rather than submit. A field with an id or a unique name is found again by that selector (a re-rendered node is not read stale).
+3. **Cover letter.** Unchanged and now tested in both callers: a cover-letter text box gets the letter text (unless it holds text, or there is a cover-letter file field and a letter PDF in the
+   assist); a cover-letter file field gets the PDF.
+4. **Equal opportunities: a single check box.** `assist._answer_eo`: a lone check box ("Person with disability", "Veteran") whose listed answer is No (`eo.answers_no`: the entry's `answer`,
+   else its first accepted option) stays unchecked and prints `CHECK EO ANSWER [key]: question -> left unchecked (answer: No)` (`report["eo"]` value `No`); it is not in `manual` or
+   `required_empty`. A lone check box with any other answer, or not listed, is unchanged (EMPTY). A group of check boxes still picks the matching option.
+5. **Letter, company mode** (`tailoring/company_letter.py`, `prompts.py`). `ATTEMPTS = 3`. P2 is extractive: `about_sentences` offers the ad's About / role sentences (before the first heading and under
+   about / role / team / impact headings; not skills, requirements, benefits, diversity, privacy or fraud sections; at most `ABOUT_LIMIT` 10, ranked by company name, ad keywords and cue words), numbered in the
+   prompt; `extractive_problems` rejects a P2 that does not quote or closely follow 2 of them (`used_sentences`: a P2 sentence or clause with >= 60 % of its content stems in one offered sentence,
+   >= 3 shared). `letter["p2_used"]` and the review lines (`workflow.company_letter_lines`) print which ones it followed. The company guard checks facts (nouns, names, numbers, products, customers):
+   the connecting words of a role ("the role involves", "requires", "this team", "you will", responsibilities, candidate ...) are in `_GENERIC` and are not claims. The user guard is unchanged; its
+   prompt now lists the ALLOWED VOCABULARY (the chosen bullets' tools and methods + the ad's skill terms, `allowed_vocabulary`) and the filler words (`FILLER`: robust, seamless, cutting-edge,
+   passionate, leverage, synergy).
+6. **Tests.** `tests/apply/test_fill_verify.py` (20: the autofill control never used, a form that clears its fields after an upload still ends with salary and notice filled, the wipe-once refill, LOST,
+   select reset, `wait_quiet`, the auto-apply twin, the cover-letter box and file in both callers), `tests/apply/test_assist_eo.py` (+6: single check box No / Yes / unlisted / required / group),
+   `tests/tailoring/test_company_letter.py` (+18, the two-draft test replaced by a three-draft one: "The role involves ..." with ad content passes, "SaaS" not in the ad or the fact bank fails,
+   "seamless" fails, P2 following 0 / 1 / 2 offered sentences, the prompt's numbered sentences / vocabulary / filler, the third draft used, the review lines).
+   Not verified: a live Ashby form (the fixtures re-render and wipe like it does, but the real timing is unseen), and the real Groq model following the extractive prompt. Stale and left alone:
+   the comment above `letter:` in `config/settings.yaml` (and the test copy) still says "one redraft"; those files hold your uncommitted settings.
+
 ## 5ae. Round 16 — `letter.mode: company` (2026-10-22) — **done** (offline tests, MockLLM; no real model, no live form)
 
 1. **Settings.** `letter.mode` accepts `company` (`tailor.LETTER_MODES`). `letter.company_words: 400` (allowed 360-420, `company_letter.target_words` refuses anything else) is the length the
@@ -1107,7 +1137,7 @@ Not verified: a real model's drafts (the guard may reject more than the mock sho
 2. **`tailoring/company_letter.py`.** `prepare` settles P1 (hook `letter_sentence`, else the family `profile_body` from `tailor._tailor`'s new `report["family_line"]`, which is now set for every job,
    not only a hook-less one), P5 (`letters.closing_text(problem)`: the hook's problem, else `letters.ad_problem` = the ad's two heaviest claimable keywords) and the two evidence bullets with the ad
    requirements each evidences. `make` asks the `cover_letter` task (context `mode: "company"`, prompts `COMPANY_LETTER_SYSTEM/USER`) for `[P2, P3, P4]`, runs `check`, and on a rejection asks
-   once more with every rejection listed (`ATTEMPTS = 2`). Two rejections: `status "none"`, `reason`, `retry.failures`, no PDF. `TaskUnavailable`: `status "pending"`. No template fallback.
+   again with every rejection listed (`ATTEMPTS = 3` since round 17; it was 2). Three rejections: `status "none"`, `reason`, `retry.failures`, no PDF. `TaskUnavailable`: `status "pending"`. No template fallback.
 3. **Guards.** `company_problems` (P2: clause-level normalised overlap against windows of up to 3 ad sentences, `COMPANY_SUPPORT` 0.6; numbers must be in the ad), `name_problems` (an invented
    person / team / product name), `user_problems` (P3, P4: numbers, fact-bank tools and organisations must be the chosen bullets', `grounding_problems` per bullet with no ad to lean on, a named
    requirement, no paste, no repeated bullet), plus the existing `claim_problems` (we / our / "I help"), `term_dump_problems`, deny list, style and word-count checks.
@@ -1116,8 +1146,8 @@ Not verified: a real model's drafts (the guard may reject more than the mock sho
    `mode`, `words`, `target_words`, `p2_sources`, `requirements`, `hook_source`.
 5. **Upload.** Unchanged from round 15: the PDF goes to a cover-letter file field, the text to a cover-letter text box when there is no file field.
 6. **Tests.** `tests/tailoring/test_company_letter.py` (57): a P2 claim missing from the ad, a company number missing from the ad, an invented person / team name, a user number / tool /
-   organisation missing from the bullets, 360-420 words pass and 250 / 359 / 421 / 500 fail, the redraft-once-then-no-letter flow, a no-hook job (with and without a family line), the review lines,
-   and `tailor_job` end to end (letter fits one page). Not verified: the real Groq model's drafts (the guards are strict by design and may reject paraphrases: it then redrafts once and says why).
+   organisation missing from the bullets, 360-420 words pass and 250 / 359 / 421 / 500 fail, the redraft-then-no-letter flow (three drafts since round 17), a no-hook job (with and without a family line), the review lines,
+   and `tailor_job` end to end (letter fits one page). Not verified: the real Groq model's drafts (the guards are strict by design and may reject paraphrases: it then redrafts, up to three drafts, and says why).
 
 ## 5ad. Round 15 — the 22 Oct live run at Flo Health (Greenhouse) (2026-10-22) — **done** (offline tests; no live form, no real model, no real data)
 

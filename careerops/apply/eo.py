@@ -120,6 +120,13 @@ def book_entries(book: Any) -> list[Entry]:
     return out
 
 
+def answers_no(entry: Entry) -> bool:
+    """Is the answer the user wrote for this question "No"? Its `answer`, else the first option accepted. A single check box
+    ("Person with disability", "Veteran") whose answer is No is left unchecked: ticking it would say Yes."""
+    first = entry.answer.strip() or (entry.match_any[0] if entry.match_any else "")
+    return norm(first) in ("no", "n", "false")
+
+
 def is_eo_field(text: str) -> bool:
     return bool(EO_FIELD.search(text or ""))
 

@@ -7,18 +7,23 @@ guards, the first and the last written in code.
   P4  the second best-matching bullet, tied to another named requirement               (written from that bullet alone)
   P5  `letter.closing_hook` with the problem phrase of the ad (the hook's, else the ad's heaviest keywords the bank can claim)
 
-The model is asked once and, when a guard rejects the draft, once more with every rejection listed; a second rejection is NO LETTER and the
-review screen says why (status "none", `reason`, `retry.failures`). Nothing falls back to a template.
+The model is asked up to ATTEMPTS (3) times, each redraft told every rejection so far; a third rejection is NO LETTER and the review screen
+says why (status "none", `reason`, `retry.failures`). Nothing falls back to a template.
+
+P2 is written EXTRACTIVELY: the prompt lists the ad's About / role sentences (`about_sentences`, numbered) and P2 must quote or closely follow
+2 or 3 of them (`extractive_problems`); the review screen prints which ones it used (`letter["p2_used"]`).
 
 User guard (P3, P4: what the letter says about the user). Every number must be in the two chosen bullets (or the opening); every fact-bank
 tool and organisation named must be one of theirs; every sentence is checked against its own bullet (`grounding_problems` with no job ad
 to lean on: a name, sector, client or capability word the bullet does not say is rejected); each paragraph names an ad requirement its bullet
 evidences; no pasted bullet, no deny-listed term, no keyword list, no "we" / "our", no "I help <Company>".
 
-Company guard (P2: what the letter says about the employer). The ad is split into sentences. Every clause of P2 that makes a claim (its
-content stems, after the company and role names and the generic verbs are set aside) must have at least COMPANY_SUPPORT of its stems in one
-window of up to WINDOW consecutive ad sentences (a clause of fewer than MIN_CLAIM_STEMS stems: all of them somewhere in the ad). Every number
-must be in the ad. Every capitalised name (a person, a team, a product) must be in the ad, the fact bank or the opening.
+Company guard (P2: what the letter says about the employer). It checks FACTS: nouns and noun phrases, names, numbers, products and customers.
+The ad is split into sentences. Every clause of P2 that makes a claim (its content stems, after the company and role names, the generic verbs
+and the plain connecting words about a role -- "the role involves", "requires", "this team", "you will" -- are set aside) must have at least
+COMPANY_SUPPORT of its stems in one window of up to WINDOW consecutive ad sentences (a clause of fewer than MIN_CLAIM_STEMS stems: all of them
+somewhere in the ad). Every number must be in the ad. Every capitalised name or acronym (a person, a team, a product: "SaaS") must be in the ad,
+the fact bank or the opening.
 
 Length: the whole letter, P1 to P5, must be between MIN_WORDS (360) and `scoring.letter_max_words_company` (420) words; `letter.company_words`
 (360-420, default 400) is the length the model is asked for. The apply assist uploads the PDF to the cover-letter file field, or pastes the text
@@ -44,11 +49,17 @@ from .scorer import Keyword, keyword_hits, norm_literal, norm_stem
 
 MIN_WORDS, MAX_WORDS = 360, 420           # the allowed range of letter.company_words, and of the whole letter
 DEFAULT_WORDS = 400
-ATTEMPTS = 2                              # the draft and one redraft
+ATTEMPTS = 3                              # the draft and up to two redrafts, each told every rejection so far
 COMPANY_SUPPORT = 0.6                     # share of a P2 clause's content stems that one window of the ad must hold
 WINDOW = 3                                # consecutive ad sentences that may together support one clause
 MIN_CLAIM_STEMS = 3                       # a clause with fewer content stems must have all of them somewhere in the ad
 MODE = "company"
+ABOUT_LIMIT = 10                          # how many of the ad's About / role sentences the prompt offers for P2
+P2_MIN_USED, P2_MAX_USED = 2, 3           # P2 quotes or closely follows this many of them (fewer offered: all of them)
+P2_FOLLOWS = 0.6                          # share of a P2 sentence's content stems that one offered ad sentence must hold ...
+P2_MIN_SHARED = 3                         # ... and at least this many stems, for that ad sentence to count as followed
+# filler the letter never uses (the prompt says so; the user guard's own checks are unchanged)
+FILLER = ("robust", "seamless", "cutting-edge", "passionate", "leverage", "synergy")
 
 # words that carry no claim: function words, and the generic verbs and nouns of any "what we do" sentence
 _FUNCTION = frozenset("""the and for with that this from have has had are was were will would can could may might shall should their they them its our
@@ -59,7 +70,9 @@ _GENERIC = frozenset("""company companies team teams role roles hiring hire hire
     working help helps helping need needs needed solve solves solving problem problems challenge challenges opportunity make makes made use uses used
     using provide provides providing offer offers offering build builds building create creates creating deliver delivers delivering enable enables
     support supports include includes including allow allows get gets give gives take takes bring brings drive drives driving ensure ensures
-    focus focuses focused part""".split())
+    focus focuses focused part
+    involve involves involved involving require requires required requiring entail entails entailed entailing cover covers covering
+    responsible responsibility responsibilities expected expect expects candidate successful ideal person someone""".split())
 _SKIP = _FUNCTION | _GENERIC
 _CLAUSE = re.compile(r",(?!\d)|[;:]|\s+(?:and|but|while|so|because|which|who|whose|whereas)\s+|\s[-–—]\s")
 _BULLET = re.compile(r"^\s*(?:[-*•●▪]|\d+[.)])\s*")
@@ -108,6 +121,48 @@ def stems(text: str, skip: frozenset[str] = frozenset()) -> set[str]:
         if s and s not in skip and s not in _SKIP:
             out.add(s)
     return out
+
+
+# A heading line (short, no full stop) that opens a section of the ad about the company / the role / the team (kept), or one about what the
+# candidate needs or about boilerplate (dropped). A short line that is neither is a line of the section it sits in.
+_KEEP_HEAD = re.compile(r"\b(?:about|who we are|our (?:story|mission|company|team|vision|purpose)|the (?:company|role|team|opportunity|position|job)|"
+                        r"company|overview|summary|mission|your impact|impact|responsibilit\w*|what you(?:'|’)?ll do|what you will do|role|team|"
+                        r"what we do|why join|why us|description|opportunity|position)\b", re.I)
+_SKIP_HEAD = re.compile(r"\b(?:skills?|requirements?|qualifications?|experience|desirable|nice to have|bonus|benefits|perks|what we offer|diversity|"
+                        r"inclusion|equal opportunit\w*|equity|belonging|commitment|privacy|notice|disclaimer|fraud|salary|compensation|how to apply|"
+                        r"application|about you|who you are|you have|what you(?:'|’)?ll bring|what we(?:'|’)?re looking for)\b", re.I)
+_CUE = re.compile(r"\b(?:platform|products?|customers?|clients?|users?|team|mission|role|seeking|hiring|provides?|builds?|helps?|enables?)\b", re.I)
+_FLUFF = re.compile(r"\b(?:culture|values?|welcome|celebrat\w*|inspired|unique|winning|diversity|innovators|rewarded)\b", re.I)
+
+
+def about_sentences(jd: str, company: str = "", kws: list[Keyword] | None = None, limit: int = ABOUT_LIMIT) -> list[str]:
+    """The ad's About / role sentences, at most `limit`, in the ad's order: the sentences before the first heading and under headings about the
+    company, the role, the team or the impact (not under skills, requirements, benefits, diversity or notices). When there are more than `limit`,
+    those that name the company, hit the ad's keywords or say what the company makes win. P2 quotes or closely follows two or three of them."""
+    keep, out = True, []
+    for line in (jd or "").splitlines():
+        text = _BULLET.sub("", line).strip()
+        if not text:
+            continue
+        if len(text.split()) <= 9 and not re.search(r"[.!?]$", text):
+            if _SKIP_HEAD.search(text):
+                keep = False
+                continue
+            if _KEEP_HEAD.search(text):
+                keep = True
+                continue
+        if keep:
+            out += [s.strip() for s in sentences(text) if len(s.split()) >= 5]
+    out = list(dict.fromkeys(out))
+    if len(out) <= limit:
+        return out
+    name = norm_literal(company)
+
+    def score(i: int) -> tuple[int, int]:
+        text = out[i]
+        return (2 * bool(name and name in norm_literal(text)) + len(keyword_hits(text, kws or [])) + bool(_CUE.search(text)) - bool(_FLUFF.search(text)), -i)
+    best = sorted(sorted(range(len(out)), key=score, reverse=True)[:limit])
+    return [out[i] for i in best]
 
 
 def _windows(ad: list[str], skip) -> tuple[list[set[str]], list[set[str]]]:
@@ -166,6 +221,37 @@ def p2_sources(p2: str, jd: str, skip: frozenset[str] = frozenset()) -> list[dic
             left -= each[best]
         rows.append({"claim": sentence.strip(), "ad": [ad[i] for i in sorted(picked)]})
     return rows
+
+
+def used_sentences(p2: str, offered: list[str], skip: frozenset[str] = frozenset()) -> list[str]:
+    """The offered ad sentences P2 quotes or closely follows, in the ad's order: a sentence or clause of P2 whose content stems are at least
+    P2_FOLLOWS in one offered sentence, sharing at least P2_MIN_SHARED stems (all of them, for a sentence of fewer)."""
+    pieces = [stems(x, skip) for sentence in sentences(p2) for x in (sentence, *clauses(sentence))]
+    pieces = [c for c in pieces if c]
+    used = []
+    for ad in offered:
+        have = stems(ad, skip)
+        if not have:
+            continue
+        for c in pieces:
+            shared = len(c & have)
+            if shared >= min(P2_MIN_SHARED, len(c), len(have)) and shared / len(c) >= P2_FOLLOWS:
+                used.append(ad)
+                break
+    return used
+
+
+def extractive_problems(p2: str, offered: list[str], skip: frozenset[str] = frozenset()) -> list[str]:
+    """P2 is written from the ad's About / role sentences: it must quote or closely follow at least P2_MIN_USED of those offered (fewer
+    offered: all of them). Nothing is asked when the ad has none."""
+    if not offered:
+        return []
+    need = min(P2_MIN_USED, len(offered))
+    used = used_sentences(p2, offered, skip)
+    if len(used) >= need:
+        return []
+    return [f"P2 follows {len(used)} of the ad's About / role sentences; it must quote or closely follow {P2_MIN_USED} or {P2_MAX_USED} of them "
+            f"(for example: '{offered[0][:80]}')"]
 
 
 def name_problems(paragraphs: list[str], allowed_text: str, label: str = "") -> list[str]:
@@ -241,6 +327,7 @@ def check(p1: str, body: list[str], p5: str, job: dict, fb: dict, kws: list[Keyw
     if n < MIN_WORDS or n > cap:
         out.append(f"{n} words: the letter must be between {MIN_WORDS} and {cap}")
     out += [f"P2: {p}" for p in company_problems(body[0], jd, skip)]
+    out += extractive_problems(body[0], about_sentences(jd, company, kws), skip)
     out += user_problems(body[1:], evidence, p1, fb, kws, reqs, company, title)
     allowed = " ".join([jd, company, title, team, p1, *bank_names(fb), *_labels(fb).values(),
                         *(f"{e['text']} {e.get('where', '')} {e.get('org', '')}" for e in evidence)])
@@ -256,6 +343,16 @@ def check(p1: str, body: list[str], p5: str, job: dict, fb: dict, kws: list[Keyw
     return list(dict.fromkeys(out)), p2_sources(body[0], jd, skip)
 
 
+def allowed_vocabulary(evidence: list[dict], kws: list[Keyword], limit: int = 30) -> str:
+    """The words P3 and P4 may name, for the prompt: the tools and methods of the chosen fact-bank bullets, and the ad's skill terms."""
+    from . import evidence_fields
+
+    mine = list(dict.fromkeys(t for e in evidence for t in (evidence_fields.fields(e)["method"].split("; ")) if t and t != evidence_fields.NOT_STATED))
+    ad = [k.term for k in sorted(kws, key=lambda k: -k.weight)][:limit]
+    return (f"from the chosen bullets: {', '.join(mine) or '(none named)'}\n"
+            f"the ad's skill terms: {', '.join(ad) or '(none)'}")
+
+
 def _requirements(evidence: list[dict], kws: list[Keyword]) -> list[list[str]]:
     """For each evidence bullet the ad's keywords it evidences, heaviest first (at most three): the requirement its paragraph names."""
     out = []
@@ -267,7 +364,7 @@ def _requirements(evidence: list[dict], kws: list[Keyword]) -> list[list[str]]:
 
 def _letter_dict(status: str, **kw) -> dict:
     base = {"paragraphs": [], "problems": [], "score": None, "pages": 0, "words": 0, "status": status, "mode": MODE, "notes": [], "retry": {},
-            "evidence": [], "p2_sources": [], "requirements": []}
+            "evidence": [], "p2_sources": [], "p2_used": [], "requirements": []}
     return {**base, **kw}
 
 
@@ -329,12 +426,17 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
     target, cap = target_words(settings), word_cap(settings)
     body_words = max(target - words([p1, p5]), 60)
     deny = fb.get("deny_terms", [])
+    offered = about_sentences(jd, job["company"], kws)
     system = (P.COMPANY_LETTER_SYSTEM.replace("{body_words}", str(body_words)).replace("{lo}", str(MIN_WORDS)).replace("{hi}", str(cap))
-              .replace("{deny}", ", ".join(deny) or "(none)"))
+              .replace("{deny}", ", ".join(deny) or "(none)").replace("{filler}", ", ".join(FILLER))
+              .replace("{min_used}", str(P2_MIN_USED)).replace("{max_used}", str(P2_MAX_USED)))
     user = P.COMPANY_LETTER_USER.format(
         title=job["title"], company=job["company"], opening=p1, closing=p5, ad=jd[:9000], evidence=evidence_fields.block(evidence),
-        requirements="\n".join(f"EVIDENCE {i}: {', '.join(r)}" for i, r in enumerate(reqs, 1)))
+        requirements="\n".join(f"EVIDENCE {i}: {', '.join(r)}" for i, r in enumerate(reqs, 1)),
+        about="\n".join(f"[{i}] {x}" for i, x in enumerate(offered, 1)) or "(the ad has no About / role section: use its opening lines)",
+        vocabulary=allowed_vocabulary(evidence, kws), filler=", ".join(FILLER))
     ctx = {"mode": MODE, "company": job["company"], "title": job["title"], "opening": p1, "closing": p5, "ad": jd, "ad_sentences": ad_sentences(jd),
+           "about_sentences": offered, "filler": list(FILLER),
            "evidence": [e["text"] for e in evidence], "requirements": reqs, "body_words": body_words, "min_words": MIN_WORDS, "max_words": cap}
     retry: dict = {"count": 0, "rejected_words": [], "first_problems": [], "failures": [], "removed": [], "outcome": "first draft"}
     feedback, problems, body = "", [], []
@@ -358,16 +460,17 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
             retry["first_problems"] = list(problems)
         if attempt + 1 < ATTEMPTS:
             retry["count"] = attempt + 1
-            notes.append(f"cover_letter: draft {attempt + 1} rejected ({'; '.join(problems)[:200]}); redrafting once")
-        feedback = ("\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one, keep P2 inside the ad, and make P2 + P3 + P4 "
+            notes.append(f"cover_letter: draft {attempt + 1} rejected ({'; '.join(problems)[:200]}); redrafting ({attempt + 2} of {ATTEMPTS})")
+        feedback = ("\n\nYOUR LAST DRAFT BROKE THESE RULES; fix every one, keep P2 inside the ad's About / role sentences, and make P2 + P3 + P4 "
                     f"about {body_words} words:\n" + "\n".join(f"- {p}" for p in problems))
     if problems:
         retry["outcome"] = "no letter"
         shown_problems = "; ".join(problems)[:300]
         return none(f"{len(retry['failures'])} draft(s) rejected by the {MODE} guards; last: {shown_problems}", problems, retry)
     paragraphs = [p1, *body, p5]
+    used = used_sentences(body[0], offered, frozenset(stems(f"{job['company']} {job['title']} {team}")))
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paragraphs, "date": date.today().strftime("%d %B %Y"),
                          "greeting": L.greeting(job, team, settings), "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
     return pdf, _letter_dict("ok", paragraphs=paragraphs, words=words(paragraphs), score=ats.score(pdf_text(pdf), kws).literal,
-                             pages=page_count(pdf), notes=notes, retry=retry, evidence=shown, p2_sources=sources, requirements=reqs,
+                             pages=page_count(pdf), notes=notes, retry=retry, evidence=shown, p2_sources=sources, p2_used=used, requirements=reqs,
                              target_words=target, hook_source=(hk.source if hk is not None else "family profile line"))

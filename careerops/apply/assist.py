@@ -9,6 +9,10 @@ applicant.yaml `visa.by_country[W]` (else `.default`) and nothing else; a job wh
 visa field is highlighted and printed as `CHECK VISA ANSWER [W=XX]: question -> answer`; for a remote role at home XX is the remote label
 (`visa.remote.label`), never the home country.
 
+Order (apply/verify.py): files first -- the CV only to the real Resume / CV field, never to an "Autofill from resume" control --, then a wait until
+the form has not changed for 2 s, then the text fields, then every filled field is read back: `VERIFIED` / `LOST` per field, a LOST one is listed
+under REQUIRED + EMPTY.
+
 Every other field is filled by apply/filler.py, the same code the gated auto-apply uses: the standard fields from applicant.yaml (full
 name, first name, last name, e-mail, phone, links, location), then the user's answers.yaml. A free-text question nobody has an answer for
 ("Describe an LLM feature ...") stays empty and is marked for you.
@@ -29,7 +33,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import eo, filler, formfind
+from . import eo, filler, formfind, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -114,9 +118,13 @@ def _eo_options(page, el, typ: str) -> list[tuple[str, object]]:
     return []
 
 
-def _answer_eo(page, el, typ: str, entry: "eo.Entry | None") -> tuple[str | None, list[str], str]:
+UNCHECKED_NO = "left unchecked (answer: No)"          # what _answer_eo returns for a single check box whose answer is No
+
+
+def _answer_eo(page, el, typ: str, entry: "eo.Entry | None", track=None) -> tuple[str | None, list[str], str]:
     """Pick the option of an equal-opportunities field: (the option chosen or None, the option texts, why nothing was chosen). Only a
-    listed question is ever answered, and only with an option that equals one of its `match_any` texts."""
+    listed question is ever answered, and only with an option that equals one of its `match_any` texts. A single check box whose answer is
+    No stays unchecked and returns UNCHECKED_NO (an answer, not an empty field). `track(element, kind, value)` notes what was filled."""
     options = _eo_options(page, el, typ)
     texts = [t for t, _ in options]
     if entry is None:
@@ -126,16 +134,24 @@ def _answer_eo(page, el, typ: str, entry: "eo.Entry | None") -> tuple[str | None
             if (el.input_value() or "").strip():
                 return None, texts, "the text box already holds an answer: left as it is"
             el.fill(entry.answer.strip())                       # a free-text question: the answers.yaml answer, as written
+            if track:
+                track(el, "text", entry.answer.strip())
             return entry.answer.strip(), texts, ""
         return None, texts, "no options to choose from (a text box): left blank"
+    if typ == "checkbox" and len(options) == 1 and eo.answers_no(entry):
+        return UNCHECKED_NO, texts, ""
     pick = eo.choose(texts, entry)
     if pick is None:
         return None, texts, "no option matched match_any: left blank"
     target = next(e for t, e in options if t == pick)
     if typ == "select":
         el.select_option(label=target.inner_text())
+        if track:
+            track(el, "select", pick)
     else:
         target.check()
+        if track:
+            track(target, "check", pick)
     return pick, texts, ""
 
 
@@ -147,10 +163,37 @@ class _Filled:
         self.blank: list[str] = []
 
 
+def _upload_files(page, cv_pdf: str | None, letter_pdf: str | None, report: dict) -> bool:
+    """Pass 1 of fill_page: every file field, before any text field (an upload can make the form re-render and wipe what was typed). The
+    "Autofill from resume" control is skipped; the CV goes only to the real Resume / CV field, the letter PDF to a cover-letter field.
+    True when a file was set."""
+    sent = False
+    for el in page.query_selector_all("input, textarea, select"):
+        tag = el.evaluate("e => e.tagName").lower()
+        if tag != "input" or (el.get_attribute("type") or "").lower() != "file":
+            continue
+        label = (el.evaluate(LABEL_JS) or "").strip()
+        short = label.split("|")[0].strip()[:60] or "file"
+        if verify.is_autofill(el):
+            print(f"  skipped the autofill upload control (never used): {short}")
+            report.setdefault("skipped", []).append(f"file: {short} (autofill)")
+        elif re.search(r"cover", label, re.I) and letter_pdf:
+            el.set_input_files(letter_pdf); report["uploaded"].append(f"{short} ← letter"); sent = True
+        elif re.search(r"resume|résumé|\bcv\b|curriculum", label, re.I) and cv_pdf:
+            el.set_input_files(cv_pdf); report["uploaded"].append(f"{short} ← CV"); sent = True
+        else:
+            report["manual"].append(f"file: {short}")
+    return sent
+
+
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
               letter_text: str | None = None, job=None, plan: VisaPlan | None = None,
-              book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None) -> dict:
+              book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None, quiet_ms: int = verify.QUIET_MS) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
+
+    Order (apply/verify.py): the files first (never the "Autofill from resume" control); then, if a file was uploaded, wait until the form has
+    not changed for `quiet_ms`; then every text field, select and box; then each filled field is read back, an empty one is filled once more,
+    and `VERIFIED` / `LOST` is printed per field. A LOST field is listed in `required_empty` (and `lost`).
 
     With `job`, the wrong-file guard runs first: nothing is uploaded unless the CV and letter belong to that job.
     A cover-letter file field gets the letter PDF; a cover-letter text box gets `letter_text` (when still empty).
@@ -173,33 +216,30 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         for e in page.query_selector_all("input[type=file]"))
     listed_eo = eo.entries(applicant, book)               # applicant.yaml first, then the eo_* entries of answers.yaml
     never = applicant.get("never_fill", [])
+    tracker = verify.Tracker()
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
                      letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
-                     freetext=freetext)
+                     freetext=freetext, tracker=tracker)
 
-    for el in page.query_selector_all("input, textarea, select"):
+    if _upload_files(page, cv_pdf, letter_pdf, report):                  # pass 1: the files, then the form is left to finish re-rendering
+        if not verify.wait_quiet(page, quiet_ms):
+            print(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back below)")
+
+    for el in page.query_selector_all("input, textarea, select"):       # pass 2: fresh handles, the form may have replaced its nodes
         tag = el.evaluate("e => e.tagName").lower()
         typ = (el.get_attribute("type") or ("text" if tag == "input" else tag)).lower()
-        if typ in ("hidden", "submit", "button", "image", "reset") or not el.is_visible() and typ != "file":
+        if typ in ("hidden", "submit", "button", "image", "reset", "file") or not el.is_visible():
             continue
         label = (el.evaluate(LABEL_JS) or "").strip()
         short = label.split("|")[0].strip()[:60] or typ
         question = _norm(el.evaluate(QUESTION_JS) if typ == "radio" else label.split("|")[0]).rstrip(" *")   # no "required" star
-
-        if typ == "file":
-            if re.search(r"cover", label, re.I) and letter_pdf:
-                el.set_input_files(letter_pdf); report["uploaded"].append(f"{short} ← letter")
-            elif re.search(r"resume|résumé|\bcv\b|curriculum", label, re.I) and cv_pdf:
-                el.set_input_files(cv_pdf); report["uploaded"].append(f"{short} ← CV")
-            else:
-                report["manual"].append(f"file: {short}")
-            continue
 
         if letter_text and not letter_file and typ == "textarea" and re.search(r"cover\s*letter", label, re.I):
             # Before the never_fill check on purpose: 'cover letter' is in never_fill so that a *question* about
             # one is left to the user, but the letter text is ours and was reviewed.
             if not (el.input_value() or "").strip():
                 el.fill(letter_text)
+                tracker.add(el, short, "text", letter_text)
                 report["filled"].append(f"{short} = cover letter text")
             continue
 
@@ -219,11 +259,17 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                     opt = _norm((r.evaluate(LABEL_JS) or "").split("|")[0]).lower()
                     if value and done is None and value.lower() in (opt, (r.get_attribute("value") or "").lower()):
                         r.check()
+                        tracker.add(r, question, "check")
                         done = value
                 held = done
             else:
                 el.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
+                was_empty = typ in TEXT_TYPES and not (el.input_value() or "").strip()
                 held = _answer_visa(el, typ, question, plan)
+                if held and typ == "select":
+                    tracker.add(el, question, "select", held)
+                elif held and was_empty:                       # a text box this run typed into (one that already held the answer is not ours)
+                    tracker.add(el, question, "text", held)
             other = about_another_country(question, plan)
             print(f"CHECK VISA ANSWER [W={where}]: {question[:150]} -> {held or 'EMPTY'}"
                   + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else ""))
@@ -243,7 +289,11 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             group_els = [e for _, e in _eo_options(page, el, typ)] if typ in ("radio", "checkbox") else [el]
             for g in group_els:
                 g.evaluate(f"e => e.style.outline = '{EO_COLOUR}'")
-            picked, texts, why = _answer_eo(page, el, typ, entry)
+            picked, texts, why = _answer_eo(page, el, typ, entry, track=lambda e, kind, value, q=question: tracker.add(e, q, kind, value))
+            if picked == UNCHECKED_NO:                       # a single check box and the answer is No: nothing to tick, and nothing is missing
+                print(f"CHECK EO ANSWER [{entry.key}]: {question[:150]} -> {picked}")
+                report["eo"].append({"question": question, "key": entry.key, "value": "No", "options": texts})
+                continue
             shown = (" (" + why + (f"; options: {' | '.join(texts[:12])}" if why.startswith("no option matched") else "") + ")") if not picked else ""
             print(f"CHECK EO ANSWER [{entry.key if entry else 'not listed'}]: {question[:150]} -> {picked or 'EMPTY'}{shown}")
             report["eo"].append({"question": question, "key": entry.key if entry else None, "value": picked, "options": texts})
@@ -267,6 +317,11 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         if required and empty:
             el.evaluate("e => e.style.outline = '3px solid red'")
             report["required_empty"].append(short)
+
+    if tracker.fills:                                                    # pass 3: read back everything this run filled
+        print("\nReading back every field that was filled:")
+        report["verified"], report["lost"] = tracker.verify(page)
+        report["required_empty"].extend(x for x in report["lost"] if x not in report["required_empty"])
     return report
 
 

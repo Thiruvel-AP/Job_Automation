@@ -183,7 +183,8 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
    box (a text box or text area) for an `eo_*` question of `answers.yaml` is typed with that entry's `answer` as you wrote it (`Male`), unless the
    box already holds text; a text box for a question listed only in `applicant.yaml` stays empty. Every equal-opportunities field on the form (ethnicity, gender, disability, religion, sexual orientation, veteran status,
    pronouns ...), listed or not, is outlined blue and printed as `CHECK EO ANSWER [ethnicity]: <question> -> <option or EMPTY (why)>`
-   (`[not listed]` for the ones you did not list, which are always left blank; an unmatched list prints its options). `careerops
+   (`[not listed]` for the ones you did not list, which are always left blank; an unmatched list prints its options). A single check box
+   ("Person with disability", "Veteran") whose answer is No stays unchecked and prints `-> left unchecked (answer: No)`, not EMPTY. `careerops
    doctor` validates the block when there is one: a mapping of questions, each with a non-empty `match_any` list of texts, an optional
    `answer` text, an optional `question` list of valid regexes (required unless the key is `ethnicity`), no other keys. The `eo_*` entries of
    `answers.yaml` (`eo_gender`, `eo_disability` ...: their `match` texts are the question, their `options` the options you accept, best first, else their
@@ -555,6 +556,10 @@ assist still never submit.
 - **Finding the form.** Ashby: `<job url>/application`. Lever: `<job url>/apply`. Greenhouse and others: the job page itself, waiting up to 15 s for the
   form; an "Apply" link on it is followed once. If no form field has appeared after 15 s the assist and the auto-apply print `FORM NOT FOUND <url>` (and no
   `Filled:` line); the job is left to you.
+- **Fill order and read-back.** Files first: the CV goes only to the real Resume / CV field, never to an "Autofill from resume" control (printed `skipped the
+  autofill upload control`); then the form is left alone until it has not changed for 2 s (an Ashby form re-renders after an upload and wipes what was typed);
+  then the text fields. Afterwards every field that was filled is read back: an empty one is filled once more and printed `VERIFIED` (`(filled again)`) or
+  `LOST`. The assist lists a LOST field under `REQUIRED + EMPTY`; the auto-apply stops (`needs_user`) instead of submitting.
 
 **Submitting**: a full-page screenshot of the filled form is saved in the job's output folder first. The first `confirm_first_n` (3) auto-submits ever,
 or every one with `--confirm`, show its path and ask `Submit? [y/N]`. Then the button is clicked and the confirmation page awaited for 30 seconds; its
@@ -690,7 +695,9 @@ bullet (0.7 overlap), no deny-listed term, no keyword list, no "we" / "our", no 
 least 60 % of its content words in one run of up to three consecutive ad sentences (a very short clause: all of them somewhere in the ad); any number
 about the company must be in the ad; any capitalised name (a person, a team, a product) must be in the ad, the fact bank or P1. Outside knowledge about the
 company therefore cannot get in; a faithful paraphrase of the ad can.
-The review screen shows the **word count** against the accepted range and, for P2, **each sentence with the ad sentences it drew from**. The apply
+P2 is written from the ad's About / role sentences (the prompt numbers them; it must quote or closely follow 2 or 3), and up to three drafts are tried before
+"no letter" (the reasons are shown). The review screen shows the **word count** against the accepted range and, for P2, **each sentence with the ad sentences it drew from**
+and which About / role sentences it followed. The apply
 assist uploads the letter PDF to the cover-letter file field, or pastes the text into a cover-letter text box.
 
 With `off` no letter is asked for: no letter call, no letter PDF, review says `Letter: off` and approving needs no extra words, and

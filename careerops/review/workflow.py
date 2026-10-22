@@ -205,6 +205,9 @@ def company_letter_lines(letter: dict) -> list[str]:
     for row in letter.get("p2_sources") or []:
         out.append(f"    - {row['claim']}")
         out += [f"        ad: {s}" for s in row["ad"]] or ["        ad: (no single ad sentence; the check passed on a run of them)"]
+    if letter.get("p2_used"):
+        out.append("  P2 quotes or closely follows these About / role sentences of the ad:")
+        out += [f"    [{i}] {s}" for i, s in enumerate(letter["p2_used"], 1)]
     return out
 
 
