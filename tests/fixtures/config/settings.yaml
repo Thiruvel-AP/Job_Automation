@@ -286,6 +286,7 @@ scoring:
   max_skill_groups: 5         # grouped skill rows besides the pinned `skills.core` row; the groups least relevant to the JD are left off
   bullet_dedupe_jaccard: 0.6  # a bullet whose word-set overlap (Jaccard) with an already chosen bullet reaches this is not added
   letter_max_words: 250
+  letter_max_words_company: 420   # letter.mode: company only: the most words its letter may have (never over 420); the other modes keep letter_max_words
 
 letter:
   # off = no letter is asked for: no letter call is made, no letter PDF is written, review says "Letter: off" and approving needs
@@ -298,7 +299,13 @@ letter:
   # Default off: a live run uploads the CV only. hook = the letter is ASSEMBLED, no model writes it: the hook entry's letter_line, two
   # sentences each built from one selected bullet's own words, and the call to action (its problem phrase = the hook entry's terms, lower
   # case). draft = the model drafts one (legacy, under every letter check and the same our/we/"I help <Company>"/linked-noun-phrase guard).
-  mode: "off"                # off | draft | hook (quoted: an unquoted off is the boolean false in YAML)
+  mode: "off"                # off | draft | hook | company (quoted: an unquoted off is the boolean false in YAML)
+  # company = ONE 360-420 word letter in five paragraphs (tailoring/company_letter.py), the middle three written by the cover_letter model
+  # (Groq gpt-oss-120b) under two guards: P1 the hook's letter line word for word (no hook: the role family's profile line), P2 why this
+  # company (the job ad is the only source: every claim must be backed by a phrase of the ad, no company number the ad lacks, no invented
+  # name), P3 and P4 the two best-matching fact-bank bullets each tied to a named requirement of the ad (every number, tool and organisation
+  # must be in those bullets), P5 closing_hook. One redraft after a rejection; a second rejection = no letter, and review says why.
+  company_words: 400         # company mode: the length the model is asked for, 360-420 (the whole letter must come to at least 360 and at most scoring.letter_max_words_company words)
   # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
   greeting_hook: "Dear {company}{team} team"
   greeting_agency: "Hi {company} team"

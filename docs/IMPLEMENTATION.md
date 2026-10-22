@@ -1099,6 +1099,26 @@ you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywo
 
 Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
 
+## 5ae. Round 16 — `letter.mode: company` (2026-10-22) — **done** (offline tests, MockLLM; no real model, no live form)
+
+1. **Settings.** `letter.mode` accepts `company` (`tailor.LETTER_MODES`). `letter.company_words: 400` (allowed 360-420, `company_letter.target_words` refuses anything else) is the length the
+   model is asked for. `scoring.letter_max_words_company: 420` is the cap of this mode only (`word_cap`, never over 420); `scoring.letter_max_words` (250) is untouched, so the other modes
+   are unchanged. Both keys are in `config/settings.yaml` and in `tests/fixtures/config/settings.yaml`.
+2. **`tailoring/company_letter.py`.** `prepare` settles P1 (hook `letter_sentence`, else the family `profile_body` from `tailor._tailor`'s new `report["family_line"]`, which is now set for every job,
+   not only a hook-less one), P5 (`letters.closing_text(problem)`: the hook's problem, else `letters.ad_problem` = the ad's two heaviest claimable keywords) and the two evidence bullets with the ad
+   requirements each evidences. `make` asks the `cover_letter` task (context `mode: "company"`, prompts `COMPANY_LETTER_SYSTEM/USER`) for `[P2, P3, P4]`, runs `check`, and on a rejection asks
+   once more with every rejection listed (`ATTEMPTS = 2`). Two rejections: `status "none"`, `reason`, `retry.failures`, no PDF. `TaskUnavailable`: `status "pending"`. No template fallback.
+3. **Guards.** `company_problems` (P2: clause-level normalised overlap against windows of up to 3 ad sentences, `COMPANY_SUPPORT` 0.6; numbers must be in the ad), `name_problems` (an invented
+   person / team / product name), `user_problems` (P3, P4: numbers, fact-bank tools and organisations must be the chosen bullets', `grounding_problems` per bullet with no ad to lean on, a named
+   requirement, no paste, no repeated bullet), plus the existing `claim_problems` (we / our / "I help"), `term_dump_problems`, deny list, style and word-count checks.
+4. **Wiring.** `tailor._letters` has a `company` branch (returns one letter, no A / B variants, so review's `l` / `g` regenerate it with the same inputs: `report["family_line"]`, hook, claimable).
+   `review.workflow.company_letter_lines`: word count, accepted range, requirements named, and each P2 sentence with the ad sentences it drew from. The report's letter dict carries
+   `mode`, `words`, `target_words`, `p2_sources`, `requirements`, `hook_source`.
+5. **Upload.** Unchanged from round 15: the PDF goes to a cover-letter file field, the text to a cover-letter text box when there is no file field.
+6. **Tests.** `tests/tailoring/test_company_letter.py` (57): a P2 claim missing from the ad, a company number missing from the ad, an invented person / team name, a user number / tool /
+   organisation missing from the bullets, 360-420 words pass and 250 / 359 / 421 / 500 fail, the redraft-once-then-no-letter flow, a no-hook job (with and without a family line), the review lines,
+   and `tailor_job` end to end (letter fits one page). Not verified: the real Groq model's drafts (the guards are strict by design and may reject paraphrases: it then redrafts once and says why).
+
 ## 5ad. Round 15 — the 22 Oct live run at Flo Health (Greenhouse) (2026-10-22) — **done** (offline tests; no live form, no real model, no real data)
 
 1. **Crash.** `job.get` on a `sqlite3.Row` (`Handoff.run`, reached from `assist`). `assist()` and `Handoff.run()` now start with `job = dict(job)`. Tests pass a real `sqlite3.Row`

@@ -53,10 +53,15 @@ def greeting(job: dict, team: str, settings) -> str:
     return (cfg.get("greeting_hook") or "Dear {company}{team} team").format(company=job["company"], team=f" {team}" if team else "")
 
 
+def closing_text(problem: str, settings) -> str:
+    """The call to action for a problem phrase: `letter.closing_hook`, written in settings and never by a model."""
+    return (settings["letter"].get("closing_hook") or "Could we take 20 minutes to talk about {problem}?").format(
+        problem=problem.strip().rstrip(".?"))
+
+
 def closing(hk: Hook, settings) -> str:
     """The call to action: a 20-minute ask that names one problem from the ad (the hook's problem phrase)."""
-    return (settings["letter"].get("closing_hook") or "Could we take 20 minutes to talk about {problem}?").format(
-        problem=hk.problem.strip().rstrip(".?"))
+    return closing_text(hk.problem, settings)
 
 
 def _home_city(applicant: dict, fb: dict) -> str:
@@ -344,14 +349,20 @@ def make_letters(job: dict, fb: dict, kws: list[Keyword], company_hook: str, hk:
     return {"A": a, "B": b_none, "choice": "A", "retry": {}}
 
 
+def ad_problem(job: dict, kws: list[Keyword], fb: dict, claimable: list[str], headline: str = "") -> str:
+    """A problem phrase made of the ad's own words, for the call to action of a letter with no hook entry: the ad's two heaviest keywords
+    the fact bank can claim (the JD's order on a tie), as a lower-case noun phrase; else "the <role> role"."""
+    have = {c.lower() for c in claimable}
+    deny = (fb or {}).get("deny_terms", [])
+    pool = sorted((k for k in kws if k.term.lower() in have and not deny_hits(k.term, deny)), key=lambda k: -k.weight)
+    return noun_phrase([k.term for k in pool[:2]], job.get("description") or "", bank_names(fb)) or f"the {headline or job.get('title') or 'role'} role"
+
+
 def family_hook(job: dict, kws: list[Keyword], fb: dict, claimable: list[str], line: str, headline: str = "") -> Hook:
     """The stand-in hook of a job that no hook_library entry fits: sentence 1 of the letter is `line` (the role family's profile line from the
     fact bank, word for word), the call to action names the ad's two heaviest keywords the fact bank can claim (else the role). It carries
     no proof bullet, so both body sentences come from the CV's own bullets."""
-    have = {c.lower() for c in claimable}
-    deny = (fb or {}).get("deny_terms", [])
-    pool = sorted((k for k in kws if k.term.lower() in have and not deny_hits(k.term, deny)), key=lambda k: -k.weight)     # stable: the JD's order on a tie
-    problem = noun_phrase([k.term for k in pool[:2]], job.get("description") or "", bank_names(fb)) or f"the {headline or job.get('title') or 'role'} role"
+    problem = ad_problem(job, kws, fb, claimable, headline)
     text = " ".join(line.split())
     return Hook(problem, "", "", headline, text, text, source=FAMILY_SOURCE,
                 notes=["no hook_library entry qualifies: sentence 1 is the role family's profile line, word for word"])

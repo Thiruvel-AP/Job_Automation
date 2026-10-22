@@ -61,6 +61,7 @@ career-ops/
 │   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
 │   │   ├── profile.py            the CV profile, assembled in code: the hook's profile line + one or two `profile_facts` sentences (no model)
 │   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
+│   │   ├── company_letter.py     `letter.mode: company`: the 360-420 word five-paragraph letter (hook line, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
 │   │   ├── letters.py            `letter.mode: hook`: the letter ASSEMBLED in code (library letter line + two sentences from two bullets + 20-minute ask), the our/we/linked-phrase guard, relocation line, greeting
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
@@ -210,7 +211,7 @@ careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one 
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
-careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one), in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 360-420 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
@@ -642,7 +643,7 @@ table. Ollama down, or an answer that is not JSON: tried twice, then **no verdic
 
 An unquoted `off` in YAML is the boolean `false`; both `letter.mode` and `review.judge` accept it, but the shipped file quotes it.
 
-### Letters (`letter.mode: off | draft | hook`, default `off`)
+### Letters (`letter.mode: off | draft | hook | company`, default `off`)
 
 **`off`** (the default since 17 Oct) asks for no letter: a live run uploads the **CV only** (see below).
 
@@ -665,6 +666,32 @@ and the archive keeps (`letters/A/<name> Cover Letter.pdf`). With the hook off o
 phrase is the ad's two heaviest keywords the bank can claim). No model writes any of it; the same checks apply. A family with no `profile_body` has no
 line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
 `Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
+
+**`company`** writes ONE letter of **360 to 420 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
+task, Groq `openai/gpt-oss-120b`) writes the middle three; code writes the first and the last.
+
+| | paragraph | source |
+|---|---|---|
+| P1 | the hook | the hook's `letter_line` word for word; no hook qualifies: the role family's profile line (`families[*].profile_body`), word for word |
+| P2 | why this company | what it does, its product or customers, what this team is hiring to solve: the **job ad alone** (its About / Company section included) |
+| P3, P4 | evidence | the two best-matching fact-bank bullets (other than the hook's proof bullet), each tied to a named requirement of the ad |
+| P5 | the close | `letter.closing_hook` with the problem phrase from the ad |
+
+The greeting and sign-off are the ones in settings (`letter.greeting_hook` / `greeting_agency`, `letter.signoff`). `letter.company_words` (default
+**400**, allowed 360 to 420; anything else is refused) is the length the model is asked for; the finished letter must come to 360 to
+`scoring.letter_max_words_company` (420) words, so 250 and 500 are rejected. `scoring.letter_max_words` (250) stays the cap of the other modes.
+A draft is checked and, if a guard rejects it, drafted **once more** with every rejection named; a second rejection means **no letter** and the review
+screen says why (`Letter draft 1 / 2 rejected: ...`, the `NO LETTER` banner and its reason; approving needs `no letter`, as for any lost letter).
+
+*User guard* (P3, P4): every number, tool and organisation named must be in the two chosen bullets (or in P1); each sentence is checked against its own
+bullet (no name, sector, client or capability word the bullet does not say); each paragraph names an ad requirement its bullet evidences; no pasted
+bullet (0.7 overlap), no deny-listed term, no keyword list, no "we" / "our", no "I help <Company>".
+*Company guard* (P2): the ad is split into sentences; every clause of P2 that makes a claim (product, customers, size, funding, markets, mission) needs at
+least 60 % of its content words in one run of up to three consecutive ad sentences (a very short clause: all of them somewhere in the ad); any number
+about the company must be in the ad; any capitalised name (a person, a team, a product) must be in the ad, the fact bank or P1. Outside knowledge about the
+company therefore cannot get in; a faithful paraphrase of the ad can.
+The review screen shows the **word count** against the accepted range and, for P2, **each sentence with the ad sentences it drew from**. The apply
+assist uploads the letter PDF to the cover-letter file field, or pastes the text into a cover-letter text box.
 
 With `off` no letter is asked for: no letter call, no letter PDF, review says `Letter: off` and approving needs no extra words, and
 the application is archived without one. With `draft` the model drafts one from the evidence **as fields** (`method`, `data`,

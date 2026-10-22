@@ -53,7 +53,7 @@ from .scorer import (Keyword, _contains, cap_keywords, has_literal, ceiling, dro
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
-LETTER_MODES = ("off", "draft", "hook")     # settings letter.mode: no letter calls at all, the model drafts one, or hook.py's two variants A / B
+LETTER_MODES = ("off", "draft", "hook", "company")     # settings letter.mode: no letter calls at all, the model drafts one, hook.py's two variants A / B, or the 5-paragraph company letter
 LETTER_POLICIES = ("none", "template")     # settings letter.on_failure: what a letter that failed every draft becomes
 LLM_FAILED = "LLM call failed"             # in analyse's notes when only the taxonomy keywords could be used
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
@@ -1099,7 +1099,8 @@ def letter_mode(settings) -> str:
     """settings letter.mode: "off" = no letter is asked for and no letter call is made; "draft" = the model drafts one from the
     evidence fields (evidence_fields.py), under every letter check; "hook" = two letters, A (strengths) and B (A plus one honest gap),
     each opening with the hook's sentence (letters.py). "hook" needs the hook: with hook.enabled false a "draft" letter is made; with
-    the hook on but none buildable both letters are "none"."""
+    the hook on but none buildable both letters are "none". "company" = one 360-420 word letter (company_letter.py): the hook's letter line
+    (else the role family's profile line), why this company (from the ad alone), two evidence paragraphs, the closing question."""
     raw = settings["letter"].get("mode")
     mode = "off" if raw is None or raw is False else str(raw).strip().lower()          # YAML reads an unquoted `off` as False
     if mode not in LETTER_MODES:
@@ -1259,6 +1260,11 @@ def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_di
     bypassed). With hook.enabled false, or in mode `draft`, the one letter of `_make_letter`. With the hook on, none buildable and the
     role family's profile line (`family_line`, the fact bank's `profile_body`) known, sentence 1 is that line word for word and the rest is
     assembled as usual (`letters.family_hook`); without such a line the letters are "none"."""
+    if letter_mode(settings) == "company":
+        from . import company_letter as CL
+
+        pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids)
+        return pdf, letter, None
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
 
@@ -1656,10 +1662,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         analysis_warnings.append(f"hook: no library hook qualifies, so the CV headline is the role family's '{headline}' with no number, "
                                  "and there is no hook line, no proof bullet first and no hook letter (" + "; ".join(hook_notes)[:400] + ")")
     # no hook: profile line 1 is the role family's profile body (the user's own words, fact bank `families[*].profile_body`), if the bank has one
-    head = ""
-    if hook_failed:
-        bank_family = fam or pick_family(fb, kws, family, from_family)
-        head = " ".join(str((bank_family or {}).get("profile_body") or "").split())
+    bank_family = fam or pick_family(fb, kws, family, from_family)
+    family_body = " ".join(str((bank_family or {}).get("profile_body") or "").split())      # also the opening of a company-mode letter without a hook
+    head = family_body if hook_failed else ""
     profile = assemble_profile(fb, kws, jd, hk, head)            # the hook's profile line (else the family's body) + profile_facts sentences, in code
     profile_text = profile["text"]
     # an award project moves to Certifications & Achievements unless the JD ranks it in the top three (or it holds the hook's proof):
@@ -1678,7 +1683,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
-                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": head}
+                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body}
 
     jac = sc["bullet_dedupe_jaccard"]
     ranking, best, cache = kws, None, {}
@@ -1811,7 +1816,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
     evidence = letter_evidence(fb, kws, chosen_ids, job["description"])
     letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
-                                           required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, head)
+                                           required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body)
     cv_text = pdf_text(pdf)
     fm = None if one_page else pdflayout.measure(pdf)
     urls = [] if one_page else [p["github"] for p in ctx["projects"] if p.get("github") and not project_parts(p)[1]]

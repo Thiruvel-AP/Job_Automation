@@ -29,6 +29,7 @@ from ..hook import headline_lint
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
+from ..tailoring import company_letter
 from ..tailoring import letters as letters_mod
 from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
 from . import judge
@@ -192,6 +193,21 @@ def letter_lines(rep: dict) -> list[str]:
     return out
 
 
+def company_letter_lines(letter: dict) -> list[str]:
+    """letter.mode: company: the word count against the accepted range and, for P2 (why this company), each sentence with the ad sentences it
+    drew from, so that the claims about the employer can be read against the ad. [] for a letter of another mode."""
+    if letter.get("mode") != "company" or letter.get("status") != "ok":
+        return []
+    out = [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {company_letter.MIN_WORDS}-"
+           f"{company_letter.MAX_WORDS}) | opening: {letter.get('hook_source')} | requirements named: "
+           + "; ".join(", ".join(r) for r in letter.get("requirements") or [])]
+    out.append("  P2 (why this company) drew from the job ad:")
+    for row in letter.get("p2_sources") or []:
+        out.append(f"    - {row['claim']}")
+        out += [f"        ad: {s}" for s in row["ad"]] or ["        ad: (no single ad sentence; the check passed on a run of them)"]
+    return out
+
+
 def ats_lines(rep: dict) -> list[str]:
     """The three ATS numbers (ats.py: strict CV, claimable ceiling, CV + letter; the letter alone is shown, never gated), and the
     STRETCH label for a job whose honest ceiling is under the band."""
@@ -306,6 +322,7 @@ def summary(job, rep: dict, settings=None) -> str:
     ]
     if letter.get("evidence"):
         lines.append("Letter evidence: " + ", ".join(e["id"] for e in letter["evidence"]))
+    lines += company_letter_lines(letter)
     failures = (rep["letter"].get("retry") or {}).get("failures") or []
     for fail in failures:
         lines.append(f"Letter draft {fail['attempt']} rejected: " + "; ".join(fail["problems"])[:400])
