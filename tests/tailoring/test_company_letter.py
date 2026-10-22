@@ -61,7 +61,8 @@ def world(settings, fb_fixture):
     claimable = [k.term for k in kws]
     plan = CL.prepare(JOB, fb, kws, hk, "", evidence, settings, claimable, chosen)
     assert not plan.error
-    own = L.assemble_body(fb, plan.evidence, hk, kws, JD, "Anaplan")        # P3 and P4 first sentences, from their own bullets
+    own = L.assemble_body(fb, [g[0] for g in plan.groups], hk, kws, JD, "Anaplan")     # P3 and P4 first sentences, from the best bullet of each group
+    own = [f"On {r[0]}: {x}" if r[0].lower() not in x.lower() else x for x, r in zip(own, plan.reqs)]   # each paragraph names its requirement
     return SimpleNamespace(settings=settings, fb=fb, kws=kws, hk=hk, chosen=chosen, evidence=evidence, claimable=claimable, plan=plan, own=own)
 
 
@@ -84,21 +85,8 @@ def test_the_mode_is_known_and_the_shipped_settings_hold_the_new_keys(settings):
     settings.raw["letter"]["mode"] = "company"
     assert tailor.letter_mode(settings) == "company" and "company" in tailor.LETTER_MODES
     s = load_settings()
-    assert s["letter"]["company_words"] == 400 and s["scoring"]["letter_max_words_company"] == 420
+    assert s["letter"]["company_words"] == [330, 420] and s["scoring"]["letter_max_words_company"] == 420
     assert s["scoring"]["letter_max_words"] == 250                          # the other modes keep theirs
-
-
-@pytest.mark.parametrize("value", [360, 400, 420, "380"])
-def test_company_words_between_360_and_420_are_accepted(settings, value):
-    settings.raw["letter"]["company_words"] = value
-    assert CL.target_words(settings) == int(value)
-
-
-@pytest.mark.parametrize("value", [250, 359, 421, 500, "many", None, True])
-def test_company_words_outside_the_range_are_refused(settings, value):
-    settings.raw["letter"]["company_words"] = value
-    with pytest.raises(ValueError, match="letter.company_words must be a whole number between 360 and 420"):
-        CL.target_words(settings)
 
 
 def test_the_word_cap_is_the_company_one_and_never_over_420(settings):
@@ -128,8 +116,7 @@ def test_with_neither_hook_nor_family_line_there_is_nothing_to_open_with(world):
 
 def test_p3_and_p4_come_from_the_best_other_bullets_and_each_has_a_requirement_it_evidences(world):
     assert world.hk.proof_bullet_id not in {e["id"] for e in world.plan.evidence}
-    assert len(world.plan.evidence) == 2 and all(r for r in world.plan.reqs)
-    assert world.plan.reqs[0] == ["Python", "machine learning", "XGBoost"]
+    assert len(world.plan.evidence) == 4 and len(world.plan.reqs) == 2 and all(len(r) == 1 for r in world.plan.reqs)     # two bullets for each of two requirements
 
 
 # ------------------------------------------------------------------ a good letter passes
@@ -232,11 +219,11 @@ def test_360_to_420_words_pass(world, total):
     assert check(world, paragraphs) == []
 
 
-@pytest.mark.parametrize("total", [250, 359, 421, 500])
+@pytest.mark.parametrize("total", [250, 329, 421, 500])
 def test_250_and_500_words_and_the_edges_around_the_range_are_rejected(world, total):
     paragraphs = body(world, total) if total >= 200 else None
     problems = check(world, paragraphs)
-    assert f"{total} words: the letter must be between 360 and 420" in problems, problems
+    assert f"{total} words: the letter must be between 330 and 420" in problems, problems
 
 
 def test_a_lower_cap_in_settings_narrows_the_range(world):
@@ -273,8 +260,8 @@ def test_the_model_is_asked_through_the_cover_letter_task_with_the_ad_and_the_tw
     llm = MockLLM({"cover_letter": handler})
     pdf, letter = run(world, llm)
     assert llm.calls == ["cover_letter"] and seen[0]["mode"] == "company" and seen[0]["ad"] == JD
-    assert seen[0]["opening"] == world.plan.p1 and seen[0]["closing"] == world.plan.p5 and len(seen[0]["evidence"]) == 2
-    assert 360 <= CL.words([world.plan.p1, world.plan.p5]) + seen[0]["body_words"] <= 420
+    assert seen[0]["opening"] == world.plan.p1 and seen[0]["closing"] == world.plan.p5 and len(seen[0]["evidence"]) == 4
+    assert 330 <= CL.words([world.plan.p1, world.plan.p5]) + seen[0]["body_words"] <= 420
 
 
 @pytest.mark.slow
@@ -309,7 +296,7 @@ def test_the_second_draft_is_told_every_rejection(world):
     bad = body(world, 400, p2="Anaplan has more than 9,000 customers and its platform supports scenario planning and analysis.")
     handler, seen = writer(world, [bad, body(world)])
     run(world, Spy({"cover_letter": handler}))
-    assert "YOUR LAST DRAFT BROKE THESE RULES" not in sent[0] and "number(s) about the company not in the ad" in sent[1]
+    assert "YOUR LAST DRAFT BROKE THESE RULES" not in sent[0] and "P2: remove the number(s) ['9000']: the ad does not state them" in sent[1]
 
 
 def test_a_model_that_answers_with_the_old_shape_is_rejected_not_trusted(world):
@@ -339,7 +326,8 @@ def test_a_no_hook_job_still_gets_a_letter_that_opens_with_the_family_profile_li
 
 
 def _no_hook_body(world, plan) -> list[str]:
-    own = L.assemble_body(world.fb, plan.evidence, world.hk, world.kws, JD, "Anaplan")
+    own = L.assemble_body(world.fb, [g[0] for g in plan.groups], world.hk, world.kws, JD, "Anaplan")
+    own = [f"On {r[0]}: {x}" if r[0].lower() not in x.lower() else x for x, r in zip(own, plan.reqs)]       # each paragraph names its requirement
     need = 400 - CL.words([plan.p1, P2, *own, plan.p5])
     return [f"{own[0]} {pad(need // 2)}", f"{own[1]} {pad(need - need // 2)}"]
 
@@ -357,7 +345,7 @@ def test_review_shows_the_word_count_and_the_ad_sentences_p2_drew_from(world):
               "p2_sources": CL.p2_sources(P2, JD, skip)}
     lines = workflow.company_letter_lines(letter)
     text = "\n".join(lines)
-    assert lines[0].startswith("Letter (company mode): 398 words (asked for 400; accepted 360-420)") and "Python, XGBoost; PyTorch" in lines[0]
+    assert lines[0].startswith("Letter (company mode): 398 words (asked for 400; accepted 330-420)") and "Python, XGBoost; PyTorch" in lines[0]
     assert "P2 (why this company) drew from the job ad:" in text and "- Anaplan builds an AI-infused scenario planning" in text
     assert "ad: At Anaplan, we are a team of innovators focused on optimizing" in text
     assert workflow.company_letter_lines({"mode": "company", "status": "none"}) == [] and workflow.company_letter_lines({"status": "ok"}) == []

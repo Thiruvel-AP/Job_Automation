@@ -12,7 +12,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
-from .. import ats
+from .. import ats, bands
 from .. import hook as hooks
 from .. import note as note_mod
 from ..apply.naming import file_stem
@@ -645,7 +645,7 @@ def letter_summary(letter: dict) -> str:
         why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
         return f"NO LETTER ({letter.get('reason') or 'no letter'}" + (f"; first: {why[0]}" if why else "") + ")"
     if letter.get("status") == "off":
-        return "off (letter.mode: off)"
+        return f"off ({letter.get('reason') or 'letter.mode: off'})"
     if letter.get("status") == "pending":
         return f"pending ({letter.get('reason') or 'no provider for it'})"
     why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
@@ -1055,6 +1055,18 @@ def letter_evidence(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = 
             for b in picked]
 
 
+def ranked_letter_bullets(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None = None, jd: str = "") -> list[dict]:
+    """EVERY bullet of the CV (or of `chosen_ids`) as letter evidence, best first (the ranking of `letter_evidence`): the company letter picks
+    the two best for each of its two requirements from this list."""
+    sc = letter_scores(fb, kws, jd)
+    bidx = bullet_index(fb)
+    where = {b["id"]: entry_where(e) for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
+    order = {b: i for i, b in enumerate(sc)}
+    ranked = sorted((b for b in sc if not chosen_ids or b in chosen_ids), key=lambda b: (-sc[b], order[b]))
+    extra = lambda b: {k: bidx[b][k] for k in evidence_fields.OPTIONAL_KEYS if str(bidx[b].get(k) or "").strip()}   # noqa: E731
+    return [{"id": b, "text": bidx[b]["text"], "terms": list(bidx[b].get("terms", [])), "where": where[b], **extra(b)} for b in ranked]
+
+
 def _style_problems(paras: list[str], evidence: list[str]) -> list[str]:
     """Checks that keep the letter faithful in tone: it ends on a question, never promotes the candidate's role,
     keeps approximations approximate and uses no filler word the evidence does not use."""
@@ -1253,7 +1265,7 @@ def _final_path(p, out_dir: Path, final_dir: Path) -> str | None:
 
 def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_dir: Path, letter_name: str, team: str,
              gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False,
-             family_line: str = ""):
+             family_line: str = "", revise: dict | None = None):
     """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `hook` with a hook:
     letters A and B (letters.py), the current choice is A when it passed its checks. In mode `hook` when the hook is on but none
     could be built: both letters are "none" (no old single letter takes their place, so the letter settings are never silently
@@ -1263,7 +1275,8 @@ def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_di
     if letter_mode(settings) == "company":
         from . import company_letter as CL
 
-        pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids)
+        pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids,
+                              revise=revise)
         return pdf, letter, None
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
@@ -1426,8 +1439,39 @@ def usage_since(llm, start: int) -> dict:
     return {"calls": calls, **total, "by_task": usage_by_task(calls), "by_model": usage_by_model(calls)}
 
 
-def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
-    """Re-draft the letter for an already tailored job (review's 'l'). Keeps the file name; rewrites report.json."""
+def revision_for(settings, rep: dict, feedback: str = "") -> dict | None:
+    """What review's `l` hands the company-letter model besides the ad: the previous draft (the letter's P2-P4, or the last rejected draft when
+    there was no letter), the rejections that go with it, and the reader's feedback. None outside letter.mode: company."""
+    if letter_mode(settings) != "company":
+        return None
+    old = rep.get("letter") or {}
+    paras = old.get("paragraphs") or []
+    previous = list(paras[1:4]) if len(paras) == 5 else list(old.get("draft_body") or [])
+    problems = [] if old.get("status") == "ok" else [p for p in old.get("problems") or [] if p != FALLBACK_MARK]
+    return {"previous": previous, "problems": problems, "feedback": feedback}
+
+
+def install_letter(job, fb: dict, rep: dict, pdf, letter: dict, letters: dict | None = None) -> None:
+    """Put a new letter into the report: letter, file, ATS numbers, note.md. Does not write report.json (`save_report`)."""
+    kws = [Keyword(**k) for k in rep["keywords"]]
+    out_dir = Path(rep["out_dir"])
+    rep["letter"], rep["letter_pdf"] = letter, str(pdf) if pdf else None
+    rep["letters"], rep["letter_choice"] = letters, letters["choice"] if letters else None
+    if rep.get("ats") is not None:
+        cv_text = pdf_text(Path(rep["cv_pdf"]))
+        band = tuple(rep.get("band_pct") or (70.0, 85.0))
+        rep["ats"] = {**ats.scores(cv_text, kws, rep.get("claimable") or [], pdf_text(pdf) if pdf else None, band).to_dict(),
+                      "variants": ats_by_variant(cv_text, kws, rep.get("claimable") or [], letters, band)}
+    note_mod.write(dict(job), rep, fb, out_dir)                               # the note names letter B's gap
+
+
+def save_report(rep: dict) -> None:
+    (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+
+
+def regenerate_letter(job, fb: dict, llm, settings, rep: dict, feedback: str = "") -> dict:
+    """Re-draft the letter for an already tailored job (review's 'l'). Keeps the file name; rewrites report.json. `feedback` is what the
+    person typed ("What should change?"): with the previous draft and its rejections it goes to the company-letter model word for word."""
     job = dict(job)
     job["description"] = job.get("description") or ""
     kws = [Keyword(**k) for k in rep["keywords"]]
@@ -1441,20 +1485,13 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     pdf, letter, letters = _letters(job, fb, kws, rep.get("company_hook") or "", hk, evidence, llm, settings, out_dir, stem,
                                     rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws), ids,
                                     rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None,
-                                    rep.get("family_line") or "")
-    rep["letter"], rep["letter_pdf"] = letter, str(pdf) if pdf else None
-    rep["letters"], rep["letter_choice"] = letters, letters["choice"] if letters else None
-    if rep.get("ats") is not None:
-        cv_text = pdf_text(Path(rep["cv_pdf"]))
-        band = tuple(rep.get("band_pct") or (70.0, 85.0))
-        rep["ats"] = {**ats.scores(cv_text, kws, rep.get("claimable") or [], pdf_text(pdf) if pdf else None, band).to_dict(),
-                      "variants": ats_by_variant(cv_text, kws, rep.get("claimable") or [], letters, band)}
-    note_mod.write(job, rep, fb, out_dir)                                     # the note names letter B's gap
+                                    rep.get("family_line") or "", revision_for(settings, rep, feedback))
+    install_letter(job, fb, rep, pdf, letter, letters)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
     rep["llm_usage"] = {"calls": calls, **{k: (old.get(k) or 0) + new[k] for k in USAGE_SUMS},
                         "by_task": usage_by_task(calls), "by_model": usage_by_model(calls)}
-    (out_dir / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    save_report(rep)
     return rep
 
 
@@ -1815,9 +1852,18 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     fill_final = page2_fill(pdf, cv_pages)
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
     evidence = letter_evidence(fb, kws, chosen_ids, job["description"])
-    letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
-                                           required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body)
     cv_text = pdf_text(pdf)
+    # the ATS band (careerops/bands.py) is decided on the CV alone, BEFORE any letter call: a job under the band costs no letter tokens
+    cv_ats = ats.scores(cv_text, kws, claimable, None, (lo * 100, hi * 100))
+    verdict = bands.classify(cv_ats.strict, cv_ats.ceiling, bands.config(settings))
+    if verdict.letter:
+        letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
+                                               required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body)
+    else:                                                       # skipped (ats): no model call, no PDF
+        letter_pdf, letters = None, None
+        letter = {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "off",
+                  "reason": f"{verdict.reason}: no letter was drafted", "notes": [],
+                  "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
     fm = None if one_page else pdflayout.measure(pdf)
     urls = [] if one_page else [p["github"] for p in ctx["projects"] if p.get("github") and not project_parts(p)[1]]
     link_issues = pdflayout.link_problems(pdf, urls) if urls else []            # checked on the PDF's word boxes
@@ -1826,6 +1872,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     report.update({
         "ats": {**ats_now.to_dict(), "variants": ats_by_variant(cv_text, kws, claimable, letters, (lo * 100, hi * 100))},
         "stretch": ats_now.gate == "stretch",                                # a ceiling under the band is labelled, never dropped
+        "band": verdict.to_dict(),
         "letters": _publish_letters(letters, out_dir, final_dir), "letter_choice": letters["choice"] if letters else None,
         "claimable": claimable, "band_pct": [lo * 100, hi * 100],
         "final": {"score": final_score.literal, "score_stemmed": final_score.stemmed,

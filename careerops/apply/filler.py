@@ -34,6 +34,16 @@ LABEL_JS = """el => {
   const wrap = el.closest('label'); if (wrap) bits.push(wrap.innerText);
   const lb = el.getAttribute('aria-labelledby');
   if (lb) lb.split(' ').forEach(i => { const n = document.getElementById(i); if (n) bits.push(n.innerText); });
+  if (!bits.length && !el.getAttribute('aria-label') && el.tagName === 'TEXTAREA') {
+    // a Lever custom question: the question is the text ABOVE the box (".application-label"), the box itself says only "Type your response"
+    for (let n = el.parentElement, i = 0; n && i < 5; n = n.parentElement, i++) {
+      if (n.querySelectorAll('input:not([type=hidden]), textarea, select').length > 1) break;
+      const c = n.cloneNode(true);
+      c.querySelectorAll('textarea, select, input, button, script, style').forEach(x => x.remove());
+      const t = (c.textContent || '').split(String.fromCharCode(10033)).join('*').replace(/\\s+/g, ' ').trim();
+      if (t) { bits.push(t.slice(0, 300)); break; }
+    }
+  }
   ['aria-label','placeholder','name','id'].forEach(a => { const v = el.getAttribute(a); if (v) bits.push(v); });
   if (!bits.length) { const p = el.closest('div,fieldset,li'); if (p) bits.push(p.innerText.slice(0,120)); }
   return bits.join(' | ');
@@ -259,6 +269,19 @@ def select(el, question: str, ctx: Ctx, required: bool) -> None:
         ctx.result.filled.append(f"{question[:80]} -> {pick}")
 
 
+PROMPT_WORDS = frozenset("type enter write your add provide response answer text here please a an the".split())
+
+
+def readable_question(question: str) -> bool:
+    """False when the label of a text box does not say what is asked: nothing, only a prompt such as "Type your response", or a field name such
+    as cards[abc][field0]. A required free-text box with such a label gets no draft (and the person is told), never a silent skip."""
+    q = _norm(question).strip(" *:")
+    words = re.findall(r"[a-z]+", q.lower())
+    if not words or all(w in PROMPT_WORDS for w in words):
+        return False
+    return not (" " not in q and re.search(r"[\[\]_0-9]", q))
+
+
 def _answered(ctx: Ctx, question: str) -> bool:
     r = ctx.book.resolve(question, ctx.job)
     return r is not None and r.known
@@ -292,6 +315,10 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
         maxlength = el.get_attribute("maxlength")
         if ctx.freetext is not None and required and freetext_mod.is_free_text(typ, maxlength) and not _answered(ctx, question):
             # a long required question answers.yaml has no answer for: drafted from the fact bank, guarded, and used only when the person says y
+            if not readable_question(question):                       # never skip a required box without saying so
+                ctx.out(f"  free text: the question of this required box cannot be read (its label says {question[:60]!r}): no draft is offered, it is yours")
+                ctx.stop(f"cannot read the question of a required text box ({short}): it is yours to answer")
+                return
             text = ctx.freetext.answer(question, label, maxlength, strict=ctx.strict)
             if text:
                 el.fill(text)

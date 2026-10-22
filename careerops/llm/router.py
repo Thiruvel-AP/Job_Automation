@@ -368,6 +368,7 @@ class Router:
                     self.last_raw = text
                     self.usage.append({"task": task, "provider": p.name,
                                        "model": p.last_model or model or p.cfg.get("model"), **p.last_usage})
+                    self.db.llm_task_add(task, f"{p.name}/{self.usage[-1]['model']}", p.last_usage.get("total_tokens") or 0)    # llm/usage.py
                     try:
                         return extract_json(text)
                     except LLMError as e:

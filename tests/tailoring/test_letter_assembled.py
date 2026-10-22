@@ -167,6 +167,7 @@ def test_the_draft_mode_letter_is_under_the_same_guard(settings, bank, spy_llm):
 @pytest.mark.slow
 def test_a_tailored_job_with_letters_on_gets_the_assembled_letter(settings, bank):
     settings.raw["letter"]["mode"] = "hook"
+    settings.raw["apply"]["bands"] = {"auto": 0, "review": 0, "rescue_ceiling": 0}        # this test is about the letter, not the ATS band (a CV under it gets no letter)
     llm = MockLLM()
     rep = tailor.tailor_job(JOB, bank, llm, settings, settings.path("outputs"))
     hk = H.Hook.from_dict(rep["hook"])

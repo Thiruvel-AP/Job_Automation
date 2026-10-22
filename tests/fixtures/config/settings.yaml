@@ -17,6 +17,7 @@ paths:
   fact_bank: config/profile/fact_bank.yaml
   applicant: config/profile/applicant.yaml
   answers: config/profile/answers.yaml    # your answers to application-form questions (autoapply reads it; only `save` at the prompt appends to it)
+  letter_feedback: data/letters/feedback.jsonl   # what you typed after `l` in review (job id, text, date): runtime data, handed to the next letter draft
   answers_library: data/answers/library.jsonl   # free-text form answers YOU approved or wrote (apply/freetext.py): reused for a similar question; runtime data, never answers.yaml
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
@@ -305,7 +306,8 @@ letter:
   # company (the job ad is the only source: every claim must be backed by a phrase of the ad, no company number the ad lacks, no invented
   # name), P3 and P4 the two best-matching fact-bank bullets each tied to a named requirement of the ad (every number, tool and organisation
   # must be in those bullets), P5 closing_hook. One redraft after a rejection; a second rejection = no letter, and review says why.
-  company_words: 400         # company mode: the length the model is asked for, 360-420 (the whole letter must come to at least 360 and at most scoring.letter_max_words_company words)
+  company_words: [330, 420]  # company mode: [low, high], the whole letter must come to at least `low` and at most `high` words (300 <= low <= high <= 420;
+                             # scoring.letter_max_words_company can lower the top); the model is asked for the middle of the range
   # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
   greeting_hook: "Dear {company}{team} team"
   greeting_agency: "Hi {company} team"
@@ -387,6 +389,9 @@ llm:
   # tokens per JD, before the hook (one ~1K call) and the two hook-mode letters (~3-5K): expect ~12K a job now and
   # re-measure with `careerops calibrate` before relying on this number.
   job_token_estimate: 10000
+  # `warn_budget_below`: careerops prints WARNING when a provider's (or model's) daily token budget (tpd) has less than this share left
+  # (0.2 = 20 %), after tailoring, after review's `l` and at the end of `live`, with the day's cover_letter tokens per model.
+  warn_budget_below: 0.2
   # Tasks that may only run on the named providers. cover_letter is written by Groq's model alone: the local model's
   # letters were not fit to send. When none of the named providers can take the call (no key, daily budget spent, rate
   # limited) the CV is still built and the job waits as status `letter_pending` until `careerops tailor` finds the budget
@@ -439,3 +444,12 @@ apply:
   max_auto_per_day: 5   # auto-submits per calendar day, counted from data/live/applied_auto.csv
   confirm_first_n: 3    # the first N auto-submits ever (rows in applied_auto.csv) ask `Submit? [y/N]` after showing the filled-form screenshot
   kinds: [greenhouse, ashby, lever]   # apply_kind values that may be auto-submitted; Workday and every other site stay manual
+  # What happens after tailoring, on the STRICT CV score S and the honest (claimable) ceiling C. Only you edit these; code never lowers them.
+  bands:
+    auto: 70            # S >= auto: the auto-apply gates run (`live --auto`); the letter is drafted
+    review: 50          # review <= S < auto: the review prompt, as always; the letter is drafted
+    rescue_ceiling: 60  # S < review but C >= rescue_ceiling: review, flagged "CV under-uses the fact bank". S < review and C below it: skipped (ats), no letter, no form
+  # Hosts that go straight to the hand-off (your own browser + answers_to_paste.txt) with no automated browser, as if they had handed a job over before.
+  # jobs.lever.co: its hCaptcha / "error verifying your application" check turned the automated browser away (see data/live/submit_failures.csv).
+  handoff_hosts: [jobs.lever.co]
+  max_submit_failures: 2   # failed attempts on one job (verification error, a field LOST after re-fill, upload refused, FORM NOT FOUND) before it is handed off

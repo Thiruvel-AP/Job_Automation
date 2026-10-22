@@ -1225,3 +1225,51 @@ Not verified: a real model's drafts (the guard may reject more than the mock sho
    record keeps a sha256 of each fact-bank entry (with its bullet) and motivation it was built from (`Record.digests`); `Library.find` skips a record whose source changed, was
    removed, or whose digest was never recorded (lines written before this round are asked about once more). The ad and the hook are the job's own and are not digested.
    Tests: `tests/apply/test_freetext.py` (+17), `tests/apply/test_applications_auto.py`, `tests/test_no_real_settings.py`.
+
+## 5ag. Round 18 — ATS bands, a four-bullet letter, `l` with feedback, `e` on a letter, token visibility, submit failures and the hand-off, Lever free text (2026-10-22) — **done** (offline tests; Chromium fixture forms, MockLLM; never run on the real data, the real model or a real form)
+
+1. **ATS bands** (`careerops/bands.py`, settings `apply.bands: {auto: 70, review: 50, rescue_ceiling: 60}`). After the CV is built, `_tailor` classifies the strict CV score S and the
+   claimable ceiling C (`ats.scores(cv_text, ...)` with no letter): `auto` (S >= 70), `review` (50 <= S < 70), `rescue` (S < 50, C >= 60: flag `CV under-uses the fact bank (strict S,
+   ceiling C)`), `skip` (S < 50, C < 60). The letter is drafted AFTER that check and only when the outcome is not `skip` (a skipped job gets a letter dict with status `off` and the
+   reason `ATS S < 50: no letter was drafted`; no model call, no PDF). `report["band"]` holds the verdict. `cli.record_tailoring` stores it: status `skipped (ats)` (reason `ATS S < 50`) or
+   `needs_review` / `letter_pending` plus the flag. `live` ends a `skipped (ats)` job in `_ats_skip` (prints `SKIPPED (ATS 32 < 50): Valarian | MLOps Engineer`; the summary says `Skipped by
+   the ATS band: N`), files its JD in `jds_done/skipped/` with `<name>.reason.txt` (`Live._file_ats_skip`; only that file moves, copies of the job are not touched) and never asks, reviews or
+   opens a form. `careerops retriage --ats [--apply]` (`cli.retriage_ats`): every `skipped (ats)` job is tailored again with `frozen_for` keywords; a dry run goes to a scratch folder under
+   `paths.tmp` (a `TemporaryDirectory`, nothing in the database or the inbox changes); `--apply` keeps the tailoring (`record_tailoring`), and a job that now reaches the review band or the
+   rescue line goes back to `needs_review` with its JD back in the inbox and its `live/state.json` entry reopened (`decided.bring_back`). `autogate`'s `min_ats_strict` is unchanged
+   (70: the auto gates still decide on the same S). Code never lowers a band.
+2. **Letter evidence and length** (`company_letter.py`). `requirement_groups`: the ad's heaviest keywords first, each with the two best bullets of the CV (`tailor.ranked_letter_bullets`,
+   never the hook's proof bullet, no bullet twice); a requirement with only one bullet left takes it (second pass). `Plan.groups` / `Plan.evidence` (four bullets, flat) / `Plan.reqs` (one
+   requirement per paragraph). The prompt shows `P3 EVIDENCE (requirement: X; the two best bullets for it)` and `P4 EVIDENCE ...`. `letter.company_words: [330, 420]` (`word_range`; the
+   model is asked for the middle, `word_cap` = the top or `scoring.letter_max_words_company`, never over 420; a scalar or anything else is refused with `letter.company_words must be
+   [low, high]`). The letter dict carries `accepted: [lo, cap]` and the review screen prints it.
+3. **User guard scope.** `grounding.bank_text(fb)` (every string of `fact_bank.yaml` except `deny_terms`) lets a capability or skill word through `grounding_problems(..., bank=...)`; names,
+   sectors, clients, numbers, the tool/organisation check, the cross-bullet link check (`claim_problems`) and the company guard on P2 are unchanged. `company_letter.filler_problems` rejects
+   robust, seamless, cutting-edge, passionate, leverage and synergy (unless a chosen bullet says the word).
+4. **`l` with feedback** (`tailoring/letter_feedback.py`, `review/letter_edit.py`). `l` on a company letter asks `What should change? (enter = just retry)`; the answer is appended to
+   `paths.letter_feedback` (`data/letters/feedback.jsonl`: job id, text, date; also a built-in default in `config.DEFAULT_PATHS`). `make(..., revise=...)` gives every draft of that `l` the
+   previous draft (`YOUR PREVIOUS DRAFT`), every rejection rewritten by `letter_feedback.instruction` (`remove 'robust'`, `the letter is 288 words, 42 short of the 330 minimum: use more
+   of the detail of bullet p1a`, ...) and the feedback word for word; the redraft inside one call is told the same way. At most `ATTEMPTS` = 3 drafts per `l`; a letter that fails keeps its
+   last draft (`draft_body`, `opening`, `closing`) for the next `l`.
+5. **`e` on a letter.** In company mode `e` asks `Edit the [c]v or the [l]etter? (enter = cv)`. `letter_edit.edit_letter` opens the five paragraphs in `$EDITOR` (`nano` by default), runs
+   `company_letter.edit_problems` (the same `check`) and installs the text (`install_edited`, `tailor.install_letter` / `save_report`) when it passes; a failing text lists its reasons and
+   is installed only on `use anyway` typed in full; Enter edits again, `discard` keeps the old letter; a text that is not five paragraphs is never installed.
+6. **Token visibility** (`llm/usage.py`). The router files each answered call under (day, task, model) in the new table `llm_task_usage` (`DB.llm_task_add` / `llm_task_today`). After
+   tailoring, after `l` and at the end of `live` `usage.report` prints the day's `cover_letter` tokens per model and a `WARNING` for every provider or model whose `tpd` has less than
+   `llm.warn_budget_below` (0.2) left.
+7. **Submit failures and the hand-off** (`apply/failures.py`, `apply/handoff.py`, `autoapply.run`, `assist.assist`, `live.py`). Four kinds are counted per job in `paths.live/submit_failures.csv`
+   (time, job id, host, kind, detail): verification error, field LOST after the re-fill, upload refused (`verify.upload_refused` reads the visible error containers), FORM NOT FOUND. The
+   second failure (`apply.max_submit_failures`) offers `[h] hand off`; a job with two failures, a host in `apply.handoff_hosts` (`jobs.lever.co`) and a host that handed a job over before go
+   straight to `Handoff.run` with no browser (`Failures.gate`, `Handoff.why`): never a third attempt. `Handoff.run` opens the URL (`explorer.exe`), prints the CV and letter paths, writes
+   `answers_to_paste.txt` (now with a QUICK ANSWERS block: salary and notice) and copies the first answer (the full name) with `clip.exe` (`copy_to_clipboard`). `AutoResult.handed_off` and the
+   assist's `handoff` key make `live` end the job `handed_off` (finished: its JD goes to `done/`); `mark-applied` has no status gate and works as before. Nothing here fills, clicks, signs in
+   to anything or changes a profile, user agent or proxy.
+8. **Free text on Lever** (`apply/filler.py`). `LABEL_JS` reads the text ABOVE a textarea that has no label, no `aria-label` and no `aria-labelledby` (Lever's `.application-label`), so the
+   free-text drafter gets the real question instead of the placeholder "Type your response". `filler.readable_question` stops a required text box whose label says nothing (a prompt such as
+   "Type your response", or a field name) with a printed `free text: the question of this required box cannot be read ...` and `ctx.stop(...)`, never a silent skip.
+9. **Tests** (+196 new): `tests/apply/test_bands.py` (29), `test_bands_retriage.py` (9), `test_bands_pipeline.py` (6, xelatex), `test_submit_failures.py` (29), `test_submit_failures_flow.py` (7);
+   `tests/tailoring/test_letter_evidence.py` (49), `test_letter_feedback.py` (14), `test_letter_edit.py` (18); `tests/review/test_letter_review_keys.py` (10); `tests/llm/test_usage.py` (12);
+   `tests/test_autoapply_lever_freetext.py` (13, Chromium; fixture `tests/fixtures/apply/lever_form.html`). The old `letter.company_words` scalar tests were replaced by the range tests; the
+   company-letter tests build P3/P4 from the first bullet of each group; `test_letter_assembled.py` and `test_golden_anaplan.py` (hook-mode letters on a MockLLM CV that sits under the ATS bands)
+   set permissive bands, and `test_letter_format.py` expects the range. Full suite, 8 shards by file: 3,814 passed, 0 failed. **Unverified:** a live `careerops live --dry-run --max 3` on the real data and a real Lever form (CLAUDE.md forbids the
+   first from a task; the second needs a live site); `clip.exe` and `explorer.exe` are faked in the tests.

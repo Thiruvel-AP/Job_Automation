@@ -111,10 +111,11 @@ Rules:
   or customer in P2 must come from the JOB AD. Outside knowledge is forbidden: no funding, size, customers, markets, mission, history or
   people that the ad does not state. Write no number about the company unless the ad states it. Name no person and no team that the ad
   does not name. Refer to the company by name or as "you"; never "we" or "our".
-- P3 is written from EVIDENCE 1 alone and P4 from EVIDENCE 2 alone. Each names the ad's REQUIREMENT given for that evidence and shows
-  the evidence meeting it, in the first person ("I"). Use only what the evidence fields say: no number, tool, organisation, client
-  or outcome that is not in them, and no number from the ad. A field marked (not stated) is unknown: say nothing about it.
-  method is a set of tools, not a sentence: never copy it back as a list of three or more names.
+- P3 is written from the "P3 EVIDENCE" and P4 from the "P4 EVIDENCE" of the user message: each is the two best bullets for ONE
+  requirement of the ad. Each paragraph names that REQUIREMENT and shows the two bullets meeting it, in the first person ("I").
+  Use only what the evidence fields say: no number, tool, organisation, client or outcome that is not in them, and no number from
+  the ad. A field marked (not stated) is unknown: say nothing about it. method is a set of tools, not a sentence: never copy it
+  back as a list of three or more names.
 - P3 and P4 name only the ALLOWED VOCABULARY of the user message: the tools and methods of the chosen bullets and the ad's skill terms.
 - Together P2, P3 and P4 are {body_words} words (the whole letter must come to between {lo} and {hi}). Plain, confident British English.
   No filler words: {filler}. Never say "we", "our" or "I help <company>".
@@ -134,6 +135,6 @@ ALLOWED VOCABULARY (the only tools, methods and skills P3 and P4 may name):
 NEVER USE (filler): {filler}
 
 {evidence}
-REQUIREMENTS (name the one given for each evidence):
+REQUIREMENTS (each paragraph names the one given for it):
 {requirements}
 """

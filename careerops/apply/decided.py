@@ -280,6 +280,15 @@ def restore(db: DB, settings, job_id: str) -> Restored:
     return res
 
 
+def bring_back(settings, job_id: str, company: str, title: str) -> list[Path]:
+    """`retriage --ats`: a job skipped on the ATS band that now reaches the review band. Its JD file(s) move from jds_done/skipped/ back to
+    the inbox (the `.reason.txt` beside them stays) and live's record of it is reopened. Returns the files moved."""
+    key = key_of(company, title)
+    moved = [move_file(settings, f, inbox_dir(settings)) for f in group_files(decision_dir(settings, SKIPPED), key)]
+    _reopen(settings, {job_id})
+    return moved
+
+
 def _reopen(settings, job_ids: set[str]) -> None:
     """In live's state file, mark the entries of these jobs not done, so that live works on their files again."""
     path = settings.path("live") / "state.json"

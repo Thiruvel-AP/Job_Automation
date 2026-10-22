@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS llm_usage (
     provider TEXT, day TEXT, calls INTEGER, PRIMARY KEY (provider, day)
 );
+CREATE TABLE IF NOT EXISTS llm_task_usage (       -- tokens the router was charged today, per task and model (llm/usage.py)
+    day TEXT, task TEXT, model TEXT, calls INTEGER, tokens INTEGER, PRIMARY KEY (day, task, model)
+);
 CREATE TABLE IF NOT EXISTS register_snapshots (
     day TEXT PRIMARY KEY, csv_url TEXT, path TEXT, rows INTEGER
 );
@@ -240,6 +243,19 @@ class DB:
         day = now()[:10]
         r = self.conn.execute("SELECT tokens FROM llm_usage WHERE provider=? AND day=?", (provider, day)).fetchone()
         return (r[0] or 0) if r else 0
+
+    def llm_task_add(self, task: str, model: str, tokens: int) -> None:
+        """One answered call of `task` on `model` ("<provider>/<model id>") that cost `tokens`, filed under today."""
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO llm_task_usage (day, task, model, calls, tokens) VALUES (?,?,?,1,?) "
+                "ON CONFLICT(day, task, model) DO UPDATE SET calls = calls + 1, tokens = tokens + excluded.tokens",
+                (now()[:10], task, model, int(tokens or 0)))
+
+    def llm_task_today(self, task: str) -> list[tuple[str, int, int]]:
+        """[(model, calls, tokens)] for today's calls of `task`, the model that used most tokens first."""
+        return [(r[0], r[1], r[2]) for r in self.conn.execute(
+            "SELECT model, calls, tokens FROM llm_task_usage WHERE day=? AND task=? ORDER BY tokens DESC, model", (now()[:10], task))]
 
     def llm_add_tokens(self, provider: str, tokens: int) -> None:
         with self.conn:

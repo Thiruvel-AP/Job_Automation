@@ -63,6 +63,29 @@ def sentences(text: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
 
 
+def bank_text(fb: dict) -> str:
+    """Every string of the fact bank (bullets, terms, skills, profile, entries ...) as one norm_literal text, for the capability-word check:
+    a word the bank says anywhere is a word the candidate may use. The deny list is left out (it names what must NOT be claimed)."""
+    parts: list[str] = []
+
+    def walk(x) -> None:
+        if isinstance(x, str):
+            parts.append(x)
+        elif isinstance(x, dict):
+            for k, v in x.items():
+                if k != "deny_terms":
+                    walk(v)
+        elif isinstance(x, (list, tuple)):
+            for v in x:
+                walk(v)
+    walk(fb or {})
+    return norm_literal(" ".join(parts))
+
+
+def has_in_bank(bank: str, word: str) -> bool:
+    return _has(bank, word)
+
+
 def content_words(s: str) -> set[str]:
     return {w for w in re.findall(r"[a-z][a-z0-9+#-]{4,}", norm_literal(s)) if w not in _STOP}
 
@@ -165,9 +188,11 @@ def repeated_evidence_problems(body: list[str], evidence: list[dict]) -> list[st
 
 
 def grounding_problems(paragraphs: list[str], evidence: list[dict], jd: str, hook: str = "", extra: str = "",
-                       gaps: list[str] | None = None) -> list[str]:
+                       gaps: list[str] | None = None, bank: str = "") -> list[str]:
     """Problems with the letter's sentences. `evidence` is [{"text", "terms"}] (the bullets the model was given);
-    `extra` is more text that may be named (company, role); `gaps` are the required tools the letter may say it lacks."""
+    `extra` is more text that may be named (company, role); `gaps` are the required tools the letter may say it lacks.
+    `bank` (bank_text) lets a CAPABILITY or skill word through when the fact bank says it anywhere; names, sectors and clients are not
+    relaxed by it."""
     ev = [norm_literal(e["text"] + " " + " ".join(e.get("terms", []))) for e in evidence]
     shared = norm_literal(" ".join([jd, hook, extra, " ".join(gaps or [])]))
     everything = " ".join(ev) + " " + shared
@@ -200,6 +225,6 @@ def grounding_problems(paragraphs: list[str], evidence: list[dict], jd: str, hoo
                 flag(w, "client")
         if not about_a_gap:
             for term in capabilities:
-                if _contains(lit, norm_literal(term)) and not _has(allowed, term):
+                if _contains(lit, norm_literal(term)) and not _has(allowed, term) and not (bank and _has(bank, term)):
                     flag(term, "capability")
     return list(dict.fromkeys(out))

@@ -2,13 +2,16 @@
 
 What happens, and only this:
   1. the apply URL is opened in the person's normal Windows browser (`explorer.exe <url>`; nothing is clicked, filled or sent from there);
-  2. the CV (and letter) PDF paths are printed;
+  2. the CV (and letter) PDF paths are printed, and the first answer (the full name) is put on the clipboard with `clip.exe`;
   3. every answer that can be prepared from the person's own files is written to `answers_to_paste.txt` in the job's output folder, ready to
      copy: applicant.yaml (name, e-mail, phone, links, location, right to work / sponsorship, equal opportunities), the answers of answers.yaml
      that have an answer for this job, the approved free-text answers of this job (answer library), the cover letter text, and whatever the form
      had been filled with before the stop. Nothing is worked out or invented here; an answer that is blank in those files is listed as blank;
   4. the host is recorded in paths.live/handoff_hosts.json: the next job on that host goes straight to steps 1-3 and no automated browser is
-     opened there. Delete the host's entry from that file to let the program try it again.
+     opened there. Delete the host's entry from that file to let the program try it again. A host listed in settings.yaml `apply.handoff_hosts`
+     (jobs.lever.co) is treated the same way from the start.
+
+A job also gets here after `apply.max_submit_failures` (2) failed attempts (apply/failures.py); it then ends with the status `handed_off`.
 
 No challenge is solved, bypassed or outsourced, and no credential is ever typed.
 """
@@ -30,6 +33,8 @@ from .formfind import host_of
 HOSTS_FILE = "handoff_hosts.json"
 PASTE_FILE = "answers_to_paste.txt"
 EXPLORER_FALLBACK = "/mnt/c/Windows/explorer.exe"
+CLIP_FALLBACK = "/mnt/c/Windows/System32/clip.exe"
+QUICK = (("Salary expectation", "salary expectation"), ("Notice period", "notice period"))      # asked on almost every form: always listed
 STANDARD = (("Full name", None), ("First name", "first_name"), ("Last name", "last_name"), ("E-mail", "email"), ("Phone", "phone"),
             ("Location", "location"), ("LinkedIn", "linkedin"), ("GitHub", "github"), ("Website / portfolio", "website"))
 
@@ -45,12 +50,34 @@ def open_in_browser(url: str) -> bool:
     return True
 
 
-class Handoff:
-    """The hosts that handed a job over, and the hand-off itself. `opener(url)` opens a page for the person (tests replace it)."""
+def copy_to_clipboard(text: str) -> bool:
+    """Put `text` on the Windows clipboard with clip.exe (inside WSL or on Windows). False when there is no such program or it failed."""
+    clip = shutil.which("clip.exe") or (CLIP_FALLBACK if Path(CLIP_FALLBACK).exists() else None)
+    if not clip:
+        return False
+    try:
+        return subprocess.run([clip], input=("\ufeff" + text).encode("utf-16-le"), timeout=10).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
-    def __init__(self, settings, opener: Callable[[str], bool] = open_in_browser, out: Callable[[str], None] = print):
-        self.settings, self.opener, self.out = settings, opener, out
+
+class Handoff:
+    """The hosts that handed a job over, and the hand-off itself. `opener(url)` opens a page for the person, `clip(text)` copies one to the
+    clipboard (tests replace both)."""
+
+    def __init__(self, settings, opener: Callable[[str], bool] = open_in_browser, out: Callable[[str], None] = print,
+                 clip: Callable[[str], bool] = copy_to_clipboard):
+        self.settings, self.opener, self.out, self.clip = settings, opener, out, clip
         self.path = settings.path("live") / HOSTS_FILE
+
+    # ---- the hosts named in settings.yaml
+    def listed(self, url: str | None) -> str | None:
+        """Why this URL's host is on the settings list `apply.handoff_hosts`, or None."""
+        raw = ((getattr(self.settings, "raw", None) or {}).get("apply") or {}).get("handoff_hosts") or []
+        host = host_of(url)
+        if host and host in {str(h).strip().lower() for h in raw if isinstance(h, str)}:
+            return f"{host} is on the hand-off list (apply.handoff_hosts in settings.yaml)"
+        return None
 
     # ---- the hosts
     def hosts(self) -> dict[str, dict]:
@@ -61,9 +88,20 @@ class Handoff:
         return data if isinstance(data, dict) else {}
 
     def known(self, url: str | None) -> str | None:
-        """Why this URL's host was handed over before, or None."""
+        """Why this URL's host goes straight to the hand-off (it is on `apply.handoff_hosts`, or it handed a job over before), or None."""
+        listed = self.listed(url)
+        if listed:
+            return listed
         entry = self.hosts().get(host_of(url))
         return str(entry.get("reason") or "handed over before") if isinstance(entry, dict) else None
+
+    def why(self, url: str | None) -> str:
+        """The sentence for a job that goes straight to the hand-off because of its host ('' when it does not)."""
+        listed = self.listed(url)
+        if listed:
+            return listed
+        known = self.known(url)
+        return f"{host_of(url)} handed a job over before ({known})" if known else ""
 
     def record(self, url: str | None, reason: str, job_id: str = "") -> None:
         host = host_of(url)
@@ -99,6 +137,10 @@ class Handoff:
             self.out(f"  could not write {path}: {e}")
             return None
         self.out(f"  Answers to paste: {path}")
+        first = filler.full_name(applicant)
+        if first:
+            self.out(f"  Copied to the clipboard: {first}" if self.clip(first)
+                     else f"  The first answer was not copied (clip.exe not found or it failed): {first}")
         return path
 
 
@@ -112,6 +154,10 @@ def paste_text(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mappin
         value = filler.full_name(applicant) if key is None else str(applicant.get(key) or "").strip()
         if value:
             out.append(f"  {label}: {value}")
+    out += ["", "QUICK ANSWERS (answers.yaml)"]
+    for label, question in QUICK:
+        found = book.resolve(question, job)
+        out.append(f"  {label}: {found.text if found is not None and found.known else '(blank in answers.yaml: yours to answer)'}")
     if plan is not None:
         out += ["", "RIGHT TO WORK AND SPONSORSHIP (applicant.yaml visa block for this job's work country)", f"  {plan.describe()}"]
         if getattr(plan, "summary", ""):

@@ -33,7 +33,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import eo, filler, formfind, verify
+from . import eo, failures as failures_mod, filler, formfind, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -349,12 +349,15 @@ def open_form_link(link) -> None:
 
 
 def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
-           handoff=None) -> dict:
+           handoff=None, failures=None) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
     after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
     error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
     `book` is the user's answers.yaml (answers.load), `history(company)` whether they applied there before (autoapply.default_history).
-    `handoff` (apply/handoff.Handoff): where a bot check or sign-in wall sends the page; a host it already handed over opens no browser at all."""
+    `handoff` (apply/handoff.Handoff): where a bot check or sign-in wall sends the page; a host it already handed over, or one on
+    `apply.handoff_hosts`, opens no browser at all. `failures` (apply/failures.py) counts the failed attempts of each job (FORM NOT FOUND, a LOST
+    field, an upload the form refused, "error verifying your application"): the second offers `[h] hand off`, a job that has used them up goes
+    straight to the hand-off, and the result then has `handoff` set (`live` ends the job `handed_off`)."""
     from playwright.sync_api import Error as PlaywrightError
 
     job = dict(job)                                        # a sqlite3.Row has no .get (hand-off and the guards read the job as a mapping)
@@ -376,13 +379,26 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
         else:
             print(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
 
-    known = handoff.known(url) if handoff is not None else None
-    if known:                                               # this host turned the automated browser away before: no browser is opened
-        hand_off(f"{formfind.host_of(url)} handed a job over before ({known})", remember=False)
+    used_up = failures.gate(job["id"]) if failures is not None else None
+    known = (handoff.why(url) if handoff is not None else "") or used_up
+    if known:                                               # a host that turned the automated browser away, or a job out of attempts: no browser is opened
+        hand_off(known, remember=False)
         r["confirmation"] = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
         return r
     page, close = (launch or playwright_launch)(profile_dir)
     closed = False
+
+    def count(text: str) -> bool:
+        """File this attempt's failure (one of the four kinds) and say whether the hand-off is to be offered now."""
+        kind = failures_mod.kind_of(text)
+        if failures is None or not kind:
+            return False
+        n = failures.record(job["id"], url, kind, text)
+        if n < failures.limit:
+            return False
+        print(f"\n  Failed attempt {n} of {failures.limit} on this job ({text}): there will be no third attempt.")
+        return ask("  [h] hand off to your own browser (answers_to_paste.txt, CV and letter paths), or Enter to leave it > ").strip().lower() in (
+            "h", "hand off", "handoff")
     try:
         try:
             problem = formfind.open_form(page, url, job.get("apply_kind"),
@@ -390,8 +406,15 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
             if problem:                                     # no form field after 15 s: say so, never print an empty "Filled: []"
                 print(f"\n{problem}\nThe page opened but shows no application form; apply by hand.")
                 r["not_found"] = problem
+                if count(problem):
+                    raise formfind.HandOff(f"{failures.limit} failed attempts on this job: {problem}")
             else:
                 r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext)
+                refused = verify.upload_refused(page)
+                trouble = (f"the form refused an upload: {refused}" if refused else
+                           f"the form emptied field(s) after they were filled: {'; '.join(r['lost'][:5])}" if r.get("lost") else "")
+                if trouble and count(trouble):
+                    raise formfind.HandOff(f"{failures.limit} failed attempts on this job: {trouble}")
                 stop = formfind.blocker(page)
                 if stop:
                     raise formfind.HandOff(stop)
@@ -399,6 +422,8 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                 print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
                 print("\nReview everything in the browser and press Submit yourself.")
         except formfind.HandOff as e:                       # a bot check or a sign-in wall: nothing on it is touched; the person's own browser takes over
+            if failures is not None and failures_mod.kind_of(str(e)) == failures_mod.VERIFICATION_ERROR:
+                failures.record(job["id"], url, failures_mod.VERIFICATION_ERROR, str(e))
             hand_off(str(e))
             try:
                 close()

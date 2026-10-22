@@ -174,6 +174,7 @@ def test_the_pipeline_output_for_the_anaplan_ad_reaches_the_bar(settings, fb_fix
     from careerops.tailoring.render import pdf_text
 
     settings.raw["letter"]["mode"] = "hook"
+    settings.raw["apply"]["bands"] = {"auto": 0, "review": 0, "rescue_ceiling": 0}        # this test is about the letter, not the ATS band (a CV under it gets no letter)
     job = {"id": "greenhouse:anaplan:8654662002", "source": "greenhouse", "company": "Anaplan",
            "title": "Data Scientist, Functional Analytics (REQ 26490)", "location": "London, UK", "url": "https://job-boards.greenhouse.io/anaplan/jobs/8654662002",
            "apply_url": "https://job-boards.greenhouse.io/anaplan/jobs/8654662002", "description": (GOLDEN / "jd.txt").read_text(encoding="utf-8"),

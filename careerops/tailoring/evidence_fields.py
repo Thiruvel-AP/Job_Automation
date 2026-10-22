@@ -42,10 +42,10 @@ def fields(ev: dict) -> dict[str, str]:
             "outcome": clean(ev.get("outcome")) or clean(ev.get("result")) or NOT_STATED}
 
 
-def block(evidence: list[dict]) -> str:
-    """The EVIDENCE section of the letter prompt, one numbered item per bullet."""
+def block(evidence: list[dict], start: int = 1) -> str:
+    """The EVIDENCE section of the letter prompt, one numbered item per bullet (numbered from `start`)."""
     out = []
-    for i, ev in enumerate(evidence, 1):
+    for i, ev in enumerate(evidence, start):
         f = fields(ev)
         out.append(f"EVIDENCE {i}\n  method: {f['method']}\n  data: {f['data']}\n  outcome: {f['outcome']}")
     return "\n".join(out)

@@ -27,7 +27,7 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, filler, formfind, verify
+from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, verify
 from .apply import visa as visa_mod
 from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
@@ -96,6 +96,7 @@ class AutoResult:
     confirmation: str = ""
     filled: list[str] = field(default_factory=list)   # "question -> value", for the log and the terminal
     blank: list[str] = field(default_factory=list)    # optional questions left empty because nothing answers them
+    handed_off: bool = False                          # the job went to the person's own browser (apply/handoff.py): its status is `handed_off`
 
 
 # ------------------------------------------------------------------ challenge, submit button, confirmation
@@ -214,8 +215,12 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
     ctx.combobox = _combobox
     if ctx.tracker is None:
         ctx.tracker = verify.Tracker()
-    if upload_files(page, ctx) and not verify.wait_quiet(page, quiet_ms):
-        ctx.out(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back after)")
+    if upload_files(page, ctx):
+        if not verify.wait_quiet(page, quiet_ms):
+            ctx.out(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back after)")
+        refused = verify.upload_refused(page)
+        if refused:                                          # a failed attempt (apply/failures.py), not something to try again
+            raise NeedsUser(f"the form refused an upload: {refused}")
     seen: set = set()
     for el in page.query_selector_all("input, textarea, select"):
         tag = el.evaluate("e => e.tagName").lower()
@@ -317,9 +322,13 @@ def default_history(db, settings=None) -> Callable[[str], bool]:
 def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], settings, *, submit: bool = True, confirm: bool = False,
         ask: Callable[[str], str] = input, out: Callable[[str], None] = print, launch: Callable[[Path], Session] | None = None,
         history: Callable[[str], bool] | None = None, throttle: Throttle | None = None, ats_strict: float | None = None,
-        now: Callable[[], datetime] = datetime.now, freetext=None, handoff=None) -> AutoResult:
+        now: Callable[[], datetime] = datetime.now, freetext=None, handoff=None, failures=None) -> AutoResult:
     """Fill the form of one gated job; submit it unless `submit` is False. Always appends one row to applied_auto.csv. Raises ArchiveError
-    (wrong files, unknown work country) before a browser is opened."""
+    (wrong files, unknown work country) before a browser is opened.
+
+    `failures` (apply/failures.py) counts the failed attempts of each job in data/live/submit_failures.csv. A job that has used them up, and a host
+    on `apply.handoff_hosts` or that handed a job over before, goes straight to the hand-off with no browser: never a third attempt. The second
+    failure of a job offers `[h] hand off`."""
     job = dict(job)
     cv = rep.get("cv_pdf")
     letter = rep.get("letter_pdf") if rep.get("letter_pdf") and Path(rep["letter_pdf"]).is_file() and \
@@ -344,21 +353,35 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     stamp = f"{now():%Y%m%d-%H%M%S}"
     folder = Path(job["out_dir"])
     result = ctx.result
-    known = handoff.known(url) if handoff is not None else None
-    if known:                                             # this host turned the automated browser away before: no browser is opened at all
-        why = f"{formfind.host_of(url)} handed a job over before ({known})"
-        handoff.run(job, rep, applicant, ctx.book, plan, url, why, remember=False)
-        result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + why
+    used_up = failures.gate(job["id"]) if failures is not None else None
+    known = (handoff.why(url) if handoff is not None else "") or used_up   # a host that turned the automated browser away, or a job out of attempts
+    if known:                                             # no browser is opened at all
+        if handoff is not None:
+            handoff.run(job, rep, applicant, ctx.book, plan, url, known, remember=False)
+            result.handed_off = True
+        else:
+            out(f"\n  HAND-OFF: {known}\n  Open this in your own browser: {url}\n  CV: {cv}")
+        result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + known
         autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
         return result
     session = (launch or playwright_launch)(settings.path("secrets") / "browser")
     keep_open = False
+    failed, offer = 0, False
 
     def hand_off(why: str) -> None:
+        result.handed_off = True
         if handoff is not None:
             handoff.run(job, rep, applicant, ctx.book, plan, url, why, result.filled)
         else:
             out(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
+
+    def failure(text: str) -> tuple[int, bool]:
+        """Count this attempt's failure (when it is one of the four kinds); (failures so far, is the hand-off to be offered)."""
+        kind = failures_mod.kind_of(text)
+        if failures is None or not kind:
+            return 0, False
+        n = failures.record(job["id"], url, kind, text)
+        return n, n >= failures.limit
     try:
         page = session.page
         open_form(page, url, throttle, job.get("apply_kind"))
@@ -399,6 +422,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
             stop = formfind.blocker(page)
             if stop:
                 result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + stop + " after the click; the form may not have gone through"
+                failure(stop)
                 hand_off(stop + " after the click")
                 break
         else:
@@ -408,6 +432,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         return result
     except HandOff as e:                                  # a bot check or a sign-in wall: never touched, never worked around
         result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + str(e)
+        failure(str(e))                                   # "error verifying your application" is a counted failure; a plain bot check is not
         try:
             _shot(session.page, folder, "stopped", stamp, result)
         except Exception:  # noqa: BLE001  (the page is gone; the reason is what matters)
@@ -416,6 +441,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         return result
     except NeedsUser as e:
         result.status, result.reason = autolog.NEEDS_USER, str(e)
+        failed, offer = failure(str(e))
         keep_open = True
         try:
             _shot(session.page, folder, "stopped", stamp, result)
@@ -430,6 +456,11 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     finally:
         if result.status == autolog.NEEDS_USER and keep_open:
             out(f"\n  STOPPED, hand-over: {result.reason}\n  The browser is left open for you; nothing on the page has been touched by this program.")
-            ctx.typed("  Finish by hand if you want to, then press Enter to close the browser: ")
+            if offer and ctx.typed(f"  Failed attempt {failed} of {failures.limit} on this job: there will be no third attempt. "
+                                   "[h] hand off to your own browser (answers_to_paste.txt, CV and letter paths), or Enter to leave it > "
+                                   ).lower() in ("h", "hand off", "handoff"):
+                hand_off(f"{failed} failed attempts on this job: {result.reason}")
+            else:
+                ctx.typed("  Finish by hand if you want to, then press Enter to close the browser: ")
         session.close()
         autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=result.screenshots, result=result.status, when=now())

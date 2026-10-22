@@ -61,7 +61,7 @@ career-ops/
 │   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
 │   │   ├── profile.py            the CV profile, assembled in code: the hook's profile line + one or two `profile_facts` sentences (no model)
 │   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
-│   │   ├── company_letter.py     `letter.mode: company`: the 360-420 word five-paragraph letter (hook line, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
+│   │   ├── company_letter.py     `letter.mode: company`: the 330-420 word five-paragraph letter (hook line, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
 │   │   ├── letters.py            `letter.mode: hook`: the letter ASSEMBLED in code (library letter line + two sentences from two bullets + 20-minute ask), the our/we/linked-phrase guard, relocation line, greeting
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
@@ -204,6 +204,7 @@ scripts/discover.sh                # what the scheduler runs twice a day: discov
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
+careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
 careerops unskip --id JOB          # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
@@ -212,7 +213,7 @@ careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one 
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
-careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 360-420 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 330-420 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
@@ -495,6 +496,25 @@ gets `-2`). `careerops retriage --decided` does the same for what is in the inbo
 database copies), `careerops unskip --id JOB` undoes a skip (the job and its copies return to `needs_review` if tailored, else `new`, and their
 files to the inbox; live works on them again).
 
+**ATS bands** (`apply.bands` in `config/settings.yaml`: `auto: 70`, `review: 50`, `rescue_ceiling: 60`). Right after tailoring, the STRICT CV score
+S (the CV's own text, negation-aware) and the honest ceiling C decide what happens next; `live`, `tailor` and `retriage --ats` print the line
+`ATS band: strict 63, ceiling 78 -> review (50 to under 70)` for every job.
+
+| S (strict) and C (ceiling) | outcome |
+|---|---|
+| S >= 70 | the auto-apply gates run (with `--auto`), the letter is drafted |
+| 50 <= S < 70 | the review prompt, the letter is drafted |
+| S < 50 and C >= 60 | the review prompt with the red flag `CV under-uses the fact bank (strict S, ceiling C)`, the letter is drafted |
+| S < 50 and C < 60 | status `skipped (ats)`: **no letter call, no form, no prompt**; the JD goes to `data/jds_done/skipped/` with `<name>.reason.txt` (`ATS S < 50`) |
+
+The letter is drafted only AFTER this check, so a skipped job costs no letter tokens. `live` prints one line per skipped job, `SKIPPED (ATS 32 < 50):
+Valarian | MLOps Engineer`, and `Skipped by the ATS band: N` at the end. Only you edit the bands; no code lowers them. After the fact bank grows,
+`careerops retriage --ats` tailors the `skipped (ats)` jobs again (a dry run into a scratch folder by default: it reports `ATS 32 -> 55 ... would come back
+to review`); `--apply` keeps the new tailoring and moves every job that now reaches 50 (or the rescue line) back to `needs_review` and its JD back to the inbox.
+
+**Hand-off.** A job whose form cannot be submitted ends `handed_off` (see "Submit failures and the hand-off" under Auto-apply); once you have submitted it
+in your own browser, `careerops mark-applied --id JOB` records it as always.
+
 There is no `--yes`: every gate is answered by you. `--mock` runs everything on the isolated `data/mock` root with MockLLM
 and implies `--dry-run`. **Ctrl-C** (or an unanswered prompt) prints the stage it stopped at and the command to resume (exit 130);
 the JD stays in `inbox/`, and a rerun continues the same job at the status it reached. A finished JD is remembered by its
@@ -553,6 +573,15 @@ assist still never submit.
   (delete the host's entry from that file to let the program try it again). An **invisible** reCAPTCHA (v3) frame or badge (`size=invisible`, a
   hidden challenge frame, a submit button that carries the site key) is not a trigger: the form is filled as usual, and the program only asks whether
   an element is displayed and how big it is, never clicks, focuses or types into it.
+- **Submit failures and the hand-off.** Four things count as a failed attempt on a job, each one row in `data/live/submit_failures.csv` (time, job id,
+  host, kind, detail): a verification error ("error verifying your application"), a field `LOST` after the re-fill, an upload the form refused, and
+  `FORM NOT FOUND`. After **two** failures on one job (`apply.max_submit_failures`), the assist and the auto-apply offer `[h] hand off`: your normal Windows
+  browser opens the apply page (`explorer.exe`), `answers_to_paste.txt` is written in the job's output folder (name, e-mail, phone, links, location,
+  salary and notice from `answers.yaml`, the visa text, the cover letter, the `answers.yaml` answers, the free-text answers you approved), the first
+  answer (your full name) is put on the clipboard with `clip.exe`, and the CV and letter paths are printed. The job ends `handed_off`. A host in
+  `apply.handoff_hosts` (`jobs.lever.co`) or one that handed a job over before goes **straight** to the hand-off, with no automated browser. There is
+  **never a third attempt**, never a changed browser profile, user agent or proxy, and nothing is ever signed in to. (To let the program try a job again,
+  delete its rows from `submit_failures.csv`; a host's entry in `handoff_hosts.json` works the same way, and `apply.handoff_hosts` is yours to edit.)
 - **Finding the form.** Ashby: `<job url>/application`. Lever: `<job url>/apply`. Greenhouse and others: the job page itself, waiting up to 15 s for the
   form; an "Apply" link on it is followed once. If no form field has appeared after 15 s the assist and the auto-apply print `FORM NOT FOUND <url>` (and no
   `Filled:` line); the job is left to you.
@@ -672,25 +701,27 @@ phrase is the ad's two heaviest keywords the bank can claim). No model writes an
 line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
 `Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
 
-**`company`** writes ONE letter of **360 to 420 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
+**`company`** writes ONE letter of **330 to 420 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
 task, Groq `openai/gpt-oss-120b`) writes the middle three; code writes the first and the last.
 
 | | paragraph | source |
 |---|---|---|
 | P1 | the hook | the hook's `letter_line` word for word; no hook qualifies: the role family's profile line (`families[*].profile_body`), word for word |
 | P2 | why this company | what it does, its product or customers, what this team is hiring to solve: the **job ad alone** (its About / Company section included) |
-| P3, P4 | evidence | the two best-matching fact-bank bullets (other than the hook's proof bullet), each tied to a named requirement of the ad |
+| P3, P4 | evidence | each paragraph is written from the **two best fact-bank bullets for ONE named requirement of the ad** (four different bullets in all, never the hook's proof bullet) |
 | P5 | the close | `letter.closing_hook` with the problem phrase from the ad |
 
-The greeting and sign-off are the ones in settings (`letter.greeting_hook` / `greeting_agency`, `letter.signoff`). `letter.company_words` (default
-**400**, allowed 360 to 420; anything else is refused) is the length the model is asked for; the finished letter must come to 360 to
-`scoring.letter_max_words_company` (420) words, so 250 and 500 are rejected. `scoring.letter_max_words` (250) stays the cap of the other modes.
+The greeting and sign-off are the ones in settings (`letter.greeting_hook` / `greeting_agency`, `letter.signoff`). `letter.company_words` (`[330, 420]`: `[low, high]`, two whole numbers,
+300 <= low <= high <= 420; anything else is refused) is the range the finished letter must come to (the model is asked for the middle of it; `scoring.letter_max_words_company`
+(420) can lower the top), so 250 and 500 are rejected. `scoring.letter_max_words` (250) stays the cap of the other modes.
 A draft is checked and, if a guard rejects it, drafted **once more** with every rejection named; a second rejection means **no letter** and the review
 screen says why (`Letter draft 1 / 2 rejected: ...`, the `NO LETTER` banner and its reason; approving needs `no letter`, as for any lost letter).
 
-*User guard* (P3, P4): every number, tool and organisation named must be in the two chosen bullets (or in P1); each sentence is checked against its own
-bullet (no name, sector, client or capability word the bullet does not say); each paragraph names an ad requirement its bullet evidences; no pasted
-bullet (0.7 overlap), no deny-listed term, no keyword list, no "we" / "our", no "I help <Company>".
+*User guard* (P3, P4): every number, tool and organisation named must be in the four chosen bullets (or in P1); each sentence is checked against its own
+bullets (no name, sector or client word they do not say); a **capability or skill word** ("production", "deployment", "pipelines", "end-to-end", "monitoring")
+passes when `fact_bank.yaml` says it anywhere (bullets, skills, profile); each paragraph names the requirement its bullets evidence; no filler (robust, seamless,
+cutting-edge, passionate, leverage, synergy), no pasted bullet (0.7 overlap), no deny-listed term, no keyword list, no "we" / "our", no "I help <Company>",
+and no noun phrase that links one bullet's object to another bullet's tool (a number or a tool named without a chosen bullet saying it still fails).
 *Company guard* (P2): the ad is split into sentences; every clause of P2 that makes a claim (product, customers, size, funding, markets, mission) needs at
 least 60 % of its content words in one run of up to three consecutive ad sentences (a very short clause: all of them somewhere in the ad); any number
 about the company must be in the ad; any capitalised name (a person, a team, a product) must be in the ad, the fact bank or P1. Outside knowledge about the
@@ -706,6 +737,18 @@ the application is archived without one. With `draft` the model drafts one from 
 fields yet, so the fields are the bullet's `method` / `data` / `outcome` keys if you add them (the pipeline never writes your fact
 bank), else `method` = its `terms`, `outcome` = its `result`, and `data` = `(not stated)`, which the prompt tells the model to leave
 alone.
+
+#### Review keys for a company letter, and the tokens
+
+- **`l` (regenerate)** asks `What should change? (enter = just retry)`. The next draft is handed the previous draft, every guard rejection rewritten as an
+  instruction (`remove 'robust'`, `the letter is 288 words, 42 short of the 330 minimum: use more of the detail of bullet p1a`) and what you typed, word for
+  word. At most three drafts per `l`. What you typed is kept in `data/letters/feedback.jsonl` (`paths.letter_feedback`: job id, text, date).
+- **`e` (edit)** asks `Edit the [c]v or the [l]etter? (enter = cv)`. `l` opens the letter text in `$EDITOR` (`nano` if unset): five paragraphs separated by a blank
+  line. On save the same guards run. A letter that passes is used. One that fails shows its reasons and is used only if you type `use anyway` in full;
+  Enter edits again and `discard` keeps the old letter. A text that is not five paragraphs is never installed.
+- **Tokens.** After tailoring, after `l` and at the end of `live` the tokens used today for `cover_letter` are printed per model, and a `WARNING` for every
+  provider or model whose daily token budget (`tpd`) has less than `llm.warn_budget_below` (0.2 = 20 %) left. The counts are kept in the database table
+  `llm_task_usage`.
 
 ### What the review screen shows besides the score
 

@@ -148,10 +148,10 @@ def world(settings, job, tmp_path):
     cv = out / "Ada Lovelace CV.pdf"
     cv.write_bytes(b"%PDF")
     book = answers.load(PROFILE_FIX / "answers.yaml")
-    opened, lines = [], []
-    h = Handoff(settings, opener=lambda url: opened.append(url) or True, out=lines.append)
+    opened, lines, clips = [], [], []
+    h = Handoff(settings, opener=lambda url: opened.append(url) or True, out=lines.append, clip=lambda text: clips.append(text) or True)
     rep = {"cv_pdf": str(cv), "letter_pdf": None, "letter": {"status": "ok", "paragraphs": ["Dear team,", "I would like to work at Northwind."]}}
-    return SimpleNamespace(h=h, opened=opened, lines=lines, rep=rep, book=book, job={**job, "out_dir": str(out)}, out=out, settings=settings)
+    return SimpleNamespace(h=h, opened=opened, lines=lines, clips=clips, rep=rep, book=book, job={**job, "out_dir": str(out)}, out=out, settings=settings)
 
 
 def hand(w, url="https://boards.greenhouse.io/acme/jobs/1", reason="a CAPTCHA / bot check is on the page", **kw):
@@ -180,7 +180,7 @@ def test_the_host_is_recorded_and_the_next_job_on_it_goes_straight_to_hand_off(w
     assert world.h.known("https://boards.greenhouse.io/acme/jobs/2") is None
     hand(world)
     assert world.h.known("https://boards.greenhouse.io/other/jobs/9") == "a CAPTCHA / bot check is on the page"
-    assert world.h.known("https://jobs.lever.co/acme/1") is None
+    assert world.h.known("https://jobs.ashbyhq.com/acme/1") is None
     again = Handoff(world.settings, opener=lambda url: True, out=lambda s: None)            # a new process reads the file
     assert again.known("https://boards.greenhouse.io/x/jobs/3")
 
@@ -217,7 +217,7 @@ def assisted(monkeypatch, world):
     real_require, use_real = assist_mod.require_plan, []              # a page that is really filled needs the real plan
     monkeypatch.setattr(assist_mod, "require_plan", lambda job, applicant: real_require(job, applicant) if use_real else plan)
 
-    def run(page, handoff=None, launch=True, row=False, url=None, real_plan=False):
+    def run(page, handoff=None, launch=True, row=False, url=None, real_plan=False, failures=None, answer=""):
         use_real[:] = [1] if real_plan else []
         closed = []
 
@@ -227,7 +227,8 @@ def assisted(monkeypatch, world):
             return page, lambda: closed.append(1)
         job = {**world.job, "apply_url": url or getattr(page, "url", "https://boards.greenhouse.io/acme/jobs/1"), "apply_kind": "greenhouse"}
         job = to_row(job) if row else job                              # `live` and the CLI hand the assist a sqlite3.Row
-        r = assist_mod.assist(job, world.rep, APPLICANT, world.out, launch=start, ask=lambda p: "", book=world.book, handoff=handoff)
+        r = assist_mod.assist(job, world.rep, APPLICANT, world.out, launch=start, ask=lambda p: answer if "[h]" in p else "", book=world.book,
+                              handoff=handoff, failures=failures)
         return r, closed
     return run
 

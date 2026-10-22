@@ -39,6 +39,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
+from .. import bands
 from ..db import DB
 from ..discovery import applykind, countries, freshness, manual
 from . import autolog, decided, snapshot
@@ -52,7 +53,9 @@ EXIT_BUDGET = 1               # the day's LLM budget is spent: nothing half-done
 EXIT_ARCHIVE = 3              # the archive changed in a way the pipeline never does
 EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 
-FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", "rejected", "submit_unconfirmed")
+HANDED_OFF = "handed_off"       # the form went to the person's own browser (apply/handoff.py); mark-applied records it once they submit
+FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", bands.ATS_SKIP, "rejected",
+            "submit_unconfirmed", HANDED_OFF)
 NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error", "needs_user", "auto_filled (not submitted)",
                 "auto_ready (dry run)")
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
@@ -161,6 +164,7 @@ class Live:
         self.before_own: snapshot.Snapshot | None = None
         self.dir_before: str | None = None
         self._auto_tried: set[str] = set()                # a job meets the auto gate once per session; a decline falls through to the review prompt
+        self.ats_skipped: list[str] = []                  # one `SKIPPED (ATS 32 < 50): Company | Role` line per job under the ATS band
 
     # ------------------------------------------------------------------ files
     def _inside_archive(self, p: Path) -> bool:
@@ -190,6 +194,9 @@ class Live:
         entry.update(done=True, status=status)
         self.state.jobs[sha] = entry
         self.state.save()
+        if status == bands.ATS_SKIP:
+            self._file_ats_skip(f, entry)
+            return
         which = decided.STATUS_DECISION.get(status)
         if which and entry.get("job_id") and self.db.job(entry["job_id"]) is not None:
             # a skip or an application is final and covers every copy of the job: their JD files go to paths.jds_done/<decision>/
@@ -201,6 +208,29 @@ class Live:
             return
         if f.exists():
             self._move(f, self.dirs.done, f"{safe_part(entry.get('job_id') or 'nojob')}-{f.name}")
+
+    def _file_ats_skip(self, f: Path, entry: dict) -> None:
+        """A job under the ATS band: its JD goes to jds_done/skipped/ with `<name>.reason.txt` ("ATS S < 50") beside it. Only this file moves:
+        `careerops retriage --ats` brings it back if the fact bank grows."""
+        if not f.exists():
+            return
+        job = self.db.job(entry["job_id"]) if entry.get("job_id") else None
+        try:
+            dst = decided.move_file(self.s, f, decided.decision_dir(self.s, decided.SKIPPED))
+            dst.with_name(dst.stem + ".reason.txt").write_text(((job["reason"] if job is not None else "") or "ATS S below the review band") + "\n",
+                                                               encoding="utf-8")
+            self.out(f"  JD filed in jds_done/skipped/{dst.name} (reason: {dst.stem}.reason.txt)")
+        except (OSError, decided.DecidedError) as e:
+            self.out(f"  could not file the JD of {entry.get('job_id')}: {e}")
+
+    def _ats_skip(self, jid: str) -> str:
+        """The line for a job whose strict CV score and ceiling are under the ATS bands. No letter, no form, no prompt."""
+        job = self.db.job(jid)
+        line = bands.skip_line(100 * (job["score"] or 0), bands.config(self.s).review, job["company"], job["title"])
+        if line not in self.ats_skipped:
+            self.ats_skipped.append(line)
+        self.out(line)
+        return bands.ATS_SKIP
 
     # ------------------------------------------------------------------ the session
     def run(self) -> int:
@@ -609,6 +639,8 @@ class Live:
             elif st in AWAITING and stop_before_review:
                 r.pass1_done = True
                 return st                                                           # pass 2 reviews it, in the order of the final P
+            elif st == bands.ATS_SKIP:
+                return self._ats_skip(jid)
             elif st == "needs_user":
                 self.out(f"  This job needs you: {job['reason']}. Finish the form by hand (careerops apply --id {jid}); once submitted: "
                          f"careerops mark-applied --id {jid}")
@@ -686,6 +718,8 @@ class Live:
             self.out(f"  SUBMIT CLICKED, NOT CONFIRMED: {res.reason}\n  Look at the screenshots and your e-mail; if it went through, run: "
                      f"careerops mark-applied --id {jid}")
             return "submit_unconfirmed"
+        if res.status == autolog.NEEDS_USER and res.handed_off:
+            return self._handed_off(jid, res.reason, r)
         if res.status == autolog.NEEDS_USER:
             db.update_job(jid, status="needs_user", reason=res.reason)
             r.note = res.reason
@@ -724,10 +758,20 @@ class Live:
         submitted = confirmation.lower() != "x" and self.h.ask("  Did YOU submit the form? [y/N] ").strip().lower() in ("y", "yes")
         self._opened(False)
         if not submitted:
+            if res.get("handoff"):
+                return self._handed_off(jid, "HAND-OFF: " + str(res["handoff"]), r)
             return self._not_submitted(jid, "you did not submit")
         self._stage("mark-applied")
         ok = self.h.mark_applied(jid, confirmation or None)
         return "applied" if ok else "applied (archive incomplete)"
+
+    def _handed_off(self, jid: str, why: str, r: JobResult) -> str:
+        """The form went to the person's own browser (answers_to_paste.txt, CV and letter paths printed): status `handed_off`, nothing recorded as sent."""
+        self.db.update_job(jid, status=HANDED_OFF, reason=why)
+        self.db.log(jid, "live", {"handed_off": why})
+        r.note = why
+        self.out(f"  HANDED OFF: {why}\n  Submit it in your own browser; once you have: careerops mark-applied --id {jid}")
+        return HANDED_OFF
 
     def _not_submitted(self, jid: str, why: str) -> str:
         self.db.update_job(jid, status="ready_not_submitted")
@@ -747,6 +791,8 @@ class Live:
                 lines.append(f"- note: {r.note}")
             lines += ["- visa lines:"] + [f"    {v}" for v in r.visa] if r.visa else ["- visa lines: none"]
             lines.append("")
+        if self.ats_skipped:
+            lines += [f"Skipped by the ATS band: {len(self.ats_skipped)}", *self.ats_skipped, ""]
         if stop:
             lines.append(f"Stopped: {stop}")
         return "\n".join(lines)

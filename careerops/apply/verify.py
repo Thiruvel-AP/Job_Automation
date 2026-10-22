@@ -22,6 +22,22 @@ QUIET_MAX_MS = 15000             # a form that never settles (a spinner that nev
 
 AUTOFILL = re.compile(r"auto-?fill", re.I)
 
+# An upload the form turned down: the error text of an alert / error container that names a file or an upload. Only error containers are read,
+# so the form's own helper text ("PDF, DOC; max 5 MB") is not mistaken for a refusal.
+UPLOAD_ERROR = re.compile(r"(?:upload|file|resume|cv|attachment)[^.]{0,50}(?:fail|error|refus|reject|not (?:allowed|supported|accepted)|too (?:large|big)|invalid)|"
+                          r"(?:fail|unable|could not|couldn['’]t|cannot|can['’]t)[^.]{0,30}upload|invalid file|file type", re.I)
+UPLOAD_ERROR_JS = """() => [...document.querySelectorAll('[role=alert], [aria-live=assertive], [class*=error i], [class*=invalid i]')]
+  .filter(e => e.offsetParent !== null).map(e => (e.innerText || '').trim()).filter(Boolean).slice(0, 10)"""
+
+
+def upload_refused(page) -> str | None:
+    """The error text of an upload the form refused (visible error containers only), or None. A page that cannot be asked says None."""
+    try:
+        texts = page.evaluate(UPLOAD_ERROR_JS) or []
+    except Exception:  # noqa: BLE001
+        return None
+    return next((" ".join(t.split())[:160] for t in texts if isinstance(t, str) and UPLOAD_ERROR.search(t)), None)
+
 # True when this file input belongs to an "Autofill from resume" block: its own id / name / label says so, or the text of the smallest
 # container around it does (a container is not climbed past the point where it also holds another field or another file input).
 AUTOFILL_JS = """el => {

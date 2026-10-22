@@ -18,6 +18,9 @@
                                 sign in to Google once (read mail, create drafts, edit the tracker Sheet; never sends) · counts per
                                 source, resolved vs the manual queue
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
+  careerops retriage --ats [--apply]
+                                score the `skipped (ats)` jobs again after the fact bank changes (dry run: a scratch folder); --apply keeps the
+                                new tailoring and brings back every job that now reaches the review band (apply.bands)
   careerops retriage --decided [--apply]
                                 move the inbox files of jobs (and copies of jobs) you skipped or applied to into paths.jds_done
                                 (dry run: lists them; --apply moves them and skips the database copies)
@@ -76,12 +79,13 @@ import traceback
 from datetime import date
 from pathlib import Path
 
-from . import ats
+from . import ats, bands
 from .apply import autogate
 from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
 from .apply import decided
+from .apply.failures import Failures
 from .apply.handoff import Handoff
 from .discovery import gates, manual, sources
 from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
@@ -93,7 +97,7 @@ from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
 from .tailoring.queue import order, select_for_run
-from .llm import BudgetExhausted, MockLLM, Router
+from .llm import BudgetExhausted, MockLLM, Router, usage
 from .setup import doctor, init, load_dotenv
 
 STRETCH_FLAG = "Stretch"      # job flag: the honest ATS ceiling is under the band (kept and labelled, never dropped)
@@ -365,10 +369,100 @@ def cmd_set_country(args):
         print("Triage:", manual.triage_job(db, s, args.id))
 
 
+def record_tailoring(db: DB, s, job, rep: dict) -> str:
+    """Store a finished tailoring on the job and return its new status: `skipped (ats)` when the CV is under the ATS bands (bands.py), else
+    `letter_pending` or `needs_review`. A rescued job (strict under the review band, ceiling high) gets the flag "CV under-uses the fact bank"."""
+    f = rep["final"]
+    verdict = bands.Verdict.from_dict(rep["band"]) if rep.get("band") else None
+    skip = verdict is not None and verdict.outcome == "skip"
+    status = bands.ATS_SKIP if skip else "letter_pending" if rep["letter"]["status"] == "pending" else "needs_review"
+    flags = [x for x in json.loads(job["flags"] or "[]") if not x.startswith((STRETCH_FLAG, bands.UNDER_USE))]
+    if rep.get("stretch"):         # an honest ceiling under the band: kept and labelled, never dropped (and never auto-approved)
+        flags.append(f"{STRETCH_FLAG}: honest ceiling {rep['ceiling']:.0%} is under the {s['scoring']['band'][0]:.0%} band")
+    if verdict is not None and verdict.flag:
+        flags.append(verdict.flag)
+    extra = {}
+    if skip:
+        extra["reason"] = verdict.reason
+    elif (job["reason"] or "").startswith("ATS S <"):         # the reason of an earlier skip (ats) is stale now
+        extra["reason"] = None
+    db.update_job(job["id"], status=status, keywords=rep["keywords"], ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
+                  letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"], cv_pages=rep["cv_pages"],
+                  page2_fill=rep["page2_fill"], flags=flags, **extra)
+    db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"], "letter": rep["letter"]["status"],
+                                 **({"ats_band": verdict.outcome} if verdict is not None else {})})
+    return status
+
+
+def retriage_ats(db: DB, s, fb: dict, llm, *, apply: bool = False, out=print) -> dict[str, int]:
+    """`retriage --ats`: score every `skipped (ats)` job again with today's fact bank. A dry run (the default) tailors into a scratch folder under
+    paths.tmp and changes nothing; `apply` keeps the new tailoring, and a job that now reaches the review band (or the rescue line) goes back to
+    `needs_review` (`letter_pending` if no provider may write its letter now), its JD back to the inbox. One that is still under the bands stays."""
+    import tempfile
+
+    from .tailoring.freeze import frozen_for
+    from .tailoring.tailor import tailor_job
+
+    jobs = db.jobs(bands.ATS_SKIP)
+    counts = {"checked": 0, "back": 0, "still_skipped": 0, "errors": 0, "not_run": 0}
+    if not jobs:
+        out("No job is skipped (ats): nothing to re-score.")
+        return counts
+    out(f"{len(jobs)} job(s) skipped (ats); each is tailored again with today's fact bank"
+        + ("." if apply else " into a scratch folder (dry run)."))
+    est = s["llm"].get("job_token_estimate", 10000)
+    scratch = s.path("tmp")
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=scratch) as tmp:
+        for n, job in enumerate(jobs):
+            label = f"{job['company']} | {job['title']}"
+            try:
+                llm.begin_job(est)
+            except BudgetExhausted as e:
+                counts["not_run"] = len(jobs) - n
+                out(f"STOP: not enough daily LLM token budget for a whole job (~{est:,} tokens): {e}\n  {counts['not_run']} job(s) not re-scored.")
+                break
+            try:
+                rep = tailor_job(dict(job), fb, llm, s, s.path("outputs") if apply else Path(tmp), frozen_for(job)[0])
+            except Exception as e:  # noqa: BLE001 — one bad job must not stop the others
+                counts["errors"] += 1
+                db.log(job["id"], "error", traceback.format_exc())
+                out(f"- {label}: ERROR {e}")
+                continue
+            finally:
+                llm.end_job()
+            v = bands.Verdict.from_dict(rep["band"])
+            move = f"ATS {bands.num(100 * (job['score'] or 0))} -> {bands.num(v.strict)} (ceiling {bands.num(v.ceiling)})"
+            counts["checked"] += 1
+            if v.outcome == "skip":
+                counts["still_skipped"] += 1
+                out(f"- {label}: {move}: stays skipped (ats)")
+                if apply:
+                    record_tailoring(db, s, job, rep)
+                continue
+            counts["back"] += 1
+            if not apply:
+                out(f"- {label}: {move}: would come back to review" + (f", flagged '{v.flag}'" if v.flag else ""))
+                continue
+            status = record_tailoring(db, s, job, rep)
+            moved = decided.bring_back(s, job["id"], job["company"], job["title"])
+            out(f"- {label}: {move}: came back to review ({status})" + (f"; JD back in the inbox: {', '.join(p.name for p in moved)}" if moved else ""))
+    if not apply and counts["checked"]:
+        out("Dry run: nothing was changed. Run again with --apply to keep the new tailoring and bring the jobs back.")
+    return counts
+
+
 def cmd_retriage(args):
+    if args.apply and not (args.decided or args.ats):
+        _fail("--apply belongs to --decided or --ats")
+    if args.ats and args.decided:
+        _fail("--ats and --decided are two different re-checks: use one of them")
     s, db = _ctx(args)
-    if args.apply and not args.decided:
-        _fail("--apply belongs to --decided")
+    if args.ats:
+        fb = load_yaml(s.path("fact_bank"))
+        gates.load_roles(s, fb)
+        retriage_ats(db, s, fb, _llm(args, s, db), apply=args.apply)
+        return
     if args.decided:
         plan = decided.sweep(db, s, apply=args.apply)
         print("\n".join(plan.lines(args.apply)))
@@ -453,6 +547,7 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
             print(f"  letter NOT written: {e}")
         finally:
             llm.end_job()
+    usage.report(db, s)
 
 
 def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False,
@@ -490,15 +585,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
             off = rep["letter"]["status"] == "off"              # letter.mode: off, no letter was asked for
-            flags = [x for x in json.loads(job["flags"] or "[]") if not x.startswith(STRETCH_FLAG)]
-            if rep.get("stretch"):         # an honest ceiling under the band: kept and labelled, never dropped (and never auto-approved)
-                flags.append(f"{STRETCH_FLAG}: honest ceiling {rep['ceiling']:.0%} is under the {s['scoring']['band'][0]:.0%} band")
-            db.update_job(job["id"], status="letter_pending" if pending else "needs_review", keywords=rep["keywords"],
-                          ceiling=rep["ceiling"], score=f["score"], score_stemmed=f["score_stemmed"],
-                          letter_score=rep["letter"]["score"], attempts=len(rep["attempts"]), out_dir=rep["out_dir"],
-                          cv_pages=rep["cv_pages"], page2_fill=rep["page2_fill"], flags=flags)
-            db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"],
-                                         "letter": rep["letter"]["status"]})
+            record_tailoring(db, s, job, rep)
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
             max_pages = 1 if rep["one_page"] else s["scoring"]["max_pages"]
             short = (not rep["one_page"] and max_pages == 2
@@ -508,6 +595,8 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
                 print(f"  letter {letter_summary(rep['letter'])}")
             if rep.get("ats"):
                 print("  " + ats.AtsScores(**{k: v for k, v in rep["ats"].items() if k in ats.AtsScores.__dataclass_fields__}).line())
+            if rep.get("band"):
+                print("  " + bands.Verdict.from_dict(rep["band"]).line())
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s)"
                   + (f", page 2 {rep['page2_fill']:.0%} full" + (" (the fact bank has no more content to add)" if short else "")
@@ -530,6 +619,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             print(f"  ERROR: {e}")
         finally:
             llm.end_job()
+    usage.report(db, s)
 
 
 def cmd_tailor(args):
@@ -623,7 +713,7 @@ def _assist_answers(db: DB, s) -> dict:
     except answers_mod.AnswersError as e:
         print(f"  answers.yaml not used: {e}", file=sys.stderr)
         book = None
-    return {"book": book, "history": autoapply.default_history(db, s), "handoff": Handoff(s)}
+    return {"book": book, "history": autoapply.default_history(db, s), "handoff": Handoff(s), "failures": Failures(s)}
 
 
 def cmd_live(args):
@@ -733,7 +823,7 @@ def cmd_live(args):
             job = db.job(jid)
             rep = review.load_report(job)
             return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
-                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"), handoff=Handoff(s),
+                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"), handoff=Handoff(s), failures=Failures(s),
                                  freetext=freetext.for_job(job, rep, fb, llm, s, answers_mod.load(answers_mod.path_for(s)), ask=input))
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
@@ -745,6 +835,7 @@ def cmd_live(args):
                              mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
                 fresh=getattr(args, "fresh", False)).run()
+    usage.report(db, s)
     if code:
         sys.exit(code)
 
@@ -1271,10 +1362,17 @@ def main(argv=None):
     sc.add_argument("--country", required=True, help="a code or name: GB, DE, Ireland")
     sc.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
     sc.set_defaults(fn=cmd_set_country)
-    rt = sub.add_parser("retriage", help="re-run triage on every non-applied job; with --decided, clean the inbox of decided jobs")
+    rt = sub.add_parser("retriage", help="re-run triage on every non-applied job; with --decided, clean the inbox of decided jobs; "
+                                         "with --ats, score the `skipped (ats)` jobs again")
     rt.add_argument("--decided", action="store_true",
                     help="instead of triage: list the inbox files that are copies of a job you skipped or applied to (dry run)")
-    rt.add_argument("--apply", action="store_true", help="with --decided: move those files to paths.jds_done and skip their database copies")
+    rt.add_argument("--ats", action="store_true",
+                    help="instead of triage: tailor every `skipped (ats)` job again with today's fact bank and report which now reach the review "
+                         "band (dry run: a scratch folder, nothing changes)")
+    rt.add_argument("--apply", action="store_true",
+                    help="with --decided: move those files to paths.jds_done and skip their database copies; with --ats: keep the new "
+                         "tailoring and bring the jobs that reach the review band back")
+    rt.add_argument("--mock", action="store_true", help="with --ats: the isolated data/mock database and MockLLM")
     rt.set_defaults(fn=cmd_retriage)
     us = sub.add_parser("unskip", help="undo a skip: the job, its copies and their JD files go back to the inbox")
     us.add_argument("--id", required=True)

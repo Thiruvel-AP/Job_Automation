@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Valarian - MLOps Engineer</title></head><body>
+<!-- A Lever-shaped form: the label of a custom question is a div ABOVE its box, and the box itself only says "Type your response". For tests/test_autoapply_lever_freetext.py.
+     Query: ?nolabel = the custom question has no text at all above its box. -->
+<h1>Apply: MLOps Engineer</h1>
+<form id="application" novalidate>
+  <ul>
+    <li class="application-question resume"><label><div class="application-label">Resume/CV <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="file" name="resume" required></div></label></li>
+    <li class="application-question"><label><div class="application-label">Full name <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="text" name="name" required></div></label></li>
+    <li class="application-question"><label><div class="application-label">Email <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="text" name="email" required></div></label></li>
+    <li class="application-question custom-question" id="custom">
+      <div class="application-label" id="custom-label"><div class="text">Describe a project you are proud of <span class="required">&#10033;</span></div></div>
+      <div class="application-field"><textarea name="cards[1][field0]" placeholder="Type your response" required></textarea></div>
+    </li>
+  </ul>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__clicks = 0;
+  if (location.search.includes('nolabel')) document.getElementById('custom-label').remove();
+  document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); window.__clicks += 1; location.href = 'auto_done.html'; });
+</script>
+</body></html>

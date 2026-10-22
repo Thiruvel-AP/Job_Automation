@@ -26,13 +26,14 @@ from ..tailoring.faithfulness import deny_hits
 from ..discovery import applykind, freshness, priority as prio
 from ..discovery.gates import is_sponsor_flag
 from ..hook import headline_lint
+from ..llm import usage
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
 from ..tailoring import company_letter
 from ..tailoring import letters as letters_mod
 from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
-from . import judge
+from . import judge, letter_edit
 
 CONFIRM_FALLBACK = "send fallback"
 CONFIRM_NO_LETTER = "no letter"
@@ -198,8 +199,7 @@ def company_letter_lines(letter: dict) -> list[str]:
     drew from, so that the claims about the employer can be read against the ad. [] for a letter of another mode."""
     if letter.get("mode") != "company" or letter.get("status") != "ok":
         return []
-    out = [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {company_letter.MIN_WORDS}-"
-           f"{company_letter.MAX_WORDS}) | opening: {letter.get('hook_source')} | requirements named: "
+    out = [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {'-'.join(str(n) for n in letter.get('accepted') or company_letter.DEFAULT_RANGE)}) | opening: {letter.get('hook_source')} | requirements named: "
            + "; ".join(", ".join(r) for r in letter.get("requirements") or [])]
     out.append("  P2 (why this company) drew from the job ad:")
     for row in letter.get("p2_sources") or []:
@@ -471,11 +471,13 @@ def contacts_step(db: DB, job, settings, ask) -> None:
         print(f"  contacts: skipped ({e})")
 
 
-def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings) -> dict:
-    """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log."""
-    rep = _regenerate_letter(job, fb, llm, settings, rep)
+def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings, feedback: str = "") -> dict:
+    """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log. `feedback` = what the person said
+    should change (company mode): it goes to the next draft word for word."""
+    rep = _regenerate_letter(job, fb, llm, settings, rep, feedback=feedback)
     db.update_job(job["id"], letter_score=rep["letter"]["score"])
-    db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"], **({"choice": rep["letter_choice"]} if rep.get("letters") else {})})
+    db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"], **({"choice": rep["letter_choice"]} if rep.get("letters") else {}),
+                                 **({"feedback": feedback} if feedback else {})})
     return rep
 
 
@@ -660,19 +662,29 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
             if make_llm is None:
                 print("  no LLM available for this run")
                 continue
+            feedback = ""
+            if c == "l" and (rep.get("letter") or {}).get("mode") == "company":       # company letters: what should change?
+                feedback = letter_edit.ask_feedback(ask, settings, job["id"])
             try:
-                rep = regenerate_letter(db, job, rep, fb, make_llm(), settings)
+                rep = regenerate_letter(db, job, rep, fb, make_llm(), settings, feedback=feedback)
             except Exception as e:  # noqa: BLE001  (provider errors, xelatex errors: report, keep the old letter)
                 print(f"  letter NOT regenerated: {e}")
                 continue
             job = db.job(job["id"])
             print(summary(job, rep, settings))
+            usage.report(db, settings)
             verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "r":
             reason = ask("reason: ").strip() or "unspecified"
             reject(db, job, rep, prefs, reason)
             judge.log_decision(settings, job, rep, verdict, "reject", reason)
             return "rejected"
+        elif c == "e" and (rep.get("letter") or {}).get("mode") == "company" and \
+                ask("Edit the [c]v or the [l]etter? (enter = cv) ").strip().lower() in ("l", "letter"):
+            rep = letter_edit.edit_letter(db, job, rep, fb, settings, ask)
+            job = db.job(job["id"])
+            print(summary(job, rep, settings))
+            verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "e":
             path = Path(rep["out_dir"]) / "edit.yaml"
             path.write_text(yaml.safe_dump(edit_file_for(rep), sort_keys=False, allow_unicode=True, width=120),
