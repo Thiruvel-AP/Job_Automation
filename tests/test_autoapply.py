@@ -12,7 +12,8 @@ from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
 
 from careerops import autoapply
-from careerops.apply import answers, autolog
+from careerops.apply import answers, autolog, formfind
+from careerops.apply.handoff import Handoff
 from careerops.apply.errors import ArchiveError
 
 FIX = Path(__file__).resolve().parent / "fixtures" / "apply"
@@ -70,7 +71,15 @@ class Run:
             page.close()
         return autoapply.Session(page, close)
 
-    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None):
+    def handoff(self, known: str | None = None) -> Handoff:
+        """A Handoff whose 'browser' is a list (the pages it was asked to open) and whose `known` can be forced."""
+        self.opened: list[str] = []
+        h = Handoff(self.settings, opener=lambda url: self.opened.append(url) or True, out=lambda s: self.out.append(s))
+        if known:
+            h.known = lambda url: known
+        return h
+
+    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None, handoff=None):
         replies = replies or {}
 
         def ask(prompt: str) -> str:
@@ -85,7 +94,7 @@ class Run:
         job = {**self.job, "apply_url": target.resolve().as_uri() + ("?" + query if query else "")}
         return autoapply.run(job, rep or self.rep(), APPLICANT, self.settings, submit=submit, confirm=confirm, ask=ask,
                              out=lambda s: self.out.append(s), launch=self.launch, history=history or (lambda c: False), throttle=throttle,
-                             ats_strict=74.2, now=NOW)
+                             ats_strict=74.2, now=NOW, handoff=handoff)
 
     def rep(self, letter: bool = False) -> dict:
         out = Path(self.job["out_dir"])
@@ -204,10 +213,40 @@ def test_a_captcha_stops_the_run_before_anything_is_filled_or_clicked(world, var
     assert world.state["values"]["first_name"] == "" and world.state["values"]["email"] == ""          # not even the form was filled
 
 
-def test_the_browser_is_left_open_for_the_user_until_they_press_enter(world):
-    world.run("auto_captcha.html")
-    assert world.events[-2].startswith("asked: Finish by hand") and world.events[-1] == "browser closed"
-    assert any("left open for you" in o for o in world.out)
+def test_a_bot_check_hands_the_page_to_the_users_own_browser_and_closes_the_automated_one(world):
+    h = world.handoff()
+    r = world.run("auto_captcha.html", handoff=h)
+    assert r.status == autolog.NEEDS_USER and r.reason.startswith("HAND-OFF") and world.submit_calls == 0
+    assert len(world.opened) == 1 and world.opened[0].endswith("auto_captcha.html")           # the apply URL, in the person's normal browser
+    assert not any(e.startswith("asked: Finish by hand") for e in world.events) and world.events[-1] == "browser closed"
+    assert any(o.strip().startswith("CV: ") and "Ada Lovelace CV.pdf" in o for o in world.out)       # the CV path is printed
+    paste = Path(world.job["out_dir"]) / "answers_to_paste.txt"
+    text = paste.read_text(encoding="utf-8")
+    assert "ada.lovelace@example.org" in text and "Available immediately" in text
+    assert world.state["touched"] == 0 and world.state["clicks"] == 0                          # nothing on the challenge was touched
+
+
+def test_error_verifying_your_application_is_a_hand_off_too(world):
+    r = world.run("auto_verify_error.html", handoff=world.handoff())
+    assert r.status == autolog.NEEDS_USER and "error verifying your application" in r.reason and world.submit_calls == 0
+    assert len(world.opened) == 1 and world.state["values"]["first_name"] == "" and world.state["touched"] == 0
+
+
+def test_a_host_that_handed_over_before_opens_no_browser_at_all(world):
+    def launch(profile_dir):
+        raise AssertionError("an automated browser was opened for a host that is already handed over")
+    world.launch = launch
+    h = world.handoff(known="a bot check turned this browser away")
+    r = world.run("auto_form.html", handoff=h)
+    assert r.status == autolog.NEEDS_USER and r.reason.startswith("HAND-OFF") and len(world.opened) == 1
+    assert (Path(world.job["out_dir"]) / "answers_to_paste.txt").is_file() and log_rows(world.settings)[-1]["result"] == "needs_user"
+
+
+def test_a_job_page_with_no_form_says_form_not_found_with_the_url(world, monkeypatch):
+    monkeypatch.setattr(formfind, "FORM_WAIT_S", 1)
+    r = world.run("auto_noform.html")
+    assert r.status == autolog.NEEDS_USER and r.reason.startswith("FORM NOT FOUND ") and r.reason.endswith("auto_noform.html")
+    assert r.filled == [] and world.submit_calls == 0
 
 
 def test_a_challenge_that_appears_after_the_click_is_not_touched_and_hands_over(world):
@@ -376,9 +415,10 @@ def test_click_on_a_submit_control_appears_only_in_autoapply_py():
                     others.append((f"{p.relative_to(ROOT)}:{n}", line.strip()))
                 if "submit" in line.lower() and any(w in line for w in ("query_selector", ".locator(", "get_by_role", ".press(")):
                     others.append((f"{p.relative_to(ROOT)}:{n}", line.strip()))
-    # the one other click in the package is the assist's "Apply" link that opens a form (its text is matched by APPLY_BUTTON, which has no "submit")
+    # the one other click in the package is assist's "Apply" link that opens a form: guarded by OPEN_FORM_LINK (an "Apply" text, no "submit");
+    # Ashby / Lever forms are reached by address (formfind.form_url), a bot check or sign-in is handed over and never clicked
     assert [w for w, line in others if not w.startswith("careerops/apply/assist.py")] == []
-    assert all("APPLY_BUTTON" in line or line == "a.click()" for w, line in others if w.startswith("careerops/apply/assist.py"))
+    assert all("OPEN_FORM_LINK" in line for w, line in others if w.startswith("careerops/apply/assist.py"))
 
 
 def test_inside_autoapply_the_submit_button_is_clicked_in_exactly_one_place():

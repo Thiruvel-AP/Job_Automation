@@ -533,10 +533,10 @@ def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
 
 
 # ---- 2b. profile: assembled in code (profile.py): the hook's profile line + one or two profile_facts. No model.
-def assemble_profile(fb: dict, kws: list[Keyword], jd: str, hk: hooks.Hook | None) -> dict:
-    """The CV profile (profile.assemble): `hk.profile_line` first, then the best one or two `profile_facts` as sentences. Returns
-    {"text", "facts", "violations", "warnings", "retried", "fallback"}."""
-    return profile_mod.assemble(fb, kws, jd, hk.profile_line if hk else "")
+def assemble_profile(fb: dict, kws: list[Keyword], jd: str, hk: hooks.Hook | None, head: str = "") -> dict:
+    """The CV profile (profile.assemble): `hk.profile_line` first (without a hook, `head`: the role family's profile body), then the best one
+    or two `profile_facts` as sentences. Returns {"text", "facts", "violations", "warnings", "retried", "fallback"}."""
+    return profile_mod.assemble(fb, kws, jd, hk.profile_line if hk else head)
 
 
 # ---- 2c. assemble and fit
@@ -571,11 +571,12 @@ def achievement_entries(fb: dict, pids: list[str], kws: list[Keyword]) -> list[d
 
 def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list[Keyword], headline: str = "",
              skills: dict[str, list[str]] | None = None, hk: hooks.Hook | None = None,
-             achievements: list[dict] | None = None) -> dict:
+             achievements: list[dict] | None = None, profile_head: str = "") -> dict:
     """The render context for a selection: canonical bullet text unless the guard accepted a rewording (`texts`).
     `skills` = the rows to show (`cv_skills`); default every row, `core` first. `hk` (the hook): its headline goes under the
     name and its proof bullet comes first in its role (or project). `achievements` (achievement_entries): the award projects
-    printed under Certifications & Achievements."""
+    printed under Certifications & Achievements. Without a hook the context has no `hook_*` key: the templates print `id.headline` (the
+    role family's `headline`) under the name. `profile_head` is the first sentence(s) of `profile` that a length fit never drops."""
     bidx = bullet_index(fb)
     pos = bullet_positions(fb, hk.proof_bullet_id if hk else None)
 
@@ -607,6 +608,8 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
     if hk is not None:
         ctx["hook_headline"], ctx["hook_number"] = hk.headline, hk.number
         hooks.proof_first(ctx, hk)
+    if profile_head:
+        ctx["profile_head"] = profile_head
     return ctx
 
 
@@ -739,18 +742,22 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
         m = pdflayout.measure(pdf)
         stats["rounds"] += 1
         changed = False
-        if m.headline_lines > 1 and ctx.get("hook_headline"):
-            opts = pdflayout.headline_options(ctx["hook_headline"], ctx.get("hook_number") or "")
+        shown = ctx.get("hook_headline") or ctx["id"].get("headline") or ""          # the hook's headline, else the family's
+        if m.headline_lines > 1 and shown:
+            opts = pdflayout.headline_options(shown, ctx.get("hook_number") or "")
             if opts:                 # the first version short enough for one line (a line holds about len / (lines - 0.5) characters)
-                room = len(ctx["hook_headline"]) / (m.headline_lines - 0.5) * 0.98
+                room = len(shown) / (m.headline_lines - 0.5) * 0.98
                 pick = next((o for o in opts if len(o) <= room), opts[-1])
-                ctx["hook_headline"] = pick
+                if ctx.get("hook_headline"):
+                    ctx["hook_headline"] = pick
+                else:
+                    ctx["id"] = {**ctx["id"], "headline": pick}
                 if hk is not None:
                     hk.headline = pick
                 stats["headline"].append(pick)
                 changed = True
         if m.profile_lines > pdflayout.MAX_PROFILE_LINES:
-            opts = pdflayout.profile_options(ctx["profile"], hk.profile_line if hk is not None else "")
+            opts = pdflayout.profile_options(ctx["profile"], hk.profile_line if hk is not None else ctx.get("profile_head", ""))
             if opts:
                 room = len(ctx["profile"]) / (m.profile_lines - 0.5) * pdflayout.MAX_PROFILE_LINES * 0.98
                 ctx["profile"] = next((o for o in opts if len(o) <= room), opts[-1])
@@ -1640,7 +1647,12 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     if hook_failed:
         analysis_warnings.append(f"hook: no library hook qualifies, so the CV headline is the role family's '{headline}' with no number, "
                                  "and there is no hook line, no proof bullet first and no hook letter (" + "; ".join(hook_notes)[:400] + ")")
-    profile = assemble_profile(fb, kws, jd, hk)                  # the hook's profile line + profile_facts sentences, in code
+    # no hook: profile line 1 is the role family's profile body (the user's own words, fact bank `families[*].profile_body`), if the bank has one
+    head = ""
+    if hook_failed:
+        bank_family = fam or pick_family(fb, kws, family, from_family)
+        head = " ".join(str((bank_family or {}).get("profile_body") or "").split())
+    profile = assemble_profile(fb, kws, jd, hk, head)            # the hook's profile line (else the family's body) + profile_facts sentences, in code
     profile_text = profile["text"]
     # an award project moves to Certifications & Achievements unless the JD ranks it in the top three (or it holds the hook's proof):
     # the fact bank the selection sees then lacks it, so it neither takes a project slot nor is offered to the fill
@@ -1658,7 +1670,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
-                              "hook_family_headline": headline if hook_failed else ""}
+                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head)}
 
     jac = sc["bullet_dedupe_jaccard"]
     ranking, best, cache = kws, None, {}
@@ -1680,7 +1692,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             rephrase_notes.append(f"hook: the rewording of {hk.proof_bullet_id} lost {hk.number}; the fact-bank wording is kept")
         rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted),
                       regressed=sum(f": {NO_REGRESSION}: " in w for w in warn))
-        ctx = _context(fb, sel, accepted, profile_text, kws, headline, skills, hk, achievements)
+        ctx = _context(fb, sel, accepted, profile_text, kws, headline, skills, hk, achievements, head)
         ctx["linespread"] = sc["cv_linespread"]
         fit_state: dict = {}
 

@@ -12,7 +12,7 @@ from careerops import hook as H
 from careerops import setup
 from careerops.llm import MockLLM
 from careerops.review import workflow as review
-from careerops.tailoring import tailor
+from careerops.tailoring import render, tailor
 from careerops.tailoring.scorer import Keyword
 
 JOB = {"id": "manual:sel1", "company": "Northwind Health AI", "title": "Data Scientist", "location": "Bristol, UK",
@@ -78,6 +78,22 @@ def test_the_cv_of_an_ad_with_no_overlapping_hook_carries_the_family_headline_an
     lines = review.hook_lines(rep)
     assert lines[0].startswith("Hook: none qualifies") and f"'{rep['headline']}' with no number" in lines[0]
     assert any("no hook_library entry hits at least 2" in ln for ln in lines)
+
+
+FAMILY_HEADLINE = "Data Scientist, forecasting and demand planning"
+
+
+@pytest.mark.parametrize("template", ["cv.tex.j2", "cv2.tex.j2"])
+def test_the_tex_of_a_cv_with_no_hook_carries_the_family_headline(bank, template):
+    ctx = tailor._context(bank, {"experience": {}, "projects": []}, {}, "Profile.", [], FAMILY_HEADLINE, {})
+    assert not [k for k in ctx if k.startswith("hook_")]                      # no hook: no hook_* key at all
+    ctx["linespread"] = 1.0
+    tex = render.env().get_template(template).render(**ctx)
+    assert FAMILY_HEADLINE in tex
+    assert tex.index(FAMILY_HEADLINE) < tex.index(bank["identity"]["email"])      # under the name, above the contact line
+    ctx["hook_headline"], ctx["hook_number"] = "LLM agent behind ~65 tests", "65"
+    hooked = render.env().get_template(template).render(**ctx)
+    assert "LLM agent behind" in hooked and FAMILY_HEADLINE not in hooked        # a hook's headline replaces the family's, never both
 
 
 # ---------------------------------------------------------------- the reason it won

@@ -13,10 +13,14 @@ Every other field is filled by apply/filler.py, the same code the gated auto-app
 name, first name, last name, e-mail, phone, links, location), then the user's answers.yaml. A free-text question nobody has an answer for
 ("Describe an LLM feature ...") stays empty and is marked for you.
 
-Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` lists them (ethnicity first), with
-the first form option that equals one of the `match_any` texts you wrote (case- and dash-insensitive); no match, or a question that is not
-listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
+Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` or an `eo_*` entry of answers.yaml lists
+them (ethnicity first), with the first form option that equals one of the `match_any` / `options` texts you wrote (case- and dash-insensitive);
+no match, or a question that is not listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
 Nothing about equal opportunities is ever inferred from anything else.
+
+The form is found by apply/formfind.py (Ashby `<job url>/application`, Lever `<job url>/apply`, Greenhouse: wait for it). No form field after
+15 s prints `FORM NOT FOUND <url>` and no `Filled:` line. A bot check, "error verifying your application" or a Google / Microsoft sign-in page
+ends the automated browsing: apply/handoff.py opens the page in your own browser and writes answers_to_paste.txt (see there).
 """
 from __future__ import annotations
 
@@ -25,7 +29,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import eo, filler
+from . import eo, filler, formfind
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -35,7 +39,8 @@ from .visa import VisaPlan, plan_for, require_plan, work_for
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
 EO_COLOUR = "3px solid blue"
-APPLY_BUTTON = re.compile(r"^\s*(apply( for this job| now)?|i'?m interested)\s*$", re.I)
+APPLY_BUTTON = formfind.APPLY_BUTTON
+OPEN_FORM_LINK = APPLY_BUTTON          # the text of the one control assist may press: the "Apply" link that opens the form (never a submit or a sign-in)
 
 
 KIND_KEY = {"right_to_work_now": "right_to_work", "sponsorship_now": "sponsorship_now", "sponsorship_future": "sponsorship_future"}
@@ -157,7 +162,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     where = (plan.work.shown if plan.work.home_remote else plan.work.country) if plan is not None else "?"
     report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
     seen_groups: set = set()
-    listed_eo = eo.entries(applicant)
+    listed_eo = eo.entries(applicant, book)               # applicant.yaml first, then the eo_* entries of answers.yaml
     never = applicant.get("never_fill", [])
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
                      letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
@@ -274,11 +279,18 @@ def playwright_launch(profile_dir: Path):
     return page, close
 
 
-def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None) -> dict:
+def open_form_link(link) -> None:
+    """formfind's `follow`: press `link` only when its whole text is OPEN_FORM_LINK; anything else (a submit, a sign-in, a bot check) is left alone."""
+    if OPEN_FORM_LINK.match(link.inner_text() or ""): link.click()
+
+
+def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
+           handoff=None) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
     after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
     error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
-    `book` is the user's answers.yaml (answers.load), `history(company)` whether they applied there before (autoapply.default_history)."""
+    `book` is the user's answers.yaml (answers.load), `history(company)` whether they applied there before (autoapply.default_history).
+    `handoff` (apply/handoff.Handoff): where a bot check or sign-in wall sends the page; a host it already handed over opens no browser at all."""
     from playwright.sync_api import Error as PlaywrightError
 
     url = job["apply_url"] or job["url"]
@@ -290,30 +302,53 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
     if freetext is not None:
         freetext.ask = ask
-    page, close = (launch or playwright_launch)(profile_dir)
     r = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
+
+    def hand_off(why: str, remember: bool = True) -> None:
+        r["handoff"] = why
+        if handoff is not None:
+            handoff.run(job, rep, applicant, book, plan, url, why, r["filled"], remember=remember)
+        else:
+            print(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
+
+    known = handoff.known(url) if handoff is not None else None
+    if known:                                               # this host turned the automated browser away before: no browser is opened
+        hand_off(f"{formfind.host_of(url)} handed a job over before ({known})", remember=False)
+        r["confirmation"] = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
+        return r
+    page, close = (launch or playwright_launch)(profile_dir)
+    closed = False
     try:
         try:
-            page.goto(url, wait_until="domcontentloaded")
-            page.wait_for_timeout(2500)
-            if not page.query_selector("input[type=file], input[type=email]"):
-                for a in page.query_selector_all("a, button"):
-                    if APPLY_BUTTON.match(a.inner_text() or ""):
-                        a.click()
-                        page.wait_for_timeout(2500)
-                        break
-            r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext)
-            print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
-            print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
-            print("\nReview everything in the browser and press Submit yourself.")
+            problem = formfind.open_form(page, url, job["apply_kind"] if "apply_kind" in job.keys() else None,
+                                         follow=open_form_link)
+            if problem:                                     # no form field after 15 s: say so, never print an empty "Filled: []"
+                print(f"\n{problem}\nThe page opened but shows no application form; apply by hand.")
+                r["not_found"] = problem
+            else:
+                r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext)
+                stop = formfind.blocker(page)
+                if stop:
+                    raise formfind.HandOff(stop)
+                print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
+                print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
+                print("\nReview everything in the browser and press Submit yourself.")
+        except formfind.HandOff as e:                       # a bot check or a sign-in wall: nothing on it is touched; the person's own browser takes over
+            hand_off(str(e))
+            try:
+                close()
+            except PlaywrightError:
+                pass
+            closed = True
         except PlaywrightError as e:                        # the window is gone or the page failed: the prompt below is still asked
             print(f"\n(the browser or the page stopped answering: {str(e).splitlines()[0][:120]}). If you submitted the form, paste the "
                   "confirmation below; 'x' = did not submit.")
         conf = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
     finally:
-        try:
-            close()
-        except PlaywrightError:                             # already closed by the person: nothing left to tear down
-            pass
+        if not closed:
+            try:
+                close()
+            except PlaywrightError:                         # already closed by the person: nothing left to tear down
+                pass
     r["confirmation"] = conf
     return r

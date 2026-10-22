@@ -73,8 +73,9 @@
 % ================= HEADER =================
 \begin{center}
   {\fontsize{22}{26}\selectfont\bfseries\color{navy} \VAR{id.name|e}}\\[4pt]
-\BLOCK{if hook_headline|default('')}
-  {\fontsize{12}{14}\selectfont\color{navy} \VAR{hook_headline|hook_tex(hook_number|default(''), 'num')}}\\[4pt]
+\BLOCK{set headline = hook_headline|default('') or id.headline|default('')}
+\BLOCK{if headline}
+  {\fontsize{12}{14}\selectfont\color{navy} \VAR{headline|hook_tex(hook_number|default(''), 'num')}}\\[4pt]
 \BLOCK{endif}
   {\small
   \VAR{id.location|e}\VAR{dot}\href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')}\VAR{dot}\href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\VAR{dot}\href{\VAR{id.links[k]|urlesc}}{\VAR{'Portfolio' if k == 'portfolio' else id.links[k]|urlshow|e}}\BLOCK{endfor}}\BLOCK{if id.get('status_line')}\\[3pt]

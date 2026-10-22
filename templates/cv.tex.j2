@@ -34,8 +34,9 @@
 % ---------------- HEADER ----------------
 \begin{center}
   {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
-\BLOCK{if hook_headline|default('')}
-  {\fontsize{11}{13}\selectfont\color{headernavy} \VAR{hook_headline|hook_tex(hook_number|default(''))}}\\[2pt]
+\BLOCK{set headline = hook_headline|default('') or id.headline|default('')}
+\BLOCK{if headline}
+  {\fontsize{11}{13}\selectfont\color{headernavy} \VAR{headline|hook_tex(hook_number|default(''))}}\\[2pt]
 \BLOCK{endif}
   \VAR{id.location|e} \,$|$\, \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \,$|$\, \href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\\[1pt]
   \BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\VAR{id.links[k]|urlshow|e}}\BLOCK{if not loop.last} \,$|$\, \BLOCK{endif}\BLOCK{endfor}\BLOCK{if id.get('status_line')}\\[1pt]

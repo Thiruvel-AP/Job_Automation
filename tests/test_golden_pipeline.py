@@ -230,12 +230,30 @@ def _run_on(bank: dict, tmp_path, llm: MockLLM):
 
 
 @pytest.mark.slow
+def test_without_a_hook_the_headline_is_the_family_headline_and_profile_line_1_is_the_family_profile_body(tmp_path):
+    fb = load_yaml(FIXTURE)
+    fb.pop("hook_library", None)
+    body = "Builds the modelling a brief needs and reports its limits plainly, from churn models to time-series forecasts."
+    fb["families"] = [{"id": "data_scientist", "match": ["data scientist", "machine learning", "forecasting"], "title": "Data Scientist",
+                       "headline_stack": ["Python"], "profile_body": body,
+                       "skill_lines": [{"label": "Python & Machine Learning", "items": "Python, pandas, scikit-learn, XGBoost, SQL"}]}]
+    rep = _run_on(fb, tmp_path, MockLLM())
+    assert rep["hook"] is None and rep["hook_family_profile"] is True
+    assert "hook_headline" not in rep["context"] and rep["context"]["id"]["headline"] == rep["headline"] != ""      # the template prints id.headline
+    assert rep["context"]["profile"].startswith(body) and rep["context"]["profile_head"] == body
+    text = pdf_text(Path(rep["cv_pdf"]))
+    assert rep["headline"] in text and body[:40] in text
+
+
+@pytest.mark.slow
 def test_when_no_hook_qualifies_the_run_says_so_and_makes_no_old_style_letter(tmp_path):
     fb = load_yaml(FIXTURE)
     fb.pop("hook_library", None)                                              # nothing writes a hook: no library, no hook
     rep = _run_on(fb, tmp_path, MockLLM())
     assert rep["hook"] is None and rep["hook_notes"] and any(w.startswith("hook: no library hook qualifies") for w in rep["analysis_warnings"])
-    assert rep["hook_family_headline"] == rep["headline"] and "hook_headline" not in rep["context"]
+    assert rep["hook_family_headline"] == rep["headline"] and "hook_headline" not in rep["context"] and rep["context"]["id"]["headline"] == rep["headline"] != ""     # never an empty slot
+    assert rep["hook_family_profile"] is False                                 # this bank has no families[*].profile_body: facts only
+    assert rep["headline"] in pdf_text(Path(rep["cv_pdf"]))                    # the headline line is on the page
     assert rep["letters"]["choice"] == "none" and rep["letter_pdf"] is None
     assert rep["letters"]["A"]["status"] == rep["letters"]["B"]["status"] == "none" and "no hook" in rep["letters"]["A"]["reason"]
     assert rep["letter"]["status"] == "none"
