@@ -86,7 +86,7 @@ def test_a_job_that_passes_every_gate_is_filled_submitted_and_marked_applied_wit
     live, lines, code = go(db, settings, fake)
     assert code == 0 and fake.names() == ["tailor", "auto_gate", "preflight", "auto_apply", "mark_applied"]
     assert live.results[0].status == "applied" and db.job(live.results[0].job_id)["status"] == "applied"
-    assert fake.prompts == [] and not (inbox / "a.txt").exists() and len(list((settings.path("jds") / "done").iterdir())) == 1
+    assert fake.prompts == [] and not (inbox / "a.txt").exists() and len(list((settings.path("jds_done") / "applied").iterdir())) == 1
     assert any("form.png" in l for l in lines) and any("submitted" in l.lower() for l in lines)
 
 

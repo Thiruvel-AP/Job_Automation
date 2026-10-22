@@ -60,6 +60,7 @@ from ..db import DB
 from . import applykind
 from . import ats as ats_mod
 from . import candidate as cand
+from ..apply import decided as decided_mod
 from . import boards as boards_mod
 from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import register as sponsors
@@ -79,7 +80,7 @@ COMPANY_COLUMNS = ("company", "company_name", "employer", "employer_name", "orga
 TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
 TITLE_MATCH = 0.9                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
-COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "duplicate", "written", "listed_only", "listed_capped",
+COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_capped",
             "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified")
 RESOLVED_BY = ("reed", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
 
@@ -520,6 +521,7 @@ class Discover:
         self.today = today or datetime.now(timezone.utc)
         self.limit = limit if limit is not None else int(settings["discover"].get("max_new_per_run", 40))
         self.known = load_known(settings, db)
+        self.decided = decided_mod.load(settings, db)                  # skipped / applied jobs: their ids and duplicate keys (decided.py)
         self.run = Run(started=self.today.isoformat(timespec="seconds"), dry_run=dry_run)
         self.run.notes += self.known.notes
         self.fb = fb
@@ -569,8 +571,18 @@ class Discover:
         country = countries.canon(c.country) or countries.detect(c.location)
         return "" if country in ("", countries.UK) else country
 
+    def already_decided(self, company: str, title: str, url: str | None, label: str) -> bool:
+        """Is this job (by id, else by company family + title) one you skipped or applied to? Then it is not written again: `already_decided`."""
+        if self.decided.hit(company, title, url):
+            self.run.count(label, "already_decided")
+            return True
+        return False
+
     def duplicate(self, c: Candidate, label: str) -> bool:
-        """Seen before? Not when it is a NEWER copy of an inbox file (the same job on another board of the employer): that one replaces it."""
+        """Seen before? Not when it is a NEWER copy of an inbox file (the same job on another board of the employer): that one replaces it.
+        A job you already decided on (skipped or applied, any copy of it) is counted as `already_decided`, not as a duplicate."""
+        if self.already_decided(c.company, c.title, c.url, label):
+            return True
         where = self.known.where(c.company, c.title, c.location)
         if where and self.known.older_copy(c.company, c.title, c.posted) is None:
             self.run.count(label, "duplicate")
@@ -994,6 +1006,8 @@ class Discover:
                 self.run.count(label, "alerts")
                 self.run.count(label, f"alerts_{kind}")
                 self.run.credit(src.id, "alerts")
+                if self.already_decided(item.company, item.title, None, label):
+                    continue
                 if self.known.where(item.company, item.title, item.location):
                     self.run.count(label, "duplicate")
                     continue

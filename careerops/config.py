@@ -11,7 +11,8 @@ import yaml
 ROOT = Path(os.environ.get("CAREEROPS_ROOT", Path(__file__).resolve().parent.parent))
 SETTINGS_ENV = "CAREEROPS_SETTINGS"      # a settings file to use when none is given (the test suite points it at tests/fixtures/config/)
 # A paths key the settings file may leave out: the built-in folder is used. Never one of the user's own folders.
-DEFAULT_PATHS = {"applications_auto": "data/applications_auto"}     # where the pipeline writes its archive; paths.applications is read-only
+# jds_done: the JD files of skipped / applied jobs (discovery/decided.py).
+DEFAULT_PATHS = {"applications_auto": "data/applications_auto", "jds_done": "data/jds_done"}     # where the pipeline writes its archive; paths.applications is read-only
 
 
 @dataclass

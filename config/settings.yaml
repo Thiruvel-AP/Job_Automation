@@ -20,6 +20,7 @@ paths:
   applications: /mnt/d/Professional/UK/Companies
   judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
+  jds_done: data/jds_done                 # JD files of jobs you skipped or applied to: skipped/ and applied/ (every copy of the job goes with it; never deleted; `careerops unskip` brings a skip back)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
   outreach: data/outreach                 # do_not_contact.csv: addresses and domains no outreach draft goes to (contacts.py, outreach.py)
   discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), boards.json, first_seen.json, filtered_<date>.csv, manual_queue_overflow.csv, gmail_seen.json, runs.jsonl, health/<date>.csv, listed_only.csv

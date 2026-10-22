@@ -18,6 +18,10 @@
                                 sign in to Google once (read mail, create drafts, edit the tracker Sheet; never sends) · counts per
                                 source, resolved vs the manual queue
   careerops retriage            re-run triage on every non-applied job (back-fills family/tier/ceiling_pre)
+  careerops retriage --decided [--apply]
+                                move the inbox files of jobs (and copies of jobs) you skipped or applied to into paths.jds_done
+                                (dry run: lists them; --apply moves them and skips the database copies)
+  careerops unskip --id JOB     undo a skip: the job, its copies and their JD files go back to the inbox
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
   careerops add-url URL [--company C] [--title T]
                                 fetch one job ad (Greenhouse, Lever, Ashby API; else the page) into data/jds/inbox/
@@ -77,6 +81,7 @@ from .apply import autogate
 from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
+from .apply import decided
 from .discovery import gates, manual, sources
 from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
 from .discovery import register as sponsors
@@ -361,7 +366,21 @@ def cmd_set_country(args):
 
 def cmd_retriage(args):
     s, db = _ctx(args)
+    if args.apply and not args.decided:
+        _fail("--apply belongs to --decided")
+    if args.decided:
+        plan = decided.sweep(db, s, apply=args.apply)
+        print("\n".join(plan.lines(args.apply)))
+        return
     print("Retriage:", retriage(db, s))
+
+
+def cmd_unskip(args):
+    s, db = _ctx(args)
+    try:
+        print("\n".join(decided.restore(db, s, args.id).lines()))
+    except decided.DecidedError as e:
+        _fail(str(e))
 
 
 def cmd_add_jd(args):
@@ -776,6 +795,11 @@ def cmd_mark_applied(args):
     except ArchiveError as e:                      # nothing submitted by us, nothing changed: just refuse
         _fail(str(e))
     ok = _archive(db, s, job, rep, args.ref or None, args.date, args.no_letter)
+    if db.job(args.id)["status"] == "applied":            # final, and it covers every copy of the job
+        try:
+            print("\n".join(decided.settle(db, s, args.id, decided.APPLIED).lines()))
+        except decided.DecidedError as e:
+            print(f"  JD files not moved: {e}")
     export(db, s.path("excel"), floor=s["roles"]["floor"])
     if not ok:
         sys.exit(1)
@@ -1246,7 +1270,14 @@ def main(argv=None):
     sc.add_argument("--country", required=True, help="a code or name: GB, DE, Ireland")
     sc.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
     sc.set_defaults(fn=cmd_set_country)
-    sub.add_parser("retriage").set_defaults(fn=cmd_retriage)
+    rt = sub.add_parser("retriage", help="re-run triage on every non-applied job; with --decided, clean the inbox of decided jobs")
+    rt.add_argument("--decided", action="store_true",
+                    help="instead of triage: list the inbox files that are copies of a job you skipped or applied to (dry run)")
+    rt.add_argument("--apply", action="store_true", help="with --decided: move those files to paths.jds_done and skip their database copies")
+    rt.set_defaults(fn=cmd_retriage)
+    us = sub.add_parser("unskip", help="undo a skip: the job, its copies and their JD files go back to the inbox")
+    us.add_argument("--id", required=True)
+    us.set_defaults(fn=cmd_unskip)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")
     a.add_argument("--url"); a.add_argument("--location", default="United Kingdom"); a.add_argument("--file")

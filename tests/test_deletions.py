@@ -19,6 +19,10 @@ ALLOWED = {
                                                "anything not strictly inside it and anything in or under the archive"),
     ("apply/live.py", "shutil.move"): (1, "_move: a JD .txt between the folders under paths.jds (inbox -> done / rejected) to a "
                                           "name that does not exist yet; refuses any path in or under the archive root"),
+    ("apply/decided.py", "shutil.move"): (1, "move_file: a JD .txt between inbox/ and paths.jds_done/skipped|applied (a skip or an application "
+                                               "covers every copy of the job; `unskip` moves it back) to a name that does not exist yet; "
+                                               "refuses any path in or under the archive roots"),
+    ("apply/decided.py", "os.replace"): (1, "_reopen: swaps in paths.live/state.json.tmp, a file this call just wrote"),
     ("apply/live.py", "os.replace"): (1, "State.save: swaps in paths.live/state.json.tmp, a file this run just wrote"),
     ("tailoring/render.py", ".unlink"): (1, "xelatex's own .aux/.log/.out next to the PDF it just built in this run's work folder"),
     ("tailoring/render.py", "os.replace"): (1, "renames this run's cv.pdf/cv.tex to their final names inside the same work folder"),

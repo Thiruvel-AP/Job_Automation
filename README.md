@@ -199,6 +199,8 @@ scripts/discover.sh                # what the scheduler runs twice a day: discov
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
+careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
+careerops unskip --id JOB          # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
 careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one job ad into data/jds/inbox/ (see "Adding a job from its link")
@@ -240,9 +242,10 @@ careerops calibrate                # tailor the calibration JDs with the real mo
 `Agency: yes`). It adds nothing to the database and applies to nothing; `careerops live` then works through the inbox best priority
 first. Without a source flag `discover` keeps its older job (the boards in `sources:` into the database, then triage; `run` and cron use
 that). Common to every source: a title in `roles.families` and a UK or remote-UK place are kept (a bare "Remote" only when the ad says
-UK; Reed, Adzuna and CV-Library are UK sites); closed postings are dropped; a job already in the database, in `inbox/`, `done/` or
-`rejected/`, in the application archive (read only, company and role folder names) or earlier in the same run is dropped (company +
-normalised title + place). Sponsorship is never a filter (see "Priority"). `--limit N` caps the new files (default 40), `--dry-run`
+UK; Reed, Adzuna and CV-Library are UK sites); closed postings are dropped; a job you already skipped or applied to (by job id, or
+by company family + normalised title, so another board's copy counts) is never written again and is counted as `already_decided`; a job
+already in the database, in `inbox/`, `done/` or `rejected/`, in the application archive (read only, company and role folder names) or
+earlier in the same run is dropped (company + normalised title + place). Sponsorship is never a filter (see "Priority"). `--limit N` caps the new files (default 40), `--dry-run`
 finds and ranks without writing, and every run is listed best priority first.
 
 - **`--ats`** reads Greenhouse, Lever and Ashby boards through their documented public APIs. It starts from your companies, in this
@@ -469,14 +472,23 @@ tailored. For each job:
 4. tailors exactly that id (pass 1), then asks you to review it (pass 2): **approve / edit / skip** (plus `l` to pick the letter A / B /
    none, `n` to open the note, `o` to open the PDFs, `w` to open the apply page in your default Windows browser through `wslview`, else
    `explorer.exe`: it only opens the page, never clicks, fills or submits, and the tool sends no request to it); the review screen prints
-   `Apply: <kind> <apply_url>` and, for a title with a level word, `LEVEL: manager | lead | senior`; skip leaves the job `skipped` and
-   files the JD in `done/`;
+   `Apply: <kind> <apply_url>` and, for a title with a level word, `LEVEL: manager | lead | senior`; skip leaves the job `skipped`
+   (see "Skip and applied are final" below);
 5. unless `--dry-run`, and only after approval: you confirm *Open the application form?*, the existing apply assist fills the
    basics (it never submits), every `CHECK VISA ANSWER` line is printed, and *Did YOU submit the form? [y/N]* decides:
    `y` → mark-applied (archive + `applied`); anything else → status `ready_not_submitted`, nothing recorded as sent;
 6. snapshots the archive again. A removed or changed path, or an addition outside this job's one new `<Company>/<Role>` folder,
    stops the whole loop (exit code 3) and prints the paths;
-7. moves the JD to `done/<job id>-<name>.txt` (`:` in the id becomes `_`).
+7. moves the JD out of the inbox: a skipped or applied job to `data/jds_done/skipped/` or `data/jds_done/applied/` (`paths.jds_done`), any other
+   finished job to `done/<job id>-<name>.txt` (`:` in the id becomes `_`).
+
+**Skip and applied are final.** One decision covers every copy of a job: the jobs with the same duplicate key (company family + normalised
+title: "Graphcore" and "Graphcore Early Careers", "Graduate Machine Learning Engineer 2027"). Skipping or applying to one copy skips the
+others in the database (a copy of an applied job is marked `skipped` with the reason "same job as …", it was not applied to) and moves
+every inbox file with that key into `data/jds_done/skipped/` or `applied/`. JD files are never deleted or overwritten (a name already there
+gets `-2`). `careerops retriage --decided` does the same for what is in the inbox now (a dry run; `--apply` moves the files and skips the
+database copies), `careerops unskip --id JOB` undoes a skip (the job and its copies return to `needs_review` if tailored, else `new`, and their
+files to the inbox; live works on them again).
 
 There is no `--yes`: every gate is answered by you. `--mock` runs everything on the isolated `data/mock` root with MockLLM
 and implies `--dry-run`. **Ctrl-C** (or an unanswered prompt) prints the stage it stopped at and the command to resume (exit 130);

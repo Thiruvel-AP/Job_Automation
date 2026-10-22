@@ -102,6 +102,12 @@ def archive(settings):
     return root
 
 
+def filed(settings, which: str) -> list[Path]:
+    """The JD files filed under paths.jds_done/<skipped|applied>: a skip or an application is final and takes the job's JD out of the inbox."""
+    d = settings.path("jds_done") / which
+    return sorted(d.iterdir()) if d.exists() else []
+
+
 def tree(root: Path) -> dict:
     return {str(p.relative_to(root)): (p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest(), p.stat().st_mtime_ns)
             for p in sorted(root.rglob("*"))}
@@ -177,8 +183,7 @@ def test_the_job_id_returned_by_add_jd_is_what_tailor_review_assist_and_mark_app
     assert [j["id"] for j in db.jobs()] == [want]
     assert fake.calls == [("tailor", want), ("review", want), ("preflight", want), ("assist", want), ("mark_applied", want)]
     assert db.job(want)["status"] == "applied"
-    done = settings.path("jds") / "done"
-    assert [p.name for p in done.iterdir()] == [f"{want.replace(':', '_')}-one.txt"] and not (inbox / "one.txt").exists()
+    assert [p.name for p in filed(settings, "applied")] == ["one.txt"] and not (inbox / "one.txt").exists()
 
 
 def test_missing_company_and_title_are_asked_for_and_a_blank_answer_rejects_the_file(db, settings, inbox, archive, jd):
@@ -198,7 +203,7 @@ def test_a_job_the_rules_skip_is_only_tailored_when_the_user_says_so(db, setting
     live, _ = session(db, settings, fake)
     live.run()
     assert fake.calls == [] and live.results[0].status == "skipped (rules)"
-    assert [p.name for p in (settings.path("jds") / "done").iterdir()][0].endswith("-a.txt")
+    assert [p.name for p in filed(settings, "skipped")] == ["a.txt"] and not (inbox / "a.txt").exists()
     put(inbox, "b.txt", jd, title="Plumber", n=2)
     fake2 = Fake(db, settings, yes(**{"Tailor it anyway": ["y"]}))
     session(db, settings, fake2)[0].run()
@@ -303,20 +308,20 @@ def test_a_dry_run_never_files_a_jd_or_marks_it_done_whatever_the_review_says(db
     jid = db.jobs()[0]["id"]
     assert db.job(jid)["status"] == "skipped" and live.results[0].status == "skipped"
     assert (inbox / "1.txt").exists()
-    assert not (settings.path("jds") / "done").exists() or not list((settings.path("jds") / "done").iterdir())
+    assert not filed(settings, "skipped") and not filed(settings, "applied")
     state = json.loads((settings.path("live") / "state.json").read_text()) if (settings.path("live") / "state.json").exists() else {"jobs": {}}
     assert not any(v.get("done") for v in state["jobs"].values())
     # the same JD, run live: the job is not redone (it was skipped), and only now is the JD filed as done
     fake2 = Fake(db, settings)
     live2, _ = session(db, settings, fake2)
     assert live2.run() == 0 and fake2.calls == []
-    assert not (inbox / "1.txt").exists() and len(list((settings.path("jds") / "done").iterdir())) == 1
+    assert not (inbox / "1.txt").exists() and len(filed(settings, "skipped")) == 1
 
 
 def test_a_dry_run_leaves_an_already_done_copy_where_it_is(db, settings, inbox, archive, jd):
     put(inbox, "1.txt", jd)
     session(db, settings, Fake(db, settings, review="skipped"))[0].run()                 # live: done, filed
-    done_file = next((settings.path("jds") / "done").iterdir())
+    done_file = filed(settings, "skipped")[0]
     (inbox / "again.txt").write_bytes(done_file.read_bytes())
     live, lines = session(db, settings, Fake(db, settings), dry_run=True)
     assert live.run() == 0 and (inbox / "again.txt").exists() and any("already done" in l for l in lines)
@@ -388,14 +393,14 @@ def test_every_visa_line_is_printed_and_ends_up_in_the_summary(db, settings, inb
 
 
 # ------------------------------------------------------------------ review choices
-def test_a_skip_leaves_the_job_skipped_and_moves_the_jd_to_done_with_the_job_id_as_prefix(db, settings, inbox, archive, jd):
+def test_a_skip_leaves_the_job_skipped_and_moves_the_jd_to_jds_done_skipped(db, settings, inbox, archive, jd):
     put(inbox, "1.txt", jd)
     fake = Fake(db, settings, review="skipped")
     live, _ = session(db, settings, fake)
     assert live.run() == 0
     job = db.jobs()[0]
     assert job["status"] == "skipped" and fake.names() == ["tailor", "review"]
-    assert [p.name for p in (settings.path("jds") / "done").iterdir()] == [f"{job['id'].replace(':', '_')}-1.txt"]
+    assert [p.name for p in filed(settings, "skipped")] == ["1.txt"] and not list((settings.path("jds") / "done").iterdir())
 
 
 def test_quit_at_the_review_prompt_stops_the_session_and_keeps_the_job_in_review(db, settings, inbox, archive, jd):
@@ -452,14 +457,13 @@ def test_a_completed_jd_is_skipped_by_content_hash_even_under_another_name(db, s
     fake = Fake(db, settings, yes())
     session(db, settings, fake)[0].run()
     assert len(fake.calls) == 5
-    (inbox / "again.txt").write_bytes((settings.path("jds") / "done" / next(
-        (settings.path("jds") / "done").iterdir()).name).read_bytes())          # the same bytes, dropped in again
+    (inbox / "again.txt").write_bytes(filed(settings, "applied")[0].read_bytes())          # the same bytes, dropped in again
     fake2 = Fake(db, settings)                                                    # must not be called at all
     live2, lines = session(db, settings, fake2)
     assert live2.run() == 0
     assert fake2.calls == [] and not (inbox / "again.txt").exists()
     assert any("already done" in l for l in lines) and len(db.jobs()) == 1
-    assert len(list((settings.path("jds") / "done").iterdir())) == 2              # the copy was filed, not processed
+    assert len(filed(settings, "applied")) == 2                                   # the copy was filed, not processed
 
 
 def test_ctrl_c_records_where_it_stopped_and_prints_the_resume_command_and_a_rerun_continues(db, settings, inbox, archive, jd):
@@ -599,7 +603,7 @@ def test_retailor_never_touches_an_applied_job(db, settings, inbox, archive, jd)
     put(inbox, "1.txt", jd)
     session(db, settings, Fake(db, settings, yes()))[0].run()                  # applied; its JD is filed
     jid = db.jobs()[0]["id"]
-    done = next((settings.path("jds") / "done").iterdir())
+    done = filed(settings, "applied")[0]
     (inbox / "again.txt").write_bytes(done.read_bytes())
     fake = Fake(db, settings)
     session(db, settings, fake, retailor=True)[0].run()
@@ -863,7 +867,7 @@ def test_the_next_run_first_asks_whether_you_submitted_the_job_it_crashed_on_and
     assert live.run() == 0
     assert fake.calls == [("mark_applied", jid)] and db.job(jid)["status"] == "applied"
     assert [r.status for r in live.results] == ["applied"]
-    assert not (inbox / "one.txt").exists() and [p.name for p in (settings.path("jds") / "done").iterdir()] == [f"{jid.replace(':', '_')}-one.txt"]
+    assert not (inbox / "one.txt").exists() and [p.name for p in filed(settings, "applied")] == ["one.txt"]
     again = Fake(db, settings, {})                                  # asked once: the next session has nothing to ask
     assert session(db, settings, again)[0].run() == 0 and again.calls == []
 

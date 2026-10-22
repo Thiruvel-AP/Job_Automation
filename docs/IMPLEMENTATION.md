@@ -1099,6 +1099,22 @@ you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywo
 
 Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
 
+## 5ab. Round 13 — skip and applied are final, and cover every copy of a job (2026-10-22) — **done** (offline tests only)
+
+1. **`apply/decided.py`.** The duplicate key is `(candidate.family_key(company), candidate.norm_title(title))` (round 10; place is not part of it). `settle(db, settings, job_id,
+   decision, also=file)` is called by `live._finish_file` for the statuses `skipped`, `skipped (rules)`, `applied`, `applied (archive incomplete)` and by `mark-applied`: every other
+   database row with the key becomes `skipped` (`reason: same job as <id>: <decision>`; an applied row is never touched, and a copy of an applied job is not marked applied, so
+   the funnel and the daily cap count one application), and every inbox JD with the key moves to `paths.jds_done/<skipped|applied>/` (`move_file`: never over a file, never in or
+   out of the archive). Pass 2 of `live` does not review a copy that was filed with its twin.
+2. **`paths.jds_done`** (`data/jds_done`; also the built-in default in `config.DEFAULT_PATHS`). Other finished jobs (`ready_not_submitted`, `submit_unconfirmed`) still go to `jds/done/`.
+3. **Discovery.** `Discover.decided = decided.load(...)`: job ids and keys of the database rows with status skipped / applied and of the files in `jds_done/`.
+   `duplicate()` and the Gmail alert path check it first and count `already_decided` (a new counter in the report) instead of `duplicate`.
+4. **`careerops retriage --decided [--apply]`** (`decided.sweep`): dry run by default, lists the inbox files and the database rows that are copies of a decided job; `--apply` skips the rows and
+   moves the files. **`careerops unskip --id JOB`** (`decided.restore`): refuses an applied group or a job that is not skipped; sets the job and its skipped copies to `needs_review` (tailored)
+   or `new`, moves their files from `jds_done/skipped/` to the inbox and reopens their entries in `live/state.json`.
+5. **Tests.** `tests/apply/test_decided.py` (skipping one Graphcore copy removes both; a re-discovered ad with a decided key is not written; `--apply` is needed to move anything;
+   unskip restores the job; an applied decision is final; never overwrites). `tests/test_deletions.py` lists the two new file operations. The live tests now look in `jds_done/`.
+
 ## 5aa. Round 12 — the write folder, tests that never read your settings, stale answers (2026-10-21) — **done** (offline tests only; no live form, no real model, no real data)
 
 1. **`paths.applications_auto`.** `paths.applications` is the user's own folder of past submissions and is READ only. The pipeline writes its archive (`apply/archive.py`:

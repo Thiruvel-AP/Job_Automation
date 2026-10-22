@@ -73,6 +73,9 @@ ALLOWED = {
     ("apply/live.py", "_move"): "moves a JD .txt between inbox/done/rejected under paths.jds; refuses any path in or under "
                                 "the archive root and never overwrites",
     ("apply/live.py", "save"): "State.save swaps in paths.live/state.json.tmp, a file this run just wrote",
+    ("apply/decided.py", "move_file"): "moves a JD .txt between the inbox and paths.jds_done/skipped|applied (a decision covers every "
+                                       "copy of the job); refuses any path in or under the archive roots and never overwrites",
+    ("apply/decided.py", "_reopen"): "swaps in paths.live/state.json.tmp, a file this call just wrote",
 }
 
 

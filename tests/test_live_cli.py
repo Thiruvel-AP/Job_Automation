@@ -23,7 +23,7 @@ def world(tmp_path, settings, jd):
     raw["paths"].update({"db": str(real / "careerops.db"), "outputs": str(real / "outputs"),
                          "excel": str(real / "exports" / "companies.xlsx"), "tmp": str(real / "tmp"),
                          "applications": str(real / "Companies"), "applications_auto": str(real / "Auto"),
-                         "jds": str(real / "jds"), "live": str(real / "live"),
+                         "jds": str(real / "jds"), "jds_done": str(real / "jds_done"), "live": str(real / "live"),
                          "mock_root": str(mock)})
     (real / "Companies" / "Old Co").mkdir(parents=True)
     (real / "Companies" / "Old Co" / "CV.pdf").write_bytes(b"SUBMITTED")
@@ -167,6 +167,7 @@ def test_live_mock_skip_marks_the_job_skipped_and_leaves_the_jd_because_mock_is_
     assert job["status"] == "skipped"
     assert [p.name for p in (mock / "jds" / "inbox").iterdir()] == ["northwind.txt"]      # dry run: never filed
     assert not (mock / "jds" / "done").exists() or not list((mock / "jds" / "done").iterdir())
+    assert not (mock / "jds_done").exists() or not list((mock / "jds_done").rglob("*.txt"))
 
 
 def test_live_mock_ctrl_c_exits_130_and_the_rerun_resumes(world, jd, monkeypatch, capsys):
@@ -227,7 +228,7 @@ def test_live_applies_through_the_real_preflight_and_archive_when_you_say_you_su
     assert sorted(p.name for p in (real / "Companies").iterdir()) == ["Old Co"]     # paths.applications got nothing new
     summary = next((real / "live").glob("*.md")).read_text()
     assert "- status: applied" in summary and "- archive check: ok (" in summary
-    assert not (inbox / "northwind.txt").exists() and len(list((real / "jds" / "done").iterdir())) == 1
+    assert not (inbox / "northwind.txt").exists() and len(list((real / "jds_done" / "applied").iterdir())) == 1
 
 
 def test_live_does_not_archive_when_you_did_not_submit(world, jd, monkeypatch, capsys):

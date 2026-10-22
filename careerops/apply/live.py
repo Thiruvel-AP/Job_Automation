@@ -24,8 +24,9 @@ to read another command's output, and tests can put fakes in their place.
 State lives in paths.live/state.json, keyed by the sha256 of the JD file: a started job keeps its id (so a rerun resumes it
 at whatever status it reached) and a finished one is skipped. The moment the apply page is opened the entry gets `apply_opened`; it is
 cleared when "Did YOU submit?" has been answered. If the session died in between (a closed browser, a crash), the next session starts by
-asking "Did you submit <company> <role>? [y/N]" for that job, and a `y` marks it applied (archive and tracker included). A JD is moved to done/ only when its job is finished; a job
-stopped by Ctrl-C, a dry run, a pending letter or an error stays in inbox/.
+asking "Did you submit <company> <role>? [y/N]" for that job, and a `y` marks it applied (archive and tracker included). A JD is moved only when its job is finished; a job
+stopped by Ctrl-C, a dry run, a pending letter or an error stays in inbox/. A skipped or applied job is final (apply/decided.py): its JD, and
+the JD of every copy of the job in the inbox, goes to paths.jds_done/skipped/ or paths.jds_done/applied/; any other finished job goes to done/.
 """
 from __future__ import annotations
 
@@ -40,7 +41,7 @@ from typing import TYPE_CHECKING, Callable
 
 from ..db import DB
 from ..discovery import applykind, countries, freshness, manual
-from . import autolog, snapshot
+from . import autolog, decided, snapshot
 from .errors import ArchiveError
 
 if TYPE_CHECKING:
@@ -189,6 +190,15 @@ class Live:
         entry.update(done=True, status=status)
         self.state.jobs[sha] = entry
         self.state.save()
+        which = decided.STATUS_DECISION.get(status)
+        if which and entry.get("job_id") and self.db.job(entry["job_id"]) is not None:
+            # a skip or an application is final and covers every copy of the job: their JD files go to paths.jds_done/<decision>/
+            try:
+                for line in decided.settle(self.db, self.s, entry["job_id"], which, also=f).lines():
+                    self.out("  " + line)
+            except decided.DecidedError as e:
+                self.out(f"  could not move the JD of {entry['job_id']} out of the inbox: {e}")
+            return
         if f.exists():
             self._move(f, self.dirs.done, f"{safe_part(entry.get('job_id') or 'nojob')}-{f.name}")
 
@@ -313,6 +323,8 @@ class Live:
         # tailoring will be good (an estimate of 0.86 became 0.25), the final one can.
         counted, pending, deferred = 0, [], None
         for f in files:
+            if self.only is None and not f.exists():                 # a copy of a job decided earlier in this session was filed away with it
+                continue
             if counted >= self.max_jobs:
                 self.out(f"--max {self.max_jobs} reached; {len(files) - files.index(f)} file(s) left in the inbox.")
                 break
@@ -329,6 +341,11 @@ class Live:
                 if r.status in AWAITING:
                     pending.append((f, r))
         for f, r in self._review_order(pending):
+            job = self.db.job(r.job_id)
+            if not f.exists() and job is not None and job["status"] in (decided.SKIPPED, decided.APPLIED):
+                r.status, r.note = job["status"], job["reason"] or "the same job was decided earlier in this session"
+                self.out(f"\n== {r.company} | {r.role}  [{r.job_id}]: {r.note}; its JD was filed with the other copy")
+                continue
             self._one(f, r=r)
         if deferred:
             self.current = deferred[1]
