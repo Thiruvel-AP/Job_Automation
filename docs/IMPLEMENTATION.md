@@ -1099,6 +1099,47 @@ you). `cli.cmd_live` passes a per-job `FreeText` (job ad, the CV's report: keywo
 
 Not verified: a real model's drafts (the guard may reject more than the mock shows: it then asks you), a live form. `careerops apply` (the old command) does not draft.
 
+## 5ad. Round 15 — the 22 Oct live run at Flo Health (Greenhouse) (2026-10-22) — **done** (offline tests; no live form, no real model, no real data)
+
+1. **Crash.** `job.get` on a `sqlite3.Row` (`Handoff.run`, reached from `assist`). `assist()` and `Handoff.run()` now start with `job = dict(job)`. Tests pass a real `sqlite3.Row`
+   through `assist` to the hand-off (a bot check, and a host handed over before) and into `Handoff.run`.
+2. **Hand-off trigger** (`formfind.captcha_reason` / `challenge_shown`). A reCAPTCHA / hCaptcha / Arkose frame or container hands over only when it is displayed
+   (`is_visible`), at least `MIN_CHALLENGE_W x MIN_CHALLENGE_H` (100 x 60) px, not marked invisible (`size=invisible` in its `src`, `data-size="invisible"`) and not a
+   `button` / `input` / `a` that merely carries a `data-sitekey` (reCAPTCHA v3). A displayed Turnstile widget (`TURNSTILE_SELECTORS`) hands over at any size. The words
+   "verify you are human", "error verifying your application" and the Google / Microsoft sign-in page are unchanged. The v3 badge and its hidden challenge frame no longer stop the
+   run; nothing is ever clicked, focused or typed into (only `is_visible`, `bounding_box`, `get_attribute`, `evaluate(tagName)`). `autoapply` uses the same function.
+3. **EO text boxes.** `assist._answer_eo`: a text box / text area for an `eo_*` entry of answers.yaml is filled with that entry's `answer` (a box that already has text is left; an
+   entry with a blank answer, or a question listed only in applicant.yaml, stays empty as before). Printed `CHECK EO ANSWER [eo_gender]: Gender -> Male`.
+4. **Letters without a hook** (`letter.mode: hook`). `letters.family_hook` makes a stand-in `Hook` (`source: "family"`) whose `letter_sentence` is the family's `profile_body` word for word
+   (`tailor._letters(..., family_line=head)`; kept in `report["family_line"]` so review's `l` / `g` regenerate it the same way); `make_letters` is unchanged otherwise (two bullet
+   sentences from the CV's bullets, closing question from `letter.closing_hook` with the ad's two heaviest claimable keywords as the problem, same checks). No `profile_body` = letters "none".
+5. **Upload.** `assist.fill_page`: the letter PDF goes to a cover-letter file field and is reported `Cover Letter ← letter` (was `← cover letter`); the letter text goes to a cover-letter text
+   box only when the form has no cover-letter file field for the PDF (the PDF and the text are not both put on one form).
+6. **Tests** (+39: `test_handoff.py` +26 = 8 displayed and 8 invisible/hidden blocker cases, 2 combined, 3 `sqlite3.Row`, 5 in Chromium; `test_assist_eo.py` +5 text boxes; `test_assist_letter.py` +5; `test_golden_pipeline.py` +2; `test_autoapply.py` +1).
+   `tests/challenge_fakes.py` (fake frames), `tests/fixtures/apply/auto_captcha.html?invisible`. Not verified: a real Greenhouse page with the real reCAPTCHA v3 badge, the real fallback letter text.
+
+## 5ac. Round 14 — fixes from the 22 Oct live run (2026-10-22) — **done** (offline tests only; no live form, no real model, no real data)
+
+1. **Excluded titles never prompt.** `settings rules.ask_on_excluded: false` (the built-in default when the key is absent too): a job whose triage reason is "title not in target
+   families" or "level excluded (...)" (`gates.is_excluded_reason`) is `skipped (rules)` with no "Tailor it anyway?" and its JD goes to `jds_done/skipped/` (round 13). Other rule
+   skips (a `jd_rules` skip such as a nationality restriction) are still asked. `true` brings the question back for the excluded ones.
+2. **The headline is never empty.** With the hook on and no entry qualifying, `tailor._context(family_headline=True)` puts the role family's `headline` under the name
+   (`ctx["hook_headline"]`, number empty) and profile line 1 is the bank family's `profile_body` (`families[*].profile_body` in the fact bank, the family `pick_family` chose;
+   `assemble_profile(..., head)`), followed by the usual `profile_facts` sentences; `ctx["profile_head"]` is what a length fit never drops (`fit_lengths`). The report has
+   `hook_family_profile`. A bank family without `profile_body` leaves profile line 1 as the facts only. Hook off (`hook.enabled: false`) is unchanged: no slot.
+3. **Find the form** (`apply/formfind.py`, used by `apply/assist.py` and `autoapply.py`): `form_url` (Ashby `/application`, Lever `/apply`), `wait_for_form` (15 s, polls every 0.5 s,
+   an "Apply" link followed once through the caller's own click), `FORM NOT FOUND <url>`. The assist prints no `Filled:` line then; autoapply stops with that reason (`needs_user`).
+4. **Hand-off** (`apply/handoff.py`): `formfind.blocker` recognises a bot check (the old `autoapply.captcha_reason`, moved), "error verifying your application", and a Google /
+   Microsoft sign-in page or popup (`accounts.google.com`, `login.microsoftonline.com`, `login.live.com`, `login.microsoft.com`, any window of the same browser). `Handoff.run`
+   opens the URL with `explorer.exe`, prints the CV path, writes `answers_to_paste.txt` (`paste_text`: only the person's own files and approved answers) and records the host in
+   `paths.live/handoff_hosts.json`; a recorded host opens no browser (`assist` and `autoapply.run` check `Handoff.known` first). `cli._assist_answers` and the auto hook pass `Handoff(s)`.
+5. **EO answers.** `eo.entries(applicant, book)` adds the `eo_*` entries of answers.yaml (`eo.book_entries`: `match` texts as whole-word question patterns, `options` else `answer` as the options,
+   best first), after applicant.yaml's; the assist and the paste file use them.
+6. **Tests.** `tests/apply/test_handoff.py` (30: form addresses per ATS, the 15 s wait, FORM NOT FOUND, blockers, hand-off file and host record, the assist without a browser, EO options),
+   `tests/test_autoapply.py` (+4 in Chromium: bot check, verify error, known host, no form), `tests/apply/test_live.py` (+5: silent skips), `tests/test_golden_pipeline.py` (+1, the
+   headline and profile body without a hook). `tests/test_autoapply.py`'s "the browser is left open" test became the hand-off test.
+   Not verified: a real Greenhouse / Ashby / Lever page, a real sign-in popup, `explorer.exe` opening the browser from WSL.
+
 ## 5ab. Round 13 — skip and applied are final, and cover every copy of a job (2026-10-22) — **done** (offline tests only)
 
 1. **`apply/decided.py`.** The duplicate key is `(candidate.family_key(company), candidate.norm_title(title))` (round 10; place is not part of it). `settle(db, settings, job_id,

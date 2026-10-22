@@ -82,6 +82,7 @@ from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
 from .apply.errors import ArchiveError, ArchiveIncomplete
 from .apply import decided
+from .apply.handoff import Handoff
 from .discovery import gates, manual, sources
 from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
 from .discovery import register as sponsors
@@ -622,7 +623,7 @@ def _assist_answers(db: DB, s) -> dict:
     except answers_mod.AnswersError as e:
         print(f"  answers.yaml not used: {e}", file=sys.stderr)
         book = None
-    return {"book": book, "history": autoapply.default_history(db, s)}
+    return {"book": book, "history": autoapply.default_history(db, s), "handoff": Handoff(s)}
 
 
 def cmd_live(args):
@@ -732,7 +733,7 @@ def cmd_live(args):
             job = db.job(jid)
             rep = review.load_report(job)
             return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
-                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"),
+                                 history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"), handoff=Handoff(s),
                                  freetext=freetext.for_job(job, rep, fb, llm, s, answers_mod.load(answers_mod.path_for(s)), ask=input))
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"

@@ -26,6 +26,7 @@ from careerops.llm import MockLLM
 from careerops.tailoring import letters as L
 from careerops.tailoring import tailor
 from careerops.tailoring import typography
+from careerops.tailoring.grounding import sentences
 from careerops.tailoring.letter_rules import term_dump_problems
 from careerops.tailoring.render import pdf_text
 from careerops.tailoring.scorer import Keyword
@@ -213,7 +214,7 @@ def test_three_ats_numbers_the_note_and_the_report_are_written(run):
 
 
 # ---------------------------------------------------------------------------------- the failure of the real run, reproduced
-def _run_on(bank: dict, tmp_path, llm: MockLLM):
+def _run_on(bank: dict, tmp_path, llm: MockLLM, keep: list | None = None):
     from conftest import fixture_profile_settings
 
     settings = fixture_profile_settings()
@@ -223,6 +224,8 @@ def _run_on(bank: dict, tmp_path, llm: MockLLM):
     settings.raw["paths"]["applications"] = str(tmp_path / "Companies")
     settings.raw["paths"]["tmp"] = str(tmp_path / "stage")
     settings.raw["letter"]["mode"] = "hook"
+    if keep is not None:
+        keep.append(settings)
     job = {"id": "greenhouse:anaplan:8654662002", "source": "greenhouse", "company": "Anaplan", "title": "Data Scientist, Functional Analytics",
            "location": "London, UK", "url": "https://example.org/anaplan", "apply_url": "https://example.org/anaplan",
            "description": (GOLDEN / "jd.txt").read_text(encoding="utf-8")}
@@ -261,3 +264,39 @@ def test_when_no_hook_qualifies_the_run_says_so_and_makes_no_old_style_letter(tm
 
     lines = workflow.hook_lines(rep)
     assert lines[0].startswith("Hook: none qualifies") and any(x.startswith("  why:") for x in lines), lines          # the review screen says why
+
+
+def _family_bank(body: str) -> dict:
+    fb = load_yaml(FIXTURE)
+    fb.pop("hook_library", None)                                              # no hook qualifies for any ad
+    fb["families"] = [{"id": "data_scientist", "match": ["data scientist", "machine learning", "forecasting"], "title": "Data Scientist",
+                       "headline_stack": ["Python"], "profile_body": body,
+                       "skill_lines": [{"label": "Python & Machine Learning", "items": "Python, pandas, scikit-learn, XGBoost, SQL"}]}]
+    return fb
+
+
+@pytest.mark.slow
+def test_a_job_with_no_hook_still_gets_a_letter_whose_sentence_1_is_the_family_profile_line(tmp_path):
+    body = "Builds the modelling a brief needs and reports its limits plainly, from churn models to forecasts."
+    llm = MockLLM()
+    rep = _run_on(_family_bank(body), tmp_path, llm)
+    assert rep["hook"] is None and rep["family_line"] == body
+    assert rep["letters"]["choice"] == "A" and rep["letter"]["status"] == "ok" and rep["letter"]["problems"] == []
+    first, middle, last = rep["letter"]["paragraphs"]
+    assert first == body                                                         # word for word
+    assert len(sentences(middle)) == 2 and "Could we take 20 minutes to talk about " in last and last.endswith("?")
+    assert rep["letters"]["B"]["status"] == "none"
+    assert not any("letter" in c for c in llm.calls)                             # no model wrote any of it
+    pdf = Path(rep["letter_pdf"])
+    assert pdf.is_file() and body in _flat(pdf_text(pdf))
+    assert any("profile line" in n for n in rep["letter"]["notes"])              # review can say where sentence 1 came from
+
+
+@pytest.mark.slow
+def test_the_family_profile_line_is_kept_in_the_report_so_a_regenerated_letter_uses_it_too(tmp_path):
+    body = "Builds the modelling a brief needs and reports its limits plainly, from churn models to forecasts."
+    fb, kept = _family_bank(body), []
+    rep = _run_on(fb, tmp_path, MockLLM(), kept)
+    job = {"id": rep["job_id"], "company": "Anaplan", "title": rep["title"], "description": (GOLDEN / "jd.txt").read_text(encoding="utf-8")}
+    again = tailor.regenerate_letter(job, fb, MockLLM(), kept[0], rep)
+    assert again["letters"]["choice"] == "A" and again["letter"]["paragraphs"][0] == body

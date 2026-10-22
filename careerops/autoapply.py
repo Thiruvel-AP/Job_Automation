@@ -3,8 +3,10 @@
 This is the ONLY module that may click a submit control, and `live` calls it only for a job that passed every gate in apply/autogate.py.
 What it will not do, whatever a form asks for:
 
-  * Solve, bypass or hand off a CAPTCHA or bot check. A challenge on the page (reCAPTCHA, hCaptcha, Turnstile, "verify you are human") stops
-    the run before anything is clicked; the browser stays open for the user and the job becomes `needs_user`. Nothing on the challenge is touched.
+  * Solve, bypass or outsource a CAPTCHA or bot check. A challenge on the page (reCAPTCHA, hCaptcha, Turnstile, "verify you are human"), the
+    message "error verifying your application", or a Google / Microsoft sign-in page stops the run; nothing on the page is touched and no
+    credential is typed. The job becomes `needs_user` and apply/handoff.py opens the apply URL in the user's own browser, prints the CV path,
+    writes answers_to_paste.txt in the job's output folder and records the host, so that later jobs on it go straight to the hand-off.
   * Invent an answer. A field is filled from applicant.yaml (name, e-mail, phone, links, location, and the visa booleans for the job's work
     country) or from the user's answers.yaml (apply/answers.py); the fields are filled by apply/filler.py, the same code the assist uses. A required question with no exact answer stops the run and asks in the terminal;
     the typed answer is used once, and written to answers.yaml only if the user then types `save`. An optional question with no answer stays empty.
@@ -25,12 +27,13 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, filler
+from .apply import autogate, autolog, eo, filler, formfind
 from .apply import visa as visa_mod
 from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
                            is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
+from .apply.formfind import CAPTCHA_SELECTORS, CAPTCHA_TEXT, HandOff, captcha_reason   # noqa: F401  (the challenge checks live in formfind)
 from .apply.guard import check_job_files
 from .discovery import discover
 
@@ -38,12 +41,6 @@ CONFIRM_SECONDS = 30                 # how long to wait for the confirmation pag
 REQUEST_GAP_S = 1.0                  # at most one request per second per host
 SETTLE_MS = 2500                     # a page's own scripts after it loads, as in the assist
 
-CAPTCHA_SELECTORS = (
-    'iframe[src*="recaptcha"]', 'iframe[title*="recaptcha" i]', ".g-recaptcha", 'iframe[src*="hcaptcha"]', ".h-captcha",
-    'iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]', ".cf-turnstile", 'iframe[src*="arkoselabs"]',
-    'iframe[src*="funcaptcha"]', "[data-sitekey]")
-CAPTCHA_TEXT = re.compile(r"verify (?:that )?you(?:'re| are) (?:a )?human|confirm (?:that )?you(?:'re| are) (?:a )?human|"
-                          r"i['’]m not a robot|are you a robot|checking (?:if|that) you(?:'re| are) (?:a )?human|human verification", re.I)
 CONFIRMATION = re.compile(r"thank you for (?:applying|your application|submitting)|application (?:has been |was )?(?:submitted|received|sent)|"
                           r"(?:we(?:'ve| have)|we['’]ve) received your application|successfully submitted|your application is (?:in|complete)|"
                           r"application (?:complete|confirmation)", re.I)
@@ -102,22 +99,6 @@ class AutoResult:
 
 
 # ------------------------------------------------------------------ challenge, submit button, confirmation
-def captcha_reason(page) -> str | None:
-    """What kind of challenge the page shows, or None. Only looks (a selector query and the visible text); never touches it."""
-    for sel in CAPTCHA_SELECTORS:
-        try:
-            if page.query_selector(sel):
-                return f"a CAPTCHA / bot check is on the page ({sel})"
-        except Exception:  # noqa: BLE001  (the page is navigating)
-            continue
-    try:
-        text = page.inner_text("body") or ""
-    except Exception:  # noqa: BLE001
-        text = ""
-    m = CAPTCHA_TEXT.search(text)
-    return f"the page asks you to verify you are human ({m.group(0)!r})" if m else None
-
-
 def _find_submit(page):
     for sel in SUBMIT_SELECTORS:
         for el in page.query_selector_all(sel):
@@ -194,7 +175,7 @@ def _combobox(page, el, question: str, ctx: Ctx, required: bool) -> None:
 
 def fill_form(page, ctx: Ctx) -> None:
     """Fill every visible field the way the module docstring says; raises NeedsUser at the first required question nobody has answered."""
-    listed_eo = eo.entries(ctx.applicant)
+    listed_eo = eo.entries(ctx.applicant, ctx.book)        # applicant.yaml first, then the eo_* entries of answers.yaml
     ctx.combobox = _combobox
     seen: set = set()
     for el in page.query_selector_all("input, textarea, select"):
@@ -264,17 +245,12 @@ def still_empty(page) -> list[str]:
     return out
 
 
-def open_form(page, url: str, throttle: Throttle) -> None:
-    throttle.wait(url)
-    page.goto(url, wait_until="domcontentloaded")
-    page.wait_for_timeout(SETTLE_MS)
-    if not page.query_selector("input[type=file], input[type=email]"):
-        for a in page.query_selector_all("a, button"):
-            if APPLY_BUTTON.match(a.inner_text() or ""):
-                throttle.wait(url)
-                a.click()                               # the "Apply" link that opens the form: not the submit button
-                page.wait_for_timeout(SETTLE_MS)
-                break
+def open_form(page, url: str, throttle: Throttle, kind: str | None = None) -> None:
+    """Open the application form (formfind.open_form: Ashby `/application`, Lever `/apply`, Greenhouse: wait for it). Raises NeedsUser
+    `FORM NOT FOUND <url>` when no form field appears within 15 s, HandOff for a bot check or a sign-in wall."""
+    problem = formfind.open_form(page, url, kind, wait=throttle.wait, follow=lambda a: a.click())      # the "Apply" link that opens the form
+    if problem:
+        raise NeedsUser(problem)
 
 
 # ------------------------------------------------------------------ one job
@@ -306,7 +282,7 @@ def default_history(db, settings=None) -> Callable[[str], bool]:
 def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], settings, *, submit: bool = True, confirm: bool = False,
         ask: Callable[[str], str] = input, out: Callable[[str], None] = print, launch: Callable[[Path], Session] | None = None,
         history: Callable[[str], bool] | None = None, throttle: Throttle | None = None, ats_strict: float | None = None,
-        now: Callable[[], datetime] = datetime.now, freetext=None) -> AutoResult:
+        now: Callable[[], datetime] = datetime.now, freetext=None, handoff=None) -> AutoResult:
     """Fill the form of one gated job; submit it unless `submit` is False. Always appends one row to applied_auto.csv. Raises ArchiveError
     (wrong files, unknown work country) before a browser is opened."""
     job = dict(job)
@@ -333,21 +309,31 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     stamp = f"{now():%Y%m%d-%H%M%S}"
     folder = Path(job["out_dir"])
     result = ctx.result
+    known = handoff.known(url) if handoff is not None else None
+    if known:                                             # this host turned the automated browser away before: no browser is opened at all
+        why = f"{formfind.host_of(url)} handed a job over before ({known})"
+        handoff.run(job, rep, applicant, ctx.book, plan, url, why, remember=False)
+        result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + why
+        autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
+        return result
     session = (launch or playwright_launch)(settings.path("secrets") / "browser")
     keep_open = False
+
+    def hand_off(why: str) -> None:
+        if handoff is not None:
+            handoff.run(job, rep, applicant, ctx.book, plan, url, why, result.filled)
+        else:
+            out(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
     try:
         page = session.page
-        open_form(page, url, throttle)
-        stop = captcha_reason(page)
-        if stop:
-            raise NeedsUser(stop)
+        open_form(page, url, throttle, job.get("apply_kind"))
         fill_form(page, ctx)
         empty = still_empty(page)
         if empty:
             raise NeedsUser("required fields still empty: " + "; ".join(empty[:5]))
-        stop = captcha_reason(page)
+        stop = formfind.blocker(page)
         if stop:
-            raise NeedsUser(stop)
+            raise HandOff(stop)
         shot = _shot(page, folder, "form", stamp, result)
         out(f"  Filled form screenshot: {shot}")
         if not submit:
@@ -361,9 +347,9 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         button = _find_submit(page)
         if button is None:
             raise NeedsUser("no submit button was found on the form")
-        stop = captcha_reason(page)
+        stop = formfind.blocker(page)
         if stop:
-            raise NeedsUser(stop)
+            raise HandOff(stop)
         throttle.wait(url)
         _click_submit(button)
         for _ in range(CONFIRM_SECONDS):
@@ -372,15 +358,23 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
                 result.status, result.reason = autolog.SUBMITTED, "the confirmation page appeared"
                 result.confirmation = f"auto-submitted {now():%Y-%m-%d %H:%M}: {page.url}"
                 break
-            stop = captcha_reason(page)
+            stop = formfind.blocker(page)
             if stop:
-                result.status, result.reason = autolog.NEEDS_USER, stop + " after the click; the form may not have gone through"
-                keep_open = True
+                result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + stop + " after the click; the form may not have gone through"
+                hand_off(stop + " after the click")
                 break
         else:
             result.status = autolog.UNCONFIRMED
             result.reason = f"no confirmation page within {CONFIRM_SECONDS} s: check the form (or your e-mail) yourself"
         _shot(page, folder, "confirmation", stamp, result)
+        return result
+    except HandOff as e:                                  # a bot check or a sign-in wall: never touched, never worked around
+        result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + str(e)
+        try:
+            _shot(session.page, folder, "stopped", stamp, result)
+        except Exception:  # noqa: BLE001  (the page is gone; the reason is what matters)
+            pass
+        hand_off(str(e))
         return result
     except NeedsUser as e:
         result.status, result.reason = autolog.NEEDS_USER, str(e)

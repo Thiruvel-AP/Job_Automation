@@ -15,7 +15,7 @@ name, first name, last name, e-mail, phone, links, location), then the user's an
 
 Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` or an `eo_*` entry of answers.yaml lists
 them (ethnicity first), with the first form option that equals one of the `match_any` / `options` texts you wrote (case- and dash-insensitive);
-no match, or a question that is not listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
+a free-text box for an `eo_*` question gets that entry's `answer` as written ("Male"); no match, or a question that is not listed, stays empty. Every such field, filled or empty, is outlined blue and printed as `CHECK EO ANSWER [key]: question -> option`.
 Nothing about equal opportunities is ever inferred from anything else.
 
 The form is found by apply/formfind.py (Ashby `<job url>/application`, Lever `<job url>/apply`, Greenhouse: wait for it). No form field after
@@ -39,6 +39,7 @@ from .visa import VisaPlan, plan_for, require_plan, work_for
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
 EO_COLOUR = "3px solid blue"
+TEXT_TYPES = ("text", "textarea", "search", "")          # the boxes a free-text answer is typed into
 APPLY_BUTTON = formfind.APPLY_BUTTON
 OPEN_FORM_LINK = APPLY_BUTTON          # the text of the one control assist may press: the "Apply" link that opens the form (never a submit or a sign-in)
 
@@ -121,6 +122,11 @@ def _answer_eo(page, el, typ: str, entry: "eo.Entry | None") -> tuple[str | None
     if entry is None:
         return None, texts, "not listed in equal_opportunities: left blank"
     if not options:
+        if typ in TEXT_TYPES and entry.key.startswith(eo.BOOK_PREFIX) and entry.answer.strip():
+            if (el.input_value() or "").strip():
+                return None, texts, "the text box already holds an answer: left as it is"
+            el.fill(entry.answer.strip())                       # a free-text question: the answers.yaml answer, as written
+            return entry.answer.strip(), texts, ""
         return None, texts, "no options to choose from (a text box): left blank"
     pick = eo.choose(texts, entry)
     if pick is None:
@@ -162,6 +168,9 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     where = (plan.work.shown if plan.work.home_remote else plan.work.country) if plan is not None else "?"
     report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
     seen_groups: set = set()
+    letter_file = bool(letter_pdf) and any(                 # a cover-letter file field takes the PDF: then the text box (if any) is not pasted into too
+        e.get_attribute("type") == "file" and re.search(r"cover", (e.evaluate(LABEL_JS) or ""), re.I)
+        for e in page.query_selector_all("input[type=file]"))
     listed_eo = eo.entries(applicant, book)               # applicant.yaml first, then the eo_* entries of answers.yaml
     never = applicant.get("never_fill", [])
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
@@ -179,14 +188,14 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
 
         if typ == "file":
             if re.search(r"cover", label, re.I) and letter_pdf:
-                el.set_input_files(letter_pdf); report["uploaded"].append(f"{short} ← cover letter")
+                el.set_input_files(letter_pdf); report["uploaded"].append(f"{short} ← letter")
             elif re.search(r"resume|résumé|\bcv\b|curriculum", label, re.I) and cv_pdf:
                 el.set_input_files(cv_pdf); report["uploaded"].append(f"{short} ← CV")
             else:
                 report["manual"].append(f"file: {short}")
             continue
 
-        if letter_text and typ == "textarea" and re.search(r"cover\s*letter", label, re.I):
+        if letter_text and not letter_file and typ == "textarea" and re.search(r"cover\s*letter", label, re.I):
             # Before the never_fill check on purpose: 'cover letter' is in never_fill so that a *question* about
             # one is left to the user, but the letter text is ours and was reviewed.
             if not (el.input_value() or "").strip():
@@ -293,6 +302,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     `handoff` (apply/handoff.Handoff): where a bot check or sign-in wall sends the page; a host it already handed over opens no browser at all."""
     from playwright.sync_api import Error as PlaywrightError
 
+    job = dict(job)                                        # a sqlite3.Row has no .get (hand-off and the guards read the job as a mapping)
     url = job["apply_url"] or job["url"]
     cv = rep.get("cv_pdf")
     letter = rep.get("letter_pdf") if rep.get("letter_pdf") and Path(rep["letter_pdf"]).is_file() else None
@@ -320,7 +330,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     closed = False
     try:
         try:
-            problem = formfind.open_form(page, url, job["apply_kind"] if "apply_kind" in job.keys() else None,
+            problem = formfind.open_form(page, url, job.get("apply_kind"),
                                          follow=open_form_link)
             if problem:                                     # no form field after 15 s: say so, never print an empty "Filled: []"
                 print(f"\n{problem}\nThe page opened but shows no application form; apply by hand.")

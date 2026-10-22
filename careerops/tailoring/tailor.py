@@ -1251,16 +1251,23 @@ def _final_path(p, out_dir: Path, final_dir: Path) -> str | None:
 
 
 def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_dir: Path, letter_name: str, team: str,
-             gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False):
+             gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False,
+             family_line: str = ""):
     """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `hook` with a hook:
     letters A and B (letters.py), the current choice is A when it passed its checks. In mode `hook` when the hook is on but none
     could be built: both letters are "none" (no old single letter takes their place, so the letter settings are never silently
-    bypassed). With hook.enabled false, or in mode `draft`, the one letter of `_make_letter`."""
+    bypassed). With hook.enabled false, or in mode `draft`, the one letter of `_make_letter`. With the hook on, none buildable and the
+    role family's profile line (`family_line`, the fact bank's `profile_body`) known, sentence 1 is that line word for word and the rest is
+    assembled as usual (`letters.family_hook`); without such a line the letters are "none"."""
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
 
-        letters = L.none_letters("no hook could be built for this job, and a hook-mode letter opens with the hook's sentence")
-        return None, L.current(letters), letters
+        if family_line.strip():
+            hk = L.family_hook(job, kws, fb, claimable, family_line)
+        else:
+            letters = L.none_letters("no hook could be built for this job, and the fact bank has no profile line for its role family to open "
+                                     "the letter with")
+            return None, L.current(letters), letters
     if letter_mode(settings) == "hook" and hk is not None:
         from . import letters as L
 
@@ -1427,7 +1434,8 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict) -> dict:
     hk = hooks.Hook.from_dict(rep["hook"]) if rep.get("hook") else None
     pdf, letter, letters = _letters(job, fb, kws, rep.get("company_hook") or "", hk, evidence, llm, settings, out_dir, stem,
                                     rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws), ids,
-                                    rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None)
+                                    rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None,
+                                    rep.get("family_line") or "")
     rep["letter"], rep["letter_pdf"] = letter, str(pdf) if pdf else None
     rep["letters"], rep["letter_choice"] = letters, letters["choice"] if letters else None
     if rep.get("ats") is not None:
@@ -1670,7 +1678,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
-                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head)}
+                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": head}
 
     jac = sc["bullet_dedupe_jaccard"]
     ranking, best, cache = kws, None, {}
@@ -1803,7 +1811,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     chosen_ids = {i for e in ctx["experience"] + ctx["projects"] for i in e["bullet_ids"]}
     evidence = letter_evidence(fb, kws, chosen_ids, job["description"])
     letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
-                                           required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed)
+                                           required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, head)
     cv_text = pdf_text(pdf)
     fm = None if one_page else pdflayout.measure(pdf)
     urls = [] if one_page else [p["github"] for p in ctx["projects"] if p.get("github") and not project_parts(p)[1]]

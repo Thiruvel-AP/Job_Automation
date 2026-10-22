@@ -1,7 +1,8 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Apply</title></head><body>
 <!-- A form with a bot check on it. ?text = the check is only words ("verify you are human"); ?hcaptcha / ?turnstile = those widgets;
-     otherwise a reCAPTCHA iframe. Every element counts what was done to it in window.__touched. -->
+     ?invisible = what reCAPTCHA v3 puts on a page (a 256x60 badge frame with size=invisible, a challenge frame hidden until needed, a submit
+     button carrying the site key): NOT a challenge. Otherwise a reCAPTCHA checkbox iframe. Every element counts what was done to it in window.__touched. -->
 <h1>Apply</h1>
 <form id="application" novalidate>
   <label for="first_name">First Name *</label><input id="first_name" name="first_name" required>
@@ -14,6 +15,10 @@
   window.__clicks = 0; window.__touched = 0;
   const q = location.search, box = document.getElementById('check');
   if (q.includes('text')) box.innerHTML = '<p id="widget">Please verify you are human to continue.</p>';
+  else if (q.includes('invisible')) box.innerHTML =
+    '<div class="grecaptcha-badge" style="width:256px;height:60px"><iframe src="about:blank#recaptcha/api2/anchor?k=x&size=invisible" title="reCAPTCHA" style="width:256px;height:60px;border:0"></iframe></div>'
+    + '<div style="visibility:hidden"><iframe src="about:blank#recaptcha/api2/bframe" title="recaptcha challenge expires in two minutes" style="width:400px;height:580px"></iframe></div>'
+    + '<button type="button" class="g-recaptcha" data-sitekey="x" data-callback="cb" style="width:300px;height:80px">Protected by reCAPTCHA</button>';
   else if (q.includes('hcaptcha')) box.innerHTML = '<iframe id="widget" src="about:blank#hcaptcha" title="hCaptcha"></iframe>';
   else if (q.includes('turnstile')) box.innerHTML = '<iframe id="widget" src="about:blank#challenges.cloudflare.com" title="x"></iframe>';
   else box.innerHTML = '<iframe id="widget" src="about:blank#recaptcha" title="reCAPTCHA"></iframe>';

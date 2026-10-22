@@ -178,12 +178,15 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 
    For a listed question the assist picks, for each `match_any` text in order, the first form option **equal** to it ignoring case,
    dashes and spacing (`Asian or Asian British – Indian` = `asian or asian british - indian`; never "contains": `American Indian or
-   Alaska Native` is not `Indian`). A select, a radio group or a checkbox group has options; no match, or a text box, leaves the field
-   empty. Every equal-opportunities field on the form (ethnicity, gender, disability, religion, sexual orientation, veteran status,
+   Alaska Native` is not `Indian`). A select, a radio group or a checkbox group has options; no match leaves the field empty. A free-text
+   box (a text box or text area) for an `eo_*` question of `answers.yaml` is typed with that entry's `answer` as you wrote it (`Male`), unless the
+   box already holds text; a text box for a question listed only in `applicant.yaml` stays empty. Every equal-opportunities field on the form (ethnicity, gender, disability, religion, sexual orientation, veteran status,
    pronouns ...), listed or not, is outlined blue and printed as `CHECK EO ANSWER [ethnicity]: <question> -> <option or EMPTY (why)>`
    (`[not listed]` for the ones you did not list, which are always left blank; an unmatched list prints its options). `careerops
    doctor` validates the block when there is one: a mapping of questions, each with a non-empty `match_any` list of texts, an optional
-   `answer` text, an optional `question` list of valid regexes (required unless the key is `ethnicity`), no other keys; an invalid
+   `answer` text, an optional `question` list of valid regexes (required unless the key is `ethnicity`), no other keys. The `eo_*` entries of
+   `answers.yaml` (`eo_gender`, `eo_disability` ...: their `match` texts are the question, their `options` the options you accept, best first, else their
+   `answer`) are read as well, after the ones in `applicant.yaml`: with `options: [Man, Male]` a "Man / Woman / ..." list gets "Man". An invalid
    entry is never used to fill anything.
 
 ## Daily use
@@ -537,9 +540,20 @@ assist still never submit.
 - **A required question with no exact answer stops the run**: it prints the question, asks in the terminal, uses what you type on this form only, and
   appends it to `answers.yaml` only if you then type `save`. A blank reply stops the job (`needs_user`). An optional question with no answer is left empty.
   Nothing is invented, and an answer that matches none of a drop-down's options is not rounded to the nearest one.
-- **A CAPTCHA or bot check** (a reCAPTCHA, hCaptcha or Turnstile frame, or "verify you are human" on the page) stops the run before anything is filled
-  or clicked; the program only looks for it and never touches it. The browser stays open for you, and the job is `needs_user`. An invisible reCAPTCHA
-  frame counts, so a form that has one stays manual.
+- **A CAPTCHA, a bot check or a sign-in wall is a hand-off, never something to get past.** A **visible** reCAPTCHA / hCaptcha checkbox or puzzle frame
+  (displayed and at least 100×60 px), a displayed Turnstile widget, "verify you are human", the message "error verifying your application", or a
+  Google or Microsoft sign-in page or popup stops the run (assist and auto-apply alike) before
+  anything on it is touched, and no credential is ever typed. Then the apply URL is opened in your normal Windows browser (`explorer.exe <url>`), the CV
+  PDF path is printed, every answer that can be prepared from your own files is written to `answers_to_paste.txt` in the job's output folder (your details,
+  the visa answers for the job's work country, equal-opportunities options, the `answers.yaml` answers for this job, the free-text answers you approved,
+  the letter text, whatever was filled before the stop; a blank answer is listed as blank), the automated browser is closed, and the job is `needs_user`.
+  The host is recorded in `data/live/handoff_hosts.json`: the next job on it goes straight to the hand-off without opening an automated browser
+  (delete the host's entry from that file to let the program try it again). An **invisible** reCAPTCHA (v3) frame or badge (`size=invisible`, a
+  hidden challenge frame, a submit button that carries the site key) is not a trigger: the form is filled as usual, and the program only asks whether
+  an element is displayed and how big it is, never clicks, focuses or types into it.
+- **Finding the form.** Ashby: `<job url>/application`. Lever: `<job url>/apply`. Greenhouse and others: the job page itself, waiting up to 15 s for the
+  form; an "Apply" link on it is followed once. If no form field has appeared after 15 s the assist and the auto-apply print `FORM NOT FOUND <url>` (and no
+  `Filled:` line); the job is left to you.
 
 **Submitting**: a full-page screenshot of the filled form is saved in the job's output folder first. The first `confirm_first_n` (3) auto-submits ever,
 or every one with `--confirm`, show its path and ask `Submit? [y/N]`. Then the button is clicked and the confirmation page awaited for 30 seconds; its
@@ -645,6 +659,12 @@ also applied to a `draft` letter) rejects "our" and "we", "I help <Company>", an
 bullet's tool (*"Docker and AWS Lambda ran the test suite"*: the agent was deployed there, the tests are another bullet). Variant **B** (a gap
 sentence) was the model's and is gone: B is always **none**. In review `l` cycles A → none; the chosen letter is the one the apply assist uploads
 and the archive keeps (`letters/A/<name> Cover Letter.pdf`). With the hook off or none buildable for the job, the letters are **none**.
+
+**`hook` with no hook** (no `hook_library` entry fits the ad): sentence 1 is the role family's profile line, word for word (the fact bank's
+`families[*].profile_body`, the same text as profile line 1 of the CV); the two bullet sentences and the call to action follow as above (the problem
+phrase is the ad's two heaviest keywords the bank can claim). No model writes any of it; the same checks apply. A family with no `profile_body` has no
+line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
+`Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
 
 With `off` no letter is asked for: no letter call, no letter PDF, review says `Letter: off` and approving needs no extra words, and
 the application is archived without one. With `draft` the model drafts one from the evidence **as fields** (`method`, `data`,

@@ -36,6 +36,7 @@ BODY_SENTENCES = 2
 LEAD_INS = ("On {phrase}, here is my closest example", "On {phrase}, here is a second example")
 LEAD_INS_BARE = ("Here is my closest example", "Here is a second example")
 VARIANTS = ("A", "B")
+FAMILY_SOURCE = "family"             # Hook.source of the stand-in hook of a job with no library hook: sentence 1 is the role family's profile line
 DECLINED = "declined"                # status of the letter the user chose to go without in review
 HOME_PLACES = frozenset({"", "uk", "united kingdom", "remote", "england", "scotland", "wales", "great britain", "britain"})
 
@@ -309,7 +310,7 @@ def make_letters(job: dict, fb: dict, kws: list[Keyword], company_hook: str, hk:
     max_words = settings["scoring"]["letter_max_words"]
     evidence = body_evidence(fb, kws, chosen_ids, jd, hk)
     base = {"evidence": [{"id": e["id"], "text": e["text"]} for e in evidence], "gap": None, "bridge": None, "gap_source": None}
-    notes: list[str] = []
+    notes: list[str] = list(hk.notes) if hk.source == FAMILY_SOURCE else []
 
     def empty(variant: str, reason: str, problems: list[str] | None = None) -> dict:
         return {**base, "variant": variant, "status": "none", "reason": reason, "paragraphs": [], "problems": problems or [],
@@ -341,6 +342,19 @@ def make_letters(job: dict, fb: dict, kws: list[Keyword], company_hook: str, hk:
          "score": ats.score(pdf_text(pdf), kws).literal, "pages": page_count(pdf), "words": _words(paragraphs), "pdf": str(pdf),
          "tex": str(pdf.with_suffix(".tex")), "notes": notes, "retry": {}}
     return {"A": a, "B": b_none, "choice": "A", "retry": {}}
+
+
+def family_hook(job: dict, kws: list[Keyword], fb: dict, claimable: list[str], line: str, headline: str = "") -> Hook:
+    """The stand-in hook of a job that no hook_library entry fits: sentence 1 of the letter is `line` (the role family's profile line from the
+    fact bank, word for word), the call to action names the ad's two heaviest keywords the fact bank can claim (else the role). It carries
+    no proof bullet, so both body sentences come from the CV's own bullets."""
+    have = {c.lower() for c in claimable}
+    deny = (fb or {}).get("deny_terms", [])
+    pool = sorted((k for k in kws if k.term.lower() in have and not deny_hits(k.term, deny)), key=lambda k: -k.weight)     # stable: the JD's order on a tie
+    problem = noun_phrase([k.term for k in pool[:2]], job.get("description") or "", bank_names(fb)) or f"the {headline or job.get('title') or 'role'} role"
+    text = " ".join(line.split())
+    return Hook(problem, "", "", headline, text, text, source=FAMILY_SOURCE,
+                notes=["no hook_library entry qualifies: sentence 1 is the role family's profile line, word for word"])
 
 
 def none_letters(reason: str) -> dict:

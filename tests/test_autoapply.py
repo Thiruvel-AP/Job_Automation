@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from challenge_fakes import ChallengeEl, ChallengePage
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
 
@@ -213,6 +214,12 @@ def test_a_captcha_stops_the_run_before_anything_is_filled_or_clicked(world, var
     assert world.state["values"]["first_name"] == "" and world.state["values"]["email"] == ""          # not even the form was filled
 
 
+def test_an_invisible_recaptcha_is_not_a_hand_off_the_form_is_filled_and_nothing_on_it_is_touched(world):
+    r = world.run("auto_captcha.html?invisible", submit=False)
+    assert r.status == autolog.NOT_SUBMITTED and world.submit_calls == 0
+    assert world.state["values"]["first_name"] == "Ada" and world.state["touched"] == 0
+
+
 def test_a_bot_check_hands_the_page_to_the_users_own_browser_and_closes_the_automated_one(world):
     h = world.handoff()
     r = world.run("auto_captcha.html", handoff=h)
@@ -376,16 +383,8 @@ def test_the_page_is_asked_for_through_the_throttle(world):
 
 
 # ------------------------------------------------------------------ the page checks without a browser
-class FakePage:
-    def __init__(self, selectors=(), text=""):
-        self.selectors, self.text = set(selectors), text
-        self.touched = []
-
-    def query_selector(self, sel):
-        return object() if sel in self.selectors else None
-
-    def inner_text(self, sel):
-        return self.text
+def FakePage(selectors=(), text=""):                       # noqa: N802  (a page where each selector matches one displayed 304x78 frame)
+    return ChallengePage({s: [ChallengeEl()] for s in selectors}, text)
 
 
 def test_every_challenge_marker_is_recognised_by_looking_only():

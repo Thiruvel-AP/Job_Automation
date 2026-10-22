@@ -11,6 +11,9 @@ applicant.yaml:
         - "Asian"
       question: ["ethnic"]                # optional: regexes for the question's label (built-in for ethnicity)
 
+answers.yaml entries whose id starts with `eo_` (eo_gender, eo_disability ...) are read as well, after the ones above: their `match` texts
+are the question, their `options` (else their `answer`) the options you accept, best first. "Man / Woman / ..." with `options: [Man, Male]` picks "Man".
+
 If no option matches, the field stays empty. A question that is about equal opportunities (ethnicity, gender, disability, religion, sexual
 orientation, veteran status, pronouns ...) but is not listed stays empty too. Every such field, filled or empty, is outlined blue and printed
 as `CHECK EO ANSWER [key]: question -> option or EMPTY`.
@@ -24,6 +27,7 @@ from typing import Any, Mapping
 
 BUILTIN_QUESTIONS = {"ethnicity": (r"ethnic", r"\brace\b", r"racial")}
 ALLOWED_KEYS = ("answer", "match_any", "question")
+BOOK_PREFIX = "eo_"                                  # answers.yaml entries with an id like this are equal-opportunities answers too
 # any form question that is about equal opportunities, listed or not: all of them are printed, only the listed ones are ever filled
 EO_FIELD = re.compile(r"ethnic|\brace\b|racial|gender|\bsex\b|disab|veteran|pronoun|sexual orientation|religio|\bbelief|transgender|marital"
                       r"|equal opportunit|equality monitoring", re.I)
@@ -87,18 +91,32 @@ def _bad_regexes(q: Any) -> str:
     return ""
 
 
-def entries(applicant: Mapping[str, Any] | None) -> list[Entry]:
-    """The valid entries of applicant.yaml `equal_opportunities` (an invalid one is skipped: doctor reports it, nothing is guessed)."""
+def entries(applicant: Mapping[str, Any] | None, book: Any = None) -> list[Entry]:
+    """The valid entries of applicant.yaml `equal_opportunities` (an invalid one is skipped: doctor reports it, nothing is guessed), then those
+    of the `eo_*` entries of the answers book (apply/answers.py) that have an answer or options. applicant.yaml wins for a question both list."""
     block = (applicant or {}).get("equal_opportunities")
-    if not isinstance(block, Mapping):
-        return []
     out = []
-    for key, e in block.items():
+    for key, e in (block.items() if isinstance(block, Mapping) else []):
         if problems({key: e}):
             continue
         patterns = e.get("question") or list(BUILTIN_QUESTIONS[key])
         out.append(Entry(str(key), str(e.get("answer") or ""), tuple(str(x) for x in e["match_any"]),
                          tuple(re.compile(p, re.I) for p in patterns)))
+    return out + book_entries(book)
+
+
+def book_entries(book: Any) -> list[Entry]:
+    """The answers book's `eo_*` entries as equal-opportunities entries: the question is any of its `match` texts as whole words, the options
+    are its `options` (else its `answer`), best first. An entry with neither is left out: nothing is guessed."""
+    out = []
+    for e in getattr(book, "entries", None) or []:
+        if not str(e.id).startswith(BOOK_PREFIX):
+            continue
+        options = tuple(o for o in (e.options or ((e.answer,) if str(e.answer).strip() else ())) if norm(o))
+        patterns = tuple(re.compile(r"(?<![a-z0-9])" + r"[^a-z0-9]+".join(re.escape(w) for w in p.split()) + r"(?![a-z0-9])", re.I)
+                         for p in e.patterns if p)
+        if options and patterns:
+            out.append(Entry(str(e.id), str(e.answer or ""), options, patterns))
     return out
 
 

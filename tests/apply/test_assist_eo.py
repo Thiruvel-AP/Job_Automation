@@ -9,6 +9,7 @@ import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
 
+from careerops.apply import answers
 from careerops.apply.assist import fill_page
 
 pytestmark = pytest.mark.slow          # these tests render PDFs with xelatex (or drive Chromium)
@@ -148,3 +149,42 @@ def test_other_fields_are_untouched_and_visa_and_eo_do_not_mix(page, applicant, 
     assert page.input_value("#first_name") == "Ada" and page.eval_on_selector("#sp", "e => e.value") == "Yes"
     assert "CHECK VISA ANSWER" in out and "CHECK EO ANSWER [ethnicity]" in out and page.input_value("#nat") == ""
     assert "CHECK EO ANSWER" not in out.split("CHECK EO ANSWER", 1)[1]                                   # one EO line: the ethnicity select
+
+
+# ------------------------------------------------------------------ a free-text box for an eo_* question gets the answers.yaml answer
+def gender_book(answer="Male"):
+    return answers.AnswerBook([answers.Entry("eo_gender", ("gender", "sex"), answer, None, {}, ("Man", "Male"))])
+
+
+def test_a_gender_text_box_is_typed_with_the_answers_yaml_answer(page, applicant, capsys):
+    form(page, '<label for="gen">Gender</label><input id="gen" name="gen">')
+    r = fill_page(page, applicant, None, None, book=gender_book())
+    assert page.input_value("#gen") == "Male"
+    assert "CHECK EO ANSWER [eo_gender]: Gender -> Male" in capsys.readouterr().out
+    assert r["eo"] == [{"question": "Gender", "key": "eo_gender", "value": "Male", "options": []}]
+    assert "Gender = eo" in r["filled"] and outline(page, "#gen") == BLUE and page.evaluate("document.body.dataset.submitted") is None
+
+
+def test_a_gender_text_area_is_typed_too(page, applicant):
+    form(page, '<label for="gen">What is your gender?</label><textarea id="gen" name="gen"></textarea>')
+    fill_page(page, applicant, None, None, book=gender_book("Female"))
+    assert page.input_value("#gen") == "Female"
+
+
+def test_an_eo_text_box_that_already_has_text_is_left_as_it_is(page, applicant, capsys):
+    form(page, '<label for="gen">Gender</label><input id="gen" name="gen" value="my own words">')
+    r = fill_page(page, applicant, None, None, book=gender_book())
+    assert page.input_value("#gen") == "my own words" and r["eo"][0]["value"] is None
+    assert "-> EMPTY (the text box already holds an answer: left as it is)" in capsys.readouterr().out
+
+
+def test_an_unlisted_eo_text_box_stays_empty_even_when_another_question_is_listed(page, applicant, capsys):
+    form(page, '<label for="pn">Preferred pronouns</label><input id="pn" name="pn">')
+    fill_page(page, applicant, None, None, book=gender_book())
+    assert page.input_value("#pn") == "" and "[not listed]: Preferred pronouns -> EMPTY" in capsys.readouterr().out
+
+
+def test_an_eo_entry_with_a_blank_answer_types_nothing(page, applicant):
+    form(page, '<label for="gen">Gender</label><input id="gen" name="gen">')
+    fill_page(page, applicant, None, None, book=answers.AnswerBook([answers.Entry("eo_gender", ("gender",), "", None, {}, ("Man", "Male"))]))
+    assert page.input_value("#gen") == ""

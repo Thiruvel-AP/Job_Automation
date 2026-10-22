@@ -8,9 +8,12 @@ Where the form is:
 If no form field has appeared after FORM_WAIT_S seconds the caller prints `FORM NOT FOUND <url>`: an empty `Filled: []` is never printed as if
 the form had been looked at.
 
-A page that must be handed to the person (`blocker`): a bot check (reCAPTCHA, hCaptcha, Turnstile ... frames, "verify you are human"), the
-message "error verifying your application", or a Google or Microsoft sign-in page or popup. Nothing here touches, solves or works around any
-of them, and no credentials are ever entered: the caller stops and apply/handoff.py opens the page in the person's own browser.
+A page that must be handed to the person (`blocker`): a VISIBLE bot check (a reCAPTCHA / hCaptcha / Arkose checkbox or puzzle frame that is
+displayed and at least MIN_CHALLENGE_W x MIN_CHALLENGE_H px, or a displayed Turnstile widget, or the words "verify you are human"), the
+message "error verifying your application", or a Google or Microsoft sign-in page or popup. An invisible reCAPTCHA (v3) frame or badge
+(`size=invisible`, `data-size="invisible"`, a submit button carrying a data-sitekey) is not a trigger: the form is filled as usual. Nothing here
+touches, solves or works around any of them (it only asks whether an element is displayed and how big it is), and no credentials are ever
+entered: the caller stops and apply/handoff.py opens the page in the person's own browser.
 """
 from __future__ import annotations
 
@@ -30,6 +33,8 @@ CAPTCHA_SELECTORS = (
     'iframe[src*="recaptcha"]', 'iframe[title*="recaptcha" i]', ".g-recaptcha", 'iframe[src*="hcaptcha"]', ".h-captcha",
     'iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]', ".cf-turnstile", 'iframe[src*="arkoselabs"]',
     'iframe[src*="funcaptcha"]', "[data-sitekey]")
+TURNSTILE_SELECTORS = ('iframe[src*="challenges.cloudflare.com"]', 'iframe[src*="turnstile"]', ".cf-turnstile")
+MIN_CHALLENGE_W, MIN_CHALLENGE_H = 100, 60      # a checkbox or puzzle frame is bigger than this; the invisible reCAPTCHA badge is not a challenge
 CAPTCHA_TEXT = re.compile(r"verify (?:that )?you(?:'re| are) (?:a )?human|confirm (?:that )?you(?:'re| are) (?:a )?human|"
                           r"i['’]m not a robot|are you a robot|checking (?:if|that) you(?:'re| are) (?:a )?human|human verification", re.I)
 VERIFY_ERROR = re.compile(r"error verifying your application", re.I)
@@ -76,11 +81,44 @@ def has_form(page) -> bool:
     return bool(kinds & {"email", "tel", "file"}) or len(fields) >= 2
 
 
+def _attr(el, name: str) -> str:
+    try:
+        return str(el.get_attribute(name) or "")
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _tag(el) -> str:
+    try:
+        return str(el.evaluate("e => e.tagName") or "").lower()
+    except Exception:  # noqa: BLE001  (not an element we can ask)
+        return ""
+
+
+def challenge_shown(el, selector: str) -> bool:
+    """Is `el` (matched by `selector`) a challenge the person can see: displayed, not marked invisible, and (a Turnstile widget aside) at
+    least MIN_CHALLENGE_W x MIN_CHALLENGE_H px. Looks only; nothing is clicked, typed or focused."""
+    if not _visible(el):
+        return False
+    if re.search(r"[?&#]size=invisible", _attr(el, "src"), re.I) or _attr(el, "data-size").lower() == "invisible":
+        return False
+    if selector in TURNSTILE_SELECTORS:
+        return True
+    if _tag(el) in ("button", "input", "a"):                  # a submit button that carries the site key (reCAPTCHA v3), not a widget
+        return False
+    try:
+        box = el.bounding_box()
+    except Exception:  # noqa: BLE001
+        return False
+    return bool(box) and box["width"] >= MIN_CHALLENGE_W and box["height"] >= MIN_CHALLENGE_H
+
+
 def captcha_reason(page) -> str | None:
-    """What kind of challenge the page shows, or None. Only looks (a selector query and the visible text); never touches it."""
+    """What kind of challenge the page shows, or None. Only looks (a selector query, the size of what it finds and the visible text); never
+    touches it. An invisible reCAPTCHA iframe or badge is not a challenge."""
     for sel in CAPTCHA_SELECTORS:
         try:
-            if page.query_selector(sel):
+            if any(challenge_shown(el, sel) for el in page.query_selector_all(sel)):
                 return f"a CAPTCHA / bot check is on the page ({sel})"
         except Exception:  # noqa: BLE001  (the page is navigating)
             continue
