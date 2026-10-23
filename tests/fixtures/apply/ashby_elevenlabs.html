@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Senior AI Engineer - ElevenLabs</title></head><body>
+<!-- The field layout of the 23 Oct ElevenLabs Ashby form, for tests/apply/test_formloop.py: system fields, then THREE OPTIONAL text areas whose question is
+     a <label> with a description under it (nothing is required but name, e-mail and resume), and one field that appears only after the first
+     text area has an answer ("answers can reveal new questions"). Query: ?spam = the form answers a submit with Ashby's spam message; ?noconfirm = stay. -->
+<h1>Senior AI Engineer</h1>
+<form id="application" novalidate>
+  <div class="_fieldEntry"><label class="_heading" for="_systemfield_name">Name <span class="_required">*</span></label>
+    <input id="_systemfield_name" name="_systemfield_name" type="text" required></div>
+  <div class="_fieldEntry"><label class="_heading" for="_systemfield_email">Email <span class="_required">*</span></label>
+    <input id="_systemfield_email" name="_systemfield_email" type="email" required></div>
+  <div class="_fieldEntry"><label class="_heading" for="phone">Phone</label><input id="phone" name="phone" type="tel"></div>
+  <div class="_fieldEntry"><label class="_heading" for="li">LinkedIn</label><input id="li" name="linkedin" type="text"></div>
+  <div class="_fieldEntry"><label class="_heading" for="_systemfield_resume">Resume <span class="_required">*</span></label>
+    <input id="_systemfield_resume" name="_systemfield_resume" type="file" required></div>
+  <div class="_fieldEntry"><label class="_heading" for="notice">Notice period</label><input id="notice" name="notice" type="text"></div>
+  <div class="_fieldEntry"><label class="_heading" for="heard">How did you hear about this role?</label>
+    <select id="heard" name="heard"><option value="">Select...</option><option>LinkedIn</option><option>Referral</option><option>Other</option></select></div>
+
+  <div class="_fieldEntry"><label class="_heading" for="agent">Describe an agent or LLM-powered system you have shipped. What did it do?</label>
+    <div class="_description">Optional. A few sentences are enough.</div>
+    <textarea id="agent" name="agent" maxlength="1500"></textarea></div>
+  <div class="_fieldEntry"><label class="_heading" for="automation">Tell us about an automation or agent you took from prototype to production</label>
+    <div class="_description">Optional.</div>
+    <textarea id="automation" name="automation"></textarea></div>
+  <div class="_fieldEntry"><label class="_heading" for="stake">Describe a project you built with non-engineering stakeholders</label>
+    <div class="_description">Optional.</div>
+    <textarea id="stake" name="stake"></textarea></div>
+  <div class="_fieldEntry"><label class="_heading" for="anything">Anything else you would like us to know?</label>
+    <textarea id="anything" name="anything"></textarea></div>
+
+  <div class="_fieldEntry" id="followup" style="display:none"><label class="_heading" for="hardest">What was the hardest part of building that feature (1-2 sentences)</label>
+    <textarea id="hardest" name="hardest"></textarea></div>
+  <button type="submit" id="submit">Submit Application</button>
+</form>
+<div id="notice-box" role="alert" style="display:none">Your application submission was flagged as possible spam. Please try again later.</div>
+<script>
+  window.__clicks = 0;
+  const q = location.search;
+  document.getElementById('agent').addEventListener('input', e => {
+    document.getElementById('followup').style.display = e.target.value.trim() ? '' : 'none';
+  });
+  document.getElementById('application').addEventListener('submit', e => {
+    e.preventDefault();
+    window.__clicks += 1;
+    if (q.includes('spam')) { document.getElementById('notice-box').style.display = ''; return; }
+    if (q.includes('noconfirm')) return;
+    location.href = 'auto_done.html';
+  });
+</script>
+</body></html>

@@ -1,6 +1,6 @@
 """Free-text answers to application-form questions ("Describe an LLM feature you've built", "Why {company}?").
 
-The form filler (apply/filler.py) hands every REQUIRED free-text field that answers.yaml does not answer to `FreeText.answer`:
+The form loop (apply/formloop.py) hands every free-text field, required or not, that answers.yaml does not answer to `FreeText.propose` / `review` (`answer` = both):
 
   1. read the question and its limit ("1-2 sentences", "max 200 words", the field's maxlength; nothing stated = 120 words) and classify it
      (project | challenge | why_company | why_role | other);
@@ -16,8 +16,14 @@ The form filler (apply/filler.py) hands every REQUIRED free-text field that answ
   4. show it (question, limit, sources, guard result) and ask `[y] use · [e] edit · [r] redraft · [s] I'll write it`. Only `y`, a text you
      typed, or a text you edited is used, and is stored in the answer library (paths.answers_library) with approved: true.
 
-A new draft is therefore never used without your `y`, so it can never be submitted without it. Nothing here writes to answers.yaml, fact_bank.yaml
+A new draft is therefore never submitted without your `y` (or an edit you saved). Nothing here writes to answers.yaml, fact_bank.yaml
 or applicant.yaml: the library is runtime data. "Other" questions (hobbies, "anything else?") are never drafted: they are asked.
+
+Two entry points. `answer` is the old one-call form (propose, then ask). The form loop (apply/formloop.py) calls `propose` for every free-text field
+of a form, required or not, puts the result in the field at once (a NEW DRAFT), and calls `review` for each new draft before anything is submitted.
+`propose` also reads what the question ASKS for (a compound such as "non-engineering", a name such as "Salesforce", the words after "with" / "for" /
+"in") and checks each against the whole fact bank: a thing the bank never mentions is NOT claimed (the guard rejects a draft that mentions it) and the
+proposal carries `WEAK EVIDENCE: <what was asked> vs <entry ids>`; a question that overlaps no entry at all is answered from the closest true entry.
 """
 from __future__ import annotations
 
@@ -28,7 +34,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from ..tailoring import faithfulness, letters as letters_mod
 from ..tailoring.grounding import sentences as split_sentences
@@ -138,7 +144,7 @@ def classify(question: str, company: str = "") -> str:
 # ------------------------------------------------------------------ is this the same question?
 _STOP = frozenset("""a an the you your ve we us me my i it its this that these those of to in on at for with and or but is are was were be been do did does
 have has had please describe tell about give share example examples what which who how when where can could would should will any one some
-more most very part way""".split())
+more most very part way powered based driven enabled""".split())
 _SAME = {"shipped": "build", "built": "build", "build": "build", "building": "build", "deployed": "build", "deploy": "build", "developed": "build",
          "develop": "build", "created": "build", "launched": "build", "delivered": "build", "maintain": "build", "maintained": "build",
          "implemented": "build", "designed": "build", "feature": "system", "tool": "system", "application": "system", "product": "system",
@@ -156,11 +162,25 @@ def normalise(question: str) -> str:
     return " ".join(sorted(_tokens(question)))
 
 
-def similarity(a: str, b: str) -> float:
-    """0..1: the share of meaningful words two questions have in common once synonyms ("shipped", "built", "deployed") are one word."""
+def _similar(a: str, b: str) -> float:
     ta, tb = _tokens(a), _tokens(b)
     jaccard = len(ta & tb) / len(ta | tb) if ta | tb else 0.0
     return max(jaccard, SequenceMatcher(None, " ".join(sorted(ta)), " ".join(sorted(tb))).ratio() if ta and tb and jaccard >= 0.5 else 0.0)
+
+
+def _head(question: str) -> str:
+    """The first sentence of a question: what is asked, before the form elaborates ("... shipped. What did it do and how did you know?")."""
+    return re.split(r"(?<=[.?!\u2026])\s+", " ".join(question.split()), maxsplit=1)[0].rstrip(".\u2026 ")
+
+
+def similarity(a: str, b: str) -> float:
+    """0..1: the share of meaningful words two questions have in common once synonyms ("shipped", "built", "deployed") are one word. A question
+    that goes on after its first sentence is also compared by that sentence alone (at least 3 meaningful words), the better of the two counts."""
+    whole = _similar(a, b)
+    ha, hb = _head(a), _head(b)
+    if (ha, hb) != (a.strip(), b.strip()) and len(_tokens(ha)) >= 3 and len(_tokens(hb)) >= 3:
+        return max(whole, _similar(ha, hb))
+    return whole
 
 
 # ------------------------------------------------------------------ the answer library
@@ -272,6 +292,8 @@ class Plan:
     why: str
     ad_snippets: list[str] = field(default_factory=list)
 
+    fallback: bool = False                 # no entry overlapped the question: the sources are the closest true entry, not a match
+
     @property
     def ids(self) -> list[str]:
         return [s.id for s in self.sources]
@@ -337,6 +359,68 @@ def _runs(text: str, ad: str, n: int = AD_RUN_WORDS) -> bool:
     return any(" " + " ".join(words[i:i + n]) + " " in hay for i in range(len(words) - n + 1))
 
 
+# ------------------------------------------------------------------ what a question asks for that the bank may not have
+ASK_PREPS = frozenset("with for using in within across alongside between among from on around".split())
+FRAMING = frozenset("""tell describe walk talk give share example examples proud recent time times took take taken lead led setting context environment
+situation team role company organisation organization work worked working experience project projects thing things way ways one""".split())
+MODIFIERS = ("powered", "based", "driven", "enabled", "led", "facing", "related", "oriented", "native")      # "LLM-powered" is a kind of system, not an ask
+_GENERIC = frozenset(w for w, canon in _SAME.items() if canon in ("build", "system", "hard"))      # agent, tool, feature, project, shipped, built ...
+_ALPHA = r"[A-Za-z][A-Za-z']*"
+
+
+def _prefix(term: str) -> str:
+    t = norm_literal(term)
+    return t if len(t) <= 4 else t[:max(4, len(t) - 3)]
+
+
+def mentions(text: str, term: str) -> bool:
+    """Does the text say `term` (a compound, or a word with its endings: "stakeholder" ~ "stakeholders")?"""
+    t, hay = norm_literal(term), norm_literal(text)
+    if "-" in t:
+        return _contains(hay, t) or _contains(hay, t.replace("-", " "))
+    return re.search(r"(?<![\w])" + re.escape(_prefix(t)), hay) is not None
+
+
+def asks(question: str, company: str = "") -> list[tuple[str, list[str]]]:
+    """(phrase, terms) of what a question asks about beyond its kind: a hyphenated compound ("non-engineering"), a name written with a capital
+    inside the sentence ("Salesforce"), and the words after with / for / using / in / from ... up to the next small word ("sales stakeholders").
+    The framing words of a question (describe, tell us, project, built, shipped, agent ...) are not asks."""
+    q = re.sub(r"\([^)]*\)", " ", question.replace("\u2019", "'"))
+    skip = {w for w in _tokens(company)} | _GENERIC | FRAMING
+    found: list[tuple[str, list[str]]] = []
+
+    def add(phrase: str, terms: list[str]) -> None:
+        terms = [t for t in terms if t and t not in skip and t not in _STOP and len(t) >= 3]
+        if terms and phrase.lower() not in [p.lower() for p, _ in found]:
+            found.append((phrase, list(dict.fromkeys(terms))))
+
+    words = re.findall(_ALPHA + r"(?:-" + _ALPHA + r")*|[.?!;:,]", q)
+    for i, w in enumerate(words):                                                     # 1. the words after with / for / in ... up to the next small word
+        if w.lower() in ASK_PREPS:
+            run: list[str] = []
+            for nxt in words[i + 1:i + 5]:
+                ln = nxt.lower()
+                if not nxt[0].isalpha():
+                    break
+                if ln in ASK_PREPS or ln in FRAMING or ln in _GENERIC or ln in _STOP:
+                    if run:
+                        break
+                    continue
+                run.append(ln)
+            if run:
+                add(" ".join(run), run)
+    for i, w in enumerate(words):                                                     # 2. a compound or a name that is not in one of those phrases
+        lw = w.lower()
+        if any(lw in terms for _, terms in found):
+            continue
+        if "-" in lw:
+            if not lw.endswith(tuple("-" + m for m in MODIFIERS)):
+                add(lw, [lw])
+        elif i and words[i - 1] not in (".", "?", "!") and w[0].isupper() and w != "I" and not w.startswith("I'"):
+            add(w, [lw])                                                              # a name inside the sentence
+    return found
+
+
 @dataclass
 class Guard:
     fb: Mapping[str, Any]
@@ -353,11 +437,12 @@ class Guard:
         tools = set(gap_terms()) | set(n for n in letters_mod._tools(fb))            # type: ignore[attr-defined]  (the bank's own skill and stack names)
         return cls(fb, kws, list(fb.get("deny_terms", [])), list(avoid), company, title, ad, sorted((t for t in tools if len(t) >= 3), key=len, reverse=True))
 
-    def problems(self, text: str, plan: Plan, limit: Limit) -> list[str]:
+    def problems(self, text: str, plan: Plan, limit: Limit, missing: Sequence[str] = ()) -> list[str]:
         t = (text or "").strip()
         if not t:
             return ["the draft is empty"]
         out = list(limit.problems(t))
+        out += [f"claims '{m}', which no fact-bank entry mentions" for m in missing if mentions(t, m)]
         why = plan.cls in ("why_company", "why_role")
         allowed = plan.allowed() + (f" {self.ad} {self.company} {self.title}" if why else "")
         out += faithfulness.check(t, allowed, [], self.deny, self.kws, vocabulary="", max_growth=1000.0).violations
@@ -408,14 +493,33 @@ SYSTEM = (
     "name a tool, number, employer, organisation, project or outcome that is not in them, and add no adjective the sources do not earn. Past "
     "tense for past work. Plain prose, no list, no headings. Never write 'we' or 'our'. Do not use any word listed under style.avoid. Stay inside "
     "the limit. For a question about the company or the role, say something about the company or role ONLY by quoting words that are in "
-    "AD_SNIPPETS (the same words, in a row), and say why the applicant cares using the MOTIVATIONS or the SOURCES. If PROBLEMS is given, your "
-    "last draft was rejected for them: write it again without them. Return JSON only: {\"answer\": \"...\", \"ad_phrases\": [\"exact words you "
+    "AD_SNIPPETS (the same words, in a row), and say why the applicant cares using the MOTIVATIONS or the SOURCES. If NOT_IN_BANK is given, the "
+    "applicant has no recorded experience of those things: do not mention or imply them; describe the closest true thing in the SOURCES instead. "
+    "If PROBLEMS is given, your last draft was rejected for them: write it again without them. Return JSON only: {\"answer\": \"...\", \"ad_phrases\": [\"exact words you "
     "quoted from AD_SNIPPETS\"]}.")
 
 
 def _user_prompt(ctx: Mapping[str, Any]) -> str:
-    return json.dumps({k: ctx[k] for k in ("question", "class", "limit", "style", "company", "title", "sources", "motivations", "ad_snippets", "problems")
+    return json.dumps({k: ctx[k] for k in ("question", "class", "limit", "style", "company", "title", "sources", "motivations", "ad_snippets", "not_in_bank",
+                                           "problems")
                        if ctx.get(k)}, ensure_ascii=False, indent=1)
+
+
+@dataclass
+class Proposal:
+    """What `FreeText.propose` found for one question: an approved answer to reuse (`origin == "reused"`), a guarded draft (`"draft"`), or
+    nothing (`origin == ""`, `why_not` says why and who writes it)."""
+    question: str
+    cls: str
+    limit: Limit
+    plan: Plan
+    text: str = ""
+    origin: str = ""
+    problems: list[str] = field(default_factory=list)
+    why_not: str = ""
+    weak: str = ""                                      # "WEAK EVIDENCE: <what was asked> vs <entry ids>", or ""
+    missing: list[str] = field(default_factory=list)    # the terms the bank never mentions: the draft may not claim them
+    reused: Record | None = None
 
 
 # ------------------------------------------------------------------ one job's free-text answers
@@ -472,30 +576,36 @@ class FreeText:
             if eb not in chosen and score[eb[1]["id"]] > 0 and score[eb[1]["id"]] >= 0.4 * top:
                 chosen.append(eb)
         if not chosen:
-            return Plan(cls, [], "no fact-bank entry overlaps this question")
+            closest = [eb for eb in pool if eb[1]["id"] == proof][:1] or order[:1]          # the hook proof, else the best of a zero-score pool
+            if not closest:
+                return Plan(cls, [], "the fact bank has no entry to draw on")
+            return Plan(cls, [bullet_source(e, b) for e, b in closest],
+                        f"no fact-bank entry overlaps this question: the closest true entry is {closest[0][1]['id']}", fallback=True)
         why = f"entries {', '.join(b['id'] for _, b in chosen)} overlap the question and the ad's keywords" + (
             f"; the hook proof {proof} of this job's CV goes first" if proof and chosen[0][1]["id"] == proof else "")
         return Plan(cls, [bullet_source(e, b) for e, b in chosen], why)
 
     # ---- the draft
-    def _context(self, question: str, plan: Plan, limit: Limit, problems: list[str]) -> dict:
+    def _context(self, question: str, plan: Plan, limit: Limit, problems: list[str], missing: Sequence[str] = ()) -> dict:
         return {"question": question, "class": plan.cls, "limit": limit.as_dict(), "company": self.company, "title": self.title,
                 "style": {"avoid": list(self.style.get("avoid") or []), "person": self.style.get("person", "first"), "voice": self.style.get("voice", "")},
                 "sources": [{"id": s.id, "text": s.text} for s in plan.sources], "ad_snippets": plan.ad_snippets,
-                "motivations": list(self.book.motivations) if plan.cls == "why_company" else [], "problems": problems}
+                "motivations": list(self.book.motivations) if plan.cls == "why_company" else [], "not_in_bank": list(missing), "problems": problems}
 
-    def _draft(self, question: str, plan: Plan, limit: Limit) -> tuple[str, list[str]]:
-        """(the first draft that passes the guard, []) or ("", the problems of the second try): one redraft, with the problems named."""
-        problems: list[str] = []
-        for _ in range(2):
-            ctx = self._context(question, plan, limit, problems)
+    def _draft(self, question: str, plan: Plan, limit: Limit, missing: Sequence[str] = (), problems: list[str] | None = None,
+               tries: int = 2) -> tuple[str, list[str]]:
+        """(the first draft that passes the guard, []) or ("", the problems of the last try): `tries` model calls, each told the problems of the
+        one before (and `problems`, those of an earlier pass)."""
+        problems = list(problems or [])
+        for _ in range(tries):
+            ctx = self._context(question, plan, limit, problems, missing)
             try:
                 reply = normalise_json(self.llm.json(TASK, SYSTEM, _user_prompt(ctx), context=ctx))
             except Exception as e:  # noqa: BLE001  (no budget, no network, a cut-off reply: the person writes it)
                 self.out(f"  free-text draft unavailable: {e}")
                 return "", [f"the model could not draft it: {e}"]
             text = str((reply or {}).get("answer") or "").strip()
-            problems = self.guard.problems(text, plan, limit)
+            problems = self.guard.problems(text, plan, limit, missing)
             for ph in (reply or {}).get("ad_phrases") or []:
                 if plan.cls in ("why_company", "why_role") and norm_literal(str(ph)) not in " ".join(norm_literal(self.ad).split()):
                     problems.append(f"quotes '{str(ph)[:60]}' as a phrase of the ad, which the ad does not contain")
@@ -503,11 +613,58 @@ class FreeText:
                 return text, []
         return "", problems
 
+    # ---- what the question asks for that the bank never mentions
+    def _bank_text(self) -> str:
+        if not hasattr(self, "_bank"):
+            parts = [_fact_corpus(self.fb)]
+            for sec in ("experience", "projects"):
+                for e in self.fb.get(sec, []):
+                    parts.append(" ".join(str(e.get(k) or "") for k in ("title", "name", "org", "situation", "stack")))
+                    parts += [str(b.get("result") or "") for b in e["bullets"]]
+            self._bank = norm_literal("\n".join(parts))
+        return self._bank
+
+    def unsupported(self, question: str) -> list[tuple[str, list[str]]]:
+        """(phrase, terms) of what the question asks for that NO fact-bank entry mentions (the terms; the phrase is shown as asked)."""
+        bank, out = self._bank_text(), []
+        for phrase, terms in asks(question, self.company):
+            gone = [t for t in terms if not mentions(bank, t)]
+            if gone:
+                out.append((phrase, gone))
+        return out
+
+    # ---- one pass: reuse, or plan + draft + check
+    def propose(self, question: str, label: str = "", maxlength: Any = None, *, problems: list[str] | None = None, tries: int = 2) -> Proposal:
+        """Retrieve and draft the answer to one free-text question, asking nobody. An approved answer for a similar question (same class, similarity
+        >= 0.85) is `reused`; else the draft that passes the guard (`origin == "draft"`, to be approved); else no text and `why_not`."""
+        question = " ".join(question.split())
+        cls, limit = classify(question, self.company), read_limits(f"{question} {label}", maxlength)
+        hit = self.lib.find(question, cls, self.company, limit, job_id=str(self.job.get("id") or ""), current=self._current())
+        empty = Plan(cls, [], "")
+        if hit is not None:
+            return Proposal(question, cls, limit, empty, hit.answer, "reused", reused=hit)
+        if cls == "other":
+            return Proposal(question, cls, limit, empty, why_not=f"free-text question of no kind a draft can answer ({question[:80]!r}): it is yours")
+        if cls == "why_company" and not self.book.motivations:
+            return Proposal(question, cls, limit, empty, why_not="answers.yaml has no `motivations`, so nothing may be said about why you want this "
+                                                                 "company: add them, or write it yourself")
+        plan = self.plan(cls, question)
+        if not plan.sources:
+            return Proposal(question, cls, limit, plan, why_not=f"free text [{cls}]: {plan.why}")
+        gaps = self.unsupported(question) if cls in ("project", "challenge") else []
+        missing = [t for _, terms in gaps for t in terms]
+        asked = "; ".join(p for p, _ in gaps) or (question[:80] if plan.fallback else "")
+        weak = f"WEAK EVIDENCE: {asked} vs {', '.join(plan.ids)}" if gaps or plan.fallback else ""
+        text, probs = self._draft(question, plan, limit, missing, problems, tries)
+        return Proposal(question, cls, limit, plan, text, "draft" if text else "", probs, weak=weak, missing=missing,
+                        why_not="" if text else f"free text [{cls}]: no draft passed the guard ({'; '.join(probs[:4])}). Nothing is drafted for you.")
+
     # ---- the person
-    def _show(self, question: str, cls: str, limit: Limit, plan: Plan, text: str) -> None:
+    def _show(self, question: str, cls: str, limit: Limit, plan: Plan, text: str, weak: str = "") -> None:
         self.out(f"\n  FREE-TEXT QUESTION [{cls}]: {question}\n  Limit: {limit.describe()}\n  Plan: {plan.why}\n  Sources: {', '.join(plan.ids)}\n"
                  f"  Guard: passed (numbers, tools, organisations and names are all in the sources; limit, style and letter rules kept)\n"
-                 f"  Draft:\n    {text}")
+                 + (f"  {weak}: the answer uses the closest true entry and does not claim the missing part\n" if weak else "")
+                 + f"  Draft:\n    {text}")
 
     def _store(self, question: str, text: str, cls: str, plan: Plan, origin: str) -> None:
         self.lib.add(Record.new(question, text, cls, self.company, str(self.job.get("id") or ""), plan.ids, self.today, origin,
@@ -528,54 +685,51 @@ class FreeText:
         self._store(question, typed, cls, plan, "written")
         return typed
 
-    def answer(self, question: str, label: str = "", maxlength: Any = None, *, strict: bool = True) -> str:
-        """The text for a free-text field, '' when there is none (the form then needs you). `strict`: the run can ask you to type an answer
-        (auto-apply, or the assist when you press s); not strict: the assist leaves the field for you to type in the browser."""
-        self.last = ""
-        question = " ".join(question.split())
-        cls, limit = classify(question, self.company), read_limits(f"{question} {label}", maxlength)
-        hit = self.lib.find(question, cls, self.company, limit, job_id=str(self.job.get("id") or ""), current=self._current())
-        if hit is not None:
-            self.last = "reused"
-            self.out(f"  free text: reused the answer you approved on {hit.date} for \"{hit.question[:70]}\" ({cls})")
-            return hit.answer
-        empty = Plan(cls, [], "")
-        if cls == "other":
-            return self._write(question, cls, empty, limit, strict, f"free-text question of no kind a draft can answer ({question[:80]!r}): it is yours")
-        if cls == "why_company" and not self.book.motivations:
-            return self._write(question, cls, empty, limit, strict,
-                               "answers.yaml has no `motivations`, so nothing may be said about why you want this company: add them, or write it yourself")
-        plan = self.plan(cls, question)
-        if not plan.sources:
-            return self._write(question, cls, plan, limit, strict, f"free text [{cls}]: {plan.why}")
-        text, problems = self._draft(question, plan, limit)
-        redrafts = 0
+    def review(self, p: Proposal, strict: bool = True, on_text: Callable[[str], None] | None = None) -> str:
+        """Show a draft and ask `[y] use · [e] edit · [r] redraft · [s] I'll write it`. Returns the text the person approved or wrote ('' = none),
+        and stores it in the library. `on_text(text)` is called with each redraft so that the form can show it."""
+        text, problems, redrafts = p.text, p.problems, 0
         while True:
             if not text:
-                return self._write(question, cls, plan, limit, strict,
-                                   f"free text [{cls}]: no draft passed the guard ({'; '.join(problems[:4])}). Nothing is drafted for you.")
-            self._show(question, cls, limit, plan, text)
+                return self._write(p.question, p.cls, p.plan, p.limit, strict,
+                                   f"free text [{p.cls}]: no draft passed the guard ({'; '.join(problems[:4])}). Nothing is drafted for you.")
+            self._show(p.question, p.cls, p.limit, p.plan, text, p.weak)
             reply = (self.ask(MENU) or "").strip().lower()
             if reply in ("y", "yes"):
-                self._store(question, text, cls, plan, "draft")
+                self._store(p.question, text, p.cls, p.plan, "draft")
                 return text
             if reply == "r" and redrafts < MAX_REDRAFTS:
                 redrafts += 1
-                text, problems = self._draft(question, plan, limit)
+                text, problems = self._draft(p.question, p.plan, p.limit, p.missing)
+                if text and on_text is not None:
+                    on_text(text)
                 continue
             if reply == "e":
                 typed = (self.ask("  Your edited answer (replaces the draft; blank = back to the menu): ") or "").strip()
                 if not typed:
                     continue
-                over = limit.problems(typed)
+                over = p.limit.problems(typed)
                 if over:
                     self.out(f"  too long for the form ({'; '.join(over)}): shorten it")
                     continue
-                self._store(question, typed, cls, plan, "edited")
+                self._store(p.question, typed, p.cls, p.plan, "edited")
                 return typed
             if reply == "s":
-                return self._write(question, cls, plan, limit, strict, "")
+                return self._write(p.question, p.cls, p.plan, p.limit, strict, "")
             return ""                                                  # anything else is not an approval
+
+    def answer(self, question: str, label: str = "", maxlength: Any = None, *, strict: bool = True) -> str:
+        """The text for a free-text field, '' when there is none (the form then needs you). `strict`: the run can ask you to type an answer
+        (auto-apply, or the assist when you press s); not strict: the assist leaves the field for you to type in the browser."""
+        self.last = ""
+        p = self.propose(question, label, maxlength)
+        if p.origin == "reused":
+            self.last = "reused"
+            self.out(f"  free text: reused the answer you approved on {p.reused.date} for \"{p.reused.question[:70]}\" ({p.cls})")
+            return p.text
+        if not p.text:
+            return self._write(p.question, p.cls, p.plan, p.limit, strict, p.why_not)
+        return self.review(p, strict)
 
 
 def for_job(job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], llm, settings, book: answers_mod.AnswerBook, *,

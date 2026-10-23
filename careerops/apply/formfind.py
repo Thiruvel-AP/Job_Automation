@@ -10,7 +10,8 @@ the form had been looked at.
 
 A page that must be handed to the person (`blocker`): a VISIBLE bot check (a reCAPTCHA / hCaptcha / Arkose checkbox or puzzle frame that is
 displayed and at least MIN_CHALLENGE_W x MIN_CHALLENGE_H px, or a displayed Turnstile widget, or the words "verify you are human"), the
-message "error verifying your application", or a Google or Microsoft sign-in page or popup. An invisible reCAPTCHA (v3) frame or badge
+message "error verifying your application", a submit the form flagged as possible spam ("flagged as possible spam", "couldn't submit your
+application"), or a Google or Microsoft sign-in page or popup. An invisible reCAPTCHA (v3) frame or badge
 (`size=invisible`, `data-size="invisible"`, a submit button carrying a data-sitekey) is not a trigger: the form is filled as usual. Nothing here
 touches, solves or works around any of them (it only asks whether an element is displayed and how big it is), and no credentials are ever
 entered: the caller stops and apply/handoff.py opens the page in the person's own browser.
@@ -38,6 +39,10 @@ MIN_CHALLENGE_W, MIN_CHALLENGE_H = 100, 60      # a checkbox or puzzle frame is 
 CAPTCHA_TEXT = re.compile(r"verify (?:that )?you(?:'re| are) (?:a )?human|confirm (?:that )?you(?:'re| are) (?:a )?human|"
                           r"i['’]m not a robot|are you a robot|checking (?:if|that) you(?:'re| are) (?:a )?human|human verification", re.I)
 VERIFY_ERROR = re.compile(r"error verifying your application", re.I)
+# What Ashby shows after a submit from the automated browser: "Your application submission was flagged as possible spam" / "We couldn't submit your
+# application". The form is never refreshed or submitted again from automation.
+SPAM_FLAG = re.compile(r"flagged (?:\w+ ){0,3}as (?:a )?(?:possible |potential |likely |suspected )?spam|(?:possible|potential|suspected) spam|"
+                       r"(?:could not|couldn['’]t|unable to|were not able to|weren['’]t able to) submit your application", re.I)
 SIGN_IN_HOSTS = ("accounts.google.com", "login.microsoftonline.com", "login.live.com", "login.microsoft.com")
 FIELDS = "input[type=email], input[type=tel], input[type=file], input[type=text], textarea"
 
@@ -148,14 +153,21 @@ def sign_in_reason(page) -> str | None:
     return None
 
 
+def spam_reason(page) -> str | None:
+    """The sentence of a page that says the submission was flagged as spam or could not be submitted, or None. Only reads the visible text."""
+    m = SPAM_FLAG.search(_body(page))
+    return f"the form flagged this submission as possible spam ({m.group(0)!r}): not refreshed, not submitted again from automation" if m else None
+
+
 def blocker(page) -> str | None:
-    """Why this page has to be handed to the person, or None: a bot check, "error verifying your application", or a sign-in wall."""
+    """Why this page has to be handed to the person, or None: a bot check, "error verifying your application", a submit flagged as spam, or a
+    sign-in wall."""
     found = captcha_reason(page)
     if found:
         return found
     if VERIFY_ERROR.search(_body(page)):
         return "the page says 'error verifying your application' (a bot check turned this browser away)"
-    return sign_in_reason(page)
+    return spam_reason(page) or sign_in_reason(page)
 
 
 def wait_for_form(page, seconds: float | None = None, follow: Callable[[Any], None] | None = None) -> str | None:

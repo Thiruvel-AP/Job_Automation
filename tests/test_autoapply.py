@@ -80,7 +80,7 @@ class Run:
             h.known = lambda url: known
         return h
 
-    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None, handoff=None):
+    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None, handoff=None, failures=None):
         replies = replies or {}
 
         def ask(prompt: str) -> str:
@@ -95,7 +95,7 @@ class Run:
         job = {**self.job, "apply_url": target.resolve().as_uri() + ("?" + query if query else "")}
         return autoapply.run(job, rep or self.rep(), APPLICANT, self.settings, submit=submit, confirm=confirm, ask=ask,
                              out=lambda s: self.out.append(s), launch=self.launch, history=history or (lambda c: False), throttle=throttle,
-                             ats_strict=74.2, now=NOW, handoff=handoff)
+                             ats_strict=74.2, now=NOW, handoff=handoff, failures=failures)
 
     def rep(self, letter: bool = False) -> dict:
         out = Path(self.job["out_dir"])

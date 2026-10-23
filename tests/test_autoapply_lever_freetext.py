@@ -8,21 +8,27 @@ from test_autoapply import APPLICANT, FIX, chromium, world  # noqa: F401  (the f
 
 from careerops import autoapply
 from careerops.apply import autolog, filler
+from careerops.apply.freetext import Limit, Plan, Proposal
 
 pytestmark = pytest.mark.slow          # these tests drive Chromium
 
 
 class Stub:
-    """What apply/freetext.FreeText offers the filler: `answer(question, label, maxlength, strict)`, `last`, and the `ask` / `out` the runner sets."""
+    """What apply/freetext.FreeText offers the form loop: `propose(question, label, maxlength, ...)` (a draft), `review(proposal, strict)` (the person's y),
+    `last`, and the `ask` / `out` the runner sets."""
 
     def __init__(self, text="I like what Valarian builds and I would like to help run its models in production."):
         self.questions, self.labels, self.text, self.last = [], [], text, "approved"
         self.ask = self.out = None
 
-    def answer(self, question, label="", maxlength=None, *, strict=True):
+    def propose(self, question, label="", maxlength=None, *, problems=None, tries=2):
         self.questions.append(question)
         self.labels.append(label)
-        return self.text
+        return Proposal(question, "why_company", Limit(words=120), Plan("why_company", [], "stub"), self.text, "draft")
+
+    def review(self, proposal, strict=True, on_text=None):
+        self.last = "approved"
+        return proposal.text
 
 
 def run(world, monkeypatch, stub, page="lever_form.html", replies=None):

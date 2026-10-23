@@ -1,6 +1,7 @@
 """Free-text questions through the gated auto-apply and the assist, in headless Chromium on a fixture form (no network, MockLLM as the model).
-A NEW draft is used only on the person's `y` (so it can never be submitted without it); an answer they approved before is reused without a
-question and the form goes through. Chromium missing = the tests fail."""
+A NEW draft goes into the field at once (marked NEW DRAFT) but is submitted only on the person's `y` or an edit they saved: the gated auto-apply stops
+before the submit while one is unapproved. An answer they approved before is reused without a question and the form goes through. Chromium
+missing = the tests fail."""
 import functools
 from datetime import date
 from pathlib import Path
@@ -49,10 +50,11 @@ def seeded_questions(world):
     return world
 
 
-def test_a_new_draft_is_not_used_without_y_and_nothing_is_submitted(world, monkeypatch):
+def test_a_new_draft_is_not_approved_without_y_and_nothing_is_submitted(world, monkeypatch):
     r = run(world, monkeypatch, free(world, llm_for(ANSWER_1, ANSWER_2)), {"[y] use": ""})
-    assert r.status == autolog.NEEDS_USER and "no answer for the required question" in r.reason and world.submit_calls == 0
-    assert world.state["values"].get("q1", "") == ""
+    assert r.status == autolog.NEEDS_USER and "new draft not approved" in r.reason and world.submit_calls == 0
+    assert world.state["values"].get("q1", "") == ANSWER_1                      # in the field for the person who takes over, marked NEW DRAFT, not stored
+    assert ANSWER_1 not in [rec.answer for rec in ft.Library(world.settings.path("answers_library")).records()]
 
 
 def test_a_new_draft_goes_in_on_y_is_stored_and_the_form_is_submitted(world, monkeypatch):
@@ -61,7 +63,7 @@ def test_a_new_draft_goes_in_on_y_is_stored_and_the_form_is_submitted(world, mon
     assert sum("[y] use" in p for p in world.prompts) == 2                       # one approval per new draft, asked before the submit
     ev = world.events
     assert ev.index("submit clicked") > max(i for i, e in enumerate(ev) if "[y] use" in e)       # both approvals come before the click
-    assert sum("free text (approved)" in f for f in r.filled) == 2
+    assert sum("free text (approved)" in f for f in r.filled) == 2 and not any("NEW DRAFT" in f for f in r.filled)
     assert [rec.answer for rec in ft.Library(world.settings.path("answers_library")).records()][-2:] == [ANSWER_1, ANSWER_2]
 
 

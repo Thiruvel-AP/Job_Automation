@@ -14,8 +14,10 @@ the form has not changed for 2 s, then the text fields, then every filled field 
 under REQUIRED + EMPTY.
 
 Every other field is filled by apply/filler.py, the same code the gated auto-apply uses: the standard fields from applicant.yaml (full
-name, first name, last name, e-mail, phone, links, location), then the user's answers.yaml. A free-text question nobody has an answer for
-("Describe an LLM feature ...") stays empty and is marked for you.
+name, first name, last name, e-mail, phone, links, location), then the user's answers.yaml. Every free-text question, required or not, goes to the
+form loop (apply/formloop.py): the form is scanned and its fields printed before anything is filled; an answer you approved for a similar question
+is filled as it is, any other gets a draft from your fact bank in the field at once, marked NEW DRAFT (and WEAK EVIDENCE when the bank does not cover
+what is asked), and you are asked `[y] use / [e] edit` for it; an optional question of no kind a draft can answer ("anything else?") stays empty.
 
 Equal-opportunities questions (apply/eo.py) are filled ONLY when applicant.yaml `equal_opportunities` or an `eo_*` entry of answers.yaml lists
 them (ethnicity first), with the first form option that equals one of the `match_any` / `options` texts you wrote (case- and dash-insensitive);
@@ -33,7 +35,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import eo, failures as failures_mod, filler, formfind, verify
+from . import eo, failures as failures_mod, filler, formfind, formloop, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -220,16 +222,18 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
                      letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
                      freetext=freetext, tracker=tracker)
+    loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, cv_pdf))
+    loop.begin(page)                                                     # every field of the form, printed before anything is filled
 
     if _upload_files(page, cv_pdf, letter_pdf, report):                  # pass 1: the files, then the form is left to finish re-rendering
         if not verify.wait_quiet(page, quiet_ms):
             print(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back below)")
 
-    for el in page.query_selector_all("input, textarea, select"):       # pass 2: fresh handles, the form may have replaced its nodes
+    def fill_element(el) -> None:                                       # one element of the form (also used for a field that appears after an answer)
         tag = el.evaluate("e => e.tagName").lower()
         typ = (el.get_attribute("type") or ("text" if tag == "input" else tag)).lower()
         if typ in ("hidden", "submit", "button", "image", "reset", "file") or not el.is_visible():
-            continue
+            return
         label = (el.evaluate(LABEL_JS) or "").strip()
         short = label.split("|")[0].strip()[:60] or typ
         question = _norm(el.evaluate(QUESTION_JS) if typ == "radio" else label.split("|")[0]).rstrip(" *")   # no "required" star
@@ -241,7 +245,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                 el.fill(letter_text)
                 tracker.add(el, short, "text", letter_text)
                 report["filled"].append(f"{short} = cover letter text")
-            continue
+            return
 
         if VISA_FIELD.search(f"{question} {label}"):
             # Before never_fill on purpose: visa/sponsor/right-to-work are in never_fill so that an unrecognised variant is
@@ -249,7 +253,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             if typ == "radio":
                 name = el.get_attribute("name")
                 if name and name in seen_groups:
-                    continue                                   # the rest of a group already answered
+                    return                                   # the rest of a group already answered
                 seen_groups.add(name)
                 group = page.query_selector_all(f'input[type=radio][name="{name}"]') if name else [el]
                 value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
@@ -275,7 +279,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                   + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else ""))
             report["visa"].append({"question": question, "value": held, "work_location": where})
             report["filled" if held else "manual"].append(f"{short} = visa" if held else short)
-            continue
+            return
 
         if eo.is_eo_field(f"{question} {label}"):
             # Before never_fill on purpose (its gender / ethnic / disab ... labels are left empty by default): only a question listed in
@@ -283,7 +287,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             if typ in ("radio", "checkbox"):
                 name = el.get_attribute("name")
                 if name and ("eo", name) in seen_groups:
-                    continue
+                    return
                 seen_groups.add(("eo", name))
             entry = eo.entry_for(f"{question} {label}", listed_eo)
             group_els = [e for _, e in _eo_options(page, el, typ)] if typ in ("radio", "checkbox") else [el]
@@ -293,23 +297,23 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             if picked == UNCHECKED_NO:                       # a single check box and the answer is No: nothing to tick, and nothing is missing
                 print(f"CHECK EO ANSWER [{entry.key}]: {question[:150]} -> {picked}")
                 report["eo"].append({"question": question, "key": entry.key, "value": "No", "options": texts})
-                continue
+                return
             shown = (" (" + why + (f"; options: {' | '.join(texts[:12])}" if why.startswith("no option matched") else "") + ")") if not picked else ""
             print(f"CHECK EO ANSWER [{entry.key if entry else 'not listed'}]: {question[:150]} -> {picked or 'EMPTY'}{shown}")
             report["eo"].append({"question": question, "key": entry.key if entry else None, "value": picked, "options": texts})
             report["filled" if picked else "manual"].append(f"{short} = eo" if picked else short)
-            continue
+            return
 
         before = len(ctx.result.filled)
         filler.fill_field(page, el, tag, typ, label, short, question, filler.is_required(el, label.split("|")[0]), ctx, seen_groups)
         if len(ctx.result.filled) > before:                                        # applicant.yaml or answers.yaml answered it
             report["filled"].extend(ctx.result.filled[before:])
-            continue
+            return
 
         if _matches(label, never):
             el.evaluate("e => e.style.outline = '3px solid orange'")
             report["manual"].append(short)
-            continue
+            return
 
         required = el.get_attribute("required") is not None or el.get_attribute("aria-required") == "true"
         empty = typ in ("checkbox", "radio") and not el.is_checked() or \
@@ -317,6 +321,15 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         if required and empty:
             el.evaluate("e => e.style.outline = '3px solid red'")
             report["required_empty"].append(short)
+
+    loop.handle_new = fill_element
+    for el in page.query_selector_all("input, textarea, select"):       # pass 2: fresh handles, the form may have replaced its nodes
+        fill_element(el)
+    loop.run(page)                                                       # pass 2b: the free-text fields, one by one, the form scanned again after each
+    report["filled"].extend(loop.added)
+    report["manual"].extend(f"{d.short or d.question[:60]} (NEW DRAFT: check it)" for d in loop.drafts if d.status == "NEW DRAFT (unapproved)")
+    report["required_empty"] = [x for x in report["required_empty"] if x not in loop.filled_shorts]
+    report["drafts"] = loop.paste_drafts()
 
     if tracker.fills:                                                    # pass 3: read back everything this run filled
         print("\nReading back every field that was filled:")
@@ -375,7 +388,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     def hand_off(why: str, remember: bool = True) -> None:
         r["handoff"] = why
         if handoff is not None:
-            handoff.run(job, rep, applicant, book, plan, url, why, r["filled"], remember=remember)
+            handoff.run(job, rep, applicant, book, plan, url, why, r["filled"], remember=remember, drafts=r.get("drafts"))
         else:
             print(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
 

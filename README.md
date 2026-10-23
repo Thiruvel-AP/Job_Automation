@@ -69,6 +69,7 @@ career-ops/
 │   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
 │   ├── autoapply.py              gated auto-apply (Greenhouse / Ashby / Lever): the ONLY module that clicks a submit control, only for a job that passed the gate
 │   ├── apply/freetext.py         drafts free-text form answers from the fact bank, guards them, you approve once (data/answers/library.jsonl)
+│   ├── apply/formloop.py         scans EVERY field of a form (table before filling), runs the free-text loop (required or optional), logs formloop.jsonl
 │   ├── apply/assist.py · filler.py   Playwright: fill, upload PDFs, never submit · the ONE field filler (applicant.yaml, then answers.yaml) that assist and autoapply share
 │   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
@@ -589,6 +590,22 @@ assist still never submit.
   autofill upload control`); then the form is left alone until it has not changed for 2 s (an Ashby form re-renders after an upload and wipes what was typed);
   then the text fields. Afterwards every field that was filled is read back: an empty one is filled once more and printed `VERIFIED` (`(filled again)`) or
   `LOST`. The assist lists a LOST field under `REQUIRED + EMPTY`; the auto-apply stops (`needs_user`) instead of submitting.
+- **The form loop** (`apply/formloop.py`). Before anything is filled, every visible input, textarea, select, radio group and check-box group is printed in a
+  table (`FORM FIELDS (n)`: type, required, maxlength, label, options), required or not; a label is the `<label>`, `aria-label`, or the nearest text before the field.
+  After the standard fields and `answers.yaml`, each free-text field still empty (a text area, or a text box over 100 characters) goes through
+  observe → classify → retrieve → draft → check → fill → verify, at most 3 passes, and the form is scanned again after each fill (an answer can reveal a new
+  question). Retrieval is only `answers.yaml`, the answer library, the fact bank and the job ad. An answer you approved for a question at least 0.85 similar
+  (same kind) is **filled directly**, no draft, no question (`LIBRARY` in the table). Any other question gets a draft, **filled into the field at once** and marked
+  `NEW DRAFT`. If the question asks for something the fact bank never mentions (a compound like "non-engineering", a name like "Salesforce", the words after
+  "with" / "for" / "in"), the draft uses the closest true entry, never claims the missing part (the guard rejects a draft that does), and is marked
+  `WEAK EVIDENCE: <what was asked> vs <entry ids>`. An **optional** question of no kind a draft can answer ("Anything else?") is skipped; a required one is asked.
+  Each new draft is then shown with `[y] use · [e] edit · [r] redraft · [s] I'll write it`: `y` or your edit stores it in the library. In the **auto-apply** a
+  draft nobody approved stops the run (`needs_user`) before any submit; in the assist it stays in the field, outlined orange, listed under `YOU ANSWER`.
+  Every step of every field is appended to `formloop.jsonl` in the job's output folder. The drafts also go into `answers_to_paste.txt` on a hand-off.
+- **A spam flag after a submit.** If the page says "flagged as possible spam" or "couldn't submit your application" after the auto-apply pressed Submit, the job
+  goes to the hand-off **at once** (it does not use up one of the two allowed failures): the row `spam_flag` is written to `data/live/submit_failures.csv`,
+  the host (e.g. `jobs.ashbyhq.com`) is recorded in `data/live/handoff_hosts.json` so later jobs there skip the automated browser, and the page is never
+  refreshed or submitted again from automation. No host is put on `apply.handoff_hosts` in advance.
 
 **Submitting**: a full-page screenshot of the filled form is saved in the job's output folder first. The first `confirm_first_n` (3) auto-submits ever,
 or every one with `--confirm`, show its path and ask `Submit? [y/N]`. Then the button is clicked and the confirmation page awaited for 30 seconds; its
@@ -606,7 +623,7 @@ its outcome, appends a row to `data/live/applied_auto.csv` (time, job id, compan
 **Pre-flight**: `live` checks at its start that the Google sign-in may edit the tracker Sheet (the `spreadsheets` scope in the token file; no network). Without it
 one line says to run `careerops discover --gmail-auth`, and the run goes on in assist mode only: `--auto` is switched off, because the duplicate gate cannot
 read the Sheet and a duplicate cannot be ruled out. The assist fills the same fields as the auto-apply (applicant.yaml: full name, first and last name, e-mail,
-phone, links, location; then `answers.yaml`) and leaves a free-text question to you. If the browser is closed (or the program dies) after the form was opened,
+phone, links, location; then `answers.yaml`; free-text questions go through the form loop below). If the browser is closed (or the program dies) after the form was opened,
 the confirmation question is still asked, and the next `live` starts with `Did you submit <company> <role>? [y/N]` for that job.
 
 **Free-text questions** (a required text area, or a text box with room for over 100 characters, that `answers.yaml` does not answer): `apply/freetext.py`

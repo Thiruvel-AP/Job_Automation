@@ -1323,3 +1323,52 @@ which need a new fact, and the user can act on it.
    (8). `tests/test_deletions.py` and `tests/apply/test_safe_io.py` list `factbank_append._write_atomic`'s `os.replace`. **Unverified:** a real
    `careerops live --dry-run --max 3` on the real data and the real model (CLAUDE.md forbids running it from a task); the same screen was produced
    on the mock root with a scratch JD (`live --mock`, MockLLM, the real bank read only: its sha256 was the same before and after).
+
+
+## 5ai. Round 20 — the form-question loop (23 Oct; the task file calls it "Round 17") — **done** (offline tests; Chromium fixture forms, MockLLM; never run on a real form or the real model)
+
+Evidence: on the 23 Oct ElevenLabs Ashby form three OPTIONAL text areas ("Describe an agent or LLM-powered system you have shipped...", "Tell us about an automation or agent you took
+from prototype to production...", "Describe a project you built with non-engineering stakeholders...") were never looked at: only REQUIRED free-text questions reached `apply/freetext.py`, the
+assist printed `YOU ANSWER: []`. Separately Ashby answered a submit from the automated browser with "flagged as possible spam".
+
+1. **Scanner** (`apply/formloop.py: scan`, `table`). `FormLoop.begin(page)` runs before any file or field is touched and prints `FORM FIELDS (n)`: every visible input, textarea, select, radio group
+   and check-box group (a group with one name is one field; a file input counts even when hidden), required or not, with `type`, `req`, `maxlength`, label and options. The label is the `<label>`
+   (`el.labels`), `aria-labelledby`, `aria-label`, else the nearest text before the field (siblings of the field, then of each ancestor, stopping at another field), else placeholder / name / id.
+   After the run it prints `FORM FIELDS AFTER FILLING` with a status per field (FILLED, PRE-FILLED, LIBRARY, NEW DRAFT; WEAK EVIDENCE: ..., APPROVED, FILE, BLANK, BLANK (required), or why it was skipped).
+   The word is BLANK, not EMPTY: tests assert that EMPTY is absent for a "left unchecked (answer: No)" box.
+2. **Loop** (`FormLoop.run`, `work`). Called by `assist.fill_page` and `autoapply.fill_form` after their own field pass (the per-element body of each is now a nested `fill_element`, also handed to the
+   loop as `handle_new`). `filler.fill_field` no longer drafts: with `Ctx.loop` set a free-text field (textarea, or a text box with `maxlength` > 100) that `answers.yaml` does not answer is
+   left to the loop. Per field still empty: observe -> classify (`freetext.classify`) -> retrieve (`answers.yaml`; the answer library at similarity >= 0.85, same class; the fact bank and the job
+   ad through `FreeText.plan`) -> draft -> check (the existing guard) -> fill -> read back, up to `MAX_PASSES` = 3 passes (a pass that fails the guard, or whose text the form did not keep,
+   tells the next one why); then the form is scanned again, and a field that appeared (`phase: appeared after a fill`) goes to `handle_new` (the caller's own routine) and, if free text, to the loop.
+   An OPTIONAL field of class `other` ("anything else?") is skipped (`skip` in the log); a REQUIRED one is asked of the person as before; an optional field no draft passed for stays empty.
+   With no `FreeText` (no model) a required free-text box goes through `filler.decide` (answers.yaml, else the person) and an optional one is skipped.
+3. **Freetext split** (`apply/freetext.py`). `FreeText.propose(question, label, maxlength, problems=, tries=)` -> `Proposal` does one pass (reuse, plan, draft, guard) and asks nobody;
+   `FreeText.review(proposal, strict, on_text=)` is the old `[y] use · [e] edit · [r] redraft · [s] I'll write it` menu and the only thing that stores an answer; `answer()` is `propose` + `review`
+   (same prompts and library writes as before). `similarity` also compares the FIRST SENTENCE of a question that goes on (>= 3 meaningful words each side) and `powered / based / driven / enabled`
+   are stop words, so "Describe an agent or LLM-powered system you have shipped. What did it do?" matches the seeded Limbic question (1.0). `Plan.fallback`: a question that overlaps no fact-bank
+   entry (and has no hook proof) is answered from the closest entry (`order[0]`) instead of being given up.
+4. **Weak evidence** (`freetext.asks`, `FreeText.unsupported`, `mentions`, `Guard.problems(missing=)`). `asks(question)` is what a question asks for beyond its kind: the words after with / for /
+   using / in / from / ... up to the next small word, a hyphenated compound ("non-engineering", but not "LLM-powered"), a name written with a capital inside the sentence. `unsupported` keeps the
+   terms the WHOLE fact bank (bullets, situation, results, stack, skills) never mentions (word-prefix match, so "stakeholders" ~ "stakeholder"). They go to the model as `not_in_bank`, and the guard
+   rejects a draft that mentions one (`claims 'x', which no fact-bank entry mentions`). The proposal carries `WEAK EVIDENCE: <asked> vs <entry ids>` (printed in the table, in the `[y]` screen and in
+   `answers_to_paste.txt`). This is a heuristic on wording, not understanding: a question phrased without those cues is not flagged, and a flagged term the bank covers under another word is a
+   false alarm the person sees and ignores.
+5. **Approval.** A draft is filled at once and listed as NEW DRAFT; after the loop `FormLoop.approve` runs `review` for each. `y` / an edit / a typed answer is stored in the library (never
+   before) and the filled-list entry becomes `free text (approved|edited|written)`. A library answer is `LIBRARY`: no draft, no question. Unapproved: the gated auto-apply raises `NeedsUser("new draft not
+   approved (nothing is submitted): ...")` before the screenshot and the submit; the assist leaves the text in the field outlined orange and lists `<field> (NEW DRAFT: check it)` under `YOU ANSWER`.
+   The draft is NOT removed from the field when the run stops: the person who takes over sees it.
+6. **Log.** `formloop.jsonl` in the job's output folder (`out_dir`, else the folder of the CV), append-only, one object per step: `observe`, `classify`, `retrieve`, `draft`, `check`, `fill`, `verify`,
+   `skip`, `give_up`, `approve`, `status`.
+7. **Spam flags** (`formfind.SPAM_FLAG`, `spam_reason`, `blocker`; `failures.SPAM_FLAG`). "flagged as possible spam", "possible / potential / suspected spam", "couldn't / could not / unable to submit your
+   application" is a `blocker`: after the click the auto-apply hands the job over at once (`autoapply.run` already did so for any blocker). `failures.kind_of` gives it its own kind `spam_flag`,
+   which `Failures.record` writes to `submit_failures.csv` (with the host) but `count` / `kinds` / `gate` ignore: it is not one of the two allowed failures. `Handoff.run` records the host in
+   `handoff_hosts.json`, so later jobs there skip the browser; `jobs.ashbyhq.com` is NOT added to `apply.handoff_hosts` (your file). Nothing is refreshed or resubmitted: the button is pressed once.
+8. **Hand-off text.** `Handoff.run(..., drafts=)` / `paste_text(..., drafts)`: `answers_to_paste.txt` gains `FREE-TEXT ANSWERS DRAFTED FOR THIS FORM` (question, answer, `[NEW DRAFT]` or
+   `[approved by you]`, `[WEAK EVIDENCE: ...]`), skipping an answer that is already in the approved-for-this-job section. Both callers pass `loop.paste_drafts()`. A job whose host goes straight to the
+   hand-off never opens the form, so it has no drafts to list (only the answers you approved for it).
+9. **Tests** (`tests/apply/test_formloop.py`, 27; fixture `tests/fixtures/apply/ashby_elevenlabs.html`, the ElevenLabs layout: system fields, three optional text areas, a field that appears after
+   the first answer, `?spam`). Changed on purpose: `tests/test_autoapply_freetext.py` (the "no y" test now expects the draft in the field, not stored, and `new draft not approved`),
+   `tests/test_autoapply_lever_freetext.py` (its stub offers `propose` / `review`), `tests/apply/test_assist_visa.py` (the table lists "Salary"; the check is that no CHECK line does),
+   `tests/test_autoapply.py` (`Run.run(failures=)`). **Unverified:** a live Ashby / Lever form and a real model: drafts from a real model may fail the guard more often than MockLLM's, and then the
+   person is asked (required) or the optional field stays empty; the wording of the real ElevenLabs questions past their first sentence is unseen (library matching uses the first sentence as well).

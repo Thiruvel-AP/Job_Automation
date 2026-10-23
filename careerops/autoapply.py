@@ -27,7 +27,7 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, verify
+from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, formloop, verify
 from .apply import visa as visa_mod
 from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
@@ -215,6 +215,8 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
     ctx.combobox = _combobox
     if ctx.tracker is None:
         ctx.tracker = verify.Tracker()
+    loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, ctx.cv_pdf))
+    loop.begin(page)                                       # every field of the form, printed before anything is filled
     if upload_files(page, ctx):
         if not verify.wait_quiet(page, quiet_ms):
             ctx.out(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back after)")
@@ -222,11 +224,12 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
         if refused:                                          # a failed attempt (apply/failures.py), not something to try again
             raise NeedsUser(f"the form refused an upload: {refused}")
     seen: set = set()
-    for el in page.query_selector_all("input, textarea, select"):
+
+    def fill_element(el) -> None:                         # one element of the form (also used for a field that appears after an answer)
         tag = el.evaluate("e => e.tagName").lower()
         typ = (el.get_attribute("type") or ("text" if tag == "input" else tag)).lower()
         if typ in ("hidden", "submit", "button", "image", "reset", "file") or not el.is_visible():
-            continue
+            return
         label = (el.evaluate(LABEL_JS) or "").strip()
         short = label.split("|")[0].strip()[:60] or typ
         question = _norm(el.evaluate(QUESTION_JS) if typ == "radio" else label.split("|")[0]).rstrip(" *")
@@ -237,11 +240,11 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
                 el.fill(ctx.letter_text)
                 ctx.track(el, short, "text", ctx.letter_text)
                 ctx.result.filled.append(f"{short} <- cover letter text")
-            continue
+            return
 
         if VISA_FIELD.search(f"{question} {label}"):
             _visa_field(page, el, typ, question, ctx, seen, required)
-            continue
+            return
 
         r = ctx.book.resolve(question, ctx.job)
         if (r is None or not r.known) and eo.is_eo_field(f"{question} {label}") and tag == "select":
@@ -249,8 +252,13 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
             picked, _, _ = _answer_eo(page, el, typ, entry, track=lambda e, kind, value, q=question: ctx.track(e, q, kind, value))
             if picked:
                 ctx.result.filled.append(f"{question[:80]} -> {picked} (applicant.yaml)")
-                continue
+                return
         filler.fill_field(page, el, tag, typ, label, short, question, required, ctx, seen)       # standard fields, then answers.yaml
+
+    loop.handle_new = fill_element
+    for el in page.query_selector_all("input, textarea, select"):
+        fill_element(el)
+    loop.run(page)                                         # the free-text fields, one by one, the form scanned again after each; then the person's y / e
 
 
 def verify_filled(page, ctx: Ctx) -> list[str]:
@@ -371,7 +379,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     def hand_off(why: str) -> None:
         result.handed_off = True
         if handoff is not None:
-            handoff.run(job, rep, applicant, ctx.book, plan, url, why, result.filled)
+            handoff.run(job, rep, applicant, ctx.book, plan, url, why, result.filled, drafts=ctx.loop.paste_drafts() if ctx.loop else None)
         else:
             out(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
 

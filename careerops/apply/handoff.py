@@ -5,7 +5,8 @@ What happens, and only this:
   2. the CV (and letter) PDF paths are printed, and the first answer (the full name) is put on the clipboard with `clip.exe`;
   3. every answer that can be prepared from the person's own files is written to `answers_to_paste.txt` in the job's output folder, ready to
      copy: applicant.yaml (name, e-mail, phone, links, location, right to work / sponsorship, equal opportunities), the answers of answers.yaml
-     that have an answer for this job, the approved free-text answers of this job (answer library), the cover letter text, and whatever the form
+     that have an answer for this job, the approved free-text answers of this job (answer library), the free-text answers the form loop drafted for
+     this form (apply/formloop.py; marked NEW DRAFT and WEAK EVIDENCE while you have not approved them), the cover letter text, and whatever the form
      had been filled with before the stop. Nothing is worked out or invented here; an answer that is blank in those files is listed as blank;
   4. the host is recorded in paths.live/handoff_hosts.json: the next job on that host goes straight to steps 1-3 and no automated browser is
      opened there. Delete the host's entry from that file to let the program try it again. A host listed in settings.yaml `apply.handoff_hosts`
@@ -116,8 +117,9 @@ class Handoff:
 
     # ---- the hand-off
     def run(self, job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], book: answers_mod.AnswerBook | None, plan: Any,
-            url: str, reason: str, filled: list[str] | None = None, remember: bool = True) -> Path | None:
-        """Open `url` for the person, print the file paths and write answers_to_paste.txt in the job's output folder (its path is returned)."""
+            url: str, reason: str, filled: list[str] | None = None, remember: bool = True, drafts: list[dict] | None = None) -> Path | None:
+        """Open `url` for the person, print the file paths and write answers_to_paste.txt in the job's output folder (its path is returned).
+        `drafts`: the free-text answers the form loop drafted for this form (`FormLoop.paste_drafts()`)."""
         job = dict(job)                               # a sqlite3.Row has no .get
         if remember:
             self.record(url, reason, str(job.get("id") or ""))
@@ -132,7 +134,7 @@ class Handoff:
         path = Path(folder) / PASTE_FILE
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(paste_text(job, rep, applicant, book, plan, url, reason, filled or [], self.settings), encoding="utf-8", newline="\n")
+            path.write_text(paste_text(job, rep, applicant, book, plan, url, reason, filled or [], self.settings, drafts), encoding="utf-8", newline="\n")
         except OSError as e:
             self.out(f"  could not write {path}: {e}")
             return None
@@ -145,7 +147,7 @@ class Handoff:
 
 
 def paste_text(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], book: answers_mod.AnswerBook | None, plan: Any,
-               url: str, reason: str, filled: list[str], settings=None) -> str:
+               url: str, reason: str, filled: list[str], settings=None, drafts: list[dict] | None = None) -> str:
     """The text of answers_to_paste.txt: every answer prepared from the person's own files, one block each. Nothing is made up."""
     book = book or answers_mod.AnswerBook()
     out = [f"{job.get('company', '')} | {job.get('title', '')}", f"Apply: {url}", f"Why this file exists: {reason}", "",
@@ -179,6 +181,13 @@ def paste_text(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mappin
         out += ["", "FREE-TEXT ANSWERS YOU APPROVED FOR THIS JOB"]
         for q, a in approved:
             out += [f"  Q: {q}", f"  A: {a}", ""]
+    known = {a for _, a in approved}
+    fresh = [d for d in drafts or [] if d.get("answer") and d["answer"] not in known]
+    if fresh:
+        out += ["", "FREE-TEXT ANSWERS DRAFTED FOR THIS FORM (from your fact bank; check each one before you paste it)"]
+        for d in fresh:
+            out += [f"  Q: {d.get('question', '')}", f"  A: {d['answer']}",
+                    f"  [{d.get('status', 'NEW DRAFT')}]" + (f" [{d['weak']}]" if d.get("weak") else ""), ""]
     letter = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or [])
     if letter:
         out += ["", "COVER LETTER TEXT", letter]

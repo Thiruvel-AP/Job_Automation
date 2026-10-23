@@ -149,7 +149,7 @@ def test_other_never_fill_matches_stay_empty_and_are_orange_not_visa_coloured(pa
     assert page.input_value("#salary") == "" and page.input_value("#nat") == ""
     assert "Salary expectations" in r["manual"] and "Nationality" in r["manual"]
     assert _outline(page, "#salary") == "rgb(255, 165, 0)" and _outline(page, "#nat") == "rgb(255, 165, 0)"
-    assert "Salary" not in capsys.readouterr().out                                        # not a visa field: no CHECK line
+    assert not [l for l in capsys.readouterr().out.splitlines() if "Salary" in l and "CHECK" in l]       # not a visa field: no CHECK line (the field table lists it)
 
 
 def test_an_existing_answer_in_a_visa_text_box_is_not_overwritten(page, applicant, capsys):

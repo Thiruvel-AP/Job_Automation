@@ -6,7 +6,9 @@ through `fill_field`, so a form gets the same answers whichever of them opens it
   2. everything else from the user's answers.yaml (apply/answers.py): text boxes, drop-downs, radio groups, check boxes, script-built
      drop-downs. An answer is the user's own words or one of the options they listed; nothing is worked out, guessed or generated.
 
-A free-text question that no answers.yaml entry matches ("Describe an LLM feature you have shipped...") is left empty: for the person.
+A free-text question that no answers.yaml entry matches ("Describe an LLM feature you have shipped...", required or not) is not answered here: with
+`Ctx.loop` set (apply/formloop.py, which both callers set) it is left for the form loop, which drafts it from the fact bank once the whole form has
+been scanned; without a loop a REQUIRED one is drafted inline by `Ctx.freetext` as before and an optional one stays empty.
 What differs between the two callers is only what happens to a REQUIRED question nobody has answered: `Ctx.strict` (auto-apply) asks in the
 terminal and stops the run if the person gives no answer; the assist (not strict) leaves it empty and records it, and its own check
 marks it red for the person.
@@ -107,6 +109,7 @@ class Ctx:
     combobox: Callable[..., None] | None = None       # fills a script-built drop-down (picks an option = a click, which only autoapply.py may do)
     freetext: Any = None                              # apply/freetext.FreeText of this job: drafts, guards and asks about a required free-text question
     tracker: Any = None                               # apply/verify.Tracker: every field filled is noted, then read back once the form is filled
+    loop: Any = None                                  # apply/formloop.FormLoop of this form: it answers the free-text fields (required or optional)
 
     def track(self, el, label: str, kind: str = "text", value: str = "") -> None:
         """Note a field this run filled, so that it is read back (and filled once more if the form emptied it) before anyone is told it is done."""
@@ -313,6 +316,8 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
         select(el, question, ctx, required)
     elif typ in TEXT_TYPES:
         maxlength = el.get_attribute("maxlength")
+        if ctx.loop is not None and freetext_mod.is_free_text(typ, maxlength) and not _answered(ctx, question):
+            return                                                              # the form loop drafts it (or asks) once the whole form is scanned
         if ctx.freetext is not None and required and freetext_mod.is_free_text(typ, maxlength) and not _answered(ctx, question):
             # a long required question answers.yaml has no answer for: drafted from the fact bank, guarded, and used only when the person says y
             if not readable_question(question):                       # never skip a required box without saying so
