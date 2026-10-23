@@ -29,7 +29,8 @@ from ..discovery import manual
 SKIPPED, APPLIED = "skipped", "applied"
 DECISIONS = (SKIPPED, APPLIED)
 # live's result statuses and the database statuses that are a decision
-STATUS_DECISION = {"skipped": SKIPPED, "skipped (rules)": SKIPPED, "applied": APPLIED, "applied (archive incomplete)": APPLIED}
+STATUS_DECISION = {"skipped": SKIPPED, "skipped (rules)": SKIPPED, "skipped (user)": SKIPPED, "applied": APPLIED,
+                   "applied (archive incomplete)": APPLIED}
 Key = tuple[str, str]
 
 

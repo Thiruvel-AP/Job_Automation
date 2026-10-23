@@ -92,6 +92,7 @@ from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
 from .discovery import register as sponsors
 from .review import judge
 from .review import workflow as review
+from .review import factsave
 from . import mockroot
 from .config import load_settings, load_yaml
 from .db import DB, now
@@ -551,11 +552,12 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
 
 
 def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False,
-                re_extract: bool = False) -> None:
+                re_extract: bool = False, boost: list[str] | None = None) -> None:
     """Tailor these jobs one after the other (the loop `careerops tailor` and `careerops live` share). Each job ends as
     needs_review, letter_pending, error, or — when the day's token budget is short — stays as it was. A job's keywords
     are extracted once and kept in its record: a job tailored again reuses them (no extract_keywords call, so the same
-    keyword list and ceiling) unless `re_extract` (--re-extract) or its JD has changed."""
+    keyword list and ceiling) unless `re_extract` (--re-extract) or its JD has changed. `boost`: JD keywords the first attempt ranks first (review's
+    `r` and `f`); `fb` is then the job's own bank, the real one plus the facts typed for it."""
     from .tailoring.freeze import frozen_for
     from .tailoring.tailor import letter_summary, tailor_job
 
@@ -580,7 +582,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             print(f"  keywords: extracting again ({why_not or '--re-extract'})")
         try:
             rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), frozen, one_page=one_page,
-                             on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec))
+                             on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec), boost=boost)
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
@@ -644,9 +646,20 @@ def cmd_tailor(args):
                 re_extract=getattr(args, "re_extract", False))
 
 
+def retailor_hook(db: DB, s, args):
+    """What review's `r` and `f` call to tailor one job again: `retailor(job id, the job's fact bank, keywords to rank first)`. The model is
+    made only when it is first needed; the job's keywords are the ones frozen when it was first tailored, so S and C stay comparable."""
+    holder: dict = {}
+
+    def retailor(jid: str, bank: dict, boost: list[str]) -> None:
+        llm = holder.setdefault("llm", _llm(args, s, db))
+        tailor_jobs(db, s, bank, llm, [db.job(jid)], mock=getattr(args, "mock", False), boost=boost)
+    return retailor
+
+
 def cmd_review(args):
     s, db = _ctx(args)
-    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db))
+    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db), retailor=retailor_hook(db, s, args))
 
 
 def _fail(msg: str) -> None:
@@ -785,7 +798,18 @@ def cmd_live(args):
 
     def review_it(jid: str) -> str:
         return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelgnowsq",
-                                 skip_means_no=True)           # live has no reject key: a skipped job is a "no" for the judge log
+                                 skip_means_no=True,           # live has no reject key: a skipped job is a "no" for the judge log
+                                 retailor=lambda j, bank, boost: tailor_jobs(db, s, bank, llm, [db.job(j)], mock=args.mock, boost=boost))
+
+    def save_facts_it(jid: str, sent: bool, why: str) -> None:
+        job = db.job(jid)
+        if job is None or not job["out_dir"]:
+            return
+        try:
+            rep = review.load_report(job)
+        except (OSError, ValueError):
+            return
+        factsave.offer(s, fb, jid, rep, input, sent=sent, why=why)
 
     def preflight_it(jid: str) -> None:
         job = db.job(jid)
@@ -832,7 +856,7 @@ def cmd_live(args):
               + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else "")      # resume: not --retailor
               + (" --auto" if args.auto else "") + (" --no-submit" if args.no_submit else "") + (" --confirm" if args.confirm else ""))
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
-                             mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it),
+                             mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it, save_facts=save_facts_it),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
                 fresh=getattr(args, "fresh", False)).run()
     usage.report(db, s)
@@ -892,6 +916,10 @@ def cmd_mark_applied(args):
             print("\n".join(decided.settle(db, s, args.id, decided.APPLIED).lines()))
         except decided.DecidedError as e:
             print(f"  JD files not moved: {e}")
+        try:                                              # facts typed in review for this job: keep them in the fact bank? (a `y` for each)
+            factsave.offer(s, load_yaml(s.path("fact_bank")), args.id, rep, input, sent=True)
+        except (EOFError, KeyboardInterrupt):
+            print("  (saving your typed facts was cut short: they are still provisional, for this job only)")
     export(db, s.path("excel"), floor=s["roles"]["floor"])
     if not ok:
         sys.exit(1)

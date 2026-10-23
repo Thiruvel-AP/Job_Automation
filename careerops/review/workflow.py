@@ -19,8 +19,9 @@ from urllib.parse import urlparse
 
 import yaml
 
-from .. import ats
+from .. import ats, bands
 from .. import note as note_mod
+from ..apply import decided
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
 from ..discovery import applykind, freshness, priority as prio
@@ -33,7 +34,8 @@ from ..tailoring.scorer import Keyword, score
 from ..tailoring import company_letter
 from ..tailoring import letters as letters_mod
 from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
-from . import judge, letter_edit
+from ..tailoring import provisional as prov
+from . import addfacts, gaps, judge, letter_edit
 
 CONFIRM_FALLBACK = "send fallback"
 CONFIRM_NO_LETTER = "no letter"
@@ -230,6 +232,33 @@ def ats_lines(rep: dict) -> list[str]:
     return out
 
 
+def gap_lines(rep: dict, gap: gaps.GapReport) -> list[str]:
+    """The gap report (review/gaps.py) in place of the plain ATS lines, for a job in the review band: its header first, then the CV + letter
+    numbers and any keyword the CV only mentions as 'not ...', then the missing keywords and the two sums."""
+    a = rep.get("ats") or {}
+    lines = gap.lines()
+    mid = []
+    nums = [f"CV + letter {a['combined']:.1f}%" if a.get("combined") is not None else "",
+            f"letter alone {a['letter']:.1f}% (not gated)" if a.get("letter") is not None else ""]
+    if any(nums):
+        mid.append(" | ".join(n for n in nums if n))
+    if a.get("negated"):
+        mid.append("  in the CV only as 'not ...' (not counted): " + ", ".join(a["negated"]))
+    return [lines[0], *mid, *lines[1:]]
+
+
+def provisional_lines(rep: dict) -> list[str]:
+    """The facts the user typed for this job (review's `f`) that this tailoring was given: the ones the CV uses are labelled [provisional]."""
+    facts = rep.get("provisional") or []
+    if not facts:
+        return []
+    out = ["Facts you typed for this job (not in the fact bank; they count for this job only until you save them):"]
+    for f in facts:
+        out.append(f"  [provisional] {f['text']}  (counts for {f['keyword']})" if f.get("on_cv")
+                   else f"  {f['text']}  (typed for {f['keyword']}; not on the CV)")
+    return out
+
+
 def hook_lines(rep: dict) -> list[str]:
     """The hook (hook.py) as the review screen shows it: the problem, the proof bullet and its number, the headline, and anything
     that did not land on the CV."""
@@ -287,8 +316,12 @@ def pdf_created(path) -> str:
         return ""
 
 
-def summary(job, rep: dict, settings=None) -> str:
+def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
+    """The review screen. With `fb` (the fact bank, plus the job's provisional facts) a job in the review band gets the gap report in place of
+    the plain ATS header."""
     f = rep["final"]
+    gap = (gaps.build(rep, fb, bands.config(settings)) if settings is not None and fb is not None and rep.get("ats")
+           and gaps.applies(rep, bands.config(settings)) else None)
     all_flags = json.loads(job["flags"] or "[]")
     flags = [x for x in all_flags if not is_sponsor_flag(x)]          # sponsor-register notes are information, shown on the Sponsor line
     sponsor_notes = [x for x in all_flags if is_sponsor_flag(x)]
@@ -311,7 +344,8 @@ def summary(job, rep: dict, settings=None) -> str:
         f"ATS literal {f['score']:.0%} | stemmed {f['score_stemmed']:.0%} | honest ceiling {rep['ceiling']:.0%} "
         f"| band: {f['band']} | pages {f['pages']}"
         + f" | attempts {len(rep['attempts'])}",
-        *ats_lines(rep),
+        *(gap_lines(rep, gap) if gap is not None else ats_lines(rep)),
+        *provisional_lines(rep),
         *hook_lines(rep),
         *letter_lines(rep),
         *fill_lines(rep, settings),
@@ -351,11 +385,11 @@ def summary(job, rep: dict, settings=None) -> str:
     if rep.get("context_terms"):
         lines.append("Context terms (team / product-area / org names; not scored, not in the ceiling): "
                      + ", ".join(c["term"] for c in rep["context_terms"]))
-    if rep.get("possible_evidence"):
+    if rep.get("possible_evidence") and gap is None:                 # the gap report lists them itself
         lines.append("Possible evidence — you decide (nothing is claimed; add the word to the fact bank if it is true):")
         for term, via in rep["possible_evidence"].items():
             lines.append(f"  {term} <- " + "; ".join(f"{v['via']} ({', '.join(v['where'][:2])})" for v in via))
-    if rep["genuine_gaps"]:
+    if rep["genuine_gaps"] and gap is None:
         lines.append("Genuine gaps (no evidence, left out): " + ", ".join(rep["genuine_gaps"][:25]))
     if f["wording_misses"]:
         lines.append("Wording-only misses (substance present): " + ", ".join(f["wording_misses"][:20]))
@@ -561,6 +595,10 @@ MENU = {"a": "[a]pprove", "e": "[e]dit", "r": "[r]eject", "l": "[l]etter regener
         "n": "[n]ote", "o": "[o]pen PDFs", "w": "[w] open apply page", "s": "[s]kip", "q": "[q]uit"}
 MENU_ORDER = "aerlgnowsq"
 HOOK_L = "[l]etter A/B/none"              # `l` in hook mode: the label shown instead of MENU["l"]
+GAP_MENU = ("[a] apply as is   [s] skip   [r] re-tailor with the claimable points forced in",
+            "[f] add facts     [o] open PDF   [q] quit")      # the choices for a job in the review band (the gap report); `r` is not reject here
+GAP_ALSO = "elngw"                                          # the other keys still work in that prompt; listed on a line of their own
+SKIPPED_USER = "skipped (user)"                             # review_job's answer to `s` at the gap report; live files the JD under jds_done/skipped/
 
 
 def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge.Verdict | None:
@@ -586,22 +624,39 @@ def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge
 
 
 def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlgnowsq",
-               skip_means_no: bool = False) -> str:
-    """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'quit'. `allow` names the choices
+               skip_means_no: bool = False, retailor=None) -> str:
+    """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'skipped (user)' | 'quit'. `allow` names the choices
     offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, w open the apply page in the browser, s skip, q quit); `ask` answers the
     prompts (default: input). A skip changes nothing in the database: what a skip means is the caller's business; with
     `skip_means_no` (live: a skipped job is finished) the judge log records it as a rejection.
 
     review.judge (judge.py): the verdict is printed under the summary and logged beside your decision. In `gate` mode a
     judge yes approves the job here without the prompt, unless it has FLAGS or its letter is a fallback or was lost to
-    letter.on_failure (those keep their deliberate confirmation); raises judge.GateRefused while the log has not earned gate."""
+    letter.on_failure (those keep their deliberate confirmation); raises judge.GateRefused while the log has not earned gate.
+
+    A job in the review band (50 <= strict S < 70, or the "CV under-uses the fact bank" rescue) gets the gap report (review/gaps.py) and its own
+    choices (GAP_MENU): `r` re-tailors once with the claimable keywords ranked first, `f` asks about the top gap keywords, keeps what the user
+    types as provisional facts (data/facts/proposed.yaml, never the fact bank) and re-tailors with them, `s` answers 'skipped (user)'. Both
+    re-tailorings go through `retailor(job id, fact bank for this job, keywords to rank first)`, which tailors and records the job (cli.py)."""
     ask = ask or input
     prefs = settings.path("preferences")
     mode = judge.judge_mode(settings)
     if mode == "gate":
         judge.require_gate(settings)
     rep = load_report(job)
-    print(summary(job, rep, settings))
+    store, band = prov.store(settings), bands.config(settings)
+
+    def view() -> dict:
+        """The fact bank as this job sees it: the real one plus the facts typed for this job, marked provisional."""
+        return prov.augment(fb, store.for_job(job["id"]))[0]
+
+    def show() -> str:
+        """The review screen of this version of the job: with the gap report in the review band, the plain header elsewhere."""
+        if rep.get("ats") and gaps.applies(rep, band):
+            return summary(job, rep, settings, fb=view())
+        return summary(job, rep, settings)
+
+    print(show())
     verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)
     if (mode == "gate" and verdict is not None and verdict.yes
             and not [x for x in json.loads(job["flags"] or "[]") if not is_sponsor_flag(x)]
@@ -612,11 +667,57 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         print("  Judge gate: approved without the prompt (judge yes, no flags). Whether to open the form is still yours.")
         contacts_step(db, job, settings, ask)
         return "approved"
-    hook_mode = bool(rep.get("letters"))
-    menu = "  ".join((HOOK_L if hook_mode and c == "l" else MENU[c]) for c in MENU_ORDER if c in allow and (c != "g" or hook_mode))
+
+    def re_tailor(boost: list[str]) -> bool | None:
+        """One re-tailoring of this job through the `retailor` hook (the bank given is this job's: the real one plus its provisional facts).
+        True = the new tailoring is shown; False = nothing changed; None = the job cannot go on now (its letter is pending: quit)."""
+        nonlocal job, rep, verdict
+        if retailor is None:
+            print("  no re-tailoring is available in this run")
+            return False
+        bank, notes = prov.augment(fb, store.for_job(job["id"]))
+        for n in notes:
+            print("  " + n)
+        old = rep.get("ats") or {}
+        retailor(job["id"], bank, list(boost))
+        job = db.job(job["id"])
+        status = job["status"]
+        if status == "letter_pending":
+            print("  The CV is re-tailored but its letter is pending (no provider has budget now); run live again later to finish it.")
+            return None
+        if status == "error":
+            why = job["reason"] or "unknown error"
+            db.update_job(job["id"], status="needs_review", reason=None)
+            job = db.job(job["id"])
+            print(f"  re-tailoring failed ({why}); the earlier tailoring stays.")
+            return False
+        if status == bands.ATS_SKIP:                                  # under the bands after all: this is the user's call, not an automatic skip
+            db.update_job(job["id"], status="needs_review", reason=None)
+            job = db.job(job["id"])
+            print("  The re-tailored CV is under the ATS band; it is still yours to decide.")
+        rep = load_report(job)
+        new = rep.get("ats") or {}
+        print(f"  re-tailored: ATS strict {bands.num(old.get('strict', 0))} -> {bands.num(new.get('strict', 0))}, "
+              f"ceiling {bands.num(old.get('ceiling', 0))} -> {bands.num(new.get('ceiling', 0))}")
+        print(show())
+        verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the CV changed: judge this version
+        return True
+
     while True:
-        c = ask(f"{menu} > ").strip().lower()
-        if c not in allow:
+        hook_mode = bool(rep.get("letters"))
+        gap = gaps.build(rep, view(), band) if rep.get("ats") and gaps.applies(rep, band) else None
+        if gap is None:
+            allowed = set(allow)
+            menu = "  ".join((HOOK_L if hook_mode and k == "l" else MENU[k]) for k in MENU_ORDER if k in allow and (k != "g" or hook_mode))
+            c = ask(f"{menu} > ").strip().lower()
+        else:
+            allowed = (set(allow) - {"r"}) | {"r", "f"}
+            print("\n".join(GAP_MENU))
+            more = [(HOOK_L if hook_mode and k == "l" else MENU[k]) for k in GAP_ALSO if k in allow and (k != "g" or hook_mode)]
+            if more:
+                print("also: " + "  ".join(more))
+            c = ask("> ").strip().lower()
+        if c not in allowed:
             continue
         if c == "o":
             open_file(rep["cv_pdf"])
@@ -671,9 +772,22 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 print(f"  letter NOT regenerated: {e}")
                 continue
             job = db.job(job["id"])
-            print(summary(job, rep, settings))
+            print(show())
             usage.report(db, settings)
             verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
+        elif c == "r" and gap is not None:
+            if gap.claimable_terms():
+                if re_tailor(gap.claimable_terms()) is None:
+                    return "quit"
+            else:
+                print("  nothing claimable is missing: only a new fact (f) can add points")
+        elif c == "f" and gap is not None:
+            facts = addfacts.collect(ask, gap, fb, store, job["id"])
+            if not facts:
+                print("  nothing typed: nothing changed")
+                continue
+            if re_tailor(gap.claimable_terms() + [f.keyword for f in facts]) is None:
+                return "quit"
         elif c == "r":
             reason = ask("reason: ").strip() or "unspecified"
             reject(db, job, rep, prefs, reason)
@@ -683,7 +797,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 ask("Edit the [c]v or the [l]etter? (enter = cv) ").strip().lower() in ("l", "letter"):
             rep = letter_edit.edit_letter(db, job, rep, fb, settings, ask)
             job = db.job(job["id"])
-            print(summary(job, rep, settings))
+            print(show())
             verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "e":
             path = Path(rep["out_dir"]) / "edit.yaml"
@@ -699,14 +813,29 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         elif c == "s":
             if skip_means_no:
                 judge.log_decision(settings, job, rep, verdict, "reject", "skipped in live review")
-            return "skipped"
+            return SKIPPED_USER if gap is not None else "skipped"
         elif c == "q":
             return "quit"
 
 
-def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None) -> None:
+def skip_user(db: DB, settings, job_id: str) -> None:
+    """`s` at the gap report outside live: the job is skipped (reason 'skipped (user)'), and so is every copy of it; their JD files go to
+    jds_done/skipped/ (apply/decided.py)."""
+    db.update_job(job_id, status=decided.SKIPPED, reason=SKIPPED_USER)
+    db.log(job_id, "review", SKIPPED_USER)
+    try:
+        for line in decided.settle(db, settings, job_id, decided.SKIPPED).lines():
+            print("  " + line)
+    except decided.DecidedError as e:
+        print(f"  JD files not moved: {e}")
+
+
+def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None, retailor=None) -> None:
     queue = order(db.jobs("needs_review"), settings, tailored=True)[:limit]
     print(f"{len(queue)} job(s) waiting for review.")
     for job in queue:
-        if review_job(db, job, settings, fb, make_llm) == "quit":
+        result = review_job(db, job, settings, fb, make_llm, retailor=retailor)
+        if result == SKIPPED_USER:
+            skip_user(db, settings, job["id"])
+        if result == "quit":
             return

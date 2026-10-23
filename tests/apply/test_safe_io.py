@@ -75,6 +75,8 @@ ALLOWED = {
     ("apply/live.py", "save"): "State.save swaps in paths.live/state.json.tmp, a file this run just wrote",
     ("apply/decided.py", "move_file"): "moves a JD .txt between the inbox and paths.jds_done/skipped|applied (a decision covers every "
                                        "copy of the job); refuses any path in or under the archive roots and never overwrites",
+    ("factbank_append.py", "_write_atomic"): "os.replace of fact_bank.yaml.tmp (just written) over the fact bank file (fact_bank.yaml): the one writer of the fact bank, "
+                                             "after the user's y, a dated backup and a validation",
     ("apply/decided.py", "_reopen"): "swaps in paths.live/state.json.tmp, a file this call just wrote",
 }
 

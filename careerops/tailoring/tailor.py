@@ -10,7 +10,7 @@ import time
 from dataclasses import asdict, replace as dc_replace
 from datetime import date
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from .. import ats, bands
 from .. import hook as hooks
@@ -29,6 +29,7 @@ from .grounding import (FILLER_WORDS, avoid_words, grounding_problems, hook_link
 from .context_terms import model_terms, split_context
 from .families import possible_evidence
 from . import freeze
+from .provisional import provisional_bullets
 from . import letters as letters_mod
 from . import profile as profile_mod
 from . import typography
@@ -655,7 +656,7 @@ def letter_summary(letter: dict) -> str:
 MIN_PROJECTS_KEPT = 2           # the shrink loop leaves whole projects alone down to this many until the roles have given up their extra bullets
 
 
-def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: str | None = None) -> bool:
+def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: str | set[str] | None = None) -> bool:
     """Drop the least keyword-relevant bullet (or, at step 3, a whole project), in this order, each step only once the one before has
     nothing left to give:
       1. the layout's floors: the newest experience entry keeps `layout.first[0]` bullets, the other entries `layout.other[0]`, a project
@@ -666,7 +667,9 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
       4. the least relevant bullet anywhere, but a recent role keeps its two
       5. whole projects go down to the last one, then every entry may fall to its last bullet
     So a role that is recent is trimmed to two bullets only after the projects have given up theirs. `protect` (the hook's proof bullet)
-    is never dropped, nor the project that holds it. False if nothing is left to drop."""
+    is never dropped, nor the project that holds it; nor is a provisional bullet (a fact the user typed for this job): `protect` is one id or
+    several. False if nothing is left to drop."""
+    protected = {protect} if isinstance(protect, str) else set(protect or ())
     terms = [[norm_literal(w) for w in k.members()] for k in kws]
     first = ctx["experience"][0] if ctx["experience"] else None
     floor_proj = layout.project_bullets[0] if layout.project_bullets else 1
@@ -681,7 +684,7 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
         return max(floor, layout.recent_min if id(e) in recent else 0)
 
     def drop_project(keep: int) -> bool:
-        gone = [(sum(relevance(b) for b in p["bullets"]), -i, p) for i, p in enumerate(ctx["projects"]) if protect not in p["bullet_ids"]]
+        gone = [(sum(relevance(b) for b in p["bullets"]), -i, p) for i, p in enumerate(ctx["projects"]) if not protected & set(p["bullet_ids"])]
         if len(ctx["projects"]) <= keep or not gone:
             return False
         worst = min(gone, key=lambda g: g[:2])[2]
@@ -705,7 +708,7 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
                 if len(e["bullets"]) <= max(1, step(sec, e)):
                     continue
                 for i, b in enumerate(e["bullets"]):
-                    if e["bullet_ids"][i] == protect:
+                    if e["bullet_ids"][i] in protected:
                         continue
                     s = relevance(b)
                     if worst is None or s < worst[0]:
@@ -955,10 +958,37 @@ def fill_tail(ctx: dict, fb: dict, rerender: Callable[[], tuple[Path, int]], min
     return stats
 
 
-def _keyword_boost(kws: list[Keyword], fixable: set[str]) -> list[Keyword]:
-    """The keywords with the ones the fact bank evidences but the CV missed counted double when ranking bullets: how a
-    below-band attempt differs from the last (selection is deterministic, so an identical retry would be wasted)."""
-    return [Keyword(k.term, k.weight * 2, k.required, list(k.alts)) if k.term in fixable else k for k in kws]
+def force_provisional(fb: dict, sel: dict) -> dict:
+    """`sel` (select_cv's answer) with every provisional bullet of `fb` on it: a fact the user typed for this job is on the CV (its entry gets the
+    bullet; a project the selection did not pick is added with it). Nothing else changes. `fb` without provisional bullets: `sel` itself."""
+    ids = {b["id"] for b in provisional_bullets(fb)}
+    if not ids:
+        return sel
+    out = {"experience": {k: list(v) for k, v in sel["experience"].items()}, "projects": list(sel["projects"]),
+           "project_bullets": {p: list(v) for p, v in (sel.get("project_bullets") or {}).items()}}
+    for e in fb["experience"]:
+        for b in e["bullets"]:
+            if b["id"] in ids and b["id"] not in out["experience"].setdefault(e["id"], []):
+                out["experience"][e["id"]].append(b["id"])
+    for p in fb.get("projects", []):
+        mine = [b["id"] for b in p["bullets"] if b["id"] in ids]
+        if not mine:
+            continue
+        if p["id"] not in out["projects"]:
+            out["projects"].append(p["id"])
+        have = out["project_bullets"].setdefault(p["id"], [])
+        have.extend(i for i in mine if i not in have)
+    return out
+
+
+FORCE_FACTOR = 4          # review's `r`: the claimable keywords weigh this much more when the first attempt ranks bullets
+
+
+def _keyword_boost(kws: list[Keyword], fixable: set[str], factor: float = 2) -> list[Keyword]:
+    """The keywords with the ones the fact bank evidences but the CV missed counted double (or `factor` times) when ranking bullets: how a
+    below-band attempt differs from the last (selection is deterministic, so an identical retry would be wasted). Only the ranking sees the
+    heavier weights; the ATS score always uses the JD's own."""
+    return [Keyword(k.term, k.weight * factor, k.required, list(k.alts)) if k.term in fixable else k for k in kws]
 
 
 # ------------------------------------------------------------------ 3. cover letter
@@ -1578,17 +1608,19 @@ def swap_in(work: Path, final: Path, root: Path, out: Callable[[str], None] = pr
 
 
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
-               one_page: bool = False, on_extracted: Callable[[dict], None] | None = None) -> dict[str, Any]:
+               one_page: bool = False, on_extracted: Callable[[dict], None] | None = None,
+               boost: Iterable[str] | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
     earlier successful output folder exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
     analysis (freeze.record) as soon as the model has given it, before anything else can fail, unless `frozen` was used
-    or the model call failed (a taxonomy-only list is never frozen)."""
+    or the model call failed (a taxonomy-only list is never frozen). `boost` = JD keywords (terms) the first attempt ranks first: review's `r`
+    asks for the ones the fact bank evidences (FORCE_FACTOR); it moves the selection only, never the score."""
     final = out_root / folder_name(job)
     work = final.with_name(final.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
-        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted)
+        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted, boost)
         swap_in(work, final, out_root)                          # the earlier output goes (.old), or is copied over when Windows holds it
         _discard(final.with_name(final.name + ".failed"), out_root)    # superseded by this success
         return report
@@ -1644,7 +1676,7 @@ def hook_placement(ctx: dict, hk: hooks.Hook | None, text: str) -> dict:
 
 def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             frozen: dict | None = None, one_page: bool = False,
-            on_extracted: Callable[[dict], None] | None = None) -> dict[str, Any]:
+            on_extracted: Callable[[dict], None] | None = None, boost: Iterable[str] | None = None) -> dict[str, Any]:
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
@@ -1723,10 +1755,12 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body}
 
     jac = sc["bullet_dedupe_jaccard"]
-    ranking, best, cache = kws, None, {}
+    keep_ids = {b["id"] for b in provisional_bullets(fb)}               # typed facts: never shrunk away
+    forced = {k.term for k in kws if k.term.lower() in {str(t).lower() for t in boost or ()}}      # the JD's own spelling of each named term
+    ranking, best, cache = (_keyword_boost(kws, forced, FORCE_FACTOR) if forced else kws), None, {}
     for attempt in range(1, sc["max_attempts"] + 1):
         llm.attempt = attempt                                    # names this attempt's raw replies (tailor_profile-2.json)
-        picked = select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd)
+        picked = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd))
         rephrase_notes: list[str] = []
         if hk:           # the proof bullet is always on the CV (or the bullet that replaces it); no bullet next to the one it replaces
             sel, hk, proof_notes = reconcile_proof(fb, picked, hk, kws, jd)
@@ -1758,7 +1792,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
 
         pdf, pages = rerender()
         shrinks = 0
-        while pages > max_pages and _shrink(ctx, kws, layout, hk.proof_bullet_id if hk else None):
+        while pages > max_pages and _shrink(ctx, kws, layout, {*([hk.proof_bullet_id] if hk else []), *keep_ids}):
             pdf, pages = rerender()
             shrinks += 1
         fill: dict = {"added": [], "rejected_overflow": [], "renders": 0, "reached": None, "sections": [],
@@ -1841,7 +1875,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         # attempt picks the bullets that carry them. Selection is deterministic; an unchanged one would be wasted quota.
         fixable = {m for m in s.wording_misses + s.misses if m not in all_gaps}
         ranking = _keyword_boost(ranking, fixable)
-        again = select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd)
+        again = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd))
         if (reconcile_proof(fb, again, hk, kws, jd)[0] if hk else settle_selection(fb, again)[0]) == sel:   # the same selection (proof bullet included) is not asked again
             break
 
@@ -1881,6 +1915,10 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
         "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"],
         "needs_result": needs_result(fb, ctx),
+        "boosted": sorted(forced),
+        # the typed facts this tailoring was given (tailoring/provisional.py), and whether the CV uses each: [] for a bank with none
+        "provisional": [{"id": pb["id"], "keyword": (pb.get("terms") or [""])[0], "text": pb["text"], "on_cv": pb["id"] in chosen_ids}
+                        for pb in provisional_bullets(fb)],
         "lengths": {**rec["lengths"], "final": ({"headline_lines": fm.headline_lines, "profile_lines": fm.profile_lines,
                                                    "longest_bullet": max(fm.bullets, default=0)} if fm else None),
                     "links": link_issues},

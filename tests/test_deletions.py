@@ -23,6 +23,8 @@ ALLOWED = {
                                                "covers every copy of the job; `unskip` moves it back) to a name that does not exist yet; "
                                                "refuses any path in or under the archive roots"),
     ("apply/decided.py", "os.replace"): (1, "_reopen: swaps in paths.live/state.json.tmp, a file this call just wrote"),
+    ("factbank_append.py", "os.replace"): (1, "_write_atomic: swaps in fact_bank.yaml.tmp, a file this call just wrote, over the fact bank file (fact_bank.yaml): "
+                                              "the one writer of the fact bank, after the user's y, a dated backup and a validation (a failed one writes the backup back)"),
     ("apply/live.py", "os.replace"): (1, "State.save: swaps in paths.live/state.json.tmp, a file this run just wrote"),
     ("tailoring/render.py", ".unlink"): (1, "xelatex's own .aux/.log/.out next to the PDF it just built in this run's work folder"),
     ("tailoring/render.py", "os.replace"): (1, "renames this run's cv.pdf/cv.tex to their final names inside the same work folder"),

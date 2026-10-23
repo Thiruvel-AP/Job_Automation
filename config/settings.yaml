@@ -16,6 +16,7 @@ paths:
   answers: config/profile/answers.yaml    # your answers to application-form questions (autoapply reads it; only `save` at the prompt appends to it)
   letter_feedback: data/letters/feedback.jsonl   # what you typed after `l` in review (job id, text, date): runtime data, handed to the next letter draft
   answers_library: data/answers/library.jsonl   # free-text form answers YOU approved or wrote (apply/freetext.py): reused for a similar question; runtime data, never answers.yaml
+  facts_proposed: data/facts/proposed.yaml   # facts you typed in review (`f`) for a gap keyword: provisional for their own job until you save them to the fact bank after the job (tailoring/provisional.py); runtime data, never the fact bank itself (built-in default when the key is absent)
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies

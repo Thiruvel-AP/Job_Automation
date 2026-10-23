@@ -750,6 +750,45 @@ alone.
   provider or model whose daily token budget (`tpd`) has less than `llm.warn_budget_below` (0.2 = 20 %) left. The counts are kept in the database table
   `llm_task_usage`.
 
+### The gap report and typed facts (a job in the review band)
+
+A job whose strict CV score S is 50 to under 70 (or the "CV under-uses the fact bank" rescue) does not get the plain ATS header. It gets a **gap
+report**, computed from the scorer's own numbers:
+
+```
+ATS strict 56.3 | ceiling 78.8 | to reach 70 you need +13.7 points
+Missing from the CV (on CV? no), by weight; the gain is the points it adds if it gets onto the CV:
+  +6.3  Airflow (required, w=2)  gap
+  +3.1  dbt (preferred, w=1)  claimable: skills "SQL", bullet av3 (left off: page full)
+claimable total: +9.4 points (re-tailoring can win them)
+gap total: +12.5 points (each needs a new fact)
+```
+
+Every JD keyword the CV lacks, with its weight w and its gain g = 100 x w / sum(w), largest first. `claimable`: the fact bank evidences it; the skill
+or bullet is named and so is why it is not on the CV (`page full`, `rank #n` or `rank, <bullet> replaces it`, `guard`: the bullet's `terms:` say it
+but its text does not, and a rewording may not add a word). `gap`: the fact bank has nothing, so only a new fact can add the points (a term on your
+`deny_terms` is a gap too and is never asked about). The two totals add up to the points still to win; the "Possible evidence" lines are kept.
+
+```
+[a] apply as is   [s] skip   [r] re-tailor with the claimable points forced in
+[f] add facts     [o] open PDF   [q] quit            (also: [e]dit [l]etter [n]ote [w] apply page)
+```
+
+- `r` tailors the job once more with the claimable keywords ranked first (4x weight when the first attempt picks bullets; the score keeps the JD's
+  own weights) and shows the new S and C. It cannot add a word a bullet does not say.
+- `s` ends the job as `skipped (user)`: its JD goes to `jds_done/skipped/` like any skip.
+- `f` asks about the top 5 gap keywords one by one (`Airflow (+6.3): have you used it? Describe it in one line (where, what, result), or press enter to
+  skip.`). Enter skips and stores nothing. A line you type is stored word for word in `data/facts/proposed.yaml` with the keyword, the role or
+  project you name, the job id and the date, never in the fact bank, and the job is tailored again with the bank plus these facts, marked
+  `[provisional]` on the review screen. A provisional fact is a source for **its own job only** (every other job is tailored with a bank that does not
+  have it), is on the CV as your own words (never reworded) and is not used by the free-text answers of the application form.
+- **After the job** (applied, or not: your `x`, a hand-off, a skip, a dry run) every typed fact the CV used is offered: `Add to fact_bank.yaml under
+  <role/project>? "<text>" [y/N/e(dit)]`. `y`: `careerops/factbank_append.py` writes `config/profile/backups/fact_bank.<YYYYMMDD-HHMMSS>.yaml`, appends
+  the bullet (`<prefix><next number>`, `source: user_<date>`, `terms: [<keyword>]`; every other line of the file stays byte-identical), reloads the file
+  and puts the backup back if it does not validate (a duplicate id, a deny-listed term). `e`: you retype it, then the same question. `N`: it stays in
+  `proposed.yaml` marked `declined` and is never used again. When the CV was not sent the question says so (`NOT SENT: this CV was not sent`). A
+  `--mock` run never writes your real fact bank. `careerops mark-applied` offers the same after a hand-off.
+
 ### What the review screen shows besides the score
 
 - **Context terms**: team, product-area and organisation names in the JD (Growth, Payments, Fincrime, "product squad",

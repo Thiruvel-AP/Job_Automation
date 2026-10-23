@@ -1273,3 +1273,53 @@ Not verified: a real model's drafts (the guard may reject more than the mock sho
    company-letter tests build P3/P4 from the first bullet of each group; `test_letter_assembled.py` and `test_golden_anaplan.py` (hook-mode letters on a MockLLM CV that sits under the ATS bands)
    set permissive bands, and `test_letter_format.py` expects the range. Full suite, 8 shards by file: 3,814 passed, 0 failed. **Unverified:** a live `careerops live --dry-run --max 3` on the real data and a real Lever form (CLAUDE.md forbids the
    first from a task; the second needs a live site); `clip.exe` and `explorer.exe` are faked in the tests.
+
+
+## 5ah. Round 19 — the gap report, typed facts and saving them (2026-10-23) — **done** (offline tests; MockLLM; the live dry run on the real data is yours to run)
+
+What and why: a job in the review band (50 <= strict S < 70, or the rescue) used to get a bare "ATS ... ceiling ..." header and the user could only
+approve, edit or skip it. Now the review screen says exactly which keywords are missing, what each is worth, which the fact bank already backs and
+which need a new fact, and the user can act on it.
+
+1. **Gap report** (`review/gaps.py`, `workflow.summary(..., fb=)`, `gap_lines`). Header `ATS strict S | ceiling C | to reach 70 you need +D points`; a row
+   per JD keyword not in `rep["ats"]["hits"]` with w (required 2 / preferred 1, as scored) and g = 100 w / sum(w) (rounded half up: 1.25 prints 1.3),
+   largest first (a tie keeps the JD's order); `claimable` (`rep["claimable"]`: the keywords the bank backs) names the skills (`fb.skills`) and bullets (text
+   + `terms:`, the ceiling's own matcher with keyword-group synonyms) and why each bullet is not on the CV (`page full` = `fill.rejected_overflow`,
+   `rank #n` from `rep["ranking"]`, `rank, <id> replaces it` from `replaces:`, `guard`: it is on the CV but only its `terms:` say it); `gap`: no evidence.
+   `claimable total` = C - S, `gap total` = 100 - C, so they add up to 100 - S (a test on a fixture). A deny-listed term is a gap marked
+   `deny-listed`, never asked about. `gaps.applies` = band outcome review or rescue (a report without `band` is judged by its numbers). The later
+   "Possible evidence" block is part of the report; "Genuine gaps" is not printed twice.
+2. **Choices** (`review_job`, `GAP_MENU`). `a` approve, `s` returns `skipped (user)` (live: DB status `skipped`, reason `skipped (user)`, result status
+   `skipped (user)`, JD to `jds_done/skipped/`; `careerops review`: `review.skip_user`), `r` re-tailor, `f` add facts, `o`, `q`; the old `e l n w` keys
+   still work and are listed on an "also" line. `r` means re-tailor here, not reject. Both re-tailorings call `retailor(job id, the job's bank, keywords)`
+   (`cli.retailor_hook` -> `tailor_jobs(..., boost=)` -> `tailor_job(..., boost=)`; the job's frozen keywords are reused, so S and C compare), then print
+   `re-tailored: ATS strict A -> B, ceiling C -> D` and the new screen. A re-tailor that lands under the bands, fails or whose letter is pending never skips
+   the job on its own: it stays `needs_review` (a pending letter ends the session as `quit`).
+3. **`boost`** (`tailor.FORCE_FACTOR` = 4, `_keyword_boost(kws, fixable, factor)`): the first attempt ranks the named keywords at 4x weight; only the
+   ranking sees it, `report["keywords"]` and the score keep the JD's weights. `report["boosted"]` names them.
+4. **Typed facts** (`review/addfacts.py`, `tailoring/provisional.py`, `paths.facts_proposed` = `data/facts/proposed.yaml`, also a built-in default in
+   `config.DEFAULT_PATHS` and redirected by `--mock`). `f` asks `<kw> (+g): have you used it? Describe it in one line (where, what, result), or press
+   enter to skip. ` for the top 5 askable gaps (none deny-listed, none that already has a fact for this job), then which role or project (a number or
+   an id). An empty answer stores nothing; a sentence naming a deny-listed tool is refused; one that does not contain the keyword is kept with a note
+   (the ATS would not count it). Entry = `{keyword, text (as typed), target, job_id, date, status: provisional|declined|saved, saved_as}`.
+   `provisional.augment(fb, facts_of_this_job)` returns a COPY of the bank with each fact added as the last bullet of its target (`prov<n>`,
+   `provisional: true`, `verbatim: true`, `terms: [keyword]`); only `Store.for_job(job id)` feeds it, so another job's bank never has the fact and the claim
+   guard (which checks against the bullets of the bank it is given) has no such source there. `_tailor` forces every provisional bullet into the
+   selection (`force_provisional`) and `_shrink` never drops it; `report["provisional"]` = `[{id, keyword, text, on_cv}]`, and the review screen
+   labels the ones on the CV `[provisional]`. The free-text answers (`apply/freetext.py`) and the auto-apply gate are given the real bank, so a
+   provisional fact is never a source for them.
+5. **Saving** (`careerops/factbank_append.py`, `review/factsave.py`, `Hooks.save_facts`, `Live._offer_facts`, `cmd_mark_applied`). `append_fact(path, target,
+   text, keyword, confirmed="y")` is the only writer of the fact bank: anything but `y` raises `NotConfirmed` before a file is touched; the old bytes go to
+   `config/profile/backups/fact_bank.<stamp>.yaml` first (`xb`, never over an existing file; `-2` for a second in the same second); the block is inserted
+   as text after the entry's last bullet (file newline style kept, id = the entry's own prefix + highest number + 1, text as a JSON/YAML double-quoted
+   scalar); the result must load and have no NEW problem (`problems`: duplicate ids, a deny-listed term in a bullet, in its terms or in `skills.core`) or
+   the old bytes are written back and `AppendError` says why (the backup stays). `tests/test_fact_bank_single_writer.py` greps the package: no other
+   function that names the fact bank also writes a file, and `append_fact` is called only from `review/factsave.py` with `confirmed=`. `factsave.offer`
+   asks `Add to fact_bank.yaml under <id>: <title>, <org>? "<text>" [y/N/e(dit)]` for each fact the CV used, after `mark-applied`, and at the end of a
+   job that was NOT sent (`ready_not_submitted`, hand-off, skip, dry run), saying `NOT SENT: this CV was not sent (...)`; `N` marks it `declined`; it
+   prints what was added and the backup path, and refreshes the in-memory bank. A mock run says it keeps them provisional.
+6. **Tests** (+115): `tests/review/test_gap_report.py` (14), `test_gap_review.py` (20), `test_factsave.py` (22); `tests/test_factbank_append.py` (27),
+   `tests/test_fact_bank_single_writer.py` (3); `tests/tailoring/test_provisional.py` (14), `test_gap_tailoring.py` (7, xelatex); `tests/apply/test_live_facts.py`
+   (8). `tests/test_deletions.py` and `tests/apply/test_safe_io.py` list `factbank_append._write_atomic`'s `os.replace`. **Unverified:** a real
+   `careerops live --dry-run --max 3` on the real data and the real model (CLAUDE.md forbids running it from a task); the same screen was produced
+   on the mock root with a scratch JD (`live --mock`, MockLLM, the real bank read only: its sha256 was the same before and after).

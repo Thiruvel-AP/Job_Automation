@@ -195,6 +195,7 @@ def settings(tmp_path) -> Settings:
     # shipped one names OpenAI's Ashby board and 20 alert senders, which no other test wants to read or to fake.
     raw["paths"]["sources"] = str(tmp_path / "sources.yaml")
     raw["paths"]["calibration"] = str(tmp_path / "calibration")
+    raw["paths"]["facts_proposed"] = str(tmp_path / "facts" / "proposed.yaml")      # the facts a test user types in review: never data/facts/
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords
     (tmp_path / "Companies").mkdir()                      # the user's own folder: init never creates it
     (tmp_path / "Auto").mkdir()                           # only `careerops init` creates the real one

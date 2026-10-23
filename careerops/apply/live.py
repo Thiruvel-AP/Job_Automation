@@ -54,8 +54,16 @@ EXIT_ARCHIVE = 3              # the archive changed in a way the pipeline never 
 EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 
 HANDED_OFF = "handed_off"       # the form went to the person's own browser (apply/handoff.py); mark-applied records it once they submit
-FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", bands.ATS_SKIP, "rejected",
+SKIPPED_USER = "skipped (user)"   # `s` at the review prompt of a job in the review band (the gap report): the job is skipped, its JD filed in jds_done/skipped/
+FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", SKIPPED_USER, bands.ATS_SKIP, "rejected",
             "submit_unconfirmed", HANDED_OFF)
+SENT = ("applied", "applied (archive incomplete)")
+# the ends of a job after which the facts the user typed for it (review's `f`) are offered for the fact bank, and how each end is put when
+# the CV was NOT sent (review/factsave.py says so in so many words)
+UNSENT_WHY = {"ready_not_submitted": "you did not submit the form", HANDED_OFF: "the form went to your own browser, to submit by hand",
+              SKIPPED_USER: "you skipped this job", "skipped": "you skipped this job", "approved (dry run)": "dry run: no form was opened",
+              "auto_ready (dry run)": "dry run: no form was opened", "auto_filled (not submitted)": "the form was filled but not submitted",
+              "submit_unconfirmed": "the submit was clicked but never confirmed"}
 NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error", "needs_user", "auto_filled (not submitted)",
                 "auto_ready (dry run)")
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
@@ -80,6 +88,7 @@ class Hooks:
     mark_applied: Callable[[str, str | None], bool]     # archive + mark applied; False = archive incomplete
     auto_gate: "Callable[[str], Gates] | None" = None   # `--auto`: the gate for this job (apply/autogate.py); None = no auto-apply in this session
     auto_apply: "Callable[[str], AutoResult] | None" = None    # `--auto`: fill the form and, unless --no-submit, submit it (autoapply.py)
+    save_facts: "Callable[[str, bool, str], None] | None" = None    # end of a job: (job id, was the application sent, how it ended); offers the typed facts (review/factsave.py)
 
 
 @dataclass
@@ -444,7 +453,19 @@ class Live:
             return None
         if status in FINISHED and not self.dry_run:                                # 7. the JD moves to done/ (never in a dry run)
             self._finish_file(f, sha, entry, status)
+        self._offer_facts(r)                                                        # 8. facts typed for this job: keep them? (only if the CV used any)
         return r
+
+    def _offer_facts(self, r: JobResult) -> None:
+        """The end of a job that was worked through (applied, or not sent: the user's `x`, a hand-off, a skip): offer the facts typed for it in
+        review for the fact bank. The hook asks nothing when the CV used none. An interrupt here leaves them provisional; the job is final."""
+        if self.h.save_facts is None or r.job_id in (None, "-") or not (r.status in SENT or r.status in UNSENT_WHY):
+            return
+        self._stage("save-facts")
+        try:
+            self.h.save_facts(r.job_id, r.status in SENT, "" if r.status in SENT else UNSENT_WHY[r.status])
+        except (KeyboardInterrupt, EOFError):
+            self.out("  (saving your typed facts was cut short: they are still provisional, for this job only)")
 
     def _outside_uk(self, text: str) -> str | None:
         """Why this JD must not be worked on: it is for a job outside the UK (`Country:` header) or marked `Status: listed_only`, and
@@ -655,10 +676,10 @@ class Live:
                 choice = self.h.review(jid)                                         # 4. review exactly this id
                 if choice == "quit":
                     raise StopSession("you chose quit at the review prompt; the job stays 'needs_review'", 0)
-                if choice == "skipped":
-                    db.update_job(jid, status="skipped", reason="skipped in live review")
+                if choice in ("skipped", SKIPPED_USER):
+                    db.update_job(jid, status="skipped", reason=SKIPPED_USER if choice == SKIPPED_USER else "skipped in live review")
                     db.log(jid, "live", "skipped in review")
-                    return "skipped"
+                    return choice
             elif st == "approved":
                 if self.dry_run:
                     self.out("  --dry-run: approved, not applied. Run live without --dry-run to apply; this JD stays in inbox/.")
