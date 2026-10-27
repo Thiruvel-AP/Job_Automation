@@ -279,6 +279,12 @@ finds and ranks without writing, and every run is listed best priority first.
   that are not companies ("New folder", "AI Engineer"): `--ats` skips them; the folders themselves are never touched. The boards named
   token by token in `sources:` are still read. Posting lists are cached for 6
   hours. **Workable is not read**: its API needs the account owner's token and no public posting API is documented.
+  **Workday** is read for the sites you list yourself, `sources.workday: [{company: Acme, url: 'https://acme.wd3.myworkdayjobs.com/en-US/External'}]`
+  (also `https://<wdN>.myworkdaysite.com/recruiting/<tenant>/<site>`; empty by default; optional `queries: [...]` and `max_pages` per entry): the
+  public JSON list the careers page itself uses (`POST .../wday/cxs/<tenant>/<site>/jobs`), only after the tenant's robots.txt allows `/wday/cxs/`, at
+  one request a second, at most 10 list pages per tenant per run. A matching posting (role family, UK place) is read in full once. "Posted Today / N Days Ago"
+  becomes the posted date, "30+ Days Ago" is freshness tier 3. An outage (HTTP 422, the maintenance page) is a note and is asked again next run,
+  never "zero jobs". Workday careers PAGES are still never fetched.
 - **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
   recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
   (`details_per_run`). An expired posting is closed.
@@ -287,8 +293,8 @@ finds and ranks without writing, and every run is listed best priority first.
   board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); anything else goes to the manual queue. Adzuna's own
   redirect links are never followed.
 - **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
-  title, company and link. **linkedin.com, Indeed, CV-Library and Workday hosts (`*.myworkdayjobs.com`, `*.myworkday.com`) are never
-  fetched**, to resolve an alert or for anything else in discover: the job is looked for on the employer's own board by title (as for
+  title, company and link. **linkedin.com, Indeed, CV-Library and Workday pages (`*.myworkdayjobs.com`, `*.myworkday.com`) are never
+  fetched**, to resolve an alert or for anything else in discover (only the `/wday/cxs/` list of a site under `sources.workday` is read): the job is looked for on the employer's own board by title (as for
   Adzuna); Reed links go through the Reed API. A job that cannot be resolved stays in the queue (nothing is dropped): it is appended to
   `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason, apply_kind`, one row per link; a file from before
   `apply_kind` gets the column added to its header, its rows kept) for you to open, copy the ad and run `careerops live --clipboard`. A

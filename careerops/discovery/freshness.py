@@ -34,6 +34,7 @@ GMAIL = "gmail.received"
 # the source label stored in `posted_at_source` -> where in the source's answer the time is
 SOURCES = {"greenhouse.first_published": "Greenhouse first_published", "lever.createdAt": "Lever createdAt",
            "ashby.publishedAt": "Ashby publishedAt", "reed.date": "Reed date", "adzuna.created": "Adzuna created",
+           "workday.postedOn": "Workday postedOn (to the day; \"30+ Days Ago\" is dated 30 days back)",
            GMAIL: "alert email received (an upper bound)"}
 TRUSTED = frozenset(SOURCES)
 _ISO = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$")

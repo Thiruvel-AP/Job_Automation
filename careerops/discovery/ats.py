@@ -248,6 +248,9 @@ def parse_postings(ats: str, data, name: str) -> list[Posting]:
 def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None) -> list[Posting]:
     """Every open posting on the board, with its description (one request: all three APIs return the text in the list).
     [] for a board that does not exist. Raises FetchError / Blocked on a failure."""
+    if board.ats == "workday":                                  # its own request (a POST) and its own shape: discovery/workday.py
+        from . import workday
+        return workday.board_postings(board, fetcher)
     url, params, what = board_request(board.ats, board.slug)
     return parse_postings(board.ats, fetcher.json(url, params=params, what=what), board.name)
 
@@ -380,6 +383,8 @@ def configured_boards(settings) -> list[Board]:
         for e in src.get(key) or []:
             slug, name = (e["slug"], e.get("name") or e["slug"]) if isinstance(e, dict) else (e, e.replace("-", " ").title())
             out.append(Board(ats, str(slug), str(name), "config"))
+    from . import workday                                      # imported here: workday.py imports Board and Posting from this module
+    out += [e.board() for e in workday.entries(settings)]       # sources.workday: [{company, url}] (discovery/workday.py)
     return out
 
 

@@ -1446,3 +1446,28 @@ each time, never anyone else's.
    `test_blacklist`, `test_channel`, `test_pretailor` (the gate, `tailor_jobs`, the report). **Unverified:** the real sites' closed pages (a live Greenhouse / Lever / Ashby 404 or redirect, an SPA that shows
    "no longer available" only after its scripts run is uncertain here), the real archive's folder names against the channel check, and `discover --report` against a full inbox. **Known limits:** the
    employer behind an agency ad is only found when the ad says so in one of the three forms above; a blacklist.yaml error shows `tailoring did not run (budget?)` in `live` (the real reason is printed above it).
+
+
+## 5al. Phase C — Workday coverage (27 Oct) — **done** (offline tests: a fake `get` / `post`, no network; never run against a real Workday tenant)
+
+1. **C1 — discovery** (`discovery/workday.py`). `sources.workday: [{company, url}]` in settings.yaml, seeded with `[]` (and in the test copy); an entry may add `queries: [...]` (the `searchText`s,
+   default `data scientist`, `machine learning`, `AI engineer`, `generative AI`) and `max_pages`. `parse_url` takes both host forms (`<tenant>.<wdN>.myworkdayjobs.com[/<locale>]/<site>` and
+   `<wdN>.myworkdaysite.com[/<locale>]/recruiting/<tenant>/<site>`, no lookalikes) and `Site.api` is `https://<host>/wday/cxs/<tenant>/<site>/jobs`. The list is `POST {appliedFacets:{}, limit:20,
+   offset:n, searchText}`; the offset runs until a short page; `max_pages` (10) list requests per tenant per run are shared by the searches. The list carries no description, so a posting that passes
+   the role-family and UK-place filters (`BoardCache` hands `keep`) is read once more from `/wday/cxs/<tenant>/<site>/job/...` (at most 40 a run); a posting whose place is "2 Locations" is read first and
+   judged by its real places. A board is `Board("workday", slug, company)`, the slug carrying host, tenant, site and locale (`~`-joined, safe in the cache file name `boards/workday-<slug>.json`),
+   and it flows through `Discover.from_boards` like the three other ATS boards (same filters, same inbox ad, `apply_kind: workday`).
+2. **Manners.** `discovery/http.py` gained `Fetcher(post=, allow_paths=)` and `request(method="POST", json=, follow=False)`. robots.txt of the tenant host is read before the first request (the Fetcher's own
+   check, on the `/wday/cxs/...` path): a tenant that disallows `/wday/cxs/` raises `Blocked` and is skipped with a note, the other tenants still run (a tenant that disallows only `/refreshFacet/` is read).
+   One request a second per host. `applykind.NEVER_FETCH` still lists the Workday hosts, so careers PAGES, alert resolution and the liveness check do not fetch them; only the `/wday/cxs/` prefix is
+   allowed, and only the discover Fetcher built in `cli._discover_inbox` allows it.
+3. **Posting time.** `workday.posted_on`: "Posted Today", "Posted Yesterday", "Posted N Days Ago" become the day; "Posted 30+ Days Ago" becomes the day 30 days back, which is freshness tier 3 whatever the
+   real day was (a missing date would have fallen back to the first-seen day and made it tier 0). `freshness.SOURCES` trusts `workday.postedOn` for the age.
+4. **Outages.** A 422, a redirect to `community.workday.com/maintenance-page` or `/wday/drs/outage`, or a reply that is not the job list raises `Transient`: a note in the run ("retried next run"), nothing is
+   cached (no `boards/workday-*.json`), and it is never counted as zero jobs; a real empty list is zero jobs. A 404 says the address is wrong; a 5xx is a `FetchError`; a 401 / 403 / 429 backs the host off.
+5. **Tests** (`tests/discovery/test_workday.py`, 80): URL parsing for both host forms and the lookalikes, `postedOn` mapping and its tiers, the request body, paging and the page cap, the shared budget,
+   one request a second, postings and details, outages (each redirect form), robots refusal, the never-list with the CXS exception, the configuration, and discover end to end (inbox ads, an outage
+   run, a refusing tenant next to a good one, the cache). **Unverified:** a real tenant (the exact `myworkdaysite.com` API path is assumed to be `https://<wdN>.myworkdaysite.com/wday/cxs/<tenant>/<site>/jobs`;
+   the reply fields `jobPostings`, `externalPath`, `locationsText`, `postedOn`, `bulletFields`, `jobPostingInfo` are as documented by the pages that call it, not read from a live answer today).
+   **Known limits:** Workday jobs are `liveness uncertain` before tailoring (their pages are never fetched; the CXS detail would answer, not wired); the search terms narrow what is listed, so a role the
+   searches do not name is not seen (add `queries`).

@@ -69,6 +69,7 @@ sources:
   lever: []                        # site slugs, e.g. [palantir]  — slug in jobs.lever.co/<slug>
   lever_eu: []                     # jobs.eu.lever.co/<slug>
   ashby: []                        # e.g. [synthesia] — slug in jobs.ashbyhq.com/<slug>
+  workday: []                      # Workday careers sites you add: [{company: Acme, url: 'https://acme.wd3.myworkdayjobs.com/en-US/External'}]; optional queries: [...] and max_pages (10) per entry
   adzuna:
     enabled: false                 # needs ADZUNA_APP_ID / ADZUNA_APP_KEY env vars (free at developer.adzuna.com)
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]

@@ -63,6 +63,7 @@ from . import candidate as cand
 from ..apply import decided as decided_mod
 from . import boards as boards_mod
 from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import workday as workday_mod
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
@@ -365,6 +366,7 @@ class BoardCache:
 
     def __init__(self, settings, fetcher: Fetcher, clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)):
         self.dir = settings.path("discover")
+        self.settings = settings
         self.hours = float(settings["discover"].get("cache_hours", 6))
         self.fetcher, self.clock = fetcher, clock
         self.memory: dict[tuple[str, str], list[ats_mod.Posting]] = {}
@@ -381,7 +383,13 @@ class BoardCache:
                 return self.memory[k]
         except (OSError, ValueError, KeyError, TypeError):
             pass
-        posts = ats_mod.board_postings(board, self.fetcher)
+        if board.ats == "workday":                         # only the role family and place that match are read in full (one request each)
+            def keep(p: ats_mod.Posting) -> bool:
+                c = posting_candidate(board, p)
+                return cand.family_of(c, self.settings) is not None and cand.uk_ok(c, self.settings)
+            posts = workday_mod.board_postings(board, self.fetcher, keep=keep, **workday_mod.options_for(self.settings, board))
+        else:
+            posts = ats_mod.board_postings(board, self.fetcher)
         self.put(board, posts)
         return posts
 
@@ -499,7 +507,7 @@ def merge_boards(boards: list[ats_mod.Board], extra: list[ats_mod.Board]) -> lis
     return out
 
 
-POSTED_FIELD = {"greenhouse": "first_published", "lever": "createdAt", "lever_eu": "createdAt", "ashby": "publishedAt"}
+POSTED_FIELD = {"greenhouse": "first_published", "lever": "createdAt", "lever_eu": "createdAt", "ashby": "publishedAt", "workday": "postedOn"}
 
 
 def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = "") -> Candidate:
@@ -738,6 +746,7 @@ class Discover:
         time: find its board, read its postings, move on. self.findings is the per-company report (ats_report)."""
         label = "ats"
         self.findings = []
+        self.run.notes += workday_mod.config_problems(self.s)         # a sources.workday entry that is not a Workday address
         index = self.index
         listed = merge_boards(ats_mod.configured_boards(self.s), self.registry.boards())     # boards named by token: sources: and sources.yaml
         for board in listed:
@@ -769,7 +778,7 @@ class Discover:
             posts = self.cache.postings(board)
         except (Blocked, FetchError) as e:
             finding.errors.append(str(e))
-            self.run.notes.append(str(e) if isinstance(e, Blocked) else f"{board.ats}:{board.slug}: {e}")
+            self.run.notes.append(str(e) if isinstance(e, (Blocked, workday_mod.WorkdayError)) else f"{board.ats}:{board.slug}: {e}")
             return "error"
         for p in posts:
             if not p.listed:

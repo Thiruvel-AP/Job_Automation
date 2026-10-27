@@ -9,6 +9,9 @@
     later requests to the host raise at once without sending anything. With a `blocklog` (blocklog.py) the refusal is written down (time,
     requests to that host before it), and the next runs keep at least blocklog.SLOW_GAP_S between requests to it;
   * a connection error is retried once; other statuses are returned for the caller to read;
+  * `method="POST", json=...` sends a JSON body (the public Workday CXS list endpoint); `follow=False` returns a redirect instead of following it, so the
+    caller can read where it points (a Workday outage page);
+  * `allow_paths`: path prefixes that are fetched even on a host in `never` (the Workday /wday/cxs/ API; the careers PAGES on that host stay refused);
   * a `Crawl-delay` in the host's robots.txt (up to MAX_CRAWL_DELAY_S) is the gap to that host instead of one second.
 
 Tests replace `get`, `sleep` and `clock`, so no test touches the network.
@@ -51,13 +54,20 @@ def _real_get(url: str, **kw) -> requests.Response:
     return requests.get(url, timeout=kw.pop("timeout", TIMEOUT_S), allow_redirects=False, **kw)
 
 
+def _real_post(url: str, **kw) -> requests.Response:
+    return requests.post(url, timeout=kw.pop("timeout", TIMEOUT_S), allow_redirects=False, **kw)
+
+
 class Fetcher:
     def __init__(self, robots: RobotsCache | None = None, get: Callable[..., Any] | None = None,
                  sleep: Callable[[float], None] | None = None, clock: Callable[[], float] | None = None,
-                 gap_s: float = MIN_HOST_GAP_S, never: tuple[str, ...] = (), blocklog: BlockLog | None = None):
+                 gap_s: float = MIN_HOST_GAP_S, never: tuple[str, ...] = (), blocklog: BlockLog | None = None,
+                 post: Callable[..., Any] | None = None, allow_paths: tuple[str, ...] = ()):
         self.robots = robots if robots is not None else RobotsCache(None)
         # looked up when called, not when defined, so a test can replace requests.get / time.sleep after import
         self._get = get or (lambda url, **kw: _real_get(url, **kw))
+        self._post = post or (lambda url, **kw: _real_post(url, **kw))
+        self.allow_paths = tuple(allow_paths)             # path prefixes fetched even on a `never` host
         self._sleep = sleep or (lambda s: time.sleep(s))
         self._clock = clock or (lambda: time.monotonic())
         self.gap_s = gap_s
@@ -113,7 +123,8 @@ class Fetcher:
 
     # ---- the request
     def request(self, url: str, *, params: dict | None = None, headers: dict | None = None, auth: tuple | None = None,
-                robots: bool = True, what: str = "", stream: bool = False) -> requests.Response:
+                robots: bool = True, what: str = "", stream: bool = False, method: str = "GET", json: Any = None,
+                follow: bool = True) -> requests.Response:
         """GET `url`. Raises Blocked (401 / 403 / 429, robots.txt, a host already backed off, linkedin.com) or FetchError
         (no answer, 5xx, too many redirects, a response over MAX_BYTES). 404 and other statuses are returned.
         `stream=True` leaves the body unread (and the MAX_BYTES check to the caller, who must close the response): for an open-data
@@ -124,7 +135,7 @@ class Fetcher:
             gone = never_fetch(url)
             if gone:
                 raise Blocked(gone)
-            if any(host == h or host.endswith("." + h) for h in self.never):
+            if any(host == h or host.endswith("." + h) for h in self.never) and not any(urlparse(url).path.startswith(p) for p in self.allow_paths):
                 raise Blocked(f"{what}: {host} is never requested by this tool (it is only recorded as the place to apply)")
             if host in self.backed_off:
                 raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} earlier in this run; not asked again")
@@ -145,8 +156,11 @@ class Fetcher:
                 self.requests += 1
                 self.by_host[host] += 1
                 try:
-                    r = self._get(url, headers={**UA, **(headers or {})}, params=params if _hop == 0 else None, auth=auth,
-                                  **({"stream": True} if stream else {}))
+                    if method == "POST":
+                        r = self._post(url, headers={**UA, **(headers or {})}, json=json)
+                    else:
+                        r = self._get(url, headers={**UA, **(headers or {})}, params=params if _hop == 0 else None, auth=auth,
+                                      **({"stream": True} if stream else {}))
                     break
                 except requests.RequestException as e:
                     if attempt == 1 or not isinstance(e, requests.ConnectionError):
@@ -156,7 +170,8 @@ class Fetcher:
                 raise Blocked(f"{what}: HTTP {r.status_code}: {host} blocks automated access; it is not asked again this run",
                               r.status_code)
             where = (getattr(r, "headers", None) or {}).get("Location") if r.status_code in REDIRECT_STATUSES else None
-            if where:
+            if where and follow:
+                method, json = "GET", None                         # a redirect is followed with a GET
                 url = urljoin(url, where)
                 if urlparse(url).scheme not in ("http", "https"):
                     raise FetchError(f"{what}: redirected to something that is not a web link")

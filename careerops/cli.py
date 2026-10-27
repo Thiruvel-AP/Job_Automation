@@ -260,8 +260,9 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         except gmail.GmailAuthError as e:
             _fail(str(e))
         return
-    fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH,       # linkedin, indeed, cv-library and Workday: never asked
-                      blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE))
+    fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH,       # linkedin, indeed, cv-library and Workday PAGES: never asked
+                      blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE),
+                      allow_paths=("/wday/cxs/",))                                       # ... but the public Workday list API of the sites you name is read
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
                       limit=getattr(args, "limit", None))
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
