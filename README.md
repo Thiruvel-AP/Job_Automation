@@ -66,7 +66,7 @@ career-ops/
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
 │   ├── llm/                      router.py (Groq/Ollama, quota fallback) · mock.py (deterministic)
-│   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4)
+│   ├── review/                   workflow.py (approve/edit/reject → preferences) · judge.py (LLM judge) · outreach.py (M4) · prep.py (interview prep pack)
 │   ├── autoapply.py              gated auto-apply (Greenhouse / Ashby / Lever): the ONLY module that clicks a submit control, only for a job that passed the gate
 │   ├── apply/freetext.py         drafts free-text form answers from the fact bank, guards them, you approve once (data/answers/library.jsonl)
 │   ├── apply/formloop.py         scans EVERY field of a form (table before filling), runs the free-text loop (required or optional), logs formloop.jsonl
@@ -78,7 +78,7 @@ career-ops/
 │   ├── apply/knockout.py · attest.py   the knock-out pre-scan (sponsorship, years, degree, salary floor, on-site, clearance) · attestations code never answers
 │   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
-│   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
+│   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`) · replies.py (reply watch) · followups.py
 │   └── training/rewards.py       Phase 2 GRPO reward functions
 ├── config/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
@@ -239,6 +239,7 @@ careerops contact add JOB "First Last" --role "Hiring Manager" [--email x@y]   #
 careerops outreach draft JOB [--to you@gmail.com]   # Gmail drafts with the CV attached, never sent; --to = one test draft to that address
 careerops outcome --id JOB --event screen --date 2026-10-12 --note "phone"   # applied|acknowledged|screen|interview|offer|rejected|withdrawn
 careerops outcomes                 # the funnel applied → any reply → screen → interview → offer: counts, rates, 95% Wilson intervals
+careerops followups                # applications past their follow-up day with no reply, oldest first, with the contact if known (read-only)
 careerops outcomes --import-archive          # DRY RUN: list <paths.applications> and <paths.applications_auto> /<Company>/<Role> as approximate 'applied' events
 careerops outcomes --import-archive --apply  # write them to the database only (the archive is only listed, never written)
 careerops import-linkedin config/reference/linkedin.pdf   # LinkedIn profile PDF → config/profile/fact_bank.proposed.yaml + data/linkedin_diff.md (see below)
@@ -1105,6 +1106,33 @@ and stores `sponsor_match` = `exact` | `fuzzy(0.95)` | `none` plus route and rat
 `mark-applied` (and `apply`) log an `applied` event; add the rest with `careerops outcome`. `careerops outcomes` prints the funnel
 split by role family, tier, CV pages and sponsor match. A job applied more than 28 days ago with nothing logged since counts as
 `no_response` in the report (computed, never stored). `--import-archive` is read-only on the archive: it only lists folders.
+
+### After you apply: replies, follow-ups, interview prep
+
+**Reply watch** (`careerops/reporting/replies.py`, runs at the end of `careerops discover --gmail-alerts`). It searches your mailbox, with the same
+read-only Gmail scope, for the last 30 days of mail from the domains of the companies you applied to (and from applicant-tracking mailers such as
+`greenhouse-mail.io` or `hire.lever.co` when the sender's name or the subject names the company), and classifies each as `interview | assessment |
+rejection | info | noise` by rules (no model, no cost). The mail text is data: nothing in it is ever obeyed, and a mail that talks to the tool is flagged.
+Each interview, assessment or rejection is **proposed**, one line at a time:
+
+    Trainline: rejection (22 Oct mail) → set Status "Rejected"? [y/N]
+
+Only `y` writes: the **Status** cell of that job's row in the Sheet (that cell alone; Interview / Assessment / Rejected) and the outcome in the database
+(`interview`, `screen` for an assessment, `rejected`), so the funnel and `followups` know. Anything else, or Ctrl-C, writes nothing. A mail you answered is
+not asked about again (`data/discover/replies_seen.json`). Without a terminal (cron, `--dry-run`) the proposals are printed and not asked. A Sheet that
+cannot be written (no sign-in, no row yet) is one line; the outcome is still logged. It never replies, never sends, never labels or deletes a mail.
+The rules have not met a real mailbox: read each proposal before you press `y`.
+
+**`careerops followups`** lists the applications past `Follow-up due` (the day you applied plus `outreach.follow_up_days`, 7; for a job with no draft the same
+day) that have no reply, oldest first, with the best stored contact or `no contact known`. It only reads. A follow-up message is drafted by `careerops outreach
+draft JOB` under outreach's own rules and is never sent.
+
+**Interview prep pack.** `mark-applied` (and `apply` / `live`, which end the same way) writes `prep.md` into the job's archive folder
+(`paths.applications_auto/<Company>/<Role>/`, never over an existing file, never in your own `paths.applications`): the 8 to 10 questions the ad is most
+likely to lead to (its keywords, required and heaviest first, then why-this-company and the project you are proudest of); for each, up to two fact-bank
+entries to answer with, in situation → task and action → result order, the bullet quoted word for word with its id; the gaps from the gap report with a
+one-line learn task; and three questions to ask them. **Facts about you come only from the fact bank.** A question with no supporting bullet, or on a term
+on the fact bank's deny list, says `no evidence: don't claim`; a result is the bullet's own `result:` or the numbers in its text, never a new one. No model.
 
 ### Role tiers and queue order
 

@@ -602,8 +602,9 @@ def test_mark_applied_without_letter_exits_1_and_no_letter_overrides_and_records
     run_cli(settings, tmp_path, monkeypatch, "mark-applied", "--id", "gh:nl:1", "--no-letter")
     role = root / "Lendable" / "AI Engineer"
     assert {p.name for p in role.iterdir()} == {"Ada Fixture CV.pdf", "Ada Fixture CV.tex", "JD.txt", "job.json",
-                                                "report.json"}
+                                                "report.json", "prep.md"}          # prep.md: the interview prep pack mark-applied adds (review/prep.py)
     assert json.loads((role / "job.json").read_text())["no_letter"] is True
+    assert (role / "prep.md").read_text(encoding="utf-8").startswith("# Interview prep: Lendable")
     ev = [r["detail"] for r in db.conn.execute("SELECT detail FROM events WHERE job_id='gh:nl:1' AND stage='archive'")]
     assert any('"no_letter": true' in d for d in ev) and db.job("gh:nl:1")["status"] == "applied"
 

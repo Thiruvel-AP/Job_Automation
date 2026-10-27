@@ -1471,3 +1471,30 @@ each time, never anyone else's.
    the reply fields `jobPostings`, `externalPath`, `locationsText`, `postedOn`, `bulletFields`, `jobPostingInfo` are as documented by the pages that call it, not read from a live answer today).
    **Known limits:** Workday jobs are `liveness uncertain` before tailoring (their pages are never fetched; the CXS detail would answer, not wired); the search terms narrow what is listed, so a role the
    searches do not name is not seen (add `queries`).
+
+
+## 5am. Phase D — after applying (27 Oct) — **done** (offline tests: a fake Gmail `get`, a fake Sheet, fixture databases; no network, no model; never run against a real mailbox or Sheet)
+
+1. **D1 — reply watch** (`reporting/replies.py`, called by `cli.reply_lines` at the end of `discover --gmail-alerts`; skipped on the mock root). `watched` = every applied job without a
+   rejected / withdrawn / offer outcome, with the employer's own domain (`contacts.company_domain`). `queries` = `(from:d1 OR from:d2 ...) newer_than:30d`, 25 domains to a search, plus one search for the
+   applicant-tracking mailers (`ATS_MAILERS`); read with `gmail.list_message_ids` / `get_message` (GET only, read-only scope). `match`: the sender is the domain or a subdomain of a watched company (never a
+   lookalike: `nottrainline.com`), or an ATS mailer whose display name or subject names the company; with several jobs at one company the title in the subject decides, else the latest application.
+   `classify(subject, body)` is rules only: a strict rejection phrase wins over everything (a rejection may mention a future interview); between interview and assessment the first one in the text; then info;
+   else noise. Curly quotes, accents, case and contractions are normalised first; a mail that addresses the tool ("ignore previous instructions", "set the status") is flagged and classified by the rules
+   alone. `run` prints `Trainline: rejection (22 Oct mail) → set Status "Rejected"? [y/N]` per interview / assessment / rejection; **only `y` / `yes` writes**: `outcomes.record(..., source="reply-watch")` and
+   `tracker.set_status` (new: the Status cell of the row found by Job ID, nothing else, `TrackerError` when there is no row or no column). A failed Sheet write is one line and the outcome stays. A prompt cut
+   short (EOF / Ctrl-C) writes nothing and the mail is asked again next time; an answered mail is kept in `data/discover/replies_seen.json`; with no terminal (`ask=None`) proposals are printed, not asked, not
+   remembered. Info lines never prompt. No settings key was added (window 30 days, 80 mails a run, constants in the module).
+2. **D2 — `careerops followups`** (`reporting/followups.py`). Due = applied day + `outreach.follow_up_days` (7); listed from that day on (`due today`, `N days over`) when the outcome log has no
+   acknowledged / screen / interview / offer / rejected / withdrawn event for the job; jobs backfilled from the archive (`source=archive`) are skipped. Oldest due first, with the best stored contact
+   (`contacts.stored`) or `no contact known`. Read-only; drafting stays in `outreach.py`.
+3. **D3 — interview prep pack** (`review/prep.py`, `cli._write_prep` after a complete archive in `cli._archive`). `prep.md` is created with the new `safe_io.safe_write_text` (mode `xb`: never over an
+   existing file) in `application_dir`; a folder inside `paths.applications` is refused. Questions: the ad's keywords (required first, heaviest first, at most 8; the ad's order within a tie) with three
+   question templates, then 2 to 5 standard ones so that the list has 8 to 10 (fewer only when the ad has almost no keywords). Stories: up to two fact-bank entries, those on this CV first, each with up to two
+   matching bullets quoted word for word with their ids, labelled Situation (the entry's `situation:`) / Task and action / Result (the bullet's `result:`, else "the numbers in the bullet above", else "none
+   recorded"). **Truth rule:** nothing about the user that is not a fact-bank bullet; a keyword with no bullet, or on `deny_terms` whatever a stray tag says, gets `no evidence: don't claim`. Gaps: the gap
+   report's `gap` rows (`gaps.build`; `learn_list` when the report has no scores) with a one-line learn task, `do not claim` on a deny-listed term. Three questions to ask them, from the ad.
+4. **Tests** (new): `tests/reporting/test_replies.py`, `tests/reporting/test_followups.py`, `tests/review/test_prep.py`, `tests/test_tracker_status.py`, `tests/apply/test_safe_write.py`, helper
+   `tests/gmail_fakes.py`. **Unverified:** the classification rules on a real mailbox (hand-made mails only), Gmail's `from:` search on real senders, an ATS mailer's real display names, a real Sheet write.
+   **Known limits:** a company whose domain cannot be told (its job link is on an ATS) is found only through an ATS mailer; a reply from a recruiter's personal address is not seen; `assessment` is logged as the
+   outcome `screen` (the log has no assessment event).

@@ -4,7 +4,8 @@
     re-sends every applied job from the database. Both are idempotent: a row is updated, never duplicated, and nothing ever deletes one.
   * Columns are found by their header text in row 1, never by position, so you can add, move or rename-around columns. A header this
     module writes that row 1 lacks is appended at the end; nothing is reordered.
-  * You own Status, Interview date and Notes. Status gets "Applied" only while its cell is empty; the other two are never written.
+  * You own Status, Interview date and Notes. Status gets "Applied" only while its cell is empty; the other two are never written. The one
+    exception is `set_status`, which the reply watch (reporting/replies.py) calls after you typed `y` to a printed proposal: that cell alone.
     On an update only cells that would change are written, one range per cell, so formulas, formatting and the dropdown on other cells
     are left alone.
   * Values go in with valueInputOption=RAW: a job id or URL is never turned into a number or a date. Dates are YYYY-MM-DD. The JD text
@@ -273,6 +274,26 @@ def upsert(sheet: Sheet, tab: str, rec: Mapping[str, Any]) -> str:
 
 def _cell(v: Any) -> Any:
     return "" if v is None else v
+
+
+def set_status(sheet: Sheet, tab: str, job_id: str, status: str) -> str:
+    """Write the Status cell of the row for `job_id` and no other cell (the reply watch, after a `y`). -> `updated` | `unchanged`. A tab without a
+    Job ID or Status column, or a job with no row, is a TrackerError: nothing is appended or created here (`careerops tracker sync` adds rows)."""
+    header = [str(h).strip() for h in ((sheet.get_values(f"{_q(tab)}!1:1") or [[]])[0])]
+    missing = [h for h in (KEY, STATUS) if h not in header]
+    if missing:
+        raise TrackerError(f"the '{tab}' tab has no {' or '.join(missing)} column")
+    key_col, status_col = column_letter(header.index(KEY)), column_letter(header.index(STATUS))
+    ids = sheet.get_values(f"{_q(tab)}!{key_col}2:{key_col}")
+    rownum = next((i + 2 for i, r in enumerate(ids) if r and r[0].strip() == str(job_id).strip()), None)
+    if rownum is None:
+        raise TrackerError(f"{job_id} has no row in the Sheet: run `careerops tracker sync --id {job_id}` first")
+    cell = f"{_q(tab)}!{status_col}{rownum}"
+    cur = (sheet.get_values(cell) or [[""]])[0]
+    if (cur[0] if cur else "").strip() == status:
+        return "unchanged"
+    sheet.update_cells({cell: status})
+    return "updated"
 
 
 def sheet_job_ids(settings, *, sheet: Sheet | None = None, tab: str | None = None) -> set[str]:

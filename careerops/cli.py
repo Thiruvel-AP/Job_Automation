@@ -40,6 +40,10 @@
                                 archive + mark an application you made outside the assist
   careerops outcome --id JOB --event applied|acknowledged|screen|interview|offer|rejected|withdrawn [--date D] [--note T]
                                 log what happened after an application (mark-applied logs 'applied' itself)
+  careerops followups [--mock]  the applications past their follow-up day (applied + outreach.follow_up_days) with no reply, oldest first, with the
+                                contact if known; read-only (drafting stays in `outreach draft`)
+  careerops discover --gmail-alerts   ... then the reply watch: mail from the companies you applied to is classified (interview | assessment |
+                                rejection | info | noise) and each change PROPOSED; the Sheet's Status and the outcome log change only on your `y`
   careerops outcomes [--import-archive [--apply]]
                                 the funnel applied -> any reply -> screen -> interview -> offer with 95% Wilson
                                 intervals, split by role family, tier, cv_pages, sponsor_match; --import-archive lists
@@ -230,6 +234,35 @@ def cmd_discover(args):
     _print_health(s, reg, run=run)
 
 
+def _reply_watch(args, s, db, fetcher=None) -> list[str]:
+    """The reply watch (reporting/replies.py) after `discover --gmail-alerts`: mail from the companies you applied to is classified and each change is
+    PROPOSED; the Sheet and the outcome log are written only after your `y`. On a terminal it asks; without one (cron, --dry-run) it only prints.
+    Reads Gmail with the read-only scope; never replies, never sends."""
+    from .discovery import gmail
+    from .discovery.http import Fetcher
+    from .discovery.robots import RobotsCache
+    from .reporting import replies
+
+    token = gmail.access_token(s)
+    f = fetcher or Fetcher(RobotsCache(s.path("robots")), blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE))
+    ask = input if sys.stdin.isatty() and not getattr(args, "dry_run", False) else None
+    r = replies.run(db, s, f, token, ask=ask)
+    if not r.matched:
+        return []
+    return [f"reply watch: {r.matched} mail(s) from companies you applied to: {r.proposed} proposal(s), {r.written} written, {r.info} info, {r.noise} noise"]
+
+
+def reply_lines(args, s, db, sources_asked: list[str], fetcher=None) -> list[str]:
+    """The reply watch's summary lines, [] when discover was not asked for the alerts or runs on the mock root (no network there). It can never fail
+    discover: a problem is one line."""
+    if "gmail_alerts" not in sources_asked or getattr(args, "mock", False):
+        return []
+    try:
+        return _reply_watch(args, s, db, fetcher)
+    except Exception as e:  # noqa: BLE001  (not signed in, Gmail down, a Sheet that cannot be written)
+        return [f"reply watch: not run ({e})"]
+
+
 def _inbox_signals(args, s, db, fetcher=None) -> list[str]:
     """The lines `discover --report` adds: liveness of the inbox (open / closed / uncertain) and the repost / evergreen? counts. Information only. No
     network with --no-liveness or --mock."""
@@ -309,6 +342,9 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if getattr(args, "report", False):
         print("\n" + disc.format_report(s, d.run))             # the counts per source and the freshness tiers, after this run
         print("\n".join(_inbox_signals(args, s, db, fetcher)))
+    watch = reply_lines(args, s, db, sources_asked, fetcher)          # mail from the companies you applied to: proposals, a `y` writes
+    if watch:
+        print("\n" + "\n".join(watch))
     if d.run.failures:                                  # a scheduled run (scripts/discover.sh) must show as failed
         print("\nFAILED: " + "; ".join(d.run.failures[:5]), file=sys.stderr)
         sys.exit(1)
@@ -693,8 +729,21 @@ def _archive(db: DB, s, job, rep: dict, confirmation: str | None, applied_on, no
     """Archive a submitted application and mark it applied, then draft the outreach and update the tracker row. True if fully archived;
     problems are printed. The job is applied whatever the archive says, so the follow-ups run either way."""
     ok = _archive_files(db, s, job, rep, confirmation, applied_on, no_letter)
+    if ok:
+        _write_prep(db, s, job["id"])
     _after_applied(db, s, job["id"])
     return ok
+
+
+def _write_prep(db: DB, s, job_id: str) -> None:
+    """The interview prep pack (review/prep.py) into the job's archive folder. It reads the fact bank and the job's report, needs no network and no model,
+    and a failure is printed: the application stays recorded."""
+    from .review import prep
+
+    try:
+        print(f"  interview prep: {prep.write_pack(db, s, job_id)}")
+    except Exception as e:  # noqa: BLE001  (an existing prep.md, a missing report, an unreadable fact bank)
+        print(f"  interview prep not written ({e})", file=sys.stderr)
 
 
 def _after_applied(db: DB, s, job_id: str) -> None:
@@ -946,6 +995,15 @@ def cmd_mark_applied(args):
     export(db, s.path("excel"), floor=s["roles"]["floor"])
     if not ok:
         sys.exit(1)
+
+
+def cmd_followups(args):
+    """The applications past their follow-up day with no reply, oldest first, with the contact if known (reporting/followups.py). Only reads."""
+    from .reporting import followups
+
+    s, db = _ctx(args)
+    today = date.today()
+    print("\n".join(followups.lines(followups.due(db, s, today), today)))
 
 
 def cmd_outcome(args):
@@ -1479,6 +1537,9 @@ def main(argv=None):
     ma.add_argument("--date", type=date.fromisoformat, metavar="YYYY-MM-DD", help="date applied (default: today)")
     ma.add_argument("--no-letter", action="store_true", help="go ahead although the cover-letter PDF is missing")
     ma.set_defaults(fn=cmd_mark_applied)
+    fu = sub.add_parser("followups", help="applications past their follow-up day with no reply, oldest first, with the contact if known")
+    fu.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
+    fu.set_defaults(fn=cmd_followups)
     ou = sub.add_parser("outcome", help="log what happened after an application")
     ou.add_argument("--id", required=True, help="job id")
     ou.add_argument("--event", required=True, choices=["applied", "acknowledged", "screen", "interview", "offer",

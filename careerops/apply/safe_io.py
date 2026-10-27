@@ -31,6 +31,20 @@ def sha256_of(path: Path | str) -> str:
     return h.hexdigest()
 
 
+def safe_write_text(dst: Path | str, text: str, encoding: str = "utf-8") -> str:
+    """Create a NEW text file dst with `text` and return the sha256 of the bytes written (the interview prep pack). Same rule as safe_copy: mode "xb" makes
+    the operating system refuse an existing destination, and a missing parent folder is not created."""
+    data = text.encode(encoding)
+    with open(dst, "xb") as d:
+        d.write(data)
+        d.flush()
+        os.fsync(d.fileno())
+    digest = hashlib.sha256(data).hexdigest()
+    if sha256_of(dst) != digest:
+        raise IntegrityError(f"{dst}: written bytes do not match what was given")
+    return digest
+
+
 def safe_copy(src: Path | str, dst: Path | str) -> str:
     """Copy src to a NEW file dst and return the sha256 of the bytes written.
 
