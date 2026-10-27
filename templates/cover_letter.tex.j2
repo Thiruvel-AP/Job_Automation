@@ -10,6 +10,7 @@
 \usepackage{parskip}
 
 \definecolor{headernavy}{RGB}{12, 83, 166}
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
 \definecolor{linkblue}{RGB}{0, 102, 204}
 \hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
 
@@ -25,9 +26,13 @@
 % --- HEADER ---
 \begin{center}
     {\LARGE \color{linkblue} \textbf{\VAR{id.name|e}}}\\[0.2cm]
-    \VAR{id.get('address', id.location)|e} \\
-    \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \ $|$ \ \VAR{id.phone|e}\BLOCK{endif} \\
-    \BLOCK{for k in ['linkedin', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\BLOCK{if k == 'linkedin'}LinkedIn\BLOCK{else}Portfolio\BLOCK{endif}}\BLOCK{if not loop.last} \ $|$ \ \BLOCK{endif}\BLOCK{endfor}
+\BLOCK{if headline is defined and headline}
+    {\fontsize{12}{14}\selectfont\color{headernavy} \VAR{headline|hook_tex(headline_number|default(''), 'num')}}\\[0.2cm]
+\BLOCK{endif}
+    {\small \VAR{id|contact_line}}
+\BLOCK{if id.get('address')}\\[0.1cm]
+    {\small \VAR{id.address|e}}
+\BLOCK{endif}
 
 \end{center}
 

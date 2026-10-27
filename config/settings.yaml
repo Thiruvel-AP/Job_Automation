@@ -271,21 +271,22 @@ scoring:
   required_weight: 2.0
   preferred_weight: 1.0
   max_pages: 2                # two full pages by default (recruiters respond to a 2-page CV); the shrink loop runs only above this. `--one-page` forces 1 with the old template
-  min_fill_page2: 0.96        # page 2 must be at least this full: its last text line within 2 lines (2 x 14pt of a 770pt text area) of the bottom margin (y of that line / text-area height, measured from the PDF). Fill order: more projects, then more experience bullets, then the optional fact-bank sections (publications, languages, research_focus), then linespread (cv_linespread_max); nothing is invented, so a bank that runs out of content ends short and says so
+  min_fill_page2: 0.96        # page 2 must be at least this full: its last text line within 2 lines (2 x 14pt of a 770pt text area) of the bottom margin (y of that line / text-area height, measured from the PDF). Fill order (Document rules): each role up to its maximum bullets, then projects (never more than 3), then the optional fact-bank sections (publications, languages, research_focus), then linespread (cv_linespread_max); nothing is invented, so a bank that runs out of experience bullets ends short and says so
   cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
-    most_recent: [4, 5]       # the first (newest) entry
-    other: [3, 4]             # every other entry; an entry with fewer bullets in the fact bank just shows them all
+    most_recent: [4, 6]       # the first (newest) entry
+    other: [3, 5]             # every other entry; an entry with fewer bullets in the fact bank just shows them all
   cv_recent_min_bullets: 2    # a role dated within the last cv_recent_years years keeps at least this many bullets (if the bank has them) before any project is added; the shrink loop trims projects first
   cv_recent_years: 2          # how far back "recent" goes, from today, by the end date of the role
-  cv_projects: 5              # projects the two-page CV starts with (by JD relevance)
+  cv_projects: 3              # projects the two-page CV starts with (by JD relevance); the Document rules allow at most 3, code clamps a larger value
   cv_project_bullets: [2, 3]  # [min, max] bullets per project (a project with fewer shows them all)
-  cv_projects_max: 6          # fill may add projects (best JD match first) up to this many before it adds experience bullets
+  cv_projects_max: 3          # the fill may add projects (best JD match first) up to this many, after every role has its maximum bullets; never over 3
+  profile_words: [100, 150]   # the CV profile's word range (the Document rules): sentences are added from the fact bank until it has 100 words, never past 150; narrower is allowed, wider is not
   cv_linespread: 1.03         # the reference CV's linespread (config/reference/cv_style_reference.tex); raised only when the fact bank has no more content to fill page 2 (the font never shrinks below 11pt)
   cv_linespread_max: 1.09     # ceiling for that raise, in steps of 0.02 (three steps above the reference 1.03)
   max_skill_groups: 5         # grouped skill rows besides the pinned `skills.core` row; the groups least relevant to the JD are left off
   bullet_dedupe_jaccard: 0.6  # a bullet whose word-set overlap (Jaccard) with an already chosen bullet reaches this is not added
   letter_max_words: 250
-  letter_max_words_company: 420   # letter.mode: company only: the most words its letter may have (never over 420); the other modes keep letter_max_words
+  letter_max_words_company: 500   # letter.mode: company only: the most words its letter may have (never over 500); the other modes keep letter_max_words
 
 letter:
   # off = no letter is asked for: no letter call is made, no letter PDF is written, review says "Letter: off" and approving needs
@@ -304,7 +305,7 @@ letter:
   # company (the job ad is the only source: every claim must be backed by a phrase of the ad, no company number the ad lacks, no invented
   # name), P3 and P4 the two best-matching fact-bank bullets each tied to a named requirement of the ad (every number, tool and organisation
   # must be in those bullets), P5 closing_hook. One redraft after a rejection; a second rejection = no letter, and review says why.
-  company_words: [330, 420]  # company mode: [low, high], the whole letter must come to at least `low` and at most `high` words (300 <= low <= high <= 420;
+  company_words: [300, 500]  # company mode: [low, high], the whole letter must come to at least `low` and at most `high` words (300 <= low <= high <= 500;
                              # scoring.letter_max_words_company can lower the top); the model is asked for the middle of the range
   # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
   greeting_hook: "Dear {company}{team} team"

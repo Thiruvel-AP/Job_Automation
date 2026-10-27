@@ -39,6 +39,7 @@ def _bank() -> dict:
     exp["dc"]["bullets"][0]["text"] = ("Prototyped an MCP-based agentic tool in Python (FastMCP, PostgreSQL, GitHub Actions CI) for a "
                                        "start-up client -- presented in a live stakeholder demo.")
     proj["bitcoin"]["name"] = "Price forecasting \u2014 LSTM time-series service"
+    proj["churn"]["name"] = "Price forecasting — LSTM time-series service"     # the project the three-project CV shows for this ad (Document rules)
     proj["lloyds"]["award"] = "3rd place"
     proj["lloyds"]["bullets"][0]["result"] = "3rd place; 200:1 class imbalance"
     fb["certifications"] = ["Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
@@ -333,4 +334,4 @@ def test_the_databases_are_in_the_cloud_group_when_the_jd_mentions_sql(tmp_path)
 def test_the_one_page_template_has_no_em_dash_either(run, tmp_path):
     rep, _, _ = run
     text = pdf_text(render_cv(rep["context"], tmp_path, "cv", one_page=True))
-    assert "\u2014" not in text and "--" not in text and rep["context"]["projects"][0]["name"] in text
+    assert "\u2014" not in text and "--" not in text and any(q["name"] in text for q in rep["context"]["projects"] if "—" not in q["name"])

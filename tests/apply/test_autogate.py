@@ -11,6 +11,7 @@ import yaml
 from conftest import PROFILE_FIX
 
 from careerops.apply import autogate, autolog
+from careerops.tailoring import doccheck
 
 TODAY = date(2026, 10, 21)
 APPLICANT = yaml.safe_load((PROFILE_FIX / "applicant.yaml").read_text(encoding="utf-8"))
@@ -38,6 +39,7 @@ def pdf_is_fine(monkeypatch, request):
     """The gate tests do not render PDFs: the PDF checks say all is well, except in the tests marked slow, which use real ones."""
     if request.node.get_closest_marker("slow") is None:
         monkeypatch.setattr(autogate, "pdf_problems", lambda *a, **k: [])
+    monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck())        # the document check has its own tests (below, and test_doccheck.py)
 
 
 def run(settings, db, job=None, rep=None, **kw):
@@ -52,7 +54,7 @@ def names(g):
 def test_a_clean_job_passes_every_gate(settings, db):
     g = run(settings, db)
     assert g.ok and g.failed == [] and g.line() == ""
-    assert [x.name for x in g.items] == ["ATS", "format", "faithfulness", "level", "sponsorship", "kind", "duplicates", "daily cap"]
+    assert [x.name for x in g.items] == ["ATS", "format", "faithfulness", "level", "sponsorship", "kind", "duplicates", "daily cap", "doc check"]
 
 
 def test_every_failed_gate_is_named_in_one_line_in_table_order(settings, db):
@@ -137,6 +139,7 @@ def test_the_pdf_is_checked_against_the_fact_bank_identity_and_the_sections_the_
 
 def test_a_missing_cv_pdf_is_a_failed_format_gate(settings, db, monkeypatch):
     monkeypatch.undo()
+    monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck())
     g = run(settings, db, rep={"cv_pdf": None})
     assert names(g) == ["format"] and "no CV PDF" in g.line()
 
@@ -389,3 +392,41 @@ def test_headings_out_of_order_and_text_past_the_margin_are_named(tmp_path):
     wide = compile_tex(_tex("Ada Lovelace \\section*{PROFILE} \\hspace*{16cm}\\mbox{pastthemargin} \\newpage more"), tmp_path, "wide")
     got = autogate.pdf_problems(wide, name="Ada Lovelace", email="", headings=["Profile"])
     assert any("margin" in p for p in got)
+
+
+# ------------------------------------------------------------------ the document check (Document rules, A7): always blocks auto-submit
+def test_a_document_check_failure_blocks_auto_submit_and_is_named(settings, db, monkeypatch):
+    monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck(["PROFILE 84/100 words: add profile sentences to fact_bank.yaml → profile.sentences", "x"]))
+    g = run(settings, db)
+    assert names(g) == ["doc check"] and not g.ok
+    first = "PROFILE 84/100 words: add profile sentences to fact_bank.yaml → profile.sentences"
+    assert g.line() == f"AUTO BLOCKED: doc check: 2 failure(s), first: {first[:70]}"
+    assert g.failed[0].info.startswith("DOC CHECK: FAILED (2)")
+
+
+def test_a_passing_document_check_adds_its_line_and_blocks_nothing(settings, db):
+    g = run(settings, db)
+    assert g.ok and [x.info for x in g.items if x.name == "doc check"] == ["DOC CHECK: pass"]
+
+
+def test_no_setting_can_switch_the_document_check_off(settings, db, monkeypatch):
+    monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck(["HOOK headline"]))
+    for key in ("doc_check", "skip_doc_check", "require_doc_check"):
+        settings.raw["apply"][key] = False
+    assert names(run(settings, db)) == ["doc check"]
+
+
+def test_a_check_that_cannot_run_blocks_too(settings, db, monkeypatch):
+    def boom(*a, **k):
+        raise OSError("no PDF")
+    monkeypatch.setattr(doccheck, "for_report", boom)
+    g = run(settings, db)
+    assert names(g) == ["doc check"] and "the check could not run" in g.failed[0].info
+
+
+def test_the_gate_is_given_the_report_the_fact_bank_and_the_job(settings, db, monkeypatch):
+    seen = []
+    monkeypatch.setattr(doccheck, "for_report", lambda rep, s, fb, job=None: seen.append((rep, fb, job)) or doccheck.DocCheck())
+    run(settings, db)
+    (rep, fb, job), = seen
+    assert rep["ats"]["strict"] == 74.0 and fb is FB and job["id"] == "greenhouse:acme-1"

@@ -6,8 +6,9 @@
    raise from 1.03 to 1.09 in steps of 0.02. test_cv_template.py compares both with the reference when that file is present.
    Body: experience goes through role (roleNoLoc when the entry has no location), a project through project with its award or
    coursework label as badge or its link as gh, a skills group through skillgroup (the label on its own navy bold line, the items
-   below it), education through roleNoLoc plus a muted small modules line, the certifications are one bullet joined with a middle
-   dot, years in italics, after one bold-led bullet per project that moved there for its award (render context `achievements`).
+   below it), education through roleNoLoc plus a muted small modules line, the certifications are a bulleted list with one item
+   per certification (name, issuer, date in italics), after one bold-led bullet per project that moved there for its award (render
+   context `achievements`).
    A project with a github value prints that URL (url, the default url font) as its right-hand tag; the macro gh stays in the preamble
    because the preamble is the reference file line for line, but nothing calls it. When the bold name and the URL do not fit on one
    line the URL goes to the stack line, right-aligned, and when the stack and the URL do not fit together it gets a line of its own:
@@ -78,7 +79,7 @@
   {\fontsize{12}{14}\selectfont\color{navy} \VAR{headline|hook_tex(hook_number|default(''), 'num')}}\\[4pt]
 \BLOCK{endif}
   {\small
-  \VAR{id.location|e}\VAR{dot}\href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')}\VAR{dot}\href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\VAR{dot}\href{\VAR{id.links[k]|urlesc}}{\VAR{'Portfolio' if k == 'portfolio' else id.links[k]|urlshow|e}}\BLOCK{endfor}}\BLOCK{if id.get('status_line')}\\[3pt]
+  \VAR{id|contact_line}}\BLOCK{if id.get('status_line')}\\[3pt]
   {\small\itshape\color{muted} \VAR{id.status_line|map('e')|join(dot)}}
 \BLOCK{endif}
 
@@ -193,9 +194,9 @@
 \BLOCK{for a in achievements|default([])}
   \item \textbf{\VAR{a|achievement_head}}: \VAR{a.text|bullet(a.get('result', ''), 'num')}
 \BLOCK{endfor}
-\BLOCK{if certifications}
-  \item \VAR{certifications|map('cert_tex')|join(dot)}
-\BLOCK{endif}
+\BLOCK{for c in certifications}
+  \item \VAR{c|cert_tex}
+\BLOCK{endfor}
 \end{itemize}
 \BLOCK{endif}
 \BLOCK{if languages|default([])}

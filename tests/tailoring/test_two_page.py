@@ -60,13 +60,13 @@ def test_the_fixture_bank_renders_exactly_two_pages_with_page_two_96_to_100_perc
     assert rep["attempts"][-1]["page2_fill"] == pytest.approx(fill)
 
 
-def test_the_fixture_cv_shows_five_projects_and_reaches_the_fill_target(run2):
+def test_the_fixture_cv_shows_three_projects_and_reaches_the_fill_target_or_says_why_not(run2):
     rep, fb, s = run2
     projects = rep["context"]["projects"]
-    moved = rep["achievements"]                                                    # an award project outside the JD's top three
-    assert s["scoring"]["cv_projects"] == 5 and len(fb["projects"]) == 5 and len(projects) + len(moved) == 5      # the bank has five, all are shown
-    assert all(len(p["bullet_ids"]) >= 2 for p in projects)
-    assert rep["fill"]["reached"] is True and rep["page2_fill"] >= s["scoring"]["min_fill_page2"]
+    assert s["scoring"]["cv_projects"] == 3 and len(fb["projects"]) == 5 and len(projects) == 3          # the bank has five; the Document rules show three
+    assert all(1 <= len(p["bullet_ids"]) <= 3 for p in projects)
+    reached = rep["fill"]["reached"] is True and rep["page2_fill"] >= s["scoring"]["min_fill_page2"]
+    assert reached or "fact bank has no more experience bullets" in rep["fill_shortfall"]                 # a short page 2 is said, never padded
     first = rep["attempts"][-1]["proposal"]["selection"]
     assert all(2 <= len(first["project_bullets"][p]) <= 3 for p in first["projects"])               # selection: 2-3 each
 
@@ -126,15 +126,15 @@ def _bank(n_first=7, n_other=5, n_proj=3):
                          for j in range(5)]}
 
 
-def test_two_page_targets_are_four_to_five_for_the_newest_entry_three_to_four_for_the_rest():
+def test_two_page_targets_are_four_to_six_for_the_newest_entry_three_to_five_for_the_rest():
     fb = _bank()
     kws = _kws(*[f"k{e}{i}" for e in ("e1", "e2", "e3") for i in range(7)], *[f"kp{j}{i}" for j in range(5) for i in range(3)])
     sel = select_cv(fb, kws, layout=TWO_PAGE)
-    assert [len(sel["experience"][e]) for e in ("e1", "e2", "e3")] == [5, 4, 4]       # plenty to gain: the maximum
-    assert len(sel["projects"]) == 5 and all(len(b) == 3 for b in sel["project_bullets"].values())
+    assert [len(sel["experience"][e]) for e in ("e1", "e2", "e3")] == [6, 5, 5]       # plenty to gain: the maximum
+    assert len(sel["projects"]) == 3 and all(len(b) == 3 for b in sel["project_bullets"].values())
     none = select_cv(fb, _kws("zzz-nothing"), layout=TWO_PAGE)
     assert [len(none["experience"][e]) for e in ("e1", "e2", "e3")] == [4, 3, 3]      # nothing to gain: the minimum
-    assert len(none["projects"]) == 5 and all(len(b) == 2 for b in none["project_bullets"].values())
+    assert len(none["projects"]) == 3 and all(len(b) == 2 for b in none["project_bullets"].values())
 
 
 def test_an_entry_with_fewer_bullets_than_its_target_shows_all_of_them():

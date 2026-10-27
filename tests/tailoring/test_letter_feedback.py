@@ -50,18 +50,18 @@ def test_a_filler_word_becomes_remove_it(world):
 def test_too_short_names_the_count_and_the_bullet_whose_detail_to_use(world):
     paragraphs = body(world, 288)
     problems = check(world, paragraphs)
-    assert "288 words: the letter must be between 330 and 420" in problems
+    assert "288 words: the letter must be between 300 and 500" in problems
     lines = LF.instructions(problems, [world.plan.p1, *paragraphs, world.plan.p5], world.plan)
     line = next(x for x in lines if x.startswith("the letter is 288 words"))
-    assert "42 short of the 330 minimum" in line and "use more of the detail of bullet " in line
+    assert "12 short of the 300 minimum" in line and "use more of the detail of bullet " in line
     named = line.split("use more of the detail of bullet ")[1].split()[0].strip(".,:;")
     assert named in {e["id"] for e in world.plan.evidence}
 
 
 def test_too_long_names_how_many_words_to_cut(world):
-    paragraphs = body(world, 430)
+    paragraphs = body(world, 530)
     lines = LF.instructions(check(world, paragraphs), [world.plan.p1, *paragraphs, world.plan.p5], world.plan)
-    assert any(x.startswith("the letter is 430 words, 10 over the 420 maximum: cut 10 words") for x in lines), lines
+    assert any(x.startswith("the letter is 530 words, 30 over the 500 maximum: cut 30 words") for x in lines), lines
 
 
 def test_a_number_a_tool_and_a_missing_requirement_become_instructions(world):

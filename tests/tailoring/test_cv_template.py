@@ -91,7 +91,16 @@ def _preamble(tex: str) -> list[str]:
 
 
 def _bank() -> dict:
-    return load_yaml(FIX / "profile" / "fact_bank.yaml")
+    """The fixture bank with spare experience bullets: since the Document rules the fill raises every role to its maximum before it adds a project
+    (never more than three), so a bank must hold enough experience to fill page 2."""
+    fb = load_yaml(FIX / "profile" / "fact_bank.yaml")
+    spare = {"az": 1, "dc": 2, "fl": 3, "hp": 3, "ra": 3}
+    topics = ["survey returns", "donor records", "sales ledgers", "weather feeds", "clinic rotas"]
+    for e in fb["experience"]:
+        for i in range(spare.get(e["id"], 0)):
+            e["bullets"].append({"id": f"{e['id']}x{i}", "terms": [],
+                                 "text": f"Prepared analysis {i} of {topics[(i + len(e['id'])) % 5]} for {e['id']} and wrote up the caveats for the team."})
+    return fb
 
 
 def _job() -> dict:
@@ -210,7 +219,7 @@ def test_the_body_uses_the_reference_macros():
     assert "\\roleNoLoc{Uni, Bristol, UK}{Sep 2025 \u2013 Sep 2026}{MSc Data Science, Distinction}" in body
     assert r"{\color{muted}\small Deep Learning, NLP; dissertation}\par" in body
     assert r"Course, Anthropic, \textit{Jun 2026}" in body and r"AWS Cloud Foundations, \textit{Nov 2025}" in body
-    assert body.count(r"\item", body.index("Certifications")) == 1
+    assert body.count(r"\item", body.index("Certifications")) == 2                  # a list: one item per certification (Document rules, A6)
     assert r"\fontsize{22}{26}\selectfont\bfseries\color{navy} Ada Lovelace}" in body
     assert r"\textperiodcentered" in body and "|" not in body                       # middle-dot separators, as in the reference
     assert r"\color{muted} Right to work in the UK" in body and "Available now" in body
@@ -272,7 +281,7 @@ def test_certification_years_are_italic_and_joined_with_a_middle_dot():
 
 def test_settings_for_the_fill():
     sc = load_settings()["scoring"]
-    assert (sc["max_pages"], sc["min_fill_page2"], sc["cv_projects"], sc["cv_projects_max"]) == (2, 0.96, 5, 6)   # 0.96 = within 2 lines
+    assert (sc["max_pages"], sc["min_fill_page2"], sc["cv_projects"], sc["cv_projects_max"]) == (2, 0.96, 3, 3)   # 0.96 = within 2 lines; 3 projects at most
     assert (sc["cv_linespread"], sc["cv_linespread_max"]) == (1.03, 1.09)               # the reference's, then three steps of 0.02
 
 
@@ -288,18 +297,18 @@ def _fill_bank(n_projects=8):
             "projects": [{"id": f"p{j}", "bullets": bullets(f"p{j}b", 3)} for j in range(n_projects)]}
 
 
-def test_fill_adds_further_projects_first_then_project_bullets_then_experience_bullets():
+def test_fill_adds_experience_bullets_first_then_further_projects_then_project_bullets():
     fb = _fill_bank()
     kws = _kw(*[f"toolp{j}b0" for j in range(8)])
     sel = select_cv(fb, kws, layout=TWO_PAGE)
-    assert len(sel["projects"]) == 5
-    order = fill_order(fb, kws, sel, max_projects=6)
+    assert len(sel["projects"]) == 3
+    order = fill_order(fb, kws, sel, max_projects=5)
     owner = {b["id"]: (sec, e["id"]) for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
     stages = [("new" if owner[b][0] == "projects" and owner[b][1] not in sel["projects"]
                else "shown" if owner[b][0] == "projects" else "experience") for b in order]
-    assert stages == sorted(stages, key=["new", "shown", "experience"].index)           # never back to an earlier stage
+    assert stages == sorted(stages, key=["experience", "new", "shown"].index)           # never back to an earlier stage (Document rules, A5)
     new = {owner[b][1] for b, st in zip(order, stages) if st == "new"}
-    assert len(new) == 1 and not new & set(sel["projects"])                              # 5 shown + 1 new = the maximum of 6
+    assert len(new) == 2 and not new & set(sel["projects"])                              # 3 shown + 2 new = the maximum of 5
     assert stages.count("shown") > 0 and stages.count("experience") > 0
 
 
@@ -310,7 +319,8 @@ def test_a_project_is_added_by_jd_relevance_and_none_without_a_maximum():
     assert "p7" in sel["projects"]
     sel["projects"].remove("p7")                                                         # as if it had not been picked
     sel["project_bullets"].pop("p7", None)
-    assert fill_order(fb, kws, sel, max_projects=5 + 1)[0].startswith("p7b")             # the best of the remaining first
+    order = fill_order(fb, kws, sel, max_projects=3 + 1)
+    assert next(b for b in order if b.startswith("p")).startswith("p7b")                 # the best of the remaining first (after the experience bullets)
     none = fill_order(fb, kws, sel)                                                      # no maximum: no further project
     assert not any(b.startswith("p7") for b in none)
 
@@ -322,7 +332,7 @@ def test_snapshot_two_pages_and_page_two_at_least_90_percent_full(fixture_run):
     pdf = Path(rep["cv_pdf"])
     assert page_count(pdf) == rep["cv_pages"] == 2
     assert page2_fill(pdf) >= 0.96 and rep["page2_fill"] == pytest.approx(page2_fill(pdf)) and rep["fill"]["reached"] is True
-    assert len(rep["context"]["projects"]) in (5, 6)
+    assert len(rep["context"]["projects"]) == 3                                   # never more than three (Document rules)
 
 
 @pytest.mark.slow
@@ -418,10 +428,10 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
     urls = re.findall(r"https://\S+", text)                                         # only the project URLs: the header links are short
     assert "https://github.com/ada-lovelace-test/churn#readme" in urls
     assert all(u.startswith("https://github.com/ada-lovelace-test/") for u in urls)
-    # certifications: one bullet joined with a middle dot, the years in italics
+    # certifications: a list, one bullet each (Document rules, A6), the years in italics
     cert = text.split("CERTIFICATIONS & ACHIEVEMENTS")[1]
-    assert cert.count("\u2022") == 2 and " \u00b7 " in cert            # the award project's line, then the one certifications bullet
-    assert tex.count(r"\item", tex.index("Certifications")) == 2
+    assert cert.count("\u2022") == 3 and " \u00b7 " not in cert        # the award project's line, then one bullet for each of the two certifications
+    assert tex.count(r"\item", tex.index("Certifications")) == 3
     assert len(re.findall(r"\\textit\{(?:[A-Z][a-z]{2} )?\d{4}\}", tex[tex.index("Certifications"):])) == 2
     # every date range reads "Mon YYYY – Mon YYYY"
     ranges = re.findall(r"(?:[A-Za-z]+ )?\d{4} – (?:[A-Za-z]+ \d{4}|Present)", text)
@@ -433,7 +443,7 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
 def test_snapshot_freelance_entry(fixture_run):
     rep, fb = fixture_run
     text, tex = pdf_text(Path(rep["cv_pdf"])), _tex(rep)
-    assert re.search(r"^Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M)
+    assert re.search(r"^\f?Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M)
     assert "Self-employed" not in text and "Self-employed" not in tex
     assert "\\role{Freelance}{Chennai, India}{Jan 2025 \u2013 Aug 2025}{ML Engineer}" in tex       # Freelance bold, its location italic
 
@@ -446,7 +456,7 @@ def test_an_explicit_employment_type_freelance_renders_freelance(tmp_path):
             e.update(org="Chennai Data Studio", employment_type="freelance", title="Freelance ML Engineer")
     rep = _tailor(tmp_path, fb)
     text = pdf_text(Path(rep["cv_pdf"]))
-    assert re.search(r"^Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M) and "Chennai Data Studio" not in text
+    assert re.search(r"^\f?Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M) and "Chennai Data Studio" not in text
     assert re.search(r"^ML Engineer$", text, re.M)
 
 
@@ -460,7 +470,7 @@ def test_a_year_only_date_is_printed_as_given_not_given_a_month(fixture_run, tmp
 def _bank_with(per_job: int, per_project: int, projects: int = 5) -> dict:
     """The fixture bank cut to `per_job` bullets per job and `per_project` per project (`projects` of them): how much content is
     left to fill page 2 with. Measured with the v2 template: (2, 1) with 5 projects reaches about 69% at the highest
-    linespread; (5, 2) with 5 projects reaches 96% at 1.07, between the reference's 1.03 and the ceiling 1.09 (the fill moves in
+    linespread; (5, 2) with 3 projects reaches 97% at 1.07, between the reference's 1.03 and the ceiling 1.09 (the fill moves in
     lumps: a step of 0.02 can push an entry onto a third page, and the loop then keeps the last value that fits)."""
     fb = _bank()
     fb["experience"] = [{**e, "bullets": e["bullets"][:per_job]} for e in fb["experience"]]
@@ -505,7 +515,7 @@ def test_when_content_runs_out_the_linespread_stops_at_1_09_and_the_shortfall_is
 
 @pytest.mark.slow
 def test_the_linespread_is_raised_only_as_far_as_the_fill_needs(tmp_path):
-    rep = _tailor(tmp_path, _bank_with(5, 2, 5))
+    rep = _tailor(tmp_path, _bank_with(5, 2, 3))
     assert 1.03 < rep["fill"]["linespread"] < 1.09 and rep["fill"]["reached"] is True
     assert rep["page2_fill"] >= 0.96 and page_count(Path(rep["cv_pdf"])) == 2
     assert "\\linespread{" + str(rep["fill"]["linespread"]) + "}" in _tex(rep)

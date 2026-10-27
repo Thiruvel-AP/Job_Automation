@@ -28,6 +28,8 @@ from ..discovery import applykind, freshness, priority as prio
 from ..discovery.gates import is_sponsor_flag
 from ..hook import headline_lint
 from ..llm import usage
+from ..tailoring import doccheck
+from ..tailoring.profile import bank_sentences as profile_sentences
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
 from ..tailoring.scorer import Keyword, score
@@ -39,6 +41,7 @@ from . import addfacts, gaps, judge, letter_edit
 
 CONFIRM_FALLBACK = "send fallback"
 CONFIRM_NO_LETTER = "no letter"
+CONFIRM_DOC_CHECK = doccheck.OVERRIDE                       # "override doc check", typed in full to approve a CV that failed the document check
 NO_LETTER_BANNER = "NO LETTER — write your own or apply without"
 JOB_BOARDS = ("cvlibrary", "reed", "totaljobs", "indeed", "linkedin")          # a host label or source name, hyphens ignored
 BOARD_BANNER = "agency/job board — sponsor check may refer to the agency, apply by hand on the site"
@@ -267,6 +270,13 @@ def provisional_lines(rep: dict) -> list[str]:
     return out
 
 
+def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
+    """`DOC CHECK: pass`, or the list of failures, on the review screen. Nothing without settings (a bare summary)."""
+    if settings is None or fb is None:
+        return []
+    return doc_check(rep, settings, fb, job).text().splitlines()
+
+
 def hook_lines(rep: dict) -> list[str]:
     """The hook (hook.py) as the review screen shows it: the problem, the proof bullet and its number, the headline, and anything
     that did not land on the CV."""
@@ -480,9 +490,23 @@ def open_file(p: str) -> None:
 
 
 # ---------------------------------------------------------------- decisions (also used by tests)
-def approve(db: DB, job, rep: dict, prefs: Path, confirm: str | None = None) -> None:
+def doc_check(rep: dict, settings, fb: dict | None, job) -> doccheck.DocCheck:
+    """The document check of a tailored job (tailoring/doccheck.py), read from its files. A check that cannot run is a failure."""
+    try:
+        return doccheck.for_report(rep, settings, fb, job)
+    except Exception as e:  # noqa: BLE001
+        return doccheck.DocCheck([f"the check could not run ({type(e).__name__}: {str(e)[:80]})"])
+
+
+def approve(db: DB, job, rep: dict, prefs: Path, confirm: str | None = None, doc: doccheck.DocCheck | None = None,
+            override: str | None = None) -> None:
     """A fallback letter is approved only with confirm == 'send fallback', a job with no letter only with confirm ==
-    'no letter' (each logged as an event)."""
+    'no letter' (each logged as an event). A CV that failed the document check (`doc`, tailoring/doccheck.py) is approved only with
+    override == 'override doc check', typed in full; the failures are logged with the approval."""
+    if doc is not None and not doc.ok:
+        if (override or "").strip() != CONFIRM_DOC_CHECK:
+            raise doccheck.DocCheckError(f"the document check failed ({len(doc.failures)}); fix it, or type '{CONFIRM_DOC_CHECK}' to approve anyway")
+        db.log(job["id"], "review", {"approved_over_doc_check": True, "failures": doc.failures})
     if letter_status(rep) == "none":
         if (confirm or "").strip() != CONFIRM_NO_LETTER:
             raise NoLetterError(f"there is no cover letter; regenerate it, or type '{CONFIRM_NO_LETTER}' to approve "
@@ -578,7 +602,7 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
                     warnings += [f"{bid}: deny-listed '{d}'" for d in deny_hits(new, fb.get("deny_terms", []))]
                     e["bullets"][i] = new.strip()
     if edited.get("profile") and edited["profile"].strip() != ctx["profile"]:
-        _log(prefs, {"kind": "edit_pair", "job_id": job["id"], "bullet_id": "profile", "source": fb["profile_facts"],
+        _log(prefs, {"kind": "edit_pair", "job_id": job["id"], "bullet_id": "profile", "source": profile_sentences(fb),
                      "keywords": rep["keywords"], "chosen": edited["profile"].strip(), "rejected": ctx["profile"]})
         ctx["profile"] = edited["profile"].strip()
     typo = rep.get("typography") or {}
@@ -661,14 +685,16 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
     def show() -> str:
         """The review screen of this version of the job: with the gap report in the review band, the plain header elsewhere."""
         if rep.get("ats") and gaps.applies(rep, band):
-            return summary(job, rep, settings, fb=view())
-        return summary(job, rep, settings)
+            screen = summary(job, rep, settings, fb=view())
+        else:
+            screen = summary(job, rep, settings)
+        return "\n".join([screen, *doc_check_lines(rep, settings, view(), job)])          # the document check is on every review screen
 
     print(show())
     verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)
     if (mode == "gate" and verdict is not None and verdict.yes
             and not [x for x in json.loads(job["flags"] or "[]") if not is_sponsor_flag(x)]
-            and letter_status(rep) in ("ok", "off", "declined")):
+            and letter_status(rep) in ("ok", "off", "declined") and doc_check(rep, settings, view(), job).ok):
         approve(db, job, rep, prefs)
         judge.log_decision(settings, job, rep, verdict, "auto", "gate: judge yes, no flags")
         db.log(job["id"], "review", {"auto_approved_by_judge": verdict.model, "score": verdict.score})
@@ -737,9 +763,16 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 confirm = ask(f"Letter is a FALLBACK. Type '{CONFIRM_FALLBACK}' to approve anyway: ")
             elif letter_status(rep) == "none":
                 confirm = ask(f"There is NO LETTER. Type '{CONFIRM_NO_LETTER}' to approve without one: ")
+            found, override = doc_check(rep, settings, view(), job), None
+            if not found.ok:
+                print("  " + found.text().replace("\n", "\n  "))
+                override = ask(f"The document check failed. Type '{CONFIRM_DOC_CHECK}' to approve anyway: ")
             try:
-                approve(db, job, rep, prefs, confirm=confirm)
-            except (FallbackLetterError, NoLetterError) as e:
+                if found.ok:
+                    approve(db, job, rep, prefs, confirm=confirm)
+                else:
+                    approve(db, job, rep, prefs, confirm=confirm, doc=found, override=override)
+            except (FallbackLetterError, NoLetterError, doccheck.DocCheckError) as e:
                 print(f"  NOT approved: {e}")
                 continue
             judge.log_decision(settings, job, rep, verdict, "approve")

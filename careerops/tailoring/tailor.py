@@ -42,13 +42,13 @@ from .rewrite_rules import (added_word_problems, bare_keyword_problems, canonica
                             qualifier_problems)
 from . import selection as _selection
 from .selection import (JACCARD, ONE_PAGE, REPLACE_RATIO, Layout, bullet_hits, chunks, fill_order, is_recent, layout_from, missing_keywords,
-                        replacers, select_cv, selected_ids, settle_selection, situated_ids, skills_text, verbatim_ids)
+                        project_cap, replacers, select_cv, selected_ids, settle_selection, situated_ids, skills_text, verbatim_ids)
 from .skills import (CORE_LABEL, core_skills, cv_skill_groups, cv_skills, dedupe_skills, family_basics_missing, family_skill_lines,
                      is_database_row, pick_family, skill_group_config, wants_databases)   # noqa: F401 — dedupe_skills is re-exported
 from .shapes import normalise_keywords, normalise_letter, normalise_rephrase
 from .textnorm import normalise_json
 from .render import (CV2_MARGIN_PT, DATE_SEPARATOR, last_line_fills, page2_fill, page_count, pdf_text, project_parts, render_cv,
-                     render_letter, result_span)
+                     render_letter, result_span, url_shown)
 from .scorer import (Keyword, _contains, cap_keywords, has_literal, ceiling, drop_contained, gap_terms, in_band, merge_keywords,
                      norm_literal, norm_stem, score, taxonomy_keywords)
 
@@ -67,7 +67,7 @@ LACK_CLAIM = re.compile(r"\b(have not|haven't|never used|no experience)\b")
 
 # ------------------------------------------------------------------ fact bank helpers
 def fact_text(fb: dict) -> str:
-    parts = list(fb.get("profile_facts", []))
+    parts = list(profile_mod.bank_sentences(fb))
     for g, items in fb.get("skills", {}).items():
         parts.append(f"{g}: {', '.join(items)}")
     for sec in ("experience", "projects"):
@@ -533,11 +533,13 @@ def rephrase_coverage(ctx: dict, fb: dict, kws: list[Keyword]) -> dict:
     return {"eligible": eligible, "rephrased": rephrased, "ratio": rephrased / eligible if eligible else None}
 
 
-# ---- 2b. profile: assembled in code (profile.py): the hook's profile line + one or two profile_facts. No model.
-def assemble_profile(fb: dict, kws: list[Keyword], jd: str, hk: hooks.Hook | None, head: str = "") -> dict:
-    """The CV profile (profile.assemble): `hk.profile_line` first (without a hook, `head`: the role family's profile body), then the best one
-    or two `profile_facts` as sentences. Returns {"text", "facts", "violations", "warnings", "retried", "fallback"}."""
-    return profile_mod.assemble(fb, kws, jd, hk.profile_line if hk else head)
+# ---- 2b. profile: assembled in code (profile.py): the hook's profile line, the family's profile body, then profile sentences up to 100-150 words. No model.
+def assemble_profile(fb: dict, kws: list[Keyword], jd: str, hk: hooks.Hook | None, head: str = "",
+                     words: tuple[int, int] | None = None) -> dict:
+    """The CV profile (profile.assemble): `hk.profile_line` first, then `head` (the role family's profile body), then the bank's profile
+    sentences, best keyword score first, up to the `words` range (None: the older one or two facts). Returns {"text", "facts", "violations",
+    "warnings", "retried", "fallback", "words", "shortfall"}."""
+    return profile_mod.assemble(fb, kws, jd, hk.profile_line if hk else "", family_body=head, words=words)
 
 
 # ---- 2c. assemble and fit
@@ -760,7 +762,8 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
                 stats["headline"].append(pick)
                 changed = True
         if m.profile_lines > pdflayout.MAX_PROFILE_LINES:
-            opts = pdflayout.profile_options(ctx["profile"], hk.profile_line if hk is not None else ctx.get("profile_head", ""))
+            opts = pdflayout.profile_options(ctx["profile"], ctx.get("profile_head") or (hk.profile_line if hk is not None else ""),
+                                             ctx.get("profile_min_words", 0))
             if opts:
                 room = len(ctx["profile"]) / (m.profile_lines - 0.5) * pdflayout.MAX_PROFILE_LINES * 0.98
                 ctx["profile"] = next((o for o in opts if len(o) <= room), opts[-1])
@@ -856,9 +859,9 @@ def _remove(e: dict, bid: str) -> None:
 
 
 def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rerender: Callable[[], tuple[Path, int]],
-               min_fill: float, skip: set[str] | None = None, first: str | None = None) -> dict:
+               min_fill: float, skip: set[str] | None = None, first: str | None = None, max_projects: int | None = None) -> dict:
     """Add bullets from `order` (selection.fill_order) until page 2 is at least `min_fill` full or the bullets run out,
-    never past two pages. Each round adds as many bullets as the size guess says it needs, renders, and if that tipped the
+    never past two pages and never starting a project once the CV shows `max_projects` of them (None = no limit). Each round adds as many bullets as the size guess says it needs, renders, and if that tipped the
     CV onto a third page takes them back, last first (those bullets are not tried again). `rerender()` renders `ctx` and
     returns (pdf, pages). Returns {"added", "rejected_overflow", "renders", "reached"}."""
     bidx, pos = bullet_index(fb), bullet_positions(fb, first)           # `first`: the hook's proof bullet stays first in its entry
@@ -881,8 +884,13 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
     stats["renders"] += 1
     used = _used(pdf, pages) if pages <= 2 else 3.0
     while queue and used < target and pages <= 2:
-        batch, est = [], used
+        batch, est, over = [], used, set()
+        shown = {e.get("id") for e in ctx["projects"]}
         for bid in list(queue):
+            if (max_projects is not None and owner[bid] in projects_by_id and owner[bid] not in shown
+                    and len(shown) + len({owner[b] for b in batch if owner[b] in projects_by_id and owner[b] not in shown}) >= max_projects):
+                over.add(bid)                             # it would be a project over the limit: never added
+                continue
             share = _bullet_share(texts.get(bid) or bidx[bid]["text"])
             if est + share > 2.0:
                 continue                                  # would not fit even by the guess: a shorter one may
@@ -890,6 +898,7 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
             est += share
             if est >= target:
                 break
+        queue = [q for q in queue if q not in over]
         if not batch:
             break
         queue = [q for q in queue if q not in batch]
@@ -910,6 +919,15 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
         used = _used(pdf, pages) if pages <= 2 else 3.0
     stats["reached"] = pages == 2 and page2_fill(pdf, pages) >= min_fill
     return stats
+
+
+def fill_shortfall(fill: dict, page2: float, min_fill: float) -> str:
+    """What the report says when page 2 stayed short after every fill step: the fact bank has no more experience bullets to add (every role is at
+    its maximum or has used all its bullets); nothing is invented to fill the page. "" when page 2 was filled."""
+    if fill.get("reached") is not False:                    # filled, or the fill was not run (a shrunk CV, one page)
+        return ""
+    return (f"page 2 is {page2:.0%} full (target {min_fill:.0%}): fact bank has no more experience bullets to add (every role is at its maximum or "
+            "out of bullets, projects stop at three); nothing is invented to fill the page")
 
 
 OPTIONAL_SECTIONS = ("publications", "languages", "research_focus")   # fact-bank keys, in the order fill_tail tries them
@@ -1293,9 +1311,15 @@ def _final_path(p, out_dir: Path, final_dir: Path) -> str | None:
     return str(final_dir / Path(p).relative_to(out_dir)) if p else None
 
 
+def letter_header(ctx: dict, kws: list[Keyword]) -> dict:
+    """The CV's hook headline as the CV prints it (typography applied), for the cover letter's header: {"headline", "number"}."""
+    shown = ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or ""
+    return {"headline": typography.clean(shown, keep=hyphen_keywords(kws)), "number": ctx.get("hook_number") or ""}
+
+
 def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_dir: Path, letter_name: str, team: str,
              gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False,
-             family_line: str = "", revise: dict | None = None):
+             family_line: str = "", revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None):
     """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `hook` with a hook:
     letters A and B (letters.py), the current choice is A when it passed its checks. In mode `hook` when the hook is on but none
     could be built: both letters are "none" (no old single letter takes their place, so the letter settings are never silently
@@ -1306,7 +1330,7 @@ def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_di
         from . import company_letter as CL
 
         pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids,
-                              revise=revise)
+                              revise=revise, cv=cv, page=page, header=header)
         return pdf, letter, None
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
@@ -1515,7 +1539,8 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict, feedback: str = "
     pdf, letter, letters = _letters(job, fb, kws, rep.get("company_hook") or "", hk, evidence, llm, settings, out_dir, stem,
                                     rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws), ids,
                                     rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None,
-                                    rep.get("family_line") or "", revision_for(settings, rep, feedback))
+                                    rep.get("family_line") or "", revision_for(settings, rep, feedback),
+                                    cv=_letter_cv(rep["context"]), header=letter_header(rep["context"], kws))
     install_letter(job, fb, rep, pdf, letter, letters)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
@@ -1607,20 +1632,27 @@ def swap_in(work: Path, final: Path, root: Path, out: Callable[[str], None] = pr
     _discard(old, root)
 
 
+def _letter_cv(ctx: dict) -> dict:
+    from .company_letter import cv_from_ctx
+
+    return cv_from_ctx(ctx)
+
+
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
                one_page: bool = False, on_extracted: Callable[[dict], None] | None = None,
-               boost: Iterable[str] | None = None) -> dict[str, Any]:
+               boost: Iterable[str] | None = None, company_page: Callable[[dict, Path], str] | None = None) -> dict[str, Any]:
     """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
     in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
     earlier successful output folder exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
     analysis (freeze.record) as soon as the model has given it, before anything else can fail, unless `frozen` was used
     or the model call failed (a taxonomy-only list is never frozen). `boost` = JD keywords (terms) the first attempt ranks first: review's `r`
-    asks for the ones the fact bank evidences (FORCE_FACTOR); it moves the selection only, never the score."""
+    asks for the ones the fact bank evidences (FORCE_FACTOR); it moves the selection only, never the score. `company_page(job, folder)` returns the
+    text of the employer's own careers page (companypage.provider) for a company-mode letter whose ad has no clause to quote; None = never fetched."""
     final = out_root / folder_name(job)
     work = final.with_name(final.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
     try:
-        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted, boost)
+        report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted, boost, company_page)
         swap_in(work, final, out_root)                          # the earlier output goes (.old), or is copied over when Windows holds it
         _discard(final.with_name(final.name + ".failed"), out_root)    # superseded by this success
         return report
@@ -1676,7 +1708,8 @@ def hook_placement(ctx: dict, hk: hooks.Hook | None, text: str) -> dict:
 
 def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             frozen: dict | None = None, one_page: bool = False,
-            on_extracted: Callable[[dict], None] | None = None, boost: Iterable[str] | None = None) -> dict[str, Any]:
+            on_extracted: Callable[[dict], None] | None = None, boost: Iterable[str] | None = None,
+            company_page: Callable[[dict, Path], str] | None = None) -> dict[str, Any]:
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
@@ -1733,9 +1766,13 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     # no hook: profile line 1 is the role family's profile body (the user's own words, fact bank `families[*].profile_body`), if the bank has one
     bank_family = fam or pick_family(fb, kws, family, from_family)
     family_body = " ".join(str((bank_family or {}).get("profile_body") or "").split())      # also the opening of a company-mode letter without a hook
-    head = family_body if hook_failed else ""
-    profile = assemble_profile(fb, kws, jd, hk, head)            # the hook's profile line (else the family's body) + profile_facts sentences, in code
+    head = family_body
+    words = None if one_page else profile_mod.word_range(settings)
+    profile = assemble_profile(fb, kws, jd, hk, head, words)     # the hook's profile line, the family's body, then profile sentences up to 100-150 words, in code
     profile_text = profile["text"]
+    if profile["shortfall"]:
+        analysis_warnings.append("profile: " + profile["shortfall"])
+    profile_head = " ".join(x for x in ((hk.profile_line if hk else ""), head) if x).strip()      # the fit never drops these sentences
     # an award project moves to Certifications & Achievements unless the JD ranks it in the top three (or it holds the hook's proof):
     # the fact bank the selection sees then lacks it, so it neither takes a project slot nor is offered to the fill
     moved = [] if one_page else achievement_projects(fb, kws, jd, hk)
@@ -1750,7 +1787,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "skills": {"core": core_skills(fb), "rows": list(skills), "dropped_groups": dropped_groups,
                                          "family": fam["id"] if fam else None},
                               "achievements": [a["id"] for a in achievements],
-                              "profile": {k: profile[k] for k in ("facts", "retried", "fallback")},
+                              "profile": {k: profile[k] for k in ("facts", "retried", "fallback", "words", "shortfall")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
                               "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body}
 
@@ -1776,8 +1813,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             rephrase_notes.append(f"hook: the rewording of {hk.proof_bullet_id} lost {hk.number}; the fact-bank wording is kept")
         rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted),
                       regressed=sum(f": {NO_REGRESSION}: " in w for w in warn))
-        ctx = _context(fb, sel, accepted, profile_text, kws, headline, skills, hk, achievements, head)
+        ctx = _context(fb, sel, accepted, profile_text, kws, headline, skills, hk, achievements, profile_head)
         ctx["linespread"] = sc["cv_linespread"]
+        ctx["profile_min_words"] = words[0] if words else 0
         fit_state: dict = {}
 
         def render_once() -> tuple[Path, int]:
@@ -1800,11 +1838,12 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         # two pages: when nothing had to be shrunk away, keep adding until page 2 is full enough (or nothing is left):
         # further projects, more experience bullets, optional fact-bank sections, then linespread (fill_tail)
         fill_on = not one_page and max_pages == 2 and shrinks == 0
-        order = (fill_order(fb_sel, ranking, sel, skills, jac, sc["cv_projects_max"], jd) if fill_on else [])
+        cap = project_cap(settings)
+        order = (fill_order(fb_sel, ranking, sel, skills, jac, cap, jd, layout) if fill_on else [])
 
         def fill_up(skip: set[str] | None = None) -> dict:
             more = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"], skip=skip,
-                              first=hk.proof_bullet_id if hk else None)
+                              first=hk.proof_bullet_id if hk else None, max_projects=cap)
             if not more["reached"]:
                 tail = fill_tail(ctx, fb, rerender, sc["min_fill_page2"], sc["cv_linespread_max"])
                 more.update(renders=more["renders"] + tail["renders"], reached=tail["reached"])
@@ -1892,14 +1931,18 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     verdict = bands.classify(cv_ats.strict, cv_ats.ceiling, bands.config(settings))
     if verdict.letter:
         letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
-                                               required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body)
+                                               required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body,
+                                               cv=_letter_cv(ctx), page=company_page, header=letter_header(ctx, kws))
     else:                                                       # skipped (ats): no model call, no PDF
         letter_pdf, letters = None, None
         letter = {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "off",
                   "reason": f"{verdict.reason}: no letter was drafted", "notes": [],
                   "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
     fm = None if one_page else pdflayout.measure(pdf)
-    urls = [] if one_page else [p["github"] for p in ctx["projects"] if p.get("github") and not project_parts(p)[1]]
+    short = fill_shortfall(rec["fill"], fill_final, sc["min_fill_page2"])
+    if short:
+        report["analysis_warnings"].append("fill: " + short)
+    urls = [] if one_page else [url_shown(p) for p in ctx["projects"] if url_shown(p) and not project_parts(p)[1]]
     link_issues = pdflayout.link_problems(pdf, urls) if urls else []            # checked on the PDF's word boxes
     report["analysis_warnings"].extend(f"layout: project link {x}" for x in link_issues)
     ats_now = ats.scores(cv_text, kws, claimable, pdf_text(letter_pdf) if letter_pdf else None, (lo * 100, hi * 100))
@@ -1913,7 +1956,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "band": in_band(final_score.literal, band), "pages": cv_pages, "page2_fill": fill_final,
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
-        "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"],
+        "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"], "fill_shortfall": short,
+        "hook": hk.to_dict() if hk else None,                                  # the hook as the PDF prints it (the length fit may have shortened its headline)
         "needs_result": needs_result(fb, ctx),
         "boosted": sorted(forced),
         # the typed facts this tailoring was given (tailoring/provisional.py), and whether the CV uses each: [] for a bank with none

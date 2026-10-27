@@ -9,6 +9,7 @@ Also the fact-bank checks `careerops doctor` runs on `core`."""
 from __future__ import annotations
 
 import re
+from typing import NamedTuple
 
 from .faithfulness import deny_hits
 from .scorer import Keyword, has_literal, norm_literal
@@ -32,17 +33,102 @@ def core_skills(fb: dict) -> list[str]:
     return [str(s) for s in ((fb.get("skills") or {}).get(CORE_KEY) or [])]
 
 
+# ------------------------------------------------------------------------------------------------------------ the canonical key
+# Document rules, A3. Aliases map one spelling to another before the plural is stripped (keys are lower-case letters and digits only).
+_ALIASES = {"awslambda": "lambda", "amazonlambda": "lambda", "awss3": "s3", "amazons3": "s3", "awsec2": "ec2", "amazonec2": "ec2",
+            "awsecr": "ecr", "awsiam": "iam", "awssqs": "sqs", "awsdynamodb": "dynamodb", "amazondynamodb": "dynamodb", "awseks": "eks",
+            "awsbedrock": "bedrock", "amazonbedrock": "bedrock", "gcpcloudrun": "cloudrun", "googlecloudrun": "cloudrun",
+            "sklearn": "scikitlearn", "postgres": "postgresql", "k8s": "kubernetes"}
+
+
+def canon(skill) -> str:
+    """The canonical key of one skill name: lower case, hyphens, dots, spaces and other punctuation stripped (so "scikit-learn" is
+    "Scikit Learn" and "Node.js" is "nodejs"), an alias mapped ("AWS Lambda" is "Lambda") and a plural stripped ("LLMs" is "LLM")."""
+    k = re.sub(r"[^a-z0-9+#]", "", str(skill).casefold())
+    k = _ALIASES.get(k, k)
+    return k[:-1] if len(k) > 3 and k.endswith("s") and not k.endswith("ss") else k
+
+
+def covers(skill) -> set[str]:
+    """The canonical keys one skill entry stands for: the name without a trailing bracket ("Kubernetes (AWS EKS)" covers "Kubernetes"), and
+    each part of a slash pair whose parts are words ("TensorFlow/Keras" covers "TensorFlow" and "Keras"; "CI/CD" is one name)."""
+    head = _QUALIFIER.sub("", str(skill)).strip()
+    parts = [p for p in re.split(r"\s*/\s*", head) if len(re.sub(r"[^A-Za-z]", "", p)) >= 3]
+    return {k for k in {canon(head), *(canon(p) for p in parts if len(parts) > 1)} if k}
+
+
+def line_items(text) -> list[str]:
+    """The skills one row names: its items split at commas outside brackets, and the items inside a bracket too ("AWS (Bedrock, Lambda), Docker"
+    is AWS, Bedrock, Lambda and Docker). A list row is the items of each entry."""
+    if not isinstance(text, str):
+        return [i for entry in text for i in line_items(entry)]
+    out: list[str] = []
+    depth, cur = 0, ""
+
+    def flush(buf: str) -> None:
+        buf = " ".join(buf.split())
+        if buf:
+            out.append(buf)
+
+    for ch in str(text):
+        if ch in "([":
+            depth += 1
+            flush(cur)
+            cur = ""
+        elif ch in ")]" and depth:
+            depth -= 1
+            flush(cur)
+            cur = ""
+        elif ch in ",;":
+            flush(cur)
+            cur = ""
+        else:
+            cur += ch
+    flush(cur)
+    return out
+
+
+class Repeat(NamedTuple):
+    name: str          # the skill as the first row names it
+    first: str         # the row that has it first
+    second: str        # the row that repeats it (the same row when it names it twice)
+
+
+def row_repeats(rows: dict) -> list[Repeat]:
+    """Every skill that two items of the Skills section share, in the order the second one appears. `rows` = {group label: a line of text (the
+    user's verbatim skill_lines) or a list of skills}. Nothing is changed."""
+    seen: dict[str, tuple[str, str]] = {}
+    out: list[Repeat] = []
+    for label, items in rows.items():
+        for item in line_items(items):
+            cs = covers(item)
+            hit = next((k for k in cs if k in seen), None)
+            if hit is not None:
+                out.append(Repeat(seen[hit][0], seen[hit][1], str(label)))
+            else:
+                seen.update({k: (item, str(label)) for k in cs})
+    return out
+
+
+def repeat_problems(rows: dict, family: str | None = None) -> list[str]:
+    """`SKILLS repeat "Lambda" in <group A> and <group B>: fix in fact_bank.yaml families.<name>.skill_lines` for each repeat (the hint only
+    when `family` names the bank family the verbatim lines came from)."""
+    fix = f": fix in fact_bank.yaml families.{family}.skill_lines" if family else ""
+    return [f'SKILLS repeat "{r.name}" in {r.first} and {r.second}{fix}' for r in row_repeats(rows)]
+
+
 def dedupe_skills(skills: dict[str, list[str]]) -> dict[str, list[str]]:
-    """The skill groups without case-insensitive repeats, within a group and across groups: the first occurrence stays
-    ("Python" in Languages keeps it; "python" in Tools goes). A group left empty is dropped."""
+    """The skill groups without repeats, within a group and across groups, by canonical key (`covers`: "AWS Lambda" is "Lambda", "TensorFlow/Keras"
+    covers "TensorFlow", case, hyphens and plurals do not matter): the first occurrence stays ("Python" in Languages keeps it; "python" in Tools
+    goes). A group left empty is dropped."""
     seen: set[str] = set()
     out: dict[str, list[str]] = {}
     for group, items in skills.items():
         kept = []
         for s in items:
-            key = " ".join(str(s).split()).casefold()
-            if key not in seen:
-                seen.add(key)
+            cs = covers(s)
+            if not cs & seen:
+                seen |= cs
                 kept.append(s)
         if kept:
             out[group] = kept
@@ -55,7 +141,9 @@ def core_deny_problems(fb: dict) -> list[str]:
 
 
 def _bank_text_without_core(fb: dict) -> str:
-    parts = list(fb.get("profile_facts", []))
+    from .profile import bank_sentences
+
+    parts = list(bank_sentences(fb))
     for g, items in (fb.get("skills") or {}).items():
         if g != CORE_KEY:
             parts += [str(i) for i in items]
@@ -237,7 +325,16 @@ def cv_skill_groups(fb: dict, kws: list[Keyword], cfg: dict, jd: str = "") -> tu
                 entries.append((source, s, source == CORE_KEY or k in always))
     placed: dict[str, list[tuple[str, bool]]] = {label: [] for label in labels}
     left_out: list[str] = []
-    for source, s, pinned in collapse_skills(entries, [str(u) for u in cfg.get("skill_umbrellas") or []]):
+    owner: dict[str, int] = {}                                    # canonical key -> the entry that holds it (Document rules, A3)
+    once: list[tuple[str, str, bool]] = []
+    for entry in collapse_skills(entries, [str(u) for u in cfg.get("skill_umbrellas") or []]):
+        hit = next((owner[k] for k in covers(entry[1]) if k in owner), None)
+        if hit is None:
+            owner.update({k: len(once) for k in covers(entry[1])})
+            once.append(entry)
+        elif entry[2] and not once[hit][2]:                       # a repeat that is pinned (skills_always) pins the one that stays
+            once[hit] = (*once[hit][:2], True)
+    for source, s, pinned in once:
         label = route.get(_key(s))
         if label is None and source != CORE_KEY:
             label = next((lab for lab, pats in banks if any(p.search(source) for p in pats)), None)

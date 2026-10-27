@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MAX_BULLET_LINES = 3
-MAX_PROFILE_LINES = 7
+MAX_PROFILE_LINES = 10               # a 150-word profile (the Document rules' limit) is about nine and a half lines of the 11pt body
 DOT = "•"
 _LINE = re.compile(r'<line xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</line>', re.S)
 _WORD = re.compile(r"<word [^>]*>(.*?)</word>", re.S)
@@ -293,14 +293,15 @@ def headline_options(headline: str, number: str = "") -> list[str]:
     return options
 
 
-def profile_options(profile: str, hook_line: str) -> list[str]:
+def profile_options(profile: str, hook_line: str, min_words: int = 0) -> list[str]:
     """The profile with whole sentences dropped from its end, longest first, the hook sentence (`hook_line`, first in the profile) always
-    kept: the profile itself is not among them."""
+    kept and, with `min_words`, no version under that many words (the Document rules' 100): the profile itself is not among them."""
     rest = profile[len(hook_line):].strip() if hook_line and profile.startswith(hook_line) else ""
     if not rest:
         return []
     sentences = re.split(r"(?<=[.!?])\s+", rest)
-    return [" ".join([hook_line, *sentences[:k]]).strip() for k in range(len(sentences) - 1, -1, -1)]
+    options = [" ".join([hook_line, *sentences[:k]]).strip() for k in range(len(sentences) - 1, -1, -1)]
+    return [o for o in options if len(o.split()) >= min_words]
 
 
 def copy_ctx(ctx: dict) -> dict:

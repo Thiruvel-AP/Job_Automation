@@ -320,7 +320,9 @@ def bullet_source(entry: Mapping[str, Any], b: Mapping[str, Any]) -> Source:
 
 
 def _fact_corpus(fb: Mapping[str, Any]) -> str:
-    parts = list(fb.get("profile_facts", []))
+    from ..tailoring.profile import bank_sentences
+
+    parts = list(bank_sentences(fb))
     for g, items in (fb.get("skills") or {}).items():
         parts.append(f"{g}: {', '.join(map(str, items))}" if isinstance(items, list) else str(items))
     for sec in ("experience", "projects"):

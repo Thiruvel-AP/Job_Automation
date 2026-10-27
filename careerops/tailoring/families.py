@@ -40,7 +40,9 @@ def _related(a: str, b: str) -> bool:
 
 def _places(fb: dict) -> list[tuple[str, str]]:
     """(where, text) for every place the fact bank says something: skills rows, profile facts, bullets (text + terms)."""
-    out = [("profile facts", f) for f in fb.get("profile_facts", [])]
+    from .profile import bank_sentences
+
+    out = [("profile facts", f) for f in bank_sentences(fb)]
     out += [(f"skills: {g}", ", ".join(items)) for g, items in fb.get("skills", {}).items()]
     for sec in ("experience", "projects"):
         for e in fb.get(sec, []):

@@ -13,6 +13,14 @@ from careerops.tailoring import tailor
 from test_company_letter import JD, JOB, TEAM, body, world  # noqa: F401  (world is a fixture)
 
 
+def cv_context(world) -> dict:
+    """A minimal render context of the CV the letter was written for: every bullet of the bank on it, and every skill of the bank."""
+    bullets = {b["id"]: b["text"] for sec in ("experience", "projects") for e in world.fb[sec] for b in e["bullets"]}
+    ids = sorted(world.chosen)
+    skills = {g: list(items) for g, items in world.fb["skills"].items()}
+    return {"experience": [{"bullet_ids": ids, "bullets": [bullets[i] for i in ids]}], "projects": [], "skills": skills}
+
+
 @pytest.fixture
 def rig(world, settings, db, tmp_path, monkeypatch):
     """A tailored company-letter job: its report, the job row, a fake renderer, and an editor that writes what the test says."""
@@ -23,7 +31,7 @@ def rig(world, settings, db, tmp_path, monkeypatch):
     paragraphs = [world.plan.p1, *body(world, 400), world.plan.p5]
     rep = {"job_id": JOB["id"], "keywords": [asdict(k) for k in world.kws], "hook": world.hk.to_dict(), "family_line": "",
            "claimable": world.claimable, "team": TEAM, "out_dir": str(out), "cv_pdf": str(out / "cv.pdf"), "letter_pdf": str(out / "Ada Cover Letter.pdf"),
-           "context": {"experience": [{"bullet_ids": sorted(world.chosen)}], "projects": []},
+           "context": cv_context(world),
            "letter": {"mode": "company", "status": "ok", "paragraphs": paragraphs, "problems": [], "words": CL.words(paragraphs), "notes": [], "retry": {},
                       "evidence": [], "hook_source": "library"}}
     world.settings.raw["review"]["judge"] = "off"

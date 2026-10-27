@@ -98,7 +98,7 @@ def test_c_garbage_answers_leave_canonical_bullets_an_assembled_profile_and_a_fa
     bidx = tailor.bullet_index(fb_fixture)
     for e in rep["context"]["experience"] + rep["context"]["projects"]:
         assert e["bullets"] == [bidx[i]["text"] for i in e["bullet_ids"]]
-    assert 1 <= len(rep["profile"]["facts"]) <= 2 and not rep["profile"]["fallback"]       # the profile never depended on the model
+    assert len(rep["profile"]["facts"]) >= 1 and not rep["profile"]["fallback"]            # the profile never depended on the model (Document rules: up to 150 words of the bank's)
     assert rep["letter"]["status"] == "fallback" and rep["final"]["pages"] <= settings["scoring"]["max_pages"]
 
 

@@ -85,33 +85,39 @@ def test_the_mode_is_known_and_the_shipped_settings_hold_the_new_keys(settings):
     settings.raw["letter"]["mode"] = "company"
     assert tailor.letter_mode(settings) == "company" and "company" in tailor.LETTER_MODES
     s = load_settings()
-    assert s["letter"]["company_words"] == [330, 420] and s["scoring"]["letter_max_words_company"] == 420
+    assert s["letter"]["company_words"] == [300, 500] and s["scoring"]["letter_max_words_company"] == 500
     assert s["scoring"]["letter_max_words"] == 250                          # the other modes keep theirs
 
 
-def test_the_word_cap_is_the_company_one_and_never_over_420(settings):
-    assert CL.word_cap(settings) == 420
-    settings.raw["scoring"]["letter_max_words_company"] = 500
-    assert CL.word_cap(settings) == 420
+def test_the_word_cap_is_the_company_one_and_never_over_500(settings):
+    assert CL.word_cap(settings) == 500
+    settings.raw["scoring"]["letter_max_words_company"] = 600
+    assert CL.word_cap(settings) == 500
     settings.raw["scoring"]["letter_max_words_company"] = 400
     assert CL.word_cap(settings) == 400 and settings["scoring"]["letter_max_words"] == 250
 
 
 # ------------------------------------------------------------------ what P1 and P5 are
-def test_p1_is_the_hooks_letter_line_word_for_word_and_p5_is_closing_hook_with_the_hooks_problem(world):
-    assert world.plan.p1 == world.hk.letter_sentence
+def test_p1_opens_with_the_hooks_letter_line_word_for_word_and_p5_is_closing_hook_with_the_hooks_problem(world):
+    assert world.plan.p1.startswith(world.hk.letter_sentence.rstrip(".")) and world.plan.opening.hook_id == world.hk.hook_id
     assert world.plan.p5 == f"Could we take 20 minutes to talk about {world.hk.problem}?"
 
 
-def test_with_no_hook_p1_is_the_family_profile_line_and_p5_names_the_ads_own_keywords(world):
+def test_with_no_hook_p1_is_a_numbered_bullet_then_the_family_profile_line_and_p5_names_the_ads_own_keywords(world):
     plan = CL.prepare(JOB, world.fb, world.kws, None, FAMILY_LINE, world.evidence, world.settings, world.claimable, world.chosen)
-    assert not plan.error and plan.p1 == FAMILY_LINE
+    assert not plan.error and plan.p1.endswith(FAMILY_LINE) and plan.opening.fact_kind == "bullet" and plan.p1 == plan.opening.paragraph
     assert plan.p5.startswith("Could we take 20 minutes to talk about ") and plan.p5.endswith("?") and "Python" in plan.p5
 
 
-def test_with_neither_hook_nor_family_line_there_is_nothing_to_open_with(world):
+def test_with_neither_hook_nor_family_line_the_numbered_bullet_alone_opens_the_letter(world):
     plan = CL.prepare(JOB, world.fb, world.kws, None, "", world.evidence, world.settings, world.claimable, world.chosen)
-    assert "nothing to open with" in plan.error
+    assert not plan.error and plan.p1 == plan.opening.sentence and plan.opening.fact_kind == "bullet"
+
+
+def test_with_no_numbered_fact_on_the_cv_there_is_nothing_to_open_with(world):
+    plain = {b["id"] for sec in ("experience", "projects") for e in world.fb[sec] for b in e["bullets"] if not any(c.isdigit() for c in b["text"])}
+    plan = CL.prepare(JOB, world.fb, world.kws, None, "", world.evidence, world.settings, world.claimable, plain)
+    assert "number" in plan.error and "nothing numbered to open the letter with" in plan.error
 
 
 def test_p3_and_p4_come_from_the_best_other_bullets_and_each_has_a_requirement_it_evidences(world):
@@ -212,18 +218,18 @@ def test_a_pasted_bullet_is_rejected(world):
 
 
 # ------------------------------------------------------------------ the length
-@pytest.mark.parametrize("total", [360, 361, 400, 419, 420])
-def test_360_to_420_words_pass(world, total):
+@pytest.mark.parametrize("total", [300, 301, 400, 499, 500])
+def test_300_to_500_words_pass(world, total):
     paragraphs = body(world, total)
     assert CL.words([world.plan.p1, *paragraphs, world.plan.p5]) == total
     assert check(world, paragraphs) == []
 
 
-@pytest.mark.parametrize("total", [250, 329, 421, 500])
-def test_250_and_500_words_and_the_edges_around_the_range_are_rejected(world, total):
+@pytest.mark.parametrize("total", [250, 299, 501, 600])
+def test_the_edges_around_the_range_are_rejected(world, total):
     paragraphs = body(world, total) if total >= 200 else None
     problems = check(world, paragraphs)
-    assert f"{total} words: the letter must be between 330 and 420" in problems, problems
+    assert f"{total} words: the letter must be between 300 and 500" in problems, problems
 
 
 def test_a_lower_cap_in_settings_narrows_the_range(world):
@@ -261,16 +267,16 @@ def test_the_model_is_asked_through_the_cover_letter_task_with_the_ad_and_the_tw
     pdf, letter = run(world, llm)
     assert llm.calls == ["cover_letter"] and seen[0]["mode"] == "company" and seen[0]["ad"] == JD
     assert seen[0]["opening"] == world.plan.p1 and seen[0]["closing"] == world.plan.p5 and len(seen[0]["evidence"]) == 4
-    assert 330 <= CL.words([world.plan.p1, world.plan.p5]) + seen[0]["body_words"] <= 420
+    assert 300 <= CL.words([world.plan.p1, world.plan.p5]) + seen[0]["body_words"] <= 500
 
 
 @pytest.mark.slow
 def test_a_good_first_draft_makes_the_pdf_with_the_five_paragraphs_in_order(world):
     handler, seen = writer(world, [body(world)])
     pdf, letter = run(world, MockLLM({"cover_letter": handler}))
-    assert letter["status"] == "ok" and letter["mode"] == "company" and 360 <= letter["words"] <= 420 and letter["retry"]["outcome"] == "first draft"
+    assert letter["status"] == "ok" and letter["mode"] == "company" and 300 <= letter["words"] <= 500 and letter["retry"]["outcome"] == "first draft"
     p = letter["paragraphs"]
-    assert len(p) == 5 and p[0] == world.hk.letter_sentence and p[1] == P2 and p[4] == world.plan.p5
+    assert len(p) == 5 and p[0] == world.plan.p1 and p[0].startswith(world.hk.letter_sentence.rstrip(".")) and p[1] == P2 and p[4] == world.plan.p5
     assert pdf.is_file() and pdf_text(pdf).count("Could we take 20 minutes") == 1
     assert [r["claim"] for r in letter["p2_sources"]] == sentences(P2) and letter["requirements"] == world.plan.reqs
 
@@ -321,8 +327,8 @@ def test_a_no_hook_job_still_gets_a_letter_that_opens_with_the_family_profile_li
     handler, seen = writer(world, [[P2, *_no_hook_body(world, plan)]])
     pdf, letter = run(world, MockLLM({"cover_letter": handler}), hk=None, family_line=FAMILY_LINE)
     assert letter["status"] == "ok", letter["problems"] or letter["reason"]
-    assert letter["paragraphs"][0] == FAMILY_LINE and letter["paragraphs"][4] == plan.p5 and letter["hook_source"] == "family profile line"
-    assert pdf.is_file() and 360 <= letter["words"] <= 420
+    assert letter["paragraphs"][0] == plan.p1 and plan.p1.endswith(FAMILY_LINE) and letter["paragraphs"][4] == plan.p5
+    assert letter["hook_source"] == "family profile line" and pdf.is_file() and 300 <= letter["words"] <= 500
 
 
 def _no_hook_body(world, plan) -> list[str]:
@@ -332,10 +338,12 @@ def _no_hook_body(world, plan) -> list[str]:
     return [f"{own[0]} {pad(need // 2)}", f"{own[1]} {pad(need - need // 2)}"]
 
 
-def test_a_no_hook_job_with_no_family_line_has_no_letter_and_says_why(world):
+def test_a_job_with_no_numbered_fact_on_its_cv_has_no_letter_and_says_why(world):
     llm = MockLLM({"cover_letter": lambda ctx: pytest.fail("the model must not be asked when there is nothing to open the letter with")})
-    pdf, letter = run(world, llm, hk=None, family_line="")
-    assert pdf is None and letter["status"] == "none" and "nothing to open with" in letter["reason"]
+    plain = {b["id"] for sec in ("experience", "projects") for e in world.fb[sec] for b in e["bullets"] if not any(c.isdigit() for c in b["text"])}
+    pdf, letter = CL.make(JOB, world.fb, world.kws, None, "", world.evidence, llm, world.settings, world.settings.path("outputs") / "company",
+                          "Ada Lovelace Cover Letter", TEAM, world.claimable, plain)
+    assert pdf is None and letter["status"] == "none" and "nothing numbered to open the letter with" in letter["reason"]
 
 
 # ------------------------------------------------------------------ the review screen
@@ -345,7 +353,7 @@ def test_review_shows_the_word_count_and_the_ad_sentences_p2_drew_from(world):
               "p2_sources": CL.p2_sources(P2, JD, skip)}
     lines = workflow.company_letter_lines(letter)
     text = "\n".join(lines)
-    assert lines[0].startswith("Letter (company mode): 398 words (asked for 400; accepted 330-420)") and "Python, XGBoost; PyTorch" in lines[0]
+    assert lines[0].startswith("Letter (company mode): 398 words (asked for 400; accepted 300-500)") and "Python, XGBoost; PyTorch" in lines[0]
     assert "P2 (why this company) drew from the job ad:" in text and "- Anaplan builds an AI-infused scenario planning" in text
     assert "ad: At Anaplan, we are a team of innovators focused on optimizing" in text
     assert workflow.company_letter_lines({"mode": "company", "status": "none"}) == [] and workflow.company_letter_lines({"status": "ok"}) == []
@@ -378,8 +386,8 @@ def test_tailor_job_in_company_mode_without_a_hook_writes_the_letter_from_the_fa
     rep = tailor.tailor_job(JOB, bank, MockLLM({"cover_letter": handler}), settings, settings.path("outputs"))
     letter = rep["letter"]
     assert letter["status"] == "ok", letter.get("problems") or letter.get("reason")
-    assert rep["letters"] is None and Path(rep["letter_pdf"]).is_file() and letter["mode"] == "company" and 360 <= letter["words"] <= 420
-    assert rep["hook"] is None and rep["family_line"] == FAMILY_LINE and letter["paragraphs"][0] == FAMILY_LINE
+    assert rep["letters"] is None and Path(rep["letter_pdf"]).is_file() and letter["mode"] == "company" and 300 <= letter["words"] <= 500
+    assert rep["hook"] is None and rep["family_line"] == FAMILY_LINE and letter["paragraphs"][0].endswith(FAMILY_LINE)
     assert len(seen) == 1 and letter["hook_source"] == "family profile line"
     assert letter["pages"] == 1                                    # 400 words fit one page
 

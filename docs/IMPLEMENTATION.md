@@ -1539,3 +1539,24 @@ each time, never anyone else's.
    approves its ads into `approved/` and gained the two approval tests. **Unverified:** `shortlist` on the real inbox (never run on real data), liveness on real pages, the dealbreaker sentence rules on real ads (hand-made
    ones only), and the Sheet read of `patterns`. **Known limits:** a company whose name differs between the ad and your archive (a trading name) is not recognised; the cooldown starts from a rejection or withdrawal
    logged in the outcome log (the reply watch or `careerops outcome`), not from a Status typed only into the Sheet.
+
+
+## 5ap. Document rules (27 Oct) — **done** (offline tests: fake bank, fake fetcher, MockLLM, xelatex for the pipeline tests; no network)
+
+1. **Settings** (`settings.yaml` and the test copy): `scoring.cv_projects: 3`, `cv_projects_max: 3`, `cv_bullets` `[4, 6]` / `[3, 5]`, `profile_words: [100, 150]`, `letter.company_words: [300, 500]`,
+   `scoring.letter_max_words_company: 500`. Code clamps projects to `selection.MAX_PROJECTS` = 3 and profile/letter ranges to the Document rules' bounds (narrower is allowed, wider is not).
+2. **A2 profile** (`tailoring/profile.py`): `assemble(..., family_body, words)`, `word_range`, `trim`, `word_problems`, `bank_sentences` (`profile.sentences` + `profile_facts`). `layout.MAX_PROFILE_LINES` is 10 and
+   `profile_options` never drops below the minimum words.
+3. **A3 skills** (`tailoring/skills.py`): `canon`, `covers`, `line_items`, `row_repeats`, `repeat_problems`; `dedupe_skills` and `cv_skill_groups` use the canonical key; `setup.skill_repeat_checks` for doctor.
+4. **A4/A5/A6**: `selection.fill_order(..., layout)` orders experience (to each role's max) -> further projects -> shown projects' bullets, no role/project over its maximum; `tailor.fill_page2(max_projects)`;
+   `tailor.fill_shortfall`; `render.url_shown` / `with_public_links` (`public: false` prints no URL); `cv2.tex.j2` lists certifications with `\item` each.
+5. **A1/A7 `tailoring/doccheck.py`**: `check` / `for_report` / `DocCheck.text()`; gates: `review.workflow.approve(doc=, override=)`, the judge gate, `summary` (`DOC CHECK` lines), `autogate` gate `doc check`,
+   `cli.tailor_jobs` prints it. The suite stubs `doccheck.for_report` (tests/conftest.py) so tests about other things keep their small banks; its own tests call `check` or the real `for_report`.
+6. **B letter** (`company_letter.py`, new `opening.py`, `companypage.py`, `letter_reuse.py`): range 300-500; `balance_problems` / `citation_tags` / `skill_problems` / `cv_from_ctx`; P1 from `opening.build`
+   (`hook.iter_eligible` walks the ranked hooks); `make(..., cv, page, header)`; reuse redraft; the letter template shares `render.contact_line` and the hook headline with the CV (a postal `address`, when the bank
+   has one, stays as an extra line). `tailor_job(company_page=)` threads the careers-page provider; `--mock` never fetches.
+7. **C doctor**: `setup.profile_word_checks`, `project_public_checks`, `skill_repeat_checks`.
+8. **Choices where the spec was silent:** the fact bank's key is `profile.sentences`, with `profile_facts` still read; "cites a bullet" is tagged by provenance (P3/P4 sentences carry their evidence group's ids, P2's carry none); a
+   letter whose opening cannot be built (no numbered fact on the CV, no phrase in the ad or page) is "no letter" with the reason; a skill-repeat check covers families' verbatim lines (the bank's generated rows are deduped, not
+   reported); the doc-check rules are not applied to `--one-page` CVs or to letter modes other than `company`. **Unverified:** `live --dry-run --max 1 --retailor` on real data (never run on real data), the real careers-page fetch,
+   and the real fact bank, which needs `profile.sentences` and the `public:` flags before it can pass.

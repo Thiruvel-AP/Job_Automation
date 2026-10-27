@@ -37,7 +37,7 @@ def test_settings_carry_the_letter_block(settings):
         "closing_fallback": "Could we find twenty minutes to talk about where I could contribute first at {company}?",
         "greeting_hook": "Dear {company}{team} team", "greeting_agency": "Hi {company} team",     # hook mode (letters.py)
         "closing_hook": "Could we take 20 minutes to talk about {problem}?",
-        "signoff": "With regards", "on_failure": "none", "mode": "draft", "company_words": [330, 420]}   # draft: the fixture turns the letter on
+        "signoff": "With regards", "on_failure": "none", "mode": "draft", "company_words": [300, 500]}   # draft: the fixture turns the letter on
 
 
 def test_greeting_uses_the_team_when_there_is_one_and_the_fallback_when_not(settings):

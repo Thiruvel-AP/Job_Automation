@@ -10,6 +10,9 @@
   kind           apply_kind is in apply.kinds
   duplicates     not applied to before: database, archive, AIApply export, this log, and the tracker Sheet
   daily cap      fewer than apply.max_auto_per_day auto-submits today
+  doc check      the Document rules hold for the CV and the letter (tailoring/doccheck.py: hook, profile 100-150 words, no skill twice, at most 3
+                 projects, certifications as a list, a 300-500 word letter with the CV's header, evidence and an opening that quotes the ad, no
+                 reuse). A failure always blocks auto-submit; only a person can approve over it, by typing `override doc check` in review.
 
 Nothing here opens a browser or clicks anything. A failed gate sends the job to the normal review prompt, with `Gates.line()` printed first.
 """
@@ -24,6 +27,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from ..discovery import applykind, discover, priority
+from ..tailoring import doccheck
 from ..tailoring.render import page_count, pdf_text
 from . import autolog
 from .archive import _own_role
@@ -319,6 +323,17 @@ def _cap(cfg: Config, log: list[dict[str, str]], today: date) -> Gate:
     return Gate("daily cap", ok, "" if ok else f"daily cap: {used} of {cfg.max_auto_per_day} auto-submits used today")
 
 
+def _doc_check(rep: Mapping[str, Any], settings, fb: Mapping[str, Any], job: Mapping[str, Any]) -> Gate:
+    """The document check (tailoring/doccheck.py). A check that cannot run is a failure: nothing is submitted on a CV nobody could check."""
+    try:
+        found = doccheck.for_report(rep, settings, fb, job)
+    except Exception as e:  # noqa: BLE001
+        found = doccheck.DocCheck([f"the check could not run ({type(e).__name__}: {str(e)[:80]})"])
+    if found.ok:
+        return Gate("doc check", True, "", "DOC CHECK: pass")
+    return Gate("doc check", False, f"doc check: {len(found.failures)} failure(s), first: {found.failures[0][:70]}", found.text())
+
+
 def evaluate(db, settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], *, today: date | None = None,
              tracker: Callable[[], set[str]] | None = None, submitting: bool = True) -> Gates:
     """Every gate for one tailored job, in the order of the table above. `tracker` returns the job ids in the tracker Sheet (it may raise);
@@ -327,4 +342,5 @@ def evaluate(db, settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: M
     cfg, job = config(settings), dict(job)
     log = autolog.rows(settings)
     return Gates([_ats(rep, cfg), _format(rep, fb), _faithfulness(rep), _level(job, settings), _sponsorship(job), _kind(job, cfg),
-                  _duplicates(db, settings, job, log, tracker, submitting), _cap(cfg, log, today or date.today())])
+                  _duplicates(db, settings, job, log, tracker, submitting), _cap(cfg, log, today or date.today()),
+                  _doc_check(rep, settings, fb, job)])

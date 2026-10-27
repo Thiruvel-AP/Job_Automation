@@ -1,7 +1,10 @@
-"""The cover letter of `letter.mode: company`: five paragraphs, 360-420 words, the middle three written by the cover_letter model under two
+"""The cover letter of `letter.mode: company`: five paragraphs, 300-500 words, the middle three written by the cover_letter model under two
 guards, the first and the last written in code.
 
-  P1  the hook's letter line, word for word; with no hook the role family's profile line (fact bank `families[*].profile_body`), word for word
+  P1  sentence 1 = the hook's letter line, word for word, with a number the fact bank holds, followed by a clause of the job ad (else of the
+      company's own careers page) that says the problem the company is hiring to solve, in quotation marks (tailoring/opening.py). A hook
+      whose line has no number cannot open a letter: the next hook, else the strongest numbered bullet of the CV and then the role family's
+      profile line (`families[*].profile_body`). "I am writing to apply" and the like are never used.
   P2  why this company: what it does, its product or customers, what this team is hiring to solve. The JOB AD is the only source.
   P3  the best-matching fact-bank bullet, tied to a named requirement of the ad        (written from that bullet alone)
   P4  the second best-matching bullet, tied to another named requirement               (written from that bullet alone)
@@ -31,7 +34,12 @@ COMPANY_SUPPORT of its stems in one window of up to WINDOW consecutive ad senten
 somewhere in the ad). Every number must be in the ad. Every capitalised name or acronym (a person, a team, a product: "SaaS") must be in the ad,
 the fact bank or the opening.
 
-Length: the whole letter, P1 to P5, must be inside `letter.company_words` ([low, high], default [330, 420]; high never over 420, and never over
+Body (Document rules, B3 and B5): P3 and P4 are written from bullets that this job's CV prints, a skill they name must be in the CV's Skills or
+bullets, and at least 60 % of the body's sentences (P2 to P4) are about those bullets (`balance_problems`; the internal tags are
+`citation_tags`, never printed). The body is compared with every earlier letter (letter_reuse.py): 0.30 or more is redrafted once, told
+`do not reuse these sentences: ...`, and a second copy is no letter.
+
+Length: the whole letter, P1 to P5, must be inside `letter.company_words` ([low, high], default [300, 500]; high never over 500, and never over
 `scoring.letter_max_words_company`); the model is asked for the middle of the range. The apply assist uploads the PDF to the cover-letter file field, or pastes the text
 into a cover-letter text box (apply/assist.py).
 """
@@ -45,17 +53,21 @@ from pathlib import Path
 from .. import ats
 from ..hook import Hook, org_short
 from ..llm.router import TaskUnavailable
+from . import companypage as CP
 from . import evidence_fields
 from . import letter_feedback as LF
+from . import letter_reuse as RU
 from . import letters as L
+from . import opening as OP
 from . import prompts as P
 from .faithfulness import numbers
 from .grounding import _has, _names, bank_text, grounding_problems, repeated_evidence_problems, sentences
 from .letter_rules import bank_names, term_dump_problems
 from .scorer import Keyword, keyword_hits, norm_literal, norm_stem
 
-LOW_BOUND, HIGH_BOUND = 300, 420          # letter.company_words: [low, high] with 300 <= low <= high <= 420
-DEFAULT_RANGE = (330, 420)
+LOW_BOUND, HIGH_BOUND = 300, 500          # letter.company_words: [low, high] with 300 <= low <= high <= 500 (the Document rules' letter length)
+DEFAULT_RANGE = (300, 500)
+BODY_CITING = 0.60                        # at least this share of the body's sentences (P2 to P4) must be about the CV's bullets
 ATTEMPTS = 3                              # the draft and up to two redrafts, each told every rejection so far
 COMPANY_SUPPORT = 0.6                     # share of a P2 clause's content stems that one window of the ad must hold
 WINDOW = 3                                # consecutive ad sentences that may together support one clause
@@ -87,7 +99,7 @@ _BULLET = re.compile(r"^\s*(?:[-*•●▪]|\d+[.)])\s*")
 
 # ------------------------------------------------------------------ settings
 def word_range(settings) -> tuple[int, int]:
-    """settings letter.company_words: [low, high], two whole numbers with 300 <= low <= high <= 420 (default [330, 420])."""
+    """settings letter.company_words: [low, high], two whole numbers with 300 <= low <= high <= 500 (default [300, 500])."""
     raw = settings["letter"].get("company_words", list(DEFAULT_RANGE))
     bad = ValueError(f"letter.company_words must be [low, high], two whole numbers with {LOW_BOUND} <= low <= high <= {HIGH_BOUND}, got {raw!r}")
     if not isinstance(raw, (list, tuple)) or len(raw) != 2 or any(isinstance(x, bool) for x in raw):
@@ -109,7 +121,7 @@ def target_words(settings) -> int:
 
 def word_cap(settings) -> int:
     """The most words a company-mode letter may have: the top of letter.company_words, or scoring.letter_max_words_company when that is lower
-    (never over 420). The other modes keep scoring.letter_max_words."""
+    (never over 500). The other modes keep scoring.letter_max_words."""
     return min(word_range(settings)[1], int(settings["scoring"].get("letter_max_words_company", HIGH_BOUND)), HIGH_BOUND)
 
 
@@ -342,9 +354,55 @@ def user_problems(paragraphs: list[str], evidence: list[dict], opening: str, fb:
 
 
 # ------------------------------------------------------------------ the whole letter
+def balance_problems(body: list[str]) -> list[str]:
+    """At least BODY_CITING of the body's sentences must be about the CV's bullets: the sentences of P3 and P4 (each written from its bullets, tagged
+    with their ids by `citation_tags`) against all the sentences of P2 to P4. A long P2 is what breaks it."""
+    counts = [len(sentences(p)) for p in body]
+    cited, total = sum(counts[1:]), sum(counts)
+    if total and cited / total < BODY_CITING - 1e-9:
+        return [f"body: {cited} of {total} sentences cite a bullet or project ({cited / total:.0%}); at least {BODY_CITING:.0%} must (shorten P2)"]
+    return []
+
+
+def citation_tags(body: list[str], groups: list[list[dict]]) -> list[dict]:
+    """[{"para": "P2".."P4", "sentence", "ids"}] for every sentence of the body: the bullet ids a sentence of P3 or P4 stands on (its evidence
+    group), none for a sentence of P2. Internal: kept in the report, never printed on the letter."""
+    out: list[dict] = []
+    for n, (tag, par) in enumerate(zip(("P2", "P3", "P4"), body)):
+        ids = [e["id"] for e in groups[n - 1]] if n >= 1 and n - 1 < len(groups) else []
+        out += [{"para": tag, "sentence": s.strip(), "ids": list(ids)} for s in sentences(par)]
+    return out
+
+
+def skill_problems(body: list[str], fb: dict, cv_text: str) -> list[str]:
+    """A skill the fact bank names that the letter's body names too must be in this CV's Skills or bullets (`cv_text`)."""
+    have = norm_literal(cv_text)
+    out = []
+    for n, par in enumerate(body):
+        lit = norm_literal(par)
+        for tool in L._tools(fb):
+            if len(tool) >= 3 and re.search(r"(?<![\w])" + re.escape(tool) + r"(?![\w])", lit) and not re.search(
+                    r"(?<![\w])" + re.escape(tool) + r"(?![\w])", have):
+                out.append(f"P{n + 2}: names '{tool}', which is not in this CV's Skills or bullets")
+    return out
+
+
+def cv_from_ctx(ctx: dict) -> dict:
+    """What the guards need to know of a CV (its render context): {"ids": the bullet ids it prints, "text": its Skills, headline, profile and
+    bullets as one string}."""
+    entries = [*(ctx.get("experience") or []), *(ctx.get("projects") or [])]
+    ids = {i for e in entries for i in e.get("bullet_ids") or []} | {a.get("bullet_id") for a in ctx.get("achievements") or [] if a.get("bullet_id")}
+    skills = " ".join(", ".join(v) if isinstance(v, (list, tuple)) else str(v) for v in (ctx.get("skills") or {}).values())
+    stacks = " ".join(str(e.get("stack") or "") for e in entries)
+    text = " ".join([skills, stacks, str(ctx.get("profile") or ""), *(b for e in entries for b in e.get("bullets") or []),
+                     *(str(a.get("text") or "") for a in ctx.get("achievements") or [])])
+    return {"ids": ids, "text": text}
+
+
 def check(p1: str, body: list[str], p5: str, job: dict, fb: dict, kws: list[Keyword], evidence: list[dict], reqs: list[list[str]],
-          team: str, settings) -> tuple[list[str], list[dict]]:
-    """(problems, the ad sentences P2 drew from) for the five paragraphs [p1, *body, p5]; body = [P2, P3, P4]."""
+          team: str, settings, cv: dict | None = None) -> tuple[list[str], list[dict]]:
+    """(problems, the ad sentences P2 drew from) for the five paragraphs [p1, *body, p5]; body = [P2, P3, P4]. `cv` (cv_from_ctx) adds the CV
+    rules: the evidence bullets and the skills named must be on this job's CV."""
     from . import tailor as T
 
     jd, company, title = job.get("description") or "", job["company"], job["title"]
@@ -367,6 +425,10 @@ def check(p1: str, body: list[str], p5: str, job: dict, fb: dict, kws: list[Keyw
     framing = " ".join([company, title, *(" ".join(e.get("terms", [])) for e in evidence), *(t for r in reqs for t in r)])
     out += L.claim_problems(body[1:], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", framing)))       # P3, P4: and no linked noun phrase
     out += term_dump_problems(body, fb)
+    out += balance_problems(body)
+    if cv is not None:
+        out += [f"P3/P4 draw on bullet {e['id']}, which is not printed on this job's CV" for e in evidence if e["id"] not in cv["ids"]]
+        out += skill_problems(body, fb, cv["text"])
     out += T._deny_problems(text, fb.get("deny_terms", []), [])
     out += T._style_problems([*body, p5], [e["text"] for e in evidence])
     if T.BANNED_CLOSERS.search(text):
@@ -432,39 +494,45 @@ class Plan:
     reqs: list[list[str]] = field(default_factory=list)     # per paragraph, the ONE ad requirement it names
     groups: list[list[dict]] = field(default_factory=list)  # per paragraph, its bullets (two, or one when the bank had only one)
     error: str = ""
+    opening: OP.Opening | None = None                       # how P1 was made: its fact, its quoted problem phrase and where the phrase came from
+    page_text: str = ""                                     # the company's own careers page, when the ad had no phrase to quote
 
 
 def prepare(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: str, evidence: list[dict], settings, claimable: list[str],
-            chosen_ids: set[str] | None = None) -> Plan:
-    """P1 (the hook's letter line, else the role family's profile line, word for word), P5 (closing_hook with the problem phrase of the ad), the
-    two evidence bullets and their requirements. With a hook that has a proof bullet, P3 and P4 are written from the best two OTHER bullets of the
-    CV (the proof bullet is already P1's story); `evidence` is used when there are not two."""
+            chosen_ids: set[str] | None = None, page_text: str = "") -> Plan:
+    """P1 (opening.py: the hook's letter line with a fact-bank number, else the next hook's, else the strongest numbered bullet of the CV and the
+    role family's profile line; tied to a quoted clause of the ad or, failing that, of `page_text`), P5 (closing_hook with the problem phrase of
+    the ad), the two evidence bullets and their requirements. With a hook that has a proof bullet, P3 and P4 are written from the best two OTHER
+    bullets of the CV (the proof bullet is already P1's story); `evidence` is used when there are not two."""
     from . import tailor as T
 
     jd = job.get("description") or ""
-    p1 = (hk.letter_sentence if hk is not None else family_line).strip()
-    if not p1:
-        return Plan(error="no hook qualifies and the fact bank has no profile line for the role family: the letter has nothing to open with")
+    op = OP.build(job, fb, kws, hk, chosen_ids, family_line, page_text)
+    if not op.ok:
+        return Plan(error=op.error, opening=op, page_text=page_text)
+    p1 = op.paragraph
     found = requirement_groups(fb, kws, chosen_ids, jd, hk)
     if len(found) < 2:
         have = [e for _, g in found for e in g]
-        return Plan(evidence=T._with_orgs(fb, have),
+        return Plan(evidence=T._with_orgs(fb, have), opening=op, page_text=page_text,
                     error="fewer than two requirements of the ad with a bullet on the CV to write P3 and P4 from")
     groups = [T._with_orgs(fb, g) for _, g in found]
     reqs = [[term] for term, _ in found]
     problem = hk.problem.strip() if hk is not None and hk.problem.strip() else L.ad_problem(job, kws, fb, claimable)
-    return Plan(p1, L.closing_text(problem, settings), [e for g in groups for e in g], reqs, groups)
+    return Plan(p1, L.closing_text(problem, settings), [e for g in groups for e in g], reqs, groups, opening=op, page_text=page_text)
 
 
 def write_letter(job: dict, kws: list[Keyword], paragraphs: list[str], team: str, fb: dict, settings, out_dir: Path, final_name: str,
-                 **extra) -> tuple[Path, dict]:
-    """Render the five paragraphs and return (pdf, the "ok" letter dict). `extra` are more keys of the dict (notes, retry, evidence, ...)."""
+                 header: dict | None = None, **extra) -> tuple[Path, dict]:
+    """Render the five paragraphs and return (pdf, the "ok" letter dict). `header` = {"headline", "number"}: the CV's hook headline, printed under the
+    name as the CV prints it (Document rules, B2). `extra` are more keys of the dict (notes, retry, evidence, ...)."""
     from .render import page_count, pdf_text, render_letter
 
     skip = frozenset(stems(f"{job['company']} {job['title']} {team}"))
     jd = job.get("description") or ""
+    head = {"headline": (header or {}).get("headline") or "", "headline_number": (header or {}).get("number") or ""}
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paragraphs, "date": date.today().strftime("%d %B %Y"),
-                         "greeting": L.greeting(job, team, settings), "signoff": settings["letter"]["signoff"]}, out_dir, final_name)
+                         "greeting": L.greeting(job, team, settings), "signoff": settings["letter"]["signoff"], **head}, out_dir, final_name)
     return pdf, _letter_dict("ok", paragraphs=paragraphs, words=words(paragraphs), score=ats.score(pdf_text(pdf), kws).literal, pages=page_count(pdf),
                              p2_sources=p2_sources(paragraphs[1], jd, skip), p2_used=used_sentences(paragraphs[1], about_sentences(jd, job["company"], kws), skip),
                              accepted=[word_range(settings)[0], word_cap(settings)], **extra)
@@ -478,7 +546,8 @@ def rebuild_plan(job: dict, fb: dict, rep: dict, settings) -> tuple[Plan, list[K
     ids = {i for sec in ("experience", "projects") for e in rep["context"][sec] for i in e.get("bullet_ids", [])}
     hk = Hook.from_dict(rep["hook"]) if rep.get("hook") else None
     evidence = T.letter_evidence(fb, kws, ids, job.get("description") or "")
-    return prepare(job, fb, kws, hk, rep.get("family_line") or "", evidence, settings, rep.get("claimable") or [], ids), kws
+    page = CP.stored(Path(rep["out_dir"])) if rep.get("out_dir") else ""
+    return prepare(job, fb, kws, hk, rep.get("family_line") or "", evidence, settings, rep.get("claimable") or [], ids, page), kws
 
 
 def edit_problems(job: dict, fb: dict, rep: dict, settings, paragraphs: list[str]) -> list[str]:
@@ -488,8 +557,9 @@ def edit_problems(job: dict, fb: dict, rep: dict, settings, paragraphs: list[str
     plan, kws = rebuild_plan(job, fb, rep, settings)
     if plan.error:
         return [f"the guards cannot be run on this job: {plan.error}"]
-    problems, _ = check(paragraphs[0], paragraphs[1:4], paragraphs[4], job, fb, kws, plan.evidence, plan.reqs, rep.get("team") or "", settings)
-    return problems
+    problems, _ = check(paragraphs[0], paragraphs[1:4], paragraphs[4], job, fb, kws, plan.evidence, plan.reqs, rep.get("team") or "", settings,
+                        cv=cv_from_ctx(rep["context"]))
+    return problems + OP.problems(paragraphs[0], fb, [job.get("description") or "", plan.page_text])
 
 
 def install_edited(job: dict, fb: dict, rep: dict, settings, paragraphs: list[str], overridden: list[str]) -> tuple[Path, dict]:
@@ -501,7 +571,9 @@ def install_edited(job: dict, fb: dict, rep: dict, settings, paragraphs: list[st
 
         stem = T._names(fb, settings)[1]
     old = rep.get("letter") or {}
-    return write_letter(job, kws, paragraphs, rep.get("team") or "", fb, settings, Path(rep["out_dir"]), stem,
+    ctx = rep["context"]
+    header = {"headline": ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or "", "number": ctx.get("hook_number") or ""}
+    return write_letter(job, kws, paragraphs, rep.get("team") or "", fb, settings, Path(rep["out_dir"]), stem, header,
                         notes=list(old.get("notes") or []) + ["letter edited by hand" + (" (guards overridden with 'use anyway')" if overridden else "")],
                         retry=old.get("retry") or {}, evidence=[{"id": e["id"], "text": e["text"]} for e in plan.evidence], requirements=plan.reqs,
                         target_words=target_words(settings), hook_source=old.get("hook_source", "edited by hand"),
@@ -510,15 +582,22 @@ def install_edited(job: dict, fb: dict, rep: dict, settings, paragraphs: list[st
 
 def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: str, evidence: list[dict], llm, settings, out_dir: Path,
          final_name: str, team: str, claimable: list[str], chosen_ids: set[str] | None = None,
-         revise: dict | None = None) -> tuple[Path | None, dict]:
+         revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None) -> tuple[Path | None, dict]:
     """(letter pdf or None, the letter dict `report["letter"]` shows). Status "ok", "none" (every draft rejected, or nothing to build it from;
     `reason` and `retry.failures` say why) or "pending" (no provider may write it now: the job waits). `hk` is the hook (None: none qualifies or
     the hook is off), `family_line` the role family's profile line, `evidence` the letter's two best bullets of the CV. `revise`
-    ({"previous": [P2, P3, P4], "problems": [...], "feedback": text}) is review's `l`: the draft, its rejections and the reader's words go to the model."""
+    ({"previous": [P2, P3, P4], "problems": [...], "feedback": text}) is review's `l`: the draft, its rejections and the reader's words go to the model.
+    `cv` (cv_from_ctx of the CV) adds the CV rules to the guards; `page(job, folder)` fetches the company's careers page (once, only when the ad has no
+    clause to quote); `header` = the CV's headline for the letter's header."""
     from . import tailor as T
 
     jd = job.get("description") or ""
-    plan = prepare(job, fb, kws, hk, family_line, evidence, settings, claimable, chosen_ids)
+    page_text = CP.stored(out_dir)
+    plan = prepare(job, fb, kws, hk, family_line, evidence, settings, claimable, chosen_ids, page_text)
+    if plan.error and "no problem phrase" in plan.error and page is not None and not page_text:
+        page_text = page(job, out_dir) or ""
+        if page_text:
+            plan = prepare(job, fb, kws, hk, family_line, evidence, settings, claimable, chosen_ids, page_text)
     evidence, reqs, p1, p5, lo_words = plan.evidence, plan.reqs, plan.p1, plan.p5, word_range(settings)[0]
     shown = [{"id": e["id"], "text": e["text"]} for e in evidence]
     notes: list[str] = []
@@ -550,6 +629,9 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
     feedback = (LF.revision_block(previous, LF.instructions(list((revise or {}).get("problems") or []), [p1, *previous, p5], plan), said)
                 if revise else "")
     problems, body = [], []
+    earlier = RU.earlier_letters(settings, exclude=[out_dir.name])
+    reuse = {"score": 0.0, "against": "", "redrafted": False}
+    reused = 0                                                        # drafts rejected for copying an earlier letter: one redraft, then no letter
     for attempt in range(ATTEMPTS):
         try:
             out = T._llm_json(llm, "cover_letter", system, user + feedback, ctx)
@@ -561,13 +643,22 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
             problems = [f"letter LLM failed: {e}"]
             retry["failures"].append({"attempt": attempt + 1, "problems": problems})
             break
-        problems, sources = check(p1, body, p5, job, fb, kws, evidence, reqs, team, settings)
+        problems, sources = check(p1, body, p5, job, fb, kws, evidence, reqs, team, settings, cv=cv)
+        if not problems:
+            score, who = RU.worst(body, earlier)
+            if who is not None and score >= RU.LIMIT:
+                reused += 1
+                problems = [RU.problem(score, who, RU.shared_sentences(body, who))]
+            else:
+                reuse = {"score": round(score, 3), "against": who.name if who else "", "redrafted": bool(reused)}
         if not problems:
             retry["outcome"] = "ok after redraft" if attempt else "first draft"
             break
         retry["failures"].append({"attempt": attempt + 1, "problems": list(problems)})
         if attempt == 0:
             retry["first_problems"] = list(problems)
+        if reused >= 2:
+            break                                                     # a second copy of an earlier letter: no more tries
         if attempt + 1 < ATTEMPTS:
             retry["count"] = attempt + 1
             notes.append(f"cover_letter: draft {attempt + 1} rejected ({'; '.join(problems)[:200]}); redrafting ({attempt + 2} of {ATTEMPTS})")
@@ -577,5 +668,9 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
         shown_problems = "; ".join(problems)[:300]
         return none(f"{len(retry['failures'])} draft(s) rejected by the {MODE} guards; last: {shown_problems}", problems, retry, body)
     retry["feedback"] = said
-    return write_letter(job, kws, [p1, *body, p5], team, fb, settings, out_dir, final_name, notes=notes, retry=retry, evidence=shown,
-                        requirements=reqs, target_words=target, hook_source=(hk.source if hk is not None else "family profile line"))
+    op = plan.opening
+    return write_letter(job, kws, [p1, *body, p5], team, fb, settings, out_dir, final_name, header, notes=notes, retry=retry, evidence=shown,
+                        requirements=reqs, target_words=target, hook_source=(hk.source if hk is not None else "family profile line"),
+                        reuse=reuse, cites=citation_tags(body, plan.groups),
+                        opening={"fact": op.fact_kind, "hook_id": op.hook_id, "bullet_id": op.bullet_id, "number": op.number,
+                                 "problem": op.problem, "source": op.source} if op is not None else {})

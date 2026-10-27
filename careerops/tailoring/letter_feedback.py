@@ -89,6 +89,19 @@ def instruction(problem: str, paragraphs: list[str], plan) -> str:
     m = re.match(r"^uses '(.+?)': the letter speaks for one person", problem)
     if m:
         return f"write in the first person singular about your own work: no '{m.group(1)}'"
+    m = re.search(r"do not reuse these sentences: (.*)$", problem)
+    if m and problem.startswith("reuse:"):
+        return f"do not reuse these sentences: {m.group(1)}"
+    m = re.match(r"^body: (\d+) of (\d+) sentences cite", problem)
+    if m:
+        cited, total = int(m.group(1)), int(m.group(2))
+        return f"shorten P2 to at most {max(int(cited * 2 / 3), 1)} sentence(s): at least 60% of the body's sentences must be about your bullets (P3 and P4)"
+    m = re.match(r"^P3/P4 draw on bullet (\S+), which is not printed", problem)
+    if m:
+        return f"write P3 and P4 only from the bullets given for them: {m.group(1)} is not on this CV"
+    m = re.match(r"^names '(.+?)', which is not in this CV's Skills or bullets", rest)
+    if m:
+        return f"{pre}remove '{m.group(1)}': it is not in this CV's Skills or bullets"
     if problem.startswith("last paragraph is not a call-to-action question"):
         return "end with a question"
     return f"fix this: {problem}"

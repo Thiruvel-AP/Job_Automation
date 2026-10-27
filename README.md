@@ -61,7 +61,7 @@ career-ops/
 │   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
 │   │   ├── profile.py            the CV profile, assembled in code: the hook's profile line + one or two `profile_facts` sentences (no model)
 │   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
-│   │   ├── company_letter.py     `letter.mode: company`: the 330-420 word five-paragraph letter (hook line, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
+│   │   ├── company_letter.py     `letter.mode: company`: the 300-500 word five-paragraph letter (hook line tied to a quoted clause of the ad, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
 │   │   ├── letters.py            `letter.mode: hook`: the letter ASSEMBLED in code (library letter line + two sentences from two bullets + 20-minute ask), the our/we/linked-phrase guard, relocation line, greeting
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
@@ -220,7 +220,7 @@ careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one 
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
-careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 330-420 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 300-500 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good (see "Fewer, better-matched applications")
@@ -733,12 +733,12 @@ phrase is the ad's two heaviest keywords the bank can claim). No model writes an
 line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
 `Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
 
-**`company`** writes ONE letter of **330 to 420 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
+**`company`** writes ONE letter of **300 to 500 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
 task, Groq `openai/gpt-oss-120b`) writes the middle three; code writes the first and the last.
 
 | | paragraph | source |
 |---|---|---|
-| P1 | the hook | the hook's `letter_line` word for word; no hook qualifies: the role family's profile line (`families[*].profile_body`), word for word |
+| P1 | the hook | the hook's `letter_line` word for word (it must carry a number the fact bank holds), then a quoted clause of the ad that says the problem the company is hiring to solve; a hook with no number is skipped for the next one, else the strongest numbered bullet of the CV and then the role family's profile line |
 | P2 | why this company | what it does, its product or customers, what this team is hiring to solve: the **job ad alone** (its About / Company section included) |
 | P3, P4 | evidence | each paragraph is written from the **two best fact-bank bullets for ONE named requirement of the ad** (four different bullets in all, never the hook's proof bullet) |
 | P5 | the close | `letter.closing_hook` with the problem phrase from the ad |
@@ -923,7 +923,7 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   sentence first), the 12pt headline exactly one line (its trailing stack list is dropped first). The contact line shows the
   portfolio as just "Portfolio". Education is `\roleNoLoc` (school with its location, dates, the degree with its grade and note) and, below, a muted
   small line with the modules and `details`. The header is the 22pt navy name, a 10pt contact line with short links (no
-  `https://`) and an italic muted status line, all joined with ` · `. The certifications are one bullet joined with ` · `, each
+  `https://`) and an italic muted status line, all joined with ` · `. The certifications are a bulleted list, one item each,
   with its date in italics. A separator may end a line, never start one. Dates always read `Mon YYYY – Mon YYYY`
   (`cv.date_separator` in `config/settings.yaml`: `" – "` by default, `" to "` is the other choice; a fact-bank date without
   months, such as `2025 – 2026`, is printed as it is: a month is never invented). **Bold is only** what the macros make bold: the
@@ -970,11 +970,10 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   in fact-bank order, not in the order they were picked.
 
 - **Bullets** — chosen in code by greedy marginal keyword gain (ties to the more recent entry): newest entry 4–5, the others
-  3–4 (`scoring.cv_bullets`), 5 projects (`scoring.cv_projects`) with 2–3 bullets each. A bullet whose words overlap a chosen
+  3–5 (`scoring.cv_bullets`: `[4, 6]` and `[3, 5]`), 3 projects (`scoring.cv_projects`) with 2–3 bullets each. A bullet whose words overlap a chosen
   one (Jaccard ≥ 0.6) is never added. Then content is added until page 2 is at least `scoring.min_fill_page2` (0.96, within two lines of the bottom margin) full,
-  measured from the PDF (y of the last text line on page 2 over the text area), in this order: **further projects** (best JD
-  match first, up to `scoring.cv_projects_max` = 6), more bullets of the shown projects, **more experience bullets** (by
-  relevance), then the **optional fact-bank sections** (`publications`, `languages`, `research_focus`, in that order), and last
+  measured from the PDF (y of the last text line on page 2 over the text area), in this order: **experience bullets** (every role up to
+  its maximum, by relevance), then **projects** (never more than 3 in all, `scoring.cv_projects_max`; 1–3 bullets each), then the **optional fact-bank sections** (`publications`, `languages`, `research_focus`, in that order), and last
   the **linespread**, raised from the reference's 1.03 in steps of 0.02 up to `scoring.cv_linespread_max` (1.09) and stopped at the first value
   that fills page 2. Nothing is invented and the font is never shrunk below 11pt; if the content runs out the CV ends short
   and says so. The shrink step runs only when the CV is over 2 pages. `cv_pages`, `page2_fill` and `fill`
@@ -1145,6 +1144,32 @@ ads away and moving the ones you approve.
 - **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It
   may suggest ("T >= 4.0 had 3/9 replies; T 3.5-4.0 had 0/7: consider `min_triage_score: 4.0`") and **never changes a setting or a weight**. Not taken from the reference project: its LLM
   1-5 score (the ATS bands stay deterministic), its immigration templates.
+
+### The document rules: `DOC CHECK`
+
+Every CV and letter is held to the "Document rules" of `.claude/CLAUDE.md` by `tailoring/doccheck.py`, which reads the finished `.tex` and PDF text and prints
+`DOC CHECK: pass` or the list of failures (on the review screen, after `tailor`, and in `live`). A failure blocks `[a]pprove` (you may type `override doc check` in full, and the
+failures are logged) and the judge gate's auto-approval, and it **always** blocks `live --auto` (gate `doc check`). No setting turns it off.
+
+- **Hook** the headline, profile sentence 1 and the first bullet of the hook's role all come from one `hook_library` entry (a headline the length fit cut short still counts), or, with no
+  hook, are the role family's headline and profile line.
+- **Profile** 100 to 150 words (`scoring.profile_words`), assembled in code: the hook's `profile_line`, the family's `profile_body`, then `profile.sentences` (the older `profile_facts` are read
+  too), best keyword overlap first, stopping before 150 and trimmed at a sentence boundary. Under 100 the check says `PROFILE 84/100 words: add profile sentences to fact_bank.yaml →
+  profile.sentences`; no model writes profile text and nothing is padded.
+- **Skills** no skill twice: the canonical key is lower case with hyphens, dots and plurals stripped and a few aliases (`AWS Lambda` = `Lambda`, `TensorFlow/Keras` covers `TensorFlow`,
+  `Kubernetes (AWS EKS)` covers `Kubernetes`). Generated groups keep the first occurrence; a repeat in your verbatim family `skill_lines` is reported, never rewritten:
+  `SKILLS repeat "Lambda" in <A> and <B>: fix in fact_bank.yaml families.<name>.skill_lines`.
+- **Projects** at most 3, each its own sub-heading (name, stack line, URL, 1–3 bullets). A URL prints only when the project has `github:` and is not `public: false` (the key is optional;
+  `careerops doctor` warns when it is missing).
+- **Work experience first** the fill raises every role to its maximum bullets, then adds projects (up to 3), then the optional sections, then linespread. A short page 2 says `fact bank has no
+  more experience bullets`; nothing is invented.
+- **Certifications** a bulleted list, one item per certification.
+- **Letter** (`letter.mode: company`) 300 to 500 words (`letter.company_words`); the CV's name, contact line and hook headline in its header; P3/P4 only from bullets this CV prints, a skill it
+  names must be in the CV's Skills or bullets, at least 60 % of the body's sentences cite a bullet (an internal tag, `report.json` → `letter.cites`, never printed); sentence 1 is the hook's
+  fact (with a number from your bank) and a quoted clause of the ad, else of the employer's own careers page (one fetch of `companies.careers_url`, robots.txt obeyed, stored as
+  `company_page.txt` with the URL and date; never news, LinkedIn or a job board); "I am writing to apply" and the like are rejected; the body is compared with every earlier letter in
+  `outputs` and the archive folders (5-word shingles, Jaccard): 0.30 or more is redrafted once with `do not reuse these sentences: ...`, a second copy is no letter.
+- **`careerops doctor`** reports profile words available in each family, skill repeats in the family lines, and projects with `github:` but no `public:`.
 
 ### After you apply: replies, follow-ups, interview prep
 

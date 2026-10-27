@@ -36,13 +36,14 @@ def test_the_selection_never_holds_more_projects_than_the_layout_with_two_or_thr
     fb = _bank()
     kws = _kws(*[f"{t}{i}" for t in ("one", "two", "three", "four", "five", "six", "seven") for i in range(4)])
     sel = select_cv(fb, kws, layout=TWO_PAGE)
-    assert len(sel["projects"]) == TWO_PAGE.projects == 5                        # 7 projects in the bank, 5 on the CV
+    assert len(sel["projects"]) == TWO_PAGE.projects == 3                        # 7 projects in the bank, 3 on the CV (Document rules)
     assert all(2 <= len(sel["project_bullets"][p]) <= 3 for p in sel["projects"])
 
 
 def test_fill_adds_a_further_project_before_more_bullets_of_the_shown_ones():
     fb = _bank()
-    # the 4th project is the one the JD talks about most, but it did not make the three: with room for a 4th it still comes first
+    # the 4th project is the one the JD talks about most, but it did not make the three: with room for a 4th it still comes first (this is the
+    # fill's project stage; the Document rules allow 3 projects in all, so the settings never give it that room)
     kws = _kws(*[f"{t}{i}" for t in ("one", "two", "three") for i in range(2)], *[f"four{i}" for i in range(4)],
                "four0")
     sel = {"experience": {"e1": ["a0", "a1"]}, "projects": ["p1", "p2", "p3"],
@@ -64,9 +65,9 @@ def test_without_a_maximum_no_further_project_enters_the_fill():
     assert any(b.startswith("p4") for b in fill_order(fb, _kws("four0"), sel, max_projects=4))
 
 
-def test_the_defaults_start_with_five_projects_and_may_fill_to_six(settings):
+def test_the_defaults_start_with_three_projects_and_never_fill_past_three(settings):
     sc = settings["scoring"]
-    assert sc["cv_projects"] == 5 and sc["cv_projects_max"] == 6 and "cv_fill_extra_projects" not in sc
+    assert sc["cv_projects"] == 3 and sc["cv_projects_max"] == 3 and "cv_fill_extra_projects" not in sc
 
 
 # ---------------------------------------------------------------- 3. the wording pass

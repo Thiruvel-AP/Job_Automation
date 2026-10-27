@@ -83,7 +83,7 @@ def test_full_cv_header_shows_all_three_links_and_the_status_line(fb_fixture, tm
 def test_letter_header_shows_address_and_falls_back_to_location(fb_fixture, tmp_path):
     with_addr = pdf_text(compile_tex(env().get_template("cover_letter.tex.j2").render(**_letter_ctx(fb_fixture)),
                                      tmp_path / "a", "letter"))
-    assert "12 Analytical Row" in with_addr and "LinkedIn" in with_addr and "+44 7700 900123" in with_addr
+    assert "12 Analytical Row" in with_addr and "linkedin.com/in/" in with_addr and "+44 7700 900123" in with_addr      # the CV's contact line (Document rules, B2)
     assert "Hi Acme AI Accelerator team," in with_addr and "With regards," in with_addr
     minimal = pdf_text(compile_tex(env().get_template("cover_letter.tex.j2").render(**_letter_ctx(fb_fixture, True)),
                                    tmp_path / "b", "letter"))

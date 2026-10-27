@@ -434,11 +434,11 @@ def library_lint(fb: dict) -> list[tuple[str, str]]:
     return [(str(e["id"]), w) for e in library(fb) for w in headline_lint(str(e.get("headline") or ""))]
 
 
-def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = None) -> dict | None:
-    """The library entry to use for this ad: {"entry", "score", "kind", "bullet_entry", "bullet", "overlap", "reason"}, or None. Only an
-    entry whose terms hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords is eligible. Highest score first, a tie to
-    the earlier entry in the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a
-    string is missing, or when it (or its proof bullet) names a deny-listed term. None adds a note naming the closest entry."""
+def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
+    """The eligible library entries for this ad, best first, as pick_library_entry's dicts (a generator: the first is the pick). Only an entry
+    whose terms hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords is eligible. Highest score first, a tie to the earlier entry in
+    the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a string is missing, or when it
+    (or its proof bullet) names a deny-listed term. The cover letter walks the rest of the ranking when the CV's hook has no number (opening.py)."""
     notes = notes if notes is not None else []
     deny = fb.get("deny_terms", [])
     scores = library_scores(fb, kws)
@@ -461,8 +461,19 @@ def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = N
         if denied:
             notes.append(f"hook_library '{eid}': names a deny-listed term ({', '.join(denied)}); entry skipped")
             continue
-        return {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet, "overlap": overlaps[eid],
-                "reason": selection_reason(eid, overlaps[eid], score)}
+        yield {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet, "overlap": overlaps[eid],
+               "reason": selection_reason(eid, overlaps[eid], score)}
+
+
+def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = None) -> dict | None:
+    """The library entry to use for this ad: {"entry", "score", "kind", "bullet_entry", "bullet", "overlap", "reason"}, or None (the first of
+    `iter_eligible`; its rules decide). None adds a note naming the closest entry."""
+    notes = notes if notes is not None else []
+    found = next(iter_eligible(fb, kws, notes), None)
+    if found is not None:
+        return found
+    entries = library(fb)
+    overlaps = {str(e["id"]): top_keyword_overlap(e, kws) for e in entries}
     if entries:
         best = max(entries, key=lambda e: (len(overlaps[str(e["id"])]), -entries.index(e)))
         notes.append(f"no hook_library entry hits at least {MIN_OVERLAP} of the ad's top {TOP_KEYWORDS} keywords (closest: '{best['id']}' "

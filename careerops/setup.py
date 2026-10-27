@@ -139,6 +139,75 @@ def core_skill_checks(path: Path) -> list[tuple[str, bool, str]]:
     return [(f"core skills ({len(core_skills(fb))}) all evidenced and none denied", True, "")]
 
 
+def skill_repeat_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor lines for the family `skill_lines` of the fact bank (read only; the user's own verbatim text, never edited): one failing line per skill
+    that two items share (`SKILLS repeat "Lambda" in <group A> and <group B>: fix in fact_bank.yaml families.<name>.skill_lines`), or one passing
+    line."""
+    from .config import load_yaml
+    from .tailoring.skills import families, repeat_problems
+
+    if not path.exists():
+        return [("skill repeats", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    fams = families(fb)
+    found = [p for f in fams for p in repeat_problems({str(l["label"]): str(l["items"]) for l in f["skill_lines"]}, family=str(f["id"]))]
+    if found:
+        return [(p, False, "a skill appears once on the CV; edit the skill_lines in fact_bank.yaml (the pipeline never edits them)") for p in found]
+    return [(f"no skill repeats in the fact bank's family skill lines ({len(fams)} families)", True, "")]
+
+
+def profile_word_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor lines for the CV profile's length (Document rules: 100 to 150 words), read only: for each role family, are there words enough in the
+    family's `profile_body` and the bank's profile sentences (`profile.sentences`, and the older `profile_facts`; a deny-listed one does not count)
+    to reach 100? A bank without families is judged on its sentences alone. A hook's profile line only adds to the total."""
+    from .config import load_yaml
+    from .tailoring.faithfulness import deny_hits
+    from .tailoring.profile import MIN_WORDS, bank_sentences, nwords
+
+    if not path.exists():
+        return [("profile words", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    deny = fb.get("deny_terms", [])
+    own = sum(nwords(s) for s in bank_sentences(fb) if not deny_hits(s, deny))
+    fams = [f for f in fb.get("families") or [] if isinstance(f, dict) and f.get("id")]
+    if not fams:
+        return [(f"profile sentences: {own} of {MIN_WORDS} words available", own >= MIN_WORDS,
+                 "" if own >= MIN_WORDS else "add sentences to fact_bank.yaml → profile.sentences (the pipeline never edits it)")]
+    out: list[tuple[str, object, str]] = []
+    for f in fams:
+        have = own + nwords(f.get("profile_body") or "")
+        label = f"profile words for family {f['id']}: {have} of {MIN_WORDS} available"
+        if have >= MIN_WORDS:
+            out.append((label, True, ""))
+        else:
+            out.append((label + " (add profile sentences to fact_bank.yaml → profile.sentences)", False,
+                        "the profile is the hook line, the family's profile_body, then the sentences under profile.sentences; it must reach 100 words and the pipeline never pads it"))
+    return out
+
+
+def project_public_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor warnings for projects (Document rules, A4): every project with `github:` should say `public: true` or `public: false` (a missing key
+    is treated as public, so its URL is printed). Read only."""
+    from .config import load_yaml
+
+    if not path.exists():
+        return [("project public flags", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    out: list[tuple[str, object, str]] = []
+    linked = 0
+    for p in fb.get("projects") or []:
+        if not isinstance(p, dict) or not p.get("github"):
+            continue
+        linked += 1
+        name = p.get("name") or p.get("id")
+        hint = "add `public: true` or `public: false` to the project in fact_bank.yaml (the pipeline never edits it)"
+        if "public" not in p:
+            out.append((f"project '{name}' has github: but no public: true/false (treated as public, its URL is printed)", WARN, hint))
+        elif not isinstance(p["public"], bool):
+            out.append((f"project '{name}': public: {p['public']!r} is neither true nor false (treated as public)", WARN, hint))
+    return out or [(f"every project with a github link says whether it is public ({linked})", True, "")]
+
+
 def hook_lint_checks(path: Path) -> list[tuple[str, object, str]]:
     """Doctor lines for the headlines of `hook_library` in the fact bank (read only): one warning per lint finding (hook.headline_lint:
     over 60 characters, more than one number, a hardware or resource unit), or one passing line. A warning never fails the run, and
@@ -342,6 +411,9 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += judge_checks(settings)
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += hook_lint_checks(settings.path("fact_bank"))
+    checks += skill_repeat_checks(settings.path("fact_bank"))
+    checks += profile_word_checks(settings.path("fact_bank"))
+    checks += project_public_checks(settings.path("fact_bank"))
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))

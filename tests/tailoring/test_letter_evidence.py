@@ -1,5 +1,5 @@
 """Round of 22 Oct (2): the company letter's P3 and P4 each use the two best fact-bank bullets for ONE named requirement of the ad (four bullets
-in all), the length is a range (letter.company_words: [330, 420]), and the user guard lets a capability or skill word through when the fact bank
+in all), the length is a range (letter.company_words: [300, 500]), and the user guard lets a capability or skill word through when the fact bank
 says it anywhere. MockLLM only; the guards are called directly."""
 import copy
 
@@ -79,18 +79,18 @@ def test_a_job_with_a_single_usable_bullet_has_no_letter_and_says_why(world):
 
 
 # ------------------------------------------------------------------ the length is a range
-def test_the_shipped_range_is_330_to_420(settings):
-    assert settings["letter"]["company_words"] == [330, 420]
-    assert CL.word_range(settings) == (330, 420)
+def test_the_shipped_range_is_300_to_500(settings):
+    assert settings["letter"]["company_words"] == [300, 500]
+    assert CL.word_range(settings) == (300, 500)
 
 
-@pytest.mark.parametrize("value, expected", [([330, 420], (330, 420)), ([300, 400], (300, 400)), (["350", 410], (350, 410)), ([375, 375], (375, 375))])
+@pytest.mark.parametrize("value, expected", [([300, 500], (300, 500)), ([300, 400], (300, 400)), (["350", 410], (350, 410)), ([375, 375], (375, 375))])
 def test_a_range_of_two_whole_numbers_is_accepted(settings, value, expected):
     settings.raw["letter"]["company_words"] = value
     assert CL.word_range(settings) == expected
 
 
-@pytest.mark.parametrize("value", [400, "400", [330], [330, 420, 500], [420, 330], [250, 400], [330, 421], ["a", "b"], [True, 400], None, "330-420"])
+@pytest.mark.parametrize("value", [400, "400", [330], [330, 420, 500], [420, 330], [250, 400], [330, 501], ["a", "b"], [True, 400], None, "330-420"])
 def test_anything_else_is_refused_with_the_setting_named(settings, value):
     settings.raw["letter"]["company_words"] = value
     with pytest.raises(ValueError, match=r"letter.company_words must be \[low, high\]"):
@@ -98,24 +98,24 @@ def test_anything_else_is_refused_with_the_setting_named(settings, value):
 
 
 def test_the_model_is_asked_for_the_middle_of_the_range(settings):
-    assert CL.target_words(settings) == 375
+    assert CL.target_words(settings) == 400
     settings.raw["letter"]["company_words"] = [350, 400]
     assert CL.target_words(settings) == 375
     settings.raw["letter"]["company_words"] = [330, 411]
     assert CL.target_words(settings) == 370
 
 
-@pytest.mark.parametrize("total", [330, 331, 375, 420])
-def test_330_to_420_words_pass(world, total):
+@pytest.mark.parametrize("total", [300, 301, 375, 500])
+def test_300_to_500_words_pass(world, total):
     paragraphs = body(world, total)
     assert CL.words([world.plan.p1, *paragraphs, world.plan.p5]) == total
     assert check(world, paragraphs) == []
 
 
-@pytest.mark.parametrize("total", [329, 250, 421])
+@pytest.mark.parametrize("total", [299, 250, 501])
 def test_outside_the_range_is_rejected_with_the_real_bounds(world, total):
     problems = check(world, body(world, total))
-    assert f"{total} words: the letter must be between 330 and 420" in problems, problems
+    assert f"{total} words: the letter must be between 300 and 500" in problems, problems
 
 
 def test_a_narrower_range_in_settings_is_the_one_checked(world):

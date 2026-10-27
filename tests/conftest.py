@@ -122,6 +122,16 @@ def liveness_without_network(monkeypatch, tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
+def the_document_check_is_not_every_tests_subject(monkeypatch):
+    """The document check (tailoring/doccheck.py) reads a finished job's files and holds a CV to the Document rules; a test about something else (a
+    review prompt, a live session, an auto-submit gate) uses the small fixture banks, which are not written to pass it. Its own tests call
+    `doccheck.check` with a report they build, or put their own `for_report` in place."""
+    from careerops.tailoring import doccheck
+
+    monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck())
+
+
+@pytest.fixture(autouse=True)
 def no_real_data():
     """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
     _guard["hits"].clear()

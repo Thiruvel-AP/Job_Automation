@@ -1,7 +1,12 @@
 """The CV profile, assembled in code from the fact bank. No model writes it.
 
-    profile = the hook's `profile_line` (the user's own library sentence) + one or two `profile_facts`, each a sentence that ends
-              with a full stop
+    profile = the hook's `profile_line` (the user's own library sentence), then the role family's `profile_body`, then further sentences
+              of the fact bank's `profile.sentences` (the older `profile_facts` are read too), best keyword overlap first, each a sentence
+              that ends with a full stop; 100 to 150 words (Document rules, A2): sentences are added while the profile is under 100 words
+              and only those that keep it at or under 150; a text still over 150 is trimmed at a sentence boundary, and a bank with too
+              few sentences is a check failure that says how many words are missing and where to add them. Nothing is padded or invented.
+
+Without a word range (`words=None`) the older rule stands: the hook line plus the best one or two facts.
 
 The facts are chosen by keyword score for the job (`pick_facts`: budget.fact_scores, the fact bank's order on a tie). A fact is left out
 when it names a deny-listed term, when it repeats the title (a role phrase such as "Data Scientist" that the profile already says), or
@@ -17,7 +22,8 @@ from .budget import fact_scores
 from .faithfulness import deny_hits
 from .scorer import Keyword, norm_stem
 
-PROFILE_FACTS = 2             # profile_facts sentences after the hook line
+PROFILE_FACTS = 2             # profile sentences after the hook line when no word range is given
+MIN_WORDS, MAX_WORDS = 100, 150           # scoring.profile_words: the Document rules' profile length
 REPEAT_SHARE = 0.6            # a fact with this share of its content words already in the profile only restates it
 ROLE_PHRASES = re.compile(r"\b(data scientist|ai/ml engineer|ai engineer|ml engineer|machine learning engineer|data engineer|"
                           r"data analyst|research scientist|applied scientist|software engineer)\b", re.I)
@@ -65,31 +71,87 @@ def problems(text: str) -> list[str]:
     return out
 
 
-def assemble(fb: dict, kws: list[Keyword], jd: str, profile_line: str = "", n: int = PROFILE_FACTS) -> dict:
-    """{"text", "facts", "violations", "warnings", "retried", "fallback"}: `profile_line` (the hook's sentence, may be "") followed by the
-    best `n` usable profile_facts as sentences. `facts` are the fact-bank sentences used, `warnings` say what was left out and why."""
-    facts = [str(f) for f in fb.get("profile_facts") or [] if str(f).strip()]
+def nwords(text: str) -> int:
+    return len(str(text).split())
+
+
+def word_range(settings) -> tuple[int, int]:
+    """settings scoring.profile_words: [low, high], whole numbers with 100 <= low <= high <= 150 (the Document rules; the default). The
+    range can be narrowed, never widened."""
+    raw = settings["scoring"].get("profile_words", [MIN_WORDS, MAX_WORDS])
+    ok = (isinstance(raw, (list, tuple)) and len(raw) == 2 and all(isinstance(x, int) and not isinstance(x, bool) for x in raw)
+          and MIN_WORDS <= raw[0] <= raw[1] <= MAX_WORDS)
+    if not ok:
+        raise ValueError(f"scoring.profile_words must be [low, high], two whole numbers with {MIN_WORDS} <= low <= high <= {MAX_WORDS}, got {raw!r}")
+    return int(raw[0]), int(raw[1])
+
+
+def bank_sentences(fb: dict) -> list[str]:
+    """The fact bank's profile sentences: `profile.sentences` first, then the older `profile_facts`; the user's own text, in their order."""
+    prof = fb.get("profile")
+    own = prof.get("sentences") if isinstance(prof, dict) else None
+    return [str(s) for s in [*(own or []), *(fb.get("profile_facts") or [])] if str(s).strip()]
+
+
+def trim(text: str, high: int = MAX_WORDS) -> str:
+    """`text` with whole sentences dropped from its end until it has at most `high` words; the first sentence always stays."""
+    parts = sentences(text)
+    while len(parts) > 1 and nwords(" ".join(parts)) > high:
+        parts.pop()
+    return " ".join(parts)
+
+
+def word_problems(text: str, rng: tuple[int, int] = (MIN_WORDS, MAX_WORDS)) -> list[str]:
+    """[] when the profile has between rng[0] and rng[1] words; else the one-line failure naming the shortfall and where to fix it."""
+    n, (lo, hi) = nwords(text), rng
+    if n < lo:
+        return [f"PROFILE {n}/{lo} words: add profile sentences to fact_bank.yaml → profile.sentences"]
+    if n > hi:
+        cut = "" if len(sentences(text)) > 1 else " and has no sentence to cut at"
+        return [f"PROFILE {n}/{hi} words: the profile is over the limit{cut}"]
+    return []
+
+
+def assemble(fb: dict, kws: list[Keyword], jd: str, profile_line: str = "", n: int = PROFILE_FACTS, family_body: str = "",
+             words: tuple[int, int] | None = None) -> dict:
+    """{"text", "facts", "violations", "warnings", "retried", "fallback", "words", "shortfall"}: `profile_line` (the hook's sentence, may be ""),
+    then `family_body` (the role family's profile body, may be ""), then the bank's profile sentences (`bank_sentences`) best keyword score
+    first. With `words` = (low, high): sentences are added while the text is under `low` words, skipping any that would pass `high`, and a
+    text still over `high` is trimmed at a sentence boundary; `shortfall` is the check failure ("" when it passes). Without `words`: the best
+    `n` usable sentences. `facts` are the fact-bank sentences used, `warnings` say what was left out and why."""
+    facts = bank_sentences(fb)
     deny = fb.get("deny_terms", [])
-    line = " ".join(profile_line.split())
+    line = " ".join(" ".join(x.split()) for x in (profile_line, family_body) if x and x.strip())
     score = fact_scores(facts, kws, jd) if facts else []
     ranked = sorted(range(len(facts)), key=lambda i: (-score[i], i))                  # best first, the bank's order on a tie
     said, titles = _content(line), role_phrases(line)
     used: list[str] = []
     warnings: list[str] = []
     for i in ranked:
-        if len(used) >= n:
-            break
         fact = facts[i]
-        words = _content(fact)
+        if words is None and len(used) >= n:
+            break
+        if words is not None:
+            now = nwords(" ".join([line, *(sentence(f) for f in used)]))
+            if now >= words[0]:
+                break
+            if now + nwords(sentence(fact)) > words[1]:
+                continue                                      # too long to fit under the limit; a shorter one may
+        content = _content(fact)
         if deny_hits(fact, deny):
             warnings.append(f"profile: left out a fact that names a deny-listed term: '{fact[:50]}'")
         elif set(role_phrases(fact)) & set(titles) or (len(role_phrases(fact)) > 1):
             warnings.append(f"profile: left out a fact that repeats the title: '{fact[:50]}'")
-        elif words and len(words & said) / len(words) >= REPEAT_SHARE:
+        elif content and len(content & said) / len(content) >= REPEAT_SHARE:
             warnings.append(f"profile: left out a fact that only restates the sentences before it: '{fact[:50]}'")
         else:
             used.append(fact)
-            said |= words
+            said |= content
             titles += role_phrases(fact)
     text = " ".join([line, *(sentence(f) for f in used)]).strip()
-    return {"text": text, "facts": used, "violations": problems(text), "warnings": warnings, "retried": False, "fallback": False}
+    shortfall = ""
+    if words is not None:
+        text = trim(text, words[1])
+        shortfall = next(iter(word_problems(text, words)), "")
+    return {"text": text, "facts": used, "violations": problems(text), "warnings": warnings, "retried": False, "fallback": False,
+            "words": nwords(text), "shortfall": shortfall}

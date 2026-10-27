@@ -610,6 +610,16 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
     usage.report(db, s)
 
 
+def _doc_check_text(rep: dict, s, fb: dict, job) -> str:
+    """`DOC CHECK: pass`, or the list of failures, for a job just tailored (tailoring/doccheck.py). A check that cannot run says so."""
+    from .tailoring import doccheck
+
+    try:
+        return doccheck.for_report(rep, s, fb, job).text()
+    except Exception as e:  # noqa: BLE001
+        return f"DOC CHECK: FAILED (1)\n  - the check could not run ({type(e).__name__}: {str(e)[:80]})"
+
+
 def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False,
                 re_extract: bool = False, boost: list[str] | None = None, fetcher=None, ask=input) -> None:
     """Tailor these jobs one after the other (the loop `careerops tailor` and `careerops live` share). Each job ends as
@@ -620,10 +630,13 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
     Every job meets the gate first (discovery/pretailor.py: blacklist, liveness, agency vs direct, repost flags): a closed or expired posting, a blacklisted
     employer you do not override, and a role another channel owns are not tailored and cost no token. `--mock` skips the network and the archive."""
     from .discovery import pretailor
+    from .tailoring import companypage
     from .tailoring.freeze import frozen_for
     from .tailoring.tailor import letter_summary, tailor_job
 
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if mock else ''}.")
+    # the company's own careers page, for a letter whose ad has no clause to quote (one polite fetch, only then; never in a --mock run)
+    page = None if mock else companypage.provider(db, fetcher if fetcher is not None else pretailor.default_fetcher(s))
     est = s["llm"].get("job_token_estimate", 10000)
     for n, job in enumerate(jobs):
         print(f"- {job['company']} | {job['title']}")
@@ -648,7 +661,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             print(f"  keywords: extracting again ({why_not or '--re-extract'})")
         try:
             rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), frozen, one_page=one_page,
-                             on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec), boost=boost)
+                             on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec), boost=boost, company_page=page)
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done
             no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
@@ -674,6 +687,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
                      else f"letter {letter_summary(rep['letter'])}" if off
                      else f"letter {letter_pages} page(s)")
                   + (f"  !! expected {max_pages} and 1" if over else ""))
+            print("  " + _doc_check_text(rep, s, fb, job).replace("\n", "\n  "))
             u = rep["llm_usage"]
             if u["calls"]:
                 print(f"  LLM tokens: {u['total_tokens']:,} (prompt {u['prompt_tokens']:,}, completion "

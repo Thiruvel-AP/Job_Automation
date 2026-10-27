@@ -120,7 +120,8 @@ def test_profile_sentence_one_is_the_library_line_and_the_rest_are_profile_facts
     profile = rep["context"]["profile"]
     assert profile.startswith(LIBRARY[0]["profile_line"]) and NUMBER in profile
     rest = profile[len(LIBRARY[0]["profile_line"]):].split(". ")
-    assert 1 <= len([s for s in rest if s.strip()]) <= 2 and all(any(f.rstrip(".") in s for f in fb["profile_facts"]) for s in rest if s.strip())
+    assert len([s for s in rest if s.strip()]) >= 1 and all(any(f.rstrip(".") in s for f in fb["profile_facts"]) for s in rest if s.strip())
+    assert len(profile.split()) <= 150                                                 # sentences are added from the bank up to 150 words, none invented
     assert not H.vague_words(profile) and "skilled" not in profile.lower() and profile.lower().count("data scientist") == 1
     assert _flat(LIBRARY[0]["profile_line"]) in _flat(pdf_text(Path(rep["cv_pdf"])))
 

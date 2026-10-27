@@ -55,6 +55,19 @@ def _tag_shown(project: dict, key: str) -> str:
     return tag
 
 
+def url_shown(project: dict) -> str:
+    """The URL a project prints: its `github` unless the fact bank says `public: false` (a missing `public` counts as public; `careerops doctor`
+    warns about it). "" = no URL."""
+    return "" if project.get("public") is False else str(project.get("github") or "")
+
+
+def with_public_links(ctx: dict) -> dict:
+    """A copy of a render context in which a project the bank marks `public: false` has no `github`: nothing prints its URL. `ctx` is unchanged."""
+    if not any(p.get("github") and url_shown(p) == "" for p in ctx.get("projects") or []):
+        return ctx
+    return {**ctx, "projects": [{**p, "github": url_shown(p)} if p.get("github") else p for p in ctx.get("projects") or []]}
+
+
 def award_shown(project: dict) -> str:
     """The award to print beside a project: "" when it has none, or when its text is already in the project's name
     ("Lloyd's Banking Group Datathon — 3rd place" + award "3rd place"), so it is printed once."""
@@ -352,6 +365,26 @@ def skill_row(items) -> str:
     return ", ".join(inline(s) for s in shown)
 
 
+DOT = "\\nobreak\\ \\,\\textperiodcentered\\, "          # the separator of the contact line and the status line
+
+
+def contact_line(identity: dict, dot: str = DOT) -> str:
+    """The CV's contact line as LaTeX, and the cover letter's (Document rules, B2: one header for both): location, e-mail, phone, then the
+    LinkedIn, GitHub and portfolio links the fact bank has, joined by `dot`."""
+    parts = []
+    if identity.get("location"):
+        parts.append(latex_escape(identity["location"]))
+    parts.append(r"\href{mailto:" + str(identity["email"]) + "}{" + latex_escape(identity["email"]) + "}")
+    if identity.get("phone"):
+        parts.append(r"\href{tel:" + str(identity["phone"]).replace(" ", "") + "}{" + latex_escape(identity["phone"]) + "}")
+    links = identity.get("links") or {}
+    for k in ("linkedin", "github", "portfolio"):
+        if links.get(k):
+            shown = "Portfolio" if k == "portfolio" else latex_escape(re.sub(r"^https?://(www\.)?", "", str(links[k])).rstrip("/"))
+            parts.append(r"\href{" + str(links[k]).replace("%", r"\%").replace("#", r"\#") + "}{" + shown + "}")
+    return dot.join(parts)
+
+
 def env(date_separator: str = DATE_SEPARATOR) -> jinja2.Environment:
     e = jinja2.Environment(
         loader=jinja2.FileSystemLoader(ROOT / "templates"),
@@ -371,7 +404,7 @@ def env(date_separator: str = DATE_SEPARATOR) -> jinja2.Environment:
                      org_parts=org_parts, school_parts=school_parts, project_parts=project_parts,
                      education_lines=education_lines, org_tex=org_tex, school_tex=school_tex, role_tex=role_tex, degree_tex=degree_tex,
                      publication_tex=publication_tex, cert_tex=cert_tex, skill_row=skill_row, achievement_head=achievement_head,
-                     cert_text=typography.cert_text)
+                     cert_text=typography.cert_text, contact_line=contact_line)
     # a URL inside \href{...}: hyperref needs % and # escaped
     e.filters["urlesc"] = lambda u: str(u).replace("%", r"\%").replace("#", r"\#")
     # what a reader sees for a link: no scheme, no "www.", no trailing slash
@@ -463,6 +496,7 @@ def render_cv(ctx: dict, out_dir: Path, final_name: str | None = None, one_page:
     The typography (typography.py: no em dash, hyphens closed up per config/typography.yaml, no award repeated in a bullet) is
     applied here, to a copy of `ctx`, so every check has already seen the original wording. `keep_hyphens`: hyphenated forms
     to leave alone (the JD keywords spelt with the hyphen). Returns the PDF path."""
+    ctx = with_public_links(ctx)                      # a project marked `public: false` prints no URL
     if not one_page:                                  # the situation openers and the split bullets are the two-page CV's (layout.py)
         ctx = layout.with_openers(layout.with_splits(ctx))
     ctx = typography.typeset(ctx, keep=keep_hyphens)

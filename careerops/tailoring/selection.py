@@ -63,16 +63,22 @@ class Layout:
     recent_years: int = 2
 
 
+MAX_PROJECTS = 3                    # the Document rules: at most three projects on a CV, whatever the settings say
 ONE_PAGE = Layout(MOST_RECENT_BULLETS, OTHER_BULLETS, PROJECTS, None)
-TWO_PAGE = Layout((4, 5), (3, 4), 5, (2, 3), 2, 2)
+TWO_PAGE = Layout((4, 6), (3, 5), MAX_PROJECTS, (2, 3), 2, 2)
 
 
 def layout_from(settings) -> Layout:
     """The two-page layout from settings (scoring.cv_bullets / cv_projects / cv_project_bullets / cv_recent_min_bullets / cv_recent_years)."""
     sc = settings["scoring"]
     cb = sc["cv_bullets"]
-    return Layout(tuple(cb["most_recent"]), tuple(cb["other"]), int(sc["cv_projects"]), tuple(sc["cv_project_bullets"]),
+    return Layout(tuple(cb["most_recent"]), tuple(cb["other"]), min(int(sc["cv_projects"]), MAX_PROJECTS), tuple(sc["cv_project_bullets"]),
                   int(sc.get("cv_recent_min_bullets", 2)), int(sc.get("cv_recent_years", 2)))
+
+
+def project_cap(settings) -> int:
+    """The most projects the fill may put on the CV: scoring.cv_projects_max, never over MAX_PROJECTS (3)."""
+    return min(int(settings["scoring"].get("cv_projects_max", MAX_PROJECTS)), MAX_PROJECTS)
 
 
 # ------------------------------------------------------------------------------------------------------------------ role dates
@@ -355,12 +361,12 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
 
 
 def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = None,
-               jaccard_limit: float = JACCARD, max_projects: int | None = None, jd: str = "") -> list[str]:
-    """The bullets a selection has not used, in the order the two-page loop should add them while page 2 is not full:
-      1. the bullets of further projects, up to `max_projects` projects on the CV in all (scoring.cv_projects_max; None =
+               jaccard_limit: float = JACCARD, max_projects: int | None = None, jd: str = "", layout: Layout | None = None) -> list[str]:
+    """The bullets a selection has not used, in the order the two-page loop should add them while page 2 is not full (Document rules, A5):
+      1. experience bullets of any entry: every role is raised to its maximum first (with a `layout`, no role goes past its maximum);
+      2. the bullets of further projects, up to `max_projects` projects on the CV in all (scoring.cv_projects_max; None =
          no further project), the project adding the most keyword weight nobody covers yet first, then the better match;
-      2. the remaining bullets of the chosen projects;
-      3. experience bullets of any entry.
+      3. the remaining bullets of the chosen projects (with a `layout`, no project goes past its maximum).
     Inside a stage each step is the bullet adding the most uncovered keyword weight, then the more recent entry, more
     weighted overlap, fact-bank order. A bullet that nearly repeats a chosen one (or an earlier fill) is left out for
     good. Optional fact-bank sections and linespread come after this list is used up (tailor.fill_tail)."""
@@ -383,13 +389,22 @@ def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = No
         extra.append(best)
         covered |= set().union(*(pk.hits[b] for b in own[best]))
         dcovered |= set().union(*(pk.dgroups[b] for b in own[best]))
-    stage = {p: 0 for p in extra} | {p: 1 for p in shown}
-    pool = [(n, 2, b["id"]) for n, e in enumerate(fb["experience"]) for b in e["bullets"] if b["id"] not in used]
+    stage = {p: 1 for p in extra} | {p: 2 for p in shown}
+    pool = [(n, 0, b["id"]) for n, e in enumerate(fb["experience"]) for b in e["bullets"] if b["id"] not in used]
     pool += [(n, stage[p["id"]], b["id"]) for n, p in enumerate(fb.get("projects", [])) if p["id"] in stage
              for b in p["bullets"] if b["id"] not in used]
+    owner = {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb.get(sec, []) for b in e["bullets"]}
+    room: dict[str, int] = {}                                     # bullets each entry can still take (only with a layout)
+    if layout is not None:
+        for n, e in enumerate(fb["experience"]):
+            room[e["id"]] = max(0, (layout.first if n == 0 else layout.other)[1] - len(sel["experience"].get(e["id"]) or []))
+        if layout.project_bullets:
+            chosen = sel.get("project_bullets") or {}
+            for p in fb.get("projects", []):
+                room[p["id"]] = max(0, layout.project_bullets[1] - len(chosen.get(p["id"], own[p["id"]]) if p["id"] in shown else []))
     out: list[str] = []
     while pool:
-        pool = [c for c in pool if pk.allowed(c[2], strict=True) and not pk.dup(c[2])]
+        pool = [c for c in pool if room.get(owner[c[2]], 1) > 0 and pk.allowed(c[2], strict=True) and not pk.dup(c[2])]
         if not pool:
             break
         n, st, b = min(pool, key=lambda c: (c[1], -pk.gain([c[2]]), c[0], -pk.sc[c[2]], pk.order[c[2]]))
@@ -397,6 +412,8 @@ def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = No
         pool = [c for c in pool if c[2] != b]
         out.append(b)
         pk.take(b)
+        if owner[b] in room:
+            room[owner[b]] -= 1
     return out
 
 
