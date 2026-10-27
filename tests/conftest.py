@@ -101,6 +101,27 @@ def no_provider_keys(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def liveness_without_network(monkeypatch, tmp_path_factory):
+    """The gate in front of tailoring (discovery/pretailor.py) checks that a posting is still open. No test may reach a real site for that: the default
+    fetcher answers every address with an open job page, and the 6 hour cache is a throwaway file. A test of the check itself passes its own fetcher."""
+    from types import SimpleNamespace
+
+    from careerops.discovery import liveness, pretailor
+    from careerops.discovery.http import Fetcher
+    from careerops.discovery.robots import RobotsCache
+
+    page = "<html><body><h1>Job</h1><p>" + "A job description. " * 20 + "</p><a href='/apply'>Apply now</a></body></html>"
+
+    def get(url, **kw):
+        if url.endswith("/robots.txt"):
+            return SimpleNamespace(status_code=404, text="", ok=False, headers={}, content=b"", url=url)
+        return SimpleNamespace(status_code=200, text=page, ok=True, headers={}, content=page.encode(), url=url)
+    monkeypatch.setattr(pretailor, "default_fetcher", lambda s: Fetcher(RobotsCache(), get=get, sleep=lambda x: None, clock=lambda: 0.0, gap_s=0.0))
+    scratch = tmp_path_factory.mktemp("liveness") / "liveness.json"
+    monkeypatch.setattr(liveness, "cache_for", lambda s: liveness.Cache(scratch))
+
+
+@pytest.fixture(autouse=True)
 def no_real_data():
     """Fail any test that opens a path under the real data/ folder, even if the code under test swallows the error."""
     _guard["hits"].clear()

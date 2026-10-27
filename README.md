@@ -71,6 +71,8 @@ career-ops/
 │   ├── apply/freetext.py         drafts free-text form answers from the fact bank, guards them, you approve once (data/answers/library.jsonl)
 │   ├── apply/formloop.py         scans EVERY field of a form (table before filling), runs the free-text loop (required or optional), logs formloop.jsonl
 │   ├── apply/assist.py · filler.py   Playwright: fill, upload PDFs, never submit · the ONE field filler (applicant.yaml, then answers.yaml) that assist and autoapply share
+│   ├── discovery/liveness.py · pretailor.py   is the posting still open (closed ones are never tailored) · the gate every job passes before tailoring
+│   ├── discovery/repost.py · blacklist.py · channel.py   repost / evergreen? flags (information only) · your blacklist.yaml · same role via another channel (agency vs direct)
 │   ├── apply/ats_vendor.py       host → vendor (greenhouse, lever, ashby, workday, icims, successfactors ...) and the direct address of the real form (Greenhouse `gh_jid` → job-boards.greenhouse.io)
 │   ├── apply/formagent.py · submit_guard.py   the form agent for any other vendor: no submit action, a submit control has no ref, 40 steps per job / 8 per page, logs formagent.jsonl
 │   ├── apply/knockout.py · attest.py   the knock-out pre-scan (sponsorship, years, degree, salary floor, on-site, clearance) · attestations code never answers
@@ -82,7 +84,7 @@ career-ops/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
 │   ├── typography.yaml           CV typography: special hyphen spellings, the protected terms (every other hyphen is closed up when the PDF is rendered)
 │   ├── taxonomy.txt              ATS keyword vocabulary
-│   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml · answers.yaml (your answers to form questions, for `live --auto`)
+│   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml · answers.yaml (your answers to form questions, for `live --auto`) · blacklist.yaml (yours, read only)
 ├── templates/                    cv.tex.j2 · cover_letter.tex.j2
 ├── docs/                         PLAN.md · IMPLEMENTATION.md
 ├── scripts/crontab.example · auto_census.py (read-only: how the database's jobs fare against the auto-apply gates)
@@ -203,7 +205,8 @@ careerops discover                 # pull + triage; skipped jobs keep their reas
 careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
 careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
 careerops discover --jobbank       # Canada's Job Bank open-data CSV: matching rows are listed in data/discover/listed_only.csv
-careerops discover --report        # counts per source, resolved vs the manual queue, and how many ads are in each freshness tier (no network)
+careerops discover --report        # counts per source, resolved vs the manual queue, the freshness tiers; then the inbox's liveness (open / closed / uncertain: one request a second per host, answers kept 6 h) and its repost and evergreen? counts
+careerops discover --report --no-liveness   # the same without fetching any ad
 scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network

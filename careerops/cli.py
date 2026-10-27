@@ -230,6 +230,18 @@ def cmd_discover(args):
     _print_health(s, reg, run=run)
 
 
+def _inbox_signals(args, s, db, fetcher=None) -> list[str]:
+    """The lines `discover --report` adds: liveness of the inbox (open / closed / uncertain) and the repost / evergreen? counts. Information only. No
+    network with --no-liveness or --mock."""
+    from .discovery import applykind, pretailor
+    from .discovery.http import Fetcher
+    from .discovery.robots import RobotsCache
+
+    skip = getattr(args, "no_liveness", False) or getattr(args, "mock", False)
+    f = None if skip else fetcher or Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH, blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE))
+    return ["", *pretailor.report_lines(s, db, f)]
+
+
 def _discover_inbox(args, sources_asked: list[str]) -> None:
     from .discovery import applykind
     from .discovery import discover as disc
@@ -240,6 +252,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     s, db = _ctx(args)
     if getattr(args, "report", False) and not sources_asked and not getattr(args, "gmail_auth", False):
         print(disc.format_report(s))                    # --report alone: counts only; with a source flag it runs the sources first (below)
+        print("\n".join(_inbox_signals(args, s, db)))
         return
     if getattr(args, "gmail_auth", False):
         try:
@@ -294,6 +307,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         print("Next: careerops live   (works through the inbox best priority first)")
     if getattr(args, "report", False):
         print("\n" + disc.format_report(s, d.run))             # the counts per source and the freshness tiers, after this run
+        print("\n".join(_inbox_signals(args, s, db, fetcher)))
     if d.run.failures:                                  # a scheduled run (scripts/discover.sh) must show as failed
         print("\nFAILED: " + "; ".join(d.run.failures[:5]), file=sys.stderr)
         sys.exit(1)
@@ -552,12 +566,15 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
 
 
 def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False, mock: bool = False,
-                re_extract: bool = False, boost: list[str] | None = None) -> None:
+                re_extract: bool = False, boost: list[str] | None = None, fetcher=None, ask=input) -> None:
     """Tailor these jobs one after the other (the loop `careerops tailor` and `careerops live` share). Each job ends as
     needs_review, letter_pending, error, or — when the day's token budget is short — stays as it was. A job's keywords
     are extracted once and kept in its record: a job tailored again reuses them (no extract_keywords call, so the same
     keyword list and ceiling) unless `re_extract` (--re-extract) or its JD has changed. `boost`: JD keywords the first attempt ranks first (review's
-    `r` and `f`); `fb` is then the job's own bank, the real one plus the facts typed for it."""
+    `r` and `f`); `fb` is then the job's own bank, the real one plus the facts typed for it.
+    Every job meets the gate first (discovery/pretailor.py: blacklist, liveness, agency vs direct, repost flags): a closed or expired posting, a blacklisted
+    employer you do not override, and a role another channel owns are not tailored and cost no token. `--mock` skips the network and the archive."""
+    from .discovery import pretailor
     from .tailoring.freeze import frozen_for
     from .tailoring.tailor import letter_summary, tailor_job
 
@@ -565,6 +582,10 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
     est = s["llm"].get("job_token_estimate", 10000)
     for n, job in enumerate(jobs):
         print(f"- {job['company']} | {job['title']}")
+        gate = pretailor.run(db, s, job, fetcher=fetcher, ask=ask, offline=mock)
+        if gate.stop:
+            print(f"  NOT TAILORED: {gate.reason}")
+            continue
         try:
             using = llm.begin_job(est)       # daily token budget check: never start a job that can't be finished
         except BudgetExhausted as e:
@@ -1377,7 +1398,9 @@ def main(argv=None):
     dc.add_argument("--jobbank", action="store_true", help="Canada's Job Bank open-data CSV: matching rows are listed in "
                     "data/discover/listed_only.csv (the file has no employer or ad text)")
     dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Google once: read mail, create drafts, edit the tracker Sheet; never sends (opens your browser)")
-    dc.add_argument("--report", action="store_true", help="counts per source over all runs, resolved vs the manual queue")
+    dc.add_argument("--report", action="store_true", help="counts per source over all runs, resolved vs the manual queue; the inbox's liveness "
+                                                        "(open / closed / uncertain) and its repost and evergreen? counts")
+    dc.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="with --report: do not fetch the inbox ads to check they are still open")
     dc.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
     dc.add_argument("--dry-run", dest="dry_run", action="store_true", help="find and rank, write nothing")
     dc.set_defaults(fn=cmd_discover)

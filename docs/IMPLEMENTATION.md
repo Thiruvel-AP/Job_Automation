@@ -1414,3 +1414,35 @@ pattern below is this repo's own.
    fixtures `agent_site.html`, `attest_form.html`, `lever_checks.html`, `knock_form.html`, `react_select.html`. Changed on purpose: `tests/test_autoapply.py` (the world patches `knockout.scan` because its fixture asks the
    sponsorship question; the privacy checkbox moved behind `?attest` and has its own test; the "only autoapply clicks" scan allows `formagent.py`), `tests/fixtures/apply/auto_form.html`.
    **Unverified:** the Epic Games ML Engineer `--no-submit` run (a live form), a Lever job on the real site, the form agent on a real Workday / iCIMS / SuccessFactors page, and `LLMPlanner` with a real model.
+
+
+## 5ak. Phase B — stop wasting tokens on dead or duplicate jobs (27 Oct) — **done** (offline tests: a fake `get`, fixture databases, no network, no model; never run against the live sites or the real data)
+
+Every job now meets one gate before tailoring: `cli.tailor_jobs` calls `discovery/pretailor.py: run` first, so `tailor`, `run` and `live` share it. In order: blacklist, liveness, agency vs
+direct, then the repost flags. A stop costs no token. Every question defaults to no (Enter and EOF are a no). `--mock` skips the network and the archive. The job's flags (JSON list on the jobs row)
+carry `liveness uncertain: ...`, `possible repost (...)`, `evergreen?`, `blacklisted (you chose to go on)`, `same role via another channel (you chose this one)`; the gate rewrites its own flags
+each time, never anyone else's.
+
+1. **B1 — liveness** (`discovery/liveness.py`). `open | closed | uncertain`. Closed: HTTP 404 / 410; a redirect to a generic careers or search page (the final address names no posting while the
+   requested one did: Greenhouse's `?error=true`, `/careers`, `/jobs/search?q=`); a long page with no job title (an `<h1>` or a JSON-LD JobPosting) and no apply path; an expired phrase. Phrases are
+   normalised first (curly quotes straightened, accents stripped, whitespace collapsed): "no longer available", "no longer accepting applications", "this job has expired", "job posting has expired",
+   "this role|position|job is no longer / closed" (not "closed-loop"), "<job noun> ... has been filled" (not "has been filled out / in / up"). A page with almost no text (a script shell) is uncertain, never
+   closed. Requests go through the discovery `Fetcher`: robots.txt, one a second per host, a 401 / 403 / 429 backs the host off; LinkedIn, Indeed, CV-Library and the Workday hosts are not fetched at all
+   (uncertain). Cache: `paths.discover/liveness.json`, 6 hours. Closed: status `closed`, the job's own inbox file moves to `jds_done/closed/` with `<name>.reason.txt`, no tailoring. Uncertain goes on with
+   a flag. `discover --report` (and `--report` after a source run) prints `open N · closed N · uncertain N` for the inbox and lists the closed ones, checking at most 150 ads a run; `--no-liveness` skips it.
+   The report moves nothing.
+2. **B2 — repost / ghost signal** (`discovery/repost.py`). Information only: no score, no filter. `possible repost (n listings since <date>)`: same company family, same title identity (the SET of title words,
+   gender tags dropped, so "Engineer - Munich" is not "Engineer - Berlin"), 2+ URLs, 2+ distinct first-seen dates inside 90 days, span over 0 days. `evergreen?`: posted date over 120 days old. Counts in
+   `discover --report` come from the inbox files (First seen / Posted headers) and the jobs table.
+3. **B3 — blacklist** (`discovery/blacklist.py`, `config/profile/blacklist.yaml`, beside the fact bank; yours, the module has no write call). Entries `{name, scope: company|domain, since, reason}`. Company: the
+   name equals the job's company after folding case, punctuation, "(...)" and a trailing Ltd / plc / GmbH ("Acme" is not "Acme Recruitment"). Domain: the job's address or apply address is on the host or a
+   subdomain, never a lookalike. A hit asks `<company> is on your blacklist since <date>: <reason>. Apply anyway? [y/N]`; no = status `skipped` and the file to `jds_done/skipped/`. A blacklist.yaml that cannot
+   be read stops the job (nothing is tailored on the guess that nobody is blacklisted) and leaves it as it was. `tests/conftest.py` gained an autouse fixture that gives the gate an offline fetcher (every address answers with an open page) and a throwaway cache, so no existing test reaches a site.
+4. **B4 — agency vs direct** (`discovery/channel.py`). The tracker (every job not skipped / rejected / closed / error) and the archive (`discover.archive_pairs`, read only) are checked for the same title
+   identity at the same company under another channel: agency vs direct, or two agencies (the employer an agency ad names is read from "Our client, X", "on behalf of X", "Client: X"; two agencies that name
+   nobody match on title and town). Found: the job stops and asks `[c]ontinue / [s]kip`; only c goes on; skip marks THIS job skipped (the other channel's job is left alone). An agency ad that hides the employer:
+   `... does not name the employer ... Go on with this ad anyway? [y/N]`. Two ads of one company on one channel are a duplicate (apply/decided.py), not another channel.
+5. **Tests** (new, 5 files in `tests/discovery/`): `test_liveness` (67: each pattern, "closed-loop" and "filled out" false positives, redirects, cache, Fetcher pacing, never-fetched hosts), `test_repost`,
+   `test_blacklist`, `test_channel`, `test_pretailor` (the gate, `tailor_jobs`, the report). **Unverified:** the real sites' closed pages (a live Greenhouse / Lever / Ashby 404 or redirect, an SPA that shows
+   "no longer available" only after its scripts run is uncertain here), the real archive's folder names against the channel check, and `discover --report` against a full inbox. **Known limits:** the
+   employer behind an agency ad is only found when the ad says so in one of the three forms above; a blacklist.yaml error shows `tailoring did not run (budget?)` in `live` (the real reason is printed above it).
