@@ -157,8 +157,9 @@ class State:
 class Live:
     def __init__(self, db: DB, settings, hooks: Hooks, *, max_jobs: int = 5, dry_run: bool = False,
                  resume_cmd: str = "careerops live", out: Callable[[str], None] = print, retailor: bool = False,
-                 only: Path | None = None, fresh: bool = False):
+                 only: Path | None = None, fresh: bool = False, require_approval: bool = False):
         self.db, self.s, self.h, self.retailor = db, settings, hooks, retailor
+        self.require_approval = require_approval        # the command's default: work only on the ads you approved (careerops shortlist), not the whole inbox
         self.fresh = fresh                              # `live --fresh`: tier 0 only (posted at most 24 h ago); the rest stays in the inbox
         self.only = only                                # `live --url`: work on this one inbox file, leave the rest
         self.max_jobs, self.dry_run, self.resume_cmd, self.out = max_jobs, dry_run, resume_cmd, out
@@ -266,6 +267,59 @@ class Live:
         self.out(f"Summary written to {report}")
         return code
 
+    def _source_files(self) -> list[Path]:
+        """The JD files this session works on: the ones you approved with `careerops shortlist` (data/jds/approved/<date>/), or, with
+        `live --include-unapproved`, the whole inbox."""
+        if self.require_approval:
+            from ..discovery import shortlist
+
+            return shortlist.approved_files(self.s)
+        return [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]
+
+    def _locate(self, name: str) -> Path:
+        """Where the JD file called `name` is now: the inbox, else the approved folders."""
+        here = self.dirs.inbox / name
+        if here.exists() or not self.require_approval:
+            return here
+        from ..discovery import shortlist
+
+        return next((p for p in shortlist.approved_files(self.s) if p.name == name), here)
+
+    def _triage_texts(self, files: list[Path]) -> dict[str, str]:
+        """`T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3` per file name (discovery/triage.py); an empty text for a file it cannot be worked out for."""
+        from ..config import load_yaml
+        from ..discovery import register as sponsors
+        from ..discovery import triage
+
+        out: dict[str, str] = {}
+        try:
+            fb, idx, floor = load_yaml(self.s.path("fact_bank")), sponsors.load_index(self.db), triage.salary_floor(self.s)
+        except Exception:  # noqa: BLE001
+            return out
+        for f in files:
+            try:
+                job = triage.inbox_job(f, self.s, fb, idx)
+                out[f.name] = triage.score(job, self.s, fb, floor=floor).text() if job else ""
+            except Exception:  # noqa: BLE001  (a number that cannot be worked out is left out of the listing, not an error)
+                out[f.name] = ""
+        return out
+
+    def _daily_block(self) -> str | None:
+        """targeting.daily_max_applications reached today? (apply/volume.py) The reason, with the count, else None."""
+        from . import volume
+
+        return volume.daily_block(self.db, self.s, volume.today())
+
+    def _volume_block(self, job) -> str | None:
+        """Checked right before a form is opened. The daily cap ends the session (StopSession, with the count); a company at its limit holds this one job
+        (the reason is returned)."""
+        from . import volume
+
+        why = self._daily_block()
+        if why:
+            raise StopSession(why, 0)
+        return volume.company_block(self.db, self.s, job["company"], volume.today())
+
     def _by_priority(self, files: list[Path]) -> list[Path]:
         """The inbox files best first: freshness tier, then priority P = F x S (discovery/priority.py), ties by name. Sponsorship only
         weights the order; no file is left out (`--fresh` leaves the files older than 24 h in the inbox, untouched). If the ranking
@@ -282,10 +336,12 @@ class Live:
             self.out(f"(inbox order by priority not available: {e}; going by file name)")
             return [] if self.fresh else files
         self.out("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L x R (before tailoring; the review order uses the final P):")
+        triage_text = self._triage_texts([f for f, _ in ranked])
         for f, pr in ranked:
             self.out(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = F {pr.f:.2f} x S {pr.s:.2f} x L {pr.l:.2f}"
                      f"{' ' + pr.role_text() if pr.r is not None else ''}"
-                     f"{'  ' + pr.flag() if pr.flag() else ''}  {f.name}" if pr else f"     -     {f.name} (unreadable)")
+                     f"{'  ' + pr.flag() if pr.flag() else ''}  {f.name}" + (f"  | {triage_text[f.name]}" if triage_text.get(f.name) else "")
+                     if pr else f"     -     {f.name} (unreadable)")
         if self.fresh:
             keep = [f for f, pr in ranked if pr is not None and pr.tier == 0]
             self.out(f"--fresh: {len(keep)} file(s) posted at most 24 h ago (tier 0); {len(ranked) - len(keep)} older file(s) stay in the inbox.")
@@ -346,15 +402,19 @@ class Live:
             self._stage("mark-applied")
             ok = self.h.mark_applied(job["id"], None)
             r.status = "applied" if ok else "applied (archive incomplete)"
-            self._finish_file(self.dirs.inbox / (entry.get("file") or ""), sha, entry, r.status)
+            self._finish_file(self._locate(entry.get("file") or ""), sha, entry, r.status)
 
     def _loop(self) -> None:
         self._ask_unconfirmed()
-        files = ([self.only] if self.only is not None else self._by_priority(
-                 [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]))
+        if not self.dry_run and self.only is None and (why := self._daily_block()):
+            raise StopSession(why, 0)                           # at the cap nothing more is tailored or applied to today
+        files = ([self.only] if self.only is not None else self._by_priority(self._source_files()))
         if self.fresh and not files and self.only is None:
             self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
-        if not files:
+        if not files and self.require_approval:
+            self.out("Nothing approved: run `careerops shortlist` to approve ads from the inbox (live works only on ads in "
+                     f"{self.dirs.inbox.parent / 'approved'}), or, outside auto mode, `careerops live --include-unapproved`.")
+        elif not files:
             self.out(f"Nothing in {self.dirs.inbox}: put one JD per .txt file there (optional first lines "
                      "`Company: ...`, `Title: ...`, `URL: ...`).")
         # Pass 1: the selected files (tier, then the estimate, at most --max) are added, triaged and tailored; nothing is asked yet but the
@@ -705,6 +765,11 @@ class Live:
         if self.dry_run:
             self.out("  AUTO READY: every gate passed. --dry-run opens no browser and submits nothing; this JD stays in inbox/.")
             return "auto_ready (dry run)"
+        held = self._volume_block(db.job(jid))
+        if held:
+            r.note = f"AUTO BLOCKED: {held}"
+            self.out("  " + r.note)
+            return None
         self._stage("preflight")
         try:
             self.h.preflight(jid)
@@ -755,6 +820,11 @@ class Live:
 
     def _apply(self, jid: str, job, r: JobResult) -> str:
         db = self.db
+        held = self._volume_block(job)
+        if held:
+            r.note = held
+            self.out(f"  HELD: {held}. No form was opened; the job stays 'approved'.")
+            return "held (company limit)"
         self._stage("preflight")
         try:
             self.h.preflight(jid)

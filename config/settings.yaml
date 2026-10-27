@@ -434,6 +434,16 @@ outreach:
   mode: off              # off = no draft after mark-applied (`careerops outreach draft JOB` still works by hand); drafts = make them
   follow_up_days: 7      # the Sheet's Follow-up due is the day you applied plus this many days
 
+# Fewer, better-matched applications (careerops/targeting.py). `careerops shortlist` offers the best few inbox ads; `careerops live` works only on the ones you approve.
+targeting:
+  shortlist_size: 8            # jobs offered per day for approval
+  min_triage_score: 3.5        # 1-5, the zero-token triage score T (discovery/triage.py); below this a job is never offered
+  daily_max_applications: 5    # submitted (by you or auto) per calendar day; `live` stops at the cap
+  per_company_max_open: 2      # applications at one company with no reply yet (made in the last 28 days), across all roles
+  per_company_cooldown_days: 30  # after a rejection or withdrawal at a company, no new application there for this long
+  max_posting_age_days: 60     # older postings are offered only with T >= 4.5
+  dealbreakers: []             # yours, e.g. ["people management", "SC clearance", "5 days on-site outside the UK"]; an ad must STATE one (its sentence is quoted)
+
 # Gated auto-apply (careerops/autoapply.py, Greenhouse / Ashby / Lever only). `careerops live --auto` submits a form only when EVERY gate below passes;
 # a job that fails any gate goes to the normal review prompt with the failed gates printed at the top (`AUTO BLOCKED: ATS 58 < 70; level: senior`).
 apply:

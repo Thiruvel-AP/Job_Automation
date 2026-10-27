@@ -92,7 +92,8 @@ JD_HEAD = "Company: Northwind Health AI\nTitle: AI Engineer\nURL: https://exampl
 
 
 def _inbox(mock: Path, jd: str, name="northwind.txt") -> Path:
-    d = mock / "jds" / "inbox"
+    """A JD the user approved with `careerops shortlist`: `live` reads only data/jds/approved/<date>/."""
+    d = mock / "jds" / "approved" / "2026-10-27"
     d.mkdir(parents=True, exist_ok=True)
     p = d / name
     p.write_text(JD_HEAD + jd, encoding="utf-8")
@@ -127,6 +128,33 @@ def test_live_mock_takes_a_jd_through_add_jd_tailor_and_review_and_never_touches
     assert "approved (dry run)" in next((mock / "live").glob("*.md")).read_text()
     assert _hash(real) == before                                           # real paths: byte for byte unchanged
     assert not (real / "careerops.db").exists()
+
+
+def _unapproved(mock: Path, jd: str) -> Path:
+    d = mock / "jds" / "inbox"
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / "waiting.txt"
+    p.write_text(JD_HEAD.replace("Northwind Health AI", "Waiting Ltd") + jd, encoding="utf-8")
+    return p
+
+
+def test_live_works_only_on_approved_ads_so_an_ad_in_the_inbox_is_not_tailored(world, jd, monkeypatch, capsys):
+    cfg, real, mock = world
+    waiting = _unapproved(mock, jd)
+    seen = _answers(monkeypatch)                                           # any prompt would raise StopIteration
+    cli.main(["--config", str(cfg), "live", "--mock", "--max", "1"])
+    out = capsys.readouterr().out
+    assert "Nothing approved: run `careerops shortlist`" in out and "Tailoring" not in out and seen == []
+    assert waiting.exists() and not [j for j in DB(mock / "careerops.db").jobs() if j["source"] == "manual"]
+
+
+def test_include_unapproved_takes_the_inbox_as_before(world, jd, monkeypatch, capsys):
+    cfg, real, mock = world
+    waiting = _unapproved(mock, jd)
+    _answers(monkeypatch, "a")
+    cli.main(["--config", str(cfg), "live", "--mock", "--max", "1", "--include-unapproved"])
+    assert "Tailoring 1 job(s)" in capsys.readouterr().out and waiting.exists()          # a dry run keeps the JD
+    assert [j["company"] for j in DB(mock / "careerops.db").jobs() if j["source"] == "manual"] == ["Waiting Ltd"]
 
 
 def _kw(job) -> list[str]:
@@ -165,7 +193,7 @@ def test_live_mock_skip_marks_the_job_skipped_and_leaves_the_jd_because_mock_is_
     db = DB(mock / "careerops.db")
     (job,) = [j for j in db.jobs() if j["source"] == "manual"]
     assert job["status"] == "skipped"
-    assert [p.name for p in (mock / "jds" / "inbox").iterdir()] == ["northwind.txt"]      # dry run: never filed
+    assert [p.name for p in (mock / "jds" / "approved" / "2026-10-27").iterdir()] == ["northwind.txt"]      # dry run: never filed
     assert not (mock / "jds" / "done").exists() or not list((mock / "jds" / "done").iterdir())
     assert not (mock / "jds_done").exists() or not list((mock / "jds_done").rglob("*.txt"))
 
@@ -211,7 +239,7 @@ def test_live_applies_through_the_real_preflight_and_archive_when_you_say_you_su
     monkeypatch.setattr(assist_mod, "assist", lambda job, rep, applicant, profile, **kw: {
         "confirmation": "REF-42", "visa": [{"question": "Do you require sponsorship?", "value": "Yes"}], "filled": [],
         "manual": [], "uploaded": [], "required_empty": []})
-    inbox = real / "jds" / "inbox"
+    inbox = real / "jds" / "approved" / "2026-10-27"
     inbox.mkdir(parents=True)
     (inbox / "northwind.txt").write_text(JD_HEAD + jd, encoding="utf-8")
     old = _hash(real / "Companies" / "Old Co")
@@ -237,7 +265,7 @@ def test_live_does_not_archive_when_you_did_not_submit(world, jd, monkeypatch, c
     cfg, real, mock = world
     monkeypatch.setattr(cli, "_llm", lambda args, s, db: MockLLM())
     monkeypatch.setattr(assist_mod, "assist", lambda *a, **k: {"confirmation": "", "visa": []})
-    inbox = real / "jds" / "inbox"
+    inbox = real / "jds" / "approved" / "2026-10-27"
     inbox.mkdir(parents=True)
     (inbox / "northwind.txt").write_text(JD_HEAD + jd, encoding="utf-8")
     _answers(monkeypatch, "a", "y", "n")

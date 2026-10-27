@@ -223,8 +223,10 @@ careerops judge-report             # the LLM judge vs your decisions: agreement,
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 330-420 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
-careerops live --max 5             # JD files in data/jds/inbox/, one job at a time, you at every gate (see "Live sessions")
-careerops live --fresh             # tier 0 only: the inbox files posted at most 24 hours ago (older ones stay in the inbox, untouched)
+careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good (see "Fewer, better-matched applications")
+careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
+careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
+careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
 careerops live --auto --no-submit  # gated auto-apply, step 1: fill the forms of the jobs that pass every gate and screenshot them, never click Submit (see "Auto-apply")
 careerops live --auto              # step 2, needs `apply: mode: auto`: jobs that pass every gate are submitted; the rest go to your review as before (`--confirm`: ask before every submit)
@@ -1114,6 +1116,35 @@ and stores `sponsor_match` = `exact` | `fuzzy(0.95)` | `none` plus route and rat
 `mark-applied` (and `apply`) log an `applied` event; add the rest with `careerops outcome`. `careerops outcomes` prints the funnel
 split by role family, tier, CV pages and sponsor match. A job applied more than 28 days ago with nothing logged since counts as
 `no_response` in the report (computed, never stored). `--import-archive` is read-only on the archive: it only lists folders.
+
+### Fewer, better-matched applications: `shortlist`, the caps, `patterns`
+
+Passing the title filter is not a reason to apply. `careerops shortlist` scores every inbox ad with a **zero-token triage score T** (1 to 5) and offers the best few; **you
+promote** the ones worth tailoring, and `careerops live` reads only those (`data/jds/approved/<date>/`). Nothing is tailored, sent or changed by `shortlist` except filing
+ads away and moving the ones you approve.
+
+    T = 0.30 A + 0.25 E + 0.15 V + 0.10 L + 0.10 Fr + 0.10 P          shown as   T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3
+
+- **A role**: the family's `priority` (1-3 -> 5, 4-7 -> 4, 8-11 -> 3, 12-15 -> 2, no family -> 1). **E evidence** = 1 + 4c, c = the share of the ad's *required* keywords
+  that appear anywhere in your fact bank (found the way the scorer finds them; a required keyword the bank lacks stays in the denominator, so the ad cannot inflate E; no
+  required keyword found: 3). **V visa**: exact register match 5, fuzzy 4.5, unknown (or an agency) 3.5, the ad says no sponsorship 1.5, work outside your home country 1 (the
+  lowest that applies). **L level**: no level word 5, senior 2, lead or manager 1. **Fr freshness**: <= 3 days 5, 7 days 4, 30 days 3, 120 days 2, older 1 (no date: 3).
+  **P pay**: the top of the ad's band at or above your `answers.yaml` salary figure 5, no band (or no figure on file) 3, below it 1. A missing salary is never a penalty.
+- **Hard stops** (zero tokens; the ad is filed in `jds_done/skipped/` with the reason beside it and never offered), in this order: liveness (asked only for the ads that would otherwise be
+  offered, best T first; a closed posting goes to `jds_done/closed/`), your blacklist, the same role under another channel or an agency ad that hides the employer, the level exclude
+  list, then `targeting.dealbreakers`. **A dealbreaker needs an ad sentence that states the fact, and it is quoted**: `DEALBREAKER "people management" <- "You will line-manage a team of 4"`
+  (a few ideas are read by what an ad says: people management, clearance, "N days on-site", "N+ years", "salary below £N"; any other phrase is matched as words). A sentence that denies
+  it ("no people management") or calls it optional is not a hit; a senior-sounding title with no stated years, or a missing salary, breaks nothing.
+- **Offered**: T >= `min_triage_score` (3.5), best T first then freshest, at most `shortlist_size` (8). An ad older than `max_posting_age_days` (60) needs T >= 4.5. A company with
+  `per_company_max_open` (2) applications and no reply yet, or inside its `per_company_cooldown_days` (30) after a rejection or withdrawal, is left out. An application counts as open
+  for 28 days (then the funnel counts it as no response); the count includes the tracker's jobs (the database) and the archive folders for the same company.
+- **Choices**: `a` approves all, `1 3 5` approves those, `s 2` skips job 2 for good (filed in `jds_done/skipped/`, so `discover` does not bring it back), `q` quits. `shortlist --dry-run`
+  prints the list and moves nothing; without a terminal it only prints. `live --url` and `live --clipboard` are your own act for one ad, so they need no approval.
+- **Volume caps are enforced where the action happens**: `live` stops with the count when `daily_max_applications` (5) submits (yours or auto's) have been made today, before it tailors and again
+  right before a form opens; the per-company limit and cooldown are checked again right before a form opens (a held job stays `approved`). `live --auto` never takes unapproved ads.
+- **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It
+  may suggest ("T >= 4.0 had 3/9 replies; T 3.5-4.0 had 0/7: consider `min_triage_score: 4.0`") and **never changes a setting or a weight**. Not taken from the reference project: its LLM
+  1-5 score (the ATS bands stay deterministic), its immigration templates.
 
 ### After you apply: replies, follow-ups, interview prep
 

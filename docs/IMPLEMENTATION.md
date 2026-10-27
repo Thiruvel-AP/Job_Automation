@@ -1515,3 +1515,27 @@ each time, never anyone else's.
    old gain order. The tier does not change any score, band or gain.
 3. **Tests** (new): `tests/review/test_cannot_confirm.py`, `tests/review/test_gap_tiers.py`; the prompt strings in `test_gap_review.py` and `test_factsave.py` were updated. **Known limits:** the
    section and must-have rules are English phrases tested on hand-made ads, not on a corpus of real ones; a keyword the ad only implies (a synonym) is inferred.
+
+
+## 5ao. Phase F — fewer, better-matched applications (27 Oct) — **done** (offline tests: fixture ads in tmp folders, a fake register, a fake Sheet; no network, no model; never run on the real inbox)
+
+1. **Settings** (`targeting:` in settings.yaml and the test copy; `careerops/targeting.py` reads it with the defaults and refuses a value that cannot be used, by name): `shortlist_size` 8, `min_triage_score` 3.5,
+   `daily_max_applications` 5, `per_company_max_open` 2, `per_company_cooldown_days` 30, `max_posting_age_days` 60 (older needs T >= `OLD_POSTING_MIN_T` 4.5), `dealbreakers` [].
+2. **T** (`discovery/triage.py`): the six factors and weights of the spec. Choices where the spec was silent: no date known -> Fr 3; no required keyword found -> E 3; no band or no floor -> P 3; floor = the `answer_numeric` of
+   the `salary_expectation` entry of answers.yaml; pay figures under £15,000 (a bonus) or over £1,000,000, and day / hour rates, are not a band; "required" = the keywords under the ad's Requirements heading (the taxonomy scan's
+   full weight), and in an ad without one every keyword outside a nice-to-have, as the scorer reads it; E matches the term and the ad's own alternatives, never keyword-group synonyms. `Triage.text()` is
+   `T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3`. The score of every scored ad is stored in the new table `triage_scores` (keyed by the duplicate key of company + title) and shown in the `live` inbox listing.
+3. **Hard stops** (`triage.disqualify`, `discovery/dealbreakers.py`): liveness (a callable, asked lazily by `shortlist` for the ads that would be offered) -> blacklist -> hidden-employer agency ad / same role under
+   another channel -> level exclude list -> dealbreakers. A dealbreaker needs an ad sentence: known ideas by their wording (negation before the match, or optional wording, is not a hit), anything else as words; years
+   and pay floors need a stated number / band. The hit is `DEALBREAKER "<phrase>" ← "<sentence>"`.
+4. **`careerops shortlist`** (`discovery/shortlist.py`, `cli.cmd_shortlist`): build (score, stop, filter, order by T then freshness, company limits, lazy liveness) -> file the disqualified -> print -> choices. Approved ads move to
+   `data/jds/approved/<date>/`; `Live(require_approval=True)` (the command's default) reads only those; `live --include-unapproved` is refused with `--auto`. `--mock` uses the isolated root and no network.
+5. **Caps** (`apply/volume.py`, called from `Live._volume_block` right before `_apply` and the auto-fill, and at the start of a session): daily count of jobs with today's `applied_at`; per company, open = no reply
+   (acknowledged / screen / interview / offer / rejected / withdrawn) and applied within `outcomes.NO_RESPONSE_DAYS` (28), database jobs plus archive role folders no database job accounts for (by folder date);
+   cooldown = days since a rejection or withdrawal at the company. Reading the tracker Sheet is not needed: the Sheet mirrors the database.
+6. **`careerops patterns`** (`reporting/patterns.py`): from the Sheet's Status column (Job ID, Status, Role family, Posting URL found by header text; T joined from `triage_scores`), else the outcome log; tallies and
+   suggestions only (`MIN_BAND` 5 applications and a 20-point lead); no setting is ever written.
+7. **Tests** (new): `tests/discovery/{test_triage,test_dealbreakers,test_shortlist}.py`, `tests/apply/test_volume.py`, `tests/reporting/test_patterns.py`, helper `tests/triage_fakes.py`; `tests/test_live_cli.py` now
+   approves its ads into `approved/` and gained the two approval tests. **Unverified:** `shortlist` on the real inbox (never run on real data), liveness on real pages, the dealbreaker sentence rules on real ads (hand-made
+   ones only), and the Sheet read of `patterns`. **Known limits:** a company whose name differs between the ad and your archive (a trading name) is not recognised; the cooldown starts from a rejection or withdrawal
+   logged in the outcome log (the reply watch or `careerops outcome`), not from a Status typed only into the Sheet.

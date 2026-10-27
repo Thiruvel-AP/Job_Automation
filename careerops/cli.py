@@ -40,6 +40,13 @@
                                 archive + mark an application you made outside the assist
   careerops outcome --id JOB --event applied|acknowledged|screen|interview|offer|rejected|withdrawn [--date D] [--note T]
                                 log what happened after an application (mark-applied logs 'applied' itself)
+  careerops shortlist [--dry-run] [--no-liveness] [--mock]
+                                score the inbox with the zero-token triage score T, file what a hard stop disqualifies, offer the best few
+                                (targeting.shortlist_size); [a] / [1 3 5] approve, [s n] skip for good. Approved ads go to data/jds/approved/<date>/
+  careerops live ... [--include-unapproved]   works only on the approved ads; --include-unapproved (never with --auto) takes the whole inbox
+  careerops patterns [--db] [--mock]
+                                replies / interviews / rejections by role family, ATS kind and triage band, from the tracker Sheet's Status
+                                column; information only, it never changes a setting
   careerops followups [--mock]  the applications past their follow-up day (applied + outreach.follow_up_days) with no reply, oldest first, with the
                                 contact if known; read-only (drafting stays in `outreach draft`)
   careerops discover --gmail-alerts   ... then the reply watch: mail from the companies you applied to is classified (interview | assessment |
@@ -98,6 +105,7 @@ from .review import judge
 from .review import workflow as review
 from .review import factsave
 from . import mockroot
+from . import targeting
 from .config import load_settings, load_yaml
 from .db import DB, now
 from .reporting.excel import export
@@ -818,6 +826,8 @@ def cmd_live(args):
         _fail(str(e))
     if (args.no_submit or args.confirm) and not args.auto:
         _fail("--no-submit and --confirm only mean something with --auto")
+    if args.include_unapproved and args.auto:
+        _fail("--include-unapproved is not allowed with --auto: auto mode works only on ads you approved (run `careerops shortlist`)")
     if args.auto and cfg.mode == "off":
         _fail("apply.mode is `off` in settings.yaml, so --auto is not available (use `assist`, or `auto` to let it submit)")
     if args.auto and not args.no_submit and cfg.mode != "auto":
@@ -930,7 +940,7 @@ def cmd_live(args):
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
                              mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it, save_facts=save_facts_it),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
-                fresh=getattr(args, "fresh", False)).run()
+                fresh=getattr(args, "fresh", False), require_approval=not args.include_unapproved).run()
     usage.report(db, s)
     if code:
         sys.exit(code)
@@ -995,6 +1005,45 @@ def cmd_mark_applied(args):
     export(db, s.path("excel"), floor=s["roles"]["floor"])
     if not ok:
         sys.exit(1)
+
+
+def cmd_shortlist(args):
+    """The human promotes: score the inbox (zero tokens), file the disqualified, offer the best few, move the ones you approve to data/jds/approved/<date>/.
+    `live` reads only that folder. Nothing is tailored or sent here."""
+    from .discovery import pretailor, shortlist
+
+    s, db = _ctx(args)
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    dry = args.dry_run or args.mock
+    fetcher = None if args.mock or args.no_liveness else pretailor.default_fetcher(s)
+    ask = input if sys.stdin.isatty() and not dry else None
+    try:
+        shortlist.run(s, db, fb, ask=ask, fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None)
+    except targeting.TargetingError as e:
+        _fail(str(e))
+    if args.mock:
+        print("(--mock: the isolated data root, no network, nothing moved)")
+
+
+def cmd_patterns(args):
+    """What happened to the applications, by role family, ATS kind and triage score (information only; no setting is ever changed)."""
+    from . import tracker
+    from .discovery.gmail import GmailAuthError
+    from .googleapi import GoogleError
+    from .reporting import patterns
+
+    s, db = _ctx(args)
+    rows, source = None, "outcome log"
+    if not args.db and not mockroot.is_mock(s) and tracker.configured(s):
+        try:
+            if (problem := tracker.scope_problem(s)):
+                raise tracker.TrackerError(problem)
+            sheet, tab = tracker.client(s)
+            rows, source = patterns.rows_from_sheet(sheet, tab, db), "tracker Sheet, Status column"
+        except (tracker.TrackerError, GmailAuthError, GoogleError) as e:
+            print(f"(the tracker Sheet could not be read: {e}; using the outcome log in the database)")
+    print("\n".join(patterns.report(rows if rows is not None else patterns.rows_from_db(db), s, source)))
 
 
 def cmd_followups(args):
@@ -1523,6 +1572,8 @@ def main(argv=None):
                     "Submit (run this first; it works with apply.mode assist)")
     lv.add_argument("--confirm", action="store_true", help="with --auto: ask `Submit? [y/N]` before every submit, not only the first "
                     "apply.confirm_first_n ones")
+    lv.add_argument("--include-unapproved", dest="include_unapproved", action="store_true",
+                    help="work on the whole inbox, not only the ads you approved with `careerops shortlist` (not allowed with --auto)")
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
     lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
     lv.set_defaults(fn=cmd_live)
@@ -1537,6 +1588,16 @@ def main(argv=None):
     ma.add_argument("--date", type=date.fromisoformat, metavar="YYYY-MM-DD", help="date applied (default: today)")
     ma.add_argument("--no-letter", action="store_true", help="go ahead although the cover-letter PDF is missing")
     ma.set_defaults(fn=cmd_mark_applied)
+    sl = sub.add_parser("shortlist", help="score the inbox (zero tokens), offer the best few; the ones you approve go to data/jds/approved/ "
+                                          "(the only folder `live` reads)")
+    sl.add_argument("--dry-run", dest="dry_run", action="store_true", help="print the list; move and approve nothing")
+    sl.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")
+    sl.add_argument("--mock", action="store_true", help="use the isolated data/mock root (no network, nothing moved)")
+    sl.set_defaults(fn=cmd_shortlist)
+    pt = sub.add_parser("patterns", help="replies, interviews and rejections by role family, ATS kind and triage score (information only)")
+    pt.add_argument("--db", action="store_true", help="read the outcome log in the database instead of the tracker Sheet's Status column")
+    pt.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
+    pt.set_defaults(fn=cmd_patterns)
     fu = sub.add_parser("followups", help="applications past their follow-up day with no reply, oldest first, with the contact if known")
     fu.add_argument("--mock", action="store_true", help="use the isolated data/mock database")
     fu.set_defaults(fn=cmd_followups)

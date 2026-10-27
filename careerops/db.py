@@ -119,6 +119,16 @@ CREATE TABLE IF NOT EXISTS outreach_drafts (
     job_id TEXT NOT NULL, contact_email TEXT NOT NULL, draft_id TEXT, subject TEXT, created_at TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_outreach_job ON outreach_drafts(job_id);
+
+-- The zero-token triage score T of an inbox ad (discovery/triage.py), written by `careerops shortlist` whether or not the ad is offered. Keyed by the
+-- duplicate key of company + title (apply/decided.py), so a job that is later added to `jobs` finds its score; `careerops patterns` reads it.
+CREATE TABLE IF NOT EXISTS triage_scores (
+    key TEXT PRIMARY KEY,             -- "<company family>|<normalised title>"
+    company TEXT, title TEXT,
+    t REAL,                           -- 1-5
+    factors TEXT,                     -- JSON {"A":..,"E":..,"V":..,"L":..,"Fr":..,"P":..}
+    scored_on TEXT
+);
 """
 
 # Additive columns for databases created before they existed: (table, column, type). Never drop or rename.
