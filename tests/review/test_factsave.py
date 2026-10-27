@@ -59,7 +59,7 @@ def test_the_question_names_the_role_and_quotes_the_text(kit):
     kit.run("n")
     assert len(kit.asked) == 1
     q = kit.asked[0]
-    assert q.startswith("Add to fact_bank.yaml under az: Data Scientist") and q.endswith(f'"{FACT}" [y/N/e(dit)] ')
+    assert q.startswith("Add to fact_bank.yaml under az: Data Scientist") and q.endswith(f'"{FACT}" [y/N/e(dit)/c(annot confirm)] ')
 
 
 def test_a_y_marks_the_fact_saved_so_it_is_not_provisional_any_more(kit):

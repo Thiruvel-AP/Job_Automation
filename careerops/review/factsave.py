@@ -8,6 +8,7 @@ Asked only when the job used provisional facts (its report says a typed fact is 
         (`<prefix><next number>`, `source: user_<date>`, `terms: [<keyword>]`), validates the file and rolls back if it does not pass.
     e   the user retypes the sentence (their own words again); then the same question, and only a `y` writes it.
     N   (or anything else, or enter) the fact stays in proposed.yaml marked `declined` and is never used again.
+    c   "I cannot confirm this": the keyword is marked `user-cannot-confirm`, for good: no later job is asked about it and no fact for it is used.
 
 Offered whether or not the application was sent. When it was not (the user's `x`, a hand-off, a skip), the text says so in so many words:
 this CV never left the machine. Nothing is written without a `y`; this module never touches the fact bank except through factbank_append.
@@ -22,7 +23,7 @@ from .. import mockroot
 from ..tailoring import provisional as prov
 from . import addfacts
 
-PROMPT = 'Add to fact_bank.yaml under {label}? "{text}" [y/N/e(dit)] '
+PROMPT = 'Add to fact_bank.yaml under {label}? "{text}" [y/N/e(dit)/c(annot confirm)] '
 NOT_SENT = "NOT SENT: this CV was not sent ({why})."
 
 
@@ -54,7 +55,11 @@ def offer(settings, fb: dict, job_id: str, rep: dict | None, ask: Callable[[str]
         if answer in ("e", "edit"):
             retyped = ask("  your wording, one line (enter = keep it as typed): ").strip()
             text = retyped or text
-            answer = ask(PROMPT.format(label=label, text=text).replace("[y/N/e(dit)]", "[y/N]")).strip().lower()
+            answer = ask(PROMPT.format(label=label, text=text).replace("[y/N/e(dit)/c(annot confirm)]", "[y/N]")).strip().lower()
+        if answer in ("c", "cannot"):
+            store.mark_cannot_confirm(f.keyword, job_id)
+            out(f"  noted: you cannot confirm '{f.keyword}'; it is never asked about or used again.")
+            continue
         if answer != "y":
             store.mark(f, prov.DECLINED)
             out(f"  not added; '{f.keyword}' stays in proposed.yaml as declined and is never used again.")

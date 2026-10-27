@@ -6,6 +6,8 @@ An answer goes to data/facts/proposed.yaml (settings.path("facts_proposed")) wit
 the user names for it, the job id and the date (tailoring/provisional.py). Never to the fact bank: that is review/factsave.py, after the job,
 with a `y` for each entry. An empty answer stores nothing, so a skipped question can never become a claim; a sentence that names a tool on
 the deny list is refused; no keyword is asked twice for one job. The model is not involved: the text is the user's.
+`n` means "I cannot confirm it": the keyword is stored as `user-cannot-confirm` and is never asked about again, by any later job, and no fact for it is
+used (tailoring/provisional.py).
 """
 from __future__ import annotations
 
@@ -16,7 +18,9 @@ from ..tailoring.scorer import has_literal, norm_literal
 from .gaps import GapReport, Row, gain_text
 
 ASK_MAX = 5
-PROMPT = "{term} (+{gain}): have you used it? Describe it in one line (where, what, result), or press enter to skip. "
+PROMPT = ("{term} (+{gain}): have you used it? Describe it in one line (where, what, result), or press enter to skip, "
+          "or n if you cannot confirm it (never asked again). ")
+CANNOT_ANSWERS = ("n", "no")
 TARGET_TRIES = 3
 
 
@@ -52,9 +56,11 @@ def choose_target(ask: Callable[[str], str], fb: dict, out: Callable[[str], None
 
 
 def asked_rows(gap: GapReport, store: prov.Store, job_id: str) -> list[Row]:
-    """The gap keywords to ask about: the top ASK_MAX by gain, none deny-listed, none that already has a fact (any status) for this job."""
+    """The gap keywords to ask about: the top ASK_MAX by priority, none deny-listed, none that already has a fact (any status) for this job, none the
+    user said they cannot confirm (on any job)."""
     done = {f.keyword.lower() for f in store.facts() if f.job_id == job_id}
-    return [r for r in gap.askable(10_000) if r.term.lower() not in done][:ASK_MAX]
+    blocked = store.cannot_confirm_keywords()
+    return [r for r in gap.askable(10_000) if r.term.lower() not in done and prov.keyword_key(r.term) not in blocked][:ASK_MAX]
 
 
 def collect(ask: Callable[[str], str], gap: GapReport, fb: dict, store: prov.Store, job_id: str,
@@ -65,6 +71,10 @@ def collect(ask: Callable[[str], str], gap: GapReport, fb: dict, store: prov.Sto
         text = ask(PROMPT.format(term=row.term, gain=gain_text(row.gain))).strip()
         if not text:
             continue                                                 # skipped: nothing is stored, nothing is claimed
+        if text.lower() in CANNOT_ANSWERS:
+            store.mark_cannot_confirm(row.term, job_id)
+            out(f"  noted: you cannot confirm '{row.term}'. It is not asked about again, on this job or any other, and nothing is claimed for it.")
+            continue
         if "\n" in text:
             out(f"  not stored: one line, please ({row.term})")
             continue

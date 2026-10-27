@@ -12,6 +12,11 @@ points it adds to S if it gets onto the CV. Largest first, each marked
 The two sums split the points still to win: `claimable total` is what re-tailoring can win (C - S), `gap total` what needs a new fact
 (100 - C). A term on the fact bank's deny list is a gap too, but it is never asked about: the user said they lack it.
 
+Every row also carries an importance tier read from the ad's own text (review/tiers.py): `stated` (must-have wording), `structural` (in its Requirements
+section, or repeated) or `inferred` (our weight guess). Rows are ranked tier first (stated, structural, inferred), then by gain, so an `inferred` keyword is
+never ranked first, and only a stated or structural one is marked "top priority": when every missing keyword is inferred, no row is. Without the ad's text
+(`jd` not given) every keyword is inferred.
+
 Nothing here writes anything. The fact bank is read, never changed.
 """
 from __future__ import annotations
@@ -22,6 +27,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from .. import bands
 from ..tailoring.faithfulness import deny_hits
 from ..tailoring.scorer import Keyword, _contains, _with_group, has_literal, norm_literal, norm_stem
+from . import tiers
 
 MAX_SKILLS, MAX_BULLETS = 2, 3         # evidence named per keyword
 DENIED = "deny-listed: you said you lack it"
@@ -51,6 +57,7 @@ class Row:
     gain: float
     kind: str                                   # claimable | gap
     denied: bool = False
+    tier: str = tiers.INFERRED                  # stated | structural | inferred (review/tiers.py)
     skills: list[str] = field(default_factory=list)        # fact-bank skills that evidence it
     bullets: list[tuple[str, str]] = field(default_factory=list)        # (bullet id, why it is not on the CV, "" when it is not asked)
     note: str = ""                                          # evidence the fact bank has elsewhere (profile, an entry's stack)
@@ -58,10 +65,10 @@ class Row:
     def line(self) -> str:
         head = f"+{gain_text(self.gain)}  {self.term} ({'required' if self.required else 'preferred'}, w={self.weight:g})  "
         if self.kind == "gap":
-            return head + ("gap (" + DENIED + ")" if self.denied else "gap")
+            return head + ("gap (" + DENIED + ")" if self.denied else "gap") + f"  [{self.tier}]"
         parts = [f'skills "{s}"' for s in self.skills]
         parts += [f"bullet {b}" + (f" (left off: {why})" if why else "") for b, why in self.bullets]
-        return head + "claimable: " + (", ".join(parts) or self.note or "in the fact bank")
+        return head + "claimable: " + (", ".join(parts) or self.note or "in the fact bank") + f"  [{self.tier}]"
 
 
 @dataclass
@@ -78,6 +85,11 @@ class GapReport:
     def needed(self) -> float:
         return max(0.0, self.target - self.strict)
 
+    @property
+    def top(self) -> Row | None:
+        """The top-priority row: the first row, unless it is inferred (the rows are ranked stated, structural, inferred, so then all are): None."""
+        return self.rows[0] if self.rows and self.rows[0].tier != tiers.INFERRED else None
+
     def askable(self, n: int = 5) -> list[Row]:
         """The top `n` gap keywords by gain, for review's `f`: never a deny-listed one."""
         return [r for r in self.rows if r.kind == "gap" and not r.denied][:n]
@@ -89,8 +101,10 @@ class GapReport:
         num = bands.num
         out = [f"ATS strict {num(self.strict)} | ceiling {num(self.ceiling)} | to reach {num(self.target)} you need +{num(self.needed)} points"]
         if self.rows:
-            out.append("Missing from the CV (on CV? no), by weight; the gain is the points it adds if it gets onto the CV:")
-            out += ["  " + r.line() for r in self.rows]
+            out.append("Missing from the CV (on CV? no), most important first; the gain is the points it adds if it gets onto the CV:")
+            out.append("  Importance: stated = the ad's must-have wording; structural = in its Requirements section or repeated; "
+                       "inferred = our weight guess (never the top priority).")
+            out += ["  " + r.line() + (" <- top priority" if r is self.top else "") for r in self.rows]
         out.append(f"claimable total: +{num(self.claimable_total)} points (re-tailoring can win them)")
         out.append(f"gap total: +{num(self.gap_total)} points (each needs a new fact)")
         if self.needed:
@@ -176,8 +190,10 @@ def _evidence(k: Keyword, rep: dict, fb: dict, chosen: list[str]) -> Row:
     return row
 
 
-def build(rep: dict, fb: dict, b: bands.Bands) -> GapReport:
+def build(rep: dict, fb: dict, b: bands.Bands, jd: str | None = None) -> GapReport:
+    """`jd` is the ad's text: it decides each row's tier. Without it every keyword is inferred."""
     kws = [Keyword(**k) for k in rep["keywords"]]
+    tier_of = tiers.classify(jd or "", kws)
     tot = sum(k.weight for k in kws)
     ats = rep["ats"]
     hits = {t.lower() for t in ats.get("hits") or []}
@@ -194,8 +210,9 @@ def build(rep: dict, fb: dict, b: bands.Bands) -> GapReport:
             row.gain = gain
         else:
             row = Row(k.term, k.weight, k.required, gain, "gap", denied=bool(deny_hits(k.term, deny)))
+        row.tier = tier_of.get(k.term, tiers.INFERRED)
         rows.append(row)
-    rows.sort(key=lambda r: -r.gain)                           # sorted is stable: the JD's order within a tie
+    rows.sort(key=lambda r: (tiers.TIERS.index(r.tier), -r.gain))      # tier first, then gain; sorted is stable: the JD's order within a tie
     return GapReport(float(ats["strict"]), float(ats["ceiling"]), b.auto, rows,
                      sum(r.gain for r in rows if r.kind == "claimable"), sum(r.gain for r in rows if r.kind == "gap"),
                      dict(rep.get("possible_evidence") or {}))

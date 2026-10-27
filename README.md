@@ -787,17 +787,23 @@ report**, computed from the scorer's own numbers:
 
 ```
 ATS strict 56.3 | ceiling 78.8 | to reach 70 you need +13.7 points
-Missing from the CV (on CV? no), by weight; the gain is the points it adds if it gets onto the CV:
+Missing from the CV (on CV? no), most important first; the gain is the points it adds if it gets onto the CV:
   +6.3  Airflow (required, w=2)  gap
   +3.1  dbt (preferred, w=1)  claimable: skills "SQL", bullet av3 (left off: page full)
 claimable total: +9.4 points (re-tailoring can win them)
 gap total: +12.5 points (each needs a new fact)
 ```
 
-Every JD keyword the CV lacks, with its weight w and its gain g = 100 x w / sum(w), largest first. `claimable`: the fact bank evidences it; the skill
+Every JD keyword the CV lacks, with its weight w and its gain g = 100 x w / sum(w), most important first (see the tiers below). `claimable`: the fact bank evidences it; the skill
 or bullet is named and so is why it is not on the CV (`page full`, `rank #n` or `rank, <bullet> replaces it`, `guard`: the bullet's `terms:` say it
 but its text does not, and a rewording may not add a word). `gap`: the fact bank has nothing, so only a new fact can add the points (a term on your
 `deny_terms` is a gap too and is never asked about). The two totals add up to the points still to win; the "Possible evidence" lines are kept.
+
+**Importance tiers.** Each row ends with a tier read from the ad's own text (`careerops/review/tiers.py`, no model): `[stated]` = the ad says it with must-have
+wording (must, required, essential, mandatory, minimum, "you will need"; nice-to-have wording never counts), `[structural]` = it sits in the ad's Requirements-type
+section ("Requirements", "What you'll need", "Qualifications", "About you" ...) or the ad says it more than once, `[inferred]` = anything else: our extraction
+and weighting guessed it matters. Rows are ranked stated, then structural, then inferred (largest gain first inside a tier), so **an inferred keyword is never
+ranked first**; only a stated or structural one is marked `<- top priority`, and when every missing keyword is inferred no row is. `f` asks in the same order.
 
 ```
 [a] apply as is   [s] skip   [r] re-tailor with the claimable points forced in
@@ -808,15 +814,17 @@ but its text does not, and a rewording may not add a word). `gap`: the fact bank
   own weights) and shows the new S and C. It cannot add a word a bullet does not say.
 - `s` ends the job as `skipped (user)`: its JD goes to `jds_done/skipped/` like any skip.
 - `f` asks about the top 5 gap keywords one by one (`Airflow (+6.3): have you used it? Describe it in one line (where, what, result), or press enter to
-  skip.`). Enter skips and stores nothing. A line you type is stored word for word in `data/facts/proposed.yaml` with the keyword, the role or
+  skip, or n if you cannot confirm it (never asked again).`). Enter skips and stores nothing. `n` stores the keyword as `user-cannot-confirm` in
+  `proposed.yaml`, for good: no later job is asked about it, no fact for it is stored, and a fact already typed for it is not used. A line you type is stored word for word in `data/facts/proposed.yaml` with the keyword, the role or
   project you name, the job id and the date, never in the fact bank, and the job is tailored again with the bank plus these facts, marked
   `[provisional]` on the review screen. A provisional fact is a source for **its own job only** (every other job is tailored with a bank that does not
   have it), is on the CV as your own words (never reworded) and is not used by the free-text answers of the application form.
 - **After the job** (applied, or not: your `x`, a hand-off, a skip, a dry run) every typed fact the CV used is offered: `Add to fact_bank.yaml under
-  <role/project>? "<text>" [y/N/e(dit)]`. `y`: `careerops/factbank_append.py` writes `config/profile/backups/fact_bank.<YYYYMMDD-HHMMSS>.yaml`, appends
+  <role/project>? "<text>" [y/N/e(dit)/c(annot confirm)]`. `y`: `careerops/factbank_append.py` writes `config/profile/backups/fact_bank.<YYYYMMDD-HHMMSS>.yaml`, appends
   the bullet (`<prefix><next number>`, `source: user_<date>`, `terms: [<keyword>]`; every other line of the file stays byte-identical), reloads the file
   and puts the backup back if it does not validate (a duplicate id, a deny-listed term). `e`: you retype it, then the same question. `N`: it stays in
-  `proposed.yaml` marked `declined` and is never used again. When the CV was not sent the question says so (`NOT SENT: this CV was not sent`). A
+  `proposed.yaml` marked `declined` and is never used again (for that wording; another job may ask about the keyword again). `c`: "I cannot confirm this": the
+  keyword is marked `user-cannot-confirm`, permanently (see `f`). When the CV was not sent the question says so (`NOT SENT: this CV was not sent`). A
   `--mock` run never writes your real fact bank. `careerops mark-applied` offers the same after a hand-off.
 
 ### What the review screen shows besides the score

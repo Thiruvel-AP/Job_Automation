@@ -119,9 +119,9 @@ def test_f_asks_for_the_top_five_gap_keywords_one_by_one_and_skipping_stores_not
     world.run("f", "", "", "", "q")
     asked = [p for p in world.prompts if "have you used it?" in p]
     assert asked == [
-        "Dagster (+10.0): have you used it? Describe it in one line (where, what, result), or press enter to skip. ",
-        "Redshift (+5.0): have you used it? Describe it in one line (where, what, result), or press enter to skip. ",
-        "Spark (+5.0): have you used it? Describe it in one line (where, what, result), or press enter to skip. "]    # Terraform is deny-listed: not asked
+        "Dagster (+10.0): have you used it? Describe it in one line (where, what, result), or press enter to skip, or n if you cannot confirm it (never asked again). ",
+        "Redshift (+5.0): have you used it? Describe it in one line (where, what, result), or press enter to skip, or n if you cannot confirm it (never asked again). ",
+        "Spark (+5.0): have you used it? Describe it in one line (where, what, result), or press enter to skip, or n if you cannot confirm it (never asked again). "]    # Terraform is deny-listed: not asked
     assert world.calls == [] and not prov.Store(tmp_path / "facts" / "proposed.yaml").facts()    # a skipped answer is never a claim
 
 

@@ -1498,3 +1498,20 @@ each time, never anyone else's.
    `tests/gmail_fakes.py`. **Unverified:** the classification rules on a real mailbox (hand-made mails only), Gmail's `from:` search on real senders, an ATS mailer's real display names, a real Sheet write.
    **Known limits:** a company whose domain cannot be told (its job link is on an ATS) is found only through an ATS mailer; a reply from a recruiter's personal address is not seen; `assessment` is logged as the
    outcome `screen` (the log has no assessment event).
+
+
+## 5an. Phase E — honesty details (27 Oct) — **done** (offline tests, no model, no network)
+
+1. **E1 — `user-cannot-confirm`** (`tailoring/provisional.py`, `review/addfacts.py`, `review/factsave.py`). A fourth status of a fact in `data/facts/proposed.yaml`, next to
+   provisional / declined / saved. It is about the KEYWORD (compared lower case, one space between words), not the job, and permanent: `Store.mark_cannot_confirm` writes a record with no text
+   (nothing was claimed) and marks every stored non-saved fact for the keyword; `asked_rows` never offers the keyword again on any job; `Store.add` refuses a fact for it; `Store.for_job`
+   no longer returns a provisional fact for it, so tailoring cannot use one typed earlier. A `saved` fact stays saved (it is in the fact bank, which this code never edits). Two ways in: `n` at the
+   review `f` question (the prompt now says so), and `c` at the post-job `Add to fact_bank.yaml ...?` prompt. `declined` is unchanged: that wording was not kept, and another job may ask again.
+2. **E2 — importance tiers** (`review/tiers.py`, `review/gaps.py`, `review/workflow.py`). `tiers.classify(jd, keywords)` reads the ad's text: `stated` = a sentence with must-have wording
+   (must / required / essential / mandatory / minimum / you will need ...) and no nice-to-have wording, outside a nice-to-have section; `structural` = not stated, but under a Requirements-type
+   heading or said in more than one sentence; `inferred` = anything else, or no ad. A keyword is looked for by its own words (term and the ad's alternatives), never through keyword-group synonyms.
+   `gaps.build(rep, fb, bands, jd=None)` gives every row a `tier` (shown as `[tier]` at the end of its line, with a one-line legend), ranks rows tier first and gain second, and `GapReport.top`
+   is the first row unless it is inferred (the `<- top priority` mark). `workflow` passes the job's description at both call sites; a job without one (or `jd=None`) is all inferred, which keeps the
+   old gain order. The tier does not change any score, band or gain.
+3. **Tests** (new): `tests/review/test_cannot_confirm.py`, `tests/review/test_gap_tiers.py`; the prompt strings in `test_gap_review.py` and `test_factsave.py` were updated. **Known limits:** the
+   section and must-have rules are English phrases tested on hand-made ads, not on a corpus of real ones; a keyword the ad only implies (a synonym) is inferred.

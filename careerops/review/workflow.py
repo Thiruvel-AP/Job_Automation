@@ -232,6 +232,14 @@ def ats_lines(rep: dict) -> list[str]:
     return out
 
 
+def _jd(job) -> str | None:
+    """The ad's text of a job row or dict, None when it has none (the gap report then calls every keyword inferred)."""
+    try:
+        return job["description"]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
 def gap_lines(rep: dict, gap: gaps.GapReport) -> list[str]:
     """The gap report (review/gaps.py) in place of the plain ATS lines, for a job in the review band: its header first, then the CV + letter
     numbers and any keyword the CV only mentions as 'not ...', then the missing keywords and the two sums."""
@@ -320,7 +328,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
     """The review screen. With `fb` (the fact bank, plus the job's provisional facts) a job in the review band gets the gap report in place of
     the plain ATS header."""
     f = rep["final"]
-    gap = (gaps.build(rep, fb, bands.config(settings)) if settings is not None and fb is not None and rep.get("ats")
+    gap = (gaps.build(rep, fb, bands.config(settings), jd=_jd(job)) if settings is not None and fb is not None and rep.get("ats")
            and gaps.applies(rep, bands.config(settings)) else None)
     all_flags = json.loads(job["flags"] or "[]")
     flags = [x for x in all_flags if not is_sponsor_flag(x)]          # sponsor-register notes are information, shown on the Sponsor line
@@ -705,7 +713,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
 
     while True:
         hook_mode = bool(rep.get("letters"))
-        gap = gaps.build(rep, view(), band) if rep.get("ats") and gaps.applies(rep, band) else None
+        gap = gaps.build(rep, view(), band, jd=_jd(job)) if rep.get("ats") and gaps.applies(rep, band) else None
         if gap is None:
             allowed = set(allow)
             menu = "  ".join((HOOK_L if hook_mode and k == "l" else MENU[k]) for k in MENU_ORDER if k in allow and (k != "g" or hook_mode))

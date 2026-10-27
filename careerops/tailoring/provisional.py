@@ -10,6 +10,10 @@ A fact lives here and never in the fact bank (the only writer of that is factban
                   bullet of `target`, marked `provisional` (and `verbatim`: the model never rewords it, the CV carries the user's own words)
     declined      the user said N when asked to save it: kept in the file, never used again
     saved         the user said y: it is a bullet of the fact bank now (`saved_as` = its id), not provisional any more
+    user-cannot-confirm
+                  the user said they cannot confirm it (`n` at the question, `c` at the save prompt). PERMANENT and about the KEYWORD, not the job:
+                  no later job is asked about that keyword, no fact for it is stored, and a fact already stored for it is not used. Unlike
+                  `declined` (this wording was not kept), nothing brings it back; only the user editing this file does.
 
 `augment` is the only way a provisional fact reaches tailoring, and it takes the facts of ONE job (`Store.for_job`): another job's bank is
 built without it, so the claim guard (which checks a text against the bullets of the bank it is given) has no such source there.
@@ -26,7 +30,7 @@ import yaml
 
 from .faithfulness import deny_hits
 
-PROVISIONAL, DECLINED, SAVED = "provisional", "declined", "saved"
+PROVISIONAL, DECLINED, SAVED, CANNOT_CONFIRM = "provisional", "declined", "saved", "user-cannot-confirm"
 SECTIONS = ("experience", "projects")
 ID_PREFIX = "prov"
 
@@ -45,6 +49,11 @@ class Fact:
     @property
     def bullet_id(self) -> str:
         return f"{ID_PREFIX}{self.n}"
+
+
+def keyword_key(keyword: str) -> str:
+    """A keyword as the store compares it: lower case, one space between words."""
+    return " ".join(str(keyword).lower().split())
 
 
 class Store:
@@ -67,14 +76,36 @@ class Store:
         """Store one fact, `text` exactly as typed. A blank or multi-line answer is not a fact."""
         if not text.strip() or "\n" in text or "\r" in text:
             raise ValueError("a fact is one non-empty line")
+        if self.cannot_confirm(keyword):
+            raise ValueError(f"you said you cannot confirm '{keyword}': no fact is stored for it")
         facts = self.facts()
         f = Fact(keyword, text, target, job_id, on or date.today().isoformat(), PROVISIONAL, "", len(facts) + 1)
         self._save([*facts, f])
         return f
 
     def for_job(self, job_id: str) -> list[Fact]:
-        """The facts that are provisional for this job: its own, not declined, not saved."""
-        return [f for f in self.facts() if f.job_id == job_id and f.status == PROVISIONAL]
+        """The facts that are provisional for this job: its own, not declined, not saved, and not for a keyword the user cannot confirm."""
+        blocked = self.cannot_confirm_keywords()
+        return [f for f in self.facts() if f.job_id == job_id and f.status == PROVISIONAL and keyword_key(f.keyword) not in blocked]
+
+    def cannot_confirm_keywords(self) -> set[str]:
+        """The keywords (keyword_key) the user said they cannot confirm, from any job."""
+        return {keyword_key(f.keyword) for f in self.facts() if f.status == CANNOT_CONFIRM}
+
+    def cannot_confirm(self, keyword: str) -> bool:
+        return keyword_key(keyword) in self.cannot_confirm_keywords()
+
+    def mark_cannot_confirm(self, keyword: str, job_id: str, on: str | None = None) -> Fact:
+        """Record, for good, that the user cannot confirm `keyword`. There is no text: nothing was claimed. Every stored fact for the keyword is marked
+        too, so the file shows it on each of them."""
+        facts = self.facts()
+        for f in facts:
+            if keyword_key(f.keyword) == keyword_key(keyword) and f.status != SAVED:
+                f.status = CANNOT_CONFIRM
+        if not any(f.status == CANNOT_CONFIRM and keyword_key(f.keyword) == keyword_key(keyword) for f in facts):
+            facts.append(Fact(keyword, "", "", job_id, on or date.today().isoformat(), CANNOT_CONFIRM, "", len(facts) + 1))
+        self._save(facts)
+        return next(f for f in facts if f.status == CANNOT_CONFIRM and keyword_key(f.keyword) == keyword_key(keyword))
 
     def mark(self, fact: Fact, status: str, saved_as: str = "") -> None:
         facts = self.facts()
