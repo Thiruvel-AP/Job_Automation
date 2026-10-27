@@ -1,7 +1,8 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Apply: AI Engineer</title></head><body>
 <!-- A Greenhouse-shaped application form for tests/test_autoapply.py. Query: ?noconfirm = stay on the page after Submit;
-     ?captcha_after = a challenge appears after Submit; ?unknown = one more required question nobody answered. -->
+     ?captcha_after = a challenge appears after Submit; ?unknown = one more required question nobody answered;
+     ?attest = the privacy-notice attestation, which code never ticks. -->
 <h1>Apply: AI Engineer</h1>
 <form id="application" novalidate>
   <label for="first_name">First Name *</label><input id="first_name" name="first_name" required>
@@ -23,13 +24,16 @@
   <fieldset><legend>Are you willing to relocate? *</legend>
     <label><input type="radio" name="relocate" value="Yes" required> Yes</label>
     <label><input type="radio" name="relocate" value="No" required> No</label></fieldset>
-  <label><input type="checkbox" name="privacy" id="privacy" required> I agree to the privacy notice *</label>
   <div id="extra"></div>
   <button type="submit" id="submit">Submit application</button>
 </form>
 <script>
   window.__clicks = 0;
   const q = location.search;
+  if (q.includes('attest')) {
+    document.getElementById('extra').innerHTML =
+      '<label><input type="checkbox" name="privacy" id="privacy" required> I agree to the privacy notice *</label>';
+  }
   if (q.includes('unknown')) {
     document.getElementById('extra').innerHTML =
       '<label for="licence">Do you hold a full UK driving licence? *</label><input id="licence" name="licence" required>';

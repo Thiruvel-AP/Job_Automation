@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Acme - Attestations</title></head><body>
+<!-- A Greenhouse-shaped form with the two attestations and an "Enter manually" button next to the resume upload, for tests/apply/test_attestations.py.
+     window.__clicks logs every click on a button. -->
+<form id="application" novalidate>
+  <div class="field"><label for="first_name">First Name *</label><input type="text" id="first_name" name="first_name" required></div>
+  <div class="field"><label for="last_name">Last Name *</label><input type="text" id="last_name" name="last_name" required></div>
+  <div class="field"><label for="email">Email *</label><input type="text" id="email" name="email" required></div>
+  <div class="field" id="resume_section"><label for="resume">Resume/CV *</label>
+    <div class="attach"><button type="button" id="attach">Attach</button><button type="button" id="dropbox">Dropbox</button><button type="button" id="manual">Enter manually</button></div>
+    <input type="file" id="resume" name="resume" required></div>
+  <div class="field"><label><input type="checkbox" id="truth" name="truth" required> I confirm all answers are true and complete *</label></div>
+  <div class="field"><label><input type="checkbox" id="privacy" name="privacy" required> I acknowledge the privacy notice *</label></div>
+  <div class="field"><label><input type="checkbox" id="newsletter" name="newsletter"> Send me job alerts</label></div>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__clicks = [];
+  document.addEventListener('click', e => { const b = e.target.closest('button'); if (b) window.__clicks.push(b.id); }, true);
+  document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); window.__clicks.push('SUBMITTED'); });
+</script>
+</body></html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Acme - Data Scientist</title></head><body>
+<!-- A two-page application on an unknown vendor, for tests/apply/test_formagent.py: job page -> Apply -> page 1 -> Next -> page 2 -> submit.
+     window.__submits counts every submit (the submit button, the form's own event); window.__clicks logs the id of each clicked control.
+     Query: ?nofile = no resume field on page 1; ?start = the way in is called "Start application". -->
+<h1>Data Scientist</h1>
+<button type="button" id="noop">More info</button>
+<div id="job">
+  <p>About the role: we build forecasting tools.</p>
+  <a href="#" role="button" id="apply">Apply</a>
+</div>
+<form id="app" novalidate hidden>
+  <section id="p1" hidden>
+    <h2>Page 1: about you</h2>
+    <label for="name">Full name *</label><input type="text" id="name" name="name" required>
+    <label for="email">Email *</label><input type="email" id="email" name="email" required>
+    <label for="resume">Resume/CV *</label><input type="file" id="resume" name="resume" required>
+    <button type="button" id="next1">Next</button>
+  </section>
+  <section id="p2" hidden>
+    <h2>Page 2: questions</h2>
+    <label for="phone">Phone</label><input type="tel" id="phone" name="phone">
+    <label for="linkedin">LinkedIn profile</label><input type="text" id="linkedin" name="linkedin">
+    <label for="notice">Notice period *</label><input type="text" id="notice" name="notice" required>
+    <label for="llm">Describe an LLM feature you have shipped, what you built and how you measured it *</label><textarea id="llm" name="llm" required></textarea>
+    <label><input type="checkbox" id="truth" name="truth"> I confirm all answers are true and complete</label>
+    <label><input type="checkbox" id="privacy" name="privacy"> I acknowledge the privacy notice</label>
+    <button type="button" id="back">Back</button>
+    <button type="button" id="icon" aria-label="Submit application"><svg width="10" height="10"></svg></button>
+    <input type="button" id="absenden" value="Absenden">
+    <button type="submit" id="submit">Review</button>
+  </section>
+</form>
+<script>
+  window.__submits = 0; window.__clicks = [];
+  const show = id => { for (const s of ['p1', 'p2']) document.getElementById(s).hidden = (s !== id); document.getElementById('app').hidden = false; document.getElementById('job').hidden = true; };
+  document.addEventListener('click', e => { const c = e.target.closest('button, a, input[type=button]'); if (c) window.__clicks.push(c.id || c.textContent); }, true);
+  if (location.search.includes('start')) document.getElementById('apply').textContent = 'Start application';
+  document.getElementById('apply').addEventListener('click', e => { e.preventDefault(); show(location.search.includes('nofile') ? 'p2' : 'p1'); });
+  document.getElementById('next1').addEventListener('click', () => show('p2'));
+  document.getElementById('back').addEventListener('click', () => show('p1'));
+  for (const id of ['icon', 'absenden']) document.getElementById(id).addEventListener('click', () => { window.__submits += 1; });
+  document.getElementById('app').addEventListener('submit', e => { e.preventDefault(); window.__submits += 1; });
+</script>
+</body></html>

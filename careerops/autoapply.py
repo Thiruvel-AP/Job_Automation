@@ -27,9 +27,9 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, formloop, verify
+from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, formloop, knockout, verify
 from .apply import visa as visa_mod
-from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, visa_value
+from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, sponsorship_answer, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
                            is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
@@ -135,7 +135,10 @@ def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required
             return True
         seen.add(("visa", name))
         group = _group(page, el, "radio")
-        value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
+        value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
+        if filler.lever_page(page):                                       # never set by code on Lever: the human answers it (still_empty stops the run)
+            filler.hand_over(ctx, question, value)
+            return True
         want = (value or "").lower()
         for r in group:
             if want and want in (_norm(r.evaluate(LABEL_JS).split("|")[0]).lower(), (r.get_attribute("value") or "").lower()):
@@ -216,7 +219,12 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
     if ctx.tracker is None:
         ctx.tracker = verify.Tracker()
     loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, ctx.cv_pdf))
-    loop.begin(page)                                       # every field of the form, printed before anything is filled
+    fields = loop.begin(page)                              # every field of the form, printed before anything is filled
+    knocks = knockout.scan([(f.question, f.options) for f in fields], ctx.applicant, ctx.book, ctx.job, ctx.plan, getattr(ctx.freetext, "fb", None))
+    if knocks:                                             # in auto mode a knock-out always goes to the human: nothing is uploaded, drafted or submitted
+        for k in knocks:
+            ctx.out(f"  {k.line()}")
+        raise NeedsUser(knockout.stop_reason(knocks))
     if upload_files(page, ctx):
         if not verify.wait_quiet(page, quiet_ms):
             ctx.out(f"  the form was still changing {verify.QUIET_MAX_MS // 1000} s after the upload; filling it anyway (everything is read back after)")

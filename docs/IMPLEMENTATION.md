@@ -1372,3 +1372,45 @@ assist printed `YOU ANSWER: []`. Separately Ashby answered a submit from the aut
    `tests/test_autoapply_lever_freetext.py` (its stub offers `propose` / `review`), `tests/apply/test_assist_visa.py` (the table lists "Salary"; the check is that no CHECK line does),
    `tests/test_autoapply.py` (`Run.run(failures=)`). **Unverified:** a live Ashby / Lever form and a real model: drafts from a real model may fail the guard more often than MockLLM's, and then the
    person is asked (required) or the optional field stays empty; the wording of the real ElevenLabs questions past their first sentence is unseen (library matching uses the first sentence as well).
+
+
+## 5aj. Phase A — apply reliability (27 Oct) — **done** (offline tests; Chromium fixture forms, fake pages; never run on a real form, a real model or the real data)
+
+The task file's Phase A (A1 to A5). The reference project `~/ref/career-ops` was not present on this machine, so nothing was copied from it (no `NOTICE.md` entry is needed); every list and
+pattern below is this repo's own.
+
+1. **A1 — the real form.** `apply/ats_vendor.py`: `vendor_of(url)` (greenhouse, lever, ashby, workday for myworkdayjobs / myworkdaysite, icims, successfactors for successfactors.com / .eu /
+   jobs2web.com, smartrecruiters, workable, bamboohr, taleo, oracle for `oraclecloud*.com`; any other host returns the host itself) and `direct_url(url, kind=, job=, tokens=)`: a Greenhouse job on a company
+   domain (`gh_jid=` in the address) opens `https://job-boards.greenhouse.io/<token>/jobs/<id>`; the token is the job's own board (its `board`, or its id `greenhouse:<token>:<posting>`) or a known board that
+   the company domain or name spells (`tokens=`); with none the page is left as it is. Lever `/apply`, Ashby `/application` as before. `formfind.form_url` / `open_form` call it.
+2. **A2 — the form agent** (`apply/formagent.py`, `apply/submit_guard.py`). Snapshot: every old `data-co-ref` stripped, the interactive elements tagged `e<epoch>-<n>`, their facts read in the page (tag,
+   authored type, role, in a form, aria-label, aria-labelledby text, placeholder, text, value, name, title, alt, id, data-testid). `submit_guard.submit_reason(facts)` is the one function the snapshot and
+   the executor share: it tests the shapes (`type=submit`, `input type=image`, a `<button>` with no type inside a `<form>`) and EVERY name source separately against a multilingual submit vocabulary
+   (submit, send, finish, confirm, absenden, envoyer, enviar, 提交, 送信 ...); an "Apply" word is a submit only inside a form (outside it is the way in that `reach` clicks). A submit control is listed
+   `[--] submit "<label>" (the human or the gates submit)` with no ref. Planner actions: `click, type, choose, upload, reached_form, done, need_user` (there is no submit action; `parse_action` turns anything else into
+   `need_user`). The executor refuses a ref outside this turn's set, re-reads the element and refuses if it now classifies as submit or changed kind, accepts a value only from `ValueBank` (applicant.yaml,
+   answers.yaml, the visa plan, equal-opportunities answers, approved free text) and a file only if it is this job's CV or letter (and the CV only into a resume field). Goals `reach` (click Apply and
+   interstitials until Name, Email and Resume are visible) and `fill` (every page, Next / Continue between pages, then `done`); 40 steps per job, 8 per page, every turn in `formagent.jsonl`; page text that gives
+   orders is logged as an anomaly; a bot check, a spam flag or a Google / Microsoft sign-in raises `HandOff`. `RulePlanner` decides without a model; `LLMPlanner(ask)` asks one (not wired to the router: nothing
+   calls it yet). A free-text question goes to `FreeText.answer` (drafted from the fact bank, the person approves), nowhere else.
+   **Order inside `assist`:** the direct ATS address, then the existing filler for Greenhouse / Lever / Ashby, then the form agent when no form is found there (`reach`, then the existing filler on the page it
+   reached) or for any other vendor (`reach` then `fill`; the report lists the submit controls it did not press). A page with no host (a file) keeps the old path.
+   **Limits, on purpose:** a typeless `<button>` or any `type=submit` button is a submit even when it says "Next", so a multi-page form whose Next is `type=submit` stops there for the human; the agent never ticks a
+   check box; it works in the main frame only and does not follow a pop-up window.
+3. **A3 — per-ATS quirks.** Lever: `filler.lever_page(page)`; on a Lever host no radio or check box is set by `filler.choice`, the assist's visa and equal-opportunities paths or the auto-apply's visa path:
+   they are listed under YOU ANSWER with the recommended answer (`report["recommended"]`), and the auto-apply stops at a required one that is still empty. Ashby: `assist` prints "Ashby merges candidates by
+   email; an earlier application to <company> exists." when `history(company)` is true; a spam flag already hands the page over. React-select drop-downs: the option text is typed 50 ms apart, the list read again, the
+   option picked by its visible label (`FormAgent._combobox`); a long `<select>` is chosen by label or value without listing it. A box that will not keep its text: asked for again right before the fill, then pasted
+   with clip.exe + Ctrl+V, then written to `answers_to_paste.txt` (`assist.write_unpasted`).
+4. **A4 — knock-out pre-scan** (`apply/knockout.py`). After `loop.begin(page)` and before any upload or draft: sponsorship / work authorisation (a "now or in the future" question is Yes when either
+   `sponsorship_now` or `sponsorship_future` is Yes: `assist.sponsorship_answer`; `classify_visa` itself is unchanged), years of experience (`applicant.yaml years_experience`, else the fact bank's dated roles),
+   degree (the fact bank's `education`; a missing or empty section is never evidence of lacking it), salary floor, on-site / relocation, clearance. A hit prints
+   `KNOCK-OUT: "<question>" → your answer "<answer>" may auto-reject. [c]ontinue / [s]kip job`; the assist asks, `s` ends the job (`r["skipped"]`, confirmation `x`); the auto-apply always raises `NeedsUser`
+   (the human decides). **Consequence:** with `sponsorship_future: true` in your visa block, every "now or in the future" question is a knock-out, so such a job never auto-submits.
+5. **A5 — attestations** (`apply/attest.py`). "I acknowledge ... privacy notice", "I confirm all answers are true", terms, consent: never ticked by any code, whatever answers.yaml says; outlined magenta, printed under
+   `ATTESTATIONS`, and a required one still empty stops the auto-apply (`still_empty`). **Changed on purpose:** `answers.yaml` entries such as `privacy_consent: Yes` no longer tick anything.
+   Next to an upload the PDF is uploaded; "Enter manually", Dropbox and Attach are never pressed.
+6. **Tests** (new, 8 files in `tests/apply/`): `test_ats_vendor`, `test_submit_guard`, `test_formagent`, `test_assist_agent`, `test_attestations`, `test_lever_choices`, `test_knockout`, `test_knockout_flow`;
+   fixtures `agent_site.html`, `attest_form.html`, `lever_checks.html`, `knock_form.html`, `react_select.html`. Changed on purpose: `tests/test_autoapply.py` (the world patches `knockout.scan` because its fixture asks the
+   sponsorship question; the privacy checkbox moved behind `?attest` and has its own test; the "only autoapply clicks" scan allows `formagent.py`), `tests/fixtures/apply/auto_form.html`.
+   **Unverified:** the Epic Games ML Engineer `--no-submit` run (a live form), a Lever job on the real site, the form agent on a real Workday / iCIMS / SuccessFactors page, and `LLMPlanner` with a real model.

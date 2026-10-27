@@ -821,6 +821,7 @@ def cmd_live(args):
         rep = review.load_report(job)
         kw = _assist_answers(db, s)
         kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input)
+        kw["fact_bank"] = fb                                                  # the knock-out pre-scan checks degrees and years against it (read only)
         r = assist(job, rep, load_yaml(s.path("applicant")), s.path("browser_profile"), **kw)
         db.log(jid, "apply", r)
         return r

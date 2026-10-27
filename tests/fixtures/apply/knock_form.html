@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Graphcore - ML Engineer</title></head><body>
+<!-- A Greenhouse-shaped form with a knock-out question, for tests/apply/test_knockout_flow.py. -->
+<form id="application" novalidate>
+  <div class="field"><label for="first_name">First Name *</label><input type="text" id="first_name" name="first_name" required></div>
+  <div class="field"><label for="last_name">Last Name *</label><input type="text" id="last_name" name="last_name" required></div>
+  <div class="field"><label for="email">Email *</label><input type="text" id="email" name="email" required></div>
+  <div class="field"><label for="resume">Resume/CV *</label><input type="file" id="resume" name="resume" required></div>
+  <fieldset><legend>Will you now or in the future require sponsorship to work in the UK? *</legend>
+    <label><input type="radio" name="spons" value="Yes" required> Yes</label>
+    <label><input type="radio" name="spons" value="No"> No</label></fieldset>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__submits = 0;
+  document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); window.__submits += 1; });
+</script>
+</body></html>

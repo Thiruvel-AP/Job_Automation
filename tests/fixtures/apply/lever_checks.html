@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Valarian - MLOps Engineer</title></head><body>
+<!-- A Lever-shaped form with a Yes/No radio group and a check box: code never sets these on Lever (a programmatic click triggers Lever's hCaptcha). For
+     tests/apply/test_lever_choices.py, which serves it at https://jobs.lever.co/... (and at another host as the control). -->
+<form id="application" novalidate>
+  <ul>
+    <li class="application-question"><label><div class="application-label">Resume/CV <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="file" name="resume" required></div></label></li>
+    <li class="application-question"><label><div class="application-label">Full name <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="text" name="name" required></div></label></li>
+    <li class="application-question"><label><div class="application-label">Email <span class="required">&#10033;</span></div>
+      <div class="application-field"><input type="text" name="email" required></div></label></li>
+    <li class="application-question">
+      <fieldset><legend class="application-label">Do you currently have the right to work in the UK? <span class="required">&#10033;</span></legend>
+        <label><input type="radio" name="cards[a][field0]" value="Yes" required> Yes</label>
+        <label><input type="radio" name="cards[a][field0]" value="No"> No</label></fieldset></li>
+    <li class="application-question"><label><input type="checkbox" name="cards[b][field0]" id="licence"> I have a full UK driving licence</label></li>
+  </ul>
+  <button type="submit" id="submit">Submit application</button>
+</form>
+<script>
+  window.__submits = 0;
+  document.getElementById('application').addEventListener('submit', e => { e.preventDefault(); window.__submits += 1; });
+</script>
+</body></html>

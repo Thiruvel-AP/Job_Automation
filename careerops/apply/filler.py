@@ -19,11 +19,12 @@ autoapply.py has one).
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from . import answers as answers_mod
+from . import ats_vendor, attest
 from . import freetext as freetext_mod
 
 TEXT_TYPES = ("text", "email", "tel", "url", "textarea", "search", "number", "")
@@ -110,6 +111,8 @@ class Ctx:
     freetext: Any = None                              # apply/freetext.FreeText of this job: drafts, guards and asks about a required free-text question
     tracker: Any = None                               # apply/verify.Tracker: every field filled is noted, then read back once the form is filled
     loop: Any = None                                  # apply/formloop.FormLoop of this form: it answers the free-text fields (required or optional)
+    attestations: list = field(default_factory=list)  # the questions of the attestation check boxes (apply/attest.py): never ticked, listed for the human
+    recommended: list = field(default_factory=list)   # "question -> answer" of the radios / check boxes code may not set (Lever): the human sets them
 
     def track(self, el, label: str, kind: str = "text", value: str = "") -> None:
         """Note a field this run filled, so that it is read back (and filled once more if the form emptied it) before anyone is told it is done."""
@@ -234,8 +237,21 @@ def label_of(el) -> str:
     return _norm((el.evaluate(LABEL_JS) or "").split("|")[0])
 
 
+def lever_page(page) -> bool:
+    """Is the page on a Lever host? Radio buttons and check boxes are never set by code there (a programmatic click triggers Lever's hCaptcha)."""
+    return ats_vendor.vendor_of(str(getattr(page, "url", "") or "")) == "lever"
+
+
+def hand_over(ctx: Ctx, question: str, recommended: str | None) -> None:
+    """A choice code may not make: listed for the human with the answer the files recommend."""
+    rec = recommended or "your answer"
+    ctx.recommended.append(f"{question[:100]} -> {rec}")
+    ctx.result.blank.append(f"{question} (Lever: you set it; recommended {rec})")
+
+
 def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: bool) -> None:
-    """A radio group, a group of check boxes, or one check box (a consent line)."""
+    """A radio group, a group of check boxes, or one check box (a consent line). An attestation is never answered (apply/attest.py) and on a
+    Lever page nothing is set: both are listed for the human."""
     name = el.get_attribute("name")
     group = group_of(page, el, typ)
     if typ == "radio" or len(group) > 1:
@@ -243,7 +259,14 @@ def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: boo
             return
         seen.add(("choice", name))
         q = _norm(el.evaluate(QUESTION_JS)).rstrip(" *") or question
+        if attest.is_attestation(q):
+            attest.mark(group, q, ctx.attestations)
+            return
         labels = [label_of(g) for g in group]
+        if lever_page(page):
+            r = ctx.book.resolve(q, ctx.job)
+            hand_over(ctx, q, answers_mod.pick_option(labels, r) if r is not None and r.known else None)
+            return
         req = any(is_required(g, q) for g in group)
         pick = decide(ctx, q, req, options=labels)
         if pick is not None:
@@ -253,6 +276,13 @@ def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: boo
             ctx.result.filled.append(f"{q[:80]} -> {pick}")
         return
     if el.is_checked():
+        return
+    if attest.is_attestation(question):
+        attest.mark([el], question, ctx.attestations)
+        return
+    if lever_page(page):
+        r = ctx.book.resolve(question, ctx.job)
+        hand_over(ctx, question, r.text if r is not None and r.known else None)
         return
     value = decide(ctx, question, required)
     if value is not None and value.strip().lower() in YES:

@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import re
 from typing import Any, Callable
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from ..discovery import applykind
+from . import ats_vendor
 from .filler import NeedsUser
 
 FORM_WAIT_S = 15
@@ -55,18 +56,10 @@ def host_of(url: str | None) -> str:
     return (urlparse(url or "").hostname or "").lower()
 
 
-def form_url(url: str, kind: str | None = None) -> str:
-    """The address of the application form for a job-page `url`: Ashby `.../application`, Lever `.../apply`, any other page as it is."""
-    kind = kind if kind in applykind.KINDS else applykind.kind_of(url)
-    parts = urlparse(url or "")
-    path = parts.path.rstrip("/")
-    if kind == "ashby" and not path.endswith("/application"):
-        path += "/application"
-    elif kind == "lever" and not path.endswith("/apply"):
-        path += "/apply"
-    else:
-        return url
-    return urlunparse(parts._replace(path=path))
+def form_url(url: str, kind: str | None = None, job=None, tokens=()) -> str:
+    """The address of the application form for a job-page `url` (apply/ats_vendor.py): a Greenhouse job on a company domain opens on job-boards.greenhouse.io,
+    Ashby `.../application`, Lever `.../apply`, any other page as it is."""
+    return ats_vendor.direct_url(url, kind=kind, job=job, tokens=tokens) if url else url
 
 
 def _visible(el) -> bool:
@@ -193,10 +186,10 @@ def wait_for_form(page, seconds: float | None = None, follow: Callable[[Any], No
 
 
 def open_form(page, url: str, kind: str | None = None, wait: Callable[[str], None] | None = None, seconds: float | None = None,
-              follow: Callable[[Any], None] | None = None) -> str | None:
+              follow: Callable[[Any], None] | None = None, job=None, tokens=()) -> str | None:
     """Open the application form of the job page `url` and wait for it. Returns None when the form is there, else 'FORM NOT FOUND <address>'.
     Raises HandOff for a bot check or sign-in wall. `wait(url)` is called before each request (the throttle: one a second per host)."""
-    target = form_url(url, kind)
+    target = form_url(url, kind, job, tokens)
     if wait:
         wait(target)
     page.goto(target, wait_until="domcontentloaded")

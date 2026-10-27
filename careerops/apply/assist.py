@@ -35,7 +35,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import eo, failures as failures_mod, filler, formfind, formloop, verify
+from . import ats_vendor, attest, eo, failures as failures_mod, filler, formfind, formloop, handoff as handoff_mod, knockout, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -50,6 +50,7 @@ APPLY_BUTTON = formfind.APPLY_BUTTON
 OPEN_FORM_LINK = APPLY_BUTTON          # the text of the one control assist may press: the "Apply" link that opens the form (never a submit or a sign-in)
 
 
+attestation_lines = attest.lines
 KIND_KEY = {"right_to_work_now": "right_to_work", "sponsorship_now": "sponsorship_now", "sponsorship_future": "sponsorship_future"}
 
 
@@ -68,6 +69,21 @@ def classify_visa(question: str) -> str | None:
         if re.search(r"\b(now|currently|at this time|at present|require|need)\b", q):
             return "sponsorship_now"
     return None
+
+
+COMBINED_SPONSORSHIP = re.compile(r"\b(?:now|currently|at\s+present|at\s+this\s+time)\b.{0,25}\b(?:or|and)\b.{0,25}\b(?:in\s+(?:the\s+)?future|future|later|going\s+forward)\b", re.I)
+
+
+def sponsorship_answer(plan: VisaPlan | None, question: str) -> str | None:
+    """The Yes / No for a visa question. "Now or in the future" asks both at once: Yes when either sponsorship_now or sponsorship_future is Yes, No when
+    both are No, None when neither is Yes and one is not a boolean. Any other question is classify_visa + visa_value."""
+    kind = classify_visa(question)
+    if kind == "sponsorship_future" and COMBINED_SPONSORSHIP.search(question) and plan is not None:
+        values = [plan.answers.get("sponsorship_now"), plan.answers.get("sponsorship_future")]
+        if any(v is True for v in values):
+            return "Yes"
+        return "No" if all(v is False for v in values) else None
+    return visa_value(plan, kind)
 
 
 def visa_value(plan: VisaPlan | None, kind: str | None) -> str | None:
@@ -95,7 +111,7 @@ def _answer_visa(el, typ: str, question: str, plan: VisaPlan | None) -> str | No
         if summary and not (el.input_value() or "").strip():
             el.fill(summary)
         return _norm(el.input_value() or "") or None
-    value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
+    value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
     if value is None:
         return None
     want = value.lower()
@@ -145,6 +161,8 @@ def _answer_eo(page, el, typ: str, entry: "eo.Entry | None", track=None) -> tupl
     pick = eo.choose(texts, entry)
     if pick is None:
         return None, texts, "no option matched match_any: left blank"
+    if typ in ("radio", "checkbox") and filler.lever_page(page):
+        return None, texts, f"Lever: radio buttons and check boxes are never set by code, you click it; recommended: {pick}"
     target = next(e for t, e in options if t == pick)
     if typ == "select":
         el.select_option(label=target.inner_text())
@@ -190,7 +208,8 @@ def _upload_files(page, cv_pdf: str | None, letter_pdf: str | None, report: dict
 
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
               letter_text: str | None = None, job=None, plan: VisaPlan | None = None,
-              book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None, quiet_ms: int = verify.QUIET_MS) -> dict:
+              book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None, quiet_ms: int = verify.QUIET_MS,
+              knock_ask=None, fact_bank=None) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
 
     Order (apply/verify.py): the files first (never the "Autofill from resume" control); then, if a file was uploaded, wait until the form has
@@ -211,7 +230,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         plan = plan_for(applicant, work_for(job, applicant) if job is not None else
                         Work(home, "explicit", "no job given: the home block", shown=countries.place_name(home) if home else ""))
     where = (plan.work.shown if plan.work.home_remote else plan.work.country) if plan is not None else "?"
-    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": []}
+    report = {"filled": [], "manual": [], "uploaded": [], "required_empty": [], "visa": [], "eo": [], "recommended": [], "attestations": []}
     seen_groups: set = set()
     letter_file = bool(letter_pdf) and any(                 # a cover-letter file field takes the PDF: then the text box (if any) is not pasted into too
         e.get_attribute("type") == "file" and re.search(r"cover", (e.evaluate(LABEL_JS) or ""), re.I)
@@ -223,7 +242,13 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                      letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
                      freetext=freetext, tracker=tracker)
     loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, cv_pdf))
-    loop.begin(page)                                                     # every field of the form, printed before anything is filled
+    fields = loop.begin(page)                                            # every field of the form, printed before anything is filled
+    knocks = knockout.scan([(f.question, f.options) for f in fields], applicant, book, ctx.job, plan, fact_bank)       # before anything is uploaded or drafted
+    if knocks and knock_ask is not None and not knockout.confirm(knocks, knock_ask, print):
+        raise knockout.SkipJob(knockout.stop_reason(knocks))
+    if knocks and knock_ask is None:
+        for k in knocks:
+            print(f"  {k.line()}")
 
     if _upload_files(page, cv_pdf, letter_pdf, report):                  # pass 1: the files, then the form is left to finish re-rendering
         if not verify.wait_quiet(page, quiet_ms):
@@ -247,6 +272,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                 report["filled"].append(f"{short} = cover letter text")
             return
 
+        lever_note = ""
         if VISA_FIELD.search(f"{question} {label}"):
             # Before never_fill on purpose: visa/sponsor/right-to-work are in never_fill so that an unrecognised variant is
             # left to the user, but a recognised one is answered from the visa block. Every one is highlighted and printed.
@@ -256,12 +282,16 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                     return                                   # the rest of a group already answered
                 seen_groups.add(name)
                 group = page.query_selector_all(f'input[type=radio][name="{name}"]') if name else [el]
-                value = None if about_another_country(question, plan) else visa_value(plan, classify_visa(question))
+                value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
+                lever = filler.lever_page(page)                  # never set by code on Lever: the answer is recommended, you click it
+                if lever:
+                    filler.hand_over(ctx, question, value)
+                    lever_note = f"   (Lever: radio buttons are never set by code; you click it, recommended: {value or 'your answer'})"
                 done = None
                 for r in group:
                     r.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
                     opt = _norm((r.evaluate(LABEL_JS) or "").split("|")[0]).lower()
-                    if value and done is None and value.lower() in (opt, (r.get_attribute("value") or "").lower()):
+                    if value and not lever and done is None and value.lower() in (opt, (r.get_attribute("value") or "").lower()):
                         r.check()
                         tracker.add(r, question, "check")
                         done = value
@@ -276,7 +306,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                     tracker.add(el, question, "text", held)
             other = about_another_country(question, plan)
             print(f"CHECK VISA ANSWER [W={where}]: {question[:150]} -> {held or 'EMPTY'}"
-                  + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else ""))
+                  + (f"   (the question is about {other}, W is {plan.work.shown}: left to you)" if other else "") + lever_note)
             report["visa"].append({"question": question, "value": held, "work_location": where})
             report["filled" if held else "manual"].append(f"{short} = visa" if held else short)
             return
@@ -294,6 +324,8 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             for g in group_els:
                 g.evaluate(f"e => e.style.outline = '{EO_COLOUR}'")
             picked, texts, why = _answer_eo(page, el, typ, entry, track=lambda e, kind, value, q=question: tracker.add(e, q, kind, value))
+            if why.startswith("Lever"):
+                ctx.recommended.append(f"{question[:100]} -> {why.split('recommended: ')[-1]}")
             if picked == UNCHECKED_NO:                       # a single check box and the answer is No: nothing to tick, and nothing is missing
                 print(f"CHECK EO ANSWER [{entry.key}]: {question[:150]} -> {picked}")
                 report["eo"].append({"question": question, "key": entry.key, "value": "No", "options": texts})
@@ -308,6 +340,10 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
         filler.fill_field(page, el, tag, typ, label, short, question, filler.is_required(el, label.split("|")[0]), ctx, seen_groups)
         if len(ctx.result.filled) > before:                                        # applicant.yaml or answers.yaml answered it
             report["filled"].extend(ctx.result.filled[before:])
+            return
+        if question in ctx.attestations:                                           # an attestation: outlined magenta, never answered, the human sets it
+            if filler.is_required(el, label.split("|")[0]):
+                report["required_empty"].append(short)
             return
 
         if _matches(label, never):
@@ -329,6 +365,9 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     report["filled"].extend(loop.added)
     report["manual"].extend(f"{d.short or d.question[:60]} (NEW DRAFT: check it)" for d in loop.drafts if d.status == "NEW DRAFT (unapproved)")
     report["required_empty"] = [x for x in report["required_empty"] if x not in loop.filled_shorts]
+    report["recommended"] = list(ctx.recommended)                        # radios and check boxes code may not set (Lever): the human sets them
+    report["manual"].extend(ctx.recommended)
+    report["attestations"] = list(ctx.attestations)
     report["drafts"] = loop.paste_drafts()
 
     if tracker.fills:                                                    # pass 3: read back everything this run filled
@@ -361,8 +400,45 @@ def open_form_link(link) -> None:
     if OPEN_FORM_LINK.match(link.inner_text() or ""): link.click()
 
 
+STANDARD_VENDORS = ("greenhouse", "lever", "ashby")         # the forms apply/filler.py was built for; any other vendor goes to the form agent
+
+
+def make_agent(page, applicant: dict, book, job: dict, plan, cv: str | None, letter: str | None, letter_text: str | None, history, freetext):
+    """The form agent (apply/formagent.py) for this job: values only from applicant.yaml, answers.yaml, the visa plan and this job's CV and letter; a
+    free-text question goes to `freetext`, which drafts it from the fact bank for the person to approve."""
+    from . import formagent as fa
+
+    bank = fa.ValueBank.build(applicant, book, job, plan, cv_pdf=cv, letter_pdf=letter, letter_text=letter_text)
+    planner = fa.RulePlanner(applicant, book, job, plan, cv, letter, history=history or (lambda company: False), letter_text=letter_text, freetext=freetext)
+    return fa.FormAgent(page, planner, bank, cv_pdf=cv, letter_pdf=letter, folder=formloop.output_folder(job, cv), out=print)
+
+
+def agent_report(res) -> dict:
+    """An AgentResult as the report fill_page returns."""
+    return {"filled": list(res.filled), "manual": list(res.manual) + list(res.recommended), "uploaded": list(res.uploaded),
+            "required_empty": list(res.required_empty), "visa": [], "eo": [], "recommended": list(res.recommended), "attestations": list(res.attestations),
+            "lost": list(res.lost), "submit_controls": list(res.submit_controls), "agent": res.outcome, "agent_reason": res.reason,
+            "pasted": list(res.pasted), "drafts": []}
+
+
+def write_unpasted(job: dict, rep: dict, applicant: dict, book, plan, url: str, pasted: list[tuple[str, str]], filled: list[str]) -> Path | None:
+    """answers_to_paste.txt for the answers the form would neither take typed nor pasted (apply/formagent.py): the person pastes them."""
+    folder = job.get("out_dir") or (Path(rep["cv_pdf"]).parent if rep.get("cv_pdf") else None)
+    if not folder:
+        return None
+    drafts = [{"question": q, "answer": a, "status": "the form would not take this: paste it yourself"} for q, a in pasted]
+    path = Path(folder) / handoff_mod.PASTE_FILE
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(handoff_mod.paste_text(job, rep, applicant, book, plan, url, "the form would not keep some answers (typed, then pasted)", filled, None, drafts),
+                        encoding="utf-8", newline="\n")
+    except OSError:
+        return None
+    return path
+
+
 def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
-           handoff=None, failures=None) -> dict:
+           handoff=None, failures=None, fact_bank=None, tokens=()) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
     after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
     error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
@@ -414,15 +490,36 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
             "h", "hand off", "handoff")
     try:
         try:
-            problem = formfind.open_form(page, url, job.get("apply_kind"),
-                                         follow=open_form_link)
+            direct = ats_vendor.direct_url(url, kind=job.get("apply_kind"), job=job, tokens=tokens)
+            vendor = ats_vendor.vendor_of(direct)
+            other = bool(vendor) and vendor not in STANDARD_VENDORS and job.get("apply_kind") not in STANDARD_VENDORS      # a real host that is not one of the three
+            can_agent = callable(getattr(page, "evaluate", None))       # a real browser page (the fake pages of some tests have no evaluate)
+            if vendor == "ashby" and history is not None and history(str(job.get("company") or "")):
+                print(f"  WARNING: Ashby merges candidates by email; an earlier application to {job.get('company')} exists.")
+            agent, by_agent = None, None
+            if not other or not can_agent:                              # order: the direct ATS address, then the existing filler ...
+                problem = formfind.open_form(page, url, job.get("apply_kind"), follow=open_form_link, job=job, tokens=tokens)
+                if problem and can_agent:                               # ... and the form agent when no form is found
+                    agent = make_agent(page, applicant, book, job, plan, cv, letter, letter_text, history, freetext)
+                    if agent.run("reach").outcome == "reached_form":
+                        problem = None
+            else:                                                       # any other vendor: the form agent
+                page.goto(direct, wait_until="domcontentloaded")
+                page.wait_for_timeout(formfind.SETTLE_MS)
+                agent = make_agent(page, applicant, book, job, plan, cv, letter, letter_text, history, freetext)
+                reached = agent.run("reach")
+                problem = None if reached.outcome == "reached_form" else f"FORM NOT FOUND {direct}"
+                if problem is None:
+                    by_agent = agent.run("fill")
             if problem:                                     # no form field after 15 s: say so, never print an empty "Filled: []"
                 print(f"\n{problem}\nThe page opened but shows no application form; apply by hand.")
                 r["not_found"] = problem
                 if count(problem):
                     raise formfind.HandOff(f"{failures.limit} failed attempts on this job: {problem}")
             else:
-                r = fill_page(page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext)
+                r = agent_report(by_agent) if by_agent is not None else fill_page(
+                    page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext,
+                    knock_ask=ask, fact_bank=fact_bank)
                 refused = verify.upload_refused(page)
                 trouble = (f"the form refused an upload: {refused}" if refused else
                            f"the form emptied field(s) after they were filled: {'; '.join(r['lost'][:5])}" if r.get("lost") else "")
@@ -433,7 +530,18 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                     raise formfind.HandOff(stop)
                 print(f"\nFilled: {r['filled']}\nUploaded: {r['uploaded']}")
                 print(f"YOU ANSWER (orange; visa fields magenta): {r['manual']}\nREQUIRED + EMPTY (red): {r['required_empty']}")
+                for line in attest.lines(r.get("attestations") or []):
+                    print(line)
+                if r.get("agent"):
+                    print(f"Form agent: {r['agent']}" + (f" ({r['agent_reason']})" if r.get("agent_reason") else "")
+                          + f"\nSubmit controls (listed, never clicked by the agent): {r.get('submit_controls')}")
+                if r.get("pasted"):
+                    saved = write_unpasted(job, rep, applicant, book, plan, url, r["pasted"], r["filled"])
+                    print(f"The form would not take {len(r['pasted'])} answer(s), typed or pasted: " + (f"they are in {saved}" if saved else "paste them yourself"))
                 print("\nReview everything in the browser and press Submit yourself.")
+        except knockout.SkipJob as e:                       # the person chose [s]kip at a knock-out: nothing was filled and nothing is submitted
+            print(f"\n  Skipped at a knock-out: {e}")
+            r["skipped"] = str(e)
         except formfind.HandOff as e:                       # a bot check or a sign-in wall: nothing on it is touched; the person's own browser takes over
             if failures is not None and failures_mod.kind_of(str(e)) == failures_mod.VERIFICATION_ERROR:
                 failures.record(job["id"], url, failures_mod.VERIFICATION_ERROR, str(e))
@@ -446,7 +554,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
         except PlaywrightError as e:                        # the window is gone or the page failed: the prompt below is still asked
             print(f"\n(the browser or the page stopped answering: {str(e).splitlines()[0][:120]}). If you submitted the form, paste the "
                   "confirmation below; 'x' = did not submit.")
-        conf = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
+        conf = "x" if r.get("skipped") else ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
     finally:
         if not closed:
             try:

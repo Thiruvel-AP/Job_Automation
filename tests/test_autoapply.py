@@ -121,6 +121,7 @@ def world(chromium, settings, job, tmp_path, monkeypatch):
     settings.raw["paths"]["answers"] = str(tmp_path / "answers.yaml")
     settings.raw["apply"]["confirm_first_n"] = 0
     monkeypatch.setattr(autoapply, "check_job_files", lambda *a, **k: None)          # the wrong-file guard has its own tests (tests/apply)
+    monkeypatch.setattr(autoapply.knockout, "scan", lambda *a, **k: [])             # the fixture asks "now or in the future" sponsorship, which is a knock-out for this applicant: tests/apply/test_knockout_flow.py
     return Run(chromium, settings, tmp_path, {**job, "out_dir": str(out), "source": "greenhouse"}, monkeypatch)
 
 
@@ -150,7 +151,7 @@ def test_every_field_holds_what_applicant_yaml_or_answers_yaml_says(world):
     assert v["salary"] == "50000"                                                     # a number field takes answer_numeric
     assert v["how"] == "Greenhouse" and v["gender"] == "Female"                       # {source}; an option the entry lists
     assert v["county"] == ""                                                          # "Essex" is not the word "sex": no answer, optional, empty
-    assert v["relocate"] == "Yes" and v["privacy"] is True
+    assert v["relocate"] == "Yes"
 
 
 def test_the_letter_pdf_is_uploaded_only_when_one_exists(world):
@@ -294,13 +295,12 @@ def test_a_typed_answer_is_used_once_and_saved_only_when_the_user_says_save(worl
     assert r.status == autolog.SUBMITTED and len(world.prompts) == asked_so_far
 
 
-def test_a_blank_entry_in_answers_yaml_stops_the_run_like_a_missing_one(world):
-    book = yaml.safe_load((world.tmp / "answers.yaml").read_text(encoding="utf-8"))
-    next(e for e in book["answers"] if e["id"] == "privacy_consent")["answer"] = ""
-    (world.tmp / "answers.yaml").write_text(yaml.safe_dump(book), encoding="utf-8")
-    r = world.run("auto_form.html")
-    assert r.status == autolog.NEEDS_USER and world.submit_calls == 0 and "privacy notice" in r.reason
-    assert any("the entry 'privacy_consent' in answers.yaml is blank" in o for o in world.out)
+def test_an_attestation_is_never_ticked_even_when_answers_yaml_says_yes_and_the_run_waits_for_the_human(world):
+    r = world.run("auto_form.html?attest")                                    # the world's answers.yaml has `privacy_consent: Yes`
+    assert r.status == autolog.NEEDS_USER and world.submit_calls == 0
+    assert "required fields still empty" in r.reason and "privacy notice" in r.reason
+    assert not any("Your answer for this form" in p for p in world.prompts)                          # no question was asked about it
+    assert world.state["values"].get("privacy") in (None, False, "")                                   # and it was not ticked
 
 
 def test_an_answer_that_matches_no_option_is_not_guessed(world):
@@ -415,8 +415,10 @@ def test_click_on_a_submit_control_appears_only_in_autoapply_py():
                 if "submit" in line.lower() and any(w in line for w in ("query_selector", ".locator(", "get_by_role", ".press(")):
                     others.append((f"{p.relative_to(ROOT)}:{n}", line.strip()))
     # the one other click in the package is assist's "Apply" link that opens a form: guarded by OPEN_FORM_LINK (an "Apply" text, no "submit");
-    # Ashby / Lever forms are reached by address (formfind.form_url), a bot check or sign-in is handed over and never clicked
-    assert [w for w, line in others if not w.startswith("careerops/apply/assist.py")] == []
+    # Ashby / Lever forms are reached by address (formfind.form_url), a bot check or sign-in is handed over and never clicked.
+    # The form agent (apply/formagent.py) also clicks, but only an element that has a ref, and no submit control has one: tests/apply/test_formagent.py
+    # checks where its clicks are.
+    assert [w for w, line in others if not w.startswith(("careerops/apply/assist.py", "careerops/apply/formagent.py"))] == []
     assert all("OPEN_FORM_LINK" in line for w, line in others if w.startswith("careerops/apply/assist.py"))
 
 

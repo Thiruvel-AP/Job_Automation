@@ -71,6 +71,9 @@ career-ops/
 │   ├── apply/freetext.py         drafts free-text form answers from the fact bank, guards them, you approve once (data/answers/library.jsonl)
 │   ├── apply/formloop.py         scans EVERY field of a form (table before filling), runs the free-text loop (required or optional), logs formloop.jsonl
 │   ├── apply/assist.py · filler.py   Playwright: fill, upload PDFs, never submit · the ONE field filler (applicant.yaml, then answers.yaml) that assist and autoapply share
+│   ├── apply/ats_vendor.py       host → vendor (greenhouse, lever, ashby, workday, icims, successfactors ...) and the direct address of the real form (Greenhouse `gh_jid` → job-boards.greenhouse.io)
+│   ├── apply/formagent.py · submit_guard.py   the form agent for any other vendor: no submit action, a submit control has no ref, 40 steps per job / 8 per page, logs formagent.jsonl
+│   ├── apply/knockout.py · attest.py   the knock-out pre-scan (sponsorship, years, degree, salary floor, on-site, clearance) · attestations code never answers
 │   ├── apply/autogate.py · answers.py · autolog.py   the auto-apply gate · your answers.yaml (matching, save) · data/live/applied_auto.csv
 │   ├── apply/live.py · snapshot.py  `careerops live` loop · read-only archive snapshot + compare
 │   ├── reporting/                excel.py (Excel view of SQLite) · calibrate.py (`careerops calibrate`)
