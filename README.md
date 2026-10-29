@@ -214,6 +214,7 @@ careerops retriage                 # re-run triage on all non-applied jobs (afte
 careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
 careerops unskip --id JOB          # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
+careerops unskip --shortlist [--match TEXT | --all]   # lists the ads you skipped at the shortlist and the parked ones; --match / --all brings them back
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
 careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one job ad into data/jds/inbox/ (see "Adding a job from its link")
@@ -223,7 +224,7 @@ careerops judge-report             # the LLM judge vs your decisions: agreement,
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 300-500 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
-careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good (see "Fewer, better-matched applications")
+careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
 careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
 careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
@@ -1137,8 +1138,13 @@ ads away and moving the ones you approve.
 - **Offered**: T >= `min_triage_score` (3.5), best T first then freshest, at most `shortlist_size` (8). An ad older than `max_posting_age_days` (60) needs T >= 4.5. A company with
   `per_company_max_open` (2) applications and no reply yet, or inside its `per_company_cooldown_days` (30) after a rejection or withdrawal, is left out. An application counts as open
   for 28 days (then the funnel counts it as no response); the count includes the tracker's jobs (the database) and the archive folders for the same company.
-- **Choices**: `a` approves all, `1 3 5` approves those, `s 2` skips job 2 for good (filed in `jds_done/skipped/`, so `discover` does not bring it back), `q` quits. `shortlist --dry-run`
-  prints the list and moves nothing; without a terminal it only prints. `live --url` and `live --clipboard` are your own act for one ad, so they need no approval.
+- **Choices**: `a` approves all, `1 3 5` approves those, `s 2` skips job 2 for good (filed in `jds_done/skipped/` as `skipped (user, shortlist)`, so `discover` does not bring it back), `x` skips every
+  job left in the list that you did not approve (the same), `q` quits. `careerops unskip --shortlist` lists what was skipped this way and the parked ads; `--match TEXT` or `--all` brings them back.
+  `shortlist --dry-run` prints the list and moves and counts nothing; without a terminal it only prints (and counts nothing).
+- **No repeats**: an ad whose job is already approved (waiting in `data/jds/approved/`), skipped, applied to, closed or parked is never offered. Each list you were asked about is logged in
+  `data/jds/shortlist_log.jsonl` (`times_shown` per job). The list prints `new since last shortlist: N` and marks a job shown before with `(shown 2×)`. A job shown 3 times with no decision is
+  **parked**: it stays in the inbox, is never in the list, and is only counted in a `parked: N` line (`careerops unskip --shortlist` brings it back, counted from zero). With nothing new since the
+  last list it prints `No new jobs since <time>. Run careerops discover --ats --gmail-alerts.` instead of the old list. `live --url` and `live --clipboard` are your own act for one ad, so they need no approval.
 - **Volume caps are enforced where the action happens**: `live` stops with the count when `daily_max_applications` (5) submits (yours or auto's) have been made today, before it tailors and again
   right before a form opens; the per-company limit and cooldown are checked again right before a form opens (a held job stays `approved`). `live --auto` never takes unapproved ads.
 - **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It

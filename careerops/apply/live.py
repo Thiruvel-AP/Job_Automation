@@ -192,7 +192,9 @@ class Live:
         return dst
 
     def _reject(self, f: Path, reason: str) -> str:
-        """Move a bad JD to rejected/ with <name>.reason.txt beside it."""
+        """Move a bad JD to rejected/ with <name>.reason.txt beside it. A dry run moves nothing (an approval is never consumed by it)."""
+        if self.dry_run:
+            return "dry run: not moved"
         try:
             dst = self._move(f, self.dirs.rejected, f.name, extra=(".reason.txt",))
             dst.with_name(dst.stem + ".reason.txt").write_text(reason + "\n", encoding="utf-8")
@@ -262,6 +264,8 @@ class Live:
                 code = EXIT_ARCHIVE
         text = self.summary(stop)
         self.out(text)
+        if self.dry_run and self.require_approval:
+            self.out("dry run: approvals kept")
         report = self.dirs.live / f"{datetime.now():%Y%m%d-%H%M%S}.md"
         report.write_text(text + "\n", encoding="utf-8")
         self.out(f"Summary written to {report}")

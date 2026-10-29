@@ -1530,6 +1530,12 @@ each time, never anyone else's.
    and pay floors need a stated number / band. The hit is `DEALBREAKER "<phrase>" ← "<sentence>"`.
 4. **`careerops shortlist`** (`discovery/shortlist.py`, `cli.cmd_shortlist`): build (score, stop, filter, order by T then freshness, company limits, lazy liveness) -> file the disqualified -> print -> choices. Approved ads move to
    `data/jds/approved/<date>/`; `Live(require_approval=True)` (the command's default) reads only those; `live --include-unapproved` is refused with `--auto`. `--mock` uses the isolated root and no network.
+   **No repeats** (follow-up round): `build` leaves out an inbox ad whose key (company family, normalised title) is approved-and-waiting (`approved_files`), decided (`decided.load`: skipped / applied rows and
+   files, plus `jds_done/closed/`) or parked; `data/jds/shortlist_log.jsonl` (`read_history` / `log_events`, append-only: `shown` with `times_shown`, `approved`, `skipped`, `parked`, `reset`) holds the counts. Only a
+   list asked of a human (`ask` given, not a dry run) is counted. `[x]` (`parse` -> `rest`) files every undecided row in `jds_done/skipped/` with the reason `skipped (user, shortlist)`;
+   the third list that shows an undecided job parks it (log only, the file stays in the inbox). `careerops unskip --shortlist [--match T | --all]` (`shortlist.restore`) moves skipped ads back and un-parks, writing `reset`.
+   With no offered row that was not shown before, `lines` prints only `No new jobs since <time>. Run careerops discover --ats --gmail-alerts.`. `live --dry-run` no longer files a rejected approved JD
+   (`Live._reject` returns early) and prints `dry run: approvals kept`.
 5. **Caps** (`apply/volume.py`, called from `Live._volume_block` right before `_apply` and the auto-fill, and at the start of a session): daily count of jobs with today's `applied_at`; per company, open = no reply
    (acknowledged / screen / interview / offer / rejected / withdrawn) and applied within `outcomes.NO_RESPONSE_DAYS` (28), database jobs plus archive role folders no database job accounts for (by folder date);
    cooldown = days since a rejection or withdrawal at the company. Reading the tracker Sheet is not needed: the Sheet mirrors the database.

@@ -25,6 +25,8 @@
                                 move the inbox files of jobs (and copies of jobs) you skipped or applied to into paths.jds_done
                                 (dry run: lists them; --apply moves them and skips the database copies)
   careerops unskip --id JOB     undo a skip: the job, its copies and their JD files go back to the inbox
+  careerops unskip --shortlist [--match TEXT | --all]
+                                the ads you skipped at the shortlist, and the parked ones: lists them; with --match / --all brings them back
   careerops add-jd              add a job by hand (LinkedIn, email, truncated Adzuna JD); --file must be a UTF-8 file of >= 500 bytes
   careerops add-url URL [--company C] [--title T]
                                 fetch one job ad (Greenhouse, Lever, Ashby API; else the page) into data/jds/inbox/
@@ -42,7 +44,9 @@
                                 log what happened after an application (mark-applied logs 'applied' itself)
   careerops shortlist [--dry-run] [--no-liveness] [--mock]
                                 score the inbox with the zero-token triage score T, file what a hard stop disqualifies, offer the best few
-                                (targeting.shortlist_size); [a] / [1 3 5] approve, [s n] skip for good. Approved ads go to data/jds/approved/<date>/
+                                (targeting.shortlist_size); [a] / [1 3 5] approve, [s n] skip for good, [x] skip every job left in the list. Approved ads go
+                                to data/jds/approved/<date>/. Never re-offers an approved, skipped, applied, closed or parked ad; a job shown 3 times with
+                                no decision is parked; with nothing new it prints "No new jobs since <time>" (shown counts: data/jds/shortlist_log.jsonl)
   careerops live ... [--include-unapproved]   works only on the approved ads; --include-unapproved (never with --auto) takes the whole inbox
   careerops patterns [--db] [--mock]
                                 replies / interviews / rejections by role family, ATS kind and triage band, from the tracker Sheet's Status
@@ -532,6 +536,22 @@ def cmd_retriage(args):
 
 def cmd_unskip(args):
     s, db = _ctx(args)
+    if args.shortlist:
+        from .discovery import shortlist
+
+        if not (args.match or args.all):
+            here = [name for name, _ in shortlist.skipped_here(s)] + list(shortlist.parked_here(s).values())
+            print("\n".join(f"  {name}" for name in here) if here else "Nothing skipped at the shortlist or parked.")
+            if here:
+                print("Bring back: careerops unskip --shortlist --match TEXT  (company or role contains TEXT), or --all")
+            return
+        try:
+            print("\n".join(shortlist.restore(s, match=args.match) or ["Nothing matched."]))
+        except decided.DecidedError as e:
+            _fail(str(e))
+        return
+    if not args.id:
+        _fail("unskip needs --id JOB, or --shortlist")
     try:
         print("\n".join(decided.restore(db, s, args.id).lines()))
     except decided.DecidedError as e:
@@ -1549,7 +1569,10 @@ def main(argv=None):
     rt.add_argument("--mock", action="store_true", help="with --ats: the isolated data/mock database and MockLLM")
     rt.set_defaults(fn=cmd_retriage)
     us = sub.add_parser("unskip", help="undo a skip: the job, its copies and their JD files go back to the inbox")
-    us.add_argument("--id", required=True)
+    us.add_argument("--id")
+    us.add_argument("--shortlist", action="store_true", help="the ads you skipped at the shortlist and the parked ones (lists them; --match / --all brings them back)")
+    us.add_argument("--match", help="with --shortlist: only ads whose company | role contains this text")
+    us.add_argument("--all", action="store_true", help="with --shortlist: every one of them")
     us.set_defaults(fn=cmd_unskip)
     a = sub.add_parser("add-jd")
     a.add_argument("--id"); a.add_argument("--company"); a.add_argument("--title")
@@ -1604,7 +1627,7 @@ def main(argv=None):
     ma.set_defaults(fn=cmd_mark_applied)
     sl = sub.add_parser("shortlist", help="score the inbox (zero tokens), offer the best few; the ones you approve go to data/jds/approved/ "
                                           "(the only folder `live` reads)")
-    sl.add_argument("--dry-run", dest="dry_run", action="store_true", help="print the list; move and approve nothing")
+    sl.add_argument("--dry-run", dest="dry_run", action="store_true", help="print the list; move, approve and count nothing")
     sl.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")
     sl.add_argument("--mock", action="store_true", help="use the isolated data/mock root (no network, nothing moved)")
     sl.set_defaults(fn=cmd_shortlist)

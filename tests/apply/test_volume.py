@@ -268,3 +268,24 @@ def test_include_unapproved_is_not_allowed_in_auto_mode(cfg, capsys):
     with pytest.raises(SystemExit):
         cli.main(["--config", str(cfg), "live", "--auto", "--include-unapproved"])
     assert "--include-unapproved is not allowed with --auto" in capsys.readouterr().err
+
+
+# ------------------------------------------------------------------ a dry run never consumes an approval
+def test_a_dry_run_keeps_the_approved_ads_and_says_so(settings, db, two_ads):
+    inbox, approved = two_ads
+    live, lines = live_for(db, settings, Spy(), require_approval=True, dry_run=True)
+    live.run()
+    assert (approved / "approved.txt").exists() and "dry run: approvals kept" in lines
+    live2, lines2 = live_for(db, settings, Spy(), require_approval=True)
+    live2.run()
+    assert "dry run: approvals kept" not in lines2
+
+
+def test_a_dry_run_does_not_file_a_rejected_approval_but_a_real_run_does(settings, db, two_ads):
+    inbox, approved = two_ads
+    bad = approved / "tiny.txt"
+    bad.write_text("too short", encoding="utf-8")
+    live, _ = live_for(db, settings, Spy(), require_approval=True, dry_run=True)
+    assert live._reject(bad, "too short") == "dry run: not moved" and bad.exists()
+    live2, _ = live_for(db, settings, Spy(), require_approval=True)
+    assert "rejected/" in live2._reject(bad, "too short") and not bad.exists()

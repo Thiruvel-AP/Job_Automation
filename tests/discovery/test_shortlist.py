@@ -115,7 +115,7 @@ def test_a_company_at_its_open_limit_is_left_out(settings, db, fb, inbox):
 
 
 def test_a_company_inside_its_cooldown_is_left_out_until_it_ends(settings, db, fb, inbox):
-    write_ad(inbox, "a.txt", company="Acme")
+    write_ad(inbox, "a.txt", company="Acme", title="Machine Learning Engineer")                # another role: the applied one is excluded as decided
     apply_today(db, "manual:1", "Acme", days_ago=10)
     db.conn.execute("INSERT INTO outcomes (job_id, event, on_date, source) VALUES ('manual:1', 'rejected', '2026-10-20', 'manual')")
     db.conn.commit()
@@ -232,7 +232,7 @@ def test_q_leaves_everything_where_it_is(settings, db, fb, inbox):
     assert len(list(inbox.iterdir())) == 5 and not shortlist.approved_files(settings)
 
 
-@pytest.mark.parametrize("bad", ["", "9", "0", "x", "s", "s 9", "1 x"])
+@pytest.mark.parametrize("bad", ["", "9", "0", "x 2", "s", "s 9", "1 x"])
 def test_an_answer_that_is_not_understood_changes_nothing_and_asks_again(settings, db, fb, inbox, bad):
     five(inbox)
     plan, out, seen = run_with(settings, db, fb, bad, "q")
@@ -303,3 +303,175 @@ def test_the_shipped_defaults_and_an_absent_block():
 
 def test_the_test_settings_carry_the_block_with_the_agreed_values(settings):
     assert targeting.config(settings) == targeting.Targeting()
+
+
+# ------------------------------------------------------------------ repeats: what is never offered again
+def test_approved_jobs_waiting_in_approved_are_not_listed_again(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "1 2", "q")
+    approved = {p.name for p in shortlist.approved_files(settings)}
+    assert len(approved) == 2
+    approved_keys = [shortlist.decided.file_key(p) for p in shortlist.approved_files(settings)]
+    waiting_company = shortlist.decided.header_of(shortlist.approved_files(settings)[0])["company"]
+    write_ad(inbox, "copy.txt", company=waiting_company, age_days=1)                       # the same job found again, under another file name
+    write_ad(inbox, "new.txt", company="Newco", age_days=1)
+    plan = build(settings, db, fb)
+    assert "Newco" in names(plan) and plan.approved >= 1 and waiting_company not in names(plan)
+    assert all(shortlist.decided.key_of(r.job["company"], r.job["title"]) not in approved_keys for r in plan.rows)
+    assert {p.name for p in shortlist.approved_files(settings)} == approved                # nothing was taken away
+
+
+@pytest.mark.parametrize("folder", ["skipped", "applied", "closed"])
+def test_a_job_that_is_skipped_applied_or_closed_is_not_listed(settings, db, fb, inbox, folder):
+    write_ad(settings.path("jds_done") / folder, "old.txt", company="Gone")
+    write_ad(inbox, "again.txt", company="Gone", age_days=1)
+    write_ad(inbox, "fresh.txt", company="Fresh", age_days=1)
+    plan = build(settings, db, fb)
+    assert names(plan) == ["Fresh"] and plan.decided == 1
+
+
+def test_a_job_the_database_has_skipped_is_not_listed(settings, db, fb, inbox):
+    db.upsert_job({"id": "manual:g1", "source": "manual", "company": "Gone", "title": "Data Scientist", "description": "x"})
+    db.update_job("manual:g1", status="skipped")
+    write_ad(inbox, "again.txt", company="Gone", age_days=1)
+    write_ad(inbox, "fresh.txt", company="Fresh", age_days=1)
+    assert names(build(settings, db, fb)) == ["Fresh"]
+
+
+# ------------------------------------------------------------------ [x]
+def test_x_skips_every_job_left_in_the_list_and_keeps_the_approved_ones(settings, db, fb, inbox):
+    five(inbox)
+    plan, out, seen = run_with(settings, db, fb, "1 2", "x")
+    assert len(seen) == 2                                                                    # [x] ended the session: no third prompt
+    skipped = settings.path("jds_done") / "skipped"
+    gone = sorted(p.name for p in skipped.glob("*.txt") if not p.name.endswith(".reason.txt"))
+    assert gone == sorted(r.path.name for r in plan.rows[2:]) and len(shortlist.approved_files(settings)) == 2 and not list(inbox.iterdir())
+    assert all("skipped (user, shortlist)" in (skipped / (n[:-4] + ".reason.txt")).read_text(encoding="utf-8") for n in gone)
+    assert any("skipped 3" in line for line in out)
+    company = plan.rows[4].job["company"]
+    write_ad(inbox, "again.txt", company=company, age_days=1)                                # discovered again: still never offered
+    assert company not in names(build(settings, db, fb))
+
+
+def test_x_alone_skips_the_whole_list(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "x")
+    assert not list(inbox.iterdir()) and not shortlist.approved_files(settings)
+    assert len(shortlist.skipped_here(settings)) == 5
+
+
+def test_unskip_shortlist_brings_skipped_ads_back_and_they_are_offered_again(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "x")
+    assert shortlist.restore(settings, match="alpha") == ["back in the inbox: Alpha | Data Scientist (0.txt)"]
+    assert names(build(settings, db, fb)) == ["Alpha"]
+    assert len(shortlist.skipped_here(settings)) == 4
+    assert len(shortlist.restore(settings)) == 4 and len(build(settings, db, fb).rows) == 5
+
+
+# ------------------------------------------------------------------ counting and parking
+def log_lines(settings):
+    return [json.loads(l) for l in shortlist.log_path(settings).read_text(encoding="utf-8").splitlines()]
+
+
+def test_each_list_you_were_asked_about_is_logged_with_times_shown(settings, db, fb, inbox):
+    write_ad(inbox, "a.txt", company="Alpha", age_days=1)
+    run_with(settings, db, fb, "q")
+    write_ad(inbox, "b.txt", company="Beta", age_days=1)
+    run_with(settings, db, fb, "q")
+    shown = [e for e in log_lines(settings) if e["event"] == "shown" and e["company"] == "Alpha"]
+    assert [e["times_shown"] for e in shown] == [1, 2]
+    assert shortlist.log_path(settings).parent == settings.path("jds") and shortlist.log_path(settings).name == "shortlist_log.jsonl"
+
+
+def test_new_since_last_shortlist_and_the_shown_mark(settings, db, fb, inbox):
+    five(inbox)
+    _, out, _ = run_with(settings, db, fb, "q")
+    assert "new since last shortlist: 5" in "\n".join(out) and "(shown" not in "\n".join(out)
+    write_ad(inbox, "n.txt", company="Newco", age_days=1)
+    plan, out, _ = run_with(settings, db, fb, "q")
+    text = "\n".join(out)
+    assert "new since last shortlist: 1" in text
+    assert text.count("(shown 1×)") == 5 and [r.shown for r in plan.rows].count(0) == 1
+
+
+def test_the_third_showing_without_a_decision_parks_the_job(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "q")                                                          # 1st
+    write_ad(inbox, "n1.txt", company="Newco1", age_days=1)
+    run_with(settings, db, fb, "q")                                                          # 2nd
+    write_ad(inbox, "n2.txt", company="Newco2", age_days=1)
+    plan, out, _ = run_with(settings, db, fb, "q")                                           # 3rd: five were shown 3 times, none decided
+    text = "\n".join(out)
+    assert "(shown 2×)" in text and "parked 5" in text
+    assert [e["company"] for e in log_lines(settings) if e["event"] == "parked"].count("Alpha") == 1
+    write_ad(inbox, "n3.txt", company="Newco3", age_days=1)
+    plan, out, _ = run_with(settings, db, fb, "q")
+    text = "\n".join(out)
+    assert sorted(names(plan)) == ["Newco1", "Newco2", "Newco3"]                              # the parked five are not in the list
+    assert "parked: 5" in text and "Alpha" not in text
+    assert len(list(inbox.iterdir())) == 8                                                   # parked ads stay in the inbox
+
+
+def test_a_decision_stops_the_count_from_parking_a_job(settings, db, fb, inbox):
+    write_ad(inbox, "a.txt", company="Alpha", age_days=1)
+    run_with(settings, db, fb, "q")                                                          # 1st
+    write_ad(inbox, "n0.txt", company="Newco0", age_days=1)
+    run_with(settings, db, fb, "q")                                                          # 2nd
+    write_ad(inbox, "n1.txt", company="Newco1", age_days=1)
+    plan, _, _ = run_with(settings, db, fb, "1", "q")                                        # 3rd: Alpha is approved
+    assert plan.rows[0].job["company"] == "Alpha" and len(shortlist.approved_files(settings)) == 1
+    assert not [e for e in log_lines(settings) if e["event"] == "parked"]
+
+
+def test_unskip_shortlist_offers_a_parked_job_again_from_zero(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "q")
+    for i in range(2):
+        write_ad(inbox, f"n{i}.txt", company=f"Newco{i}", age_days=1)
+        run_with(settings, db, fb, "q")
+    assert len(build(settings, db, fb).parked) == 5
+    assert shortlist.restore(settings, match="alpha") == ["offered again: Alpha | Data Scientist (was parked)"]
+    plan = build(settings, db, fb)
+    assert "Alpha" in names(plan) and len(plan.parked) == 4 and [r.shown for r in plan.rows if r.job["company"] == "Alpha"] == [0]
+
+
+def test_a_dry_run_and_a_run_without_a_terminal_log_nothing(settings, db, fb, inbox):
+    five(inbox)
+    shortlist.run(settings, db, fb, ask=None, out=lambda s: None, now=NOW, archive=[], dry_run=True)
+    shortlist.run(settings, db, fb, ask=None, out=lambda s: None, now=NOW, archive=[])
+    assert not shortlist.log_path(settings).exists()
+
+
+# ------------------------------------------------------------------ nothing new
+def test_an_empty_shortlist_says_so_and_names_the_commands(settings, db, fb, inbox):
+    plan, out, seen = run_with(settings, db, fb)
+    assert out == ["No new jobs yet. Run careerops discover --ats --gmail-alerts."] and seen == []
+
+
+def test_nothing_new_since_the_last_list_prints_the_message_instead_of_the_list(settings, db, fb, inbox):
+    five(inbox)
+    run_with(settings, db, fb, "q")
+    plan, out, seen = run_with(settings, db, fb)
+    assert out == [f"No new jobs since {NOW.astimezone():%Y-%m-%d %H:%M}. Run careerops discover --ats --gmail-alerts."] and seen == []
+    assert len(list(inbox.iterdir())) == 5
+    assert len([e for e in log_lines(settings) if e["event"] == "shown"]) == 5                # the unseen list was not counted
+
+
+def test_the_parser_knows_x():
+    assert shortlist.parse("x", 5) == ("rest", []) and shortlist.parse("X", 5) == ("rest", []) and shortlist.parse("x 2", 5)[0] == "bad"
+
+
+def test_unskip_shortlist_lists_then_brings_back_through_the_command(settings, db, fb, inbox, tmp_path, capsys):
+    import yaml
+    five(inbox)
+    run_with(settings, db, fb, "x")
+    cfg = tmp_path / "settings.yaml"
+    cfg.write_text(yaml.safe_dump(settings.raw), encoding="utf-8")
+    cli.main(["--config", str(cfg), "unskip", "--shortlist"])
+    listed = capsys.readouterr().out
+    assert "Alpha | Data Scientist" in listed and "--match TEXT" in listed and len(list(inbox.iterdir())) == 0
+    cli.main(["--config", str(cfg), "unskip", "--shortlist", "--match", "beta"])
+    assert "back in the inbox: Beta | Data Scientist" in capsys.readouterr().out and len(list(inbox.iterdir())) == 1
+    with pytest.raises(SystemExit):
+        cli.main(["--config", str(cfg), "unskip"])
