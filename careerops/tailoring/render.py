@@ -24,6 +24,16 @@ def latex_escape(s) -> str:
     return "".join(_ESC.get(ch, ch) for ch in str(s))
 
 
+_UNIT_AFTER_NUMBER = re.compile(r"(\d)\s+(pp|GB|MB|TB|ms)\b")
+
+
+def letter_escape(s) -> str:
+    """latex_escape for the generated text of a cover letter (Document rules, B6): % & $ # _ { } are escaped, ~ becomes $\\sim$, a straight double quote stays one (TeX would print it as a closing quote), and a number is
+    kept with its unit by a thin space ("+5 pp" is +5\\,pp, "5.5 GB" is 5.5\\,GB)."""
+    out = "".join({"~": "$\\sim$", '"': "\\textquotedbl{}"}.get(ch) or _ESC.get(ch, ch) for ch in str(s))
+    return _UNIT_AFTER_NUMBER.sub(lambda m: m.group(1) + "\\," + m.group(2), out)
+
+
 def skill_display(skill) -> str:
     """One skill entry as the CV shows it. An entry that lists several things ("S3, SQS, DynamoDB (MSc coursework)") would
     read as three skills among the comma-separated ones, so its commas outside brackets become "/": "S3/SQS/DynamoDB (MSc
@@ -365,7 +375,7 @@ def skill_row(items) -> str:
     return ", ".join(inline(s) for s in shown)
 
 
-DOT = "\\nobreak\\ \\,\\textperiodcentered\\, "          # the separator of the contact line and the status line
+DOT = "\\nobreak\\ \\,\\textbar\\, "          # the separator of the contact line (and the user's own CV): a bar, in Carlito like the rest
 
 
 def contact_line(identity: dict, dot: str = DOT) -> str:
@@ -380,8 +390,7 @@ def contact_line(identity: dict, dot: str = DOT) -> str:
     links = identity.get("links") or {}
     for k in ("linkedin", "github", "portfolio"):
         if links.get(k):
-            shown = "Portfolio" if k == "portfolio" else latex_escape(re.sub(r"^https?://(www\.)?", "", str(links[k])).rstrip("/"))
-            parts.append(r"\href{" + str(links[k]).replace("%", r"\%").replace("#", r"\#") + "}{" + shown + "}")
+            parts.append(r"\href{" + str(links[k]).replace("%", r"\%").replace("#", r"\#") + "}{" + latex_escape(links[k]) + "}")      # the full URL, as typed
     return dot.join(parts)
 
 
@@ -394,6 +403,7 @@ def env(date_separator: str = DATE_SEPARATOR) -> jinja2.Environment:
         trim_blocks=True, lstrip_blocks=True, autoescape=False, undefined=jinja2.StrictUndefined,
     )
     e.filters["e"] = latex_escape
+    e.filters["letter_escape"] = letter_escape                           # the cover letter's text (~ is $\\sim$, "+5 pp" is +5\\,pp)
     e.filters["inline"] = inline                                         # escaped, with (Expected) / (coursework) in italics
     e.filters["award"] = tag_shown                                       # a project's award or badge, unless its name already says it
     e.filters["skill"] = lambda s: latex_escape(skill_display(s))        # a skill entry with commas shows them as "/"

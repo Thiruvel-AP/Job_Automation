@@ -1,5 +1,5 @@
-"""The letter's opening (Document rules, B4): sentence 1 is the hook's `letter_line` fact (it must carry a number from the fact bank) tied to a problem
-the company is hiring to solve, quoted from the job ad, else from the company's own careers page (never news, LinkedIn or a third party). A hook
+"""The letter's opening, P1 (Document rules, B4 and v2.3 B3): the company's problem first, quoted from the job ad, else from the company's own careers
+page (never news, LinkedIn or a third party), a semicolon, then the hook's `letter_line` fact (it must carry a number from the fact bank). A hook
 whose line has no number cannot open a letter: the next hook is used, else the strongest numbered bullet of the CV with the role family's profile
 line. A banned opening is rejected. No network, no model."""
 import copy
@@ -33,7 +33,7 @@ def numberless(world):
 def test_the_opening_is_the_hooks_fact_plus_a_phrase_of_the_ad(world):
     op = O.build(JOB, world.fb, world.kws, world.hk, world.chosen, FAMILY_LINE)
     assert op.ok and op.source == "ad" and op.hook_id == world.hk.hook_id and op.fact_kind == "hook"
-    assert op.sentence.startswith(world.hk.letter_sentence.rstrip(".")) and op.sentence.endswith(".")
+    assert op.sentence.startswith(f'Anaplan is hiring for "{op.problem}"; ') and op.sentence.endswith(O.lower_first(world.hk.letter_sentence.rstrip(".")) + ".")
     assert O.bank_numbers(op.sentence, world.fb) == ["65"] and op.number == "65"
     assert norm(quoted(op.sentence)) in norm(JD) and op.problem == quoted(op.sentence)
     assert 3 <= len(op.problem.split()) <= O.PHRASE_MAX_WORDS
@@ -43,6 +43,19 @@ def test_the_opening_is_the_hooks_fact_plus_a_phrase_of_the_ad(world):
 def test_the_phrase_is_a_clause_of_an_ad_sentence_that_says_what_the_team_is_for(world):
     op = O.build(JOB, world.fb, world.kws, world.hk, world.chosen, FAMILY_LINE)
     assert O.CUES.search(next(s for s in O.ad_sentences(JD) if norm(op.problem) in norm(s)))
+
+
+def test_the_hooks_line_continues_after_the_semicolon_with_a_lower_case_start_only_for_a_sentence_opening_word():
+    assert O.lower_first("At Northwind I shipped it.") == "at Northwind I shipped it."
+    assert O.lower_first("I trained per-gene models.") == "I trained per-gene models."
+    assert O.lower_first("Built a model with 65 tests.") == "Built a model with 65 tests."
+    assert O.lower_first("Across 14 datasets I did it.") == "across 14 datasets I did it."
+
+
+def test_the_company_page_lead_names_the_page_not_the_ad(world):
+    page = "Acme Health builds software that helps hospitals schedule operating theatres without double booking."
+    op = O.build({**JOB, "description": "Apply now."}, world.fb, world.kws, world.hk, world.chosen, FAMILY_LINE, page_text=page)
+    assert op.sentence.startswith(f'Anaplan describes its work as "{op.problem}"; ')
 
 
 def test_a_phrase_with_a_deny_listed_word_is_never_used(world):
@@ -88,7 +101,7 @@ def test_with_no_numbered_hook_the_strongest_numbered_cv_bullet_then_the_family_
     op = O.build(JOB, fb, world.kws, numberless(world), world.chosen, FAMILY_LINE)
     assert op.ok and op.fact_kind == "bullet" and op.bullet_id in world.chosen and op.bullet_id not in ("",)
     bullet = next(b for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"] if b["id"] == op.bullet_id)
-    assert op.sentence.startswith(bullet["text"].rstrip(".")) and O.bank_numbers(op.sentence, fb)
+    assert op.sentence.startswith('Anaplan is hiring for "') and "; I " in op.sentence and O.bank_numbers(op.sentence, fb)
     assert op.paragraph == f"{op.sentence} {FAMILY_LINE}"
     assert op.number in numbers(bullet["text"])
 

@@ -42,15 +42,30 @@ HOME_PLACES = frozenset({"", "uk", "united kingdom", "remote", "england", "scotl
 
 
 # ------------------------------------------------------------------ the pieces code writes
+TITLES = frozenset("dr mr mrs ms miss mx prof professor sir".split())
+
+
+def contact_first_name(job: dict) -> str:
+    """The first name of the person the letter is for (`job["contact"]["name"]` or `job["contact_name"]`, set from the job's stored contact); '' when unknown."""
+    tokens = str(job.get("contact_name") or (job.get("contact") or {}).get("name") or "").split()
+    while tokens and tokens[0].strip(".,;:").lower() in TITLES and len(tokens) > 1:
+        tokens = tokens[1:]                                                       # "Dr. Priya Nair": the first name is Priya
+    first = tokens[0].strip(".,;:") if tokens else ""
+    return first if re.fullmatch(r"[^\W\d_][\w'’-]*", first) else ""
+
+
 def greeting(job: dict, team: str, settings) -> str:
-    """"Dear <Company> <team> team" (the team only when the ad names one); a recruitment agency gets "Hi <agency> team"."""
+    """"Hi <first name>" when the contact's name is known, else "Hi <Company> team" (`letter.greeting_hook`; never "Dear Sir/Madam"); a recruitment
+    agency gets "Hi <agency> team". The comma is added by the template."""
     from .tailor import strip_team_word
 
     cfg = settings["letter"]
     team = strip_team_word(team)
+    if contact_first_name(job) and not job.get("agency"):
+        return f"Hi {contact_first_name(job)}"
     if job.get("agency"):
         return (cfg.get("greeting_agency") or "Hi {company} team").format(company=job["company"], team=f" {team}" if team else "")
-    return (cfg.get("greeting_hook") or "Dear {company}{team} team").format(company=job["company"], team=f" {team}" if team else "")
+    return (cfg.get("greeting_hook") or "Hi {company}{team} team").format(company=job["company"], team=f" {team}" if team else "")
 
 
 def closing_text(problem: str, settings) -> str:

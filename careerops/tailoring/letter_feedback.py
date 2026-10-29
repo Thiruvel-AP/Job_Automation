@@ -3,7 +3,7 @@
 After `l` the person is asked "What should change? (enter = just retry)". The model then gets, with every draft of that `l` (at most
 company_letter.ATTEMPTS = 3):
 
-  * the PREVIOUS DRAFT it is to revise (P2, P3, P4);
+  * the PREVIOUS DRAFT it is to revise (P3, P4, P5), named as in the letter's paragraph table (P1 hook ... P7 ask), so "shorten P4" works;
   * every guard rejection of that draft REWRITTEN AS AN INSTRUCTION ("remove 'robust'", "the letter is 288 words, 42 short of the 330 minimum:
     use more of the detail of bullet p1a");
   * the person's FEEDBACK, word for word.
@@ -25,7 +25,7 @@ HEADER = "YOUR LAST DRAFT BROKE THESE RULES; fix every one"
 # ------------------------------------------------------------------ rejection -> instruction
 def _tag(problem: str) -> tuple[str, str]:
     """("P3", "rest") for "P3: rest"; ("", problem) for a problem about the letter as a whole."""
-    m = re.match(r"^(P[2-4]):\s*(.*)$", problem, re.S)
+    m = re.match(r"^(P[1-7]):\s*(.*)$", problem, re.S)
     return (m.group(1), m.group(2)) if m else ("", problem)
 
 
@@ -34,11 +34,11 @@ def _para_words(paragraph: str) -> int:
 
 
 def _shortest_bullet(paragraphs: list[str], plan) -> str:
-    """The id of the first evidence bullet of the shorter of P3 and P4: where the missing words are best found."""
+    """The id of the first evidence bullet of the shorter of P3 and P4 (`paragraphs` = [P3, P4, P5]): where the missing words are best found."""
     groups = getattr(plan, "groups", None) or []
-    if len(groups) < 2 or len(paragraphs) < 4:
+    if len(groups) < 2 or len(paragraphs) < 2:
         return ""
-    n = 0 if _para_words(paragraphs[2]) <= _para_words(paragraphs[3]) else 1
+    n = 0 if _para_words(paragraphs[0]) <= _para_words(paragraphs[1]) else 1
     return groups[n][0]["id"] if groups[n] else ""
 
 
@@ -75,11 +75,28 @@ def instruction(problem: str, paragraphs: list[str], plan) -> str:
     m = re.match(r"^does not name an ad requirement its bullet evidences \(one of: (.+)\)$", rest)
     if m:
         return f"{pre}name {m.group(1)} in the paragraph"
+    m = re.match(r"^names (\d+) of the ad skills its bullets evidence; it must name (\d+) \(from: (.+)\)$", rest)
+    if m:
+        return f"{pre}name at least {m.group(2)} of these ad skills: {m.group(3)}"
+    m = re.match(r"^does not name the employer (.+)$", rest)
+    if m:
+        return f"P4: name the employer {m.group(1)} in its own sentence"
+    m = re.match(r"^gives no number from the (.+) bullet \(one of: (.+)\)$", rest)
+    if m:
+        return f"P4: give one number of the {m.group(1)} bullet ({m.group(2)})"
+    m = re.match(r"^P5 is (\d+) sentences", problem)
+    if m or re.match(r"^P5 is \d+ words", problem):
+        return "P5: write ONE short sentence"
+    m = re.match(r"^(P\d): mentions memory / RAM / GB \('(.+?)'\)", problem)
+    if m:
+        return f"{m.group(1)}: remove '{m.group(2)}': the ad is not about memory or hardware"
+    if problem.startswith("missing paragraph") or problem.startswith("expected 3 paragraphs"):
+        return 'return JSON {"paragraphs": ["P3", "P4", "P5"]}: exactly three paragraphs'
     m = re.match(r"^claim about the company is not supported by the ad .*: '(.+)'$", rest)
     if m:
         return f"{pre}remove or rewrite '{m.group(1)}': the ad does not support it"
-    if rest.startswith("P2 follows") or problem.startswith("P2 follows"):
-        return "P2: quote or closely follow 2 or 3 of the numbered About / role sentences, in their own words"
+    if problem.startswith("P5 follows"):
+        return "P5: quote or closely follow one of the numbered About / role sentences, in its own words"
     m = re.match(r"^'(.+?)' \((?:name|sector|client|capability|claim)\) is (?:in neither|not in)", rest)
     if m:
         return f"{pre}remove '{m.group(1)}': neither the evidence nor the ad says it"
@@ -95,7 +112,7 @@ def instruction(problem: str, paragraphs: list[str], plan) -> str:
     m = re.match(r"^body: (\d+) of (\d+) sentences cite", problem)
     if m:
         cited, total = int(m.group(1)), int(m.group(2))
-        return f"shorten P2 to at most {max(int(cited * 2 / 3), 1)} sentence(s): at least 60% of the body's sentences must be about your bullets (P3 and P4)"
+        return "write P3 and P4 from their bullets: at least 60% of the sentences of P1 to P4 must be about your bullets"
     m = re.match(r"^P3/P4 draw on bullet (\S+), which is not printed", problem)
     if m:
         return f"write P3 and P4 only from the bullets given for them: {m.group(1)} is not on this CV"
@@ -117,11 +134,11 @@ def revision_block(previous: list[str], lines: list[str], feedback: str, need: i
     """The text added to the user message of a draft: the draft to revise, what to change, the reader's feedback. "" when there is none of them."""
     out: list[str] = []
     if previous:
-        tags = ("P2", "P3", "P4")
+        tags = ("P3", "P4", "P5")
         out.append("YOUR PREVIOUS DRAFT (revise it; keep what already works):\n" + "\n".join(f"{t}: {p}" for t, p in zip(tags, previous)))
     if lines:
         out.append(f"CHANGE THESE ({HEADER}):\n" + "\n".join(f"- {x}" for x in lines)
-                   + (f"\nMake P2 + P3 + P4 about {need} words." if need else ""))
+                   + (f"\nMake P3 + P4 + P5 about {need} words." if need else ""))
     if feedback.strip():
         out.append("THE READER'S FEEDBACK (follow it, word for word):\n" + feedback.strip())
     return ("\n\n" + "\n\n".join(out)) if out else ""

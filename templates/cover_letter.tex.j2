@@ -1,6 +1,9 @@
 \documentclass[11pt,a4paper]{article}
-\#{ Layout copied from the user's own cover letter (agreed 2026-10-03). Only fact-bank values and the
-   checked letter paragraphs are inserted. Optional values are read with .get or "is defined". }
+\#{ Cover letter layout, v2.3: the user's own letter (templates/reference/letter_reference_2026-10-29.tex), layout only. The header is the CV's: the
+   same name (linkblue, LARGE, bold), the same hook headline string (headernavy, small, bold) and the same contact line with the full URLs. Then
+   the greeting, short paragraphs with no bullets (each one through letter_escape: % & $ # _ braces escaped, ~ as the math tilde, a number kept with
+   its unit), and "Regards," a blank line and the full name. The greeting is "Hi <first name>" when the contact is known, else "Hi <Company> team";
+   the comma is added here. Only fact-bank values and the checked letter paragraphs are inserted. Optional values are read with .get or "is defined". }
 \usepackage{fontspec}
 \setmainfont{Carlito}
 \usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
@@ -10,8 +13,8 @@
 \usepackage{parskip}
 
 \definecolor{headernavy}{RGB}{12, 83, 166}
-\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
 \definecolor{linkblue}{RGB}{0, 102, 204}
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
 \hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
 
 % no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
@@ -23,11 +26,11 @@
 \raggedright
 \pagestyle{empty}
 
-% --- HEADER ---
+% --- HEADER (the CV's) ---
 \begin{center}
     {\LARGE \color{linkblue} \textbf{\VAR{id.name|e}}}\\[0.2cm]
 \BLOCK{if headline is defined and headline}
-    {\fontsize{12}{14}\selectfont\color{headernavy} \VAR{headline|hook_tex(headline_number|default(''), 'num')}}\\[0.2cm]
+    {\color{headernavy}\small\textbf{\VAR{headline|hook_tex(headline_number|default(''), 'num')}}}\\[0.2cm]
 \BLOCK{endif}
     {\small \VAR{id|contact_line}}
 \BLOCK{if id.get('address')}\\[0.1cm]
@@ -39,15 +42,15 @@
 \vspace{0.4cm}
 
 \noindent
-\VAR{(greeting if greeting is defined else 'Dear ' ~ company ~ ' hiring team')|e},
+\VAR{(greeting if greeting is defined else 'Hi ' ~ company ~ ' team')|letter_escape},
 
 \BLOCK{for p in paragraphs}
-\VAR{p|e}
+\VAR{p|letter_escape}
 
 \BLOCK{endfor}
 \vspace{0.5cm}
 
-\VAR{(signoff if signoff is defined else 'Kind regards')|e},
+\VAR{(signoff if signoff is defined else 'Regards')|letter_escape},
 
 \VAR{id.name|e}
 

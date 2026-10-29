@@ -113,10 +113,13 @@ def _tex_url(url: str) -> str:
     return url.replace("%", r"\%").replace("#", r"\#")
 
 
-def project_problems(rep: Mapping[str, Any], tex: str | None) -> list[str]:
-    """A4: at most 3 projects, each with 1 to 3 bullets, and a URL exactly when the bank does not say `public: false`."""
+def project_problems(rep: Mapping[str, Any], tex: str | None, settings=None) -> list[str]:
+    """A4: at most 3 projects, each with 1 to 3 bullets, and a URL exactly when the bank does not say `public: false`; with
+    scoring.cv_projects_need_url (v2.3) every project has a public URL."""
     projects = rep["context"].get("projects") or []
     out: list[str] = []
+    if settings is not None and settings["scoring"].get("cv_projects_need_url"):
+        out += [f"PROJECTS \"{p.get('name') or p.get('id')}\" has no public GitHub URL (scoring.cv_projects_need_url)" for p in projects if not render.url_shown(p)]
     if len(projects) > MAX_PROJECTS:
         out.append(f"PROJECTS {len(projects)} projects on the CV (at most {MAX_PROJECTS})")
     lo, hi = PROJECT_BULLETS
@@ -160,15 +163,21 @@ def cert_problems(rep: Mapping[str, Any], tex: str | None) -> list[str]:
 # --------------------------------------------------------------------------------------------------------------------- the cover letter
 def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb: Mapping[str, Any] | None, texts: Sequence[str],
                     earlier: Sequence[RU.Earlier]) -> list[str]:
-    """B1 to B5 on a company-mode letter that exists (status ok): 300 to 500 words; the CV's headline and contact line in its header; the
-    evidence and the skills it names on this CV and a body that is mostly about the CV's bullets; an opening that carries a fact-bank number
-    and quotes a problem phrase of the ad or the company's page; and no copy of an earlier letter. Other letter modes, and a letter that does not
-    exist, are not judged here (review has its own confirmations for those)."""
+    """B1 to B5 (v2.3) on a company-mode letter that exists (status ok): 200 to 320 body words; the CV's headline and contact line in its header;
+    P1, P3, P4, P5 and P7 present; the evidence and the skills it names on this CV and a body whose P1 to P4 are mostly about the CV's bullets; an
+    opening that carries a fact-bank number and quotes a problem phrase of the ad or the company's page; no memory / GB figure for an ad that is not
+    about hardware; and no copy of an earlier letter (P2 to P5). Other letter modes, and a letter that does not exist, are not judged here (review
+    has its own confirmations for those)."""
     letter = rep.get("letter") or {}
     paragraphs = [str(p) for p in letter.get("paragraphs") or []]
-    if letter.get("mode") != "company" or letter.get("status") != "ok" or len(paragraphs) != 5:
+    names = list(letter.get("names") or [])
+    if letter.get("mode") != "company" or letter.get("status") != "ok" or not names or len(names) != len(paragraphs):
         return []
+    parts = dict(zip(names, paragraphs))
     ctx, out = rep["context"], []
+    absent = [n for n in ("P1", "P3", "P4", "P5", "P7") if n not in parts]
+    if absent:
+        out.append(f"LETTER lacks paragraph(s) {', '.join(absent)}")
     lo, hi = CL.word_range(settings)
     n = CL.words(paragraphs)
     if not lo <= n <= hi:
@@ -181,14 +190,17 @@ def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb
             out.append("LETTER header: the CV's hook headline is not under the name")
         if render.contact_line(ctx.get("id") or {}) not in letter_tex:
             out.append("LETTER header: the CV's contact line is not under the name")
-    body = paragraphs[1:4]
+    body = [parts[n] for n in ("P3", "P4", "P5") if n in parts]
     cv = CL.cv_from_ctx(ctx)
     out += [f"LETTER P3/P4 draw on bullet {e['id']}, which is not printed on this job's CV" for e in letter.get("evidence") or [] if e.get("id") not in cv["ids"]]
-    out += CL.balance_problems(body)
+    tags = [t for t in letter.get("cites") or []]
+    out += CL.balance_problems(tags) if tags else []
+    out += CL.hardware_problems(parts, " ".join(t for t in texts if t))
     if fb is not None:
         out += CL.skill_problems(body, dict(fb), cv["text"])
-        out += OP.problems(paragraphs[0], dict(fb), [t for t in texts if t])
-    score, who = RU.worst(body, earlier)
+        out += OP.problems(parts.get("P1", ""), dict(fb), [t for t in texts if t])
+    reuse_body = [parts[n] for n in CL.REUSE_NAMES if n in parts]
+    score, who = RU.worst(reuse_body, earlier)
     if who is not None and score >= RU.LIMIT:
         out.append(f"reuse: the body is {score:.2f} like the letter '{who.name}' (limit {RU.LIMIT:.2f})")
     return [p if p.startswith("LETTER") else f"LETTER {p}" for p in out]
@@ -204,7 +216,7 @@ def check(rep: Mapping[str, Any], settings, *, tex: str | None = None, cv_text: 
     if not rep.get("one_page"):
         failures += profile_problems(rep, settings)
         failures += skill_problems(rep)
-        failures += project_problems(rep, tex)
+        failures += project_problems(rep, tex, settings)
         failures += cert_problems(rep, tex)
     failures += letter_problems(rep, settings, letter_tex, fb, texts, earlier)
     return DocCheck(list(dict.fromkeys(failures)))

@@ -1,0 +1,182 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+\titleformat{\section}
+  {\color{headernavy}\normalsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\linespread{1.02}
+
+\begin{document}
+
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE\bf Thiruvel Andagurunathan Pandian} \\[3pt]
+    {\color{headernavy}\small\textbf{Data Scientist \,$|$\, models validated before release and shipped as containerised services: three-tier $\sim$65-test validation framework, Docker on AWS Lambda \,$|$\, Python, SQL, scikit-learn}} \\[3pt]
+    Bristol, UK
+    \,$|$\,
+    \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \,$|$\,
+    \href{tel:+447741016954}{+44 7741 016954} \,$|$\,
+    \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/} \,$|$\,
+    \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP} \,$|$\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}
+
+\vspace{4pt}
+\noindent{Right to Work in UK \,$|$\, Available to join Immediately}
+\end{center}
+
+\section{Profile}
+\vspace{3pt}
+\noindent Data scientist (MSc Data Science, University of Bristol) who validates models before they are productionised: at AstraZeneca, ran exploratory data analysis across 14 heterogeneous datasets, validated an LLM agent with a three-tier, $\sim$65-test framework and deployed it myself as a Docker image on AWS Lambda, then wrote up the architecture and evaluation. Placed 3rd nationally in the Lloyd's Banking Group Datathon, finding rare transaction-fraud events at 200:1 class imbalance with an Isolation Forest and ensemble classifiers. Works in Python (pandas, NumPy, scikit-learn), SQL (PostgreSQL) and Git with pull requests. About 15 months in data science and AI, after 1 year 9 months as a software engineer.
+
+\section{Skills}
+\vspace{2pt}
+
+\noindent \textbf{Python (pandas, NumPy, scikit-learn), SQL \& Version Control (Git)}
+    \\
+    Python, pandas, NumPy, SciPy, scikit-learn, feature engineering, data wrangling, exploratory data analysis (EDA), SQL (PostgreSQL), MongoDB (NoSQL), Neo4j (graph data storage), networkx, PySpark and Databricks (MSc Large-Scale Data Engineering coursework), Git (branching, pull requests, code review), GitHub Actions CI/CD, parquet, Matplotlib, Seaborn, Plotly
+
+\vspace{3pt}
+\noindent \textbf{Model Development \& Validation}
+    \\
+    Classification (XGBoost, ensemble classifiers), unsupervised learning and outlier detection (Isolation Forest, K-Means, HAC, DBSCAN), time-series analysis (LSTM forecasting, TimeSeriesSplit), cross-validation, model calibration plots, hypothesis testing (Welch's t-test, ANOVA), regularisation (L1/Lasso, L2/Ridge, dropout), imbalanced data (SMOTE, MCC), Bayesian hyperparameter search, MLflow experiment tracking, TensorFlow/Keras, PyTorch, R (tidymodels)
+
+\vspace{3pt}
+\noindent \textbf{Machine Learning Deployment \& AI}
+    \\
+    Containerised deployment (Docker, AWS Lambda, ECR), FastAPI and REST APIs, TensorFlow Serving, Kubernetes (AWS EKS), AWS (Bedrock, IAM, CloudWatch), GCP (Cloud Run), LLM APIs (Claude on AWS Bedrock, OpenAI), LangChain, LangGraph, LLM evals (three-tier tests, hallucination-rate analysis, regression testing), Pydantic-validated outputs
+
+\section{Work Experience}
+\vspace{2pt}
+
+\noindent
+\textbf{AstraZeneca, United Kingdom}
+\hfill \textbf{May 2026 - Sep 2026}
+\\
+\textbf{Data Scientist (MSc Dissertation)}
+\begin{itemize}
+    \item Needed a model validated before anyone relied on it, and owned it end to end: ran exploratory data analysis across 14 heterogeneous datasets in Python (pandas, parquet), built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock), validated it with a three-tier, $\sim$65-test framework (tool level, API, live) including its measured hallucination rate, and deployed it myself as a Docker image on AWS Lambda.
+    \item Made it dependable: the LLM returns JSON checked with Pydantic before it reaches the front end; circuit breakers and a 19,213-gene parquet fallback keep it working when external APIs fail; after evaluating rate limits, migrated the agent from Groq to Bedrock and re-ran the same tests as a regression check.
+    \item Resolved gene aliases through deterministic Ensembl and HGNC REST calls and ran the tests at tool level, against the APIs and live, so each layer could be checked on its own.
+    \item Monitored cost, latency and traces in AWS CloudWatch, set up the account with least-privilege IAM policies, and wrote up the architecture and evaluation for technical and non-technical audiences.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent
+\textbf{180 Degrees Consulting}
+\hfill \textbf{Sep 2025 - Dec 2025}
+\\
+\textbf{Data Consultant}
+
+\begin{itemize}
+    \item A client needed an open-ended brief turned into a working solution: in three months, framed the requirements with them, led the architecture for a five-person team, prototyped it in Python (FastMCP, PostgreSQL, GitHub Actions CI) and explained it to technical and non-technical audiences in a live demo (5-star rating from senior leadership).
+    \item Kept the prototype reproducible: agent state persisted across sessions in PostgreSQL, with GitHub Actions CI running across Python 3.9--3.11.
+    \item Then contributed to the client's production TypeScript/Node.js server, now in live use, working with their engineers through Git and reviewing pull requests; one LLM (OpenAI API) writes GraphQL queries and a second analyses the results.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent
+\textbf{Freelance}
+\hfill \textbf{Jan 2025 -- Aug 2025}
+\\
+\textbf{AI/ML Engineer}
+
+\begin{itemize}
+    \item Built reproducible ML pipelines (scikit-learn, LSTM, BiRNN, CNN in TensorFlow/Keras; feature engineering, cross-validation, hyperparameter tuning) validated on held-out data and served as REST APIs via FastAPI and Docker.
+    \item Prototyped agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent
+\textbf{Avasoft LTD., Chennai, India}
+\hfill \textbf{Jan 2023 - Sep 2024}
+\\
+\textbf{Software Development Engineer (Jul 2023 - Sep 2024); Trainee (Jan 2023 - Jun 2023)}
+
+\begin{itemize}
+    \item As a trainee, faced a manual data-collection process: built a JavaScript web-scraping pipeline that automated it and surfaced market-trend signals used for pricing decisions.
+    \item Integrated Twelve Data and Plaid REST APIs in a production iOS fintech app and delivered 10 reusable SwiftUI/UIKit component templates that sped up the team's concurrent releases.
+    \item Designed Core Data schemas for user profiles, transaction histories and event bookings, with CRUD and session-state management.
+\end{itemize}
+
+\section{Projects}
+\vspace{2pt}
+
+\noindent\textbf{Lloyd's Banking Group Datathon -- Fraud and Anomaly Detection}
+\hfill \textbf{3rd Place}
+\\
+\textit{Python, scikit-learn, Isolation Forest, ensemble classifiers, MLflow}
+\begin{itemize}
+    \item Needed to find rare transaction-fraud events in data with a 200:1 class imbalance: used an Isolation Forest and ensemble classifiers, tracked experiments in MLflow, and placed 3rd nationally.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{GTAI Graph PoC -- Cancer Cell-Line Omics Graph}
+\hfill \url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}
+\\
+\textit{Python, networkx, scikit-learn, RAPIDS cuML}
+\begin{itemize}
+    \item Linked records across 14 public omics files through identifier crosswalks into one graph ($\sim$2.8M edges), ran Leiden community detection (19 communities, modularity 0.822) and combined mRNA and protein evidence with Stouffer's method.
+    \item Predicted protein levels for 11,459 genes (OLS plus a GPU random forest in RAPIDS cuML) and reported overfitting on held-out data openly (train Pearson 0.807 vs test 0.545); cut RAM from 8.2 to 5.5 GB.
+    \item Made the run reproducible: fixed a hash-randomisation bug (unordered sets replaced by sorted lists) and made the $\sim$282-minute GPU training resumable in chunks on a free T4.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{BitcoinForecasting -- LSTM Forecasting}
+\hfill \url{https://github.com/Thiruvel-AP/BitcoinForecasting}
+\\
+\textit{Python, TensorFlow/Keras, scikit-learn, TensorFlow Serving}
+\begin{itemize}
+    \item Needed a forecast that respected time order: trained an LSTM with cyclic date encoding, tuned it with a custom TimeSeriesSplit grid search, and served it through a TensorFlow Serving REST API.
+\end{itemize}
+
+\vspace{6pt}
+
+\noindent\textbf{Banking Customer Churn}
+\hfill \url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}
+\\
+\textit{R, tidymodels, XGBoost, SMOTE}
+\begin{itemize}
+    \item Built an XGBoost classifier in R (tidymodels) to find which bank customers were likely to leave, tuned it with a two-stage Bayesian hyperparameter search, handled class imbalance with SMOTE inside the modelling recipe and judged it with MCC.
+\end{itemize}
+
+\section{Education}
+\vspace{2pt}
+\noindent\textbf{University of Bristol, UK} \hfill \textbf{Sep 2025 - Sep 2026} \\ MSc Data Science (Statistical Computing \& Empirical Methods, Large-Scale Data Engineering, AI \& Text Analytics, Data Science Methods \& Practices, Visual Analytics); dissertation with AstraZeneca affiliation (GeneTraceAI)
+\vspace{6pt}
+\\
+\textbf{St.\ Joseph's College of Engineering} \hfill   \textbf{Sep 2019 - Apr 2023} \\ B.E.\ Electrical \& Electronics Engineering, First Class with Distinction
+
+\section{Certifications \& Achievements}
+\vspace{2pt}
+
+\begin{itemize}
+    \item Anthropic MCP Advanced \& Introductory, 2026 \,$\cdot$\, AWS Academy Cloud Foundations, 2025
+\end{itemize}
+
+\end{document}

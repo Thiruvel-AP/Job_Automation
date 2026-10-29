@@ -285,8 +285,9 @@ scoring:
   cv_project_bullets: [2, 3]  # [min, max] bullets per project (a project with fewer shows them all)
   cv_projects_max: 3          # the fill may add projects (best JD match first) up to this many, after every role has its maximum bullets; never over 3
   profile_words: [100, 150]   # the CV profile's word range (the Document rules): sentences are added from the fact bank until it has 100 words, never past 150; narrower is allowed, wider is not
-  cv_linespread: 1.03         # the reference CV's linespread (config/reference/cv_style_reference.tex); raised only when the fact bank has no more content to fill page 2 (the font never shrinks below 11pt)
-  cv_linespread_max: 1.09     # ceiling for that raise, in steps of 0.02 (three steps above the reference 1.03)
+  cv_linespread: 1.02         # the reference CV's linespread (templates/reference/cv_reference_2026-10-29.tex); raised only when the fact bank has no more content to fill page 2 (the font never shrinks below 11pt)
+  cv_linespread_max: 1.10     # ceiling for that raise, in steps of 0.02 (four steps above the reference 1.02; headings are 11pt since v2.3, so a short bank needs the room)
+  cv_projects_need_url: false # a project with no public GitHub URL is left off the CV (v2.3); false = it may be shown without a link (tests set true where they test it)
   max_skill_groups: 5         # grouped skill rows besides the pinned `skills.core` row; the groups least relevant to the JD are left off
   bullet_dedupe_jaccard: 0.6  # a bullet whose word-set overlap (Jaccard) with an already chosen bullet reaches this is not added
   letter_max_words: 250
@@ -304,26 +305,29 @@ letter:
   # sentences each built from one selected bullet's own words, and the call to action (its problem phrase = the hook entry's terms, lower
   # case). draft = the model drafts one (legacy, under every letter check and the same our/we/"I help <Company>"/linked-noun-phrase guard).
   mode: "off"                # off | draft | hook | company (quoted: an unquoted off is the boolean false in YAML)
-  # company = ONE 360-420 word letter in five paragraphs (tailoring/company_letter.py), the middle three written by the cover_letter model
-  # (Groq gpt-oss-120b) under two guards: P1 the hook's letter line word for word (no hook: the role family's profile line), P2 why this
-  # company (the job ad is the only source: every claim must be backed by a phrase of the ad, no company number the ad lacks, no invented
-  # name), P3 and P4 the two best-matching fact-bank bullets each tied to a named requirement of the ad (every number, tool and organisation
-  # must be in those bullets), P5 closing_hook. One redraft after a rejection; a second rejection = no letter, and review says why.
-  company_words: [300, 500]  # company mode: [low, high], the whole letter must come to at least `low` and at most `high` words (300 <= low <= high <= 500;
-                             # scoring.letter_max_words_company can lower the top); the model is asked for the middle of the range
+  # company = ONE short letter in up to seven paragraphs (tailoring/company_letter.py, v2.3). Code writes P1 (the ad's or the company page's
+  # problem phrase, a semicolon, the hook's letter line), P2 (the hook fact's `limits` / `result`, word for word; left out when the fact
+  # bank has neither), P6 (the honest gap, below) and P7 (the 20-minute ask). The cover_letter model writes P3 (the ad's 2 or 3 required
+  # skills, shown through a second CV project or bullet), P4 (one sentence per role: employer, what I owned, one number) and P5 (why this
+  # team, quoting the ad), every number, tool and organisation checked against the bullets and the ad. One redraft after a rejection; a
+  # third rejection = no letter, and review says why.
+  company_words: [200, 320]  # company mode: [low, high] BODY words (greeting, sign-off and name not counted), 200 <= low <= high <= 320;
+                             # scoring.letter_max_words_company can lower the top; the model is asked for the middle of the range
+  honest_gap: false          # company mode: P6, "One honest gap: <what I have> only, never <ad requirement>, so <it> is where I will learn."
+                             # In auto mode it is included only when this is true; in review it is shown apart and you keep ([k]) or drop ([d]) it
   # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
-  greeting_hook: "Dear {company}{team} team"
+  greeting_hook: "Hi {company}{team} team"    # hook and company modes, when the contact's name is not known (with a name: "Hi <first name>,")
   greeting_agency: "Hi {company} team"
   # hook mode: the call to action, written here and never by the model. {problem} = the hook's problem clause (what the ad hires for).
   closing_hook: "Could we take 20 minutes to talk about {problem}?"
   # {company} = job company; {team} = " <team name>" when the JD names one (leading space included), else "".
   greeting: "Hi {company}{team} team"
-  greeting_fallback: "Dear {company} hiring team"     # used when the JD names no team
+  greeting_fallback: "Hi {company} team"     # used when the JD names no team (never "Dear Sir/Madam")
   # The closing question is written here, never by the model: a small model's call to action was the most common reason a
   # letter was rejected. {team} = the team name the JD gives (no leading space).
   closing: "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?"
   closing_fallback: "Could we find twenty minutes to talk about where I could contribute first at {company}?"     # no team named
-  signoff: "With regards"
+  signoff: "Regards"
   # What a letter becomes when all 3 drafts were rejected by the checks. none = no letter is produced: no PDF, review shows
   # "NO LETTER", and approving needs the words 'no letter' (regenerate with `l`, write your own, or apply without).
   # template = the deterministic template letter is written instead, flagged as a fallback in review.

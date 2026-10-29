@@ -32,26 +32,26 @@ def _team(name):
 # ---------------------------------------------------------------- greeting
 def test_settings_carry_the_letter_block(settings):
     assert settings["letter"] == {
-        "greeting": "Hi {company}{team} team", "greeting_fallback": "Dear {company} hiring team",
+        "greeting": "Hi {company}{team} team", "greeting_fallback": "Hi {company} team",
         "closing": "Could we find twenty minutes to talk about where I could contribute first on the {team} team at {company}?",
         "closing_fallback": "Could we find twenty minutes to talk about where I could contribute first at {company}?",
-        "greeting_hook": "Dear {company}{team} team", "greeting_agency": "Hi {company} team",     # hook mode (letters.py)
+        "greeting_hook": "Hi {company}{team} team", "greeting_agency": "Hi {company} team",     # hook mode (letters.py)
         "closing_hook": "Could we take 20 minutes to talk about {problem}?",
-        "signoff": "With regards", "on_failure": "none", "mode": "draft", "company_words": [300, 500]}   # draft: the fixture turns the letter on
+        "signoff": "Regards", "on_failure": "none", "mode": "draft", "company_words": [200, 320], "honest_gap": False}   # draft: the fixture turns the letter on
 
 
 def test_greeting_uses_the_team_when_there_is_one_and_the_fallback_when_not(settings):
     assert letter_greeting(settings, "Lendable", " AI Accelerator") == "Hi Lendable AI Accelerator team"
     assert letter_greeting(settings, "Lendable", "AI Accelerator ") == "Hi Lendable AI Accelerator team"
-    assert letter_greeting(settings, "Lendable", "") == "Dear Lendable hiring team"
+    assert letter_greeting(settings, "Lendable", "") == "Hi Lendable team"
 
 
 @pytest.mark.slow
-def test_letter_without_a_team_says_dear_hiring_team_and_signs_off_from_settings(settings, fb_fixture, job, spy_llm):
+def test_letter_without_a_team_says_hi_company_team_and_signs_off_from_settings(settings, fb_fixture, job, spy_llm):
     rep, _ = _run(settings, fb_fixture, job, spy_llm())
     text = pdf_text(Path(rep["letter_pdf"]))
-    assert "Dear Northwind Health AI hiring team," in text
-    assert "With regards," in text and "Kind regards" not in text
+    assert "Hi Northwind Health AI team," in text and "Dear" not in text
+    assert "Regards," in text and "Kind regards" not in text and "With regards" not in text
 
 
 @pytest.mark.slow
@@ -66,7 +66,7 @@ def test_letter_with_a_team_named_in_the_jd_says_hi_team(settings, fb_fixture, j
 def test_a_team_the_jd_never_mentions_is_dropped(settings, fb_fixture, job, spy_llm):
     rep, _ = _run(settings, fb_fixture, job, spy_llm(_team("Phantom Squad")))
     assert rep["team"] == ""
-    assert "Dear Northwind Health AI hiring team," in pdf_text(Path(rep["letter_pdf"]))
+    assert "Hi Northwind Health AI team," in pdf_text(Path(rep["letter_pdf"]))
 
 
 @pytest.mark.slow

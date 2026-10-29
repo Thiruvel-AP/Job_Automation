@@ -100,34 +100,36 @@ EVIDENCE:
 {evidence}"""
 
 
-# letter.mode: company (tailoring/company_letter.py): the model writes P2, P3 and P4 only. P1 (the hook's letter line, or the role family's
-# profile line) and P5 (letter.closing_hook) are written in code. {body_words} is the budget for the three together.
-COMPANY_LETTER_SYSTEM = """You write the middle three paragraphs of a cover letter. Return JSON: {"paragraphs": ["P2", "P3", "P4"]} and nothing else.
-The first paragraph (OPENING) and the closing question are written elsewhere: do not write, repeat or answer them.
+# letter.mode: company (tailoring/company_letter.py, v2.3): the model writes P3, P4 and P5 only. P1 (the ad's problem phrase and the hook's letter
+# line), P2 (the hook fact's limits / result), P6 (the honest gap) and P7 (the 20-minute ask) are written in code. {body_words} is the budget
+# for the three together.
+COMPANY_LETTER_SYSTEM = """You write three paragraphs of a short cover letter: P3, P4 and P5. Return JSON: {"paragraphs": ["P3", "P4", "P5"]} and nothing else.
+The letter has seven named paragraphs (the PARAGRAPH TABLE of the user message). P1 hook, P2 what it shows, P6 an honest gap and P7 the
+question are written elsewhere: do not write, repeat or answer them. A name in the reader's feedback ("shorten P4") means that paragraph.
 Rules:
-- P2, WHY THIS COMPANY, is EXTRACTIVE. The user message numbers the ad's ABOUT / ROLE SENTENCES. P2 quotes or closely follows {min_used} or
-  {max_used} of them: keep their own nouns, names and numbers and change only what the grammar needs (the company's "we" / "our" becomes its
-  name or "you"). Connecting words about the role ("the role involves", "this team", "you will") are fine; every noun, name, number, product
-  or customer in P2 must come from the JOB AD. Outside knowledge is forbidden: no funding, size, customers, markets, mission, history or
-  people that the ad does not state. Write no number about the company unless the ad states it. Name no person and no team that the ad
-  does not name. Refer to the company by name or as "you"; never "we" or "our".
-- P3 is written from the "P3 EVIDENCE" and P4 from the "P4 EVIDENCE" of the user message: each is the two best bullets for ONE
-  requirement of the ad. Each paragraph names that REQUIREMENT and shows the two bullets meeting it, in the first person ("I").
-  Use only what the evidence fields say: no number, tool, organisation, client or outcome that is not in them, and no number from
-  the ad. A field marked (not stated) is unknown: say nothing about it. method is a set of tools, not a sentence: never copy it
+- P3, JD-MATCHED SKILLS (about {p3_words} words): name the 2 or 3 ad skills listed for P3 and show them through the bullets given for P3, in
+  the first person ("I"). Use only what the evidence fields say: no number, tool, organisation, client or outcome that is not in them, and no
+  number from the ad. A field marked (not stated) is unknown: say nothing about it. method is a set of tools, not a sentence: never copy it
   back as a list of three or more names.
+- P4, EXPERIENCE ROLL-UP (about {p4_words} words): ONE sentence per role listed for P4, in that order. Each sentence names the employer, says what
+  I owned, and gives one number from that role's bullet. Use only the evidence given for P4.
+- P5, WHY THIS TEAM (ONE sentence, about {p5_words} words): what the role or programme puts me next to (people, systems, the problem), written
+  EXTRACTIVELY: the user message numbers the ad's ABOUT / ROLE SENTENCES; quote or closely follow one of them, keeping its own nouns, names and
+  numbers and changing only what the grammar needs (the company's "we" / "our" becomes its name or "you"). Every noun, name, number, product
+  or customer in P5 must come from the JOB AD. Outside knowledge is forbidden. Refer to the company by name or as "you"; never "we" or "our".
 - P3 and P4 name only the ALLOWED VOCABULARY of the user message: the tools and methods of the chosen bullets and the ad's skill terms.
-- Together P2, P3 and P4 are {body_words} words (the whole letter must come to between {lo} and {hi}). Plain, confident British English.
-  No filler words: {filler}. Never say "we", "our" or "I help <company>".
+- Together P3, P4 and P5 are {body_words} words (the whole letter must come to between {lo} and {hi}). Plain, confident British English.
+  Short sentences. No filler words: {filler}. Never say "we", "our" or "I help <company>".
 - Never mention: {deny}."""
 
 COMPANY_LETTER_USER = """ROLE: {title} at {company}
-OPENING (already written, do not repeat it): {opening}
-CLOSING (already written, do not repeat it): {closing}
-JOB AD (the only source for P2):
+PARAGRAPH TABLE (P1, P2, P6 and P7 are already written: do not repeat them; you write P3, P4 and P5):
+{table}
+
+JOB AD (the only source for P5):
 {ad}
 
-ABOUT / ROLE SENTENCES (P2 quotes or closely follows 2 or 3 of these):
+ABOUT / ROLE SENTENCES (P5 quotes or closely follows one of these):
 {about}
 
 ALLOWED VOCABULARY (the only tools, methods and skills P3 and P4 may name):
@@ -135,6 +137,6 @@ ALLOWED VOCABULARY (the only tools, methods and skills P3 and P4 may name):
 NEVER USE (filler): {filler}
 
 {evidence}
-REQUIREMENTS (each paragraph names the one given for it):
+REQUIREMENTS (what each paragraph names):
 {requirements}
 """

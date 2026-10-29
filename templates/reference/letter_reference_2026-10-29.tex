@@ -1,0 +1,69 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+
+\usepackage[
+    paperwidth=210mm,
+    paperheight=297mm,
+    margin=0.55in
+]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+% Color Definitions
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+
+% Link Setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+}
+
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+     {\color{headernavy}\small\textbf{Graduate Machine Learning Engineer \,$|$\, 4-bit QLoRA fine-tune of Llama 3.1 8B on one Colab T4: pre-registered +5\,pp test, 16.2\% to 27.3\% exact-answer accuracy \,$|$\, PyTorch, Python}}\\[0.2cm]
+    \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \ $|$ \ +44 7741 016954 \ $|$ \
+    \url{https://www.linkedin.com/in/thiruvel-a-p/} \ $|$ \
+    \url{https://thiruvel-ap.github.io/PersonalPortfolio/}
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Hi Graphcore team,
+
+Graphcore builds AI systems from silicon to software, where models must fit real memory limits; my Llama 3.1 8B fine-tune had to fit one Colab T4, and a 4-bit QLoRA adapter on 0.52\% of the parameters lifted exact-answer accuracy from 16.2\% to 27.3\% against a pre-registered +5\,pp criterion, scored on a held-out golden test set.
+
+Then I traced the result and could explain it: accuracy among finished answers was 50.0\% vs 51.9\%, so the gain came from more answers finishing inside the 384-token cap, not stronger reasoning. I reported it that way.
+
+In MSc Data Science deep-learning labs I built PyTorch neural networks (MLP, CNN on CIFAR-10, ResNet50 transfer learning, LSTM, GRU) with Adam optimisers. On a GPU project I made about 282 minutes of T4 training resumable and cut RAM from 8.2 to 5.5 GB.
+
+At AstraZeneca I owned a Python LLM agent from raw data to AWS Lambda, tested by a three-tier, $\sim$65-test evaluation; at 180 Degrees Consulting I led the architecture for a five-person team and explained the prototype in a live demo.
+
+The Graduate Programme appeals because it puts machine learning experiments next to the people who build the chips and systems they run on.
+
+One honest gap: I have trained on one GPU only, never multi-GPU or distributed, so scaling is where I will learn.
+
+Could we spend 20 minutes on which model-efficiency problems a first-year Machine Learning Engineer would own, and what the technical assessment covers?
+
+\vspace{0.5cm}
+
+Regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

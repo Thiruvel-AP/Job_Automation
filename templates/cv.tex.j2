@@ -26,6 +26,7 @@
 \emergencystretch=3em
 
 % entry heading: org (left) dates (right) / role (left) location (right)
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline
 \newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
 
 \begin{document}
@@ -36,11 +37,10 @@
   {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
 \BLOCK{set headline = hook_headline|default('') or id.headline|default('')}
 \BLOCK{if headline}
-  {\fontsize{11}{13}\selectfont\color{headernavy} \VAR{headline|hook_tex(hook_number|default(''))}}\\[2pt]
+  {\color{headernavy}\small\textbf{\VAR{headline|hook_tex(hook_number|default(''), 'num')}}}\\[2pt]
 \BLOCK{endif}
-  \VAR{id.location|e} \,$|$\, \href{mailto:\VAR{id.email}}{\VAR{id.email|e}}\BLOCK{if id.get('phone')} \,$|$\, \href{tel:\VAR{id.phone|replace(' ', '')}}{\VAR{id.phone|e}}\BLOCK{endif}\\[1pt]
-  \BLOCK{for k in ['linkedin', 'github', 'portfolio'] if id.get('links') and id.links.get(k)}\href{\VAR{id.links[k]|urlesc}}{\VAR{id.links[k]|urlshow|e}}\BLOCK{if not loop.last} \,$|$\, \BLOCK{endif}\BLOCK{endfor}\BLOCK{if id.get('status_line')}\\[1pt]
-  \VAR{id.status_line|map('e')|join(' \\,$|$\\, ')}\BLOCK{endif}
+  {\small \VAR{id|contact_line}}\BLOCK{if id.get('status_line')}\\[1pt]
+  \VAR{id.status_line|map('e')|join(' \\,\\textbar\\, ')}\BLOCK{endif}
 
 \end{center}
 

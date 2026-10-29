@@ -456,6 +456,10 @@ education:
 certifications:
 - AWS Academy Cloud Foundations, Nov 2025
 - Master's Prize for Applied Data Science, Mar 2026
+languages:
+- {name: English, level: professional working}
+- Tamil
+research_focus: Graph neural networks for multi-omics integration with learnable adjacency matrices, and how to report their limits plainly to non-specialists.
 deny_terms:
 - kubernetes
 - terraform

@@ -55,7 +55,7 @@ def _letter_ctx(fb, minimal=False):
         return {"id": {"name": "Min Imal", "location": "Bristol, UK", "email": "min@example.org"},
                 "company": "Acme", "paragraphs": paras}
     return {"id": fb["identity"], "company": "Acme", "paragraphs": paras, "date": "03 October 2026",
-            "greeting": "Hi Acme AI Accelerator team", "signoff": "With regards"}
+            "greeting": "Hi Acme AI Accelerator team", "signoff": "Regards"}
 
 
 @pytest.mark.parametrize("minimal", [False, True], ids=["full", "minimal"])
@@ -84,11 +84,11 @@ def test_letter_header_shows_address_and_falls_back_to_location(fb_fixture, tmp_
     with_addr = pdf_text(compile_tex(env().get_template("cover_letter.tex.j2").render(**_letter_ctx(fb_fixture)),
                                      tmp_path / "a", "letter"))
     assert "12 Analytical Row" in with_addr and "linkedin.com/in/" in with_addr and "+44 7700 900123" in with_addr      # the CV's contact line (Document rules, B2)
-    assert "Hi Acme AI Accelerator team," in with_addr and "With regards," in with_addr
+    assert "Hi Acme AI Accelerator team," in with_addr and "Regards," in with_addr
     minimal = pdf_text(compile_tex(env().get_template("cover_letter.tex.j2").render(**_letter_ctx(fb_fixture, True)),
                                    tmp_path / "b", "letter"))
     assert "Bristol, UK" in minimal
-    assert "Dear Acme hiring team," in minimal and "Kind regards," in minimal
+    assert "Hi Acme team," in minimal and "Regards," in minimal and "Dear" not in minimal
 
 
 # ---------------------------------------------------------------- the real loop: shrink to one page

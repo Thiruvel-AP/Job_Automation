@@ -1,10 +1,10 @@
 """A letter never reuses another letter's body (Document rules, B5).
 
-The body of a letter (P2 to P4: why this company, the two evidence paragraphs) is compared with every earlier letter the pipeline knows:
+The body of a letter (P2 to P5: what it shows, the skills, the roll-up, why this team) is compared with every earlier letter the pipeline knows:
 the letters of the job folders under paths.outputs (their report.json) and the cover letters in the archive folders (paths.applications_auto
 and the user's own paths.applications, which are only ever READ). The measure is the Jaccard overlap of 5-word shingles. At LIMIT (0.30) or
 more the model is asked once more with `do not reuse these sentences: ...`; a second copy means no letter, and the reason names the letter
-it copies. The greeting, the sign-off, sentence 1 (the hook) and the closing question are not counted.
+it copies. The greeting, the sign-off, P1 (the hook), P6 (the honest gap) and P7 (the ask) are not counted.
 """
 from __future__ import annotations
 
@@ -79,9 +79,19 @@ def _outputs(root: Path, skip: set[str]) -> Iterable[Earlier]:
             letter = json.loads((folder / "report.json").read_text(encoding="utf-8")).get("letter") or {}
         except (OSError, ValueError, AttributeError):
             continue
-        paragraphs = letter.get("paragraphs") or []
-        if letter.get("status") == "ok" and len(paragraphs) >= 5:
-            yield Earlier(folder.name, " ".join(str(p) for p in paragraphs[1:4] if p))
+        if letter.get("status") == "ok" and body_of(letter):
+            yield Earlier(folder.name, " ".join(body_of(letter)))
+
+
+REUSE_NAMES = ("P2", "P3", "P4", "P5")
+
+
+def body_of(letter: dict) -> list[str]:
+    """The paragraphs the check compares: P2 to P5 of a v2.3 letter (by its `names`); P2 to P4 of an older five-paragraph letter; [] when there is no body."""
+    paragraphs, names = [str(p) for p in letter.get("paragraphs") or []], list(letter.get("names") or [])
+    if names and len(names) == len(paragraphs):
+        return [p for n, p in zip(names, paragraphs) if n in REUSE_NAMES and p]
+    return [p for p in paragraphs[1:4] if p] if len(paragraphs) == 5 else []
 
 
 def _archive(root: Path, read_pdf: Callable[[Path], str]) -> Iterable[Earlier]:

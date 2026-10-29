@@ -615,7 +615,7 @@ def _finish_letters(db: DB, s, fb: dict, llm, only: str | None = None) -> None:
                   "  the remaining jobs stay letter_pending; re-run after the budget resets (00:00 UTC).")
             return
         try:
-            rep = regenerate_letter(dict(job), fb, llm, s, load_report(job))
+            rep = regenerate_letter(db.job_with_contact(job), fb, llm, s, load_report(job))
             if rep["letter"]["status"] == "pending":
                 print(f"  still pending: {letter_summary(rep['letter'])}")
                 continue
@@ -680,7 +680,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
         elif why_not or (re_extract and "analysis" in job.keys() and job["analysis"]):
             print(f"  keywords: extracting again ({why_not or '--re-extract'})")
         try:
-            rep = tailor_job(dict(job), fb, llm, s, s.path("outputs"), frozen, one_page=one_page,
+            rep = tailor_job(db.job_with_contact(job), fb, llm, s, s.path("outputs"), frozen, one_page=one_page,
                              on_extracted=lambda rec, jid=job["id"]: db.update_job(jid, analysis=rec), boost=boost, company_page=page)
             f = rep["final"]
             pending = rep["letter"]["status"] == "pending"      # no provider may write the letter now: the CV is done

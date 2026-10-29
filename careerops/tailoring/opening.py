@@ -1,8 +1,9 @@
-"""The letter's opening (Document rules, B4): sentence 1.
+"""The letter's opening, P1 (Document rules, B4): the company's problem first, then the proof.
 
-    <a fact of the fact bank with a number>, the kind of work your ad describes: "<a phrase of the ad>".
+    <Company> is hiring for "<a phrase of the ad>"; <a fact of the fact bank with a number, ending with how it was validated>.
 
-The fact is the hook's `letter_line` (the user's own sentence, word for word). It must carry a number that the fact bank itself holds, so a hook
+The fact is the hook's `letter_line` (the user's own sentence, word for word, only its first letter lower-cased when it starts with "At" or
+the like). It must carry a number that the fact bank itself holds, so a hook
 whose line has none (`h_forecast`) cannot open a letter: the next eligible hook is used (its proof bullet must be on this job's CV), else the
 strongest numbered bullet of the CV, followed by the role family's profile line. A line that starts "I am writing to apply" and the like is
 never used. The problem the company is hiring to solve is a verbatim clause of the job ad (preferred), else of the company's OWN careers page
@@ -31,7 +32,15 @@ _BULLET = re.compile(r"^\s*(?:[-*•●▪]|\d+[.)])\s*")
 _CLAUSE = re.compile(r"\s*(?:[,;:]|\s[-–—]\s)\s*")
 _LEADING = re.compile(r"^(?:and|or|but|so|which|that|while|also|then|including)\s+", re.I)
 _TO_TAIL = re.compile(r"\b(?:to|so that|in order to)\s+(?=\w)", re.I)
-LEAD = {"ad": "the kind of work your ad describes", "company_page": "the kind of work your own careers page describes"}
+LEAD = {"ad": '{company} is hiring for "{phrase}"', "company_page": '{company} describes its work as "{phrase}"'}
+_SENTENCE_START = frozenset("""at in on during for across through with using after before as when while over within throughout from""".split())
+
+
+def lower_first(fact: str) -> str:
+    """A fact that starts with a sentence-opening word ("At AstraZeneca I built ...") continues after the semicolon in lower case; "I ..." and a
+    name stay as they are."""
+    first = fact.split(" ", 1)[0]
+    return fact[:1].lower() + fact[1:] if first.lower() in _SENTENCE_START and first[:1].isupper() else fact
 
 
 def _norm(text: str) -> str:
@@ -180,11 +189,13 @@ def build(job: dict, fb: dict, kws: Sequence[Keyword], hk: Hook | None, chosen: 
         out.error = ("no problem phrase to quote: the job ad has no clause about the work" +
                      (", and the company page holds none" if page_text.strip() else ", and there is no company page text (the careers page was not fetched)"))
         return out
-    core = fact.rstrip(".!? ")
-    out.sentence = f'{core}, {LEAD[source]}: "{phrase}".'
+    from .letter_rules import i_clause
+
+    core = lower_first(fact.rstrip(".!? ")) if kind == "hook" else i_clause(fact.rstrip(".!? "))
+    out.sentence = f"{LEAD[source].format(company=job['company'], phrase=phrase)}; {core}."
     out.paragraph = out.sentence if kind == "hook" else " ".join(x for x in (out.sentence, " ".join(family_line.split())) if x)
     out.fact_kind, out.hook_id, out.bullet_id, out.problem, out.source = kind, hid, bid, phrase, source
-    out.number = bank_numbers(out.sentence, fb)[0]
+    out.number = (bank_numbers(core, fb) or bank_numbers(out.sentence, fb))[0]       # the fact's own number, not one the quoted phrase happens to hold
     return out
 
 

@@ -35,6 +35,7 @@ from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text,
 from ..tailoring.scorer import Keyword, score
 from ..tailoring import company_letter
 from ..tailoring import letters as letters_mod
+from ..tailoring import tailor as tailor_mod
 from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
 from ..tailoring import provisional as prov
 from . import addfacts, gaps, judge, letter_edit
@@ -118,7 +119,7 @@ def fill_lines(rep: dict, settings=None) -> list[str]:
     if fill.get("sections"):
         bits.append("optional sections: " + ", ".join(fill["sections"]))
     ls = ctx.get("linespread") or fill.get("linespread")
-    base = float(settings["scoring"].get("cv_linespread", 1.03)) if settings is not None else 1.03     # the reference CV's
+    base = float(settings["scoring"].get("cv_linespread", 1.02)) if settings is not None else 1.02     # the reference CV's
     if ls and float(ls) > base + 1e-9:
         bits.append(f"linespread {float(ls):.2f}")
     short = target is not None and f["page2_fill"] < target
@@ -200,20 +201,33 @@ def letter_lines(rep: dict) -> list[str]:
 
 
 def company_letter_lines(letter: dict) -> list[str]:
-    """letter.mode: company: the word count against the accepted range and, for P2 (why this company), each sentence with the ad sentences it
-    drew from, so that the claims about the employer can be read against the ad. [] for a letter of another mode."""
+    """letter.mode: company: the word count against the accepted range, the paragraphs it has (P1 to P7), and, for P5 (why this team), each sentence
+    with the ad sentences it drew from, so that the claim about the employer can be read against the ad; the honest-gap paragraph (P6) is shown on its
+    own with whether it is in the letter. [] for a letter of another mode."""
     if letter.get("mode") != "company" or letter.get("status") != "ok":
         return []
     out = [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {'-'.join(str(n) for n in letter.get('accepted') or company_letter.DEFAULT_RANGE)}) | opening: {letter.get('hook_source')} | requirements named: "
            + "; ".join(", ".join(r) for r in letter.get("requirements") or [])]
-    out.append("  P2 (why this company) drew from the job ad:")
-    for row in letter.get("p2_sources") or []:
+    out.append("  paragraphs: " + " ".join(letter.get("names") or []) + ("  (P2 left out: the fact bank has no limits or result for the hook)"
+                                                                          if "P2" not in (letter.get("names") or []) else ""))
+    out.append("  P5 (why this team) drew from the job ad:")
+    for row in letter.get("p5_sources") or []:
         out.append(f"    - {row['claim']}")
         out += [f"        ad: {s}" for s in row["ad"]] or ["        ad: (no single ad sentence; the check passed on a run of them)"]
-    if letter.get("p2_used"):
-        out.append("  P2 quotes or closely follows these About / role sentences of the ad:")
-        out += [f"    [{i}] {s}" for i, s in enumerate(letter["p2_used"], 1)]
-    return out
+    if letter.get("p5_used"):
+        out.append("  P5 quotes or closely follows these About / role sentences of the ad:")
+        out += [f"    [{i}] {s}" for i, s in enumerate(letter["p5_used"], 1)]
+    return out + honest_gap_lines(letter)
+
+
+def honest_gap_lines(letter: dict) -> list[str]:
+    """The honest-gap paragraph (P6) on its own: its text, whether it is in the letter, and the keys that change it. [] when the letter has none."""
+    gap = letter.get("gap") or {}
+    if letter.get("mode") != "company" or letter.get("status") != "ok" or not gap.get("paragraph"):
+        return []
+    state = "IN the letter" if "P6" in (letter.get("names") or []) else "NOT in the letter"
+    return [f"  P6 (honest gap, {state}): {gap['paragraph']}",
+            "    [k]eep it in the letter   [d]rop it from the letter"]
 
 
 def ats_lines(rep: dict) -> list[str]:
@@ -540,7 +554,7 @@ def contacts_step(db: DB, job, settings, ask) -> None:
 def regenerate_letter(db: DB, job, rep: dict, fb: dict, llm, settings, feedback: str = "") -> dict:
     """Re-draft the cover letter (review's 'l'); updates report.json, the letter score and the event log. `feedback` = what the person said
     should change (company mode): it goes to the next draft word for word."""
-    rep = _regenerate_letter(job, fb, llm, settings, rep, feedback=feedback)
+    rep = _regenerate_letter(db.job_with_contact(job), fb, llm, settings, rep, feedback=feedback)
     db.update_job(job["id"], letter_score=rep["letter"]["score"])
     db.log(job["id"], "review", {"letter_regenerated": rep["letter"]["status"], **({"choice": rep["letter_choice"]} if rep.get("letters") else {}),
                                  **({"feedback": feedback} if feedback else {})})
@@ -739,13 +753,14 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
 
     while True:
         hook_mode = bool(rep.get("letters"))
+        gap_keys = "kd" if ((rep.get("letter") or {}).get("gap") or {}).get("paragraph") and (rep.get("letter") or {}).get("status") == "ok" else ""
         gap = gaps.build(rep, view(), band, jd=_jd(job)) if rep.get("ats") and gaps.applies(rep, band) else None
         if gap is None:
-            allowed = set(allow)
+            allowed = set(allow) | set(gap_keys)
             menu = "  ".join((HOOK_L if hook_mode and k == "l" else MENU[k]) for k in MENU_ORDER if k in allow and (k != "g" or hook_mode))
             c = ask(f"{menu} > ").strip().lower()
         else:
-            allowed = (set(allow) - {"r"}) | {"r", "f"}
+            allowed = (set(allow) - {"r"}) | {"r", "f"} | set(gap_keys)
             print("\n".join(GAP_MENU))
             more = [(HOOK_L if hook_mode and k == "l" else MENU[k]) for k in GAP_ALSO if k in allow and (k != "g" or hook_mode)]
             if more:
@@ -790,6 +805,19 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 print(f"  note: {note_path(rep)}")
             else:
                 print("  no note.md for this job (it is written when the job is tailored)")
+        elif c in ("k", "d"):
+            pdf, letter, problems = company_letter.set_gap(dict(job), fb, rep, settings, keep=(c == "k"))
+            if problems:
+                print("  P6 not changed: " + "; ".join(problems))
+                continue
+            tailor_mod.install_letter(dict(job), fb, rep, pdf, letter)
+            tailor_mod.save_report(rep)
+            db.update_job(job["id"], letter_score=letter["score"])
+            db.log(job["id"], "review", {"honest_gap": "kept" if c == "k" else "dropped"})
+            job = db.job(job["id"])
+            print(f"  P6 {'kept' if c == 'k' else 'dropped'}: the letter is {letter['words']} words.")
+            print(show())
+            verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "g" and not hook_mode:
             print("  [g] writes the A / B letters again: it is for letter.mode: hook")
         elif c == "l" and hook_mode:

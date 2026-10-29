@@ -61,7 +61,7 @@ career-ops/
 │   │   ├── tailor.py             analyse → select → rephrase → guard → render → band loop → profile, letter
 │   │   ├── profile.py            the CV profile, assembled in code: the hook's profile line + one or two `profile_facts` sentences (no model)
 │   │   ├── grounding.py          cover-letter check: every sentence against its evidence bullet and the JD
-│   │   ├── company_letter.py     `letter.mode: company`: the 300-500 word five-paragraph letter (hook line tied to a quoted clause of the ad, why this company from the ad alone, two evidence paragraphs, close) under a user guard and a company guard
+│   │   ├── company_letter.py     `letter.mode: company`: the 200-320 word letter in up to seven short paragraphs (hook, what it shows, JD skills, roll-up, why this team, optional honest gap, the 20-minute ask) under a user guard and a company guard
 │   │   ├── letters.py            `letter.mode: hook`: the letter ASSEMBLED in code (library letter line + two sentences from two bullets + 20-minute ask), the our/we/linked-phrase guard, relocation line, greeting
 │   │   ├── render.py             Jinja2 → xelatex, page count, pdftotext
 │   │   └── learning.py           M4 ranked skills-gap list
@@ -221,7 +221,7 @@ careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one 
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
-careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 300-500 word five-paragraph letter), in queue order → data/outputs/<job>/ (+ report.json)
+careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
@@ -734,19 +734,27 @@ phrase is the ad's two heaviest keywords the bank can claim). No model writes an
 line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
 `Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
 
-**`company`** writes ONE letter of **300 to 500 words** in five paragraphs (`tailoring/company_letter.py`). The model (the existing `cover_letter`
-task, Groq `openai/gpt-oss-120b`) writes the middle three; code writes the first and the last.
+**`company`** writes ONE short letter of **200 to 320 body words** in up to seven paragraphs, no bullets (`tailoring/company_letter.py`, v2.3). Code writes P1, P2, P6
+and P7; the model (the existing `cover_letter` task, Groq `openai/gpt-oss-120b`) writes P3, P4 and P5 under two guards. The greeting, sign-off and name are not counted.
 
 | | paragraph | source |
 |---|---|---|
-| P1 | the hook | the hook's `letter_line` word for word (it must carry a number the fact bank holds), then a quoted clause of the ad that says the problem the company is hiring to solve; a hook with no number is skipped for the next one, else the strongest numbered bullet of the CV and then the role family's profile line |
-| P2 | why this company | what it does, its product or customers, what this team is hiring to solve: the **job ad alone** (its About / Company section included) |
-| P3, P4 | evidence | each paragraph is written from the **two best fact-bank bullets for ONE named requirement of the ad** (four different bullets in all, never the hook's proof bullet) |
-| P5 | the close | `letter.closing_hook` with the problem phrase from the ad |
+| P1 | hook | `<Company> is hiring for "<a clause of the ad>"; <the hook's letter_line>.` The clause is the ad's own words (else the company's own careers page); the hook's line carries a number the fact bank holds and ends with how it was validated; a hook with no number is skipped for the next one, else the strongest numbered bullet and the family's profile line |
+| P2 | what it really shows | the hook fact's `limits` field, else its `result` field, **word for word** (the hook entry first, then its proof bullet). Left out when the fact bank has neither. Add `limits:` / `result:` to a `hook_library` entry or its proof bullet to get a P2 |
+| P3 | JD-matched skills | the ad's 2 or 3 heaviest skills the CV evidences, shown through a second bullet or project (never the hook's own); P3 must name two of them |
+| P4 | experience roll-up | one sentence per role, the most relevant role first (the hook's), then the next: the employer, what you owned, one number of that role's bullet |
+| P5 | why this team | **one sentence** that quotes or closely follows an About / role sentence of the ad (else of the company page); every claim must be backed by the ad |
+| P6 | one honest gap (optional) | `One honest gap: I have used <X> only, never <Y>, so <Y> is where I will learn.` Y = the heaviest **required** ad keyword the fact bank cannot claim (a tool, platform, language or framework; never a visa, a degree or years; never a deny-listed term); X = a neighbour skill the bank really says (no neighbour: `One honest gap: I have never used <Y>, so it is where I will learn.`) |
+| P7 | the ask | `Could we spend 20 minutes on the first problem the <role> would own, around <the ad's problem>?` (`letter.ask`; with an assessment named in the ad: `, and what the technical assessment covers`) |
 
-The greeting and sign-off are the ones in settings (`letter.greeting_hook` / `greeting_agency`, `letter.signoff`). `letter.company_words` (`[330, 420]`: `[low, high]`, two whole numbers,
-300 <= low <= high <= 420; anything else is refused) is the range the finished letter must come to (the model is asked for the middle of it; `scoring.letter_max_words_company`
-(420) can lower the top), so 250 and 500 are rejected. `scoring.letter_max_words` (250) stays the cap of the other modes.
+The greeting is `Hi <first name>,` when the job has a contact with a name (`careerops contact add`), else `Hi <Company> team,` (`letter.greeting_hook`); the sign-off is `letter.signoff`
+(`Regards,`), a blank line and your full name. `letter.company_words` (`[200, 320]`: `[low, high]`, two whole numbers, 200 <= low <= high <= 320; anything else is refused) is the range
+the **body** must come to (the model is asked for the middle of it; `scoring.letter_max_words_company` can lower the top), so 199 and 321 are rejected. `scoring.letter_max_words` (250) stays the cap of the
+other modes. **Memory, RAM and GB figures** are allowed in the body only when the ad talks about memory, hardware, efficiency, GPUs or edge deployment; they are never in the header or the hook headline.
+**P6** is in the letter only when `letter.honest_gap: true` (the shipped default) or you keep it in review: review shows P6 on its own line with `[k]eep` and `[d]rop`, which re-render the letter
+without asking the model; "drop P6", "keep P6" and "drop P2" in the `l` feedback are read in code, anything else ("shorten P4") goes to the model by name (its prompt carries the paragraph table P1 to P7).
+Beside the PDF the letter is also written as **`letter.txt`** (greeting, paragraphs, sign-off and name as plain text) for a cover-letter text box. The letter's text goes through `render.letter_escape`
+(`% & $ # _ { }` escaped, `~` is `$\sim$`, `+5 pp` is `+5\,pp`).
 A draft is checked and, if a guard rejects it, drafted **once more** with every rejection named; a second rejection means **no letter** and the review
 screen says why (`Letter draft 1 / 2 rejected: ...`, the `NO LETTER` banner and its reason; approving needs `no letter`, as for any lost letter).
 
@@ -776,9 +784,9 @@ alone.
 - **`l` (regenerate)** asks `What should change? (enter = just retry)`. The next draft is handed the previous draft, every guard rejection rewritten as an
   instruction (`remove 'robust'`, `the letter is 288 words, 42 short of the 330 minimum: use more of the detail of bullet p1a`) and what you typed, word for
   word. At most three drafts per `l`. What you typed is kept in `data/letters/feedback.jsonl` (`paths.letter_feedback`: job id, text, date).
-- **`e` (edit)** asks `Edit the [c]v or the [l]etter? (enter = cv)`. `l` opens the letter text in `$EDITOR` (`nano` if unset): five paragraphs separated by a blank
-  line. On save the same guards run. A letter that passes is used. One that fails shows its reasons and is used only if you type `use anyway` in full;
-  Enter edits again and `discard` keeps the old letter. A text that is not five paragraphs is never installed.
+- **`e` (edit)** asks `Edit the [c]v or the [l]etter? (enter = cv)`. `l` opens the letter text in `$EDITOR` (`nano` if unset): one paragraph under each `[P1]` ... `[P7]` label
+  (P2 and P6 may be left out). On save the same guards run. A letter that passes is used. One that fails shows its reasons and is used only if you type `use anyway` in full;
+  Enter edits again and `discard` keeps the old letter. A text without P1, P3, P4, P5 and P7, or with another label, is never installed.
 - **Tokens.** After tailoring, after `l` and at the end of `live` the tokens used today for `cover_letter` are printed per model, and a `WARNING` for every
   provider or model whose daily token budget (`tpd`) has less than `llm.warn_budget_below` (0.2 = 20 %) left. The counts are kept in the database table
   `llm_task_usage`.
@@ -975,7 +983,7 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
   one (Jaccard ≥ 0.6) is never added. Then content is added until page 2 is at least `scoring.min_fill_page2` (0.96, within two lines of the bottom margin) full,
   measured from the PDF (y of the last text line on page 2 over the text area), in this order: **experience bullets** (every role up to
   its maximum, by relevance), then **projects** (never more than 3 in all, `scoring.cv_projects_max`; 1–3 bullets each), then the **optional fact-bank sections** (`publications`, `languages`, `research_focus`, in that order), and last
-  the **linespread**, raised from the reference's 1.03 in steps of 0.02 up to `scoring.cv_linespread_max` (1.09) and stopped at the first value
+  the **linespread**, raised from the reference's 1.02 in steps of 0.02 up to `scoring.cv_linespread_max` (1.10) and stopped at the first value
   that fills page 2. Nothing is invented and the font is never shrunk below 11pt; if the content runs out the CV ends short
   and says so. The shrink step runs only when the CV is over 2 pages. `cv_pages`, `page2_fill` and `fill`
   (`added`, `sections`, `linespread`, `reached`) go into `report.json`; the review screen has a `Fill:` line (page-2 fill against
@@ -1165,16 +1173,16 @@ failures are logged) and the judge gate's auto-approval, and it **always** block
 - **Skills** no skill twice: the canonical key is lower case with hyphens, dots and plurals stripped and a few aliases (`AWS Lambda` = `Lambda`, `TensorFlow/Keras` covers `TensorFlow`,
   `Kubernetes (AWS EKS)` covers `Kubernetes`). Generated groups keep the first occurrence; a repeat in your verbatim family `skill_lines` is reported, never rewritten:
   `SKILLS repeat "Lambda" in <A> and <B>: fix in fact_bank.yaml families.<name>.skill_lines`.
-- **Projects** at most 3, each its own sub-heading (name, stack line, URL, 1–3 bullets). A URL prints only when the project has `github:` and is not `public: false` (the key is optional;
-  `careerops doctor` warns when it is missing).
+- **Projects** at most 3, each its own sub-heading (name on the left and its URL on the right, an italic stack line, 1–3 bullets). A URL prints only when the project has `github:` and is not `public: false` (the key is optional;
+  `careerops doctor` warns when it is missing). With `scoring.cv_projects_need_url: true` (the shipped value, v2.3) a project that prints no URL is **left off** the CV; `false` shows it without a link.
 - **Work experience first** the fill raises every role to its maximum bullets, then adds projects (up to 3), then the optional sections, then linespread. A short page 2 says `fact bank has no
   more experience bullets`; nothing is invented.
 - **Certifications** a bulleted list, one item per certification.
-- **Letter** (`letter.mode: company`) 300 to 500 words (`letter.company_words`); the CV's name, contact line and hook headline in its header; P3/P4 only from bullets this CV prints, a skill it
-  names must be in the CV's Skills or bullets, at least 60 % of the body's sentences cite a bullet (an internal tag, `report.json` → `letter.cites`, never printed); sentence 1 is the hook's
-  fact (with a number from your bank) and a quoted clause of the ad, else of the employer's own careers page (one fetch of `companies.careers_url`, robots.txt obeyed, stored as
+- **Letter** (`letter.mode: company`) 200 to 320 body words (`letter.company_words`); the CV's name, contact line (full URLs) and hook headline in its header; P3/P4 only from bullets this CV prints, a skill it
+  names must be in the CV's Skills or bullets, at least 60 % of the sentences of P1 to P4 cite a bullet (an internal tag, `report.json` → `letter.cites`, never printed); P1 is a quoted clause of the ad, a semicolon and the hook's
+  fact (with a number from your bank), the clause from the ad, else from the employer's own careers page (one fetch of `companies.careers_url`, robots.txt obeyed, stored as
   `company_page.txt` with the URL and date; never news, LinkedIn or a job board); "I am writing to apply" and the like are rejected; the body is compared with every earlier letter in
-  `outputs` and the archive folders (5-word shingles, Jaccard): 0.30 or more is redrafted once with `do not reuse these sentences: ...`, a second copy is no letter.
+  `outputs` and the archive folders (P2 to P5; 5-word shingles, Jaccard): 0.30 or more is redrafted once with `do not reuse these sentences: ...`, a second copy is no letter.
 - **`careerops doctor`** reports profile words available in each family, skill repeats in the family lines, and projects with `github:` but no `public:`.
 
 ### After you apply: replies, follow-ups, interview prep

@@ -30,7 +30,8 @@ def test_the_contact_line_is_one_function_and_both_templates_print_it():
     line = render.contact_line(IDENT)
     assert line in cv_tex() and line in letter_tex()
     assert line.startswith("Bristol, UK") and "mailto:ada@example.org" in line and "tel:+447700900123" in line
-    assert line.count("textperiodcentered") == 5                                          # location, email, phone, linkedin, github, Portfolio
+    assert line.count("textbar") == 5 and "textperiodcentered" not in line                # location | email | phone | linkedin | github | portfolio (A2)
+    assert r"\href{https://github.com/ada}{https://github.com/ada}" in line and "Portfolio" not in line          # the full URLs as the link text (A2, B2)
 
 
 def test_the_contact_line_leaves_out_what_the_bank_does_not_have():

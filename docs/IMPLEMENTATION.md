@@ -1566,3 +1566,35 @@ each time, never anyone else's.
    letter whose opening cannot be built (no numbered fact on the CV, no phrase in the ad or page) is "no letter" with the reason; a skill-repeat check covers families' verbatim lines (the bank's generated rows are deduped, not
    reported); the doc-check rules are not applied to `--one-page` CVs or to letter modes other than `company`. **Unverified:** `live --dry-run --max 1 --retailor` on real data (never run on real data), the real careers-page fetch,
    and the real fact bank, which needs `profile.sentences` and the `public:` flags before it can pass.
+
+
+## 5aq. v2.3 — the new CV layout and the new cover letter (29 Oct) — **done** (offline tests: fixture bank, MockLLM, xelatex; no network; never run on the real bank, the real model or a real form)
+
+1. **CV layout** (`templates/cv2.tex.j2`, the default two-page template; the one-page `cv.tex.j2` shares the header): the preamble is the user's current CV (`templates/reference/cv_reference_2026-10-29.tex`)
+   line for line: Carlito, geometry 0.6in with 0.5in top and bottom, `headernavy` section titles (11pt bold, uppercase, `\titlerule`), `linkblue` links, itemize `noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt,
+   parsep=1pt`, no hyphenation, `\linespread{1.02}`. Four additions only (pinned in `test_cv_template.py`): `needspace`, the `muted` grey of the role macros, a zero paragraph indent, the macros. Header: name (`\LARGE`
+   bold), the hook headline (`\small` bold `headernavy`), the location and contact line with the **full URLs**, then `identity.status_line` of the fact bank joined by a bar (printed only when the bank has it:
+   the task's `applicant.right_to_work` does not exist as a string in `applicant.yaml`, whose `visa.by_country.GB.right_to_work` is a boolean, so the existing bank line is the source and nothing is invented).
+   A project's URL is `\hspace*{\fill}`-aligned to the right (a plain `\hfill` after `\\` is discarded at a line start); every date range uses `cv.date_separator` (an en dash). `render.DOT` is a bar (`\textbar`,
+   Carlito: the PDF still has one font family). `layout.py` finds headings by their text (they are body-size now) and the headline between the name and the e-mail line. `scoring.cv_linespread` 1.02, `cv_linespread_max` 1.10
+   (four steps: the smaller headings leave page 2 emptier, so a short bank needs the room), `tailor.LEADING_PT` follows.
+2. **Projects need a URL** (`scoring.cv_projects_need_url`, **true** in `config/settings.yaml`, false in the test copy so the old fixtures keep their projects): `tailor.cv_bank` returns a copy of the bank without a project that
+   prints no URL (`render.url_shown`), so selection, the fill and the hook never see it; `doccheck.project_problems` fails a CV that has one. **This changes what CLAUDE.md said** ("shown without a link"); the CLAUDE.md
+   Document rules are updated to match. Set the key to false to get the old behaviour back.
+3. **Letter** (`tailoring/company_letter.py`, rewritten; `opening.py`, `letter_feedback.py`, `letter_reuse.py`, `letters.py`, `review/letter_edit.py`, `review/workflow.py`, `doccheck.py`): seven named paragraphs
+   (README table). `Plan` holds P1, P2, P7, the P6 candidate, and the bullets of P3 (`skill_group`) and P4 (`role_group`); `check(parts, ...)` takes the paragraphs by name; `letter["names"]` / `["parts"]` /
+   `["gap"]` / `["dropped"]` / `["cites"]` / `["p5_sources"]` are new report keys (old five-paragraph letters are still read by `letter_reuse.body_of`). `letter.company_words` `[200, 320]` counts the body; `letter.honest_gap`
+   (true shipped, false in the test copy); `letter.ask` / `ask_plain` / `ask_assessment` are optional templates with built-in defaults; `letter.signoff` `Regards`; greeting `Hi <first name>,` (`db.job_with_contact`
+   puts the best stored contact's name on the job dict; titles are skipped, an address is not a name) else `Hi <Company> team,`; `letter.greeting_fallback` is `Hi {company} team`.
+   `render.letter_escape` (`~` -> `$\sim$`, `+5 pp` -> `+5\,pp`, a straight `"` stays straight) is the letter template's filter; `letter.txt` is written beside the PDF (`company_letter.write_text`).
+   Review: `[k]eep` / `[d]rop` for P6 (`company_letter.set_gap` re-renders without a model call and keeps the body inside the word range); `l` feedback flags `drop P2` / `drop P6` / `keep P6` are read in code; `e` opens
+   `[P1]` ... `[P7]` labelled paragraphs. `doccheck.letter_problems` judges the new letter (words 200-320, P1/P3/P4/P5/P7 present, cites, hardware figures, opening, reuse of P2-P5).
+4. **Choices where the task was silent or did not match the repository.** (a) The task names `templates/letter.tex.j2` and `cv.tex.j2`; the files are `cover_letter.tex.j2` and `cv2.tex.j2` (the default CV). (b) The fact bank's
+   `hook_library` entries have no `limits` / `result` keys and the bullets only `result`: P2 reads `limits` first and falls back to `result` as `The result, as measured: ...` (arrows become "to"); with neither, P2 is left
+   out. Adding `limits:` to a hook entry is the way to get the "the gain came from X, not Y" paragraph. (c) P6's "what he has" is a neighbour skill from `possible_evidence` (a claim `p6_problems` checks against the bank); when
+   there is none the sentence says only that the skill has never been used. (d) P4's roles: the hook's most relevant role, then the role whose best bullet ranks next. (e) The model writes P3-P5; P1, P2, P6 and P7 are code.
+   (f) The letter keeps `greeting_hook`'s `{team}` ("Hi Anaplan Functional Analytics team").
+5. **Tests**: `test_company_letter.py` rewritten (86), `test_letter_{edit,feedback,evidence,evidence_cv,opening,reuse}.py` and the letter part of `test_doccheck.py` adapted, `test_cv_template.py` (new pinned preamble, header,
+   sizes), `test_cv_typography.py`, `test_cv_v2.py`, `test_two_page.py`, `test_render.py`, `test_letter_header.py`, `test_letter_format.py`, `test_hook_letters.py`; the fixture bank `fact_bank_two_page.yaml` gained `languages` and
+   `research_focus` and `_bank()` of `test_cv_template.py` distinct spare bullets (the smaller headings left page 2 emptier). **Unverified:** `careerops live --dry-run --max 1 --retailor` on real data (never run on real data; the
+   stand-in script prints the same checks with MockLLM), the real model's P3 to P5 wording, and the real fact bank, which needs `limits:` on its hook entries to get a P2.

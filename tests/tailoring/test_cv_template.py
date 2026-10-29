@@ -8,6 +8,7 @@ fill order up to a page 2 that is filled to within two lines of the bottom margi
 Snapshot tests render the fictional fixture profile (tests/fixtures/profile/fact_bank.yaml) with xelatex and read the PDF back
 with pdftotext / pdffonts. A missing tool makes them fail, not skip: a silent skip would hide a broken pipeline. No network,
 no model (MockLLM), never the user's real profile or reference files."""
+import copy
 import html
 import re
 import subprocess
@@ -26,11 +27,11 @@ from careerops.tailoring.scorer import Keyword
 from careerops.tailoring.selection import fill_order, select_cv, selected_ids, TWO_PAGE
 
 FIX = Path(__file__).parent.parent / "fixtures"
-REFERENCE = ROOT / "config" / "reference" / "cv_style_reference.tex"     # the user's file, git-ignored: compared when it is there
-SEPARATORS = ("|", "\u00b7", ",", ";")
+REFERENCE = ROOT / "templates" / "reference" / "cv_reference_2026-10-29.tex"     # the user's current CV (v2.3): compared when it is there
+SEPARATORS = ("|", "·", ",", ";")
 
-# The reference's preamble and macros, from \documentclass to \begin{document}, copied here so the test needs no git-ignored file.
-# cv2.tex.j2 renders exactly these lines plus one: \usepackage{needspace} (no heading or entry alone at the foot of a page).
+# The user's current CV preamble (templates/reference/cv_reference_2026-10-29.tex), from \documentclass to \begin{document}, pinned here so the
+# test needs no other file. cv2.tex.j2 renders exactly these lines plus the additions below.
 REFERENCE_PREAMBLE = r"""
 \documentclass[a4paper,11pt]{article}
 
@@ -39,34 +40,32 @@ REFERENCE_PREAMBLE = r"""
 \usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
 \usepackage{titlesec}
 \usepackage{enumitem}
+\usepackage{hyperref}
 \usepackage{xcolor}
-\usepackage[colorlinks=true]{hyperref}
 \usepackage{microtype}
-\usepackage{ragged2e}
 
-% ---- palette: one accent, one ink, one muted grey ----
-\definecolor{navy}{RGB}{12, 83, 166}
-\definecolor{ink}{RGB}{33, 37, 41}
-\definecolor{muted}{RGB}{96, 102, 110}
-\hypersetup{urlcolor=navy, linkcolor=navy}
-\color{ink}
-
-% ---- ragged right, no hyphenation: even word spacing, no split words ----
 \hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
-\setlength{\parindent}{0pt}
-\pagestyle{empty}
-\linespread{1.03}
-\AtBeginDocument{\RaggedRight}
 
-% ---- type scale (ratio ~1.2): body 11 -> headline 12 -> section 13 -> name 22 ----
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
 \titleformat{\section}
-  {\color{navy}\fontsize{13}{15}\selectfont\bfseries\addfontfeature{LetterSpace=6}}
-  {}{0em}{\MakeUppercase}[{\color{navy}\vspace{1pt}\titlerule[0.8pt]}]
-\titlespacing*{\section}{0pt}{9pt}{5pt}
+  {\color{headernavy}\normalsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
 
-\setlist[itemize]{label={\color{navy}\small\textbullet}, leftmargin=1.1em, labelsep=0.45em,
-  itemsep=1.5pt, parsep=0pt, topsep=2pt, partopsep=0pt}
+\titlespacing{\section}{0pt}{8pt}{4pt}
 
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\linespread{1.02}
+"""
+# What cv2.tex.j2 adds: needspace (no heading or entry alone at the foot of a page), the `muted` grey, a zero paragraph indent (the reference writes
+# \noindent by hand) and the macros of the body (role, project, ...). Everything else is the reference, line for line.
+ADDITIONS = (r"\usepackage{needspace}", r"\definecolor{muted}{RGB}{96, 102, 110}", r"\setlength{\parindent}{0pt}")
+MACROS = r"""
 % ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
 \newcommand{\role}[4]{% org, location, dates, title
   \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
@@ -75,8 +74,8 @@ REFERENCE_PREAMBLE = r"""
 \newcommand{\project}[3]{% name, stack, right-hand tag
   \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
 \newcommand{\gh}[1]{\href{#1}{\small GitHub}}
-\newcommand{\badge}[1]{{\color{navy}\small\textbf{#1}}}
-\newcommand{\skillgroup}[2]{{\color{navy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\badge}[1]{{\color{headernavy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{headernavy}\textbf{#1}}\\ #2\par\vspace{3pt}}
 \newcommand{\gap}{\vspace{5pt}}
 \newcommand{\num}[1]{\textbf{#1}}   % result numbers only
 """
@@ -92,14 +91,19 @@ def _preamble(tex: str) -> list[str]:
 
 def _bank() -> dict:
     """The fixture bank with spare experience bullets: since the Document rules the fill raises every role to its maximum before it adds a project
-    (never more than three), so a bank must hold enough experience to fill page 2."""
+    (never more than three), so a bank must hold enough experience to fill page 2. The spare bullets say different things (the fill drops a bullet that
+    repeats an earlier one), two lines each."""
     fb = load_yaml(FIX / "profile" / "fact_bank.yaml")
     spare = {"az": 1, "dc": 2, "fl": 3, "hp": 3, "ra": 3}
+    sentences = ["Reconciled the {t} of {e} against the source ledgers and reported every mismatch to the finance lead before month end.",
+                 "Drafted a one page guide to the {t} of {e} that new starters used in their first week on the team.",
+                 "Automated the monthly refresh of the {t} of {e} with a scheduled script and a checklist for the reviewers.",
+                 "Presented the findings on the {t} of {e} to the steering group and agreed the three actions that followed."]
     topics = ["survey returns", "donor records", "sales ledgers", "weather feeds", "clinic rotas"]
     for e in fb["experience"]:
         for i in range(spare.get(e["id"], 0)):
             e["bullets"].append({"id": f"{e['id']}x{i}", "terms": [],
-                                 "text": f"Prepared analysis {i} of {topics[(i + len(e['id'])) % 5]} for {e['id']} and wrote up the caveats for the team."})
+                                 "text": sentences[(i + len(e["id"])) % 4].format(t=topics[(i + len(e["id"])) % 5], e=e["id"])})
     return fb
 
 
@@ -172,22 +176,27 @@ MINIMAL = dict(id={"name": "A B", "location": "X", "email": "a@b.c"}, profile="p
                education=[], certifications=[])
 
 
-def test_the_preamble_and_macros_are_the_reference_ones_plus_needspace():
+def test_the_preamble_is_the_users_current_cv_plus_the_agreed_additions():
     tex = env().get_template("cv2.tex.j2").render(**MINIMAL)
     want = _lines(REFERENCE_PREAMBLE)
     got = _preamble(tex)
-    assert r"\usepackage{needspace}" in got
-    assert [ln for ln in got if ln != r"\usepackage{needspace}"] == want          # every line, in order; nothing else added
+    macro_at = next(i for i, ln in enumerate(got) if ln.startswith("% ---- building blocks"))
+    head, macros = got[:macro_at], got[macro_at:]
+    assert all(a in head for a in ADDITIONS)
+    assert [ln for ln in head if ln not in ADDITIONS] == want          # every reference line, in order; nothing else added
+    assert macros == _lines(MACROS)
     if REFERENCE.exists():                                                         # and the pinned copy is still the user's file
         ref = REFERENCE.read_text(encoding="utf-8")
         assert _lines(r"\documentclass" + ref.split(r"\documentclass", 1)[1].split(r"\begin{document}")[0]) == want, \
-            "config/reference/cv_style_reference.tex changed: update REFERENCE_PREAMBLE and templates/cv2.tex.j2 together"
-    # the type scale: 22pt name, 13pt headings, 12pt hook headline under the name (only when the job has a hook), 10pt (\small)
-    # contact / stack / modules lines, 11pt body; nothing else is sized
-    sizes = lambda t: set(re.findall(r"\\fontsize\{([\d.]+)\}", t))
-    assert sizes(tex) == {"22", "13"} and "\\fontsize{10" not in tex and "10.5pt" not in tex           # no hook: no 12pt line
+            "templates/reference/cv_reference_2026-10-29.tex changed: update REFERENCE_PREAMBLE and templates/cv2.tex.j2 together"
+    # A1: Carlito, margin 0.6in with top and bottom 0.5in, headernavy for the section titles with a \titlerule, linkblue for links, 1.02, no hyphenation
+    assert r"\setmainfont{Carlito}" in head and r"\definecolor{headernavy}{RGB}{12, 83, 166}" in head and r"\definecolor{linkblue}{RGB}{0, 102, 204}" in head
+    assert r"\linespread{1.02}" in head and r"\titlerule" in tex and r"\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em" in head
+    assert r"noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt" in tex
+    # the type scale: the name is \LARGE, the hook headline (only when the job has a hook) is \small bold headernavy, the body 11pt; nothing is sized by hand
+    assert "\\fontsize" not in tex and r"\LARGE\bfseries" in tex
     hooked = env().get_template("cv2.tex.j2").render(**{**MINIMAL, "hook_headline": "AI Engineer for clinical data"})
-    assert sizes(hooked) == {"22", "13", "12"} and "\\fontsize{10" not in hooked and "10.5pt" not in hooked
+    assert r"{\color{headernavy}\small\textbf{AI Engineer for clinical data}}" in hooked
     assert r"\linespread{1.06}" in env().get_template("cv2.tex.j2").render(**{**MINIMAL, "linespread": 1.06})
 
 
@@ -220,11 +229,43 @@ def test_the_body_uses_the_reference_macros():
     assert r"{\color{muted}\small Deep Learning, NLP; dissertation}\par" in body
     assert r"Course, Anthropic, \textit{Jun 2026}" in body and r"AWS Cloud Foundations, \textit{Nov 2025}" in body
     assert body.count(r"\item", body.index("Certifications")) == 2                  # a list: one item per certification (Document rules, A6)
-    assert r"\fontsize{22}{26}\selectfont\bfseries\color{navy} Ada Lovelace}" in body
-    assert r"\textperiodcentered" in body and "|" not in body                       # middle-dot separators, as in the reference
-    assert r"\color{muted} Right to work in the UK" in body and "Available now" in body
+    assert r"{\LARGE\bfseries Ada Lovelace}" in body
+    assert r"\textbar" in body and "|" not in body                                          # the header's bars (A2)
+    assert r"Right to work in the UK \,\textbar\, Available now" in body                    # the status line, plain, after the contact line (A2)
     sections = re.findall(r"\\section\{([^}]*)\}", body)
     assert sections == ["Profile", "Skills", "Work Experience", "Projects", "Education", "Certifications \\& Achievements"]
+
+
+def test_the_status_line_is_printed_only_when_the_bank_has_it_and_is_never_invented():
+    plain = env().get_template("cv2.tex.j2").render(**MINIMAL).split(r"\begin{document}")[1]
+    assert r"\noindent" not in plain and "Right to work" not in plain and "Available" not in plain                # no status_line: no line
+    with_line = env().get_template("cv2.tex.j2").render(**{**MINIMAL, "id": {**MINIMAL["id"], "status_line": ["Right to Work in UK", "Available to join Immediately"]}})
+    assert r"\noindent{} Right to Work in UK \,\textbar\, Available to join Immediately" in with_line          # the bank's own words, joined by a bar (A2)
+
+
+def test_cv_bank_leaves_off_a_project_that_prints_no_public_url_and_never_touches_the_bank():
+    bank = {"projects": [{"id": "a", "github": "https://github.com/u/a"}, {"id": "b", "github": None}, {"id": "c"},
+                         {"id": "d", "github": "https://github.com/u/d", "public": False}, {"id": "e", "github": "https://github.com/u/e", "public": True}]}
+    before = copy.deepcopy(bank)
+    assert [p["id"] for p in tailor.cv_bank(bank, {"cv_projects_need_url": True})["projects"]] == ["a", "e"]
+    assert tailor.cv_bank(bank, {"cv_projects_need_url": False}) is bank and tailor.cv_bank(bank, {}) is bank       # off (or absent): everything stays
+    assert bank == before
+
+
+@pytest.mark.slow
+def test_a_project_without_a_url_is_dropped_there_are_never_more_than_three_and_each_certification_is_its_own_item(tmp_path):
+    fb = _bank()
+    nourl = [p["name"] for p in fb["projects"] if not p.get("github")]
+    assert nourl                                                                          # the fixture bank has one (the datathon)
+    shown = _tailor(tmp_path / "off", fb)
+    assert any(p["name"] in nourl for p in shown["context"]["projects"] + [{"name": a["name"]} for a in shown["context"]["achievements"]])   # on by default in the tests
+    rep = _tailor(tmp_path / "on", fb, cv_projects_need_url=True)
+    ctx = rep["context"]
+    assert 1 <= len(ctx["projects"]) <= 3 and all(p["github"] for p in ctx["projects"])
+    text = pdf_text(Path(rep["cv_pdf"]))
+    assert not any(name in text for name in nourl) and rep["achievements"] == []
+    certs = text.split("CERTIFICATIONS & ACHIEVEMENTS")[1]
+    assert certs.count("\u2022") == len(ctx["certifications"]) and _tex(rep).count(r"\item", _tex(rep).index("Certifications")) == len(ctx["certifications"])
 
 
 def test_a_project_label_is_its_award_or_its_coursework_tag():
@@ -282,7 +323,7 @@ def test_certification_years_are_italic_and_joined_with_a_middle_dot():
 def test_settings_for_the_fill():
     sc = load_settings()["scoring"]
     assert (sc["max_pages"], sc["min_fill_page2"], sc["cv_projects"], sc["cv_projects_max"]) == (2, 0.96, 3, 3)   # 0.96 = within 2 lines; 3 projects at most
-    assert (sc["cv_linespread"], sc["cv_linespread_max"]) == (1.03, 1.09)               # the reference's, then three steps of 0.02
+    assert (sc["cv_linespread"], sc["cv_linespread_max"]) == (1.02, 1.10)               # the reference's, then four steps of 0.02
 
 
 # ----------------------------------------------------------------------------------------------- fill order (no xelatex)
@@ -345,7 +386,7 @@ def test_snapshot_the_only_font_is_carlito(fixture_run):
 
 URL_FONT = "LMMono10"                                                               # the default \url font: used for the project URLs and nothing else
 SECTIONS = ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]
-SIZES = (22, 13, 12, 11, 10)      # the reference's type scale: name, headings, the hook headline under the name (hook.py), body, contact / stack / modules lines
+SIZES = (17.3, 11, 10)      # the user's current CV: the name (\LARGE), the body and the headings (11pt bold), the hook headline under the name, contact / stack / modules lines (\small)
 _WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</word>')
 
 
@@ -366,27 +407,22 @@ def test_snapshot_section_order_fonts_and_sizes_from_the_bounding_boxes(fixture_
     words = _bbox_words(pdf)
     body = Counter(round(h, 1) for _, _, h, _ in words).most_common(1)[0][0]          # the bullets: by far the most words
     size = lambda h: 11 * h / body                                                    # noqa: E731  (the body is 11pt)
-    # sizes: nothing at any size but 22 / 13 / 12 / 11 / 10, and all five are used
+    # sizes: nothing at any size but the name's, the body's and \small's, and all three are used
     got = {min(SIZES, key=lambda s: abs(s - size(h))) for _, _, h, _ in words}
     assert got == set(SIZES)
-    assert all(abs(size(h) - min(SIZES, key=lambda s: abs(s - size(h)))) < 0.35 for _, _, h, _ in words), \
+    assert all(abs(size(h) - min(SIZES, key=lambda s: abs(s - size(h)))) < 0.5 for _, _, h, _ in words), \
         sorted({round(size(h), 1) for _, _, h, _ in words})
-    by_size = lambda s: [(p, y, t) for p, y, h, t in words if abs(size(h) - s) < 0.35]  # noqa: E731
-    assert [t for _, _, t in by_size(22)] == ["Ada", "Lovelace"]                      # the name, and only the name
+    by_size = lambda s: [(p, y, t) for p, y, h, t in words if abs(size(h) - s) < 0.5]  # noqa: E731
+    assert [t for _, _, t in by_size(17.3)] == ["Ada", "Lovelace"]                    # the name, and only the name
+    small = [t for _, _, t in by_size(10)]
     headline = typography.typeset({"hook_headline": rep["hook"]["headline"]})["hook_headline"]
-    assert " ".join(t for _, _, t in by_size(12)) == " ".join(headline.split())       # the 12pt line under the name is the hook headline
-    assert by_size(12)[0][1] > by_size(22)[-1][1] and by_size(12)[-1][1] < by_size(10)[0][1]        # between the name and the contact line
-    assert len({p for p, _, _ in by_size(12)}) == 1 and len({round(y) for _, y, _ in by_size(12)}) == 1      # one line
-    # section order: the 13pt words, line by line, are the six headings in the reference's order
-    heads, last = [], None
-    for p, y, t in by_size(13):
-        if last and last[0] == p and abs(last[1] - y) < 3:
-            heads[-1] += " " + t
-        else:
-            heads.append(t)
-        last = (p, y)
-    assert heads == SECTIONS
-    assert [t for _, _, t in by_size(10)][:2] == ["Bristol,", "UK"]                    # the contact line is the first 10pt text
+    assert " ".join(small[:len(headline.split())]) == " ".join(headline.split())      # the small bold line under the name is the hook headline
+    assert small[len(headline.split()):][:2] == ["Bristol,", "UK"]                     # then the contact line is the next small text
+    first = [(p, y) for p, y, t in by_size(10)][:len(headline.split())]
+    assert len({p for p, _ in first}) == 1 and len({round(y) for _, y in first}) == 1  # the headline is one line
+    # section order: the six headings, line by line, in the user's order
+    lines = [ln.strip() for ln in pdf_text(pdf).splitlines()]
+    assert [ln for ln in lines if ln in SECTIONS] == SECTIONS
     # fonts: Carlito, regular / bold / italic, and nothing else
     fonts = subprocess.run(["pdffonts", str(pdf)], capture_output=True, text=True, check=True).stdout
     names = [re.sub(r"^[A-Z]{6}\+", "", ln.split()[0]) for ln in fonts.splitlines()[2:] if ln.strip()]
@@ -399,7 +435,7 @@ def test_snapshot_no_line_starts_with_a_separator(fixture_run):
     rep, _ = fixture_run
     text = pdf_text(Path(rep["cv_pdf"]))
     starts = [ln.strip() for ln in text.splitlines() if ln.strip().startswith(SEPARATORS)]
-    assert starts == [] and "·" in text                                              # the header does use them between its items
+    assert starts == [] and "|" in text                                              # the header does use them between its items
 
 
 @pytest.mark.slow
@@ -418,16 +454,16 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
     # a project: bold name with its GitHub URL at the right (\url, 18 Oct), an italic stack line, then bullets
     assert r"\project{Customer churn prediction}{Python, scikit-learn, XGBoost}{\url{https://github.com/ada-lovelace-test/churn\#readme}}" in tex
     assert "{GitHub}" not in tex
-    assert re.search(r"^Customer churn prediction\s+https://github\.com/ada-lovelace-test/churn#readme$", text, re.M)
-    assert re.search(r"^Python, scikit-learn, XGBoost$", text, re.M)
+    assert re.search(r"^\s*Customer churn prediction\s+https://github\.com/ada-lovelace-test/churn#readme$", text, re.M)
+    assert re.search(r"^\s*Python, scikit-learn, XGBoost$", text, re.M)
     # a skill group: the navy label on a line of its own, the items on the lines below it
     assert r"\skillgroup{Machine Learning, Deep Learning \& Statistics}{" in tex and r"\skillgroup{Python, Data Quality \& Cloud}{" in tex
-    assert re.search(r"^Machine Learning, Deep Learning & Statistics$", text, re.M)
-    # the name in navy; short header links
-    assert r"{\fontsize{22}{26}\selectfont\bfseries\color{navy} Ada Lovelace}" in tex and "linkedin.com/in/ada-lovelace-test" in text
-    urls = re.findall(r"https://\S+", text)                                         # only the project URLs: the header links are short
-    assert "https://github.com/ada-lovelace-test/churn#readme" in urls
-    assert all(u.startswith("https://github.com/ada-lovelace-test/") for u in urls)
+    assert re.search(r"^\s*Machine Learning, Deep Learning & Statistics$", text, re.M)
+    # the name LARGE bold; the header links are the full URLs (A2), the projects' follow
+    assert r"{\LARGE\bfseries Ada Lovelace}" in tex and "https://www.linkedin.com/in/ada-lovelace-test/" in text
+    urls = re.findall(r"https://\S+", text)
+    assert "https://github.com/ada-lovelace-test/churn#readme" in urls and "https://github.com/ada-lovelace-test" in urls
+    assert all(u.startswith(("https://github.com/ada-lovelace-test", "https://www.linkedin.com/", "https://ada-lovelace-test.example.org")) for u in urls)
     # certifications: a list, one bullet each (Document rules, A6), the years in italics
     cert = text.split("CERTIFICATIONS & ACHIEVEMENTS")[1]
     assert cert.count("\u2022") == 3 and " \u00b7 " not in cert        # the award project's line, then one bullet for each of the two certifications
@@ -464,13 +500,13 @@ def test_an_explicit_employment_type_freelance_renders_freelance(tmp_path):
 def test_a_year_only_date_is_printed_as_given_not_given_a_month(fixture_run, tmp_path):
     fb = _bank()                                                                          # the MSc in the fixture is "2025 – 2026"
     rep = _tailor(tmp_path, fb)
-    assert re.search(r"^University of Northfield\s+2025 \u2013 2026$", pdf_text(Path(rep["cv_pdf"])), re.M)
+    assert re.search(r"^\s*University of Northfield\s+2025 \u2013 2026$", pdf_text(Path(rep["cv_pdf"])), re.M)
 
 
 def _bank_with(per_job: int, per_project: int, projects: int = 5) -> dict:
     """The fixture bank cut to `per_job` bullets per job and `per_project` per project (`projects` of them): how much content is
-    left to fill page 2 with. Measured with the v2 template: (2, 1) with 5 projects reaches about 69% at the highest
-    linespread; (5, 2) with 3 projects reaches 97% at 1.07, between the reference's 1.03 and the ceiling 1.09 (the fill moves in
+    left to fill page 2 with. Measured with the v2 template: (2, 1) with 5 projects reaches about 70% at the highest
+    linespread; (5, 3) with 3 projects reaches 97% at 1.08, between the reference's 1.02 and the ceiling 1.10 (the fill moves in
     lumps: a step of 0.02 can push an entry onto a third page, and the loop then keeps the last value that fits)."""
     fb = _bank()
     fb["experience"] = [{**e, "bullets": e["bullets"][:per_job]} for e in fb["experience"]]
@@ -501,22 +537,22 @@ def test_optional_fact_bank_sections_are_added_in_order_when_the_bullets_run_out
 
 
 @pytest.mark.slow
-def test_when_content_runs_out_the_linespread_stops_at_1_09_and_the_shortfall_is_reported(tmp_path):
+def test_when_content_runs_out_the_linespread_stops_at_1_10_and_the_shortfall_is_reported(tmp_path):
     rep = _tailor(tmp_path, _bank_with(2, 1))
     fill = rep["fill"]
-    assert fill["linespread"] == 1.09 and fill["reached"] is False and fill["sections"] == []
+    assert fill["linespread"] == 1.10 and fill["reached"] is False and fill["sections"] == []
     assert 0.5 < rep["page2_fill"] < 0.96 and page_count(Path(rep["cv_pdf"])) == 2        # nothing invented to make up the rest
     tex = _tex(rep)
-    assert r"\linespread{1.09}" in tex and "11pt" in tex and set(re.findall(r"\\fontsize\{([\d.]+)\}", tex)) == {"22", "13", "12"}      # the 11pt body is never resized
-    capped = _tailor(tmp_path / "capped", _bank_with(2, 1), cv_linespread_max=1.03)
-    assert capped["fill"]["linespread"] == 1.03 and r"\linespread{1.03}" in _tex(capped)    # the ceiling is a setting
+    assert r"\linespread{1.1}" in tex and "11pt" in tex and "\\fontsize" not in tex      # the 11pt body is never resized
+    capped = _tailor(tmp_path / "capped", _bank_with(2, 1), cv_linespread_max=1.02)
+    assert capped["fill"]["linespread"] == 1.02 and r"\linespread{1.02}" in _tex(capped)    # the ceiling is a setting
     assert capped["page2_fill"] < rep["page2_fill"]
 
 
 @pytest.mark.slow
 def test_the_linespread_is_raised_only_as_far_as_the_fill_needs(tmp_path):
-    rep = _tailor(tmp_path, _bank_with(5, 2, 3))
-    assert 1.03 < rep["fill"]["linespread"] < 1.09 and rep["fill"]["reached"] is True
+    rep = _tailor(tmp_path, _bank_with(5, 3, 3))
+    assert 1.02 < rep["fill"]["linespread"] < 1.10 and rep["fill"]["reached"] is True
     assert rep["page2_fill"] >= 0.96 and page_count(Path(rep["cv_pdf"])) == 2
     assert "\\linespread{" + str(rep["fill"]["linespread"]) + "}" in _tex(rep)
 

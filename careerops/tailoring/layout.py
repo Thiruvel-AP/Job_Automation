@@ -4,15 +4,16 @@
                sentence or semicolon boundary into two bullets, else reworded shorter by the model (tailor.shorten_pass); it is
                never cut mid-clause. A bullet that still does not fit is reported, not trimmed.
   * profile  — at most MAX_PROFILE_LINES lines, the hook sentence first; whole sentences after it are dropped until it fits.
-  * headline — one line (the 12pt line under the name); the tail is shortened a clause at a time, the trailing stack list first.
+  * headline — one line (the small bold line under the name); the tail is shortened a clause at a time, the trailing stack list first.
   * STAR     — an experience or project entry with `situation:` in the fact bank opens its first bullet with "<situation>: ", unless that
                bullet is `verbatim` (never touched) or the entry shows a `situation_included` bullet (it has its own opener: one per role).
   * links    — a project's GitHub URL is printed in the right-hand tag, or on the stack line when the name leaves no room (the template
                decides with TeX's own box widths); `link_problems` checks the rendered PDF's word boxes: every URL is there, inside the
                margin, and touches no other word.
 
-Measuring uses `pdftotext -bbox-layout` (the line boxes the PDF really has): the 12pt headline lines, the lines between the PROFILE
-and SKILLS headings, and the lines of every bullet (a bullet starts at a line whose first word is the bullet dot and goes on
+Measuring uses `pdftotext -bbox-layout` (the line boxes the PDF really has): the headline lines (between the name and the contact line, the
+one with the e-mail), the lines between the PROFILE and SKILLS headings (a heading is a line that is exactly a section name: the headings are
+body-size bold since v2.3), and the lines of every bullet (a bullet starts at a line whose first word is the bullet dot and goes on
 through the indented lines under it). `splits`, the situation opener and the other render-time changes work on a copy of the render
 context, like typography.typeset, so the checks that ran before rendering have seen the original wording.
 """
@@ -53,7 +54,7 @@ class Line:
     page: int
     x: float
     y: float
-    h: float                     # the font's ascent-to-descent box: about the font size in points (22 name, 13 heading, 12 headline, 11 body)
+    h: float                     # the font's ascent-to-descent box: about the font size in points (17 name, 11 heading and body, 10 headline and contact)
     words: list[str] = field(default_factory=list)
 
     @property
@@ -109,8 +110,12 @@ def link_problems(pdf: Path, urls: list[str]) -> list[str]:
     return out
 
 
+HEADINGS = frozenset({"PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "RESEARCH FOCUS", "PUBLICATIONS",
+                      "CERTIFICATIONS & ACHIEVEMENTS", "LANGUAGES"})      # the section titles of templates/cv2.tex.j2 (printed upper case)
+
+
 def _is_heading(line: Line) -> bool:
-    return 12.5 <= line.h < 13.6
+    return line.text.strip() in HEADINGS
 
 
 def _is_body(line: Line) -> bool:
@@ -127,7 +132,9 @@ class Measure:
 def measure(pdf: Path) -> Measure:
     lines = pdf_lines(pdf)
     first_heading = next((i for i, ln in enumerate(lines) if _is_heading(ln)), len(lines))
-    headline = sum(1 for ln in lines[:first_heading] if ln.page == 1 and 11.5 <= ln.h < 12.5)
+    top = [ln for ln in lines[:first_heading] if ln.page == 1]
+    at = next((i for i, ln in enumerate(top) if "@" in ln.text), None)          # the contact line starts with the e-mail's line
+    headline = at - 1 if at is not None and at >= 1 else 0                        # the lines between the name and the contact line
     profile = 0
     for i, ln in enumerate(lines):
         if _is_heading(ln) and ln.text.strip().upper() == "PROFILE":

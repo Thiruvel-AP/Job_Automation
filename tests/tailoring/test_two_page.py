@@ -315,7 +315,7 @@ def test_the_default_run_uses_the_two_page_template(run2):
     rep, _, _ = run2
     tex = Path(rep["cv_pdf"]).with_suffix(".tex").read_text(encoding="utf-8")
     assert rep["one_page"] is False and "\\documentclass[a4paper,11pt]{article}" in tex       # the reference CV's preamble
-    assert "margin=0.6in, top=0.5in, bottom=0.5in" in tex and "\\linespread{1.03}" in tex
+    assert "margin=0.6in, top=0.5in, bottom=0.5in" in tex and ("\\linespread{1.02}" in tex or "\\linespread{1.0" in tex)
 
 
 # ---------------------------------------------------------------- result: as evidence

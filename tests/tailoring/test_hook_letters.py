@@ -53,14 +53,19 @@ def test_the_shipped_default_is_off():
     s = load_settings()
     assert s["letter"]["mode"] == "off" and tailor.letter_mode(s) == "off"
     assert s["letter"]["closing_hook"] == "Could we take 20 minutes to talk about {problem}?"
-    assert s["letter"]["greeting_hook"] == "Dear {company}{team} team" and s["letter"]["greeting_agency"] == "Hi {company} team"
+    assert s["letter"]["greeting_hook"] == "Hi {company}{team} team" and s["letter"]["greeting_agency"] == "Hi {company} team"
 
 
 def test_the_greeting_names_the_team_when_the_ad_does_and_an_agency_gets_hi(settings):
     job = {"company": "Anaplan", "agency": 0}
-    assert L.greeting(job, "Functional Analytics", settings) == "Dear Anaplan Functional Analytics team"
-    assert L.greeting(job, "Functional Analytics team", settings) == "Dear Anaplan Functional Analytics team"
-    assert L.greeting(job, "", settings) == "Dear Anaplan team"
+    assert L.greeting(job, "Functional Analytics", settings) == "Hi Anaplan Functional Analytics team"
+    assert L.greeting(job, "Functional Analytics team", settings) == "Hi Anaplan Functional Analytics team"
+    assert L.greeting(job, "", settings) == "Hi Anaplan team"
+    assert L.greeting({**job, "contact_name": "Priya Nair"}, "Functional Analytics", settings) == "Hi Priya"      # the contact's first name (Document rules, B3)
+    assert L.greeting({**job, "contact": {"name": "Dr. Priya Nair"}}, "", settings) == "Hi Priya"                    # a title is skipped
+    assert L.greeting({**job, "contact_name": "careers@anaplan.com"}, "", settings) == "Hi Anaplan team"            # an address is not a name
+    assert L.greeting({**job, "contact_name": ""}, "", settings) == "Hi Anaplan team"
+    assert L.greeting({"company": "Hays", "agency": 1, "contact_name": "Priya Nair"}, "", settings) == "Hi Hays team"
     assert L.greeting({"company": "Hays", "agency": 1}, "", settings) == "Hi Hays team"
     assert L.greeting({"company": "Hays", "agency": 1}, "Data", settings) == "Hi Hays team"
 
@@ -141,7 +146,7 @@ def test_a_run_makes_letter_a_that_follows_the_rules_and_there_is_no_letter_b(ho
     assert paras[-1].endswith("?") and "20 minutes" in paras[-1] and hk["problem"] in paras[-1]
     assert Path(a["pdf"]).is_file() and Path(a["tex"]).is_file() and a["pages"] == 1
     assert Path(a["pdf"]).name == "Ada Lovelace Cover Letter.pdf"                    # the name that goes to the employer
-    assert "Dear Northwind Health AI team," in pdf_text(Path(a["pdf"]))
+    assert "Hi Northwind Health AI team," in pdf_text(Path(a["pdf"]))
     assert Path(a["pdf"]).parent.name == "A" and b["pdf"] is None
     assert rep["letter_pdf"] == a["pdf"] and Path(rep["letter_pdf"]).parent.parent.parent == Path(rep["out_dir"])
 
@@ -162,7 +167,7 @@ def test_an_agency_gets_hi_and_a_named_team_is_in_the_salutation(hook_settings, 
     llm = llm_(extract_keywords=lambda ctx: {**KEYWORDS, "team": "Clinical Data"})
     jd = job["description"] + "\nYou will join the Clinical Data team.\n"
     rep = run(hook_settings, fb_fixture, {**job, "description": jd}, llm)
-    assert "Dear Northwind Health AI Clinical Data team," in pdf_text(Path(rep["letters"]["A"]["pdf"]))
+    assert "Hi Northwind Health AI Clinical Data team," in pdf_text(Path(rep["letters"]["A"]["pdf"]))
 
 
 @pytest.mark.slow

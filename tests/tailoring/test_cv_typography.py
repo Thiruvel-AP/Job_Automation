@@ -18,7 +18,7 @@ from careerops.tailoring.typography import audit
 
 pytestmark = pytest.mark.slow
 FIX = Path(__file__).parent.parent / "fixtures"
-SCALE = {"contact and stack lines": 10 / 11, "body": 1.0, "hook headline": 12 / 11, "section headings": 13 / 11, "name": 22 / 11}     # 10 / 11 / 12 / 13 / 22pt: the reference's, plus the hook headline under the name (hook.py)
+SCALE = {"contact and stack lines": 10 / 10.95, "body": 1.0, "hook headline": 10 / 10.95, "section headings": 1.0, "name": 17.28 / 10.95}     # the user's current CV (v2.3): \LARGE name, 11pt bold headings and body, \small (10pt) headline, contact and stack lines
 
 
 def _bank() -> dict:
@@ -115,9 +115,9 @@ def test_hyphens_are_closed_up_by_the_table_and_protected_terms_stay(run):
         if hyphenated in kept:
             continue                                       # a JD keyword spelt with the hyphen is left alone, and listed
         assert hyphenated not in flat and closed in flat, hyphenated
-    urls = re.findall(r"https://\S+", text)                                              # only the project URLs (18 Oct); the header links are short
+    urls = re.findall(r"https://\S+", text)                                              # the project URLs (18 Oct) and the header's full URLs (v2.3)
     assert "scikit-learn" in flat and "https://github.com/ada-lovelace-test/churn#readme" in urls
-    assert all(u.startswith("https://github.com/ada-lovelace-test/") for u in urls)
+    assert all(u.startswith(("https://github.com/ada-lovelace-test", "https://www.linkedin.com/", "https://ada-lovelace-test.example.org")) for u in urls)
     assert "linkedin.com/in/ada-lovelace-test" in flat                              # a URL is never touched
     left = {w.casefold() for w in rep["typography"]["hyphens"]}
     assert "scikit-learn" not in left and "start-up" not in left or "start-up" in kept     # protected terms are not "left over"
@@ -140,20 +140,20 @@ def _word_heights(pdf) -> list[tuple[str, float]]:
             re.finditer(r'<word xMin="[\d.]+" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</word>', page1)]
 
 
-def test_the_type_scale_is_the_references_22_13_11_10(run):
+def test_the_type_scale_is_the_users_current_cv(run):
     rep, _, tex = run
     words = _word_heights(rep["cv_pdf"])
     body = Counter(round(h, 1) for _, h in words).most_common(1)[0][0]                    # the bullets: by far the most words
     ratio = lambda w: next(h for t, h in words if t == w) / body                           # noqa: E731
     assert ratio("Ada") == pytest.approx(SCALE["name"], rel=0.03) and ratio("Lovelace") == pytest.approx(SCALE["name"], rel=0.03)
-    assert ratio("PROFILE") == pytest.approx(SCALE["section headings"], rel=0.03)
+    assert ratio("PROFILE") == pytest.approx(SCALE["section headings"], rel=0.03)             # headings are the body's size (bold, with a rule)
     assert ratio("SKILLS") == pytest.approx(SCALE["section headings"], rel=0.03)
     assert ratio("Bristol,") == pytest.approx(SCALE["contact and stack lines"], rel=0.03)  # the contact line
     ratios = {round(h / body, 2) for _, h in words}
     assert all(any(abs(r - s) <= 0.03 for s in SCALE.values()) for r in ratios), ratios   # nothing at any other size
     assert min(ratios) >= 0.90                                                            # the smallest text is 10pt
     assert r"\documentclass[a4paper,11pt]{article}" in tex
-    assert set(re.findall(r"\\fontsize\{([\d.]+)\}", tex)) == {"22", "13", "12"}            # name, headings, the hook headline; the 10pt lines are \small
+    assert "\\fontsize" not in tex and r"\LARGE\bfseries" in tex and r"\small\textbf{" in tex     # \LARGE name, \small bold headline; the 10pt lines are \small
 
 
 def _line_heights(pdf) -> dict[str, float]:
@@ -221,7 +221,7 @@ def test_bold_is_only_the_employer_school_project_name_labels_badges_and_results
     body = tex.split(r"\begin{document}")[1]
     t = typography.typeset(rep["context"])                                                  # what the template was given
     lead = re.compile(r"\\item \\textbf\{[^{}]*}")
-    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln)             # the project-link layout (18 Oct) sets its own bold
+    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln and r"\small\textbf{" not in ln)    # the project-link layout (18 Oct) and the headline set their own bold
     assert len(lead.findall(body)) == len(rep["achievements"]) == 1 and r"\textbf" not in lead.sub("", plain)
     employers = {render.org_parts(e)[0] for e in t["experience"]}
     schools = {render.school_line(e) for e in t["education"]}

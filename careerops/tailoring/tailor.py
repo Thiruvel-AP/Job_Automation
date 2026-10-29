@@ -828,7 +828,7 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
 
 
 # ---- 2d. two pages: keep adding bullets until page 2 is full enough
-LEADING_PT = 13.6 * 1.03                           # the 11pt body of cv2.tex.j2 (11pt article baselineskip x linespread 1.03)
+LEADING_PT = 13.6 * 1.02                           # the 11pt body of cv2.tex.j2 (11pt article baselineskip x linespread 1.02)
 LINE_SHARE = LEADING_PT / (841.89 - 2 * CV2_MARGIN_PT)     # one text line as a share of the text area
 CHARS_PER_LINE = 92                                # a bullet line of the 11pt body, to guess how big a bullet is
 
@@ -1020,7 +1020,7 @@ def required_gaps(gaps: list[str], kws: list[Keyword]) -> list[str]:
 
 
 def letter_greeting(settings, company: str, team: str = "") -> str:
-    """'Hi <company> <team> team' when the JD names a team, else 'Dear <company> hiring team' (settings → letter)."""
+    """'Hi <company> <team> team' when the JD names a team, else 'Hi <company> team' (settings → letter; never 'Dear Sir/Madam')."""
     cfg = settings["letter"]
     team = strip_team_word(team)
     if team:
@@ -1159,8 +1159,8 @@ def letter_mode(settings) -> str:
     """settings letter.mode: "off" = no letter is asked for and no letter call is made; "draft" = the model drafts one from the
     evidence fields (evidence_fields.py), under every letter check; "hook" = two letters, A (strengths) and B (A plus one honest gap),
     each opening with the hook's sentence (letters.py). "hook" needs the hook: with hook.enabled false a "draft" letter is made; with
-    the hook on but none buildable both letters are "none". "company" = one 360-420 word letter (company_letter.py): the hook's letter line
-    (else the role family's profile line), why this company (from the ad alone), two evidence paragraphs, the closing question."""
+    the hook on but none buildable both letters are "none". "company" = one 200-320 word letter in up to seven short paragraphs
+    (company_letter.py): the hook, what it shows, the ad's skills, the roles, why this team, an optional honest gap, the 20-minute ask."""
     raw = settings["letter"].get("mode")
     mode = "off" if raw is None or raw is False else str(raw).strip().lower()          # YAML reads an unquoted `off` as False
     if mode not in LETTER_MODES:
@@ -1330,7 +1330,7 @@ def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_di
         from . import company_letter as CL
 
         pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids,
-                              revise=revise, cv=cv, page=page, header=header)
+                              revise=revise, cv=cv, page=page, header=header, possible=possible)
         return pdf, letter, None
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
@@ -1494,15 +1494,20 @@ def usage_since(llm, start: int) -> dict:
 
 
 def revision_for(settings, rep: dict, feedback: str = "") -> dict | None:
-    """What review's `l` hands the company-letter model besides the ad: the previous draft (the letter's P2-P4, or the last rejected draft when
-    there was no letter), the rejections that go with it, and the reader's feedback. None outside letter.mode: company."""
+    """What review's `l` hands the company-letter model besides the ad: the previous draft (the letter's P3, P4 and P5, or the last rejected draft
+    when there was no letter), the rejections that go with it, the reader's feedback, and the optional paragraphs the person dropped or kept
+    earlier (P2, P6). None outside letter.mode: company."""
     if letter_mode(settings) != "company":
         return None
     old = rep.get("letter") or {}
-    paras = old.get("paragraphs") or []
-    previous = list(paras[1:4]) if len(paras) == 5 else list(old.get("draft_body") or [])
+    parts = old.get("parts") or {}
+    previous = [parts[n] for n in ("P3", "P4", "P5") if parts.get(n)]
+    if len(previous) != 3:
+        previous = list(old.get("draft_body") or [])
     problems = [] if old.get("status") == "ok" else [p for p in old.get("problems") or [] if p != FALLBACK_MARK]
-    return {"previous": previous, "problems": problems, "feedback": feedback}
+    gap = old.get("gap") or {}
+    return {"previous": previous, "problems": problems, "feedback": feedback, "dropped": list(old.get("dropped") or []),
+            "gap_kept": gap.get("included") if gap.get("included") is not None else None}
 
 
 def install_letter(job, fb: dict, rep: dict, pdf, letter: dict, letters: dict | None = None) -> None:
@@ -1638,6 +1643,15 @@ def _letter_cv(ctx: dict) -> dict:
     return cv_from_ctx(ctx)
 
 
+def cv_bank(fb: dict, sc) -> dict:
+    """The fact bank as the CV may draw on it. With scoring.cv_projects_need_url (v2.3) a project that prints no public GitHub URL (none in the bank, or
+    `public: false`) is left off the CV: the returned bank is a copy without it, the bank itself is never touched."""
+    if not sc.get("cv_projects_need_url"):
+        return fb
+    keep = [p for p in fb.get("projects", []) if url_shown(p)]
+    return fb if len(keep) == len(fb.get("projects", [])) else {**fb, "projects": keep}
+
+
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
                one_page: bool = False, on_extracted: Callable[[dict], None] | None = None,
                boost: Iterable[str] | None = None, company_page: Callable[[dict, Path], str] | None = None) -> dict[str, Any]:
@@ -1713,6 +1727,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
+    fb = cv_bank(fb, sc)
     band = tuple(sc["band"])
     lo, hi = band
     one_page = one_page or sc["max_pages"] <= 1                  # --one-page, or a settings file that asks for one page

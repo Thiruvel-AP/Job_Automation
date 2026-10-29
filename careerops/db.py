@@ -220,6 +220,14 @@ class DB:
     def job(self, job_id: str) -> sqlite3.Row | None:
         return self.conn.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
 
+    def job_with_contact(self, job) -> dict:
+        """The job as a plain dict plus `contact_name`: the name of its best stored contact (user, hunter, jd, company_site), '' when there is none.
+        The cover letter greets that person by first name; without one it greets the company's team."""
+        row = self.conn.execute(
+            "SELECT name FROM contacts WHERE job_id=? AND TRIM(COALESCE(name, '')) <> '' "
+            "ORDER BY CASE source WHEN 'user' THEN 0 WHEN 'hunter' THEN 1 WHEN 'jd' THEN 2 ELSE 3 END, id LIMIT 1", (job["id"],)).fetchone()
+        return {**dict(job), "contact_name": str(row["name"]).strip() if row else ""}
+
     def log(self, job_id: str, stage: str, detail: Any = "") -> None:
         if not isinstance(detail, str):
             detail = json.dumps(detail, default=str)

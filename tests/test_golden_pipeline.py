@@ -102,12 +102,12 @@ def test_the_hook_came_from_the_library_and_names_the_numbered_bullet_of_the_mos
 
 
 @pytest.mark.slow
-def test_headline_a_12pt_line_under_the_name_with_the_number(run):
+def test_headline_a_small_bold_line_under_the_name_with_the_number(run):
     rep, *_ = run
     hk = H.Hook.from_dict(rep["hook"])
     tex = Path(rep["cv_pdf"]).with_suffix(".tex").read_text(encoding="utf-8")
-    m = re.search(r"\\fontsize\{12\}\{14\}\\selectfont\\color\{navy\}\s*(.+?)\}\\\\", tex)
-    assert m, "no 12pt navy headline line in the generated CV"
+    m = re.search(r"\\color\{headernavy\}\\small\\textbf\{(.+?)\}\} \\\\", tex)
+    assert m, "no small bold headernavy headline line in the generated CV"
     headline = _plain(m.group(1))
     assert NUMBER in headline and len(headline) <= H.HEADLINE_MAX and headline == _flat(hk.headline)
     lines = [_flat(x) for x in pdf_text(Path(rep["cv_pdf"])).splitlines() if x.strip()]
@@ -150,7 +150,7 @@ def test_sentence_one_of_the_letter_is_the_library_line_with_the_number(run):
     assert letter["status"] == "ok", (letter["reason"], letter["problems"])
     first = re.split(r"(?<=[.!?])\s+", letter["paragraphs"][0], maxsplit=1)[0]
     assert NUMBER in first and letter["paragraphs"][0] == hk.letter_sentence == LIBRARY[0]["letter_line"]
-    assert NUMBER in _flat(pdf_text(Path(letter["pdf"])))                              # and it is in the letter PDF itself
+    assert NUMBER in _flat(pdf_text(Path(letter["pdf"]))).replace("\u223c", "~")      # and it is in the letter PDF itself (the letter prints "~" as the math tilde, v2.3 B6)
 
 
 @pytest.mark.slow
