@@ -4,7 +4,7 @@ and a tenant that disallows /wday/cxs/ is skipped; one request a second per host
 N Days Ago" become posted_at; "30+ Days Ago" is tier 3. A 422, or a redirect to community.workday.com/maintenance-page or /wday/drs/outage, is transient: retried
 next run, never "zero jobs". No network: fake `get` / `post`."""
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from netfake import Resp
@@ -17,6 +17,13 @@ from careerops.discovery.robots import RobotsCache
 
 TODAY = date(2026, 10, 27)
 NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
+
+
+def ago(days: int) -> str:
+    """The date `days` before TODAY: what the parser must give, whatever the real day is."""
+    return (TODAY - timedelta(days=days)).isoformat()
+
+
 URL = "https://acme.wd3.myworkdayjobs.com/en-US/External_Careers"
 DESC = "<p>You will build forecasting models for retailers.</p><ul><li>Python</li><li>Statistics</li></ul>" + "<p>We value curiosity and clear writing.</p>" * 40
 
@@ -68,18 +75,23 @@ def test_a_site_survives_being_a_board_slug():
 
 # ------------------------------------------------------------------ "Posted N Days Ago"
 @pytest.mark.parametrize("text,expected", [
-    ("Posted Today", "2026-10-27"),
-    ("Posted Yesterday", "2026-10-26"),
-    ("Posted 2 Days Ago", "2026-10-25"),
-    ("Posted 1 Day Ago", "2026-10-26"),
-    ("Posted 29 Days Ago", "2026-09-28"),
-    ("posted today", "2026-10-27"),
-    ("  Posted   3   days ago ", "2026-10-24"),
-    ("Posted 30+ Days Ago", "2026-09-27"),                       # at least 30 days: dated 30 days back, which is tier 3 whatever the real day was
-    ("Posted 45+ Days Ago", "2026-09-12"),
+    ("Posted Today", 0),
+    ("Posted Yesterday", 1),
+    ("Posted 2 Days Ago", 2),
+    ("Posted 1 Day Ago", 1),
+    ("Posted 29 Days Ago", 29),
+    ("posted today", 0),
+    ("  Posted   3   days ago ", 3),
+    ("Posted 30+ Days Ago", 30),                       # at least 30 days: dated 30 days back, which is tier 3 whatever the real day was
+    ("Posted 45+ Days Ago", 45),
 ])
 def test_posted_on_becomes_a_date(text, expected):
-    assert workday.posted_on(text, TODAY) == expected
+    assert workday.posted_on(text, TODAY) == ago(expected)
+
+
+def test_posted_on_counts_from_the_day_it_is_given_not_from_the_real_one():
+    assert workday.posted_on("Posted Today", date(2001, 2, 3)) == "2001-02-03"
+    assert workday.posted_on("Posted 2 Days Ago", date(2001, 3, 1)) == "2001-02-27"
 
 
 @pytest.mark.parametrize("text", ["", None, "Posted recently", "Today", "Posted Last Week", "gestern"])
@@ -213,7 +225,7 @@ def test_a_posting_has_the_description_from_the_detail_the_public_address_and_th
     (p,) = workday.board_postings(board(), fetcher(wd), queries=["x"], today=TODAY)
     assert (p.company, p.title, p.location, p.ext_id) == ("Acme", "Data Scientist", "London, United Kingdom", "R1")
     assert p.url == "https://acme.wd3.myworkdayjobs.com/en-US/External_Careers/job/London/Data-Scientist_R1"
-    assert p.posted_at == "2026-10-25" and p.country == "United Kingdom"
+    assert p.posted_at == ago(2) and p.country == "United Kingdom"
     assert "forecasting models" in p.description and "<p>" not in p.description and "Python" in p.description
     assert wd.pages() == ["https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/External_Careers/job/London/Data-Scientist_R1"]
 
@@ -410,7 +422,7 @@ def test_discover_writes_inbox_ads_for_the_matching_uk_postings_only(settings, d
     written = {c.title: c for c, _ in d.run.written}
     assert set(written) == {"Data Scientist", "Machine Learning Engineer"}
     ds = written["Data Scientist"]
-    assert ds.company == "Acme" and ds.posted == "2026-10-27" and ds.posted_source == "workday.postedOn" and ds.apply_kind == "workday"
+    assert ds.company == "Acme" and ds.posted == TODAY.isoformat() and ds.posted_source == "workday.postedOn" and ds.apply_kind == "workday"
     assert ds.url == "https://acme.wd3.myworkdayjobs.com/en-US/External_Careers/job/London/Data-Scientist_R1"
     assert freshness.tier({"posted_at": written["Machine Learning Engineer"].posted, "posted_at_source": written["Machine Learning Engineer"].posted_source,
                            "first_seen": "2026-10-27T11:00:00+00:00"}, NOW) == 3

@@ -387,7 +387,8 @@ class BoardCache:
             def keep(p: ats_mod.Posting) -> bool:
                 c = posting_candidate(board, p)
                 return cand.family_of(c, self.settings) is not None and cand.uk_ok(c, self.settings)
-            posts = workday_mod.board_postings(board, self.fetcher, keep=keep, **workday_mod.options_for(self.settings, board))
+            posts = workday_mod.board_postings(board, self.fetcher, keep=keep, today=self.clock().date(),
+                                               **workday_mod.options_for(self.settings, board))
         else:
             posts = ats_mod.board_postings(board, self.fetcher)
         self.put(board, posts)
@@ -534,7 +535,7 @@ class Discover:
         self.run.notes += self.known.notes
         self.fb = fb
         self.registry = registry_mod.load(settings)
-        self.cache = BoardCache(settings, fetcher)
+        self.cache = BoardCache(settings, fetcher, clock=lambda: self.today)          # "Posted Today" is relative to the run's day
         self.index = boards_mod.BoardIndex(settings)                 # one for the run: boards.json is written whole
         self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards(), index=self.index)
         self.first_seen = firstseen.FirstSeen(settings, persist=not dry_run)
