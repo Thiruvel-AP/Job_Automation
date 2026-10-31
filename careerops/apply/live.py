@@ -157,8 +157,10 @@ class State:
 class Live:
     def __init__(self, db: DB, settings, hooks: Hooks, *, max_jobs: int = 5, dry_run: bool = False,
                  resume_cmd: str = "careerops live", out: Callable[[str], None] = print, retailor: bool = False,
-                 only: Path | None = None, fresh: bool = False, require_approval: bool = False):
+                 only: Path | None = None, fresh: bool = False, require_approval: bool = False,
+                 job_filter: Callable[[Path], str | None] | None = None):
         self.db, self.s, self.h, self.retailor = db, settings, hooks, retailor
+        self.job_filter = job_filter                    # region / size gate: the reason a file is left alone this session (None = work on it)
         self.require_approval = require_approval        # the command's default: work only on the ads you approved (careerops shortlist), not the whole inbox
         self.fresh = fresh                              # `live --fresh`: tier 0 only (posted at most 24 h ago); the rest stays in the inbox
         self.only = only                                # `live --url`: work on this one inbox file, leave the rest
@@ -279,6 +281,19 @@ class Live:
 
             return shortlist.approved_files(self.s)
         return [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]
+
+    def _gated(self, files: list[Path]) -> list[Path]:
+        """Leave alone (untouched, still approved) the files the region / size gate turns away; say which and why."""
+        if self.job_filter is None:
+            return files
+        keep = []
+        for f in files:
+            why = self.job_filter(f)
+            if why:
+                self.out(f"  left alone: {f.name}: {why}")
+            else:
+                keep.append(f)
+        return keep
 
     def _locate(self, name: str) -> Path:
         """Where the JD file called `name` is now: the inbox, else the approved folders."""
@@ -412,7 +427,7 @@ class Live:
         self._ask_unconfirmed()
         if not self.dry_run and self.only is None and (why := self._daily_block()):
             raise StopSession(why, 0)                           # at the cap nothing more is tailored or applied to today
-        files = ([self.only] if self.only is not None else self._by_priority(self._source_files()))
+        files = ([self.only] if self.only is not None else self._by_priority(self._gated(self._source_files())))
         if self.fresh and not files and self.only is None:
             self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
         if not files and self.require_approval:

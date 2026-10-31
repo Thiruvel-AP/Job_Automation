@@ -11,6 +11,11 @@ the ones you approve go to data/jds/approved/<date>/, and `careerops live` reads
    [x] skips every job in the list that you did not approve · [q] quits.
 Nothing is tailored here, and nothing is sent anywhere.
 
+Region and size (v2.4): an ad outside the chosen region(s) (discovery/region.py) is PARKED, never skipped: it is not scored or offered, and a later
+`--region` brings it back. After the other filters the company size of each ad (discovery/size.py) is worked out and the sizes in the queue are
+shown before you choose: `sme` / `large` keep that bucket and list the size-unknown ads under [u] (they count towards the daily limit only when you press
+u); `sme-first` / `large-first` order by T + 0.3 for the preferred bucket and drop nobody; `both` changes nothing. [i] prints the evidence of each line.
+
 Repeats: an ad already approved (waiting in data/jds/approved/), skipped, applied to, closed, or parked is never offered again. Every list you were asked
 about is logged in data/jds/shortlist_log.jsonl (times_shown per job); an ad shown in PARK_AFTER lists with no decision is parked: it stays in the inbox but is
 only counted ("parked: N"). `careerops unskip --shortlist` brings skipped and parked ads back. With nothing new since the last list, no list is printed.
@@ -19,15 +24,18 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Sequence
 
 from .. import targeting as targeting_mod
 from ..apply import decided, volume
 from ..db import DB
 from . import applykind, liveness, triage
+from . import region as region_mod
 from . import register as sponsors
+from . import size as size_mod
 from .http import Fetcher
 
 APPROVED = "approved"
@@ -36,6 +44,7 @@ LOG = "shortlist_log.jsonl"
 PARK_AFTER = 3                                  # lists an ad may be shown in without a decision before it is parked
 SKIP_MARK = "(user, shortlist)"
 SKIP_REASON = f"skipped {SKIP_MARK}: skipped at the shortlist, not offered again"
+SIZE_FIRST_BONUS = 0.3                          # T added for the preferred bucket by `sme-first` / `large-first`
 
 
 def approved_root(settings) -> Path:
@@ -58,6 +67,8 @@ class Row:
     t: triage.Triage
     kind: str
     shown: int = 0                              # lists this job was in before this one (shortlist_log.jsonl)
+    region: region_mod.Match | None = None      # in / unknown (an out ad is parked before it becomes a Row)
+    size: size_mod.Size | None = None           # None when the size was not asked for (no resolver)
 
     @property
     def name(self) -> str:
@@ -71,7 +82,18 @@ class Row:
         age = "date unknown" if self.t.age_days is None else f"{self.t.age_days:.0f} d"
         seen = f" (shown {self.shown}×)" if self.shown else ""
         return (f"{n:>2}. {self.name} | {age} | {self.t.text()} | have: {', '.join(self.t.have[:HAVE_SHOWN]) or '-'} | "
-                f"lack: {', '.join(self.t.lack[:LACK_SHOWN]) or '-'} | {self.kind}{seen}")
+                f"lack: {', '.join(self.t.lack[:LACK_SHOWN]) or '-'} | {self.kind}{seen}{self.tags()}")
+
+    def tags(self) -> str:
+        """` [SME·small] [region?]`: the size and the unknown region of the line (nothing for what was not asked)."""
+        got = ([f"[{self.size.tag}]"] if self.size is not None else []) + ([f"[{region_mod.FLAG}]"] if self.region and self.region.flag else [])
+        return (" " + " ".join(got)) if got else ""
+
+    def evidence(self, n: int) -> str:
+        """What [i] prints: the evidence behind the size and the region of the line."""
+        bits = ([f"size {self.size.tag}: {self.size.evidence or 'no evidence'}"] if self.size is not None else []) + \
+               ([f"region {self.region.verdict}: {self.region.evidence}"] if self.region is not None else [])
+        return f"  {n:>2}. {self.name}: " + (" | ".join(bits) or "nothing recorded")
 
 
 @dataclass
@@ -88,6 +110,15 @@ class Plan:
     parked: list[str] = field(default_factory=list)                          # (company | role) of the inbox ads parked earlier
     new: int = 0                                                             # offered rows never shown before
     last_shown: datetime | None = None                                       # when the last list was shown to you
+    selection: tuple[str, ...] | None = None                                 # the region(s) the list was built for (None: no region filter)
+    region_parked: list[str] = field(default_factory=list)                   # (company | role) of the ads outside the region: parked (region), not skipped
+    region_unknown: int = 0                                                  # ads kept although the place did not say where the work is (flag region?)
+    size_mode: str | None = None                                             # sme | large | both | sme-first | large-first (None: size not asked)
+    size_counts: Counter | None = None                                       # SME / large / unknown of the ads that passed every other filter
+    size_hidden: int = 0                                                     # ads of the other bucket under `sme` / `large`
+    unknown_rows: list[Row] = field(default_factory=list)                    # size-unknown ads under `sme` / `large`: listed under [u], offered only when you press u
+    alive: Callable[[dict], str | None] | None = None                        # liveness check, used when [u] adds an ad
+    size_notes: list[str] = field(default_factory=list)                      # what the size lookups said (no key, lookup limit, refusals)
 
 
 @dataclass
@@ -155,10 +186,20 @@ def _key(company: str, title: str) -> str:
     return "|".join(decided.key_of(company, title))
 
 
-def save_score(db: DB, job: dict, t: triage.Triage, on: date) -> None:
+def save_score(db: DB, job: dict, t: triage.Triage, on: date, region: region_mod.Match | None = None) -> None:
     with db.conn:
-        db.conn.execute("INSERT OR REPLACE INTO triage_scores (key, company, title, t, factors, scored_on) VALUES (?,?,?,?,?,?)",
-                        (_key(job["company"], job["title"]), job["company"], job["title"], round(t.t, 3), json.dumps(t.factors()), on.isoformat()))
+        db.conn.execute("INSERT OR REPLACE INTO triage_scores (key, company, title, t, factors, scored_on, region_match, region_evidence) VALUES (?,?,?,?,?,?,?,?)",
+                        (_key(job["company"], job["title"]), job["company"], job["title"], round(t.t, 3), json.dumps(t.factors()), on.isoformat(),
+                         region.verdict if region else None, region.evidence if region else None))
+
+
+def save_size(db: DB, row: Row) -> None:
+    """The size of an offered-or-pooled ad beside its score (`careerops patterns` reads it)."""
+    if row.size is None:
+        return
+    with db.conn:
+        db.conn.execute("UPDATE triage_scores SET size=?, size_label=?, size_evidence=? WHERE key=?",
+                        (row.size.size, row.size.label, row.size.evidence, row.key))
 
 
 def make_alive(fetcher: Fetcher | None, cache, now: datetime) -> Callable[[dict], str | None]:
@@ -173,11 +214,17 @@ def make_alive(fetcher: Fetcher | None, cache, now: datetime) -> Callable[[dict]
 
 
 def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=None, now: datetime | None = None,
-          archive: list[tuple[str, str]] | None = None, files: list[Path] | None = None) -> Plan:
-    """Score the inbox and decide what is offered. Writes the scores to the database; moves nothing (see `file_away`)."""
+          archive: list[tuple[str, str]] | None = None, files: list[Path] | None = None, regions: Sequence[str] | None = None,
+          size_mode: str | None = None, size_resolver: size_mod.Resolver | None = None,
+          choose_size: Callable[[Counter], str] | None = None) -> Plan:
+    """Score the inbox and decide what is offered. Writes the scores to the database; moves nothing (see `file_away`).
+
+    `regions`: the selected region keys; an ad outside them is parked (region), not scored. None = no region filter.
+    `size_resolver`: works out each pooled ad's company size; `size_mode` (or `choose_size(counts)`, asked once the counts are known) then applies it."""
     now = now or datetime.now(timezone.utc)
     cfg = targeting_mod.config(settings)
-    plan = Plan()
+    plan = Plan(selection=tuple(regions) if regions is not None else None)
+    non_uk_ok = bool(regions) and (region_mod.ANY in regions or bool(region_mod.iso_of(regions) - {"GB"}))      # S = unknown, not "not home", for a job abroad
     hist = read_history(settings)
     plan.last_shown = hist.last
     known = decided.load(settings, db)                                       # skipped and applied: database rows and the files in jds_done/
@@ -209,9 +256,17 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         if _key(job["company"], job["title"]) in hist.parked:
             plan.parked.append(f"{job['company']} | {job['title']}")
             continue
+        rm = None
+        if regions is not None:
+            rm = region_mod.job_match(job, regions)
+            if rm.verdict == region_mod.OUT:
+                plan.region_parked.append(f"{job['company']} | {job['title']}")
+                continue
+            plan.region_unknown += rm.verdict == region_mod.UNKNOWN
+            job["region_target"] = non_uk_ok
         plan.scored += 1
         t = triage.score(job, settings, fb, floor=floor, now=now)
-        save_score(db, job, t, day)
+        save_score(db, job, t, day, rm)
         if (d := triage.disqualify(job, settings, db, archive=archive, others=others)) is not None:
             plan.dropped.append((p, "skipped", f"disqualified, {d.line()}"))
             continue
@@ -221,9 +276,33 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         if t.age_days is not None and t.age_days > cfg.max_posting_age_days and t.t < targeting_mod.OLD_POSTING_MIN_T:
             plan.too_old += 1
             continue
-        pool.append(Row(p, job, t, kind_of(job)))
-    pool.sort(key=lambda r: (-r.t.t, r.t.age_days if r.t.age_days is not None else float("inf"), r.path.name))
+        pool.append(Row(p, job, t, kind_of(job), region=rm))
+    by_age = lambda r: r.t.age_days if r.t.age_days is not None else float("inf")        # noqa: E731
+    pool.sort(key=lambda r: (-r.t.t, by_age(r), r.path.name))
     alive = make_alive(fetcher, cache if cache is not None else (liveness.cache_for(settings) if fetcher is not None else None), now)
+    plan.alive = alive
+    if size_resolver is not None and pool:
+        for r in pool:
+            r.size = size_resolver.resolve(r.job["company"], r.job.get("description") or "")
+            save_size(db, r)
+        plan.size_counts = size_mod.counts(r.size for r in pool)
+        plan.size_notes = list(size_resolver.notes)
+        if size_resolver.skipped_for_limit:
+            plan.size_notes.append(f"{size_resolver.skipped_for_limit} compan{'y' if size_resolver.skipped_for_limit == 1 else 'ies'} not looked up yet: at most "
+                                   f"{size_resolver.max_lookups} Companies House lookups a run (the next run continues)")
+        if not size_resolver.has_key:
+            plan.size_notes.append(f"{size_mod.KEY_ENV} is not set: Companies House was not asked (sizes come from your overrides and the ad text)")
+        if size_mode is None and choose_size is not None:
+            size_mode = choose_size(plan.size_counts)
+        plan.size_mode = size_mode or "both"
+        if plan.size_mode in ("sme", "large"):
+            keep = [r for r in pool if r.size.size == plan.size_mode]
+            plan.unknown_rows = [r for r in pool if r.size.size == size_mod.UNKNOWN]
+            plan.size_hidden = len(pool) - len(keep) - len(plan.unknown_rows)
+            pool = keep
+        elif plan.size_mode in ("sme-first", "large-first"):
+            pref = size_mod.SME if plan.size_mode == "sme-first" else size_mod.LARGE
+            pool.sort(key=lambda r: (-(r.t.t + (SIZE_FIRST_BONUS if r.size.size == pref else 0.0)), by_age(r), r.path.name))
     for r in pool:
         if len(plan.rows) >= cfg.shortlist_size:
             break
@@ -237,6 +316,9 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         r.shown = hist.shown.get(r.key, 0)
         plan.rows.append(r)
     plan.new = sum(1 for r in plan.rows if not r.shown)
+    plan.unknown_rows = [r for r in plan.unknown_rows if not volume.company_block(db, settings, r.job["company"], day, apps=apps)][:cfg.shortlist_size]
+    for r in plan.unknown_rows:
+        r.shown = hist.shown.get(r.key, 0)
     return plan
 
 
@@ -272,20 +354,38 @@ def parked_line(plan: Plan) -> list[str]:
     return [f"parked: {len(plan.parked)} (shown {PARK_AFTER} times with no decision; `careerops unskip --shortlist` brings them back)"] if plan.parked else []
 
 
+def region_lines(plan: Plan) -> list[str]:
+    """The parked (region) count: outside the chosen region, not scored, not skipped (a later --region brings them back)."""
+    if not plan.region_parked:
+        return []
+    where = region_mod.label_of(plan.selection) if plan.selection else "the region"
+    return [f"parked (region): {len(plan.region_parked)} outside {where}: not scored, not skipped; `--region` brings them back"]
+
+
+def unknown_lines(plan: Plan) -> list[str]:
+    """Under `sme` / `large`: the size-unknown ads, offered only when you press u."""
+    if not plan.unknown_rows:
+        return []
+    return [f"Size unknown ({len(plan.unknown_rows)}): [u] include them"] + [f"     {r.name} ({r.size.evidence or 'no evidence'})" for r in plan.unknown_rows[:10]]
+
+
 def lines(plan: Plan, cfg: targeting_mod.Targeting) -> list[str]:
     if not plan.new:                                                         # nothing you have not been shown: no list
         since = f"since {plan.last_shown.astimezone():%Y-%m-%d %H:%M}" if plan.last_shown else "yet"
-        return [f"No new jobs {since}. Run careerops discover --ats --gmail-alerts."] + parked_line(plan)
+        return [f"No new jobs {since}. Run careerops discover --ats --gmail-alerts."] + region_lines(plan) + unknown_lines(plan) + parked_line(plan)
     out = [f"Shortlist: {plan.scored} ad(s) scored; {len(plan.rows)} offered (at most {cfg.shortlist_size}, T >= {cfg.min_triage_score:g}). "
            f"Left out: {len(plan.dropped)} disqualified, {plan.below_min} under T {cfg.min_triage_score:g}, "
            f"{plan.too_old} older than {cfg.max_posting_age_days} d without T >= {targeting_mod.OLD_POSTING_MIN_T:g}, {len(plan.held)} at a company limit"
            + (f", {plan.approved} already approved" if plan.approved else "") + (f", {plan.decided} already decided" if plan.decided else "")
-           + (f", {plan.unreadable} unreadable" if plan.unreadable else "") + ".",
+           + (f", {plan.unreadable} unreadable" if plan.unreadable else "") + (f", {plan.size_hidden} in the other size bucket" if plan.size_hidden else "") + ".",
            f"new since last shortlist: {plan.new}"]
+    if plan.region_unknown:
+        out.append(f"region unknown for {plan.region_unknown} ad(s): kept, flagged [{region_mod.FLAG}] (the place does not say where the work is)")
     out += [r.line(n) for n, r in enumerate(plan.rows, 1)]
     out += [f"  held back: {name}: {why}" for name, why in plan.held[:10]]
     out += [f"  disqualified: {p.name}: {why}" for p, _, why in plan.dropped[:10]]
-    return out + parked_line(plan)
+    out += [f"  size: {note}" for note in plan.size_notes]
+    return out + unknown_lines(plan) + region_lines(plan) + parked_line(plan)
 
 
 def parse(answer: str, n: int) -> tuple[str, list[int]]:
@@ -299,6 +399,10 @@ def parse(answer: str, n: int) -> tuple[str, list[int]]:
         return "all", []
     if toks == ["x"]:
         return "rest", []
+    if toks == ["u"]:
+        return "unknown", []
+    if toks == ["i"]:
+        return "info", []
     verb, nums = ("skip", toks[1:]) if toks[0] == "s" else ("approve", toks)
     if not nums or not all(t.isdigit() and 1 <= int(t) <= n for t in nums):
         return "bad", []
@@ -306,11 +410,14 @@ def parse(answer: str, n: int) -> tuple[str, list[int]]:
 
 
 def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Callable[[str], None] = print, fetcher: Fetcher | None = None,
-        now: datetime | None = None, dry_run: bool = False, archive: list[tuple[str, str]] | None = None) -> Plan:
+        now: datetime | None = None, dry_run: bool = False, archive: list[tuple[str, str]] | None = None, regions: Sequence[str] | None = None,
+        size_mode: str | None = None, size_resolver: size_mod.Resolver | None = None,
+        choose_size: Callable[[Counter], str] | None = None) -> Plan:
     """Build the list, file the disqualified ads, print it, and (with `ask`) take your choices. `ask` None or `dry_run`: print only, nothing is moved."""
     now = now or datetime.now(timezone.utc)
     cfg = targeting_mod.config(settings)
-    plan = build(settings, db, fb, fetcher=fetcher, now=now, archive=archive)
+    plan = build(settings, db, fb, fetcher=fetcher, now=now, archive=archive, regions=regions, size_mode=size_mode, size_resolver=size_resolver,
+                 choose_size=choose_size)
     if not dry_run:
         apply_drops(settings, plan)
     out("\n".join(lines(plan, cfg)))
@@ -323,9 +430,10 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
     rows = list(plan.rows)
     numbered = {n: r for n, r in enumerate(rows, 1)}
     log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for r in rows], now)
+    extra = ((" · [u] include the size-unknown ads" if plan.unknown_rows else "") + (" · [i] evidence" if any(r.size or r.region for r in rows) else ""))
     while numbered:
         try:
-            answer = ask("[a] approve all · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list · [q] quit > ")
+            answer = ask("[a] approve all · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list" + extra + " · [q] quit > ")
         except (EOFError, KeyboardInterrupt):
             out("(cut short: nothing more was approved)")
             break
@@ -334,6 +442,33 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
             break
         if verb == "bad":
             out("  not understood: type a, numbers such as 1 3 5, s and a number such as s 2, or q")
+            continue
+        if verb == "info":
+            out("\n".join(r.evidence(n) for n, r in numbered.items()))
+            continue
+        if verb == "unknown":
+            room = cfg.shortlist_size - len(numbered)
+            if not plan.unknown_rows:
+                out("  there are no size-unknown ads to include")
+                continue
+            if room <= 0:
+                out(f"  the list is full ({cfg.shortlist_size}): decide some of these first, then press u")
+                continue
+            added = []
+            taken, plan.unknown_rows = plan.unknown_rows[:room], plan.unknown_rows[room:]
+            for r in taken:
+                if plan.alive is not None and (closed := plan.alive(r.job)):
+                    if not dry_run:
+                        file_away(settings, r.path, "closed", f"disqualified, liveness: {closed}")
+                    continue
+                n = len(rows) + 1
+                rows.append(r)
+                numbered[n] = r
+                added.append((n, r))
+            log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for _, r in added], now)
+            out("\n".join(r.line(n) for n, r in added) if added else "  none of them is still open")
+            if plan.unknown_rows:
+                out(f"  {len(plan.unknown_rows)} more size-unknown ad(s) did not fit in the list")
             continue
         picked = [numbered[n] for n in (list(numbered) if verb in ("all", "rest") else nums) if n in numbered]
         if not picked:

@@ -29,9 +29,10 @@ def only_row(sheet) -> dict:
 
 # ------------------------------------------------------------------ the header and the record
 def test_the_36_headers_fill_a1_to_aj_and_job_id_is_first():
-    assert len(tracker.HEADERS) == 36 and len(set(tracker.HEADERS)) == 36
-    assert tracker.HEADERS[0] == "Job ID" and tracker.HEADERS[33] == "Status" and tracker.HEADERS[-1] == "Notes"
-    assert [tracker.column_letter(i) for i in (0, 25, 26, 33, 35)] == ["A", "Z", "AA", "AH", "AJ"]
+    """The first 36 never move (v2.4 appended Region and Size after Notes: AK and AL)."""
+    assert len(tracker.HEADERS) == 38 and len(set(tracker.HEADERS)) == 38
+    assert tracker.HEADERS[0] == "Job ID" and tracker.HEADERS[33] == "Status" and tracker.HEADERS[35] == "Notes" and tracker.HEADERS[36:] == ["Region", "Size"]
+    assert [tracker.column_letter(i) for i in (0, 25, 26, 33, 35, 36, 37)] == ["A", "Z", "AA", "AH", "AJ", "AK", "AL"]
 
 
 def test_the_record_carries_the_job_its_report_and_the_applied_date(settings, db, applied):

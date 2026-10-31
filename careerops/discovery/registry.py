@@ -19,6 +19,7 @@ from pathlib import Path
 import yaml
 
 from . import countries
+from . import region as region_mod
 
 METHODS = ("greenhouse", "ashby", "lever", "reed", "jobbank_csv", "gmail_alerts", "dedupe_only")
 ATS_METHODS = ("greenhouse", "ashby", "lever")
@@ -46,6 +47,12 @@ class Source:
     dataset: str = ""
     enabled: bool = True
     note: str = ""
+    regions: tuple[str, ...] = ()         # `regions:` in sources.yaml: the regions this source is for (uk, ie, eu, us, au, ca, de ... or any); none = [any]
+
+    @property
+    def region_tags(self) -> tuple[str, ...]:
+        """The tags the region filter reads: what sources.yaml says, `any` when it says nothing (discovery/region.py: source_runs)."""
+        return self.regions or ("any",)
 
     @property
     def home_country(self) -> str:
@@ -189,12 +196,19 @@ def parse(raw: object, source_file: str = "sources.yaml") -> Registry:
         parser = str(e.get("parser") or "").strip()
         if parser and parser not in PARSERS:
             raise RegistryError(f"{where}: parser must be one of {', '.join(PARSERS)}")
+        regions = _tuple(e, "regions", where, lower=True)
+        for tag in regions:
+            try:
+                region_mod.get(tag)
+            except region_mod.RegionError:
+                raise RegistryError(f"{where}: regions: {tag!r} is not a region (uk, ie, eu, us, any or a two-letter country code such as au, ca, de)") from None
         dataset = str(e.get("dataset") or "").strip()
         if method == "jobbank_csv" and not re.fullmatch(r"[0-9a-f-]{36}", dataset):
             raise RegistryError(f"{where}: a jobbank_csv source needs 'dataset' (the open.canada.ca dataset id)")
         out.append(Source(id=sid, name=str(e["name"]).strip(), url=str(e["url"]).strip(), country=country, method=method, token=token,
                           domains=domains, subject_contains=_tuple(e, "subject_contains", where), parser=parser, dataset=dataset,
-                          enabled=bool(e.get("enabled", True)), note=str(e.get("note") or "").strip()))
+                          enabled=bool(e.get("enabled", True)), note=str(e.get("note") or "").strip(),
+                          regions=regions))
     return Registry(out)
 
 

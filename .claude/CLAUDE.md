@@ -61,6 +61,10 @@ What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · curre
 - Never edit `config/profile/answers.yaml` content (same rule as the fact bank): only the user changes it, except
   when the user types `save` at the prompt for a new answer.
 - Never fetch linkedin.com, indeed or cv-library pages. Never work around a 401/403 or a robots.txt disallow.
+- Company size comes only from: the user's overrides file, the JD or the company's own page, and the
+  Companies House public API (key from .env, GET only, ≤1 request/second). Never LinkedIn or data-broker sites.
+- A job outside the selected region is parked, never skipped; only the user's [s] makes a skip permanent.
+- Interactive prompts (region, size) never appear in non-TTY, scheduled or --auto runs.
 - Never weaken `tailoring/faithfulness.py` or the deny list to make a score go up.
 - Never put secrets in code, tests, fixtures or commits; keys come from `.env` (loaded by the CLI).
 - Respect public APIs: ≤1 request/second per host, identify with the `UA` header already defined in each module.

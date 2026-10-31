@@ -153,6 +153,18 @@ COLUMNS = [
     ("jobs", "posted_at_source", "TEXT"),  # where posted_at comes from: greenhouse.first_published | lever.createdAt | ashby.publishedAt | reed.date | adzuna.created | gmail.received | first_seen (discovery/freshness.py)
     ("jobs", "apply_kind", "TEXT"),      # greenhouse | lever | ashby | workday | employer_other | aggregator_only: where the application is made (discovery/applykind.py)
     ("jobs", "work_location", "TEXT"),   # the location as it may be shown: the remote label for a remote role at home, else NULL (use `location`)
+    ("jobs", "region_match", "TEXT"),    # in | out | unknown: is the job in the selected region(s)? (discovery/region.py)
+    ("jobs", "region_evidence", "TEXT"), # the text the region answer rests on: the place, or a quoted sentence of the ad
+    ("jobs", "parked_from", "TEXT"),     # the status a job had before it was parked (region): it goes back to it when the region covers it again
+    ("jobs", "size", "TEXT"),            # sme | large | unknown: the employer's size bucket (discovery/size.py)
+    ("jobs", "size_label", "TEXT"),      # micro | small | medium | large | ?
+    ("jobs", "size_evidence", "TEXT"),   # where the size comes from: an override, a quoted headcount of the ad, or Companies House accounts type
+    ("jobs", "size_checked", "TEXT"),    # YYYY-MM-DD the size was worked out
+    ("triage_scores", "region_match", "TEXT"),     # the same, for an inbox ad (it has no jobs row yet): `careerops patterns` joins on the job key
+    ("triage_scores", "region_evidence", "TEXT"),
+    ("triage_scores", "size", "TEXT"),
+    ("triage_scores", "size_label", "TEXT"),
+    ("triage_scores", "size_evidence", "TEXT"),
 ]
 
 

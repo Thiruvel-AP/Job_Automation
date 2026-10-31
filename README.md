@@ -225,6 +225,8 @@ careerops tailor --limit 15        # CV (two full pages) + note.md per job (lett
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
+careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
+careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
 careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
 careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
@@ -1158,6 +1160,63 @@ ads away and moving the ones you approve.
 - **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It
   may suggest ("T >= 4.0 had 3/9 replies; T 3.5-4.0 had 0/7: consider `min_triage_score: 4.0`") and **never changes a setting or a weight**. Not taken from the reference project: its LLM
   1-5 score (the ATS bands stay deterministic), its immigration templates.
+
+### Region and company size (v2.4)
+
+**Region.** Most non-UK jobs come from company boards (Greenhouse, Lever, Ashby, Workday), which return every place the company hires, so the region is a **filter after fetching**, not
+only a question. `discover`, `shortlist` and `live` take `--region uk` (`uk,ie`, `eu`, `us`, `any`, or a two-letter country code such as `de`); `config/regions.yaml` defines the regions (code-owned;
+it is not a setting of yours). The answer comes from, in order: the flag, today's / the last choice in `data/state/targeting.json`, `targeting.region` in `settings.yaml` (a name or a list), then `uk`.
+At a terminal you are asked **once a day**:
+
+```
+Target region (Enter = UK, last used):
+  [1] UK   [2] UK + Ireland   [3] EU   [4] US   [5] All regions   [6] type codes (e.g. uk,ie)
+```
+
+**No question ever appears without a terminal, or with `--yes`, `--auto` or `--mock`** (a scheduled run prints `region: uk (from last choice)` and goes on). A flag is for that command only and is never remembered.
+
+Every job goes through one deterministic match (`discovery/region.py`, zero tokens): ISO codes become names (`GB`, `GBR`); `homonym_block` ("Cambridge, MA", "London, Ontario") is tested before `always_allow`; a city or a country the
+place names is in, on word boundaries ("India" is not "Indianapolis", "Dublin, OH" is Ohio, "Toronto, CA" is Canada); a multi-place text ("London or New York") passes when any place does. A place that
+does not say where the work is ("Remote", "EMEA", no place) is decided by **the ad's own text**: "right to work in the UK", "UK-based", "UK time zone", "open to UK residents only" -> in; "must be based in
+the US", "US-based candidates only", "Remote within the United States only", "EU work authorisation required" -> out; both, or neither -> **`region?`** (kept and flagged: missing data is not a penalty).
+The answer is stored as `region_match` (`in` / `out` / `unknown`) and `region_evidence` (the quoted words) on the job and on the inbox ad's score.
+
+- **Out of the region = parked, never skipped.** Parked ads are not scored and not offered (`parked (region): N outside United Kingdom`); jobs in the database that wait with status `new`, `triaged`,
+  `needs_jd` or `needs_country` get the status `parked (region)` (the old status is kept, in `jobs.parked_from`), and a later `--region` brings them back. Only your `[s]` makes a skip permanent.
+- **Sources** carry a `regions:` list in `config/sources.yaml` (`uk`, `ie`, `eu`, `us`, `au`, `ca`, `de` ..., or `any`); a source for other regions only does not run (SEEK -> `au`, Job Bank -> `ca`, StepStone -> `de`,
+  IrishJobs -> `ie`). A missing tag means `any`. The tool never edits `sources.yaml`: `careerops doctor` prints the lines to add.
+- **Sponsorship.** The sponsor register is UK-only, so for a job in a non-UK region S is 0.75 ("unknown") and V is 3.5, not "not home"; the run prints `non-UK region: visa/right-to-work not checked`.
+- **One ad you name** (`live --url`, `--clipboard`) outside the region asks `This job is outside <region>: continue? [y/N]`; in auto mode, or without a terminal, the answer is no.
+
+**Company size.** UK Companies Act thresholds (checked 2026-10-31): small = 2 of 3 of up to 50 employees, GBP 15m turnover, GBP 7.5m balance sheet; medium = 2 of 3 of 250, GBP 54m, GBP 27m; SME = micro (up to 10),
+small or medium; large = above. Shown as `SME`, `Large` or `Unknown`, with the label (`SME·small`). Evidence, in this order, cached per company in `data/company_size.jsonl` for 90 days:
+
+1. **Your overrides**, `data/company_size_overrides.yaml` (`Graphcore: large`; also `sme`, `small`, `medium`, `micro`). Always wins; the tool never writes it.
+2. **The ad's own text**: an explicit headcount ("team of 40", "1,200 employees", "500+ people"; a range counts its upper value) by the 50 / 250 limits; "Series A/B", seed, "founding team" -> SME; "FTSE 100/250",
+   "Fortune 500", NYSE / NASDAQ / LSE-listed, offices in 10+ countries, "10,000+" -> Large; both at once -> unknown.
+3. **Companies House** (free; `COMPANIES_HOUSE_API_KEY` in `.env`; GET only; one request a second; at most 60 new lookups a command): search by name, accept only if **exactly one active company** has the same normalised name
+   (lower case, "Ltd", "Limited", "PLC", "UK" and punctuation removed), then `accounts.last_accounts.type`: `micro-entity`, `small`, `total-exemption-small`, `total-exemption-full`, `audited-abridged`,
+   `unaudited-abridged`, `dormant` -> SME; `medium` -> SME (medium); `group` -> Large; `full` -> **Unknown** (a small company may file full accounts, kept as `full (large?)`). Without a key it is skipped
+   (`careerops doctor` says so) and sizes come from 1 and 2 only.
+4. Nothing found -> Unknown. Never LinkedIn or a data-broker site.
+
+`careerops shortlist` counts the sizes of the queue (the ads that passed every other filter) **before** it asks:
+
+```
+Company size to target (Enter = Both, last used):
+  [1] SME (<250 staff)   [2] Large (250+)   [3] Both, SME first   [4] Both, large first   [5] Both, no preference
+  sizes in queue: SME 14 · Large 22 · Unknown 31
+```
+
+`--size sme|large|both|sme-first|large-first`, else the last choice, else `targeting.size`, else `both`; asked once a day at a terminal only. `sme` / `large` keep that bucket; the size-unknown ads are **not dropped**: they
+are listed under `Size unknown (N): [u] include them` and use the daily slots only when you press `u`. `sme-first` / `large-first` order by T + 0.3 for that bucket and drop nobody. The daily cap, the per-company cap and
+the cooldown are unchanged. Each line ends `[SME·small]`, `[Large]` or `[size?]` (and `[region?]`); `[i]` prints the evidence. `live` works only on an in-region ad of the chosen bucket (an ad of unknown size passes: you approved
+it). Picking `sme`, `sme-first` or `both` prints once a day: *Note: UK small sponsors pay a lower Immigration Skills Charge (GBP 480 vs GBP 1,320 for the first year, rates from 16 Dec 2025), but fewer SMEs hold a sponsor licence.
+The sponsor check still applies to every job.*
+
+**Reports.** The tracker Sheet gets `Region` and `Size` columns appended on the right (columns AK and AL; an older Sheet gets them added after its last column, nothing is reordered); `careerops patterns` adds
+**By region** and **By company size** with each reply rate; `discover --report` ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`; `careerops doctor` reports the Companies House key
+(present or absent), the sources with no `regions:` tag (and the lines to add) and the share of the queue whose size is unknown.
 
 ### The document rules: `DOC CHECK`
 

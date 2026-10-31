@@ -21,7 +21,7 @@ from datetime import date
 from .. import targeting as targeting_mod
 from ..apply import decided
 from ..db import DB
-from ..discovery import applykind
+from ..discovery import applykind, region as region_mod, size as size_mod
 
 MIN_BAND = 5                    # applications a band needs before it is compared
 GAP = 0.20                      # the better band's reply rate must lead by this much
@@ -38,6 +38,8 @@ class Row:
     family: str = ""
     kind: str = ""
     t: float | None = None
+    region: str = ""                 # uk | ie | eu | us | other | unknown (discovery/region.py)
+    size: str = ""                   # sme | large | unknown (discovery/size.py)
 
     @property
     def replied(self) -> bool:
@@ -84,11 +86,13 @@ def score_of(db: DB, company: str, title: str) -> float | None:
     return float(r[0]) if r else None
 
 
-def _enrich(db: DB, job_id: str, status: str, family: str = "", url: str = "") -> Row:
+def _enrich(db: DB, job_id: str, status: str, family: str = "", url: str = "", region: str = "", size: str = "") -> Row:
     j = db.job(job_id)
     kind = (j["apply_kind"] if j is not None and "apply_kind" in j.keys() and j["apply_kind"] else "") or applykind.kind_of(url or (j["url"] if j is not None else ""))
     return Row(job_id, status, family or (j["family"] if j is not None and j["family"] else ""),
-               kind or "unknown", score_of(db, j["company"], j["title"]) if j is not None else None)
+               kind or "unknown", score_of(db, j["company"], j["title"]) if j is not None else None,
+               region.strip().lower() or (region_mod.region_of(j) if j is not None else "unknown"),
+               size_mod.bucket_of(size) if size.strip() else (size_mod.stored(db, j).size if j is not None else size_mod.UNKNOWN))
 
 
 def rows_from_sheet(sheet, tab: str, db: DB) -> list[Row]:
@@ -105,10 +109,11 @@ def rows_from_sheet(sheet, tab: str, db: DB) -> list[Row]:
             return []
         col = tracker.column_letter(header.index(name))
         return [(r[0] if r else "") for r in (sheet.get_values(f"{tracker._q(tab)}!{col}2:{col}") or [])]
-    ids, status, family, url = (column(n) for n in (tracker.KEY, tracker.STATUS, "Role family", "Posting URL"))
+    ids, status, family, url, reg, siz = (column(n) for n in (tracker.KEY, tracker.STATUS, "Role family", "Posting URL", "Region", "Size"))
     pad = lambda xs, n: xs + [""] * (n - len(xs))        # noqa: E731  (trailing empty cells are not returned by the API)
-    return [_enrich(db, jid.strip(), st.strip(), fam.strip(), u.strip())
-            for jid, st, fam, u in zip(ids, pad(status, len(ids)), pad(family, len(ids)), pad(url, len(ids))) if jid.strip()]
+    return [_enrich(db, jid.strip(), st.strip(), fam.strip(), u.strip(), rg, sz)
+            for jid, st, fam, u, rg, sz in zip(ids, pad(status, len(ids)), pad(family, len(ids)), pad(url, len(ids)), pad(reg, len(ids)), pad(siz, len(ids)))
+            if jid.strip()]
 
 
 def rows_from_db(db: DB) -> list[Row]:
@@ -150,7 +155,8 @@ def report(rows: list[Row], settings, source: str, today: date | None = None) ->
     if not rows:
         return [f"Patterns ({source}, {today.isoformat()}): no applications on record yet."]
     out = [f"Patterns ({source}, {today.isoformat()}); information only, no setting or weight is ever changed.", f"All: {tally(rows, lambda r: 'all')['all'].text()}"]
-    for title, key in (("By role family", lambda r: r.family), ("By ATS kind", lambda r: r.kind), ("By triage score", lambda r: band_of(r.t))):
+    for title, key in (("By role family", lambda r: r.family), ("By ATS kind", lambda r: r.kind), ("By triage score", lambda r: band_of(r.t)),
+                       ("By region", lambda r: r.region), ("By company size", lambda r: r.size)):
         out.append(title + ":")
         out += [f"  {name}: {t.text()}" for name, t in tally(rows, key).items()]
     s = suggestions(rows, settings)

@@ -384,6 +384,34 @@ def reminder_checks(settings, today: date | None = None, now: datetime | None = 
     return out
 
 
+def region_size_checks(settings) -> list[tuple[str, object, str]]:
+    """Warnings only: the Companies House key (present or absent), the sources in sources.yaml with no `regions:` tag (the lines to add are printed; this tool
+    never edits that file) and the share of the inbox whose company size is not known yet (the overrides, the 90-day cache and the ad text only: no network)."""
+    from .discovery import region, registry, size
+
+    out: list[tuple[str, object, str]] = []
+    have = bool(os.environ.get(size.KEY_ENV, "").strip())
+    out.append((f"Companies House key ({size.KEY_ENV}) {'present' if have else 'absent'}", True if have else WARN,
+                f"add {size.KEY_ENV}=... to .env (free key from developer.company-information.service.gov.uk); without it company sizes come only from "
+                "data/company_size_overrides.yaml and the ad text, and the rest stay Unknown"))
+    try:
+        reg = registry.load(settings)
+        lines = region.untagged_lines(reg)
+    except registry.RegistryError:
+        lines = []
+    if lines:
+        out.append((f"{len(lines)} source(s) in sources.yaml have no `regions:` tag (treated as [any])", WARN,
+                    "add to the entries (the tool never edits sources.yaml):\n" + "\n".join(lines)))
+    ads = size.inbox_companies(settings)
+    if ads:
+        r = size.Resolver(settings, key="", write_cache=False)
+        unknown = sum(1 for company, text in ads if r.resolve(company, text).size == size.UNKNOWN)
+        share = unknown / len(ads)
+        out.append((f"company size unknown for {unknown} of {len(ads)} queued ad(s) ({share:.0%})", WARN if share > 0.5 else True,
+                    "a Companies House key and `careerops shortlist` (or `discover --report`) fill them in; or list companies in data/company_size_overrides.yaml"))
+    return out
+
+
 def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs. `ping` = also send each llm.models model a tiny
     request (the only check that spends provider quota)."""
@@ -416,6 +444,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += project_public_checks(settings.path("fact_bank"))
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
+    checks += region_size_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

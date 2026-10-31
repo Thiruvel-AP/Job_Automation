@@ -49,8 +49,16 @@
                                 no decision is parked; with nothing new it prints "No new jobs since <time>" (shown counts: data/jds/shortlist_log.jsonl)
   careerops live ... [--include-unapproved]   works only on the approved ads; --include-unapproved (never with --auto) takes the whole inbox
   careerops patterns [--db] [--mock]
-                                replies / interviews / rejections by role family, ATS kind and triage band, from the tracker Sheet's Status
-                                column; information only, it never changes a setting
+                                replies / interviews / rejections by role family, ATS kind, triage band, region and company size, from the
+                                tracker Sheet's Status column; information only, it never changes a setting
+  careerops discover | shortlist | live  --region uk[,ie] [--yes]       (shortlist, live also: --size sme|large|both|sme-first|large-first)
+                                v2.4. The region(s) to target (uk, ie, eu, us, any, a two-letter country code): the flag, else today's / the last
+                                choice (data/state/targeting.json), else targeting.region, else uk; asked once a day, only at a terminal (never
+                                with --yes, --auto, --mock or without a terminal: then `region: uk (from last choice)` says what was used). A job
+                                outside it is PARKED, never skipped (a later --region brings it back). The company size (SME up to 250 staff,
+                                the Companies Act limits) is asked by `shortlist` after the queue is counted: `sme` / `large` keep a bucket and
+                                list the size-unknown ads under [u]; `*-first` orders by T + 0.3; sizes come from data/company_size_overrides.yaml,
+                                the ad's text and the Companies House API (COMPANIES_HOUSE_API_KEY in .env), cached 90 days
   careerops followups [--mock]  the applications past their follow-up day (applied + outreach.follow_up_days) with no reply, oldest first, with the
                                 contact if known; read-only (drafting stays in `outreach draft`)
   careerops discover --gmail-alerts   ... then the reply watch: mail from the companies you applied to is classified (interview | assessment |
@@ -142,6 +150,56 @@ def _ctx(args):
     return s, DB(s.path("db"))
 
 
+def _region_choice(args, s, *, auto: bool = False):
+    """The region(s) for this command (choices.py): `--region`, else today's / the last choice, else settings, else uk. Asked (once a day) only at a terminal
+    with no --yes, no --auto, no --mock and no --region; otherwise the line `region: uk (from last choice)` says what was used."""
+    from . import choices
+
+    interactive = sys.stdin.isatty() and not getattr(args, "yes", False) and not auto and not getattr(args, "mock", False)
+    try:
+        c = choices.resolve_region(s, flag=getattr(args, "region", None), interactive=interactive, ask=input)
+    except choices.ChoiceError as e:
+        _fail(str(e))
+    print(c.line("region"))
+    if (note := choices.non_uk_line(c.value)):
+        print(note)
+    return c
+
+
+def _park_region(db, c) -> None:
+    """Apply the region to the jobs waiting in the database: outside it = `parked (region)` (never skipped), inside it again = back."""
+    from .discovery import region as region_mod
+
+    st = region_mod.park_queue(db, c.value)
+    if st.parked or st.back:
+        print(st.line(region_mod.label_of(c.value)))
+
+
+def _region_size_line(args, s, selection, tally=None, fetcher=None) -> str:
+    """`in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`: the region of this run's jobs (`tally`; with none, of the ads in the
+    inbox) and the company size of the ads in the inbox (overrides, cache, the ad text, then Companies House for at most size.MAX_LOOKUPS companies)."""
+    from collections import Counter
+
+    from .discovery import discover as disc
+    from .discovery import region as region_mod
+    from .discovery import size as size_mod
+
+    def verdict(text: str) -> str:
+        hdr = manual.header_fields(text)
+        return region_mod.match(hdr.get("location"), text, selection, country=hdr.get("country")).verdict
+    ads = [(company, text, verdict(text)) for company, text in size_mod.inbox_companies(s)]
+    if tally is None:
+        tally = Counter(v for _, _, v in ads)
+    r = size_mod.Resolver(s, key="" if getattr(args, "mock", False) else None, fetcher=fetcher)
+    sizes = size_mod.counts(r.resolve(company, text) for company, text, v in ads if v != region_mod.OUT)         # the sizes of the queue you could work on
+    notes = [f"  size: {n}" for n in r.notes]
+    if r.skipped_for_limit:
+        notes.append(f"  size: {r.skipped_for_limit} company(ies) not looked up yet (at most {r.max_lookups} Companies House lookups a run)")
+    if not r.has_key and sizes.get(size_mod.UNKNOWN) and not getattr(args, "mock", False):
+        notes.append(f"  size: {size_mod.KEY_ENV} is not set in .env: Companies House was not asked")
+    return "\n".join([disc.format_region_size(tally, sizes), *notes])
+
+
 def _llm(args, s, db):
     if args.mock:
         return MockLLM()
@@ -225,6 +283,9 @@ def cmd_discover(args):
     from .discovery import registry as registry_mod
 
     s, db = _ctx(args)
+    rc = _region_choice(args, s)
+    if not getattr(args, "dry_run", False):
+        _park_region(db, rc)
     new = seen = 0
     run = disc.Run()
     try:
@@ -289,15 +350,29 @@ def _inbox_signals(args, s, db, fetcher=None) -> list[str]:
 
 def _discover_inbox(args, sources_asked: list[str]) -> None:
     from .discovery import applykind
+    from .discovery import registry as registry_mod
     from .discovery import discover as disc
     from .discovery import gmail
     from .discovery.http import Fetcher
     from .discovery.robots import RobotsCache
 
     s, db = _ctx(args)
+    sel = None
+    if not getattr(args, "gmail_auth", False):
+        rc = _region_choice(args, s)                     # before anything is fetched: a source for other regions only does not run
+        sel = rc.value
+        try:
+            untagged = [x for x in registry_mod.load(s).active() if not x.regions]
+        except registry_mod.RegistryError:
+            untagged = []
+        if untagged:                                     # never edited here: `careerops doctor` prints the lines to add to sources.yaml
+            print(f"{len(untagged)} source(s) in sources.yaml have no `regions:` tag (treated as [any]); `careerops doctor` lists the lines to add")
+        if not getattr(args, "dry_run", False):
+            _park_region(db, rc)
     if getattr(args, "report", False) and not sources_asked and not getattr(args, "gmail_auth", False):
         print(disc.format_report(s))                    # --report alone: counts only; with a source flag it runs the sources first (below)
         print("\n".join(_inbox_signals(args, s, db)))
+        print(_region_size_line(args, s, sel))
         return
     if getattr(args, "gmail_auth", False):
         try:
@@ -309,7 +384,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
                       blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE),
                       allow_paths=("/wday/cxs/",))                                       # ... but the public Workday list API of the sites you name is read
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
-                      limit=getattr(args, "limit", None))
+                      limit=getattr(args, "limit", None), regions=sel)
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
              "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank)}
     for name in sources_asked:
@@ -354,6 +429,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if getattr(args, "report", False):
         print("\n" + disc.format_report(s, d.run))             # the counts per source and the freshness tiers, after this run
         print("\n".join(_inbox_signals(args, s, db, fetcher)))
+        print(_region_size_line(args, s, sel, d.region_counts() if d.region_tally else None, fetcher))
     watch = reply_lines(args, s, db, sources_asked, fetcher)          # mail from the companies you applied to: proposals, a `y` writes
     if watch:
         print("\n" + "\n".join(watch))
@@ -872,6 +948,41 @@ def cmd_live(args):
     if args.url and args.clipboard:
         _fail("--url and --clipboard are two ways to get one ad into the inbox: use one of them")
     s, db = _ctx(args)
+    from . import choices
+    from .discovery import region as region_mod
+    from .discovery import size as size_mod
+
+    rc = _region_choice(args, s, auto=args.auto)
+    _park_region(db, rc)
+    try:
+        size_mode = choices.resolve_size(s, flag=getattr(args, "size", None)).value          # live never asks the size: --size, the last choice, settings
+    except choices.ChoiceError as e:
+        _fail(f"--size: {e}")
+    sizes = size_mod.Resolver(s, key="" if args.mock else None)
+
+    def out_of_region(path) -> str | None:
+        """The reason an ad is outside the chosen region(s), else None (a file `live` cannot read is left for live to reject)."""
+        try:
+            text, _ = manual.read_jd(path)
+        except manual.JDError:
+            return None
+        hdr = manual.header_fields(text)
+        m = region_mod.match(hdr.get("location"), text, rc.value, country=hdr.get("country"))
+        return f"outside {region_mod.label_of(rc.value)}: {m.evidence}" if m.verdict == region_mod.OUT else None
+
+    def region_size_gate(path) -> str | None:
+        """live works only on an in-region ad from the chosen size bucket; an ad of unknown size passes (you approved it at the shortlist, or pressed u)."""
+        if (why := out_of_region(path)):
+            return why
+        if size_mode in ("sme", "large"):
+            try:
+                text, _ = manual.read_jd(path)
+            except manual.JDError:
+                return None
+            z = sizes.resolve(manual.header_fields(text).get("company") or "", text)
+            if z.size not in (size_mod.UNKNOWN, size_mode):
+                return f"company size {z.tag} is not in the chosen bucket ({size_mode})"
+        return None
     only = None
     if args.url:
         from .discovery import intake
@@ -888,6 +999,12 @@ def cmd_live(args):
             _fail(str(e))
         print(f"{'Saved' if created else 'Already in the inbox:'} {only.name}  ({ad.company} | {ad.title}, "
               f"{len(ad.text):,} characters from the clipboard)")
+    if only is not None and (why := out_of_region(only)):          # a single ad you named: asked, never decided for you (auto: always no)
+        label = region_mod.label_of(rc.value)
+        answer = input(f"This job is outside {label}: continue? [y/N] ") if sys.stdin.isatty() and not args.auto else "n"
+        if answer.strip().lower() not in ("y", "yes"):
+            print(f"Not processed: this job is outside {label} ({why.split(': ', 1)[-1]})" + (" (auto mode never continues)" if args.auto else "") + ".")
+            return
     dry_run = args.dry_run or args.mock or cfg.mode == "off"
     if args.mock and not args.dry_run:
         print("--mock implies --dry-run: the mock data root has no real application form to open.")
@@ -905,6 +1022,9 @@ def cmd_live(args):
     gates.load_roles(s, fb)
 
     def tailor(jid: str) -> None:
+        job = db.job(jid)
+        m, z = region_mod.job_match(job, rc.value), sizes.resolve(job["company"], job["description"] or "")
+        db.update_job(jid, region_match=m.verdict, region_evidence=m.evidence, **size_mod.fields(z), size_checked=z.checked or None)
         job = db.job(jid)
         if job["status"] == "letter_pending":
             _finish_letters(db, s, fb, llm, only=jid)
@@ -974,7 +1094,7 @@ def cmd_live(args):
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
                              mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it, save_facts=save_facts_it),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
-                fresh=getattr(args, "fresh", False), require_approval=not args.include_unapproved).run()
+                fresh=getattr(args, "fresh", False), require_approval=not args.include_unapproved, job_filter=region_size_gate).run()
     usage.report(db, s)
     if code:
         sys.exit(code)
@@ -1046,14 +1166,33 @@ def cmd_shortlist(args):
     `live` reads only that folder. Nothing is tailored or sent here."""
     from .discovery import pretailor, shortlist
 
+    from . import choices
+    from .discovery import size as size_mod
+
     s, db = _ctx(args)
     fb = load_yaml(s.path("fact_bank"))
     gates.load_roles(s, fb)
     dry = args.dry_run or args.mock
     fetcher = None if args.mock or args.no_liveness else pretailor.default_fetcher(s)
     ask = input if sys.stdin.isatty() and not dry else None
+    if getattr(args, "size", None):
+        try:
+            choices.parse_size(args.size)
+        except choices.ChoiceError as e:
+            _fail(f"--size: {e}")
+    rc = _region_choice(args, s)                          # first the region, then (once the queue is known) the size
+    if not dry:
+        _park_region(db, rc)
+    interactive = ask is not None and not getattr(args, "yes", False)
+
+    def choose_size(counts) -> str:
+        ch = choices.resolve_size(s, flag=getattr(args, "size", None), interactive=interactive, ask=input, counts=lambda: counts)
+        print(ch.line("size"))
+        return ch.value
+    resolver = size_mod.Resolver(s, key="" if args.mock else None, fetcher=fetcher)
     try:
-        shortlist.run(s, db, fb, ask=ask, fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None)
+        shortlist.run(s, db, fb, ask=ask, fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None, regions=rc.value,
+                      size_resolver=resolver, choose_size=choose_size)
     except targeting.TargetingError as e:
         _fail(str(e))
     if args.mock:
@@ -1545,6 +1684,9 @@ def main(argv=None):
     dc.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="with --report: do not fetch the inbox ads to check they are still open")
     dc.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
     dc.add_argument("--dry-run", dest="dry_run", action="store_true", help="find and rank, write nothing")
+    dc.add_argument("--region", help="the region(s) to target: uk, ie, eu, us, any, a two-letter country code, or a list (uk,ie). Without it: today's / the last "
+                                     "choice, then targeting.region, then uk; asked once a day at a terminal. Jobs outside it are parked, never skipped")
+    dc.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region")
     dc.set_defaults(fn=cmd_discover)
     so = sub.add_parser("sources", help="the source registry (config/sources.yaml): `check` = health of every source, `list`")
     so.add_argument("what", choices=["check", "list"])
@@ -1612,6 +1754,8 @@ def main(argv=None):
     lv.add_argument("--include-unapproved", dest="include_unapproved", action="store_true",
                     help="work on the whole inbox, not only the ads you approved with `careerops shortlist` (not allowed with --auto)")
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
+    lv.add_argument("--region", help="the region(s) to work on: uk, ie, eu, us, any, a country code, or a list; approved ads outside it are left where they are")
+    lv.add_argument("--size", help="company size bucket to work on: sme | large | both | sme-first | large-first (`sme` / `large` leave the other bucket alone)")
     lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
     lv.set_defaults(fn=cmd_live)
     r = sub.add_parser("review"); r.add_argument("--limit", type=int)
@@ -1630,6 +1774,10 @@ def main(argv=None):
     sl.add_argument("--dry-run", dest="dry_run", action="store_true", help="print the list; move, approve and count nothing")
     sl.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")
     sl.add_argument("--mock", action="store_true", help="use the isolated data/mock root (no network, nothing moved)")
+    sl.add_argument("--region", help="the region(s) to target: uk, ie, eu, us, any, a country code, or a list (uk,ie); ads outside it are parked (region), not skipped")
+    sl.add_argument("--size", help="company size: sme | large | both | sme-first | large-first (SME = up to 250 staff; Companies Act limits). `sme` / `large` list the "
+                                   "size-unknown ads under [u]; `*-first` orders by T + 0.3 for that bucket")
+    sl.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
     sl.set_defaults(fn=cmd_shortlist)
     pt = sub.add_parser("patterns", help="replies, interviews and rejections by role family, ATS kind and triage score (information only)")
     pt.add_argument("--db", action="store_true", help="read the outcome log in the database instead of the tracker Sheet's Status column")

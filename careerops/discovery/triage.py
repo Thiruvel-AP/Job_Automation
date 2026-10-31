@@ -118,7 +118,10 @@ def visa_score(job: Mapping[str, Any], settings) -> tuple[float, str]:
         options.append((VISA["no_sponsorship"], "ad says no sponsorship"))
     if outside_home(job, settings):
         place = countries.place_code(str(_get(job, "work_country") or "")) or countries.code(str(_get(job, "country") or ""))
-        options.append((VISA["non_home"], f"work location {countries.place_name(place)} is not home"))
+        if _get(job, "region_target"):            # you chose a region outside the UK: the sponsor register is UK-only, so it is "unknown", not "not home"
+            options.append((VISA["unknown"], f"non-UK region: visa not checked ({countries.place_name(place)})"))
+        else:
+            options.append((VISA["non_home"], f"work location {countries.place_name(place)} is not home"))
     return min(options, key=lambda o: o[0])
 
 

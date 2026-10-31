@@ -227,6 +227,9 @@ def settings(tmp_path) -> Settings:
     raw["paths"]["sources"] = str(tmp_path / "sources.yaml")
     raw["paths"]["calibration"] = str(tmp_path / "calibration")
     raw["paths"]["facts_proposed"] = str(tmp_path / "facts" / "proposed.yaml")      # the facts a test user types in review: never data/facts/
+    raw["paths"]["state"] = str(tmp_path / "state")                                  # targeting.json (the last region / size): never data/state/
+    raw["paths"]["company_size"] = str(tmp_path / "company_size.jsonl")              # the 90-day size cache and the user's overrides: never data/
+    raw["paths"]["company_size_overrides"] = str(tmp_path / "company_size_overrides.yaml")
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords
     (tmp_path / "Companies").mkdir()                      # the user's own folder: init never creates it
     (tmp_path / "Auto").mkdir()                           # only `careerops init` creates the real one

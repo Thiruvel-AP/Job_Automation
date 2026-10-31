@@ -67,3 +67,9 @@ read-only access) before the next scheduled run, or that run exits non-zero with
 * The laptop must be on (and not asleep) at the trigger time, or "run as soon as possible" runs it at the next wake.
 * Each host is asked at most once a second and every request carries the career-ops user agent; two runs a day stay well inside that.
 * The Groq daily token budget is used only by `careerops live` / `tailor`, never by discovery.
+
+## Region and size in a scheduled run (v2.4)
+
+`scripts/discover.sh` has no terminal, so it never asks which region to target: it uses the last choice you made at a prompt (`data/state/targeting.json`), else `targeting.region`, else `uk`, and prints `region: uk (from last choice)`.
+To pin it, add `--region uk` to the command in `scripts/discover.sh` (a flag is for that run only and is never remembered, so it cannot overwrite what you picked by hand). Sources tagged for other regions in `config/sources.yaml` do not run.
+

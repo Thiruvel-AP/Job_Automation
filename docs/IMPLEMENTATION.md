@@ -1598,3 +1598,31 @@ each time, never anyone else's.
    sizes), `test_cv_typography.py`, `test_cv_v2.py`, `test_two_page.py`, `test_render.py`, `test_letter_header.py`, `test_letter_format.py`, `test_hook_letters.py`; the fixture bank `fact_bank_two_page.yaml` gained `languages` and
    `research_focus` and `_bank()` of `test_cv_template.py` distinct spare bullets (the smaller headings left page 2 emptier). **Unverified:** `careerops live --dry-run --max 1 --retailor` on real data (never run on real data; the
    stand-in script prints the same checks with MockLLM), the real model's P3 to P5 wording, and the real fact bank, which needs `limits:` on its hook entries to get a P2.
+
+## 5ar. v2.4 — region selection and company-size targeting (31 Oct) — **done** (offline tests: fixture ads, a fake Net for Companies House, fixture databases; no network, no model; never run against the live sites, the real inbox or the real data)
+
+1. **Region** (`discovery/region.py`, `config/regions.yaml`, `choices.py`). `match(location, body, selection)` -> `Match(in | out | unknown, evidence)`: ISO codes to names (`expand_iso`, a port of the reference
+   `_country.mjs`: a two-letter tail that is also a US state, Canadian province or Australian state stays a region, `Remote, CA` is Canada), `homonym_block`, then a qualifier read (`<city>, <US state>` is the US unless the code is the
+   city's own country: `Toronto, CA`, `Bangalore, IN`, `Berlin, DE`), then `always_allow` / `allow_cities` / countries named, on word boundaries, then `ambiguous_remote` or an empty place -> the ad (`body_decision`: eligibility cues
+   "must be based in", "right to work in", "-based candidates", "<place> only", "<place> time zone", "work authorisation required"; both an in and an out statement is `unknown`). Several regions pass a job that passes any one. `--region` /
+   `targeting.region` / the last choice / `uk`; asked once a day, only at a terminal; `data/state/targeting.json` is the program's memory (a flag is never written to it). `discover` filters after fetching (`Discover(regions=...)`, the
+   place filter), skips sources whose `regions:` tag does not meet the selection (`Registry` filtered; `Source.regions`, untagged = `[any]`), and carries a source-given country into the ad's `Location:` header (`Candidate.to_ad`: `Hull, GB`)
+   so that the shortlist reproduces discover's answer. `shortlist` parks an out-of-region ad before scoring (`Plan.region_parked`); `park_queue(db, selection)` gives waiting database jobs the status `parked (region)` (`jobs.parked_from`
+   keeps the old one) and brings them back, never touching `skipped` or a job in hand. `live` leaves an out-of-region approved ad alone (`Live(job_filter=...)`), and a single `--url` / `--clipboard` ad outside the region asks
+   `continue? [y/N]` (auto, or no terminal: no). For a job in a non-UK region the sponsor weight is `unknown` (`triage.visa_score`, `priority.sponsor_factor` read `region_target`).
+2. **Company size** (`discovery/size.py`). Overrides (`paths.company_size_overrides`, read only), the ad's text (`from_text`), the 90-day cache (`paths.company_size`, append-only jsonl), then the Companies House API through the shared
+   `Fetcher` (GET only, `robots=False` for a credentialed API, one request a second, a 401 / 403 / 429 stops the host for the run, at most `MAX_LOOKUPS` = 60 new lookups a command, the rest next run). The name must match exactly one
+   ACTIVE company; `full` accounts are `unknown`. `shortlist` resolves every pooled ad, counts the buckets, asks the size (or reads `--size` / the last choice / `targeting.size`), and applies it: `sme` / `large` keep a bucket and offer the
+   unknown ads under `[u]` (`Plan.unknown_rows`, liveness checked when `u` adds them, never past `shortlist_size`), `sme-first` / `large-first` sort by T + `SIZE_FIRST_BONUS` (0.3). Lines end `[SME·small]` / `[Large]` / `[size?]` /
+   `[region?]`; `[i]` prints the evidence. The sizes are stored (`triage_scores.size*`, and `jobs.size*` when `live` tailors).
+3. **Reporting.** Tracker `HEADERS` gain `Region`, `Size` after `Notes` (`ensure_headers` appends them to an older Sheet); `patterns` gains By region / By company size; `discover --report` prints
+   `in region N · out N (parked) · unknown N | SME N · Large N · size? N`; `doctor` (`setup.region_size_checks`, warnings only) reports the Companies House key, the untagged sources with the lines to add, and the unknown-size share.
+4. **Choices where the task was silent or did not match the repository.** (a) `settings.yaml`, `sources.yaml` and `applicant.yaml` are not edited: `targeting.region` / `targeting.size` are optional keys read with built-in defaults, and the
+   `regions:` lines are printed (doctor) for you to add. (b) The paths `state`, `company_size`, `company_size_overrides` are built-in defaults (`config.DEFAULT_PATHS`), so `--mock` redirects them under `data/mock/` like every other path.
+   (c) The reference's startup <= 50 / scaleup <= 500 bands are replaced by the UK limits (micro <= 10, small <= 50, medium <= 250). (d) `work_country` is not used to read a job's region: for a remote role it is only the home
+   country. (e) "Out of region" for a job still being found by `discover` means it is not written (a later run with another region finds it again); the ads already in the inbox are parked, not removed. (f) A bare "team of N" counts as a
+   headcount only for N >= 20 (or after "we are", "company", "startup"): "a team of 5 data scientists" is not the company. (g) `Region` in the Sheet is the first of uk / ie / eu / us that holds the job, else `other` / `unknown`. (h) A
+   destructive-call allowlist entry was not needed: `targeting.json` is written with `write_text`, nothing is renamed or removed. (i) The existing `test_the_36_headers...` now pins the first 36 headers and the two new ones.
+5. **Tests** (new, 199): `tests/discovery/test_region.py`, `test_size.py`, `test_shortlist_region_size.py`, `test_discover_region.py`, `tests/test_choices.py`, `test_live_region.py`, `test_region_size_reports.py`. **Unverified:** a live
+   `discover --ats --gmail-alerts --report --region uk`, the real Companies House API (no key was used: the search / profile shapes follow its public documentation), and `live --dry-run --max 1` on the real approved ads.
+

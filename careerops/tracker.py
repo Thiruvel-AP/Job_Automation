@@ -26,7 +26,7 @@ from . import contacts as contacts_mod
 from . import outreach
 from .config import load_yaml
 from .db import DB
-from .discovery import freshness, gmail, workcountry
+from .discovery import freshness, gmail, region as region_mod, size as size_mod, workcountry
 from .googleapi import GoogleAPI
 
 DEFAULT_TAB = "Applications"
@@ -39,6 +39,7 @@ HEADERS = [
     "Contact 1 name", "Contact 1 role", "Contact 1 email", "Contact 1 source",
     "Contact 2 name", "Contact 2 role", "Contact 2 email", "Contact 2 source",
     "Outreach status", "Follow-up due", "Status", "Interview date", "Notes",
+    "Region", "Size",                       # v2.4, appended on the right: an older Sheet gets them added after its last column (ensure_headers)
 ]
 KEY = "Job ID"
 STATUS = "Status"
@@ -213,6 +214,7 @@ def record(db: DB, settings, job_row: Any, fb: Mapping[str, Any] | None = None) 
         "JD text": str(job.get("description") or "")[:JD_MAX],
         "Outreach status": outreach.status(db, job["id"]), "Follow-up due": outreach.follow_up_due(db, settings, job),
         STATUS: "Applied",
+        "Region": region_mod.region_of(job), "Size": size_mod.stored(db, job).cell,
     }
     for n, p in enumerate(people, 1):
         out.update({f"Contact {n} name": p.get("name") or "", f"Contact {n} role": p.get("role") or "",

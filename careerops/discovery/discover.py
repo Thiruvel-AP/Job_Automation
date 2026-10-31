@@ -52,7 +52,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Sequence
 from urllib.parse import urlparse
 
 from ..apply.naming import folder_key
@@ -63,6 +63,7 @@ from . import candidate as cand
 from ..apply import decided as decided_mod
 from . import boards as boards_mod
 from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import region as region_mod
 from . import workday as workday_mod
 from . import register as sponsors
 from .candidate import Candidate
@@ -525,8 +526,10 @@ def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = ""
 # ------------------------------------------------------------------ the pipeline for one candidate
 class Discover:
     def __init__(self, settings, db: DB, fetcher: Fetcher, *, fb: dict | None = None, dry_run: bool = False, limit: int | None = None,
-                 today: datetime | None = None, say: Callable[[str], None] = print):
+                 today: datetime | None = None, say: Callable[[str], None] = print, regions: Sequence[str] | None = None):
         self.s, self.db, self.f, self.say, self.dry_run = settings, db, fetcher, say, dry_run
+        self.regions = tuple(regions) if regions is not None else None             # the selected region keys; None = the old UK gate
+        self.region_tally: dict[tuple, str] = {}                                   # one job -> its latest verdict (a Reed job is asked twice)
         self.today = today or datetime.now(timezone.utc)
         self.limit = limit if limit is not None else int(settings["discover"].get("max_new_per_run", 40))
         self.known = load_known(settings, db)
@@ -535,6 +538,12 @@ class Discover:
         self.run.notes += self.known.notes
         self.fb = fb
         self.registry = registry_mod.load(settings)
+        if self.regions is not None:                                  # a source that is for other regions only does not run (its alerts are not read, its boards not asked)
+            left = [s for s in self.registry if not region_mod.source_runs(s.region_tags, self.regions)]
+            if left:
+                self.registry = registry_mod.Registry([s for s in self.registry if s not in left])
+                if any(s.enabled for s in left):
+                    self.run.notes.append(f"not run for region {','.join(self.regions)}: " + ", ".join(f"{s.id} ({'/'.join(s.region_tags)})" for s in left if s.enabled))
         self.cache = BoardCache(settings, fetcher, clock=lambda: self.today)          # "Posted Today" is relative to the run's day
         self.index = boards_mod.BoardIndex(settings)                 # one for the run: boards.json is written whole
         self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards(), index=self.index)
@@ -558,7 +567,12 @@ class Discover:
             self.run.count(label, "role_filtered")
             self.filtered_out(c.source, c.company, c.title, c.location, c.url, "role", role_reason(c.title))
             return False
-        if cand.uk_ok(c, self.s):
+        if self.regions is not None:
+            m = region_mod.match(c.location, c.description, self.regions, country=c.country)
+            self.region_tally[(c.company, c.title, c.location, c.url)] = m.verdict
+            if m.verdict != region_mod.OUT:
+                return True                                           # in, or unknown (kept, flagged `region?` in the shortlist: missing data is no penalty)
+        elif cand.uk_ok(c, self.s):
             return True
         elsewhere = self.elsewhere(c)
         if elsewhere and self.listed_enabled:
@@ -566,13 +580,20 @@ class Discover:
             return True
         self.run.count(label, "place_filtered")
         where = f"in {elsewhere}, and discover.listed_only is off" if elsewhere else f"{c.location or c.country or 'no place given'}"
-        self.filtered_out(c.source, c.company, c.title, c.location, c.url, "place", f"not in the UK or remote UK ({where})")
+        self.filtered_out(c.source, c.company, c.title, c.location, c.url, "place",
+                          (f"not in region {','.join(self.regions)} ({where})" if self.regions is not None else f"not in the UK or remote UK ({where})"))
         return False
 
     def filtered_out(self, source: str, company: str, title: str, location: str, link: str, which: str, reason: str) -> None:
         """Note a title the role or place filter turned away (written to paths.discover/filtered_<date>.csv by flush_filtered)."""
         self.pending_filtered.append({"ts": self.today.isoformat(timespec="seconds"), "source": source, "company": company, "title": title,
                                       "location": location, "filter": which, "reason": reason, "link": link})
+
+    def region_counts(self) -> Counter:
+        """in / out / unknown over every job this run asked about (a job once, by its latest verdict)."""
+        c = Counter({region_mod.IN: 0, region_mod.OUT: 0, region_mod.UNKNOWN: 0})
+        c.update(self.region_tally.values())
+        return c
 
     @staticmethod
     def elsewhere(c: Candidate) -> str:
@@ -1110,6 +1131,12 @@ class Discover:
 
 
 # ------------------------------------------------------------------ rows that are listed, not written as ads (append-only)
+def format_region_size(region: dict, size: dict) -> str:
+    """`in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31` (`discover --report`)."""
+    return (f"in region {region.get(region_mod.IN, 0)} · out {region.get(region_mod.OUT, 0)} (parked) · unknown {region.get(region_mod.UNKNOWN, 0)} | "
+            f"SME {size.get('sme', 0)} · Large {size.get('large', 0)} · size? {size.get('unknown', 0)}")
+
+
 def listed_path(settings) -> Path:
     return settings.path("discover") / "listed_only.csv"
 

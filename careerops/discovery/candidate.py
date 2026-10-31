@@ -46,7 +46,10 @@ class Candidate:
 
     def to_ad(self) -> Ad:
         posted = (self.posted or "").strip()
-        return Ad(company=self.company, title=self.title, url=self.url, location=self.location, text=self.description,
+        place = self.location                                     # the country a source gave rides with the place ("Hull, GB"): the shortlist's region check reads the same text
+        if self.country and not self.listed_only and self.country.strip().lower() not in (place or "").lower():
+            place = f"{place}, {self.country.strip()}" if place else self.country.strip()
+        return Ad(company=self.company, title=self.title, url=self.url, location=place, text=self.description,
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
                   posted=posted if freshness.is_iso(posted) else "", posted_source=self.posted_source if freshness.is_iso(posted) else "",
                   country=self.country if self.listed_only else "", listed_only=self.listed_only,

@@ -13,8 +13,11 @@ SETTINGS_ENV = "CAREEROPS_SETTINGS"      # a settings file to use when none is g
 # A paths key the settings file may leave out: the built-in folder is used. Never one of the user's own folders.
 # jds_done: the JD files of skipped / applied jobs (discovery/decided.py). facts_proposed: facts the user typed in review for a gap keyword
 # (tailoring/provisional.py); they wait there, provisional for their own job, until the user saves them to the fact bank.
+# state: the program's own memory (targeting.json: the last region / size you chose, choices.py). company_size: the 90-day cache of company sizes
+# (discovery/size.py); company_size_overrides.yaml is YOURS (`Graphcore: large`): read only, a missing file means no overrides.
 DEFAULT_PATHS = {"applications_auto": "data/applications_auto", "jds_done": "data/jds_done", "letter_feedback": "data/letters/feedback.jsonl",
-                 "facts_proposed": "data/facts/proposed.yaml"}     # where the pipeline writes its archive; paths.applications is read-only
+                 "facts_proposed": "data/facts/proposed.yaml",     # where the pipeline writes its archive; paths.applications is read-only
+                 "state": "data/state", "company_size": "data/company_size.jsonl", "company_size_overrides": "data/company_size_overrides.yaml"}
 
 
 @dataclass

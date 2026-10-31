@@ -214,7 +214,10 @@ def sponsor_factor(job: Mapping[str, Any], settings=None) -> tuple[float, str]:
     home = (workcountry.rules_from(workcountry.applicant_visa(settings)).home if settings is not None else "") or "GB"
     place = countries.place_code(str(_get(job, "work_country") or "")) or countries.code(str(_get(job, "country") or ""))
     if place and place != home:
-        options.append((w["non_home"], f"work location {countries.place_name(place)} is not home"))
+        if _get(job, "region_target"):            # a region outside the UK was chosen: the UK register cannot say, so S = unknown (discovery/region.py)
+            options.append((w["unknown"], f"non-UK region: visa not checked ({countries.place_name(place)})"))
+        else:
+            options.append((w["non_home"], f"work location {countries.place_name(place)} is not home"))
     return min(options, key=lambda o: o[0])
 
 

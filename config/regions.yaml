@@ -1,0 +1,31 @@
+# Region definitions for `--region` / the region prompt (careerops/discovery/region.py). CODE-OWNED: the pipeline reads this file, never writes it,
+# and it is not a user setting (what you target is chosen with `--region`, the prompt, or `targeting.region` in settings.yaml).
+#
+#   label              how the region reads in the output
+#   iso                ISO 3166-1 alpha-2 and alpha-3 codes of its countries: a place that resolves to one of them is in the region
+#   always_allow       phrases that put a place in the region on their own (matched on word boundaries, any case)
+#   allow_cities       cities that put a place in the region (word boundaries; "Newcastle upon Tyne" and "Newcastle" are both listed)
+#   homonym_block      places that share a name with an allowed city but are somewhere else: tested BEFORE always_allow / allow_cities
+#   ambiguous_remote   places that do not say where the work is: the ad's own text decides (a country named in it, "UK-based",
+#                      "right to work in the UK", an exclusion such as "US-based candidates only"); with no answer the job is kept, flagged `region?`
+# Matching order, per job, zero tokens: ISO codes to names -> homonym_block -> always_allow / allow_cities -> ambiguous_remote or no place (ad text) -> out.
+uk:
+  label: "United Kingdom"
+  iso: [GB, GBR]
+  always_allow: ["United Kingdom", "UK", "U.K.", "Great Britain", "England", "Scotland", "Wales",
+                 "Northern Ireland", "Remote UK", "UK Remote", "Remote - UK", "Remote, UK",
+                 "Remote (UK)", "Remote - United Kingdom"]
+  allow_cities: [London, Bristol, Bath, Cardiff, Manchester, Birmingham, Leeds, Sheffield, Liverpool,
+                 Newcastle upon Tyne, Newcastle, Nottingham, Leicester, Cambridge, Oxford, Reading, Milton Keynes,
+                 Southampton, Brighton, Exeter, Plymouth, Edinburgh, Glasgow, Aberdeen, Dundee, Belfast,
+                 Swansea, York, Coventry, Guildford, Harwell, Stevenage, Basingstoke, Bracknell, Slough]
+  # Same name as a UK city, but a different country.
+  homonym_block: ["Cambridge, MA", "Cambridge, Massachusetts", "London, ON", "London, Ontario",
+                  "Birmingham, AL", "Manchester, NH", "Bristol, CT", "Bristol, TN", "Bristol, VA",
+                  "Reading, PA", "Newcastle, NSW", "Perth, WA", "Perth, Australia", "Plymouth, MA",
+                  "Richmond, VA", "Durham, NC", "Worcester, MA", "Portsmouth, NH", "York, PA", "Oxford, MS"]
+  ambiguous_remote: ["Remote", "Remote - EMEA", "EMEA", "Europe", "Remote Europe", "Anywhere"]
+ie:   { label: "Ireland", iso: [IE, IRL], always_allow: ["Ireland", "Dublin", "Cork", "Galway", "Limerick"] }
+eu:   { label: "EU (27)", iso: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE] }
+us:   { label: "United States", iso: [US, USA] }
+any:  { label: "All regions (old behaviour)" }
