@@ -108,6 +108,29 @@ def _has(allowed: str, term: str) -> bool:
     return _contains(allowed, norm_literal(term)) or _contains(norm_stem(allowed), norm_stem(term))
 
 
+def name_head(name: str) -> str:
+    """The name inside a hyphenated compound whose later part is an ordinary word: "Python-driven" -> "Python", "AWS-hosted" -> "AWS".
+    A compound of names ("Scikit-Learn") or a plain word is returned as it is."""
+    parts = [p for p in name.split("-") if p]
+    if len(parts) < 2:
+        return name
+    head = []
+    for p in parts:
+        if p[0].islower():
+            break
+        head.append(p)
+    return "-".join(head) if head and len(head) < len(parts) else name
+
+
+def name_allowed(allowed: str, name: str) -> bool:
+    """A name is allowed when `allowed` says it, or, for a hyphenated compound ("Python-driven"), says its name part ("Python"). The name part is
+    still checked: "Rust-driven" is rejected when nothing allowed says Rust (v2.5)."""
+    if _has(allowed, name):
+        return True
+    head = name_head(name)
+    return head != name and _has(allowed, head)
+
+
 # Where the opening sentence turns from the company to the candidate's own work: "<Company>'s mission ... MIRRORS my ...",
 # "... demands models that learn quickly — THAT'S exactly what I built ...".
 _CLAIM_MARK = re.compile(r"\b(?:mirror|reflect|match|echo|resembl|parallel)(?:s|es|ed|e|ing)?\b|\baligns? with\b|"
@@ -228,7 +251,7 @@ def grounding_problems(paragraphs: list[str], evidence: list[dict], jd: str, hoo
                            f"'{sentence.strip()[:60]}'")
 
         for name in _names(sentence):
-            if not _has(allowed, name):
+            if not name_allowed(allowed, name):
                 flag(name, "name")
         for w in dict.fromkeys(re.findall(r"[a-z][a-z-]+", lit)):
             if w in SECTOR_WORDS and not _has(allowed, w):

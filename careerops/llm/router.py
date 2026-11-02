@@ -222,14 +222,14 @@ class Provider:
         return f"{self.name}: HTTP {r.status_code}: {body}"
 
     def chat(self, system: str, user: str, task: str = "", max_tokens: int | None = None,
-             model: str | None = None) -> str:
-        """One completion. `model` overrides the provider's own model for this call (llm.models)."""
+             model: str | None = None, temperature: float | None = None) -> str:
+        """One completion. `model` overrides the provider's own model for this call (llm.models); `temperature` the configured one."""
         cap = max_tokens or self.max_tokens_for(task)
         model = model or self.cfg["model"]
         effort, include = self.reasoning_for(model)
         body: dict[str, Any] = {
             "model": model,
-            "temperature": self.temperature,
+            "temperature": self.temperature if temperature is None else temperature,
             "max_tokens": cap,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         }
@@ -341,8 +341,10 @@ class Router:
         self._allowed = None
 
     def json(self, task: str, system: str, user: str, context: dict | None = None) -> dict:
+        """`context` is the task's structured context (what a mock reads); its `temperature`, when it has one, is this call's sampling temperature."""
         errors = []
         self.last_raw = None
+        temperature = (context or {}).get("temperature")
         only = self.task_providers.get(task)          # None: any provider may take this task
         failed_for_real = False                        # an answer that was wrong, not a provider that was unavailable
         for p in self.providers:
@@ -364,7 +366,7 @@ class Router:
                 continue
             for attempt in range(2):
                 try:
-                    text = p.chat(system, user, task, model=model)
+                    text = p.chat(system, user, task, model=model, temperature=temperature)
                     self.last_raw = text
                     self.usage.append({"task": task, "provider": p.name,
                                        "model": p.last_model or model or p.cfg.get("model"), **p.last_usage})

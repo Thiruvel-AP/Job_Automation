@@ -331,11 +331,24 @@ def test_a_job_that_is_skipped_applied_or_closed_is_not_listed(settings, db, fb,
 
 
 def test_a_job_the_database_has_skipped_is_not_listed(settings, db, fb, inbox):
+    write_ad(inbox, "again.txt", company="Gone", age_days=1)
+    write_ad(inbox, "fresh.txt", company="Fresh", age_days=1)
+    from careerops.apply import decided
+    hdr = decided.header_of(inbox / "again.txt")
+    db.upsert_job({"id": "manual:g1", "source": "manual", "company": "Gone", "title": "Data Scientist", "description": "x", "url": hdr.get("url")})
+    db.update_job("manual:g1", status="skipped")
+    assert names(build(settings, db, fb)) == ["Fresh"]                     # the same address: decided
+
+
+def test_a_skipped_job_with_only_the_same_company_and_title_is_listed_as_a_possible_repost(settings, db, fb, inbox):
     db.upsert_job({"id": "manual:g1", "source": "manual", "company": "Gone", "title": "Data Scientist", "description": "x"})
     db.update_job("manual:g1", status="skipped")
     write_ad(inbox, "again.txt", company="Gone", age_days=1)
     write_ad(inbox, "fresh.txt", company="Fresh", age_days=1)
-    assert names(build(settings, db, fb)) == ["Fresh"]
+    plan = build(settings, db, fb)
+    assert sorted(names(plan)) == ["Fresh", "Gone"]                        # v2.5: company + title alone never skip
+    gone = next(r for r in plan.rows if r.job["company"] == "Gone")
+    assert "possible repost of a job you skipped" in gone.tags()
 
 
 # ------------------------------------------------------------------ [x]

@@ -1,18 +1,22 @@
-"""Skip and applied decisions are final, and cover every copy of a job.
+"""Skip and applied decisions are final, and cover every copy of the SAME listing.
 
-A job is "the same" when its duplicate key agrees: the company family (candidate.family_key: "Graphcore Early Careers" is
-"Graphcore") and the normalised title ("Graduate Machine Learning Engineer 2027" on two boards of one employer). Place is not
-part of the key. When one copy is skipped or applied to:
+v2.5: "the same listing" is decided by its canonical keys (apply/listing_keys.py), never by company + title alone: the job id, the ATS key
+`ats:<vendor>:<board>:<job_id>` or the normalised URL. Two "Forward Deployed Engineer" postings of one company (London, Munich, Paris: three
+Greenhouse ids) are three jobs, and skipping one hides neither of the others. A job that only shares the fingerprint (company family | title |
+country) with a decided one is labelled `possible repost of a job you skipped on <date>` (`Decided.repost`) and is still shown to you.
+When a job is skipped or applied to:
 
-  * every other job in the database with that key is skipped too (an applied job is never touched; a copy of an applied job is
-    marked `skipped` with the reason "same job as <id>", it was not applied to);
-  * every JD file in the inbox with that key moves to paths.jds_done/skipped/ or paths.jds_done/applied/ (never deleted, never
-    overwritten: a name already there gets -2, -3 ...);
-  * `discover` writes no ad whose job id or key is decided (`Decided`: the database rows with status skipped / applied, and the
-    files in jds_done/), and counts it as `already_decided`.
+  * the decision is appended to the decision log (apply/decisions.py, data/state/decisions.jsonl) with all its keys;
+  * every other job in the database with the same id / ATS key / URL key is skipped too (an applied job is never touched; a copy of an applied
+    job is marked `skipped` with the reason "same job as <id>", it was not applied to);
+  * every JD file of it in the inbox or an approved shortlist folder (jds/approved/<date>/) moves to paths.jds_done/skipped/ or
+    paths.jds_done/applied/ (never deleted, never overwritten: a name already there gets -2, -3 ...): a skip overrides an earlier approval;
+  * `discover`, the inbox intake, `shortlist` and `live` write or show no ad whose id / ATS key / URL key is decided (`Decided`: the decision
+    log, the database rows with status skipped / applied, and the files in jds_done/), and discover counts it as `already_decided`.
 
-`unskip` undoes a skip (the job, its copies, their files); an applied job is final. `sweep` applies the same rules to what is in
-the inbox now (`careerops retriage --decided`, a dry run unless --apply). Nothing in this module submits anything.
+`unskip` undoes a skip (the job, its copies, their files, and an `unskipped` line in the log); an applied job is final. `sweep` applies the
+same rules to what is in the inbox and the approved folders now (`careerops retriage --decided`, a dry run unless --apply; with --apply it
+first writes the log lines the database's decided jobs do not have yet). Nothing in this module submits anything.
 """
 from __future__ import annotations
 
@@ -25,6 +29,8 @@ from pathlib import Path
 from ..db import DB, now
 from ..discovery import candidate as cand
 from ..discovery import manual
+from . import decisions as decisions_mod
+from . import listing_keys as LK
 
 SKIPPED, APPLIED = "skipped", "applied"
 DECISIONS = (SKIPPED, APPLIED)
@@ -71,6 +77,12 @@ def file_key(path: Path) -> Key | None:
     return key if usable(key) else None
 
 
+def file_keys(path: Path) -> LK.Keys:
+    """The canonical keys of a JD file, from its Company / Title / URL / Location header."""
+    hdr = header_of(path)
+    return LK.keys_for(hdr.get("company"), hdr.get("title"), hdr.get("url"), hdr.get("apply_url") or hdr.get("apply url"), hdr.get("location"))
+
+
 def file_job_id(path: Path) -> str | None:
     """The id `careerops live` would give this file's job (None without Company and Title headers)."""
     hdr = header_of(path)
@@ -90,36 +102,74 @@ def txt_files(folder: Path) -> list[Path]:
 @dataclass
 class Decided:
     ids: dict[str, str] = field(default_factory=dict)          # job id -> decision
-    keys: dict[Key, str] = field(default_factory=dict)         # duplicate key -> decision (applied wins over skipped)
+    keys: dict[Key, str] = field(default_factory=dict)         # (company family, title) -> decision: kept for reports, never decides on its own
+    strong: dict[str, str] = field(default_factory=dict)       # ATS key / URL key -> decision (applied wins over skipped)
+    prints: dict[str, tuple[str, str, str]] = field(default_factory=dict)      # fingerprint -> (decision, date, job id)
+    book: decisions_mod.Book = field(default_factory=decisions_mod.Book)
 
-    def add(self, key: Key, decision: str, job_id: str | None = None) -> None:
+    def add(self, key: Key, decision: str, job_id: str | None = None, lk: LK.Keys | None = None, date: str = "") -> None:
         if job_id:
             self.ids[job_id] = decision
         if usable(key) and self.keys.get(key) != APPLIED:
             self.keys[key] = decision
+        for k in (lk.strong() if lk is not None else []):
+            if self.strong.get(k) != APPLIED:
+                self.strong[k] = decision
+        if lk is not None and lk.fingerprint and lk.fingerprint not in self.prints:
+            self.prints[lk.fingerprint] = (decision, date, job_id or "")
 
-    def hit(self, company: str, title: str, url: str | None = None) -> str | None:
-        """The decision that covers this ad (by job id when the URL is known, else by key), or None."""
-        if url:
-            found = self.ids.get(manual.job_id_for(company, title, url))
-            if found:
-                return found
-        key = key_of(company, title)
-        return self.keys.get(key) if usable(key) else None
+    def hit(self, company: str, title: str, url: str | None = None, location: str | None = None, apply_url: str | None = None,
+            job_id: str | None = None) -> str | None:
+        """The decision that covers this ad: by its job id, its ATS key or its URL key (the decision log first, then the database rows and the
+        files in jds_done/). Company + title alone never decide (v2.5). None = not decided."""
+        jid = job_id or (manual.job_id_for(company, title, url) if url else None)
+        if jid and self.ids.get(jid):
+            return self.ids[jid]
+        lk = LK.keys_for(company, title, url, apply_url, location, jid)
+        m = self.book.decided(lk, jid)
+        if m is not None:
+            return APPLIED if m.decision == decisions_mod.APPLIED else SKIPPED
+        return next((self.strong[k] for k in lk.strong() if k in self.strong), None)
+
+    def repost(self, company: str, title: str, url: str | None = None, location: str | None = None, apply_url: str | None = None,
+               job_id: str | None = None) -> str:
+        """`possible repost of a job you skipped on <date> (<id>)` when only the fingerprint matches a decided job; "" otherwise."""
+        if self.hit(company, title, url, location, apply_url, job_id):
+            return ""
+        jid = job_id or (manual.job_id_for(company, title, url) if url else None)
+        lk = LK.keys_for(company, title, url, apply_url, location, jid)
+        m = self.book.repost(lk, jid)
+        if m is not None and m.record.get("job_id") != jid:
+            return m.label()
+        got = (self.prints.get(lk.fingerprint) or self.prints.get(_no_country(lk.fingerprint))) if lk.fingerprint else None
+        if got and got[2] != jid:
+            what = "applied to" if got[0] == APPLIED else "skipped"
+            return f"possible repost of a job you {what} on {got[1][:10] or '?'} ({got[2] or '?'})"
+        return ""
 
 
 def load(settings, db: DB) -> Decided:
-    """Every decision made so far: database rows with status skipped / applied, and the JD files in jds_done/skipped and jds_done/applied
-    (those stay decided even if a later retriage gives the row a new status)."""
-    d = Decided()
-    for r in db.conn.execute("SELECT id, company, title, status FROM jobs WHERE status IN (?, ?)", (SKIPPED, APPLIED)):
-        d.add(key_of(r["company"], r["title"]), STATUS_DECISION[r["status"]], r["id"])
+    """Every decision made so far: the decision log, database rows with status skipped / applied, and the JD files in jds_done/skipped and
+    jds_done/applied (those stay decided even if a later retriage gives the row a new status)."""
+    d = Decided(book=decisions_mod.Book.load(settings))
+    for r in db.conn.execute("SELECT * FROM jobs WHERE status IN (?, ?)", (SKIPPED, APPLIED)):
+        d.add(key_of(r["company"], r["title"]), STATUS_DECISION[r["status"]], r["id"], LK.keys_of_row(r), str(r["updated_at"] or ""))
     for decision in DECISIONS:
         for p in txt_files(decision_dir(settings, decision)):
             key = file_key(p)
             if key:
-                d.add(key, decision, file_job_id(p))
+                d.add(key, decision, file_job_id(p), file_keys(p))
     return d
+
+
+def _no_country(fp: str) -> str:
+    """The fingerprint with its country left blank: a decided job whose place was not recorded still labels a repost."""
+    return fp.rsplit("|", 1)[0] + "|" if fp else ""
+
+
+def same_listing(a: LK.Keys, b: LK.Keys) -> bool:
+    """Do two jobs share an ATS key or a URL key (the same posting)?"""
+    return bool((a.ats and a.ats == b.ats) or (a.url and a.url == b.url))
 
 
 # ------------------------------------------------------------------ moving files
@@ -149,12 +199,35 @@ def move_file(settings, src: Path, folder: Path) -> Path:
     return dst
 
 
-def group_rows(db: DB, key: Key) -> list:
-    return [r for r in db.jobs() if key_of(r["company"], r["title"]) == key] if usable(key) else []
+def group_rows(db: DB, job) -> list:
+    """The job and every database row of the same listing (same id, ATS key or URL key)."""
+    mine = LK.keys_of_row(job)
+    return [r for r in db.jobs() if r["id"] == job["id"] or same_listing(mine, LK.keys_of_row(r))]
 
 
-def group_files(folder: Path, key: Key) -> list[Path]:
-    return [p for p in txt_files(folder) if file_key(p) == key] if usable(key) else []
+def group_files(folder: Path, job) -> list[Path]:
+    """The JD files in `folder` of the same listing as `job` (its id, ATS key or URL key). Given a (company family, title) key instead of a job,
+    the files with that key (what a report or a test asks: "is a file of this job there?")."""
+    if isinstance(job, tuple):
+        return [p for p in txt_files(folder) if file_key(p) == job] if usable(job) else []
+    mine = LK.keys_of_row(job)
+    return [p for p in txt_files(folder) if file_job_id(p) == job["id"] or same_listing(mine, file_keys(p))]
+
+
+def approved_dirs(settings) -> list[Path]:
+    """The shortlist's approved folders (jds/approved/<date>/): a skip takes a job out of them too."""
+    root = settings.path("jds") / "approved"
+    try:
+        return sorted(p for p in root.iterdir() if p.is_dir())
+    except OSError:
+        return []
+
+
+def record(settings, job, decision: str, reason: str = "") -> dict:
+    """Append the decision for `job` (a database row) to the decision log, with all its keys."""
+    kind = {APPLIED: decisions_mod.APPLIED}.get(decision) or (decisions_mod.SKIPPED_USER if "user" in reason or "review" in reason or "you" in reason
+                                                              else decisions_mod.SKIPPED)
+    return decisions_mod.append(settings, LK.keys_of_row(job), kind, reason, job["id"])
 
 
 # ------------------------------------------------------------------ a decision
@@ -172,17 +245,17 @@ class Settled:
         return out
 
 
-def settle(db: DB, settings, job_id: str, decision: str, *, also: Path | None = None) -> Settled:
-    """Apply `decision` (skipped | applied) to the job and to every copy of it: copies in the database are skipped (an applied row is left
-    alone), every inbox file with the key (and `also`, the file the job came from) moves to jds_done/<decision>/. An applied copy in the
-    group makes the group's decision `applied`. Idempotent."""
+def settle(db: DB, settings, job_id: str, decision: str, *, also: Path | None = None, reason: str = "") -> Settled:
+    """Apply `decision` (skipped | applied) to the job and to every copy of the same listing: the decision log gets a line with its keys, copies
+    in the database are skipped (an applied row is left alone), every inbox or approved-folder file of it (and `also`, the file the job came
+    from) moves to jds_done/<decision>/. An applied copy in the group makes the group's decision `applied`. Idempotent (a second call adds a
+    line to the log, which is append-only, and moves nothing)."""
     if decision not in DECISIONS:
         raise DecidedError(f"unknown decision {decision!r}")
     job = db.job(job_id)
     if job is None:
         raise DecidedError(f"no such job: {job_id}")
-    key = key_of(job["company"], job["title"])
-    rows = group_rows(db, key)
+    rows = group_rows(db, job)
     if any(r["status"] == APPLIED for r in rows):
         decision = APPLIED
     res = Settled(decision, job_id)
@@ -194,7 +267,8 @@ def settle(db: DB, settings, job_id: str, decision: str, *, also: Path | None = 
             db.conn.execute("INSERT INTO events VALUES (?,?,?,?)",
                             (r["id"], now(), "decided", json.dumps({"copy_of": job_id, "decision": decision})))
             res.copies.append(r["id"])
-    files = group_files(inbox_dir(settings), key)
+    record(settings, job, decision, reason or str(job["reason"] or ""))
+    files = [f for folder in (inbox_dir(settings), *approved_dirs(settings)) for f in group_files(folder, job)]
     if also is not None and also.exists() and also not in files:
         files.append(also)
     for f in files:
@@ -208,9 +282,11 @@ class Sweep:
     moves: list[tuple[Path, str, str]] = field(default_factory=list)       # (inbox file, decision, why)
     copies: list[tuple[str, str, str]] = field(default_factory=list)       # (job id, decision, why): database rows to skip
     moved: list[tuple[Path, Path]] = field(default_factory=list)           # filled by apply
+    backfilled: list[dict] = field(default_factory=list)                   # decision-log lines written first (apply)
 
     def lines(self, applied: bool) -> list[str]:
-        out = [f"{len(self.moves)} inbox file(s) {'moved' if applied else 'would move'} out of the inbox; "
+        out = ([f"decision log: {len(self.backfilled)} line(s) written for decided jobs that had none"] if self.backfilled else [])
+        out += [f"{len(self.moves)} inbox file(s) {'moved' if applied else 'would move'} out of the inbox; "
                f"{len(self.copies)} job(s) {'set to skipped' if applied else 'would be set to skipped'}."]
         out += [f"  {p.name} -> jds_done/{d}/  ({why})" for p, d, why in self.moves]
         out += [f"  job {jid} -> skipped  ({why})" for jid, d, why in self.copies]
@@ -220,21 +296,29 @@ class Sweep:
 
 
 def sweep(db: DB, settings, *, apply: bool = False) -> Sweep:
-    """The decided jobs' copies that are still around: inbox files whose job id or key is decided, and database rows (not skipped, not
-    applied) whose key is. A dry run lists them; `apply` skips the rows and moves the files (to jds_done/<decision>/, never deleted)."""
-    decided = load(settings, db)
+    """The decided jobs' copies that are still around: inbox and approved-folder files whose id / ATS key / URL key is decided, and database rows
+    (not skipped, not applied) of a decided listing. A dry run lists them; `apply` first writes the decision-log lines the database's decided jobs
+    lack (decisions.backfill), then skips the rows and moves the files (to jds_done/<decision>/, never deleted)."""
     plan = Sweep()
-    for p in txt_files(inbox_dir(settings)):
-        hdr = header_of(p)
-        if not (hdr.get("company") and hdr.get("title")):
-            continue
-        which = decided.hit(hdr["company"], hdr["title"], hdr.get("url"))
-        if which:
-            plan.moves.append((p, which, f"same job as one you {'applied to' if which == APPLIED else 'skipped'}"))
+    if apply:
+        plan.backfilled = decisions_mod.backfill(db, settings)
+    decided = load(settings, db)
+    for folder in (inbox_dir(settings), *approved_dirs(settings)):
+        for p in txt_files(folder):
+            hdr = header_of(p)
+            if not (hdr.get("company") and hdr.get("title")):
+                continue
+            which = decided.hit(hdr["company"], hdr["title"], hdr.get("url"), hdr.get("location"))
+            if which:
+                plan.moves.append((p, which, f"same job as one you {'applied to' if which == APPLIED else 'skipped'}"))
     for r in db.jobs():
-        key = key_of(r["company"], r["title"])
-        if usable(key) and r["status"] not in (SKIPPED, APPLIED) and key in decided.keys:
-            plan.copies.append((r["id"], decided.keys[key], f"same job as one you {'applied to' if decided.keys[key] == APPLIED else 'skipped'}"))
+        if r["status"] in (SKIPPED, APPLIED) or r["status"].startswith(("skipped", "applied")):
+            continue
+        which = decided.hit(r["company"], r["title"], r["url"], r["location"], r["apply_url"], r["id"])
+        if which and decided.ids.get(r["id"]) is None:
+            plan.copies.append((r["id"], which, f"same job as one you {'applied to' if which == APPLIED else 'skipped'}"))
+        elif which:
+            plan.copies.append((r["id"], which, f"you {'applied to' if which == APPLIED else 'skipped'} this job"))
     if apply:
         with db.conn:
             for jid, which, why in plan.copies:
@@ -261,8 +345,7 @@ def restore(db: DB, settings, job_id: str) -> Restored:
     job = db.job(job_id)
     if job is None:
         raise DecidedError(f"no such job: {job_id}")
-    key = key_of(job["company"], job["title"])
-    rows = group_rows(db, key)
+    rows = group_rows(db, job)
     if any(r["status"] == APPLIED for r in rows):
         raise DecidedError(f"{job_id} is the same job as one you applied to: an applied decision is final")
     if job["status"] != SKIPPED:
@@ -275,7 +358,10 @@ def restore(db: DB, settings, job_id: str) -> Restored:
             db.update_job(r["id"], commit=False, status="needs_review" if r["out_dir"] else "new", reason=None)
             db.conn.execute("INSERT INTO events VALUES (?,?,?,?)", (r["id"], now(), "decided", json.dumps({"unskipped": job_id})))
             res.job_ids.append(r["id"])
-    for f in group_files(decision_dir(settings, SKIPPED), key):
+    for r in rows:
+        if r["id"] in res.job_ids:
+            decisions_mod.append(settings, LK.keys_of_row(r), decisions_mod.UNSKIPPED, f"careerops unskip --id {job_id}", r["id"])
+    for f in group_files(decision_dir(settings, SKIPPED), job):
         res.moved.append((f, move_file(settings, f, inbox_dir(settings))))
     _reopen(settings, set(res.job_ids))
     return res
@@ -285,7 +371,8 @@ def bring_back(settings, job_id: str, company: str, title: str) -> list[Path]:
     """`retriage --ats`: a job skipped on the ATS band that now reaches the review band. Its JD file(s) move from jds_done/skipped/ back to
     the inbox (the `.reason.txt` beside them stays) and live's record of it is reopened. Returns the files moved."""
     key = key_of(company, title)
-    moved = [move_file(settings, f, inbox_dir(settings)) for f in group_files(decision_dir(settings, SKIPPED), key)]
+    moved = [move_file(settings, f, inbox_dir(settings)) for f in txt_files(decision_dir(settings, SKIPPED))
+             if file_job_id(f) == job_id or (usable(key) and file_key(f) == key)]
     _reopen(settings, {job_id})
     return moved
 

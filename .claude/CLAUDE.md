@@ -78,6 +78,8 @@ What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · curre
   has ever submitted. Never delete, move, rename, overwrite or edit anything there — not with code, not with shell
   commands (`rm`, `mv`, `cp` onto existing files, redirects). Reading (`ls`) is fine. Tests must use `tmp_path`, never this folder.
 
+- The parallel test copy never writes back into `data/`, `settings.yaml` or the inbox.
+
 ## Git
 - Small commits, imperative subject (≤72 chars), body says why. One milestone step per commit.
 - Do not push or create branches unless asked.

@@ -41,8 +41,9 @@ def test_the_table_is_printed_before_the_gate(world, form):
 
 
 def test_a_question_nobody_answered_stops_the_run_and_the_table_still_shows(world, form):
-    r = world.run(form, submit=False)                                    # the working-rights drop-down has no answers.yaml entry
-    assert r.status == autolog.NEEDS_USER and "working rights" in r.reason and world.submit_calls == 0
+    r = world.run(form, submit=False)                                    # the visa-type box has no answers.yaml entry; the working-rights one is applicant.yaml's
+    assert r.status == autolog.NEEDS_USER and "specify the type of" in r.reason and "working rights" not in r.reason and world.submit_calls == 0
+    assert any("working rights" in line and ("VERIFIED" in line or "FILLED" in line) for line in world.out), world.out          # picked from applicant.yaml
     assert any("REQUIRED FIELDS" in line for line in world.out)
 
 
@@ -60,7 +61,7 @@ def test_a_letter_written_now_is_uploaded_through_the_file_input(world, form, tm
     made = Made(str(pdf), "Hi team,\n\nBody.\n\nRegards,\n\nAda", "", {"letter": {"paragraphs": ["x"]}})
     world.run(form, submit=False, rep=world.rep(), letter_maker=lambda ctl: made)
     assert world.state["values"]["cover_letter"] == "Ada Lovelace Cover Letter.pdf"
-    assert any("written now because the form asks" in line for line in world.out)
+    assert any("written now, before any browser opens" in line for line in world.out)
 
 
 def test_a_required_letter_that_fails_its_guards_is_handed_off_with_the_reason(world, form):

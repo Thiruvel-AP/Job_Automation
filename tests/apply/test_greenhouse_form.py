@@ -14,6 +14,9 @@ from careerops.apply import answers as answers_mod
 from careerops.apply import assist as assist_mod
 from careerops.apply import freetext as ft
 from careerops.apply import requiredgate as RG
+from careerops.apply import visa as visa_mod
+from careerops.discovery import workcountry
+from careerops.discovery.workcountry import Rules
 
 pytestmark = pytest.mark.slow          # these tests drive Chromium
 
@@ -83,6 +86,10 @@ document.getElementById('f').addEventListener('submit', e => {{ e.preventDefault
 </script></body></html>"""
 
 
+def plan_for(applicant=None, code: str = "GB"):
+    return visa_mod.plan_for(applicant or APPLICANT, workcountry._mk(Rules(home="GB", label="Remote"), code, "onsite", "test"))
+
+
 def book(visa_type: str = "") -> answers_mod.AnswerBook:
     entries = [
         answers_mod.Entry("notice_period", (answers_mod.norm("notice period"),), NOTICE, options=("Immediately", "No notice period")),
@@ -116,10 +123,11 @@ def files(tmp_path):
     return str(cv), str(letter)
 
 
-def run(page, files, settings, monkeypatch, visa_type="", llm=None, job=JOB_ROW):
+def run(page, files, settings, monkeypatch, visa_type="", llm=None, job=JOB_ROW, plan="gb"):
     monkeypatch.setattr(assist_mod, "check_job_files", lambda *a, **k: None)
     free = ft.for_job(job, REP, FB, llm or llm_with(WHY, ad_phrases=[AD_PHRASE]), settings, book(visa_type), ask=lambda p: "", out=lambda s: None)
-    return assist_mod.fill_page(page, APPLICANT, files[0], files[1], letter_text="x", job=job, book=book(visa_type), freetext=free, quiet_ms=50)
+    return assist_mod.fill_page(page, APPLICANT, files[0], files[1], letter_text="x", job=job, book=book(visa_type), freetext=free, quiet_ms=50,
+                                plan=plan_for() if plan == "gb" else plan)
 
 
 def table(report) -> dict:
@@ -147,8 +155,8 @@ def test_the_required_table_blocks_only_on_what_the_person_must_do(page, files, 
     t = table(r)
     blocking = {label: row["status"] for label, row in t.items() if row["status"] in RG.BLOCKING}
     names = " | ".join(blocking)
-    assert len(blocking) == 4, blocking
-    assert "type of visa" in names and "I declare" in names and "By checking this box" in names and "working rights" in names
+    assert len(blocking) == 3, blocking                                                   # the working-rights drop-down is answered from applicant.yaml now
+    assert "type of visa" in names and "I declare" in names and "By checking this box" in names and "working rights" not in names
     assert all(s == "NEEDS USER" for s in blocking.values())
     assert "answers.yaml has no `visa_type` entry" in next(row["reason"] for label, row in t.items() if "type of visa" in label)
     assert "attestation" in next(row["reason"] for label, row in t.items() if "I declare" in label)
@@ -171,7 +179,7 @@ def test_the_declaration_and_the_consent_are_never_set_even_with_a_yes_in_answer
 def test_the_table_is_printed_with_every_status_and_blocking_rows_say_so(page, files, settings, monkeypatch, capsys):
     run(page, files, settings, monkeypatch)
     out = capsys.readouterr().out
-    assert "REQUIRED FIELDS" in out and "BLOCKS AUTO-SUBMIT: 4 required field(s)" in out and "NEEDS USER" in out and "VERIFIED" in out
+    assert "REQUIRED FIELDS" in out and "BLOCKS AUTO-SUBMIT: 3 required field(s)" in out and "NEEDS USER" in out and "VERIFIED" in out
 
 
 def test_with_no_jd_the_motivation_box_is_handed_off_and_nothing_is_drafted(page, files, settings, monkeypatch):
@@ -205,3 +213,22 @@ def test_the_dry_run_record_has_every_field_the_screenshot_and_the_files(page, f
     assert "WORDS:" in m and "GUARD: passed" in m and WHY[:40] in m
     assert {x["source"] for x in data if x["label"] == "Email"} == {"applicant"}
     assert next(x for x in data if x["label"].startswith("What is your notice"))["source"] == "answers:notice_period"
+
+
+def test_the_working_rights_dropdown_of_the_rightship_label_is_answered_from_applicant_yaml(page, files, settings, monkeypatch):
+    r = run(page, files, settings, monkeypatch)
+    assert Q_RIGHTS == "What are your working rights in the country where this role is advertised for?"
+    assert page.inner_text("#rights_v") == "Work Visa"                                    # right_to_work yes, sponsorship_now no, the summary says a visa
+    row = table(r)[Q_RIGHTS.rstrip("*")] if Q_RIGHTS.rstrip("*") in table(r) else next(x for k, x in table(r).items() if "working rights" in k)
+    assert row["status"] in ("VERIFIED", "FILLED") and "applicant.yaml" in row["source"], row
+    assert page.input_value("#visa_type") == ""                                            # the visa TYPE is its own target: no paragraph, no plan answer
+    assert page.evaluate("window.__clicked").count("Work Visa") == 1
+
+
+def test_the_working_rights_dropdown_stays_with_the_person_when_applicant_yaml_cannot_decide_it(page, files, settings, monkeypatch):
+    no_visa_words = copy.deepcopy(APPLICANT)
+    no_visa_words["visa"]["by_country"]["GB"]["summary"] = "I am settled in the UK."
+    r = run(page, files, settings, monkeypatch, plan=plan_for(no_visa_words))
+    assert page.inner_text("#rights_v") == ""
+    row = next(x for k, x in table(r).items() if "working rights" in k)
+    assert row["status"] == "NEEDS USER" and "cannot be told apart" in row["reason"]

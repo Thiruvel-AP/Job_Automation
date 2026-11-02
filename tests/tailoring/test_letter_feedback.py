@@ -136,10 +136,12 @@ def test_an_enter_with_no_feedback_still_hands_over_the_previous_draft_and_its_r
 
 
 def test_at_most_three_drafts_per_l(world):
-    llm = Spy({"cover_letter": answers(world, [body(world, P5="Anaplan sells boats.")])})
+    # three different drafts (an identical one stops the tries after the second, tests/tailoring/test_letter_retries.py)
+    drafts = [body(world, 300, P4=f"{P4} " + " ".join(f"{c}{k}" for k in range(40)), P5="Anaplan sells boats.") for c in "xyz"]
+    llm = Spy({"cover_letter": answers(world, drafts)})
     pdf, letter = make(world, llm, revise={"previous": [], "problems": [], "feedback": FEEDBACK})
     assert llm.calls == ["cover_letter"] * 3 and CL.ATTEMPTS == 3 and letter["status"] == "none"
-    assert letter["draft_body"] == body(world, P5="Anaplan sells boats.")           # the last draft is kept for the next `l`
+    assert letter["draft_body"] == drafts[2]                                         # the last draft is kept for the next `l`
     assert letter["opening"] == world.plan.p1 and letter["closing"] == world.plan.p7
 
 

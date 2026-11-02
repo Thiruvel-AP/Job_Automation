@@ -38,11 +38,12 @@ from . import answers as answers_mod
 from . import ats_vendor, attest, dryrun, eo, failures as failures_mod, filler, formfind, formloop, handoff as handoff_mod, knockout, letter_demand, requiredgate, shortfields, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
+from .errors import BrowserClosed, is_closed_error
 from .guard import check_job_files
 from .visa import VisaPlan, plan_for, require_plan, work_for
 
 # A field is a visa question when its label says so. These are answered from applicant.yaml -> visa.by_country, never from never_fill.
-VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
+VISA_FIELD = re.compile(r"right to work|working rights|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
 
 
@@ -94,6 +95,56 @@ def sponsorship_answer(plan: VisaPlan | None, question: str) -> str | None:
     return visa_value(plan, kind)
 
 
+# A working-rights question ("What are your working rights in the country where this role is advertised for?") with a list of statuses to choose from
+# (Citizen / Permanent Resident / Work Visa / Require sponsorship). It is answered from applicant.yaml (visa.by_country: right_to_work, sponsorship_now and
+# the summary) and from nothing else; the visa TYPE question ("please specify the type of visa you hold") is a different target (apply/shortfields.py).
+WORKING_RIGHTS = re.compile(r"\bworking rights\b|\bright to work\b|\b(?:eligible|eligibility|entitled|permitted|authori[sz]ed|allowed) to work\b|"
+                            r"\bwork(?:ing)? (?:eligibility|authori[sz]ation|status)\b", re.I)
+_STATUS_NEEDS_SPONSOR = re.compile(r"sponsor|require|need|no right|not (?:have|entitled|eligible)", re.I)
+_STATUS_HOLDS_VISA = re.compile(r"visa|permit", re.I)
+_STATUS_NOT_A_HOLDER = re.compile(r"citizen|national|settled|permanent|indefinite|british|irish|sponsor|require|need|\bnot\b|\bno\b", re.I)
+_PLACEHOLDER = ("select", "choose", "please", "--")
+
+
+def rights_pick(plan: VisaPlan | None, question: str, options: list[str]) -> tuple[str | None, str]:
+    """(the option to choose, why not) for a working-rights drop-down or radio group. Only applicant.yaml answers it:
+    - a Yes / No list and the words "working rights": right_to_work. (A plain "do you have the right to work" Yes / No stays with `classify_visa`:
+      without "now" or "currently" it is unclear and is left to you.)
+    - a list of statuses: right_to_work false or sponsorship_now true -> the one option that asks for sponsorship; right_to_work true and
+      sponsorship_now false -> the one option that names a visa / permit and is neither a citizen, settled, permanent nor a sponsorship option, and only
+      when the plan's own summary says you hold a visa (otherwise a citizen and a visa holder cannot be told apart).
+    None, with the reason, whenever the plan, a boolean or exactly one fitting option is missing: nothing is guessed."""
+    if plan is None:
+        return None, "no visa plan for this job (applicant.yaml visa.by_country)"
+    if not WORKING_RIGHTS.search(question):
+        return None, "not a working-rights question"
+    other = about_another_country(question, plan)
+    if other:
+        return None, f"the question is about {other}, W is {plan.work.shown}"
+    opts = [o for o in (_norm(x) for x in options) if o and not o.lower().startswith(_PLACEHOLDER)]
+    low = {o.lower(): o for o in opts}
+    rtw, now = plan.answers.get("right_to_work"), plan.answers.get("sponsorship_now")
+    if not isinstance(rtw, bool):
+        return None, "applicant.yaml right_to_work is not a Yes / No"
+    if {"yes", "no"} <= set(low):
+        if re.search(r"\bworking rights\b", question, re.I):
+            return low["yes" if rtw else "no"], ""
+        return None, "a Yes / No 'right to work' question without 'now' or 'currently' is left to you"
+    if not isinstance(now, bool):
+        return None, "applicant.yaml sponsorship_now is not a Yes / No"
+    if not rtw or now:
+        hits = [o for o in opts if _STATUS_NEEDS_SPONSOR.search(o)]
+        basis = "applicant.yaml says you need sponsorship or have no right to work"
+    elif not _STATUS_HOLDS_VISA.search(plan.summary or ""):
+        return None, "applicant.yaml's visa summary does not say you hold a visa, so Citizen / Settled / Work Visa cannot be told apart"
+    else:
+        hits = [o for o in opts if _STATUS_HOLDS_VISA.search(o) and not _STATUS_NOT_A_HOLDER.search(o)]
+        basis = "applicant.yaml says you have the right to work, need no sponsorship now, and hold a visa"
+    if len(hits) == 1:
+        return hits[0], ""
+    return None, f"{basis}, but {len(hits)} of the options fit ({', '.join(opts[:6]) or 'none listed'})"
+
+
 def visa_value(plan: VisaPlan | None, kind: str | None) -> str | None:
     """'Yes' / 'No' from the plan's booleans for `kind` (a classify_visa result); None when there is no plan, no such answer, or it is
     not a boolean (the question is left to the user)."""
@@ -120,6 +171,8 @@ def _answer_visa(el, typ: str, question: str, plan: VisaPlan | None) -> str | No
             el.fill(summary)
         return _norm(el.input_value() or "") or None
     value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
+    if value is None and typ == "select":                                   # a working-rights drop-down: from applicant.yaml, by its own options
+        value = rights_pick(plan, question, [o.inner_text() for o in el.query_selector_all("option")])[0]
     if value is None:
         return None
     want = value.lower()
@@ -293,6 +346,8 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                 seen_groups.add(name)
                 group = page.query_selector_all(f'input[type=radio][name="{name}"]') if name else [el]
                 value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
+                if value is None:                                                # a working-rights group of statuses: applicant.yaml, by its own labels
+                    value = rights_pick(plan, question, [_norm((r.evaluate(LABEL_JS) or "").split("|")[0]) for r in group])[0]
                 lever = filler.lever_page(page)                  # never set by code on Lever: the answer is recommended, you click it
                 if lever:
                     filler.hand_over(ctx, question, value)
@@ -308,8 +363,14 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
                 held = done
             else:
                 el.evaluate(f"e => e.style.outline = '{VISA_COLOUR}'")
-                was_empty = typ in TEXT_TYPES and not (el.input_value() or "").strip()
-                held = _answer_visa(el, typ, question, plan)
+                combo = shortfields.is_combobox(el, typ)
+                was_empty = typ in TEXT_TYPES and not combo and not (el.input_value() or "").strip()
+                if combo:                                                        # a script-built drop-down: open it, read its options, pick one from applicant.yaml
+                    held, why = shortfields.visa_combobox(page, el, question, plan, ctx)
+                    if not held:
+                        ctx.needs_user[question] = why
+                else:
+                    held = _answer_visa(el, typ, question, plan)
                 if held and typ == "select":
                     tracker.add(el, question, "select", held)
                 elif held and was_empty:                       # a text box this run typed into (one that already held the answer is not ours)
@@ -460,11 +521,32 @@ def write_unpasted(job: dict, rep: dict, applicant: dict, book, plan, url: str, 
     return path
 
 
+def closed_browser(job: dict, rep: dict, applicant: dict, book, plan, url: str, filled: list[str], drafts=None, paste: Path | None = None) -> Path | None:
+    """`BROWSER CLOSED: nothing submitted` (v2.5): the page, its context or the browser went away while the form was read or filled. Code submitted
+    nothing; answers_to_paste.txt holds every answer (written from the plan before the browser opened, else now); the confirmation is never asked."""
+    if paste is None:
+        folder = job.get("out_dir") or (Path(rep["cv_pdf"]).parent if rep.get("cv_pdf") else None)
+        if folder:
+            paste = Path(folder) / handoff_mod.PASTE_FILE
+            try:
+                paste.parent.mkdir(parents=True, exist_ok=True)
+                paste.write_text(handoff_mod.paste_text(job, rep, applicant, book, plan, url, "the browser was closed before the form was submitted",
+                                                        filled, None, drafts), encoding="utf-8", newline="\n")
+            except OSError:
+                paste = None
+    print("\nBROWSER CLOSED: nothing submitted." + (f" Every answer is in {paste}" if paste else "") +
+          f"\n  The job is marked not submitted. Apply later with careerops apply --id {job.get('id')} (or paste the answers into {url}).")
+    return paste
+
+
 def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
-           handoff=None, failures=None, fact_bank=None, tokens=(), letter_maker=None, record=False) -> dict:
-    """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
-    after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
-    error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
+           handoff=None, failures=None, fact_bank=None, tokens=(), letter_maker=None, record=False, planner=None) -> dict:
+    """Open the apply page, fill what we safely can and ask for the confirmation. The browser teardown cannot raise a Playwright error. A browser
+    that closes before the form is submitted ends the job at once (`BROWSER CLOSED: nothing submitted`, `browser_closed` in the result, no
+    confirmation prompt: v2.5); `live` then marks the job not submitted.
+    `planner` (apply/planfirst.Planner, cli.py builds it): plan first, then fill (v2.5): the questions, the letter, the drafts and the whole answer
+    plan are made and printed before any browser opens, and the form is filled from the plan in a fresh browser. Without it, the earlier fill
+    (fill_page) runs; the letter is still written before the browser opens.
     `book` is the user's answers.yaml (answers.load), `history(company)` whether they applied there before (autoapply.default_history).
     `handoff` (apply/handoff.Handoff): where a bot check or sign-in wall sends the page; a host it already handed over, or one on
     `apply.handoff_hosts`, opens no browser at all. `failures` (apply/failures.py) counts the failed attempts of each job (FORM NOT FOUND, a LOST
@@ -497,6 +579,16 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
         hand_off(known, remember=False)
         r["confirmation"] = ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
         return r
+    if planner is not None:
+        from . import planned
+        return planned.run(job, rep, applicant, profile_dir, plan=plan, cv=cv, letter=letter, letter_text=letter_text, launch=launch, ask=ask, book=book,
+                           history=history, freetext=freetext, handoff=handoff, failures=failures, fact_bank=fact_bank, tokens=tokens,
+                           letter_maker=letter_maker, record=record, planner=planner, url=url)
+    if letter is None and letter_maker is not None:                     # the letter is written BEFORE any browser opens (v2.5), never inside one
+        from . import planfirst
+        rep, letter, letter_text, _ = planfirst.letter_first(rep, letter, letter_text, letter_maker, True, print)
+        if letter:
+            check_job_files(job, cv, letter)
     page, close = (launch or playwright_launch)(profile_dir)
     closed = False
 
@@ -544,12 +636,10 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                 if by_agent is None:                        # letter.mode if_field: a form that asks for a cover letter gets one, written now if need be
                     from ..tailoring.letter_reason import letter_reason
 
-                    prov = letter_demand.provide(page, rep, letter, letter_text, letter_maker, print, reason=letter_reason(rep.get("letter")))
+                    prov = letter_demand.deliver(page, rep, letter, letter_text, print, reason=letter_reason(rep.get("letter")))
                     letter, letter_text, note = prov.pdf, prov.text, prov.note
                     if prov.handoff:
                         raise formfind.HandOff(prov.handoff)
-                    if prov.made:
-                        check_job_files(job, cv, letter)
                 r = agent_report(by_agent) if by_agent is not None else fill_page(
                     page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext,
                     knock_ask=ask, fact_bank=fact_bank, ask=ask, letter_note=note, record=record)
@@ -591,10 +681,15 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
             except PlaywrightError:
                 pass
             closed = True
-        except PlaywrightError as e:                        # the window is gone or the page failed: the prompt below is still asked
-            print(f"\n(the browser or the page stopped answering: {str(e).splitlines()[0][:120]}). If you submitted the form, paste the "
-                  "confirmation below; 'x' = did not submit.")
-        conf = "x" if r.get("skipped") else ask("After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
+        except (BrowserClosed, PlaywrightError) as e:       # the window or the page went away: nothing was submitted by code
+            if not isinstance(e, BrowserClosed) and not is_closed_error(e, page):
+                print(f"\n(the page stopped answering: {str(e).splitlines()[0][:120]}). If you submitted the form, paste the confirmation below; "
+                      "'x' = did not submit.")
+            else:
+                r["browser_closed"] = str(e).splitlines()[0][:200] if str(e) else "the browser was closed"
+                r["paste_file"] = str(closed_browser(job, rep, applicant, book, plan, url, r.get("filled") or [], r.get("drafts")) or "")
+        conf = "x" if (r.get("skipped") or r.get("browser_closed")) else ask(
+            "After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
     finally:
         if not closed:
             try:

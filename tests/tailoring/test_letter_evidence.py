@@ -164,11 +164,19 @@ def test_a_capability_word_the_bank_does_not_say_still_fails(world):
     assert not capability(grounding.grounding_problems(["I bring end-to-end ownership."], evidence, "", "", "", bank="end-to-end work in the bank"))
 
 
-def test_ci_driven_is_not_in_the_bank_and_still_fails(world):
+def test_a_hyphenated_name_nothing_allowed_says_still_fails(world):
+    assert "zorbix" not in grounding.bank_text(world.fb).lower() and "zorbix" not in world.job["description"].lower()
+    p3 = P3 + " I like Zorbix-driven releases."
+    problems = check(world, letter_parts(world, P3=p3, total=260))
+    assert any("Zorbix-driven" in p for p in problems), problems
+
+
+def test_ci_driven_passes_by_its_name_part_when_the_ad_says_ci(world):
+    """v2.5: the per-paragraph guard reads the ad (as name_problems does), and a hyphenated compound is checked by its name part (2 Nov RightShip)."""
     assert "ci-driven" not in grounding.bank_text(world.fb)
-    p3 = P3 + " I like CI-driven releases."
-    problems = check(world, letter_parts(world, P3=p3))
-    assert any("CI-driven" in p for p in problems), problems
+    assert grounding._has(grounding.norm_literal(world.job["description"]), "CI")
+    problems = check(world, letter_parts(world, P3=P3 + " I like CI-driven releases.", total=260))
+    assert not any("CI-driven" in p and "(name)" in p for p in problems), problems
 
 
 def test_names_sectors_and_clients_are_not_relaxed_by_the_bank(world):

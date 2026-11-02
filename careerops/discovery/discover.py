@@ -83,7 +83,7 @@ TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
 TITLE_MATCH = 0.9                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
 COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_capped",
-            "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified")
+            "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified", "possible_repost")
 RESOLVED_BY = ("reed", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
 
 
@@ -210,6 +210,16 @@ def mark_duplicate(path: Path, of_name: str) -> None:
     if re.search(r"^Duplicate of:", head, re.M):
         return
     path.write_text(f"{head}\nDuplicate of: {of_name}{sep}{body}", encoding="utf-8", newline="\n")
+
+
+def mark_repost(path: Path, label: str) -> None:
+    """Add `Possible repost: <label>` to the header block of an inbox file this discovery wrote (v2.5: only the company + title + country of a job you
+    decided matched; it is shown to you with this label, never skipped on that alone). The ad below it is not touched."""
+    text = path.read_text(encoding="utf-8")
+    head, sep, body = text.partition("\n\n")
+    if re.search(r"^Possible repost:", head, re.M):
+        return
+    path.write_text(f"{head}\nPossible repost: {label}{sep}{body}", encoding="utf-8", newline="\n")
 
 
 def archive_pairs(root: Path | Iterable[Path]) -> list[tuple[str, str]]:
@@ -601,9 +611,10 @@ class Discover:
         country = countries.canon(c.country) or countries.detect(c.location)
         return "" if country in ("", countries.UK) else country
 
-    def already_decided(self, company: str, title: str, url: str | None, label: str) -> bool:
-        """Is this job (by id, else by company family + title) one you skipped or applied to? Then it is not written again: `already_decided`."""
-        if self.decided.hit(company, title, url):
+    def already_decided(self, company: str, title: str, url: str | None, label: str, location: str | None = None) -> bool:
+        """Is this job (by its id, ATS key or URL key: apply/decided.py, v2.5) one you skipped or applied to? Then it is not written again:
+        `already_decided`. Company + title alone never decide."""
+        if self.decided.hit(company, title, url, location):
             self.run.count(label, "already_decided")
             return True
         return False
@@ -611,7 +622,7 @@ class Discover:
     def duplicate(self, c: Candidate, label: str) -> bool:
         """Seen before? Not when it is a NEWER copy of an inbox file (the same job on another board of the employer): that one replaces it.
         A job you already decided on (skipped or applied, any copy of it) is counted as `already_decided`, not as a duplicate."""
-        if self.already_decided(c.company, c.title, c.url, label):
+        if self.already_decided(c.company, c.title, c.url, label, c.location):
             return True
         where = self.known.where(c.company, c.title, c.location)
         if where and self.known.older_copy(c.company, c.title, c.posted) is None:
@@ -675,6 +686,13 @@ class Discover:
             return "exists"
         if older is not None:
             self.supersede(older, path, label)
+        repost = self.decided.repost(c.company, c.title, c.url, c.location)
+        if repost:
+            self.run.count(label, "possible_repost")
+            try:
+                mark_repost(path, repost)
+            except OSError as e:
+                self.run.notes.append(f"{path.name}: could not be labelled a possible repost ({type(e).__name__})")
         self.wrote(c, label)
         self.run.written.append((c, path))
         return "written"

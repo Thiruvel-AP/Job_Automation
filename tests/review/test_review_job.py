@@ -51,9 +51,13 @@ def test_review_run_still_loops_and_stops_on_quit(tailored, settings, db, job, m
     _, fb, _ = tailored
     answers = iter(["s", "q"])
     monkeypatch.setattr("builtins.input", lambda p="": next(answers))
-    other = dict(job, id="manual:other")
+    other = dict(job, id="manual:other", url="https://other.example/jobs/9", apply_url=None)      # another listing: a skip of one never hides it
     db.upsert_job(other)
     db.update_job("manual:other", status="needs_review", out_dir=db.job(job["id"])["out_dir"], tier=1, family="ai_engineer")
     review.run(db, settings, fb)
     assert "2 job(s) waiting for review." in capsys.readouterr().out
-    assert {db.job(job["id"])["status"], db.job("manual:other")["status"]} == {"needs_review"}
+    # v2.5: [s] in `careerops review` is stored (skipped (user), a decision-log line); q leaves the second job waiting
+    statuses = sorted([db.job(job["id"])["status"], db.job("manual:other")["status"]])
+    assert statuses == ["needs_review", "skipped"]
+    skipped = next(j for j in (db.job(job["id"]), db.job("manual:other")) if j["status"] == "skipped")
+    assert skipped["reason"] == "skipped (user)"

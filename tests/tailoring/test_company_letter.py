@@ -55,6 +55,7 @@ def keywords():
 def make_world(settings, fb_fixture, limits: str = "", result: str = "", claimable: list[str] | None = None, possible: dict | None = None,
                job: dict = JOB, jd: str = JD):
     settings.raw["letter"]["mode"] = "company"
+    settings.raw["letter"]["compose"] = "free"            # these tests drive the model-written body; the assembled default: test_letter_assembled.py
     fb = copy.deepcopy(fb_fixture)
     fb["hook_library"] = copy.deepcopy(LIBRARY)
     if limits:
@@ -535,11 +536,13 @@ def test_the_second_draft_is_told_every_rejection(world):
 
 
 def test_three_rejected_drafts_are_no_letter_and_the_reasons_are_shown(world):
-    bad = body(world, P5="Anaplan sells robotic lawnmowers to regional hospitals across Scandinavia.")
-    handler, seen = writer([bad])
+    # three DIFFERENT rejected drafts (an identical one stops the tries after the second: tests/tailoring/test_letter_retries.py)
+    bads = [body(world, 300, P4=f"{P4} " + " ".join(f"{c}{k}" for k in range(40)), P5="Anaplan sells robotic lawnmowers to regional hospitals across Scandinavia.")
+            for c in "xyz"]
+    handler, seen = writer(bads)
     pdf, letter = run(world, MockLLM({"cover_letter": handler}))
     assert pdf is None and letter["status"] == "none" and len(seen) == 3 == CL.ATTEMPTS and letter["retry"]["outcome"] == "no letter"
-    assert "3 draft(s) rejected" in letter["reason"] and letter["draft_body"] == bad and letter["opening"] == world.plan.p1 and letter["closing"] == world.plan.p7
+    assert "3 draft(s) rejected" in letter["reason"] and letter["draft_body"] == bads[2] and letter["opening"] == world.plan.p1 and letter["closing"] == world.plan.p7
 
 
 def test_a_model_that_answers_with_the_old_shape_is_rejected_not_trusted(world):

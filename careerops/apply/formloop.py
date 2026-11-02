@@ -35,6 +35,7 @@ from typing import Any, Callable
 
 from . import filler
 from . import freetext as ft
+from .errors import raise_if_closed
 from .filler import LABEL_JS, QUESTION_JS, NeedsUser, _norm
 
 FILE = "formloop.jsonl"
@@ -116,13 +117,15 @@ def _required(d: dict, label: str) -> bool:
 
 def scan(page) -> list[Field]:
     """Every visible field of the page, required or not (a file input counts even when the form hides it behind a button). A radio or check-box
-    group with one name is one field. A page that cannot be asked gives an empty list."""
+    group with one name is one field. A page that is navigating (or is not a browser page) gives an empty list; a CLOSED page, context or browser
+    raises errors.BrowserClosed: an empty list there printed `FORM FIELDS (0)` for a window that had gone (RightShip, 2 Nov 2026)."""
     handles, data = [], []
     for _ in range(2):                                    # the form may change between the two reads: try twice
         try:
             handles = page.query_selector_all("input, textarea, select")
             data = page.evaluate(SCAN_JS) or []
-        except Exception:  # noqa: BLE001  (the page is navigating, or not a browser page)
+        except Exception as e:  # noqa: BLE001  (the page is navigating, or not a browser page)
+            raise_if_closed(e, page)
             return []
         if len(handles) == len(data):
             break

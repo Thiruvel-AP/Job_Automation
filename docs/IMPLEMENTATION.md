@@ -1651,5 +1651,67 @@ What the RightShip dry run showed, and what was done (each has tests; `tests/app
 6. **Greenhouse EU** (`discovery/intake.py`, `apply/ats_vendor.py`): `job-boards.eu.greenhouse.io` / `boards.eu.greenhouse.io` use `boards-api.eu.greenhouse.io` (unverified against the live API: no network here) and are never rewritten to the US host.
 7. **`careerops live --record`**: keeps the record of a form that was filled and not submitted under `data/dryruns/` (git-ignored).
 
-Choices: `live --dry-run` opens no form (it stops after tailor + review), so the form in the report was filled by the assist or by `--auto --no-submit`; the working-rights drop-down has no answer in answers.yaml and
-stays NEEDS USER until the user writes one (an entry with `options`).
+Choices: `live --dry-run` opens no form (it stops after tailor + review), so the form in the report was filled by the assist or by `--auto --no-submit`; the working-rights drop-down was left NEEDS USER here; v2.4.2 (section 5at)
+answers it from applicant.yaml.
+
+## 5at. v2.4.2 — working rights from applicant.yaml, the letter's name guard, the letter's retries (1 Nov 2026) — **done** (offline tests)
+
+1. **Working-rights questions** ("What are your working rights in the country where this role is advertised for?"): `assist.VISA_FIELD` now holds `working rights`, so the question goes the visa route
+   (never `never_fill`, never answers.yaml). `assist.rights_pick(plan, question, options)` answers it from applicant.yaml only: a Yes / No list with the words "working rights" -> `right_to_work`; a list of
+   statuses -> the one sponsorship option when `right_to_work` is No or `sponsorship_now` is Yes, else (right to work, no sponsorship now) the one option that names a visa / permit and is not a citizen /
+   settled / permanent / sponsorship option, and only when the plan's own summary says you hold a visa. No plan, a non-boolean, another country, or not exactly one fitting option: nothing is picked (NEEDS USER
+   with the reason). A plain "do you have the right to work" Yes / No is still unclear (`classify_visa`) and left to you. Script-built drop-downs are opened and read (`shortfields.visa_combobox`); selects and
+   radio groups use the same function (assist, autoapply, form agent). The visa TYPE question stays its own target (`visa_type` in answers.yaml). The required-field table now finds a long label's source
+   (`Ctx.source` files `norm()[:80]`, the table looked up `[:60]`).
+2. **Letter name guard** (`company_letter.check`): a capitalised name is allowed when this job's CV prints it in its Skills, stacks or bullets (`cv_from_ctx(...)["names"]`; the profile paragraph is not
+   counted), as well as in the ad, the bank names and the evidence. A name on none of them is still rejected; nothing else was loosened.
+3. **Letter retries**: draft 1 at temperature 0, drafts 2 and 3 at 0.4 and 0.7 (`company_letter.TEMPERATURES`, sent through the call's context; the router's `Provider.chat(temperature=)` overrides the
+   configured one for that call only); every redraft gets every earlier draft's rejections word for word (`letter_feedback.history_block`, before the rewritten instructions); two consecutive drafts with a
+   5-word-shingle overlap of 0.8 or more stop the tries (`retry.stopped_early`); the prompt names each paragraph's evidence in advance (`EVIDENCE ASSIGNMENT`), P4's bullets carry a number when the role has
+   one (`role_group` takes a numbered bullet even if P3 used it: the plan gave it to both, so `repeated_evidence_problems` lets it through).
+
+## 5au. v2.5 — plan-first form filling, a letter that always exists, permanent skips (2 Nov 2026) — **done** (offline tests; the live parts unverified)
+
+Phase 0 (read-only) found: `formloop.scan` turned a closed page into `FORM FIELDS (0)`; the letter was written for ~90 s inside an open, empty browser
+window (the window was then closed); the Ctrl+C handler walked the archive folders (~18 s on the user's) before writing any summary; the skipped
+Anthropic FDE (`manual:69406a1aef2d`) had never been stored as skipped (`[s]` in `careerops review` without a gap report stored nothing) and live
+re-read it from `jds/approved/2026-10-27/`; the per-paragraph name guard ran with no ad and no CV names.
+
+1. **Plan first** (`apply/planfirst.py`, `answerplan.py`, `gh_schema.py`, `planned.py`): the questions (the public Greenhouse question schema, robots.txt
+   first, cached as `form_schema.json`; else a headless scan), the letter, the drafts and the whole answer plan are made BEFORE any browser window opens
+   and printed (`[y] fill these / [e N] edit answer N / [v N] view full answer N / [q] quit`; `e N` + `save` goes through `answers.save` only; a draft
+   is approved with freetext's own menu). `answers_to_paste.txt` is written from the plan at once. `letter_demand.provide` is never called with a browser
+   open (`deliver` is the in-browser half). Options are chosen by `option_match.pick` (port of pickComboboxOption: exact, else the ONE whole-word match,
+   else NEEDS USER).
+2. **Fresh browser** (`apply/browser.py`, `apply.browser: fresh` code default; `profile` waits for the lock with `A Chrome window from an earlier run is
+   still open, close it and press Enter`, never kills it): one shared Chromium per run (`channel="chrome"`, else the bundled one), a new context per job,
+   off-screen while filling, brought on-screen (`Form ready: tick the declarations and press Submit yourself`).
+3. **Reach and fill** (`apply/formscan.py`, `planfill.py`): 3 navigation attempts, a cookie banner's own accept button, a wait in every frame, the richest
+   frame, a scroll for lazy forms, an ATS link navigated to (never clicked); fields tagged `data-co-field`; react-select typed with
+   `press_sequentially(delay=15)` and the option clicked (Enter never pressed); files only to their own CV / Cover Letter input; attestations never;
+   every field read back (`[ 7/18] Location (City) … VERIFIED "..."`); a navigation during the fill stops with `PAGE NAVIGATED DURING FILL`.
+4. **BrowserClosed** (`apply/errors.py`): `formloop.scan` and the fill raise it for a closed page/context/browser; the assist prints `BROWSER CLOSED:
+   nothing submitted`, keeps answers_to_paste.txt, asks no confirmation; live marks the job not submitted (`ready_not_submitted`) without "Did YOU submit?".
+5. **Headless dry run**: `careerops live --dry-run --url URL --record` plans and fills HEADLESS after the review approval (the `record_form` hook) and
+   writes form_full.png, fields.md, fields.json, plan.txt/plan.json, letter.txt and motivation.txt under `data/dryruns/`; no prompt, no submit.
+6. **Ctrl+C in live**: `stopped by you; state saved`, no traceback; the summary is written first, then `checking the archive folders (~20 s)...`; a second
+   Ctrl+C exits at once and `data/live/archive_pending.json` makes the next run check first.
+7. **Assembled letter** (`tailoring/assembled_letter.py`, `letter.compose: assembled` code default, `free` keeps the old model-written body): P3 and P4
+   are this CV's bullets by a fixed first-person rule ("Built X" -> "I built X"), P4 one numbered bullet per role; the model writes only P5 (2 tries,
+   then `What draws me to this role is <ad clause>.`); length grows P3 / drops P2; the WHOLE letter goes through `check` (only the paste-a-bullet check
+   skips the sentences assembled from bullets); an assembled sentence that fails is a fact-bank problem (bullet ids in the notes, no redraft); a letter
+   that repeats an earlier one is rebuilt from the next bullets. The motivation answer is assembled from the letter too (a framing sentence, P1, P5,
+   one P4 sentence; 60-150 words; the freetext guard), else drafted as before. Tokens: P5 only, printed.
+8. **Name guard per paragraph**: `user_problems` gets the ad and this CV's names (as `name_problems`); a hyphenated compound ("Python-driven") is
+   checked by its name part (`grounding.name_allowed`). A name nothing allowed says is still rejected.
+9. **Permanent skips** (`apply/listing_keys.py`, `decisions.py`, `decided.py`): every decision goes to `data/state/decisions.jsonl` (append-only) with
+   `id:`, `ats:<vendor>:<board>:<id>`, the URL key (only utm_*, gclid, fbclid, lever-source, gh_src stripped) and the fingerprint. Only id / ATS / URL
+   decide; the fingerprint alone labels `possible repost of a job you skipped on <date>` (discover writes it with a `Possible repost:` header, shortlist
+   tags it, live shows it and auto mode leaves it for review). `[s]` in `careerops review` now stores `skipped (user)` and moves the JD out of
+   `jds/approved/<date>/` (a skip overrides an approval; `shortlist.approved_files(settings, db)` leaves skipped ones out). New: `careerops skip --id`,
+   `careerops why <id|url|ats:key>`; `unskip` appends `unskipped`; `retriage --decided --apply` backfills the log first. Copies are grouped by id / ATS
+   / URL key, no longer by company + title (London, Munich and Paris FDE are three jobs).
+
+Choices: discovery's own duplicate index (company + title + place, pre-v2.5) is unchanged; `parked_region` is not written to the decision log (a park is
+never permanent, CLAUDE.md); the EU board API host is not added to robots.DOCUMENTED_API_HOSTS (its robots.txt did not answer on 31 Oct): the RightShip
+form is planned from the headless scan when the schema cannot be had. Unverified here: the real RightShip page and board API (no network in tests).

@@ -1,0 +1,163 @@
+"""The decision log (v2.5): every skip and application, with the job's canonical keys (apply/listing_keys.py), in `<paths.state>/decisions.jsonl`
+(data/state/decisions.jsonl; git-ignored with the rest of data/; the parallel test copy never writes back into data/).
+
+One JSON object per line, appended and never rewritten: {"ts", "job_id", "keys": [...], "decision", "reason"}.
+
+  decision   skipped_user (your [s], `careerops skip`), skipped_ats (under the ATS band), skipped (any other skip the database holds), applied, and
+             unskipped (`careerops unskip`: a later line that lifts the earlier ones for the same keys).
+  keys       `id:<job id>`, the ATS key, the URL key and the fingerprint. The id, the ATS key and the URL key decide on their own (discover, the inbox
+             intake, shortlist and live check them before they write or show a job); the fingerprint alone is only `possible repost of a job you
+             skipped on <date>`.
+
+`backfill(db, settings)` writes a line for every skipped / applied job of the database that has none yet (the migration: `careerops retriage
+--decided --apply` runs it first). Nothing here deletes or rewrites a line.
+"""
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Iterable
+
+from . import listing_keys as LK
+
+FILE = "decisions.jsonl"
+SKIPPED_USER, SKIPPED_ATS, SKIPPED, APPLIED, UNSKIPPED = "skipped_user", "skipped_ats", "skipped", "applied", "unskipped"
+BLOCKING = (SKIPPED_USER, SKIPPED_ATS, SKIPPED, APPLIED)
+
+
+def path(settings) -> Path:
+    return settings.path("state") / FILE
+
+
+def id_key(job_id: str | None) -> str:
+    return f"id:{job_id}" if job_id else ""
+
+
+def keys_list(keys: LK.Keys, job_id: str | None = None) -> list[str]:
+    return [k for k in (id_key(job_id), keys.ats, keys.url, keys.fingerprint) if k]
+
+
+def append(settings, keys: LK.Keys | Iterable[str], decision: str, reason: str = "", job_id: str | None = None, ts: str | None = None) -> dict:
+    """Append one line; returns it."""
+    ks = keys_list(keys, job_id) if isinstance(keys, LK.Keys) else [k for k in keys if k]
+    if job_id and id_key(job_id) not in ks:
+        ks.insert(0, id_key(job_id))
+    rec = {"ts": ts or datetime.now().isoformat(timespec="seconds"), "job_id": job_id or "", "keys": ks, "decision": decision, "reason": reason}
+    p = path(settings)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return rec
+
+
+def records(settings) -> list[dict]:
+    p = path(settings)
+    out: list[dict] = []
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines() if p.is_file() else []
+    except OSError:
+        return out
+    for line in lines:
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(r, dict) and isinstance(r.get("keys"), list):
+            out.append(r)
+    return out
+
+
+def _kind(key: str) -> str:
+    return "id" if key.startswith("id:") else "ats" if key.startswith("ats:") else "url" if key.startswith("https://") else "fingerprint"
+
+
+@dataclass
+class Match:
+    record: dict
+    key: str
+    kind: str                      # id | ats | url | fingerprint
+
+    @property
+    def decision(self) -> str:
+        return self.record["decision"]
+
+    @property
+    def date(self) -> str:
+        return str(self.record.get("ts") or "")[:10]
+
+    def label(self) -> str:
+        what = "applied to" if self.decision == APPLIED else "skipped"
+        return f"possible repost of a job you {what} on {self.date} ({self.record.get('job_id') or '?'})"
+
+
+@dataclass
+class Book:
+    latest: dict[str, dict] = field(default_factory=dict)          # key -> the last record that names it
+
+    @classmethod
+    def load(cls, settings) -> "Book":
+        b = cls()
+        for r in records(settings):
+            for k in r["keys"]:
+                b.latest[k] = r
+        return b
+
+    def _hit(self, keys: Iterable[str], kinds: tuple[str, ...]) -> Match | None:
+        for k in keys:
+            if not k or _kind(k) not in kinds:
+                continue
+            r = self.latest.get(k)
+            if r is not None and r.get("decision") in BLOCKING:
+                return Match(r, k, _kind(k))
+        return None
+
+    def decided(self, keys: LK.Keys, job_id: str | None = None) -> Match | None:
+        """The decision this job is covered by: its id, ATS key or URL key (never the fingerprint alone)."""
+        return self._hit([id_key(job_id), keys.ats, keys.url], ("id", "ats", "url"))
+
+    def repost(self, keys: LK.Keys, job_id: str | None = None) -> Match | None:
+        """A fingerprint-only match (and no strong one): `possible repost of a job you skipped on <date>`."""
+        if self.decided(keys, job_id) is not None:
+            return None
+        fp = keys.fingerprint
+        return self._hit([fp, fp.rsplit("|", 1)[0] + "|" if fp else ""], ("fingerprint",))      # a decided job with no place recorded still counts
+
+
+def why(settings, keys: LK.Keys, job_id: str | None = None) -> list[tuple[dict, list[str]]]:
+    """Every record that names one of these keys, oldest first, with the keys that matched."""
+    mine = set(keys_list(keys, job_id))
+    out = []
+    for r in records(settings):
+        hit = [k for k in r["keys"] if k in mine]
+        if hit:
+            out.append((r, hit))
+    return out
+
+
+def decision_of_row(row) -> str | None:
+    """The decision a database row stands for (None when it is not skipped / applied)."""
+    status, reason = str(row["status"] or ""), str(row["reason"] or "").lower()
+    if status.startswith("applied"):
+        return APPLIED
+    if status == "skipped (ats)":
+        return SKIPPED_ATS
+    if status in ("skipped", "skipped (user)") and ("user" in reason or "review" in reason or status == "skipped (user)"):
+        return SKIPPED_USER
+    if status.startswith("skipped"):
+        return SKIPPED
+    return None
+
+
+def backfill(db, settings) -> list[dict]:
+    """A line for every skipped / applied job of the database that has none yet (by its id). Returns the lines written."""
+    have = {k for r in records(settings) for k in r["keys"] if k.startswith("id:")}
+    out = []
+    for row in db.jobs():
+        d = decision_of_row(row)
+        if d is None or id_key(row["id"]) in have:
+            continue
+        out.append(append(settings, LK.keys_of_row(row), d, f"backfill: status '{row['status']}'" + (f", {row['reason']}" if row["reason"] else ""),
+                          row["id"], ts=str(row["updated_at"] or "")[:19] or None))
+    return out

@@ -57,7 +57,7 @@ from . import letters as L
 from . import opening as OP
 from . import prompts as P
 from .faithfulness import deny_hits, numbers
-from .grounding import _has, _names, bank_text, grounding_problems, repeated_evidence_problems, sentences
+from .grounding import _has, _names, bank_text, grounding_problems, name_allowed, repeated_evidence_problems, sentences
 from .letter_rules import bank_names, gap_display, term_dump_problems
 from .scorer import Keyword, gap_terms, keyword_hits, norm_literal, norm_stem
 
@@ -65,6 +65,8 @@ LOW_BOUND, HIGH_BOUND = 200, 320          # letter.company_words: [low, high] wi
 DEFAULT_RANGE = (200, 320)
 BODY_CITING = 0.60                        # at least this share of the sentences of P1 to P4 must be about the CV's bullets
 ATTEMPTS = 3                              # the draft and up to two redrafts, each told every rejection so far
+TEMPERATURES = (0.0, 0.4, 0.7)            # draft 1 is exact; each redraft is allowed to wander further from the rejected one
+SAME_DRAFT = 0.8                          # a draft this much (5-word shingles) like the one before it: the model is stuck, no more tries
 COMPANY_SUPPORT = 0.6                     # share of a P5 clause's content stems that one window of the ad must hold
 WINDOW = 3                                # consecutive ad sentences that may together support one clause
 MIN_CLAIM_STEMS = 3                       # a clause with fewer content stems must have all of them somewhere in the ad
@@ -356,7 +358,7 @@ def name_problems(paragraphs: list[str], allowed_text: str, label: str = "") -> 
     out = []
     for sentence in sentences(" ".join(paragraphs)):
         for name in _names(sentence):
-            if not _has(allowed, name):
+            if not name_allowed(allowed, name):
                 out.append(f"'{name}' (a name) is not in the ad or the fact bank{label}: '{sentence.strip()[:60]}'")
     return list(dict.fromkeys(out))
 
@@ -374,9 +376,11 @@ def filler_problems(paragraphs: list[str], evidence: list[dict]) -> list[str]:
 
 
 def user_problems(paragraphs: list[str], groups: list[list[dict]], opening: str, fb: dict, kws: list[Keyword], reqs: list[list[str]],
-                  company: str, title: str) -> list[str]:
+                  company: str, title: str, jd: str = "", cv_names: str = "", assembled: frozenset[str] = frozenset()) -> list[str]:
     """Problems with P3 and P4, the two paragraphs about the user. `groups[i]` holds the bullets paragraph i was written from; `reqs[i]` the ad skills
-    it must name (P3: two of its two or three; P4: none)."""
+    it must name (P3: two of its two or three; P4: none). `jd` (the ad and the company page) and `cv_names` (cv_from_ctx "names": this job's CV's Skills,
+    stacks and bullets) are what name_problems allows too: the per-paragraph guard was called with no ad and no CV and rejected 'CI' (an ad keyword) and
+    'stakeholder' (2 Nov 2026)."""
     out: list[str] = []
     evidence = [e for g in groups for e in g]
     bank = bank_text(fb)
@@ -404,15 +408,18 @@ def user_problems(paragraphs: list[str], groups: list[list[dict]], opening: str,
             if len(named) < need:
                 out.append(f"{tag}: does not name an ad requirement its bullet evidences (one of: {', '.join(reqs[n])})" if need == 1 else
                            f"{tag}: names {len(named)} of the ad skills its bullets evidence; it must name {need} (from: {', '.join(reqs[n])})")
-        extra_names = f"{company} {title} {' '.join(reqs[n])} " + " ".join(f"{e.get('where', '')} {e.get('org', '')}" for e in groups[n])
-        out += [f"{tag}: {p}" for p in grounding_problems(sentences(par), groups[n], "", opening, extra_names, bank=bank)]
+        extra_names = f"{company} {title} {' '.join(reqs[n])} {cv_names} " + " ".join(f"{e.get('where', '')} {e.get('org', '')}" for e in groups[n])
+        out += [f"{tag}: {p}" for p in grounding_problems(sentences(par), groups[n], jd, opening, extra_names, bank=bank)]
     out += filler_problems(paragraphs, evidence)
     # P3 and P4 are the two paragraphs written here; they must not tell one bullet twice, unless the plan itself gave both the same one
     # because the role had no other bullet (role_group): then no draft could avoid it, and rejecting every redraft is what lost the
     # RightShip letter (31 Oct 2026).
     shared = {e["id"] for e in groups[0]} & {e["id"] for e in groups[1]} if len(groups) > 1 else set()
     out += repeated_evidence_problems(paragraphs, evidence, ("P3", "P4"), shared, groups)
-    out += L.paste_problems(paragraphs, L._all_bullets(fb))
+    # a sentence the assembled letter (letter.compose: assembled, v2.5) built word for word from a bullet is that bullet on purpose: only the other
+    # sentences are checked for a pasted bullet; every other guard above read all of them
+    own = [s for s in sentences(" ".join(paragraphs)) if " ".join(s.split()) not in assembled]
+    out += L.paste_problems(own, L._all_bullets(fb))
     return list(dict.fromkeys(out))
 
 
@@ -469,14 +476,15 @@ def skill_problems(body: list[str], fb: dict, cv_text: str, first: int = 3) -> l
 
 def cv_from_ctx(ctx: dict) -> dict:
     """What the guards need to know of a CV (its render context): {"ids": the bullet ids it prints, "text": its Skills, headline, profile and
-    bullets as one string}."""
+    bullets as one string, "names": its Skills, stacks and bullets (no profile): a name the letter uses is allowed when this CV prints it (B3)}."""
     entries = [*(ctx.get("experience") or []), *(ctx.get("projects") or [])]
     ids = {i for e in entries for i in e.get("bullet_ids") or []} | {a.get("bullet_id") for a in ctx.get("achievements") or [] if a.get("bullet_id")}
     skills = " ".join(", ".join(v) if isinstance(v, (list, tuple)) else str(v) for v in (ctx.get("skills") or {}).values())
     stacks = " ".join(str(e.get("stack") or "") for e in entries)
     text = " ".join([skills, stacks, str(ctx.get("profile") or ""), *(b for e in entries for b in e.get("bullets") or []),
                      *(str(a.get("text") or "") for a in ctx.get("achievements") or [])])
-    return {"ids": ids, "text": text}
+    names = " ".join([skills, stacks, *(b for e in entries for b in e.get("bullets") or []), *(str(a.get("text") or "") for a in ctx.get("achievements") or [])])
+    return {"ids": ids, "text": text, "names": names}
 
 
 def p2_problems(p2: str, fb: dict) -> list[str]:
@@ -510,7 +518,7 @@ def p6_problems(p6: str, gap: dict, fb: dict, kws: list[Keyword], claimable: lis
 
 
 def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: "Plan", team: str, settings, cv: dict | None = None,
-          claimable: list[str] | None = None) -> tuple[list[str], list[dict]]:
+          claimable: list[str] | None = None, assembled: frozenset[str] = frozenset()) -> tuple[list[str], list[dict]]:
     """(problems, the ad sentences P5 drew from) for a letter given as {"P1": ..., ..., "P7": ...} (P2 and P6 may be missing). `cv`
     (cv_from_ctx) adds the CV rules: the evidence bullets and the skills named must be on this job's CV."""
     from . import tailor as T
@@ -532,10 +540,11 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
     out += one_sentence_problems(parts["P5"])
     out += extractive_problems(parts["P5"], about_sentences(ad_all, company, kws), skip)
     opening = " ".join([parts["P1"], parts.get("P2") or ""])
-    out += user_problems(body[:2], plan.groups, opening, fb, kws, plan.reqs, company, title)
+    out += user_problems(body[:2], plan.groups, opening, fb, kws, plan.reqs, company, title, jd=ad_all, cv_names=(cv or {}).get("names", ""),
+                         assembled=assembled)
     out += rollup_problems(parts["P4"], plan.groups[1])
     allowed = " ".join([ad_all, company, title, team, opening, *bank_names(fb), *_labels(fb).values(),
-                        *(f"{e['text']} {e.get('where', '')} {e.get('org', '')}" for e in plan.evidence)])
+                        *(f"{e['text']} {e.get('where', '')} {e.get('org', '')}" for e in plan.evidence), (cv or {}).get("names", "")])
     out += name_problems(body, allowed)
     out += L.claim_problems(body[2:], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))      # P5: no "we" / "our", no "I help <Company>"
     framing = " ".join([company, title, *(" ".join(e.get("terms", [])) for e in plan.evidence), *(t for r in plan.reqs for t in r)])
@@ -610,14 +619,21 @@ def role_group(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None, jd: st
     first = getattr(hk, "relevant_role_id", "") if hk is not None else ""
     if first in order:
         order = [first, *(x for x in order if x != first)]
+
+    def has_number(e: dict) -> bool:
+        return bool(numbers(e["text"]) or OP.bank_numbers(e["text"], fb))
+
+    # P4 gives one number of each role's bullet (rollup_problems): the roles that have a numbered bullet come first, the hook's role still ahead of the others
+    with_number = [x for x in order if any(has_number(e) for e in exp if entry_of[e["id"]] == x)]
+    order = with_number + [x for x in order if x not in with_number]
     out: list[dict] = []
     for eid in order[:2]:
         mine = [e for e in exp if entry_of[e["id"]] == eid]
-        numbered = [e for e in mine if OP.bank_numbers(e["text"], fb)]
-        # a numbered bullet P3 or the hook has not used; else any bullet they have not used (P4 then names the employer without a number: the
-        # rollup check asks for one only "when the bullet has one"); a bullet already used is the last resort, never the second choice
-        pick = next((e for e in numbered if e["id"] not in avoid), None) or next((e for e in mine if e["id"] not in avoid), None) or \
-            (numbered[0] if numbered else None) or mine[0]
+        numbered = [e for e in mine if has_number(e)]
+        # a numbered bullet P3 or the hook has not used; else a numbered one they have (a number in P4 matters more than a fresh bullet: the
+        # "same evidence" rule is gone); only a role with no numbered bullet gets an unnumbered one (the employer is named, no number is asked)
+        pick = next((e for e in numbered if e["id"] not in avoid), None) or (numbered[0] if numbered else None) or \
+            next((e for e in mine if e["id"] not in avoid), None) or mine[0]
         out.append(pick)
     return out
 
@@ -901,6 +917,14 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
 
     if plan.error:
         return none(plan.error)
+    from . import assembled_letter as AL
+
+    if AL.compose_mode(settings) == "assembled":
+        try:
+            return _make_assembled(job, fb, kws, hk, plan, llm, settings, out_dir, final_name, team, claimable, chosen_ids, cv, header, code_parts,
+                                   page_text, said, dropped, notes, shown, none)
+        except TaskUnavailable as e:
+            return None, _letter_dict("pending", reason=str(e)[:300], notes=notes, evidence=shown)
     target, cap = target_words(settings), word_cap(settings)
     body_words = max(target - words(list(code_parts.values())), 60)
     p5_words = min(max(round(body_words * 0.2), 18), 32)
@@ -921,7 +945,9 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
            "ad_sentences": ad_sentences(jd), "about_sentences": offered, "filler": list(FILLER), "evidence": [e["text"] for e in plan.evidence],
            "groups": [[e["id"] for e in g] for g in plan.groups], "requirements": plan.reqs, "roles": [employer(e) for e in plan.groups[1]],
            "body_words": body_words, "min_words": lo_words, "max_words": cap}
-    retry: dict = {"count": 0, "rejected_words": [], "first_problems": [], "failures": [], "removed": [], "outcome": "first draft"}
+    retry: dict = {"count": 0, "rejected_words": [], "first_problems": [], "failures": [], "removed": [], "outcome": "first draft", "temperatures": []}
+    rejections: list[list[str]] = []                                  # every draft's rejections, in the writer's next prompt word for word
+    last_body: list[str] = []
     previous = list((revise or {}).get("previous") or [])
     feedback = (LF.revision_block(previous, LF.instructions(list((revise or {}).get("problems") or []), previous, plan), said) if revise else "")
     problems, body = [], []
@@ -930,7 +956,9 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
     reused = 0                                                        # drafts rejected for copying an earlier letter: one redraft, then no letter
     for attempt in range(ATTEMPTS):
         try:
-            out = T._llm_json(llm, "cover_letter", system, user + feedback, ctx)
+            temperature = TEMPERATURES[min(attempt, len(TEMPERATURES) - 1)]
+            retry["temperatures"].append(temperature)
+            out = T._llm_json(llm, "cover_letter", system, user + feedback, {**ctx, "temperature": temperature})
             body, letter_notes = T.normalise_letter(out)
             notes.extend(m for m in (f"cover_letter: {n}" for n in letter_notes) if m not in notes)
         except TaskUnavailable as e:
@@ -959,12 +987,20 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
         retry["failures"].append({"attempt": attempt + 1, "problems": list(problems)})
         if attempt == 0:
             retry["first_problems"] = list(problems)
+        rejections.append(list(problems))
         if reused >= 2:
             break                                                     # a second copy of an earlier letter: no more tries
+        if len(body) == 3 and len(last_body) == 3:
+            same = RU.jaccard(RU.shingles(" ".join(body)), RU.shingles(" ".join(last_body)))
+            if same >= SAME_DRAFT:
+                retry["stopped_early"] = f"draft {attempt + 1} is {same:.0%} the same as draft {attempt} (5-word shingles)"
+                notes.append(f"cover_letter: {retry['stopped_early']}; no more tries")
+                break
+        last_body = list(body)
         if attempt + 1 < ATTEMPTS:
             retry["count"] = attempt + 1
             notes.append(f"cover_letter: draft {attempt + 1} rejected ({'; '.join(problems)[:200]}); redrafting ({attempt + 2} of {ATTEMPTS})")
-        feedback = LF.revision_block(body, LF.instructions(problems, body, plan), said, body_words)
+        feedback = LF.revision_block(body, LF.instructions(problems, body, plan), said, body_words, history=rejections)
     if problems:
         retry["outcome"] = "no letter"
         shown_problems = "; ".join(problems)[:300]
@@ -980,6 +1016,75 @@ def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: 
                                  "problem": op.problem, "source": op.source} if op is not None else {})
 
 
+def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, plan: Plan, llm, settings, out_dir: Path, final_name: str, team: str,
+                    claimable: list[str], chosen_ids: set[str] | None, cv: dict | None, header: dict | None, code_parts: dict[str, str], page_text: str,
+                    said: str, dropped: set[str], notes: list[str], shown: list[dict], none) -> tuple[Path | None, dict]:
+    """letter.compose: assembled (tailoring/assembled_letter.py): P3 and P4 from this CV's bullets by a fixed rule, P5 from the model (or the
+    fallback), the whole letter through `check`. A variant is rebuilt from the next bullets when the last one repeats an earlier letter or one of its
+    assembled sentences fails a guard (a fact-bank problem: the model is not asked again)."""
+    import dataclasses
+
+    from . import assembled_letter as AL
+
+    jd = job.get("description") or ""
+    ad_all = jd + ("\n" + page_text if page_text else "")
+    offered = about_sentences(ad_all, job["company"], kws)
+    st = AL.steer(said)
+    p5, p5info = AL.write_p5(llm, job, fb, kws, plan, team, ad_all, offered, said, notes)
+    earlier = RU.earlier_letters(settings, exclude=[out_dir.name])
+    retry: dict = {"mode": "assembled", "count": 0, "failures": [], "outcome": "", "temperatures": [], "p5": p5info, "tokens": p5info["tokens"],
+                   "variants": []}
+    problems: list[str] = []
+    last_body: list[str] = []
+    for variant in range(AL.VARIANTS):
+        g3, g4, reqs = AL.groups_for(plan, fb, kws, chosen_ids, jd, hk, variant, st)
+        cparts = dict(code_parts)
+        b, assembled, bnotes, g3 = AL.body(plan, g3, g4, reqs, fb, chosen_ids, st, settings, cparts, p5)
+        g4 = b.pop("_g4", g4)                                                    # type: ignore[assignment]  (the roles P4 kept: each with a number)
+        if b.pop("drop_p2", None):
+            cparts.pop("P2", None)
+        vplan = dataclasses.replace(plan, groups=[g3, g4], reqs=[reqs, []], evidence=[*g3, *g4])
+        parts = {**cparts, "P3": b["P3"], "P4": b["P4"], "P5": p5}
+        problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled))
+        if any(p.startswith("P5") or "(a name)" in p and p5[:20] in p for p in problems) and p5info["source"] == "model":
+            p5 = AL.p5_fallback(offered, job["company"], lambda t: AL.p5_problems(t, job, fb, kws, plan, team, ad_all, offered))   # once
+            p5info["source"] = "fallback (after the whole-letter check)"
+            parts["P5"] = p5
+            problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled))
+        last_body = [parts["P3"], parts["P4"], parts["P5"]]
+        retry["variants"].append({"variant": variant, "p3": [e["id"] for e in g3], "p4": [e["id"] for e in g4], "problems": list(problems)})
+        notes.extend(n for n in bnotes if n not in notes)
+        if problems:
+            ids = ", ".join(e["id"] for e in [*g3, *g4])
+            notes.append(f"cover_letter: assembled variant {variant + 1} (bullets {ids}) failed a guard: a fact-bank problem, the model is not asked "
+                         f"again ({'; '.join(problems)[:200]})")
+            retry["failures"].append({"attempt": variant + 1, "problems": list(problems), "bullets": [e["id"] for e in [*g3, *g4]]})
+            continue
+        reuse_body = [parts[n] for n in REUSE_NAMES if parts.get(n)]
+        score, who = RU.worst(reuse_body, earlier)
+        if who is not None and score >= RU.LIMIT:
+            problems = [RU.problem(score, who, RU.shared_sentences(reuse_body, who))]
+            retry["failures"].append({"attempt": variant + 1, "problems": list(problems)})
+            notes.append(f"cover_letter: assembled variant {variant + 1} repeats {who.name} ({score:.2f}); rebuilt from the next bullets")
+            continue
+        retry["outcome"] = "assembled" + (f" (variant {variant + 1})" if variant else "")
+        retry["feedback"] = said
+        print(f"  cover letter: assembled ({words(assemble(parts)[0])} words); model tokens ~{retry['tokens']} (P5 only, {p5info['source']})")
+        op = plan.opening
+        gap = {**plan.gap, "included": "P6" in parts} if plan.gap else {}
+        return write_letter(job, kws, parts, team, fb, settings, out_dir, final_name, header, gap, notes=notes, retry=retry,
+                            evidence=[{"id": e["id"], "text": e["text"]} for e in vplan.evidence], requirements=vplan.reqs, target_words=target_words(settings),
+                            hook_source=(hk.source if hk is not None else "family profile line"),
+                            reuse={"score": round(score, 3), "against": who.name if who else "", "redrafted": bool(variant)},
+                            cites=citation_tags(parts, vplan.cite_ids()), dropped=sorted(dropped | ({"P2"} if "P2" in code_parts and "P2" not in cparts else set())),
+                            p2_source=plan.p2_source,
+                            opening={"fact": op.fact_kind, "hook_id": op.hook_id, "bullet_id": op.bullet_id, "number": op.number,
+                                     "problem": op.problem, "source": op.source} if op is not None else {})
+    retry["outcome"] = "no letter"
+    return none(f"the assembled letter failed its guards in {len(retry['failures'])} variant(s) (a fact-bank problem: no model redraft); last: "
+                f"{'; '.join(problems)[:300]}", problems, retry, last_body)
+
+
 def evidence_prompt(groups: list[list[dict]], reqs: list[list[str]]) -> str:
     """The EVIDENCE section of the prompt: P3's bullets (for the ad skills it names), then P4's (one per role)."""
     out, n = [], 1
@@ -987,4 +1092,20 @@ def evidence_prompt(groups: list[list[dict]], reqs: list[list[str]]) -> str:
     for g, h, req in zip(groups, heads, (", ".join(reqs[0]) if reqs else "", ", ".join(employer(e) for e in groups[1]) if len(groups) > 1 else "")):
         out.append(h.format(req) + "\n" + evidence_fields.block(g, n))
         n += len(g)
+    out.append(assignment(groups))
     return "\n".join(out)
+
+
+def assignment(groups: list[list[dict]]) -> str:
+    """Which evidence each paragraph uses, fixed before the model writes: P3 its items, P4 one per role with the numbers its sentence may use (the
+    rollup check asks for one of them), P5 none (the ad's own sentences)."""
+    n, rows = 1, []
+    for name, g in zip(("P3", "P4"), groups):
+        items = ", ".join(f"EVIDENCE {n + i} (bullet {e['id']})" for i, e in enumerate(g))
+        if name == "P4":
+            items = "; ".join(f"EVIDENCE {n + i}, {employer(e)}: the sentence MUST contain "
+                              + (" or ".join(sorted(numbers(e["text"]))[:4]) if numbers(e["text"]) else "no number (this bullet has none)") for i, e in enumerate(g))
+        rows.append(f"- {name}: {items}")
+        n += len(g)
+    rows.append("- P5: no bullet; the ABOUT / ROLE SENTENCES only")
+    return "EVIDENCE ASSIGNMENT (fixed: each paragraph uses only its own items):\n" + "\n".join(rows)

@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 from .apply import answers as answers_mod
 from .apply import autogate, autolog, dryrun, eo, failures as failures_mod, filler, formfind, formloop, knockout, letter_demand, requiredgate, shortfields, verify
 from .apply import visa as visa_mod
-from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, is_visa_question, sponsorship_answer, visa_value
+from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, is_visa_question, rights_pick, sponsorship_answer, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
                            is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
@@ -56,8 +56,22 @@ class Session:
     close: Callable[[], None]
 
 
+def fresh_launch(settings) -> Callable[[Path], Session]:
+    """v2.5 default (`apply.browser: fresh`, apply/browser.py): a new non-persistent context of the run's shared Chromium for each job, the window
+    off-screen while the form is filled. `apply.browser: profile` keeps the persistent profile below (after waiting for its lock)."""
+    from .apply import browser as browser_mod
+
+    def launch(profile_dir: Path) -> Session:
+        if browser_mod.mode_of(settings) == browser_mod.PROFILE:
+            browser_mod.wait_for_lock(profile_dir)
+            return playwright_launch(profile_dir)
+        page, close = browser_mod.fresh_page(headless=False, offscreen=False)
+        return Session(page, close)
+    return launch
+
+
 def playwright_launch(profile_dir: Path) -> Session:
-    """A headed Chromium with a persistent profile under data/secrets/browser/ (never committed)."""
+    """A headed Chromium with a persistent profile under data/secrets/browser/ (never committed): `apply.browser: profile` only."""
     from playwright.sync_api import sync_playwright
 
     profile_dir.mkdir(parents=True, exist_ok=True)
@@ -136,6 +150,8 @@ def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required
         seen.add(("visa", name))
         group = _group(page, el, "radio")
         value = None if about_another_country(question, plan) else sponsorship_answer(plan, question)
+        if value is None:                                                 # a working-rights group of statuses: applicant.yaml, by its own labels
+            value = rights_pick(plan, question, [_label_of(r) for r in group])[0]
         if filler.lever_page(page):                                       # never set by code on Lever: the human answers it (still_empty stops the run)
             filler.hand_over(ctx, question, value)
             return True
@@ -153,6 +169,13 @@ def _visa_field(page, el, typ: str, question: str, ctx: Ctx, seen: set, required
             chosen.check()
             ctx.track(chosen, question, "check")
             ctx.result.filled.append(f"{question[:80]} -> {pick} (typed)")
+        return True
+    if shortfields.is_combobox(el, typ):                                 # a script-built drop-down: applicant.yaml picks the option, or the person does
+        held, why = shortfields.visa_combobox(page, el, question, plan, ctx)
+        if not held:
+            ctx.needs_user[question] = why
+            if required:
+                ctx.stop(f"{question[:80]}: {why}")
         return True
     held = _answer_visa(el, typ, question, plan)
     if held:
@@ -381,7 +404,14 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + known
         autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
         return result
-    session = (launch or playwright_launch)(settings.path("secrets") / "browser")
+    letter_why = ""
+    if ctx.letter_pdf is None and letter_maker is not None:               # v2.5: the letter is written BEFORE the browser opens, never inside it
+        from .apply import planfirst
+        new_rep, ctx.letter_pdf, ctx.letter_text, letter_why = planfirst.letter_first(dict(rep), None, None, letter_maker, True, out)
+        if ctx.letter_pdf:
+            rep = new_rep
+            check_job_files(job, cv, ctx.letter_pdf)
+    session = (launch or fresh_launch(settings))(settings.path("secrets") / "browser")
     keep_open = False
     failed, offer = 0, False
     shown_table = False
@@ -405,12 +435,10 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         open_form(page, url, throttle, job.get("apply_kind"))
         from .tailoring.letter_reason import letter_reason
 
-        prov = letter_demand.provide(page, rep, ctx.letter_pdf, ctx.letter_text, letter_maker, out, reason=letter_reason(rep.get("letter")))
-        ctx.letter_pdf, ctx.letter_text, ctx.letter_note = prov.pdf, prov.text, prov.note       # letter.mode if_field: written now when the form asks for one
+        prov = letter_demand.deliver(page, rep, ctx.letter_pdf, ctx.letter_text, out, reason=letter_why or letter_reason(rep.get("letter")))
+        ctx.letter_pdf, ctx.letter_text, ctx.letter_note = prov.pdf, prov.text, prov.note       # written before the browser opened; "Enter manually" pasted here
         if prov.handoff:
             raise HandOff(prov.handoff)
-        if prov.made:
-            check_job_files(job, cv, ctx.letter_pdf)
         fill_form(page, ctx)
         lost = verify_filled(page, ctx)
         rows = requiredgate.check(page, ctx, ctx.verified, lost, ctx.loop.status if ctx.loop else None, ctx.letter_note)
@@ -497,6 +525,12 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     except ArchiveError:
         raise
     except Exception as e:  # noqa: BLE001  (a timeout, a page that changed under us)
+        from .apply.errors import is_closed_error
+
+        if is_closed_error(e, getattr(session, "page", None)):           # v2.5: the window went away; code submitted nothing, nothing is asked
+            result.status, result.reason = autolog.NOT_SUBMITTED, "BROWSER CLOSED: nothing submitted"
+            out("\n  BROWSER CLOSED: nothing submitted. The answers are in answers_to_paste.txt beside the CV when they were planned.")
+            return result
         result.status, result.reason = autolog.ERROR, f"{type(e).__name__}: {str(e)[:300]}"
         return result
     finally:

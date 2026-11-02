@@ -21,8 +21,10 @@ def role_bullets(fb: dict, entry_id: str) -> list[dict]:
     return next(e for e in fb["experience"] if e["id"] == entry_id)["bullets"]
 
 
-def test_a_role_group_takes_an_unused_bullet_before_one_that_p3_already_used(world):
-    """The RightShip shape: every numbered bullet of the first role is already used (by the hook or P3); an unnumbered one is free."""
+def test_a_role_group_keeps_a_number_in_p4_even_when_p3_already_used_the_roles_numbered_bullets(world):
+    """The RightShip shape: every numbered bullet of the first role is already used (by the hook or P3); an unnumbered one is free. P4 gives one number
+    of each role's bullet, so the numbered one is taken again (v2.4.2: the plan gave it to both paragraphs, so `shared` lets it through, never a rejection);
+    only a role with no numbered bullet gets an unnumbered one."""
     fb = world.fb
     role = world.plan.groups[1][0]
     entry = next(e for e in fb["experience"] if any(b["id"] == role["id"] for b in e["bullets"]))
@@ -31,7 +33,9 @@ def test_a_role_group_takes_an_unused_bullet_before_one_that_p3_already_used(wor
     assert numbered and free, "the fixture role needs numbered and unnumbered bullets"
     groups = CL.role_group(fb, world.kws, world.chosen, JOB["description"], world.hk, set(numbered))
     mine = [g for g in groups if g["id"] in {b["id"] for b in entry["bullets"]}]
-    assert mine and mine[0]["id"] in free, f"took {mine[0]['id']}, a bullet P3 or the hook already used, with {free} unused"
+    assert mine and mine[0]["id"] in numbered, f"took {mine[0]['id']}, which has no number, with the numbered {sorted(numbered)} available"
+    unused_numbered = CL.role_group(fb, world.kws, world.chosen, JOB["description"], world.hk, set())
+    assert any(g["id"] in numbered for g in unused_numbered if g["id"] in {b["id"] for b in entry["bullets"]})
 
 
 def test_with_no_unused_bullet_the_role_group_still_returns_one(world):

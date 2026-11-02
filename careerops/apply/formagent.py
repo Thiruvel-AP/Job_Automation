@@ -33,7 +33,7 @@ from . import answers as answers_mod
 from . import ats_vendor, eo, filler, formfind, handoff as handoff_mod, submit_guard, verify
 from . import freetext as freetext_mod
 from .attest import ATTEST, MAGENTA, RESET
-from .assist import VISA_FIELD, about_another_country, sponsorship_answer
+from .assist import VISA_FIELD, about_another_country, rights_pick, sponsorship_answer
 from .filler import _matches, _norm
 
 FILE = "formagent.jsonl"
@@ -830,6 +830,8 @@ class RulePlanner(Planner):
         if about_another_country(q, self.visa_plan):
             return True, None
         value = sponsorship_answer(self.visa_plan, q)
+        if value is None and options:                                       # a working-rights list of statuses: applicant.yaml, by its own options
+            return True, rights_pick(self.visa_plan, q, options)[0]
         if value is None or options is None:
             return True, value
         return True, next((o for o in options if _fold(o) == _fold(value)), None)

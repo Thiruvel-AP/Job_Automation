@@ -213,6 +213,8 @@ careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
+careerops skip --id JOB            # skip a job for good: data/state/decisions.jsonl gets its keys, its JD leaves the inbox and approved/ folders
+careerops why ID|URL|ats:KEY       # every decision recorded for a job and the key that matched (id, ats:<vendor>:<board>:<id>, URL, fingerprint)
 careerops unskip --id JOB          # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
 careerops unskip --shortlist [--match TEXT | --all]   # lists the ads you skipped at the shortlist and the parked ones; --match / --all brings them back
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
@@ -508,10 +510,13 @@ tailored. For each job:
 7. moves the JD out of the inbox: a skipped or applied job to `data/jds_done/skipped/` or `data/jds_done/applied/` (`paths.jds_done`), any other
    finished job to `done/<job id>-<name>.txt` (`:` in the id becomes `_`).
 
-**Skip and applied are final.** One decision covers every copy of a job: the jobs with the same duplicate key (company family + normalised
-title: "Graphcore" and "Graphcore Early Careers", "Graduate Machine Learning Engineer 2027"). Skipping or applying to one copy skips the
-others in the database (a copy of an applied job is marked `skipped` with the reason "same job as …", it was not applied to) and moves
-every inbox file with that key into `data/jds_done/skipped/` or `applied/`. JD files are never deleted or overwritten (a name already there
+**Skip and applied are final** (v2.5). Every decision is appended to `data/state/decisions.jsonl` with the job's keys: its id, the ATS key
+`ats:<vendor>:<board>:<job id>` and the normalised URL decide on their own; company + title + country (the fingerprint) never do: a job that only
+shares it is shown labelled `possible repost of a job you skipped on <date>`, and `s` skips it. One decision covers every copy of the same LISTING
+(same id, ATS key or URL): skipping or applying to one copy skips the others in the database (a copy of an applied job is marked `skipped` with the
+reason "same job as …", it was not applied to) and moves its files in the inbox and in `data/jds/approved/<date>/` into `data/jds_done/skipped/` or
+`applied/`. `[s]` in `careerops review` stores the skip too, and `careerops skip --id JOB` does it for a job you are not reviewing;
+`careerops why <id|url|ats:key>` shows every record and the key that matched. JD files are never deleted or overwritten (a name already there
 gets `-2`). `careerops retriage --decided` does the same for what is in the inbox now (a dry run; `--apply` moves the files and skips the
 database copies), `careerops unskip --id JOB` undoes a skip (the job and its copies return to `needs_review` if tailored, else `new`, and their
 files to the inbox; live works on them again).

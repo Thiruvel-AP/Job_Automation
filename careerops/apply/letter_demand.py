@@ -170,3 +170,10 @@ def provide(page, rep: Mapping[str, Any], pdf: str | None, text: str | None, mak
             ok = paste_manual(page, text)
             out("  cover letter: 'Enter manually' clicked and letter.txt pasted" if ok else "  cover letter: could not paste into the text area; paste letter.txt yourself")
     return Provided(pdf, text, made=made)
+
+
+def deliver(page, rep: Mapping[str, Any], pdf: str | None, text: str | None, out: Callable[[str], None] = print, reason: str = "") -> Provided:
+    """The in-browser half (v2.5). The letter was written BEFORE the browser opened (apply/planfirst.letter_first), so nothing is written here: a
+    form whose only cover-letter control is "Enter manually" gets it clicked and letter.txt pasted, and a REQUIRED cover-letter field with no letter
+    is handed off with the reason. The assist and the auto-apply call this, never `provide`, once a browser is open."""
+    return provide(page, rep, pdf, text, None, out, reason)

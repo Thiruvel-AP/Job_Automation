@@ -669,6 +669,7 @@ def add_clipboard(settings, ask: Callable[[str], str] = input) -> tuple[Path, bo
     title = _ask_field(ask, "title", "Job title: ")
     url = _ask_field(ask, "url", "Application URL: ")
     ad = Ad(company=company, title=title, url=url, location="", text=text, source="clipboard", ad_id="")
+    refuse_decided(settings, ad)
     path, created = write_inbox(settings.path("jds") / "inbox", ad)
     return path, created, ad
 
@@ -683,11 +684,26 @@ def filed_in_approved(jds: Path, name: str) -> Path | None:
     return None
 
 
+def refuse_decided(settings, ad: Ad) -> None:
+    """v2.5: an ad of a job you skipped or applied to (the decision log, by its id, ATS key or URL key) is never written to the inbox again; the
+    message says when and how to see why. Company + title alone never refuse an ad."""
+    from ..apply import decisions, listing_keys
+    from . import manual
+
+    jid = manual.job_id_for(ad.company, ad.title, ad.url) if ad.company and ad.title and ad.url else None
+    m = decisions.Book.load(settings).decided(listing_keys.keys_for(ad.company, ad.title, ad.url, None, getattr(ad, "location", None), jid), jid)
+    if m is not None:
+        what = "applied to" if m.decision == decisions.APPLIED else "skipped"
+        raise IntakeError(f"you {what} this job on {m.date} ({m.record.get('job_id') or '?'}); it is not added again. "
+                          f"See: careerops why {m.key}; undo a skip: careerops unskip --id {m.record.get('job_id') or 'JOB'}")
+
+
 def add_url(settings, url: str, company: str | None = None, title: str | None = None) -> tuple[Path, bool, Ad]:
     """Fetch `url` and put the ad in paths.jds/inbox. Returns (file, created, ad). An ad you already approved (the same file name in
     approved/<date>/) is not written again: that file is returned with created=False, so `live --url ... --retailor` resumes it instead of
     meeting a second copy of the same job."""
     ad = fetch_ad(url, company, title, RobotsCache(settings.path("robots")))
+    refuse_decided(settings, ad)
     held = filed_in_approved(settings.path("jds"), file_name(ad))
     if held is not None:
         return held, False, ad

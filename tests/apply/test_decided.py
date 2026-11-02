@@ -1,7 +1,8 @@
-"""Skip and applied decisions are final and cover every copy of a job (apply/decided.py): "Graphcore" and "Graphcore Early Careers" posting
-one "AI Engineer" are one job. A decision moves every copy's JD out of the inbox into paths.jds_done/<skipped|applied>/ (never deleted),
-discovery never writes a decided job again (`already_decided`), `retriage --decided` cleans the inbox now (a dry run unless --apply), and
-`unskip` undoes a skip."""
+"""Skip and applied decisions are final and cover every copy of the same LISTING (apply/decided.py, v2.5): the same job id, ATS key or URL key.
+A decision moves every copy's JD out of the inbox into paths.jds_done/<skipped|applied>/ (never deleted), discovery never writes a decided job
+again (`already_decided`), `retriage --decided` cleans the inbox now (a dry run unless --apply), and `unskip` undoes a skip. Company + title
+alone never decide (v2.5 addendum): "Graphcore" and "Graphcore Early Careers" posting one "AI Engineer" at two addresses are shown, the second
+labelled `possible repost of a job you skipped on <date>`."""
 import json
 from datetime import datetime, timezone
 
@@ -35,36 +36,40 @@ def two_graphcores(inbox, jd):
 
 
 # ------------------------------------------------------------------ one decision covers every copy
-def test_skipping_one_graphcore_copy_removes_both_from_the_inbox(db, settings, inbox, archive, jd):
+def test_a_same_title_job_at_another_address_is_shown_again_labelled_a_possible_repost(db, settings, inbox, archive, jd):
     two_graphcores(inbox, jd)
     fake = Fake(db, settings, review="skipped")
-    live, _ = session(db, settings, fake)
+    live, lines = session(db, settings, fake)
     assert live.run() == 0
+    assert len([c for c in fake.calls if c[0] == "review"]) == 2                    # two addresses, two answers: company + title never decide
+    assert any("possible repost of a job you skipped on" in line for line in lines)
     assert names(inbox) == [] and names(settings.path("jds_done") / "skipped") == ["a-graphcore.txt", "b-graphcore-early.txt"]
-    assert len([c for c in fake.calls if c[0] == "review"]) == 1                    # one answer covers both: the second is not asked
     assert sorted(j["status"] for j in db.jobs()) == ["skipped", "skipped"]
-    assert [r.status for r in live.results] == ["skipped", "skipped"] and "same job as" in live.results[1].note + live.results[0].note
-    assert not (settings.path("jds") / "done").exists() or not list((settings.path("jds") / "done").iterdir())
 
 
-def test_a_copy_that_is_already_a_job_in_the_database_is_skipped_with_it(db, settings, inbox, archive, jd):
-    other = manual.add_jd(db, jd, company="Graphcore Early Careers", title=TITLE, url="https://gc.example/2", location="Bristol, UK")
-    db.update_job(other, status="triaged")
+def test_a_copy_of_the_same_listing_in_the_database_is_skipped_with_it(db, settings, inbox, archive, jd):
+    same = manual.add_jd(db, jd, company="Graphcore Early Careers", title=TITLE, url="https://graphcore.example/jobs/1?utm_source=alert",
+                         location="Bristol, UK")
+    other = manual.add_jd(db, jd, company="Graphcore", title=TITLE, url="https://graphcore.example/jobs/77", location="Munich, Germany")
+    for jid in (same, other):
+        db.update_job(jid, status="triaged")
     put(inbox, "a-graphcore.txt", jd, company="Graphcore", title=TITLE, n=1)
-    fake = Fake(db, settings, review="skipped")
-    session(db, settings, fake)[0].run()
-    mine = next(j["id"] for j in db.jobs() if j["id"] != other)
-    assert db.job(other)["status"] == "skipped" and mine in db.job(other)["reason"]
+    session(db, settings, Fake(db, settings, review="skipped"))[0].run()
+    mine = next(j["id"] for j in db.jobs() if j["id"] not in (same, other))
     assert db.job(mine)["status"] == "skipped"
+    assert db.job(same)["status"] == "skipped" and mine in db.job(same)["reason"]       # the same URL (a tracking parameter aside)
+    assert db.job(other)["status"] == "triaged"                                         # another posting: never hidden
 
 
 def test_an_application_covers_the_copies_too_and_they_are_not_marked_applied(db, settings, inbox, archive, jd):
-    two_graphcores(inbox, jd)
+    put(inbox, "a-graphcore.txt", jd, company="Graphcore", title=TITLE, n=1)
+    copy = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://graphcore.example/jobs/1/", location="Bristol, UK")
     other = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://gc.example/3", location="Bristol, UK")
     fake = Fake(db, settings, yes())
     session(db, settings, fake)[0].run()
-    assert names(inbox) == [] and names(settings.path("jds_done") / "applied") == ["a-graphcore.txt", "b-graphcore-early.txt"]
-    assert db.job(other)["status"] == "skipped" and "applied" in db.job(other)["reason"]
+    assert names(inbox) == [] and names(settings.path("jds_done") / "applied") == ["a-graphcore.txt"]
+    assert db.job(copy)["status"] == "skipped" and "applied" in db.job(copy)["reason"]
+    assert db.job(other)["status"] != "skipped"                                           # same title, another posting
     assert [j["status"] for j in db.jobs() if j["status"] == "applied"] == ["applied"]          # one application, one applied row
 
 
@@ -111,23 +116,26 @@ def fresh_run(d, settings, db):
     return Discover(settings, db, d.f, today=TODAY, say=lambda s: None)
 
 
-def test_a_rediscovered_ad_with_a_decided_duplicate_key_is_not_written(db, settings, inbox, archive, jd, d):
+def test_a_rediscovered_ad_of_a_decided_listing_is_not_written_and_another_posting_is_labelled(db, settings, inbox, archive, jd, d):
     put(inbox, "a.txt", jd, company="Graphcore", title=TITLE, n=1)
     session(db, settings, Fake(db, settings, review="skipped"))[0].run()
     run = fresh_run(d, settings, db)
-    assert run.accept(graphcore("Graphcore Early Careers", "8002"), "ats") == "dropped"       # another board's copy
-    assert run.accept(graphcore("Graphcore", "7001", url="https://gc.example/jobs/1"), "ats") == "dropped"     # the very ad
-    assert names(inbox) == [] and names(settings.path("jds_done") / "skipped") == ["a.txt"]
-    assert run.run.sources["ats"]["already_decided"] == 2 and not run.run.sources["ats"].get("duplicate")
-    assert run.run.sources["ats"].get("written", 0) == 0
+    assert run.accept(graphcore("Graphcore", "7001", url="https://graphcore.example/jobs/1"), "ats") == "dropped"     # the very ad (new text, same id)
+    assert run.run.sources["ats"]["already_decided"] == 1 and not run.run.sources["ats"].get("duplicate")
+    other = graphcore("Graphcore", "8002")
+    other.location = "London, UK"                                                             # another posting (London, its own id), same country
+    assert run.accept(other, "ats") == "written", run.run.sources["ats"]                      # shown, with the label
+    (written,) = [p for p in inbox.glob("*.txt")]
+    assert "Possible repost: possible repost of a job you skipped on" in written.read_text(encoding="utf-8").partition("\n\n")[0]
+    assert run.run.sources["ats"]["possible_repost"] == 1
 
 
 def test_a_decided_job_known_only_by_its_filed_jd_still_blocks_a_rewrite(db, settings, d):
     folder = settings.path("jds_done") / "applied"
     folder.mkdir(parents=True)
-    (folder / "x.txt").write_text(f"Company: Graphcore\nTitle: {TITLE}\nURL: https://gc.example/1\n\n{GC_JD}")
+    (folder / "x.txt").write_text(f"Company: Graphcore\nTitle: {TITLE}\nURL: https://job-boards.greenhouse.io/graphcore/jobs/7001\n\n{GC_JD}")
     run = fresh_run(d, settings, db)
-    assert run.accept(graphcore("Graphcore Early Careers", "8002"), "ats") == "dropped"
+    assert run.accept(graphcore("Graphcore", "7001"), "ats") == "dropped"
     assert run.run.sources["ats"]["already_decided"] == 1
 
 
@@ -149,12 +157,14 @@ def cfg(settings, tmp_path):
 
 
 def decided_world(db, settings, inbox, jd):
-    """One Graphcore job skipped, two copies of it back in the inbox (one with a database row), and an unrelated ad."""
+    """One Graphcore job skipped; a copy of it back in the inbox (the same address) and one in the database (the same address with a tracking
+    parameter); another Graphcore posting of the same title (another address) and an unrelated ad."""
     put(inbox, "a.txt", jd, company="Graphcore", title=TITLE, n=1)
     session(db, settings, Fake(db, settings, review="skipped"))[0].run()
-    put(inbox, "copy.txt", jd, company="Graphcore Early Careers", title=TITLE, n=2)
+    put(inbox, "copy.txt", jd, company="Graphcore", title=TITLE, n=1)
     put(inbox, "other.txt", jd, company="Acme", title=TITLE, n=3)
-    row = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://gc.example/4", location="Bristol, UK")
+    put(inbox, "posting2.txt", jd, company="Graphcore", title=TITLE, n=2)
+    row = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://graphcore.example/jobs/1?utm_source=x", location="Bristol, UK")
     db.update_job(row, status="triaged")
     return row
 
@@ -163,15 +173,15 @@ def test_retriage_decided_is_a_dry_run_and_moves_nothing_without_apply(db, setti
     row = decided_world(db, settings, inbox, jd)
     cli.main(["--config", str(cfg), "retriage", "--decided"])
     out = capsys.readouterr().out
-    assert "copy.txt" in out and "other.txt" not in out and "Dry run" in out and row in out
-    assert names(inbox) == ["copy.txt", "other.txt"] and db.job(row)["status"] == "triaged"
+    assert "copy.txt" in out and "other.txt" not in out and "posting2.txt" not in out and "Dry run" in out and row in out
+    assert names(inbox) == ["copy.txt", "other.txt", "posting2.txt"] and db.job(row)["status"] == "triaged"
     assert names(settings.path("jds_done") / "skipped") == ["a.txt"]
 
 
 def test_retriage_decided_apply_moves_the_copies_and_skips_their_rows(db, settings, inbox, archive, jd, cfg, capsys):
     row = decided_world(db, settings, inbox, jd)
     cli.main(["--config", str(cfg), "retriage", "--decided", "--apply"])
-    assert names(inbox) == ["other.txt"] and names(settings.path("jds_done") / "skipped") == ["a.txt", "copy.txt"]
+    assert names(inbox) == ["other.txt", "posting2.txt"] and names(settings.path("jds_done") / "skipped") == ["a.txt", "copy.txt"]
     assert db.job(row)["status"] == "skipped"
     cli.main(["--config", str(cfg), "retriage", "--decided", "--apply"])                  # idempotent
     assert "0 inbox file(s)" in capsys.readouterr().out.splitlines()[-1] or True
@@ -185,17 +195,20 @@ def test_apply_without_decided_is_refused(cfg, capsys):
 
 # ------------------------------------------------------------------ unskip
 def test_unskip_restores_the_job_its_copies_and_their_files(db, settings, inbox, archive, jd, cfg, capsys):
-    two_graphcores(inbox, jd)
+    put(inbox, "a-graphcore.txt", jd, company="Graphcore", title=TITLE, n=1)
     session(db, settings, Fake(db, settings, review="skipped"))[0].run()
-    ids = [j["id"] for j in db.jobs()]
-    assert len(ids) == 2 and names(inbox) == []
-    cli.main(["--config", str(cfg), "unskip", "--id", ids[0]])                    # either copy: both come back
-    assert names(inbox) == ["a-graphcore.txt", "b-graphcore-early.txt"] and names(settings.path("jds_done") / "skipped") == []
-    assert [db.job(i)["status"] for i in ids] == ["needs_review", "needs_review"]      # tailored: live goes back to the review prompt
+    (jid,) = [j["id"] for j in db.jobs()]
+    copy = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://graphcore.example/jobs/1", location="Bristol, UK")
+    db.update_job(copy, status="skipped", reason=f"same job as {jid}: skipped")
+    assert names(inbox) == []
+    cli.main(["--config", str(cfg), "unskip", "--id", jid])                       # the job and its copy of the same listing come back
+    assert names(inbox) == ["a-graphcore.txt"] and names(settings.path("jds_done") / "skipped") == []
+    assert db.job(jid)["status"] == "needs_review" and db.job(copy)["status"] == "new"    # tailored: live goes back to the review prompt
+    assert decided.load(settings, db).hit("Graphcore", TITLE, "https://graphcore.example/jobs/1") is None       # the log's `unskipped` lifts it
     fake = Fake(db, settings, review="approved", answers=yes())
     live, _ = session(db, settings, fake)
     live.run()
-    assert [c for c in fake.calls if c[0] == "review"] and sorted(db.job(i)["status"] for i in ids) == ["applied", "skipped"]    # worked on, not "already done"
+    assert [c for c in fake.calls if c[0] == "review"] and db.job(jid)["status"] == "applied"    # worked on, not "already done"
 
 
 def test_unskip_a_rule_skipped_job_goes_back_to_new(db, settings, inbox, archive, jd, cfg):
@@ -208,13 +221,14 @@ def test_unskip_a_rule_skipped_job_goes_back_to_new(db, settings, inbox, archive
 
 
 def test_an_applied_decision_is_final(db, settings, inbox, archive, jd, cfg, capsys):
-    two_graphcores(inbox, jd)
+    put(inbox, "a-graphcore.txt", jd, company="Graphcore", title=TITLE, n=1)
     session(db, settings, Fake(db, settings, yes()))[0].run()
-    ids = [j["id"] for j in db.jobs()]
-    for jid in ids:
+    copy = manual.add_jd(db, jd, company="Graphcore UK", title=TITLE, url="https://graphcore.example/jobs/1", location="Bristol, UK")
+    db.update_job(copy, status="skipped", reason="same job as x: applied")
+    for jid in [j["id"] for j in db.jobs()]:
         with pytest.raises(SystemExit):
             cli.main(["--config", str(cfg), "unskip", "--id", jid])
-    assert names(settings.path("jds_done") / "applied") == ["a-graphcore.txt", "b-graphcore-early.txt"]
+    assert names(settings.path("jds_done") / "applied") == ["a-graphcore.txt"]
 
 
 def test_unskip_refuses_a_job_that_is_not_skipped_and_an_unknown_id(db, settings, cfg):

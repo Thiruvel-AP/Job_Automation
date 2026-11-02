@@ -1,6 +1,7 @@
-"""A browser the person closed after submitting must not lose the application record: `assist()` still asks for the confirmation, and
-`live` still marks the job applied (or asks about it on the next run when it crashed in between). No browser is started: the
-launcher is a fake."""
+"""A browser whose teardown fails after the person submitted must not lose the application record: `assist()` still asks for the
+confirmation, and `live` still marks the job applied. A browser that is CLOSED before the form was submitted (v2.5) ends the job at once:
+`BROWSER CLOSED: nothing submitted`, answers_to_paste.txt, no confirmation prompt, and live marks it not submitted without asking "Did YOU
+submit?". No browser is started: the launcher is a fake."""
 from types import SimpleNamespace
 
 import pytest
@@ -66,9 +67,23 @@ def test_a_browser_that_cannot_be_closed_any_more_still_reaches_the_confirmation
     assert r["confirmation"] == "REF-9" and len(asked) == 1
 
 
-def test_a_browser_closed_before_the_prompt_still_reaches_it():
+def test_a_browser_closed_before_the_form_was_submitted_asks_nothing_and_says_so(capsys):
     r, asked = run(close_raises=True, page_broken=True)
-    assert r["confirmation"] == "REF-9" and len(asked) == 1 and r["filled"] == []
+    assert asked == [] and r["confirmation"] == "x" and r["browser_closed"] and r["filled"] == []
+    assert "BROWSER CLOSED: nothing submitted" in capsys.readouterr().out
+
+
+def test_live_marks_a_closed_browser_not_submitted_without_asking_did_you_submit(db, settings, inbox, archive, jd):
+    put(inbox, "one.txt", jd)
+    fake = Fake(db, settings, yes())
+    fake.assist = lambda jid: (fake.calls.append(("assist", jid)) or
+                               assist_mod.assist(JOB, {}, {}, "profile", launch=launcher(page_broken=True), ask=lambda p: pytest.fail(p)))
+    live, lines = session(db, settings, fake)
+    live.run()
+    assert "mark_applied" not in fake.names()
+    assert [j["status"] for j in db.jobs()] == ["ready_not_submitted"]
+    assert not any("Did YOU submit" in p for p in fake.prompts)
+    assert any("BROWSER CLOSED: nothing submitted" in line for line in lines)
 
 
 def test_a_playwright_error_is_the_only_thing_swallowed(monkeypatch):

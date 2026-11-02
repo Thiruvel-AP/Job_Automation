@@ -287,3 +287,13 @@ def test_a_task_model_that_does_not_reason_is_not_sent_the_providers_reasoning_s
     assert "reasoning_effort" not in by_model["llama-3.3-70b-versatile"] and "include_reasoning" not in by_model["llama-3.3-70b-versatile"]
     assert by_model[LETTER_MODEL]["reasoning_effort"] == "low" and by_model[LETTER_MODEL]["include_reasoning"] is False
     assert by_model["openai/gpt-oss-20b"]["reasoning_effort"] == "low"
+
+
+def test_a_call_may_set_its_own_temperature_through_its_context_and_the_others_keep_the_configured_one(groq_settings, db):
+    r = Router(groq_settings, db)
+    r.json("cover_letter", "s", "u", context={"temperature": 0.0})
+    r.json("cover_letter", "s", "u", context={"temperature": 0.7})
+    r.json("cover_letter", "s", "u")
+    r.json("extract_keywords", "s", "u", context={"company": "x"})
+    configured = groq_settings["llm"].get("temperature", 0.3)
+    assert [b["temperature"] for b in _S.bodies] == [0.0, 0.7, configured, configured]

@@ -51,13 +51,24 @@ def approved_root(settings) -> Path:
     return settings.path("jds") / APPROVED
 
 
-def approved_files(settings) -> list[Path]:
-    """The JD files you approved: every .txt in data/jds/approved/<date>/. The only files `careerops live` works on."""
+def approved_files(settings, db=None) -> list[Path]:
+    """The JD files you approved: every .txt in data/jds/approved/<date>/. The only files `careerops live` works on. With `db`, a file whose job you
+    skipped or applied to since (the decision log, by id / ATS key / URL key: v2.5) is left out: a skip overrides an earlier approval."""
     root = approved_root(settings)
     try:
-        return sorted(p for d in root.iterdir() if d.is_dir() for p in d.iterdir() if p.is_file() and p.suffix.lower() == ".txt")
+        files = sorted(p for d in root.iterdir() if d.is_dir() for p in d.iterdir() if p.is_file() and p.suffix.lower() == ".txt")
     except OSError:
         return []
+    if db is None:
+        return files
+    known = decided.load(settings, db)
+    keep = []
+    for p in files:
+        hdr = decided.header_of(p)
+        if hdr.get("company") and hdr.get("title") and known.hit(hdr["company"], hdr["title"], hdr.get("url"), hdr.get("location")):
+            continue
+        keep.append(p)
+    return keep
 
 
 @dataclass
@@ -69,6 +80,7 @@ class Row:
     shown: int = 0                              # lists this job was in before this one (shortlist_log.jsonl)
     region: region_mod.Match | None = None      # in / unknown (an out ad is parked before it becomes a Row)
     size: size_mod.Size | None = None           # None when the size was not asked for (no resolver)
+    repost: str = ""                            # v2.5: "possible repost of a job you skipped on <date> (<id>)": only company + title + country match
 
     @property
     def name(self) -> str:
@@ -87,6 +99,7 @@ class Row:
     def tags(self) -> str:
         """` [SME·small] [region?]`: the size and the unknown region of the line (nothing for what was not asked)."""
         got = ([f"[{self.size.tag}]"] if self.size is not None else []) + ([f"[{region_mod.FLAG}]"] if self.region and self.region.flag else [])
+        got += [f"[{self.repost}]"] if self.repost else []
         return (" " + " ".join(got)) if got else ""
 
     def evidence(self, n: int) -> str:
@@ -227,11 +240,12 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
     non_uk_ok = bool(regions) and (region_mod.ANY in regions or bool(region_mod.iso_of(regions) - {"GB"}))      # S = unknown, not "not home", for a job abroad
     hist = read_history(settings)
     plan.last_shown = hist.last
-    known = decided.load(settings, db)                                       # skipped and applied: database rows and the files in jds_done/
+    known = decided.load(settings, db)                                       # the decision log, skipped / applied rows and the files in jds_done/
     for p in decided.txt_files(decided.decision_dir(settings, "closed")):
         if (k := decided.file_key(p)):
-            known.add(k, "closed")
-    waiting = {k for p in approved_files(settings) if (k := decided.file_key(p))}
+            known.add(k, "closed", decided.file_job_id(p), decided.file_keys(p))
+    # an ad whose job is already approved (the same id / ATS key / URL key: v2.5, never company + title alone, so London's approval hides no Munich)
+    waiting = {k for p in approved_files(settings) for k in [*decided.file_keys(p).strong(), decided.file_job_id(p) or ""] if k}
     idx = sponsors.load_index(db)
     floor = triage.salary_floor(settings)
     if archive is None:
@@ -246,13 +260,14 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         if job is None:
             plan.unreadable += 1
             continue
-        jkey = decided.key_of(job["company"], job["title"])
-        if decided.usable(jkey) and jkey in waiting:
+        jkeys = {*decided.file_keys(p).strong(), decided.file_job_id(p) or ""} - {""}
+        if jkeys & waiting:
             plan.approved += 1
             continue
-        if known.hit(job["company"], job["title"], job.get("url") or job.get("apply_url")):
+        if known.hit(job["company"], job["title"], job.get("url") or job.get("apply_url"), job.get("location")):
             plan.decided += 1
             continue
+        repost = known.repost(job["company"], job["title"], job.get("url") or job.get("apply_url"), job.get("location"))
         if _key(job["company"], job["title"]) in hist.parked:
             plan.parked.append(f"{job['company']} | {job['title']}")
             continue
@@ -276,7 +291,7 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         if t.age_days is not None and t.age_days > cfg.max_posting_age_days and t.t < targeting_mod.OLD_POSTING_MIN_T:
             plan.too_old += 1
             continue
-        pool.append(Row(p, job, t, kind_of(job), region=rm))
+        pool.append(Row(p, job, t, kind_of(job), region=rm, repost=repost))
     by_age = lambda r: r.t.age_days if r.t.age_days is not None else float("inf")        # noqa: E731
     pool.sort(key=lambda r: (-r.t.t, by_age(r), r.path.name))
     alive = make_alive(fetcher, cache if cache is not None else (liveness.cache_for(settings) if fetcher is not None else None), now)

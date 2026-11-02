@@ -130,12 +130,21 @@ def instructions(problems: list[str], paragraphs: list[str], plan) -> list[str]:
 
 
 # ------------------------------------------------------------------ the block appended to the prompt
-def revision_block(previous: list[str], lines: list[str], feedback: str, need: int | None = None) -> str:
-    """The text added to the user message of a draft: the draft to revise, what to change, the reader's feedback. "" when there is none of them."""
+def history_block(history: list[list[str]]) -> str:
+    """Every rejection of every earlier draft, each guard message exactly as the guard wrote it ("" when there is none)."""
+    rows = [f"Draft {n}:\n" + "\n".join(f"- {p}" for p in dict.fromkeys(probs)) for n, probs in enumerate(history, 1) if probs]
+    return ("EVERY REJECTION SO FAR, word for word (none of these may come back):\n" + "\n".join(rows)) if rows else ""
+
+
+def revision_block(previous: list[str], lines: list[str], feedback: str, need: int | None = None, history: list[list[str]] | None = None) -> str:
+    """The text added to the user message of a draft: the draft to revise, every earlier rejection word for word (`history`, one list per draft), what
+    to change, the reader's feedback. "" when there is none of them."""
     out: list[str] = []
     if previous:
         tags = ("P3", "P4", "P5")
         out.append("YOUR PREVIOUS DRAFT (revise it; keep what already works):\n" + "\n".join(f"{t}: {p}" for t, p in zip(tags, previous)))
+    if history_block(history or []):
+        out.append(history_block(history or []))
     if lines:
         out.append(f"CHANGE THESE ({HEADER}):\n" + "\n".join(f"- {x}" for x in lines)
                    + (f"\nMake P3 + P4 + P5 about {need} words." if need else ""))

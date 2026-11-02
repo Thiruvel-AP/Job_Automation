@@ -437,6 +437,33 @@ def hear_text(job: Mapping[str, Any]) -> str:
     return {"linkedin": "LinkedIn", "indeed": "Indeed"}.get(discovery_channel(job), HEAR_FOLLOW_UP)
 
 
+def is_combobox(el, typ: str) -> bool:
+    """True for a script-built drop-down: a text input with role=combobox."""
+    return typ in ("text", "search", "") and (el.get_attribute("role") or "") == "combobox"
+
+
+def visa_combobox(page, el, question: str, plan, ctx) -> tuple[str | None, str]:
+    """(the option picked, why not) for a working-rights drop-down built by script. The list is opened and read, `assist.rights_pick` chooses among its
+    options from applicant.yaml (never answers.yaml, never a guess), and that option is clicked. Nothing is typed: the visa plan's summary paragraph is
+    never put into a drop-down."""
+    from .assist import rights_pick
+
+    held = combo_value(el)
+    if held:
+        return held, ""
+    options = _open(page, el, None)
+    pick, why = rights_pick(plan, question, [t for t, _ in options])
+    if pick is None:
+        return None, why
+    if not _choose(page, el, options, next((t for t, _ in options if " ".join(t.split()).lower() == pick.lower()), pick)):
+        return None, f"the list shows no option {pick!r}"
+    ctx.track(el, question[:60], "combo", pick)
+    ctx.result.filled.append(f"{question[:80]} -> {pick}")
+    ctx.source(question, "applicant.yaml visa.by_country")
+    _log(ctx, question, "working_rights", chose=pick)
+    return pick, ""
+
+
 def generic_combobox(page, el, question: str, ctx, required: bool) -> None:
     """Any other script-built drop-down: open it, read its options, and pick the one the user's answers.yaml names (an entry's `options`, or an
     option equal to its answer). No entry, or no option equal to it: the field stays empty (NEEDS USER) and nothing is guessed."""

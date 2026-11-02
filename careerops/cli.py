@@ -24,6 +24,9 @@
   careerops retriage --decided [--apply]
                                 move the inbox files of jobs (and copies of jobs) you skipped or applied to into paths.jds_done
                                 (dry run: lists them; --apply moves them and skips the database copies)
+  careerops skip --id JOB       skip a job for good: status 'skipped (user)', a line in data/state/decisions.jsonl, its JD files (inbox, approved
+                                folders) to jds_done/skipped/; discover, intake, shortlist and live never bring it back (`unskip` does)
+  careerops why ID|URL|ats:KEY  every decision recorded for a job, and which key matched (id, ats:<vendor>:<board>:<id>, URL, fingerprint)
   careerops unskip --id JOB     undo a skip: the job, its copies and their JD files go back to the inbox
   careerops unskip --shortlist [--match TEXT | --all]
                                 the ads you skipped at the shortlist, and the parked ones: lists them; with --match / --all brings them back
@@ -634,6 +637,54 @@ def cmd_unskip(args):
         _fail(str(e))
 
 
+def cmd_skip(args):
+    """`careerops skip --id JOB` (v2.5): the same as `s` in review, for a job you are not reviewing now."""
+    s, db = _ctx(args)
+    job = db.job(args.id)
+    if job is None:
+        _fail(f"no such job: {args.id}")
+    if str(job["status"] or "").startswith("applied"):
+        _fail(f"{args.id} is applied: an applied decision is final")
+    review.skip_user(db, s, args.id, where="skip")
+    print(f"Skipped {args.id} ({job['company']} | {job['title']}). Check: careerops why {args.id}")
+
+
+def cmd_why(args):
+    """`careerops why <id|url|ats:key>` (v2.5): every decision-log line for the job, and which key matched."""
+    from .apply import decisions as decisions_mod
+    from .apply import listing_keys as LK
+
+    s, db = _ctx(args)
+    q = args.what.strip()
+    job = db.job(q)
+    keys = LK.keys_of_row(job) if job is not None else LK.parse_query(q)
+    jobs = [job] if job is not None else [r for r in db.jobs() if decided.same_listing(keys, LK.keys_of_row(r))]
+    for r in jobs:
+        print(f"{r['id']}: {r['company']} | {r['title']} | status '{r['status']}'" + (f" ({r['reason']})" if r["reason"] else ""))
+        rk = LK.keys_of_row(r)
+        print(f"  keys: id:{r['id']}" + "".join(f"  {k}" for k in rk.all()))
+    if not jobs:
+        print(f"no job in the database has the keys of {q!r}: " + ", ".join(keys.all() or ["(none)"]))
+    found = []
+    for r in jobs or [None]:
+        found += decisions_mod.why(s, LK.keys_of_row(r) if r is not None else keys, r["id"] if r is not None else None)
+    seen = set()
+    for rec, hit in found:
+        tag = json.dumps(rec, sort_keys=True)
+        if tag in seen:
+            continue
+        seen.add(tag)
+        kinds = ", ".join(f"{decisions_mod._kind(k)} {k}" for k in hit)
+        print(f"  {rec['ts']}  {rec['decision']:<13} {rec.get('job_id') or '-'}  ({rec.get('reason') or '-'})  matched by: {kinds}")
+    if not found:
+        print("  no decision recorded for it in " + str(decisions_mod.path(s)))
+    d = decided.load(s, db)
+    for r in jobs:
+        now_ = d.hit(r["company"], r["title"], r["url"], r["location"], r["apply_url"], r["id"])
+        print(f"  now: {'decided: ' + now_ if now_ else 'not decided'}" + (f"; {d.repost(r['company'], r['title'], r['url'], r['location'], r['apply_url'], r['id'])}"
+                                                                         if not now_ and d.repost(r['company'], r['title'], r['url'], r['location'], r['apply_url'], r['id']) else ""))
+
+
 def cmd_add_jd(args):
     s, db = _ctx(args)
     try:
@@ -1089,16 +1140,37 @@ def cmd_live(args):
             return Made(None, None, letter_reason(letter), new)
         return make
 
-    def assist_it(jid: str) -> dict:
+    def planner_for():
+        """v2.5 plan first: the Greenhouse schema through the robots-checked fetcher (1 request a second per host), a headless browser for the
+        pre-scan, answers.yaml's path for `e N` + `save`. None in a --mock run (no network, no real form)."""
+        if args.mock:
+            return None
+        from .apply import browser as browser_mod, planfirst
+        from .discovery.http import Fetcher
+        from .discovery.robots import RobotsCache
+
+        fetcher = Fetcher(RobotsCache(s.path("robots")))
+        return planfirst.Planner(lambda u: fetcher.json(u, what="Greenhouse question schema"), lambda: browser_mod.fresh_page(headless=True),
+                                 answers_mod.path_for(s))
+
+    def assist_it(jid: str, record: bool | None = None) -> dict:
+        from .apply import browser as browser_mod
+
         job = db.job(jid)
         rep = review.load_report(job)
         kw = _assist_answers(db, s)
-        kw["letter_maker"], kw["record"] = letter_maker_for(job, rep), args.record
+        kw["letter_maker"], kw["record"] = letter_maker_for(job, rep), (args.record if record is None else record)
         kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input, refetch_jd=jd_refetcher(job))
         kw["fact_bank"] = fb                                                  # the knock-out pre-scan checks degrees and years against it (read only)
+        kw["planner"] = planner_for()
+        kw["launch"] = browser_mod.launcher(s, headless=bool(record), ask=input)        # apply.browser: fresh (default) or profile
         r = assist(job, rep, load_yaml(s.path("applicant")), s.path("browser_profile"), **kw)
         db.log(jid, "apply", r)
         return r
+
+    def record_form_it(jid: str) -> dict:
+        """live --dry-run --record (v2.5): the plan and the fill, HEADLESS, no prompt, no submit; the record is written and the browser closed."""
+        return assist_it(jid, record=True)
 
     def mark_applied_it(jid: str, confirmation: str | None) -> bool:
         job = db.job(jid)
@@ -1133,7 +1205,8 @@ def cmd_live(args):
               + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else "")      # resume: not --retailor
               + (" --auto" if args.auto else "") + (" --no-submit" if args.no_submit else "") + (" --confirm" if args.confirm else ""))
     code = Live(db, s, Hooks(ask=input, tailor=tailor, review=review_it, preflight=preflight_it, assist=assist_it,
-                             mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it, save_facts=save_facts_it),
+                             mark_applied=mark_applied_it, auto_gate=auto_gate_it, auto_apply=auto_apply_it, save_facts=save_facts_it,
+                             record_form=record_form_it if (args.record and dry_run and not args.mock) else None),
                 max_jobs=args.max, dry_run=dry_run, resume_cmd=resume, retailor=args.retailor, only=only,
                 fresh=getattr(args, "fresh", False), require_approval=not args.include_unapproved, job_filter=region_size_gate).run()
     usage.report(db, s)
@@ -1751,6 +1824,12 @@ def main(argv=None):
                          "tailoring and bring the jobs that reach the review band back")
     rt.add_argument("--mock", action="store_true", help="with --ats: the isolated data/mock database and MockLLM")
     rt.set_defaults(fn=cmd_retriage)
+    sk = sub.add_parser("skip", help="skip a job for good (decision log, JD files to jds_done/skipped/); `unskip` reverses it")
+    sk.add_argument("--id", required=True)
+    sk.set_defaults(fn=cmd_skip)
+    wy = sub.add_parser("why", help="every decision recorded for a job (id, URL or ats:<vendor>:<board>:<id>) and which key matched")
+    wy.add_argument("what")
+    wy.set_defaults(fn=cmd_why)
     us = sub.add_parser("unskip", help="undo a skip: the job, its copies and their JD files go back to the inbox")
     us.add_argument("--id")
     us.add_argument("--shortlist", action="store_true", help="the ads you skipped at the shortlist and the parked ones (lists them; --match / --all brings them back)")

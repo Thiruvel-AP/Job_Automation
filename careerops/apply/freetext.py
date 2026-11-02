@@ -569,10 +569,49 @@ class FreeText:
         self.last = ""                                  # how the last answer came about: reused | approved | edited | written | ""
         self.refetch_jd, self._refetched = refetch_jd, False       # one more fetch of the ad when it is too short for a motivation answer
         self.motivation_log: list[dict] = []            # every motivation draft: question, text, words, guard result, sources, overlap (the dry-run record)
+        self.letter_parts: dict[str, str] = {}
+        self.letter_text = ""
+        self._rep, self._current_q = rep, ""
+        self.use_letter(rep)
+
+    def use_letter(self, rep: Mapping[str, Any]) -> None:
+        """This job's letter (also one written after the helper was made, v2.5: before the browser opens): the motivation answer draws on its P1, P5 and
+        the first sentence of P4 (one role, one number)."""
         letter = rep.get("letter") or {}
         parts = letter.get("parts") or {}
-        self.letter_text = " ".join(str(parts.get(k) or "") for k in ("P1", "P5")).strip() if letter.get("status") == "ok" else ""
-        self._rep, self._current_q = rep, ""
+        if letter.get("status") == "ok":
+            p4 = split_sentences(str(parts.get("P4") or ""))
+            self.letter_parts = {"P1": str(parts.get("P1") or "").strip(), "P5": str(parts.get("P5") or "").strip(), "P4": (p4[0].strip() if p4 else "")}
+            self.letter_text = " ".join(v for v in (self.letter_parts["P1"], self.letter_parts["P5"], self.letter_parts["P4"]) if v).strip()
+            self._rep = rep
+
+    def assembled_motivations(self, limit: Limit) -> list[str]:
+        """Every assembled motivation answer that fits, best first: the framing sentence with P1 + P5 + P4, P1 + P5, P5 + P4, P1 + P4."""
+        if not self.letter_parts:
+            return []
+        lead = f"I am applying for the {self.title} role at {self.company}."
+        p = self.letter_parts
+        cap = min(MOTIVATION_WORDS[1], limit.words or MOTIVATION_WORDS[1])
+        out = []
+        for keys in (("P1", "P5", "P4"), ("P1", "P5"), ("P5", "P4"), ("P1", "P4")):
+            text = " ".join([lead, *(p.get(k, "") for k in keys if p.get(k))]).strip()
+            if MOTIVATION_WORDS[0] <= len(text.split()) <= cap and text not in out:
+                out.append(text)
+        return out
+
+    def assembled_motivation(self, limit: Limit) -> str:
+        """F2, v2.5: the motivation answer ASSEMBLED from this job's letter, no model: one framing sentence (the role and the company, no claim), P1,
+        P5 and one P4 sentence, kept to MOTIVATION_WORDS (60-150, or the field's smaller limit). '' when there is no letter or it cannot fit."""
+        if not self.letter_parts:
+            return ""
+        lead = f"I am applying for the {self.title} role at {self.company}."
+        bits = [lead, self.letter_parts.get("P1", ""), self.letter_parts.get("P5", ""), self.letter_parts.get("P4", "")]
+        text = " ".join(b for b in bits if b).strip()
+        cap = min(MOTIVATION_WORDS[1], limit.words or MOTIVATION_WORDS[1])
+        if len(text.split()) > cap:
+            text = " ".join(b for b in bits[:3] if b).strip()
+        n = len(text.split())
+        return text if MOTIVATION_WORDS[0] <= n <= cap else ""
 
     def _current(self) -> dict[str, str]:
         """id -> digest of every fact-bank bullet (with the entry it sits in) and motivation of yours as they are now."""
@@ -715,6 +754,18 @@ class FreeText:
         plan = self.plan(cls, question)
         if not plan.sources:
             return Proposal(question, cls, limit, plan, why_not=f"free text [{cls}]: {plan.why}")
+        if cls in WHY and plan.motivation and self.letter_parts:                 # F2: assembled from the letter first; the guard as for any draft
+            text, probs = "", ["the letter's parts do not fit the motivation limit"]
+            for cand in self.assembled_motivations(limit):
+                probs = self.guard.problems(cand, plan, limit)
+                if not probs:
+                    text = cand
+                    break
+            if text and not probs:
+                text, probs = self._reuse_checked(question, plan, limit, [], text, [], 1)
+                if text:
+                    self.motivation_log[-1]["assembled"] = True
+                    return Proposal(question, cls, limit, plan, text, "draft", [])
         gaps = self.unsupported(question) if cls in ("project", "challenge") else []
         missing = [t for _, terms in gaps for t in terms]
         asked = "; ".join(p for p, _ in gaps) or (question[:80] if plan.fallback else "")

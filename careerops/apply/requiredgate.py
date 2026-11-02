@@ -75,7 +75,7 @@ def build(fields: list[formloop.Field], *, verified: list[str], lost: list[str],
         if required_only and not f.required:
             continue
         value = _value_of(f)
-        names = {_k(f.short), _k(f.question), _k(f.question)[:60]} - {""}
+        names = {_k(f.short), _k(f.question), answers_mod.norm(f.question)[:80], answers_mod.norm(f.short)[:80]} - {""}      # Ctx.source files a question under norm()[:80]
         source = next((sources[n] for n in names if n in sources), "")
         if not source and loop_status and loop_status.get(f.key):
             source = "freetext"

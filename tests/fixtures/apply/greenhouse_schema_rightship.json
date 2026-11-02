@@ -1,0 +1,29 @@
+{
+  "id": 4982444101,
+  "title": "AI Engineer",
+  "questions": [
+    {"label": "First Name", "required": true, "fields": [{"name": "first_name", "type": "input_text", "values": []}]},
+    {"label": "Last Name", "required": true, "fields": [{"name": "last_name", "type": "input_text", "values": []}]},
+    {"label": "Email", "required": true, "fields": [{"name": "email", "type": "input_text", "values": []}]},
+    {"label": "Phone", "required": true, "fields": [{"name": "phone", "type": "input_text", "values": []}]},
+    {"label": "Location (City)", "required": true, "fields": [{"name": "candidate-location", "type": "input_text", "values": []}]},
+    {"label": "Resume/CV", "required": true, "fields": [{"name": "resume", "type": "input_file", "values": []}, {"name": "resume_text", "type": "textarea", "values": []}]},
+    {"label": "Cover Letter", "required": false, "fields": [{"name": "cover_letter", "type": "input_file", "values": []}, {"name": "cover_letter_text", "type": "textarea", "values": []}]},
+    {"label": "What are your working rights in the country where this role is advertised for?", "required": true,
+     "fields": [{"name": "question_7001", "type": "multi_value_single_select", "values": [
+       {"label": "Citizen", "value": 1}, {"label": "Permanent Resident", "value": 2}, {"label": "Work Visa", "value": 3}, {"label": "Require sponsorship", "value": 4}]}]},
+    {"label": "If you answered 'Work Visa' in the previous question, please specify the type of visa that you are currently holding. If you do not hold any valid visa currently, please state 'N.A.'", "required": true,
+     "fields": [{"name": "question_7002", "type": "input_text", "values": []}]},
+    {"label": "What motivated you to apply for this position?", "required": true, "fields": [{"name": "question_7003", "type": "textarea", "values": []}]},
+    {"label": "How did you hear about us?", "required": true,
+     "fields": [{"name": "question_7004", "type": "multi_value_single_select", "values": [
+       {"label": "LinkedIn", "value": 1}, {"label": "Indeed", "value": 2}, {"label": "Company website", "value": 3}, {"label": "Referral", "value": 4}, {"label": "Other", "value": 5}]}]},
+    {"label": "Please include a link to your LinkedIn profile.", "required": true, "fields": [{"name": "question_7005", "type": "input_text", "values": []}]},
+    {"label": "I declare that the information provided by me is true and accurate.", "required": true,
+     "fields": [{"name": "question_7006", "type": "multi_value_single_select", "values": [{"label": "Yes", "value": 1}, {"label": "No", "value": 0}]}]},
+    {"label": "Internal", "required": false, "fields": [{"name": "hidden_x", "type": "input_hidden", "values": []}]}
+  ],
+  "location_questions": [],
+  "compliance": [],
+  "demographic_questions": null
+}

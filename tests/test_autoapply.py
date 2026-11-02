@@ -421,7 +421,13 @@ def test_click_on_a_submit_control_appears_only_in_autoapply_py():
     # v2.4.1: two modules click things that can never submit: an item of an open drop-down list (`[role=option]`, refused when its text names the
     # geolocation or a cloud drive) and the "Enter manually" button of a Cover Letter block (found by its exact text). Their clicks are listed here
     # one by one, so a new click in either module fails this test.
-    allowed = {"careerops/apply/shortfields.py": {"el.click()", "o.click()"}, "careerops/apply/letter_demand.py": {"b.click(); return true;"}}
+    # v2.5: the plan-first fill clicks, and only these: the accept / close button INSIDE a cookie banner (formscan, its text checked by
+    # shortfields.clickable_text), a react-select control to open it, the option of its open menu that the plan chose, a check box's label[for]
+    # (planfill), and a react-select opened in the headless pre-scan to read its options (planfirst). None of them can submit; Enter is never pressed.
+    allowed = {"careerops/apply/shortfields.py": {"el.click()", "o.click()"}, "careerops/apply/letter_demand.py": {"b.click(); return true;"},
+               "careerops/apply/formscan.py": {"b.click(timeout=2000)"},
+               "careerops/apply/planfill.py": {"el.click()", "[data-co-opt=", "lab.click()", "label[for="},
+               "careerops/apply/planfirst.py": {"el.click(timeout=3000)"}}
     assert [w for w, line in others if not w.startswith(("careerops/apply/assist.py", "careerops/apply/formagent.py", *allowed))] == []
     for path, lines in allowed.items():
         found = {line for w, line in others if w.startswith(path)}

@@ -703,8 +703,8 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                skip_means_no: bool = False, retailor=None) -> str:
     """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'skipped (user)' | 'quit'. `allow` names the choices
     offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, w open the apply page in the browser, s skip, q quit); `ask` answers the
-    prompts (default: input). A skip changes nothing in the database: what a skip means is the caller's business; with
-    `skip_means_no` (live: a skipped job is finished) the judge log records it as a rejection.
+    prompts (default: input). This function changes nothing in the database on a skip: the caller stores it (`careerops review`: skip_user,
+    v2.5; live: its own end of the job); with `skip_means_no` (live: a skipped job is finished) the judge log records it as a rejection.
 
     review.judge (judge.py): the verdict is printed under the summary and logged beside your decision. In `gate` mode a
     judge yes approves the job here without the prompt, unless it has FLAGS or its letter is a fallback or was lost to
@@ -920,13 +920,14 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
             return "quit"
 
 
-def skip_user(db: DB, settings, job_id: str) -> None:
-    """`s` at the gap report outside live: the job is skipped (reason 'skipped (user)'), and so is every copy of it; their JD files go to
-    jds_done/skipped/ (apply/decided.py)."""
+def skip_user(db: DB, settings, job_id: str, where: str = "review") -> None:
+    """`s` in `careerops review` (any skip there, v2.5: before, a skip without a gap report stored nothing and the job came back) and `careerops skip
+    --id`: the job is skipped (reason 'skipped (user)'), the decision log gets a line with its keys, every copy of the same listing is skipped, and
+    their JD files leave the inbox and any jds/approved/<date>/ folder for jds_done/skipped/ (apply/decided.py): a skip overrides an approval."""
     db.update_job(job_id, status=decided.SKIPPED, reason=SKIPPED_USER)
-    db.log(job_id, "review", SKIPPED_USER)
+    db.log(job_id, where, SKIPPED_USER)
     try:
-        for line in decided.settle(db, settings, job_id, decided.SKIPPED).lines():
+        for line in decided.settle(db, settings, job_id, decided.SKIPPED, reason=SKIPPED_USER).lines():
             print("  " + line)
     except decided.DecidedError as e:
         print(f"  JD files not moved: {e}")
@@ -937,7 +938,7 @@ def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None, ret
     print(f"{len(queue)} job(s) waiting for review.")
     for job in queue:
         result = review_job(db, job, settings, fb, make_llm, retailor=retailor)
-        if result == SKIPPED_USER:
+        if result in (SKIPPED_USER, "skipped"):
             skip_user(db, settings, job["id"])
         if result == "quit":
             return

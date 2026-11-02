@@ -89,6 +89,7 @@ class Hooks:
     auto_gate: "Callable[[str], Gates] | None" = None   # `--auto`: the gate for this job (apply/autogate.py); None = no auto-apply in this session
     auto_apply: "Callable[[str], AutoResult] | None" = None    # `--auto`: fill the form and, unless --no-submit, submit it (autoapply.py)
     save_facts: "Callable[[str, bool, str], None] | None" = None    # end of a job: (job id, was the application sent, how it ended); offers the typed facts (review/factsave.py)
+    record_form: "Callable[[str], dict] | None" = None  # `live --dry-run --record` (v2.5): plan and fill the form HEADLESS, write the record, never submit
 
 
 @dataclass
@@ -253,6 +254,7 @@ class Live:
         self.out(f"careerops live: inbox {self.dirs.inbox} (max {self.max_jobs}{', dry run' if self.dry_run else ''})")
         try:
             self.state = State(self.dirs.live / "state.json")
+            self._pending_check()
             self._loop()
         except StopSession as e:
             code, stop = e.code, e.reason
@@ -261,9 +263,7 @@ class Live:
             elif self.current:
                 self._where_stopped()
         except (KeyboardInterrupt, EOFError):
-            code, stop = EXIT_INTERRUPTED, "interrupted (Ctrl-C, or no answer at a prompt)"
-            if not self._where_stopped():
-                code = EXIT_ARCHIVE
+            return self._interrupted()
         text = self.summary(stop)
         self.out(text)
         if self.dry_run and self.require_approval:
@@ -273,13 +273,100 @@ class Live:
         self.out(f"Summary written to {report}")
         return code
 
+    def _interrupted(self) -> int:
+        """Ctrl+C (or no answer at a prompt), v2.5: `stopped by you; state saved`, no traceback. The summary is written FIRST; then the archive walk
+        (announced: it takes ~20 s on the user's folder). A second Ctrl+C during the walk exits at once: the snapshots taken before the job are kept in
+        data/live/archive_pending.json and the next `live` compares against them before anything else."""
+        code, stop = EXIT_INTERRUPTED, "stopped by you; state saved"
+        try:
+            self.out("\nstopped by you; state saved")
+            self._where_stopped(check=False)
+            report = self._write_summary(stop)
+            if self.before is None or not self.current:
+                return code
+            r = next((x for x in reversed(self.results) if x.file == self.current.get("file")), None)
+            if r is None or r.archive != "n/a":
+                return code
+            self._save_pending()
+            self.out("checking the archive folders (~20 s)... (Ctrl+C again skips it; the next run checks them first)")
+            try:
+                check = self._archive_check(r)
+            except KeyboardInterrupt:
+                self.out("archive check skipped: it runs at the start of the next `careerops live`.")
+                return code
+            self._clear_pending()
+            for line in check.lines():
+                self.out("  " + line)
+            self.out(f"archive check: {check.summary()}")
+            try:
+                with report.open("a", encoding="utf-8") as fh:
+                    fh.write(f"Archive check after the stop: {check.summary()}\n")
+            except OSError:
+                pass
+            return code if check.ok else EXIT_ARCHIVE
+        except KeyboardInterrupt:                                          # a second Ctrl+C anywhere in here: out at once, no traceback
+            self.out("stopped.")
+            return code
+
+    def _write_summary(self, stop: str | None) -> Path:
+        text = self.summary(stop)
+        self.out(text)
+        report = self.dirs.live / f"{datetime.now():%Y%m%d-%H%M%S}.md"
+        report.write_text(text + "\n", encoding="utf-8")
+        self.out(f"Summary written to {report}")
+        return report
+
+    PENDING = "archive_pending.json"
+
+    def _save_pending(self) -> None:
+        """The snapshots taken before the interrupted job, for the next run to compare against."""
+        try:
+            (self.dirs.live / self.PENDING).write_text(json.dumps({
+                "job_id": self.current.get("job_id"), "dir_before": self.dir_before, "before": self.before, "before_own": self.before_own}),
+                encoding="utf-8")
+        except (OSError, TypeError):
+            pass
+
+    def _clear_pending(self) -> None:
+        try:
+            (self.dirs.live / self.PENDING).write_text("{}", encoding="utf-8")
+        except OSError:
+            pass
+
+    def _pending_check(self) -> None:
+        """At the start of a run: the archive check an earlier run's second Ctrl+C skipped. The user's folder changed -> StopSession."""
+        path = self.dirs.live / self.PENDING
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        except (OSError, ValueError):
+            data = {}
+        if not data.get("before") and not data.get("before_own"):
+            return
+        self.out("checking the archive folders the stopped run left unchecked (~20 s)...")
+        before = {k: tuple(v) for k, v in (data.get("before") or {}).items()}
+        own = {k: tuple(v) for k, v in (data.get("before_own") or {}).items()}
+        job = self.db.job(data["job_id"]) if data.get("job_id") else None
+        now_dir = job["application_dir"] if job is not None else None
+        allowed = snapshot.role_folder(self.root, now_dir) if now_dir and now_dir != data.get("dir_before") else None
+        check = snapshot.compare(before, snapshot.take(self.root), allowed)
+        mine = snapshot.compare(own, snapshot.take(self.own_root))
+        check.removed += [f"{self.own_root.name}/{p}" for p in mine.removed]
+        check.modified += [f"{self.own_root.name}/{p}" for p in mine.modified]
+        check.stray += [f"{self.own_root.name}/{p}" for p in mine.stray]
+        for line in check.lines():
+            self.out("  " + line)
+        self.out(f"archive check of the stopped run: {check.summary()}")
+        self._clear_pending()
+        if not check.ok:
+            raise StopSession("the archive changed while the stopped run was open", EXIT_ARCHIVE)
+
     def _source_files(self) -> list[Path]:
         """The JD files this session works on: the ones you approved with `careerops shortlist` (data/jds/approved/<date>/), or, with
         `live --include-unapproved`, the whole inbox."""
         if self.require_approval:
             from ..discovery import shortlist
 
-            return shortlist.approved_files(self.s)
+            return shortlist.approved_files(self.s, self.db)                    # a job you skipped since is left out (v2.5)
         return [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]
 
     def _gated(self, files: list[Path]) -> list[Path]:
@@ -588,8 +675,9 @@ class Live:
         r.archive = check.summary()
         return check
 
-    def _where_stopped(self) -> bool:
-        """Say where the session stopped and how to resume; check the archive once more. False = the archive changed."""
+    def _where_stopped(self, check: bool = True) -> bool:
+        """Say where the session stopped and how to resume; check the archive once more (unless `check` is False: Ctrl+C does it after the
+        summary, see _interrupted). False = the archive changed."""
         cur, jid = self.current, self.current.get("job_id")
         job = self.db.job(jid) if jid else None
         ok = True
@@ -598,10 +686,10 @@ class Live:
             if not r.status:
                 r.status = f"stopped at {cur.get('stage')}"
             self._fill(r)
-            if self.before is not None and r.archive == "n/a":
-                check = self._archive_check(r)
-                ok = check.ok
-                for line in check.lines():
+            if check and self.before is not None and r.archive == "n/a":
+                found = self._archive_check(r)
+                ok = found.ok
+                for line in found.lines():
                     self.out("  " + line)
         self.out(f"\nSTOPPED at stage '{cur.get('stage')}' of {cur.get('file')}"
                  + (f" (job {jid}, status '{job['status']}')" if job is not None else " (no job yet)") + ".")
@@ -746,6 +834,13 @@ class Live:
                          f"careerops mark-applied --id {jid}")
                 return "needs_user"
             elif st == "needs_review":
+                repost = self._repost(job)
+                if repost:
+                    self.out(f"  {repost}: only its company, title and country match; [s] skips it")
+                if self.h.auto_gate is not None and jid not in self._auto_tried and repost:
+                    self._auto_tried.add(jid)
+                    r.note = repost
+                    self.out("  auto mode leaves a possible repost for you: the review prompt follows")
                 if self.h.auto_gate is not None and jid not in self._auto_tried:
                     self._auto_tried.add(jid)
                     done = self._try_auto(jid, r)
@@ -761,12 +856,24 @@ class Live:
                     return choice
             elif st == "approved":
                 if self.dry_run:
+                    if self.h.record_form is not None and (job["apply_url"] or job["url"]):
+                        self._stage("record-form")
+                        self.out("  --dry-run --record: planning and filling the form HEADLESS (no window, no prompt, nothing submitted)")
+                        rec = self.h.record_form(jid) or {}
+                        r.note = f"dry-run record: {rec.get('record') or 'not written'}" + (" (BROWSER CLOSED)" if rec.get("browser_closed") else "")
                     self.out("  --dry-run: approved, not applied. Run live without --dry-run to apply; this JD stays in inbox/.")
                     return "approved (dry run)"
                 return self._apply(jid, job, r)
             else:                                                                   # applied, rejected, ready_not_submitted, ...
                 return st
         return db.job(jid)["status"]
+
+    def _repost(self, job) -> str:
+        """`possible repost of a job you skipped on <date> (<id>)` when only the fingerprint matches a decided job (apply/decided.py)."""
+        try:
+            return decided.load(self.s, self.db).repost(job["company"], job["title"], job["url"], job["location"], job["apply_url"], job["id"])
+        except (OSError, ValueError, KeyError, IndexError):
+            return ""
 
     def _try_auto(self, jid: str, r: JobResult) -> str | None:
         """The gate, then the automatic fill (and submit). Returns the job's final status, or None when the job is for the review prompt
@@ -863,6 +970,10 @@ class Live:
             res = {"confirmation": "", "visa": []}
         for line in r.visa or ["(no visa question was found on the form)"]:
             self.out("  " + line)
+        if res.get("browser_closed"):                                               # v2.5: the window went away; code submitted nothing
+            self._opened(False)
+            r.note = "BROWSER CLOSED: nothing submitted"
+            return self._not_submitted(jid, "BROWSER CLOSED: nothing submitted")
         confirmation = (res.get("confirmation") or "").strip()
         self._stage("confirm-submitted")
         submitted = confirmation.lower() != "x" and self.h.ask("  Did YOU submit the form? [y/N] ").strip().lower() in ("y", "yes")
