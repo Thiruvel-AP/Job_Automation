@@ -32,7 +32,7 @@ def test_letter_mode_reads_the_setting(settings, value, want):
 
 def test_an_unknown_mode_is_refused_with_the_choices(settings):
     settings.raw["letter"]["mode"] = "auto"
-    with pytest.raises(ValueError, match="letter.mode must be one of off, draft, hook, company, got 'auto'"):
+    with pytest.raises(ValueError, match="letter.mode must be one of off, draft, hook, company, if_field, got 'auto'"):
         tailor.letter_mode(settings)
 
 

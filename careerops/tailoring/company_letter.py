@@ -407,7 +407,11 @@ def user_problems(paragraphs: list[str], groups: list[list[dict]], opening: str,
         extra_names = f"{company} {title} {' '.join(reqs[n])} " + " ".join(f"{e.get('where', '')} {e.get('org', '')}" for e in groups[n])
         out += [f"{tag}: {p}" for p in grounding_problems(sentences(par), groups[n], "", opening, extra_names, bank=bank)]
     out += filler_problems(paragraphs, evidence)
-    out += repeated_evidence_problems(paragraphs, evidence)
+    # P3 and P4 are the two paragraphs written here; they must not tell one bullet twice, unless the plan itself gave both the same one
+    # because the role had no other bullet (role_group): then no draft could avoid it, and rejecting every redraft is what lost the
+    # RightShip letter (31 Oct 2026).
+    shared = {e["id"] for e in groups[0]} & {e["id"] for e in groups[1]} if len(groups) > 1 else set()
+    out += repeated_evidence_problems(paragraphs, evidence, ("P3", "P4"), shared, groups)
     out += L.paste_problems(paragraphs, L._all_bullets(fb))
     return list(dict.fromkeys(out))
 
@@ -610,8 +614,10 @@ def role_group(fb: dict, kws: list[Keyword], chosen_ids: set[str] | None, jd: st
     for eid in order[:2]:
         mine = [e for e in exp if entry_of[e["id"]] == eid]
         numbered = [e for e in mine if OP.bank_numbers(e["text"], fb)]
-        pick = next((e for e in numbered if e["id"] not in avoid), None) or (numbered[0] if numbered else None) or \
-            next((e for e in mine if e["id"] not in avoid), None) or mine[0]
+        # a numbered bullet P3 or the hook has not used; else any bullet they have not used (P4 then names the employer without a number: the
+        # rollup check asks for one only "when the bullet has one"); a bullet already used is the last resort, never the second choice
+        pick = next((e for e in numbered if e["id"] not in avoid), None) or next((e for e in mine if e["id"] not in avoid), None) or \
+            (numbered[0] if numbered else None) or mine[0]
         out.append(pick)
     return out
 

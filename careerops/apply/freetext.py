@@ -16,6 +16,13 @@ The form loop (apply/formloop.py) hands every free-text field, required or not, 
   4. show it (question, limit, sources, guard result) and ask `[y] use · [e] edit · [r] redraft · [s] I'll write it`. Only `y`, a text you
      typed, or a text you edited is used, and is stored in the answer library (paths.answers_library) with approved: true.
 
+"Why this role / company" questions (v2.4.1: "What motivated you to apply for this position?", "Why do you want to work here?", "What excites you
+...", "Why are you applying?", "Why {company}?") are always drafted, 60-150 words (or the field's smaller limit), first person, no greeting: from the
+letter's P1 (the company's problem plus the proof) and P5 (why this team) when this job has a letter, else from the job ad, your `motivations` and one
+CV bullet with a number. The job ad is required: under 150 words it is fetched once more, and still short = hand-off with the reason "no JD" and
+nothing drafted. The draft must name the company, hold a run of words of the ad, pass the claim guard, and not reuse an earlier motivation answer
+(5-word shingles, overlap under 0.30).
+
 A new draft is therefore never submitted without your `y` (or an edit you saved). Nothing here writes to answers.yaml, fact_bank.yaml
 or applicant.yaml: the library is runtime data. "Other" questions (hobbies, "anything else?") are never drafted: they are asked.
 
@@ -36,7 +43,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ..tailoring import faithfulness, letters as letters_mod
+from ..tailoring import faithfulness, letter_reuse, letters as letters_mod
 from ..tailoring.grounding import sentences as split_sentences
 from ..tailoring.letter_rules import term_dump_problems
 from ..tailoring.scorer import Keyword, _contains, gap_terms, keyword_hits, norm_literal
@@ -51,8 +58,13 @@ SIMILAR = 0.85                    # an approved answer is reused for a question 
 MAX_PLAN = 3                      # fact-bank entries one answer may draw on
 MAX_REDRAFTS = 3                  # redrafts the person may ask for with `r`
 AD_RUN_WORDS = 4                  # a claim about the company must contain this many words in a row that the ad contains
-MENU = "  [y] use · [e] edit · [r] redraft · [s] I'll write it  > "
-JOB_SOURCES = ("ad", "hook")      # sources of a plan that belong to the job, not to you: only the rest are checked for change
+MENU = "  [y] use · [l] regenerate with feedback · [e] edit · [r] redraft · [s] I'll write it  > "
+JOB_SOURCES = ("ad", "hook", "letter")      # sources of a plan that belong to the job, not to you: only the rest are checked for change
+WHY = ("why_company", "why_role")
+MOTIVATION_WORDS = (60, 150)      # a motivation answer: at least / at most this many words (a smaller limit on the field wins at the top)
+MIN_JD_WORDS = 150                # the ad is a required input of a motivation answer
+REUSE_LIMIT = letter_reuse.LIMIT  # 5-word-shingle overlap with an earlier motivation answer must stay under this
+_GREETING = re.compile(r"^\s*(?:hi|hello|dear|hey|greetings)\b|\bi(?:'m| am) writing\b|\bi(?: would|'d) like to apply\b", re.I)
 
 
 # ------------------------------------------------------------------ the limit of a question
@@ -123,7 +135,8 @@ def is_free_text(typ: str, maxlength: Any = None) -> bool:
 def classify(question: str, company: str = "") -> str:
     q = " ".join(question.lower().replace("’", "'").split())
     named = bool(company) and answers_mod.norm(company) in answers_mod.norm(question)
-    why = re.search(r"\bwhy\b|what (?:attracts|draws|interests|excites|motivates) you|what is it about", q)
+    why = re.search(r"\bwhy\b|what (?:attracts|draws|drew|interests|interested|excites|excited|motivates|motivated|inspires|inspired|prompted|made) you|"
+                    r"what is it about|what are your reasons|how did you become interested", q)
     if why:
         role = re.search(r"\b(?:role|position|job|vacancy|opportunity|applying|apply|applied)\b", q)
         us = re.search(r"\b(?:us|our company|this company|the company|our team|join us|working here|work here|work for|work at|join)\b", q)
@@ -293,6 +306,7 @@ class Plan:
     ad_snippets: list[str] = field(default_factory=list)
 
     fallback: bool = False                 # no entry overlapped the question: the sources are the closest true entry, not a match
+    motivation: bool = False               # a "why this role / company" answer: the motivation rules (length, company name, no greeting) apply
 
     @property
     def ids(self) -> list[str]:
@@ -477,6 +491,19 @@ class Guard:
                 if not all(_contains(pool, norm_literal(p)) or (p.endswith("s") and _contains(pool, norm_literal(p[:-1])))
                            for p in re.split(r"[-'’]", base) if p):
                     out.append(f"names '{w}', which is not in the chosen entries")
+        if plan.motivation:
+            n_words, lo, hi = len(t.split()), MOTIVATION_WORDS[0], MOTIVATION_WORDS[1]
+            if limit.words is not None:
+                hi = min(hi, limit.words)
+            lo = min(lo, hi)
+            if n_words < lo:
+                out.append(f"{n_words} words: a motivation answer is at least {lo} words")
+            if n_words > hi:
+                out.append(f"{n_words} words: a motivation answer is at most {hi} words")
+            if self.company and answers_mod.norm(self.company) not in answers_mod.norm(t):
+                out.append(f"does not name the company ({self.company})")
+            if _GREETING.search(t):
+                out.append("opens with a greeting or 'I am writing': it starts with the reason")
         if plan.cls in ("why_company", "why_role"):
             if not _runs(t, self.ad):
                 out.append(f"claims nothing from the ad: a claim about the company or the role must be {AD_RUN_WORDS}+ words the ad contains")
@@ -498,12 +525,13 @@ SYSTEM = (
     "AD_SNIPPETS (the same words, in a row), and say why the applicant cares using the MOTIVATIONS or the SOURCES. If NOT_IN_BANK is given, the "
     "applicant has no recorded experience of those things: do not mention or imply them; describe the closest true thing in the SOURCES instead. "
     "If PROBLEMS is given, your last draft was rejected for them: write it again without them. Return JSON only: {\"answer\": \"...\", \"ad_phrases\": [\"exact words you "
-    "quoted from AD_SNIPPETS\"]}.")
+    "quoted from AD_SNIPPETS\"]}. If WORDS is given, write between those two numbers of words, name the company once, quote one phrase of the ad, "
+    "start with the reason (no greeting, never 'I am writing').")
 
 
 def _user_prompt(ctx: Mapping[str, Any]) -> str:
     return json.dumps({k: ctx[k] for k in ("question", "class", "limit", "style", "company", "title", "sources", "motivations", "ad_snippets", "not_in_bank",
-                                           "problems")
+                                           "problems", "words")
                        if ctx.get(k)}, ensure_ascii=False, indent=1)
 
 
@@ -522,12 +550,14 @@ class Proposal:
     weak: str = ""                                      # "WEAK EVIDENCE: <what was asked> vs <entry ids>", or ""
     missing: list[str] = field(default_factory=list)    # the terms the bank never mentions: the draft may not claim them
     reused: Record | None = None
+    handoff: str = ""                                   # set when the job must be handed off (no JD to draft a motivation answer from): the reason
 
 
 # ------------------------------------------------------------------ one job's free-text answers
 class FreeText:
     def __init__(self, llm, fb: Mapping[str, Any], library: Library, job: Mapping[str, Any], rep: Mapping[str, Any], book: answers_mod.AnswerBook,
-                 ask: Callable[[str], str] = input, out: Callable[[str], None] = print, today: date | None = None):
+                 ask: Callable[[str], str] = input, out: Callable[[str], None] = print, today: date | None = None,
+                 refetch_jd: Callable[[], str] | None = None):
         job = dict(job)                                  # a database row has no .get
         self.llm, self.fb, self.lib, self.job, self.book = llm, fb, library, job, book
         self.ask, self.out, self.today = ask, out, today or date.today()
@@ -537,6 +567,12 @@ class FreeText:
         self.style = dict(book.style or {})
         self.guard = Guard.build(fb, self.kws, self.style.get("avoid") or [], self.company, self.title, self.ad)
         self.last = ""                                  # how the last answer came about: reused | approved | edited | written | ""
+        self.refetch_jd, self._refetched = refetch_jd, False       # one more fetch of the ad when it is too short for a motivation answer
+        self.motivation_log: list[dict] = []            # every motivation draft: question, text, words, guard result, sources, overlap (the dry-run record)
+        letter = rep.get("letter") or {}
+        parts = letter.get("parts") or {}
+        self.letter_text = " ".join(str(parts.get(k) or "") for k in ("P1", "P5")).strip() if letter.get("status") == "ok" else ""
+        self._rep, self._current_q = rep, ""
 
     def _current(self) -> dict[str, str]:
         """id -> digest of every fact-bank bullet (with the entry it sits in) and motivation of yours as they are now."""
@@ -551,9 +587,8 @@ class FreeText:
             return self._plan_bullets(cls, question)
         snippets = ad_snippets(self.ad, self.kws, question, self.company)
         ad_src = Source("ad", " ".join(snippets))
-        if cls == "why_company":
-            mot = [Source(f"m{i}", m) for i, m in enumerate(self.book.motivations, 1)]
-            return Plan(cls, [ad_src, *mot[:MAX_PLAN + 1]], f"the job ad and {len(mot)} motivation(s) of yours", snippets)
+        if cls in WHY:
+            return self._plan_motivation(cls, ad_src, snippets)
         hook_text = " ".join(str(self.hook.get(k) or "") for k in ("problem", "profile_line", "headline"))
         srcs = [ad_src, Source("hook", hook_text)] if hook_text.strip() else [ad_src]
         proof = self.hook.get("proof_bullet_id")
@@ -561,6 +596,26 @@ class FreeText:
             for e in self.fb.get(sec, []):
                 srcs += [bullet_source(e, b) for b in e["bullets"] if b["id"] == proof]
         return Plan(cls, srcs, "the job ad and the hook used on this job's CV" + (f" (proof {proof})" if proof else ""), snippets)
+
+    def _numbered_bullet(self) -> Source | None:
+        """One CV bullet with a number: the hook's proof bullet when it has one, else the first numbered bullet of this job's CV, else of the bank."""
+        proof = str(self.hook.get("proof_bullet_id") or "")
+        chosen = {i for ids in (self._rep.get("selection") or {}).values() for i in ids} if isinstance(self._rep.get("selection"), dict) else set()
+        pool = [(e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"] if re.search(r"\d", b["text"])]
+        order = sorted(pool, key=lambda eb: (eb[1]["id"] != proof, eb[1]["id"] not in chosen))
+        return bullet_source(*order[0]) if order else None
+
+    def _plan_motivation(self, cls: str, ad_src: Source, snippets: list[str]) -> Plan:
+        """The sources of a "why this role / company" answer, in this order: the letter's P1 (the company's problem plus the proof) and P5 (why this team)
+        when this job has a letter; otherwise the job ad, your `motivations` and one CV bullet with a number."""
+        if self.letter_text:
+            return Plan(cls, [ad_src, Source("letter", self.letter_text)], "the job ad and this job's letter (P1 and P5)", snippets, motivation=True)
+        mot = [Source(f"m{i}", m) for i, m in enumerate(self.book.motivations, 1)]
+        bullet = self._numbered_bullet()
+        hook_text = " ".join(str(self.hook.get(k) or "") for k in ("problem", "profile_line", "headline")).strip()      # what this job's CV says first
+        why = f"the job ad, {len(mot)} motivation(s) of yours" + (f" and CV bullet {bullet.id}" if bullet else "")
+        return Plan(cls, [ad_src, *([Source("hook", hook_text)] if hook_text else []), *mot[:MAX_PLAN + 1], *([bullet] if bullet else [])], why, snippets,
+                    motivation=True)
 
     def _plan_bullets(self, cls: str, question: str) -> Plan:
         entries = [(e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]]
@@ -592,7 +647,8 @@ class FreeText:
         return {"question": question, "class": plan.cls, "limit": limit.as_dict(), "company": self.company, "title": self.title,
                 "style": {"avoid": list(self.style.get("avoid") or []), "person": self.style.get("person", "first"), "voice": self.style.get("voice", "")},
                 "sources": [{"id": s.id, "text": s.text} for s in plan.sources], "ad_snippets": plan.ad_snippets,
-                "motivations": list(self.book.motivations) if plan.cls == "why_company" else [], "not_in_bank": list(missing), "problems": problems}
+                "motivations": list(self.book.motivations) if plan.cls in WHY and not self.letter_text else [], "not_in_bank": list(missing),
+                "problems": problems, "words": list(MOTIVATION_WORDS) if plan.motivation else []}
 
     def _draft(self, question: str, plan: Plan, limit: Limit, missing: Sequence[str] = (), problems: list[str] | None = None,
                tries: int = 2) -> tuple[str, list[str]]:
@@ -641,15 +697,21 @@ class FreeText:
         >= 0.85) is `reused`; else the draft that passes the guard (`origin == "draft"`, to be approved); else no text and `why_not`."""
         question = " ".join(question.split())
         cls, limit = classify(question, self.company), read_limits(f"{question} {label}", maxlength)
+        if cls in WHY and not limit.stated:
+            limit = Limit(words=MOTIVATION_WORDS[1])                               # a motivation answer without a stated limit: 150 words, not the default 120
         hit = self.lib.find(question, cls, self.company, limit, job_id=str(self.job.get("id") or ""), current=self._current())
         empty = Plan(cls, [], "")
         if hit is not None:
             return Proposal(question, cls, limit, empty, hit.answer, "reused", reused=hit)
         if cls == "other":
             return Proposal(question, cls, limit, empty, why_not=f"free-text question of no kind a draft can answer ({question[:80]!r}): it is yours")
-        if cls == "why_company" and not self.book.motivations:
-            return Proposal(question, cls, limit, empty, why_not="answers.yaml has no `motivations`, so nothing may be said about why you want this "
-                                                                 "company: add them, or write it yourself")
+        if cls in WHY:
+            gone = self._jd_problem()
+            if gone:
+                return Proposal(question, cls, limit, empty, why_not=gone, handoff=gone)
+        if cls in WHY and not self.letter_text and not self.book.motivations:
+            return Proposal(question, cls, limit, empty, why_not="answers.yaml has no `motivations` and this job has no letter, so nothing may be said "
+                                                                 "about why you want this role: add them, or write it yourself")
         plan = self.plan(cls, question)
         if not plan.sources:
             return Proposal(question, cls, limit, plan, why_not=f"free text [{cls}]: {plan.why}")
@@ -658,8 +720,61 @@ class FreeText:
         asked = "; ".join(p for p, _ in gaps) or (question[:80] if plan.fallback else "")
         weak = f"WEAK EVIDENCE: {asked} vs {', '.join(plan.ids)}" if gaps or plan.fallback else ""
         text, probs = self._draft(question, plan, limit, missing, problems, tries)
+        if plan.motivation:
+            text, probs = self._reuse_checked(question, plan, limit, missing, text, probs, tries)
         return Proposal(question, cls, limit, plan, text, "draft" if text else "", probs, weak=weak, missing=missing,
                         why_not="" if text else f"free text [{cls}]: no draft passed the guard ({'; '.join(probs[:4])}). Nothing is drafted for you.")
+
+    # ---- a motivation answer: the ad is required, and the answer is its own
+    def _jd_problem(self) -> str:
+        """"" when the ad has MIN_JD_WORDS words or more; else it is fetched once more, and if it is still short the reason (hand-off: no JD)."""
+        if len(self.ad.split()) >= MIN_JD_WORDS:
+            return ""
+        if self.refetch_jd is not None and not self._refetched:
+            self._refetched = True
+            try:
+                fresh = str(self.refetch_jd() or "")
+            except Exception as e:  # noqa: BLE001  (no network, a closed posting, a blocked host: the job is handed off)
+                self.out(f"  the job ad could not be fetched again: {str(e)[:120]}")
+                fresh = ""
+            if len(fresh.split()) > len(self.ad.split()):
+                self.ad = fresh
+                self.guard.ad = fresh
+        if len(self.ad.split()) >= MIN_JD_WORDS:
+            return ""
+        return (f"no JD: the job ad has {len(self.ad.split())} words (a motivation answer needs {MIN_JD_WORDS}+), even after fetching it again; "
+                f"nothing is drafted from the title alone")
+
+    def _earlier_motivations(self) -> list[tuple[str, str]]:
+        """(label, text) of every earlier motivation answer: the approved ones in the library (other jobs) and this run's own earlier drafts."""
+        mine = str(self.job.get("id") or "")
+        out = [(f"{r.company} ({r.date})", r.answer) for r in self.lib.records() if r.cls in WHY and r.job_id != mine]
+        return out + [(f"an earlier draft this run ({m['question'][:40]})", m["text"]) for m in self.motivation_log if m["text"] and m["question"] != self._current_q]
+
+    def _overlap(self, text: str) -> tuple[float, str]:
+        sh = letter_reuse.shingles(text)
+        best = (0.0, "")
+        for label, other in self._earlier_motivations():
+            score = letter_reuse.jaccard(sh, letter_reuse.shingles(other))
+            if score > best[0]:
+                best = (score, label)
+        return best
+
+    def _reuse_checked(self, question: str, plan: Plan, limit: Limit, missing: Sequence[str], text: str, probs: list[str], tries: int) -> tuple[str, list[str]]:
+        """A motivation draft must not reuse an earlier motivation answer (5-word shingles, overlap under REUSE_LIMIT): one redraft is asked, then none.
+        Every draft goes to `motivation_log` with its guard result."""
+        self._current_q = question
+        overlap, who = self._overlap(text) if text else (0.0, "")
+        if text and overlap >= REUSE_LIMIT:
+            again, probs2 = self._draft(question, plan, limit, missing, [f"it reuses {who}: overlap {overlap:.2f} of 5-word runs (limit {REUSE_LIMIT}); "
+                                                                       f"say it in new words"], tries)
+            overlap2, who2 = self._overlap(again) if again else (1.0, who)
+            text, probs, overlap, who = (again, [], overlap2, who2) if again and overlap2 < REUSE_LIMIT else (
+                "", probs2 or [f"reuses {who}: overlap {overlap:.2f} (limit {REUSE_LIMIT})"], overlap2, who2)
+        self.motivation_log.append({"question": question, "text": text, "words": len(text.split()), "sources": plan.ids,
+                                    "guard": "passed" if text else "FAILED: " + "; ".join(probs[:4]),
+                                    "overlap": f"{overlap:.2f}" + (f" (closest: {who})" if who else " (no earlier motivation answer)")})
+        return text, probs
 
     # ---- the person
     def _show(self, question: str, cls: str, limit: Limit, plan: Plan, text: str, weak: str = "") -> None:
@@ -700,9 +815,10 @@ class FreeText:
             if reply in ("y", "yes"):
                 self._store(p.question, text, p.cls, p.plan, "draft")
                 return text
-            if reply == "r" and redrafts < MAX_REDRAFTS:
+            if reply in ("r", "l") and redrafts < MAX_REDRAFTS:
+                said = (self.ask("  What should change? ") or "").strip() if reply == "l" else ""
                 redrafts += 1
-                text, problems = self._draft(p.question, p.plan, p.limit, p.missing)
+                text, problems = self._draft(p.question, p.plan, p.limit, p.missing, [f"the reader asks: {said}"] if said else None)
                 if text and on_text is not None:
                     on_text(text)
                 continue
@@ -735,6 +851,8 @@ class FreeText:
 
 
 def for_job(job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], llm, settings, book: answers_mod.AnswerBook, *,
-            ask: Callable[[str], str] = input, out: Callable[[str], None] = print, today: date | None = None) -> FreeText:
-    """The free-text helper of one job: its ad, its CV report (keywords, hook), the fact bank, the model and the answer library."""
-    return FreeText(llm, fb, Library(settings.path("answers_library")), job, rep, book, ask=ask, out=out, today=today)
+            ask: Callable[[str], str] = input, out: Callable[[str], None] = print, today: date | None = None,
+            refetch_jd: Callable[[], str] | None = None) -> FreeText:
+    """The free-text helper of one job: its ad, its CV report (keywords, hook), the fact bank, the model and the answer library. `refetch_jd` fetches
+    the ad once more (the board API) when a motivation answer finds it too short; none = the ad as the database has it."""
+    return FreeText(llm, fb, Library(settings.path("answers_library")), job, rep, book, ask=ask, out=out, today=today, refetch_jd=refetch_jd)

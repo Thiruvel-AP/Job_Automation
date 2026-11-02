@@ -1006,6 +1006,12 @@ def cmd_live(args):
             print(f"Not processed: this job is outside {label} ({why.split(': ', 1)[-1]})" + (" (auto mode never continues)" if args.auto else "") + ".")
             return
     dry_run = args.dry_run or args.mock or cfg.mode == "off"
+    from .tailoring import tailor as _tailor_mod
+    if _tailor_mod.letter_raw_mode(s) == "off":
+        print("letter.mode is `off` in your settings: no cover letter is ever written, even for a form that asks for one. "
+              "Set `letter.mode: if_field` in config/settings.yaml to have one written when a form asks for it (this program never edits that file).")
+    elif _tailor_mod.letter_deferred(s):
+        print("letter.mode: if_field: the cover letter is written when an application form has a cover-letter field.")
     if args.mock and not args.dry_run:
         print("--mock implies --dry-run: the mock data root has no real application form to open.")
     elif cfg.mode == "off" and not args.dry_run:
@@ -1051,11 +1057,44 @@ def cmd_live(args):
         preflight(db, s, job, review.load_report(job))
         visa_mod.require_plan(job, load_yaml(s.path("applicant")))           # W unknown / no answers for it: refused before a form opens
 
+    def jd_refetcher(job):
+        """One more fetch of the job ad from its board API (public, robots-checked, at most 1 request a second), for a motivation answer that finds the
+        stored ad too short. Never in a --mock run (no network there)."""
+        if args.mock or not (job["url"] or ""):
+            return None
+
+        def fetch() -> str:
+            from .discovery import intake
+            return intake.fetch_ad(job["url"]).text
+        return fetch
+
+    def letter_maker_for(job, rep):
+        """letter.mode if_field: the writer of a cover letter for a form that asks for one (apply/letter_demand.py). Same rules and guards as at tailoring
+        time (review.regenerate_letter); it fails with the guards' own words, never a bare "no letter"."""
+        from .apply.letter_demand import Made, letter_text_of
+        from .tailoring import tailor as tailor_mod
+        from .tailoring.letter_reason import letter_reason
+
+        def make(control) -> Made:
+            if tailor_mod.letter_raw_mode(s) == "off":
+                return Made(None, None, "letter.mode is `off` in config/settings.yaml, so no letter is written: set `letter.mode: if_field` there to have "
+                                        "one written when a form asks for it")
+            try:
+                new = review.regenerate_letter(db, job, rep, fb, llm, s)
+            except Exception as e:  # noqa: BLE001  (no budget, no provider, xelatex missing: the form still opens)
+                return Made(None, None, f"the letter could not be written now: {str(e)[:300]}")
+            letter, pdf = new.get("letter") or {}, new.get("letter_pdf")
+            if letter.get("status") == "ok" and pdf and Path(pdf).is_file():
+                return Made(pdf, letter_text_of(new, pdf), "", new)
+            return Made(None, None, letter_reason(letter), new)
+        return make
+
     def assist_it(jid: str) -> dict:
         job = db.job(jid)
         rep = review.load_report(job)
         kw = _assist_answers(db, s)
-        kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input)
+        kw["letter_maker"], kw["record"] = letter_maker_for(job, rep), args.record
+        kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input, refetch_jd=jd_refetcher(job))
         kw["fact_bank"] = fb                                                  # the knock-out pre-scan checks degrees and years against it (read only)
         r = assist(job, rep, load_yaml(s.path("applicant")), s.path("browser_profile"), **kw)
         db.log(jid, "apply", r)
@@ -1084,7 +1123,9 @@ def cmd_live(args):
             rep = review.load_report(job)
             return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
                                  history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"), handoff=Handoff(s), failures=Failures(s),
-                                 freetext=freetext.for_job(job, rep, fb, llm, s, answers_mod.load(answers_mod.path_for(s)), ask=input))
+                                 letter_maker=letter_maker_for(job, rep), record=args.record,
+                                 freetext=freetext.for_job(job, rep, fb, llm, s, answers_mod.load(answers_mod.path_for(s)), ask=input,
+                                                           refetch_jd=jd_refetcher(job)))
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
               + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now
@@ -1756,6 +1797,9 @@ def main(argv=None):
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
     lv.add_argument("--region", help="the region(s) to work on: uk, ie, eu, us, any, a country code, or a list; approved ads outside it are left where they are")
     lv.add_argument("--size", help="company size bucket to work on: sme | large | both | sme-first | large-first (`sme` / `large` leave the other bucket alone)")
+    lv.add_argument("--record", action="store_true", help="when a form is filled and not submitted (the assist, or --auto --no-submit), keep a record of it "
+                    "under data/dryruns/<date>_<company>_<role>_<ad id>/: every field with its value, source and status, a full-page screenshot, copies "
+                    "of the CV and letter, the motivation answer and its guard results (personal data: git-ignored)")
     lv.add_argument("--mock", action="store_true", help="MockLLM and the isolated data/mock root (implies --dry-run)")
     lv.set_defaults(fn=cmd_live)
     r = sub.add_parser("review"); r.add_argument("--limit", type=int)

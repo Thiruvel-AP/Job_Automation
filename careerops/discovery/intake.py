@@ -6,6 +6,7 @@ the ad's text. Nothing here adds a job to the database or applies to anything: `
 gate. Public, unauthenticated APIs only, at most one request per second per host, identified by the shared `UA` header.
 
   Greenhouse  GET boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}        (job-boards.greenhouse.io, boards.greenhouse.io)
+              GET boards-api.eu.greenhouse.io/v1/boards/{board}/jobs/{id}     (job-boards.eu.greenhouse.io, boards.eu.greenhouse.io: the EU region)
   Lever       GET api.lever.co/v0/postings/{site}/{id}  (api.eu.lever.co for jobs.eu.lever.co)  - documented single posting
   Ashby       the board list GET api.ashbyhq.com/posting-api/job-board/{board}, then the posting in it by its id. Ashby
               documents no single-posting endpoint, so this is the one documented call, filtered here.
@@ -41,7 +42,8 @@ from .sources import UA, html_to_text
 MIN_PAGE_CHARS = 2000                  # a page with less text than this is not taken for a job description
 MIN_HOST_GAP_S = 1.0                   # at most one request per second per host
 MAX_BYTES = 5_000_000                  # a bigger response is not a job ad
-GREENHOUSE_HOSTS = ("job-boards.greenhouse.io", "boards.greenhouse.io")
+GREENHOUSE_HOSTS = {"job-boards.greenhouse.io": "boards-api.greenhouse.io", "boards.greenhouse.io": "boards-api.greenhouse.io",
+                    "job-boards.eu.greenhouse.io": "boards-api.eu.greenhouse.io", "boards.eu.greenhouse.io": "boards-api.eu.greenhouse.io"}   # board host -> its API host
 LEVER_HOSTS = {"jobs.lever.co": "api.lever.co", "jobs.eu.lever.co": "api.eu.lever.co"}
 ASHBY_HOSTS = ("jobs.ashbyhq.com",)
 CVLIBRARY_HOSTS = ("www.cv-library.co.uk", "cv-library.co.uk")
@@ -199,9 +201,9 @@ def parse_url(url: str) -> Target:
     if host in GREENHOUSE_HOSTS:
         q = parse_qs(u.query)
         if len(parts) >= 3 and parts[1] == "jobs" and parts[2].isdigit():
-            return Target("greenhouse", full, board=parts[0], ad_id=parts[2])
+            return Target("greenhouse", full, board=parts[0], ad_id=parts[2], api_host=GREENHOUSE_HOSTS[host])
         if parts[:2] == ["embed", "job_app"] and q.get("for") and (q.get("token") or [""])[0].isdigit():
-            return Target("greenhouse", full, board=q["for"][0], ad_id=q["token"][0])
+            return Target("greenhouse", full, board=q["for"][0], ad_id=q["token"][0], api_host=GREENHOUSE_HOSTS[host])
         raise IntakeError(f"{full}: a Greenhouse link needs the form {host}/<board>/jobs/<number>")
     if host in LEVER_HOSTS:
         if len(parts) >= 2 and UUID.fullmatch(parts[1]):
@@ -231,7 +233,7 @@ def _first_published(j: dict) -> str:
 
 
 def greenhouse_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
-    j = _json(f"https://boards-api.greenhouse.io/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}",
+    j = _json(f"https://{t.api_host or 'boards-api.greenhouse.io'}/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}",
               robots)
     return Ad(company=str(j.get("company_name") or "").strip() or _name(t.board), title=str(j.get("title") or "").strip(),
               url=_http_url(j.get("absolute_url"), t.url), location=str((j.get("location") or {}).get("name") or "").strip(),
@@ -502,8 +504,24 @@ def fetch_ad(url: str, company: str | None = None, title: str | None = None, rob
     """Fetch the ad behind `url`. `company` / `title` replace what the page or API says. The host's robots.txt is read first
     (`robots`: the cache to use; default one in memory)."""
     t = parse_url(url)
-    ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "cvlibrary": cvlibrary_ad,
-          "page": page_ad}[t.kind](t, robots)
+    try:
+        ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "cvlibrary": cvlibrary_ad,
+              "page": page_ad}[t.kind](t, robots)
+    except RobotsRefused as e:
+        # A host that cannot be reached at all is not a refusal: the EU API address is a guess that has not been checked against the live service, so
+        # when ITS robots.txt cannot even be fetched the board's own page is read instead (under that host's own robots.txt). A robots.txt that
+        # answers and disallows, or any HTTP refusal, is never worked around.
+        if t.kind != "greenhouse" or t.api_host == "boards-api.greenhouse.io" or "could not be fetched" not in str(e):
+            raise
+        ad = page_ad(Target("page", t.url, ad_id=t.ad_id), robots)               # the board's own ad number, so the file keeps its name
+    except BlockedError:
+        raise                                                  # a refusal is never worked around
+    except IntakeError:
+        if t.kind != "greenhouse" or t.api_host == "boards-api.greenhouse.io":
+            raise
+        # an EU board whose API address did not answer (the EU host is not verified against the live service): the board's own public page, which
+        # is what the run used before the EU hosts were known, read under the same robots.txt rules
+        ad = page_ad(Target("page", t.url, ad_id=t.ad_id), robots)
     if company:
         ad.company = company.strip()
     if title:
@@ -655,8 +673,23 @@ def add_clipboard(settings, ask: Callable[[str], str] = input) -> tuple[Path, bo
     return path, created, ad
 
 
+def filed_in_approved(jds: Path, name: str) -> Path | None:
+    """The file called `name` in an approved/<date>/ folder of paths.jds (the newest day first), or None: an ad you approved is already filed there."""
+    approved = jds / "approved"
+    if approved.is_dir():
+        for day in sorted((d for d in approved.iterdir() if d.is_dir()), reverse=True):
+            if (day / name).is_file():
+                return day / name
+    return None
+
+
 def add_url(settings, url: str, company: str | None = None, title: str | None = None) -> tuple[Path, bool, Ad]:
-    """Fetch `url` and put the ad in paths.jds/inbox. Returns (file, created, ad)."""
+    """Fetch `url` and put the ad in paths.jds/inbox. Returns (file, created, ad). An ad you already approved (the same file name in
+    approved/<date>/) is not written again: that file is returned with created=False, so `live --url ... --retailor` resumes it instead of
+    meeting a second copy of the same job."""
     ad = fetch_ad(url, company, title, RobotsCache(settings.path("robots")))
+    held = filed_in_approved(settings.path("jds"), file_name(ad))
+    if held is not None:
+        return held, False, ad
     path, created = write_inbox(settings.path("jds") / "inbox", ad)
     return path, created, ad

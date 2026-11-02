@@ -27,9 +27,9 @@ from typing import Any, Callable, Mapping
 from urllib.parse import urlparse
 
 from .apply import answers as answers_mod
-from .apply import autogate, autolog, eo, failures as failures_mod, filler, formfind, formloop, knockout, verify
+from .apply import autogate, autolog, dryrun, eo, failures as failures_mod, filler, formfind, formloop, knockout, letter_demand, requiredgate, shortfields, verify
 from .apply import visa as visa_mod
-from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, sponsorship_answer, visa_value
+from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, is_visa_question, sponsorship_answer, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
                            is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
@@ -215,7 +215,7 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
     The files go first, then the form is left to settle (`quiet_ms` without a DOM change), then the other fields (apply/verify.py);
     `verify_filled` reads them back."""
     listed_eo = eo.entries(ctx.applicant, ctx.book)        # applicant.yaml first, then the eo_* entries of answers.yaml
-    ctx.combobox = _combobox
+    ctx.combobox = _combobox if ctx.combobox is None else ctx.combobox
     if ctx.tracker is None:
         ctx.tracker = verify.Tracker()
     loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, ctx.cv_pdf))
@@ -250,7 +250,7 @@ def fill_form(page, ctx: Ctx, quiet_ms: int = verify.QUIET_MS) -> None:
                 ctx.result.filled.append(f"{short} <- cover letter text")
             return
 
-        if VISA_FIELD.search(f"{question} {label}"):
+        if is_visa_question(f"{question} {label}"):
             _visa_field(page, el, typ, question, ctx, seen, required)
             return
 
@@ -275,7 +275,8 @@ def verify_filled(page, ctx: Ctx) -> list[str]:
     if ctx.tracker is None or not ctx.tracker.fills:
         return []
     ctx.out("  Reading back every field that was filled:")
-    return ctx.tracker.verify(page, ctx.out)[1]
+    ctx.verified, ctx.lost = ctx.tracker.verify(page, ctx.out)
+    return ctx.lost
 
 
 def still_empty(page) -> list[str]:
@@ -338,7 +339,7 @@ def default_history(db, settings=None) -> Callable[[str], bool]:
 def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, Any], settings, *, submit: bool = True, confirm: bool = False,
         ask: Callable[[str], str] = input, out: Callable[[str], None] = print, launch: Callable[[Path], Session] | None = None,
         history: Callable[[str], bool] | None = None, throttle: Throttle | None = None, ats_strict: float | None = None,
-        now: Callable[[], datetime] = datetime.now, freetext=None, handoff=None, failures=None) -> AutoResult:
+        now: Callable[[], datetime] = datetime.now, freetext=None, handoff=None, failures=None, letter_maker=None, record: bool = False) -> AutoResult:
     """Fill the form of one gated job; submit it unless `submit` is False. Always appends one row to applied_auto.csv. Raises ArchiveError
     (wrong files, unknown work country) before a browser is opened.
 
@@ -383,6 +384,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     session = (launch or playwright_launch)(settings.path("secrets") / "browser")
     keep_open = False
     failed, offer = 0, False
+    shown_table = False
 
     def hand_off(why: str) -> None:
         result.handed_off = True
@@ -401,10 +403,32 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     try:
         page = session.page
         open_form(page, url, throttle, job.get("apply_kind"))
+        from .tailoring.letter_reason import letter_reason
+
+        prov = letter_demand.provide(page, rep, ctx.letter_pdf, ctx.letter_text, letter_maker, out, reason=letter_reason(rep.get("letter")))
+        ctx.letter_pdf, ctx.letter_text, ctx.letter_note = prov.pdf, prov.text, prov.note       # letter.mode if_field: written now when the form asks for one
+        if prov.handoff:
+            raise HandOff(prov.handoff)
+        if prov.made:
+            check_job_files(job, cv, ctx.letter_pdf)
         fill_form(page, ctx)
         lost = verify_filled(page, ctx)
+        rows = requiredgate.check(page, ctx, ctx.verified, lost, ctx.loop.status if ctx.loop else None, ctx.letter_note)
+        for line in requiredgate.render(rows):
+            out(line)
+        shown_table = True
+        if record:
+            try:
+                dryrun.record(dryrun.folder_for(rep, job, now().date()), page, job, rep,
+                              requiredgate.check(page, ctx, ctx.verified, lost, ctx.loop.status if ctx.loop else None, ctx.letter_note, required_only=False),
+                              cv=cv, letter=ctx.letter_pdf, letter_text=ctx.letter_text, freetext=ctx.freetext, out=out)
+            except OSError as e:
+                out(f"  dry-run record not written: {e}")
         if lost:
             raise NeedsUser("the form emptied field(s) after they were filled: " + "; ".join(lost[:5]))
+        waiting = requiredgate.blocking(rows)
+        if waiting:
+            raise NeedsUser("required fields still empty or waiting for you: " + "; ".join(f"{r.label[:60]} ({r.status}{': ' + r.reason[:80] if r.reason else ''})" for r in waiting[:6]))
         empty = still_empty(page)
         if empty:
             raise NeedsUser("required fields still empty: " + "; ".join(empty[:5]))
@@ -459,6 +483,12 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         result.status, result.reason = autolog.NEEDS_USER, str(e)
         failed, offer = failure(str(e))
         keep_open = True
+        if not shown_table:                                  # stopped early (a question nobody answered): the table of what the form holds now
+            try:
+                for line in requiredgate.render(requiredgate.check(session.page, ctx, ctx.verified, ctx.lost, ctx.loop.status if ctx.loop else None, ctx.letter_note)):
+                    out(line)
+            except Exception:  # noqa: BLE001  (the page is gone; the reason is what matters)
+                pass
         try:
             _shot(session.page, folder, "stopped", stamp, result)
         except Exception:  # noqa: BLE001  (the page is gone; the reason is what matters)

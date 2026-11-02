@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from . import answers as answers_mod
-from . import ats_vendor, attest
+from . import ats_vendor, attest, shortfields
 from . import freetext as freetext_mod
 
 TEXT_TYPES = ("text", "email", "tel", "url", "textarea", "search", "number", "")
@@ -113,6 +113,16 @@ class Ctx:
     loop: Any = None                                  # apply/formloop.FormLoop of this form: it answers the free-text fields (required or optional)
     attestations: list = field(default_factory=list)  # the questions of the attestation check boxes (apply/attest.py): never ticked, listed for the human
     recommended: list = field(default_factory=list)   # "question -> answer" of the radios / check boxes code may not set (Lever): the human sets them
+    needs_user: dict = field(default_factory=dict)    # question -> why the code left the field empty and only the person can answer it (the required-field table)
+    sources: dict = field(default_factory=dict)       # normalised question -> where its value came from (answers:<id> | applicant | freetext | letter | job ...)
+    hear_other: bool = False                          # "How did you hear about us?" was answered "Other": the follow-up box gets the careers-page words
+    verified: list = field(default_factory=list)      # labels the read-back confirmed (apply/verify.py)
+    lost: list = field(default_factory=list)          # labels the form emptied after they were filled
+    letter_note: str = ""                             # why a cover-letter field the form asks for has no letter (the guards' own words)
+
+    def source(self, question: str, where: str) -> None:
+        """Note where the value of a field came from (the dry-run record, apply/dryrun.py)."""
+        self.sources[answers_mod.norm(question)[:80]] = where
 
     def track(self, el, label: str, kind: str = "text", value: str = "") -> None:
         """Note a field this run filled, so that it is read back (and filled once more if the form emptied it) before anyone is told it is done."""
@@ -140,10 +150,10 @@ class Ctx:
             raise NeedsUser(f"no answer for the required question: {question}")
         return typed
 
-    def offer_save(self, question: str, typed: str) -> None:
+    def offer_save(self, question: str, typed: str, entry_id: str | None = None) -> None:
         if self.typed("  Type `save` to keep this answer in answers.yaml for next time (anything else: used on this form only): ").lower() == "save":
             try:
-                answers_mod.save(self.book_path, question, typed)
+                answers_mod.save(self.book_path, question, typed, entry_id)
             except answers_mod.AnswersError as e:
                 self.out(f"  not saved: {e}")
             else:
@@ -185,10 +195,14 @@ def fill_standard(el, typ: str, label: str, applicant: Mapping[str, Any]) -> tup
 
 
 # ------------------------------------------------------------------ answers.yaml
-def decide(ctx: Ctx, question: str, required: bool, *, options: list[str] | None = None, numeric: bool = False) -> str | None:
+def decide(ctx: Ctx, question: str, required: bool, *, options: list[str] | None = None, numeric: bool = False, single_line: bool = False) -> str | None:
     """The text to enter (or the option to pick) for a question, from answers.yaml only; None = leave it empty (optional and unanswered, or
-    not strict). A required question with no exact answer asks the user (Ctx.unknown) and raises NeedsUser if they give none."""
+    not strict). A required question with no exact answer asks the user (Ctx.unknown) and raises NeedsUser if they give none.
+    `single_line`: the box is a one-line input (apply/shortfields.py): the shortest matching answer is used, and a paragraph that is not a
+    short form of the question is not pasted into it."""
     r = ctx.book.resolve(question, ctx.job)
+    if single_line and options is None and not numeric and r is not None:
+        r = shortfields.shortest_answer(ctx.book, question, ctx.job) or r
     why = "no entry in answers.yaml matches this question"
     if r is not None and not r.known and r.entry_id == "previously_applied" and not ctx.history(str(ctx.job.get("company") or "")):
         r = answers_mod.Resolved(r.entry_id, r.pattern, "No", r.numeric, r.options)          # no earlier application to this company in the database or archive
@@ -200,12 +214,18 @@ def decide(ctx: Ctx, question: str, required: bool, *, options: list[str] | None
             why = f"answers.yaml says {r.text!r} but no option matches it"
         elif numeric and not r.numeric:
             why = "the field takes a number and the answers.yaml entry has no answer_numeric"
+        elif single_line and not numeric and shortfields.too_long_for_one_line(r.text, question):
+            why = (f"the answers.yaml entry {r.entry_id!r} is {len(r.text.split())} words, a paragraph for a one-line box that does not ask to explain "
+                   f"(give the entry a short form under `options`)")
         else:
+            ctx.source(question, f"answers:{r.entry_id}")
             return r.numeric if numeric else r.text
     elif r is not None:
         why = f"the entry {r.entry_id!r} in answers.yaml is blank"
     if not required or not ctx.strict:
         ctx.result.blank.append(question)
+        if required:
+            ctx.needs_user[question] = why
         return None
     typed = ctx.unknown(question, why, options)
     if options is not None:
@@ -290,6 +310,7 @@ def choice(page, el, typ: str, question: str, ctx: Ctx, seen: set, required: boo
         ctx.track(el, question, "check")
         ctx.result.filled.append(f"{question[:80]} -> ticked")
     elif value is not None:
+        ctx.source(question, f"answered No (answers.yaml {value!r}: left unticked)")
         ctx.result.blank.append(f"{question} (answer {value!r}: left unticked)")
 
 
@@ -327,18 +348,27 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
     if typ in ("radio", "checkbox"):
         choice(page, el, typ, question, ctx, seen, required)
         return
+    if shortfields.handle(page, el, tag, typ, label, short, question, required, ctx):         # city, country, how did you hear, visa type
+        return
+    if tag == "input" and el.get_attribute("role") == "combobox" and typ in TEXT_TYPES:       # before the standard fields: typing into a script-built
+        if attest.is_attestation(question):                                                   # "I declare the information is true ...": never chosen by code
+            attest.mark([el], question, ctx.attestations)
+            ctx.needs_user[question] = "attestation: you choose it yourself, code never does"
+            return
+        if ctx.combobox is not None:                                                          # drop-down without picking its option is lost on blur
+            ctx.combobox(page, el, question, ctx, required)
+        else:
+            ctx.result.blank.append(f"{question} (a script-built drop-down: you pick the option)")
+            if required:
+                ctx.needs_user[question] = "a script-built drop-down: you pick the option"
+        return
     done = fill_standard(el, typ, label, ctx.applicant)
     if done is not None:
         key, filled = done
         if filled:
             ctx.track(el, short, "text", standard_value(ctx.applicant, key))
             ctx.result.filled.append(f"{short} <- {key}")
-        return
-    if tag == "input" and el.get_attribute("role") == "combobox" and typ in TEXT_TYPES:
-        if ctx.combobox is not None:
-            ctx.combobox(page, el, question, ctx, required)
-        else:
-            ctx.result.blank.append(f"{question} (a script-built drop-down: you pick the option)")
+            ctx.source(question or short, "applicant")
         return
     if typ in TEXT_TYPES and (el.input_value() or "").strip():
         return                                                                  # the form (or a saved profile) already holds something
@@ -362,7 +392,7 @@ def fill_field(page, el, tag: str, typ: str, label: str, short: str, question: s
             else:
                 ctx.stop(f"no answer for the required question: {question}")
             return
-        value = decide(ctx, question, required, numeric=numeric_only(el, typ, label))
+        value = decide(ctx, question, required, numeric=numeric_only(el, typ, label), single_line=(tag == "input"))
         if value is not None:
             el.fill(value)
             ctx.track(el, short, "text", value)

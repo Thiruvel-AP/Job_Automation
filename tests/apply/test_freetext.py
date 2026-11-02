@@ -311,8 +311,11 @@ def test_why_company_without_motivations_asks_and_does_not_draft(make):
 
 
 AD_PHRASE = "builds clinical decision-support tools that help oncology researchers"
+# v2.4.1: a "why" answer is a motivation answer, 60 to 150 words, and names the company
 WHY = (f"Northwind Health AI {AD_PHRASE} find the right cancer cell-line models faster, and I want to build AI systems that are "
-       "trustworthy in production.")
+       "trustworthy in production, not just demos: tested, measured and safe when their dependencies fail. I am drawn to applied AI in domains "
+       "where correctness matters, such as healthcare and biomedical research, so a team that puts clinical decision support in front of "
+       "researchers is the kind of place where that care counts.")
 
 
 def test_why_company_draws_on_the_ad_and_the_motivations_and_quotes_the_ad(make):
@@ -347,8 +350,10 @@ def test_a_why_company_answer_is_never_reused_across_companies(make):
 
 
 def test_why_role_draws_on_the_ad_and_the_hook(make):
-    why_role = ("The role asks me to build and evaluate LLM agents on top of a research data platform, "
-                "which is the problem I solved with an LLM agent at Northwind Research Lab.")
+    why_role = ("The role at Northwind Health AI asks me to build and evaluate LLM agents on top of a research data platform, "
+                "which is the problem I solved with an LLM agent at Northwind Research Lab. I built it for a multi-omics cancer research "
+                "platform, and I want to do the same kind of work where correctness matters, so this is the role I would like to take on and keep "
+                "improving as the product grows.")
     llm = llm_with(why_role, ad_phrases=["build and evaluate LLM agents"])
     f = make(llm, "y")
     assert f.answer("Why are you interested in this role?", "", None) == why_role

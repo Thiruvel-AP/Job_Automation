@@ -176,14 +176,26 @@ def _own_bullet(text: str, evidence: list[dict]) -> int | None:
     return max(range(len(evidence)), key=lambda i: overlap[i]) if evidence and max(overlap) >= MATCH_WORDS else None
 
 
-def repeated_evidence_problems(body: list[str], evidence: list[dict]) -> list[str]:
-    """The hook (paragraph 1) and paragraph 2 must be written from different evidence bullets: a letter that tells one
-    example twice leaves the other bullet unused. Nothing to check with fewer than two paragraphs or bullets."""
+def repeated_evidence_problems(body: list[str], evidence: list[dict], labels: tuple[str, str] = ("the hook", "paragraph 2"),
+                               unavoidable: frozenset[str] | set[str] = frozenset(), groups: list[list[dict]] | None = None) -> list[str]:
+    """The first two paragraphs of `body` must be written from different evidence bullets: a letter that tells one
+    example twice leaves the other bullet unused. Nothing to check with fewer than two paragraphs or bullets.
+    `labels` names the two paragraphs in the message (hook mode: the hook and paragraph 2; company mode: P3 and P4, the two paragraphs
+    the model writes). A bullet id in `unavoidable` is one the plan itself offered to both paragraphs because the CV had no other
+    (company_letter.role_group): the model cannot avoid it, so repeating it is not a reason to reject the draft."""
     if len(body) < 2 or len(evidence) < 2:
         return []
+    if groups is not None:
+        # Company mode: each paragraph is judged against the bullets IT was given (P3: its group, P4: its group), never against every bullet of the
+        # letter. A role roll-up that retells the project P3 showed (one AstraZeneca project, told in P3 as a skill and in P4 as the role) was
+        # read as "the same bullet" by the whole-letter comparison, and the model could not redraft its way out of it (RightShip, 31 Oct 2026).
+        a, b = (_own_bullet(body[0], groups[0]), _own_bullet(body[1], groups[1])) if len(groups) > 1 else (None, None)
+        if a is not None and b is not None and groups[0][a].get("id") == groups[1][b].get("id") and str(groups[0][a].get("id", "")) not in unavoidable:
+            return [f"{labels[0]} and {labels[1]} use the same evidence bullet: '{groups[0][a]['text'][:50]}'"]
+        return []
     hook, second = _own_bullet(body[0], evidence), _own_bullet(body[1], evidence)
-    if hook is not None and hook == second:
-        return [f"the hook and paragraph 2 use the same evidence bullet: '{evidence[hook]['text'][:50]}'"]
+    if hook is not None and hook == second and str(evidence[hook].get("id", "")) not in unavoidable:
+        return [f"{labels[0]} and {labels[1]} use the same evidence bullet: '{evidence[hook]['text'][:50]}'"]
     return []
 
 

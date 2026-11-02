@@ -99,7 +99,7 @@ class Fill:
     """One field the program filled: what to read back and how to fill it once more."""
     label: str
     el: Any
-    kind: str                       # "text" | "select" (value = the option text) | "check"
+    kind: str                       # "text" | "select" (value = the option text) | "check" | "combo" (a script-built drop-down: the text it shows)
     value: str = ""
     selector: str = ""
 
@@ -110,7 +110,7 @@ class Tracker:
 
     def add(self, el, label: str, kind: str = "text", value: str = "") -> None:
         try:
-            selector = el.evaluate(SELECTOR_JS) if kind != "check" else ""
+            selector = el.evaluate(SELECTOR_JS) if kind not in ("check", "combo") else ""
         except Exception:  # noqa: BLE001
             selector = ""
         self.fills.append(Fill(" ".join((label or "").split())[:80], el, kind, value or "", selector))
@@ -135,6 +135,11 @@ class Tracker:
         if f.kind == "select":
             chosen = " ".join((el.evaluate("e => e.selectedOptions.length ? e.selectedOptions[0].textContent : ''") or "").split())
             return chosen != "" and chosen.casefold() == " ".join(f.value.split()).casefold()
+        if f.kind == "combo":                                   # what the drop-down shows as chosen, not its input (which a react-select empties)
+            from .shortfields import combo_value
+
+            shown = combo_value(el).casefold()
+            return shown != "" and " ".join(f.value.split()).casefold() in shown
         return bool((el.input_value() or "").strip())
 
     @staticmethod
@@ -143,6 +148,8 @@ class Tracker:
             el.check()
         elif f.kind == "select":
             el.select_option(label=f.value)
+        elif f.kind == "combo":
+            return                                              # a list item cannot be picked again blind: it is read once more and reported LOST
         else:
             el.fill(f.value)
 

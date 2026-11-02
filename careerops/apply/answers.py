@@ -106,6 +106,27 @@ class AnswerBook:
         text = e.overrides.get(norm(str(job.get("company") or "")), e.answer)
         return Resolved(e.id, pattern, _fill(text, job), e.numeric, e.options)
 
+    def resolve_all(self, question: str, job: Mapping[str, Any]) -> list[Resolved]:
+        """Every entry with a pattern that is a whole-word run of the question (each with its own longest matching pattern), answered for this job.
+        `resolve` is the longest of them; a single-line box looks at the rest to find the shortest answer (apply/shortfields.py)."""
+        q = norm(question)
+        out = []
+        for e in self.entries:
+            hits = [p for p in e.patterns if _whole(p, q)]
+            if hits:
+                pattern = max(hits, key=len)
+                out.append(Resolved(e.id, pattern, _fill(e.overrides.get(norm(str(job.get("company") or "")), e.answer), job), e.numeric, e.options))
+        return out
+
+    def by_id(self, entry_id: str, job: Mapping[str, Any]) -> Resolved | None:
+        """The entry with this id, answered for this job, whatever the question says (the first one when the id is used twice); None when absent.
+        For a target the code names itself (`visa_type`, `current_location`) whose match words are the user's own."""
+        for e in self.entries:
+            if e.id == entry_id:
+                text = e.overrides.get(norm(str(job.get("company") or "")), e.answer)
+                return Resolved(e.id, "", _fill(text, job), e.numeric, e.options)
+        return None
+
 
 def load(path: Path) -> AnswerBook:
     """The user's file as an AnswerBook; a missing file is an empty book (every question unknown). A file that cannot be read says which."""
@@ -170,15 +191,19 @@ def _end_of_answers(text: str) -> int | None:
     return len("\n".join(lines[:-1])) + 1 if len(lines) > 1 else 0
 
 
-def save(path: Path, question: str, answer: str) -> str:
-    """Append one entry for `question` to the user's file (only after the user typed `save`); returns its id. Everything above is untouched."""
+def save(path: Path, question: str, answer: str, entry_id: str | None = None) -> str:
+    """Append one entry for `question` to the user's file (only after the user typed `save`); returns its id. Everything above is untouched.
+    `entry_id` names a target the code looks up by id (`visa_type`); without it the id is made from the question. An id that already exists is refused."""
     pattern = norm(question)
     if not pattern:
         raise AnswersError("nothing to save: the question has no text")
     if not answer.strip():
         raise AnswersError("nothing to save: the answer is blank")
-    entry_id = "saved_" + pattern.replace(" ", "_")[:40]
+    named = entry_id is not None
+    entry_id = entry_id or "saved_" + pattern.replace(" ", "_")[:40]
     text = Path(path).read_text(encoding="utf-8") if Path(path).exists() else "answers:\n"
+    if named and re.search(r"^\s*-\s*id:\s*[\"']?" + re.escape(entry_id) + r"[\"']?\s*$", text, re.M):
+        raise AnswersError(f"{Path(path).name} already has an entry with the id {entry_id!r}; nothing was changed")
     empty = re.search(r"^answers:[ \t]*\[[ \t]*\][ \t]*$", text, re.M)       # `answers: []` cannot take a list item below it
     if empty:
         text = text[:empty.start()] + "answers:" + text[empty.end():]

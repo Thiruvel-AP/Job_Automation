@@ -233,7 +233,8 @@ careerops patterns                 # replies / interviews / rejections by role f
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
 careerops live --auto --no-submit  # gated auto-apply, step 1: fill the forms of the jobs that pass every gate and screenshot them, never click Submit (see "Auto-apply")
 careerops live --auto              # step 2, needs `apply: mode: auto`: jobs that pass every gate are submitted; the rest go to your review as before (`--confirm`: ask before every submit)
-careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job
+careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job. NOTE: --dry-run opens no form; to see a form filled use the assist (no flag) or --auto --no-submit
+careerops live --retailor --url URL --record   # v2.4.1: the assist fills the form (you press nothing), and data/dryruns/<date>_<company>_<role>_<id>/ keeps fields.md/json (value, source, status), form_full.png, cv.pdf, letter.pdf/txt, motivation.txt
 careerops live --retailor --re-extract   # ... and the JD's keywords are extracted again (a job keeps its FIRST extraction otherwise, so --retailor gives the same keywords and ATS)
 careerops tailor --id JOB --re-extract   # the same flag on tailor / run
 careerops review                   # approve / edit (opens YAML of bullets) / reject

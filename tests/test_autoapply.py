@@ -80,7 +80,7 @@ class Run:
             h.known = lambda url: known
         return h
 
-    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None, handoff=None, failures=None):
+    def run(self, page: str, replies: dict | None = None, *, submit=True, confirm=False, rep=None, history=None, throttle=None, handoff=None, failures=None, **extra):
         replies = replies or {}
 
         def ask(prompt: str) -> str:
@@ -95,7 +95,7 @@ class Run:
         job = {**self.job, "apply_url": target.resolve().as_uri() + ("?" + query if query else "")}
         return autoapply.run(job, rep or self.rep(), APPLICANT, self.settings, submit=submit, confirm=confirm, ask=ask,
                              out=lambda s: self.out.append(s), launch=self.launch, history=history or (lambda c: False), throttle=throttle,
-                             ats_strict=74.2, now=NOW, handoff=handoff, failures=failures)
+                             ats_strict=74.2, now=NOW, handoff=handoff, failures=failures, **extra)
 
     def rep(self, letter: bool = False) -> dict:
         out = Path(self.job["out_dir"])
@@ -418,7 +418,14 @@ def test_click_on_a_submit_control_appears_only_in_autoapply_py():
     # Ashby / Lever forms are reached by address (formfind.form_url), a bot check or sign-in is handed over and never clicked.
     # The form agent (apply/formagent.py) also clicks, but only an element that has a ref, and no submit control has one: tests/apply/test_formagent.py
     # checks where its clicks are.
-    assert [w for w, line in others if not w.startswith(("careerops/apply/assist.py", "careerops/apply/formagent.py"))] == []
+    # v2.4.1: two modules click things that can never submit: an item of an open drop-down list (`[role=option]`, refused when its text names the
+    # geolocation or a cloud drive) and the "Enter manually" button of a Cover Letter block (found by its exact text). Their clicks are listed here
+    # one by one, so a new click in either module fails this test.
+    allowed = {"careerops/apply/shortfields.py": {"el.click()", "o.click()"}, "careerops/apply/letter_demand.py": {"b.click(); return true;"}}
+    assert [w for w, line in others if not w.startswith(("careerops/apply/assist.py", "careerops/apply/formagent.py", *allowed))] == []
+    for path, lines in allowed.items():
+        found = {line for w, line in others if w.startswith(path)}
+        assert found and all(any(a in line for a in lines) for line in found), (path, found)
     assert all("OPEN_FORM_LINK" in line for w, line in others if w.startswith("careerops/apply/assist.py"))
 
 

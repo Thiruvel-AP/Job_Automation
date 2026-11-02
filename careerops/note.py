@@ -67,6 +67,13 @@ def question(rep: dict, team: str, company: str) -> str:
     return f"How does {where} handle {best.term} today, and what would you want a new data scientist to change first?"
 
 
+def _why_no_letter(rep: dict) -> str:
+    """The guards' own words for a job without a letter (tailoring/letter_reason.py), on one line."""
+    from .tailoring.letter_reason import letter_reason
+
+    return " ".join(letter_reason(rep.get("letter")).split())[:400] or "see report.json"
+
+
 def contact_line(rep: dict, job: dict) -> str:
     team = (rep.get("team") or "").strip()
     return f"TODO: you find on LinkedIn: hiring manager, {team}" if team else \
@@ -100,8 +107,8 @@ def build(job, rep: dict, fb: dict, now: datetime | None = None) -> str:
     if a:
         lines += [f"- **Strict CV:** {a['strict']:.1f}%",
                   f"- **Claimable ceiling:** {a['ceiling']:.1f}%",
-                  f"- **CV + letter:** " + (f"{a['combined']:.1f}%" if a.get("combined") is not None else "no letter"),
-                  f"- **Letter alone:** " + (f"{a['letter']:.1f}% (reported, never gated)" if a.get("letter") is not None else "no letter"),
+                  f"- **CV + letter:** " + (f"{a['combined']:.1f}%" if a.get("combined") is not None else f"no letter ({_why_no_letter(rep)})"),
+                  f"- **Letter alone:** " + (f"{a['letter']:.1f}% (reported, never gated)" if a.get("letter") is not None else f"no letter ({_why_no_letter(rep)})"),
                   f"- **Gate:** {a['gate']}" + (" (STRETCH: kept, never dropped)" if rep.get("stretch") else "")]
         for v, nums in (a.get("variants") or {}).items():
             lines.append(f"- Letter {v}: CV + letter {nums['combined']:.1f}%, letter alone {nums['letter']:.1f}%")

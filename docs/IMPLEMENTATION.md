@@ -1626,3 +1626,30 @@ each time, never anyone else's.
 5. **Tests** (new, 199): `tests/discovery/test_region.py`, `test_size.py`, `test_shortlist_region_size.py`, `test_discover_region.py`, `tests/test_choices.py`, `test_live_region.py`, `test_region_size_reports.py`. **Unverified:** a live
    `discover --ats --gmail-alerts --report --region uk`, the real Companies House API (no key was used: the search / profile shapes follow its public documentation), and `live --dry-run --max 1` on the real approved ads.
 
+## 5as. v2.4.1 — hotfix from the RightShip Greenhouse EU form (31 Oct 2026) — **done** (offline tests: Chromium pages, MockLLM, fixture ads; the live run on the real form is the user's `--record` run)
+
+What the RightShip dry run showed, and what was done (each has tests; `tests/apply/test_greenhouse_form.py` rebuilds the form):
+
+1. **No letter.** `letter.mode` was `company`, not off: all three drafts were rejected, the last only for "the hook and paragraph 2 use the same evidence bullet". That check ran on P3 and P4 (the two paragraphs the
+   model writes), and `company_letter.role_group` had given P4 the bullet P3 already used (the role's only other numbered bullet). `role_group` now takes a bullet nobody has used before reusing one; the check says
+   "P3 and P4" and lets through a bullet the plan itself gave to both (`repeated_evidence_problems(..., unavoidable)`). Nothing in faithfulness, the deny list or the claim guards was loosened. **New mode
+   `letter.mode: if_field`** (the built-in default when the key is absent; your `company` is unchanged and settings.yaml was not touched): no letter at tailoring time, one written (same v2.3 rules and guards,
+   `review.regenerate_letter`) when the open form has a cover-letter control (`apply/letter_demand.py`): a file input gets the PDF through the input, "Enter manually" is clicked and `letter.txt` pasted, the
+   Dropbox / Google Drive buttons are never clicked. A letter that fails its guards: optional = left empty, required = hand-off; the exact reason is printed. Every "no letter" now carries
+   the guards' words (`tailoring/letter_reason.py`: note.md, the review banner, the summary line). `live` prints a line when your `letter.mode` is `off`.
+2. **Motivation answers.** `freetext.classify` knows "what motivated you", "why do you want", "why are you interested", "why this role / position", "why {company}", "what excites you", "why are you
+   applying". Always drafted: 60-150 words (a smaller field limit wins), names the company, quotes a run of the ad, no greeting; from the letter's P1 + P5, else the ad + `motivations` + the CV hook + one
+   numbered bullet. Under 150 words of JD it is fetched once more, still short = hand-off "no JD", nothing drafted. 5-word-shingle reuse check (< 0.30) against earlier motivation answers. `[l]` regenerates
+   with feedback. The existing claim guard and the first-draft-needs-`y` rule apply.
+3. **Short fields** (`apply/shortfields.py`). City (`current_location`'s city part, never "Locate me"), country, how-did-you-hear (board -> Company website / Careers page / Website, LinkedIn, Indeed, else Other,
+   the follow-up box gets "Company careers page", the option chosen is logged), the visa TYPE (its own `visa_type` entry in answers.yaml, at most 8 words, never the Graduate-visa paragraph; missing = NEEDS USER and,
+   at a terminal, a prompt with `save`), and the length rule (a one-line box gets the shortest matching answer; a paragraph over 25 words is not pasted there unless the label asks to explain). A script-built
+   drop-down is now read back from what it shows (`verify` kind `combo`) and is filled before the standard fields (typing into one without picking an option is lost on blur). Attestation drop-downs are never chosen.
+4. **Required-field table** (`apply/requiredgate.py`). FILLED / VERIFIED / LOST / EMPTY / NEEDS USER for every required field, red when it blocks; printed by the assist and `autoapply.run` before the submit gate
+   (also when the run stops early); LOST / EMPTY / NEEDS USER block an auto-submit. The declaration and the consent are NEEDS USER (attestation).
+5. **`[e]dit` YAML check** (`review.workflow.read_edit_file`): a broken edit.yaml prints line and column and offers `[r]eopen` / `[d]iscard`; it is never passed on.
+6. **Greenhouse EU** (`discovery/intake.py`, `apply/ats_vendor.py`): `job-boards.eu.greenhouse.io` / `boards.eu.greenhouse.io` use `boards-api.eu.greenhouse.io` (unverified against the live API: no network here) and are never rewritten to the US host.
+7. **`careerops live --record`**: keeps the record of a form that was filled and not submitted under `data/dryruns/` (git-ignored).
+
+Choices: `live --dry-run` opens no form (it stops after tailor + review), so the form in the report was filled by the assist or by `--auto --no-submit`; the working-rights drop-down has no answer in answers.yaml and
+stays NEEDS USER until the user writes one (an entry with `options`).

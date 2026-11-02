@@ -35,7 +35,8 @@ VENDOR_DOMAINS = {
 }
 ORACLE_HOST = re.compile(r"(?:^|\.)oraclecloud[\w-]*\.com$")
 JOB_BOARDS = "job-boards.greenhouse.io"
-GREENHOUSE_BOARD_HOSTS = ("boards.greenhouse.io", JOB_BOARDS)
+JOB_BOARDS_EU = "job-boards.eu.greenhouse.io"          # the EU region has its own hosts; a board there is never rewritten to the US one
+GREENHOUSE_BOARD_HOSTS = ("boards.greenhouse.io", JOB_BOARDS, "boards.eu.greenhouse.io", JOB_BOARDS_EU)
 
 
 def _host(url_or_host: str | None) -> str:
@@ -100,7 +101,7 @@ def _greenhouse_url(url: str, job: Mapping[str, Any] | None, tokens: Iterable[st
     if host in GREENHOUSE_BOARD_HOSTS:
         query = parse_qs(parts.query)
         if parts.path.rstrip("/") == "/embed/job_app" and query.get("for") and query.get("token"):      # the embedded form of a board
-            return f"https://{JOB_BOARDS}/{query['for'][0]}/jobs/{query['token'][0]}"
+            return f"https://{JOB_BOARDS_EU if '.eu.' in host else JOB_BOARDS}/{query['for'][0]}/jobs/{query['token'][0]}"
         return url
     ids = parse_qs(parts.query).get("gh_jid") or []
     jid = ids[0] if ids and ids[0].isdigit() else ""

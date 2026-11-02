@@ -35,6 +35,7 @@ from . import profile as profile_mod
 from . import typography
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
+from .letter_reason import letter_reason          # noqa: F401  (re-exported: tailor.letter_reason)
 from .profile import PROFILE_FACTS, pick_facts   # noqa: F401 — re-exported
 from .qualifiers import prompt_list, repair
 from .letter_rules import fallback_letter, gap_display, grammar_problems, term_dump_problems
@@ -54,7 +55,7 @@ from .scorer import (Keyword, _contains, cap_keywords, has_literal, ceiling, dro
 
 USAGE_SUMS = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")   # summed into report llm_usage
 FALLBACK_MARK = "used fallback letter"
-LETTER_MODES = ("off", "draft", "hook", "company")     # settings letter.mode: no letter calls at all, the model drafts one, hook.py's two variants A / B, or the 5-paragraph company letter
+LETTER_MODES = ("off", "draft", "hook", "company", "if_field")     # settings letter.mode: no letter calls at all, the model drafts one, hook.py's two variants A / B, the company letter, or (the default) the company letter written only when an application form asks for one
 LETTER_POLICIES = ("none", "template")     # settings letter.on_failure: what a letter that failed every draft becomes
 LLM_FAILED = "LLM call failed"             # in analyse's notes when only the taxonomy keywords could be used
 BANNED_OPENERS = re.compile(r"^\s*(i am writing to|i'm writing to|i am excited|i am thrilled)", re.I)
@@ -641,12 +642,12 @@ def reconcile_proof(fb: dict, sel: dict, hk: hooks.Hook, kws: list[Keyword] | No
 
 def letter_summary(letter: dict) -> str:
     """"ok", "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text, or
-    "NO LETTER (<why>)" when letter.on_failure is none and every draft was rejected."""
+    "NO LETTER (<why>)" when letter.on_failure is none and every draft was rejected: the why is the guards' own words (letter_reason.py)."""
     if letter.get("status") == "ok":
         return "ok"
     if letter.get("status") == "none":
         why = [p for p in letter.get("problems") or [] if p != FALLBACK_MARK]
-        return f"NO LETTER ({letter.get('reason') or 'no letter'}" + (f"; first: {why[0]}" if why else "") + ")"
+        return f"NO LETTER ({letter.get('reason') or letter_reason(letter)}" + (f"; first: {why[0]}" if why else "") + ")"
     if letter.get("status") == "off":
         return f"off ({letter.get('reason') or 'letter.mode: off'})"
     if letter.get("status") == "pending":
@@ -1155,17 +1156,36 @@ def _with_orgs(fb: dict, evidence: list[dict]) -> list[dict]:
     return [{**e, "org": owner.get(e["id"], ("", False))[0], "project": owner.get(e["id"], ("", False))[1]} for e in evidence]
 
 
+def deferred_letter(evidence: list[dict]) -> dict:
+    """The report's letter for letter.mode if_field at tailoring time: none is written yet; apply/letter_demand.py writes it when a form asks."""
+    return {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "off", "mode": "if_field",
+            "reason": "letter.mode: if_field: the letter is written when an application form asks for one", "notes": [],
+            "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
+
+
+def letter_raw_mode(settings) -> str:
+    """The letter.mode setting as written: off | draft | hook | company | if_field. A missing key is `if_field` (v2.4.1), an empty one or an
+    unquoted YAML `off` (the boolean false) is `off`."""
+    raw = settings["letter"].get("mode", "if_field")
+    mode = "off" if raw is None or raw is False else str(raw).strip().lower()
+    if mode not in LETTER_MODES:
+        raise ValueError(f"letter.mode must be one of {', '.join(LETTER_MODES)}, got {mode!r}")
+    return mode
+
+
+def letter_deferred(settings) -> bool:
+    """letter.mode if_field: no letter is written at tailoring time; one is written when the application form has a cover-letter control."""
+    return letter_raw_mode(settings) == "if_field"
+
+
 def letter_mode(settings) -> str:
     """settings letter.mode: "off" = no letter is asked for and no letter call is made; "draft" = the model drafts one from the
     evidence fields (evidence_fields.py), under every letter check; "hook" = two letters, A (strengths) and B (A plus one honest gap),
     each opening with the hook's sentence (letters.py). "hook" needs the hook: with hook.enabled false a "draft" letter is made; with
     the hook on but none buildable both letters are "none". "company" = one 200-320 word letter in up to seven short paragraphs
     (company_letter.py): the hook, what it shows, the ad's skills, the roles, why this team, an optional honest gap, the 20-minute ask."""
-    raw = settings["letter"].get("mode")
-    mode = "off" if raw is None or raw is False else str(raw).strip().lower()          # YAML reads an unquoted `off` as False
-    if mode not in LETTER_MODES:
-        raise ValueError(f"letter.mode must be one of {', '.join(LETTER_MODES)}, got {mode!r}")
-    return mode
+    mode = letter_raw_mode(settings)                       # YAML reads an unquoted `off` as False (letter_raw_mode)
+    return "company" if mode == "if_field" else mode       # if_field writes the company letter, later
 
 
 def letter_policy(settings) -> str:
@@ -1319,13 +1339,18 @@ def letter_header(ctx: dict, kws: list[Keyword]) -> dict:
 
 def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_dir: Path, letter_name: str, team: str,
              gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False,
-             family_line: str = "", revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None):
-    """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `hook` with a hook:
+             family_line: str = "", revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None,
+             force: bool = False):
+    """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `if_field` nothing is written
+    here (`force` False: tailoring time) and the letter dict says so; a form that asks for one writes it later (`force` True, regenerate_letter).
+    In letter.mode `hook` with a hook:
     letters A and B (letters.py), the current choice is A when it passed its checks. In mode `hook` when the hook is on but none
     could be built: both letters are "none" (no old single letter takes their place, so the letter settings are never silently
     bypassed). With hook.enabled false, or in mode `draft`, the one letter of `_make_letter`. With the hook on, none buildable and the
     role family's profile line (`family_line`, the fact bank's `profile_body`) known, sentence 1 is that line word for word and the rest is
     assembled as usual (`letters.family_hook`); without such a line the letters are "none"."""
+    if letter_deferred(settings) and not force:
+        return None, deferred_letter(evidence), None
     if letter_mode(settings) == "company":
         from . import company_letter as CL
 
@@ -1545,7 +1570,7 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict, feedback: str = "
                                     rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws), ids,
                                     rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None,
                                     rep.get("family_line") or "", revision_for(settings, rep, feedback),
-                                    cv=_letter_cv(rep["context"]), header=letter_header(rep["context"], kws))
+                                    cv=_letter_cv(rep["context"]), header=letter_header(rep["context"], kws), force=True)
     install_letter(job, fb, rep, pdf, letter, letters)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]

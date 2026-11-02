@@ -15,6 +15,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 from urllib.parse import urlparse
 
 import yaml
@@ -29,6 +30,7 @@ from ..discovery.gates import is_sponsor_flag
 from ..hook import headline_lint
 from ..llm import usage
 from ..tailoring import doccheck
+from ..tailoring.letter_reason import letter_reason
 from ..tailoring.profile import bank_sentences as profile_sentences
 from ..tailoring.queue import order
 from ..tailoring.render import DATE_SEPARATOR, page2_fill, page_count, pdf_text, render_cv
@@ -384,7 +386,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
         *typography_lines(rep),
         *ranking_lines(rep),
         (f"Letter score {letter['score']:.0%}" if letter.get("score") is not None
-         else "Letter: off (letter.mode: off; write your own, or apply without)" if letter.get("status") == "off"
+         else f"Letter: off ({letter.get('reason') or 'letter.mode: off'}; write your own, or apply without)" if letter.get("status") == "off"
          else "Letter: none (you chose to go without one)" if letter.get("status") == "declined"
          else "Letter: none")
         + (f" | letter issues: {letter['problems']}" if letter['problems'] else ""),
@@ -403,7 +405,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
     if letter_status(rep) == "fallback":
         lines.append("LETTER IS A FALLBACK — regenerate (l) before approving")
     if letter_status(rep) == "none":
-        lines.append(NO_LETTER_BANNER + f"  ({letter.get('reason') or 'no letter'}; regenerate (l) to try again)")
+        lines.append(NO_LETTER_BANNER + f"  ({letter_reason(letter)}; regenerate (l) to try again)")
     wording = prio.wording_line(str(prio._get(job, "description") or ""))     # a job row, or a dict without the JD
     if wording:
         lines.append(wording)
@@ -598,6 +600,34 @@ def edit_file_for(rep: dict) -> dict:
     return {"profile": ctx["profile"],
             "bullets": {bid: txt for sec in ("experience", "projects") for e in ctx[sec]
                         for bid, txt in zip(e["bullet_ids"], e["bullets"])}}
+
+
+def read_edit_file(path: Path, ask: Callable[[str], str], open_editor: Callable[[Path], object]) -> dict | None:
+    """The parsed `edit.yaml` once the editor has closed, or None when the person discards it. A file that does not parse (a stray `x` line, a
+    tab, an unclosed quote) is never passed on: the line and column are printed and the person chooses [r]eopen (the editor opens again, then the
+    file is read again) or [d]iscard (the CV stays as it was). Anything else asks again. A file that parses but is not a mapping is refused the same way."""
+    while True:
+        problem = ""
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+            problem = f"the file must be a mapping with `profile:` and `bullets:` (it holds {type(data).__name__})"
+        except yaml.YAMLError as e:
+            mark = getattr(e, "problem_mark", None)
+            where = f"line {mark.line + 1}, column {mark.column + 1}: " if mark is not None else ""
+            problem = f"{where}{getattr(e, 'problem', None) or e}"
+        except (OSError, UnicodeDecodeError) as e:
+            problem = f"cannot read the file: {e}"
+        print(f"  edit.yaml was not accepted, so nothing was changed: {problem}")
+        while True:
+            choice = (ask("  [r]eopen the file / [d]iscard your edits > ") or "").strip().lower()
+            if choice in ("r", "reopen"):
+                open_editor(path)
+                break
+            if choice in ("d", "discard"):
+                print("  edits discarded; the CV is as it was")
+                return None
 
 
 def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> list[str]:
@@ -874,7 +904,10 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                             encoding="utf-8")
             editor = os.environ.get("EDITOR", "notepad" if platform.system() == "Windows" else "nano")
             subprocess.call([editor, str(path)])
-            warns = apply_edits(db, job, rep, yaml.safe_load(path.read_text(encoding="utf-8")), fb, prefs)
+            edited = read_edit_file(path, ask, lambda p: subprocess.call([editor, str(p)]))
+            if edited is None:
+                continue
+            warns = apply_edits(db, job, rep, edited, fb, prefs)
             for w in warns:
                 print("  WARNING:", w)
             print(f"  re-scored: {rep['final']['score']:.0%} literal, {rep['final']['pages']} page(s)")

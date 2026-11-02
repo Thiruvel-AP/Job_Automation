@@ -223,6 +223,18 @@ class FormLoop:
         except OSError:
             pass                                          # the log is a record, never a reason to stop a form
 
+    def log_note(self, question: str, step: str, **info: Any) -> None:
+        """A row of formloop.jsonl for something the caller did to a field that is not a free-text one (a city picked, the how-heard option chosen)."""
+        if self.folder is None:
+            return
+        row = {"time": self.now().isoformat(timespec="seconds"), "field": question[:160], "key": "", "step": step, **info}
+        try:
+            self.folder.mkdir(parents=True, exist_ok=True)
+            with open(self.folder / FILE, "a", encoding="utf-8", newline="\n") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+        except OSError:
+            pass
+
     def _note(self, text: str) -> None:
         self.ctx.result.filled.append(text)
         self.added.append(text)
@@ -360,6 +372,13 @@ class FormLoop:
     def _give_up(self, f: Field, p: ft.Proposal) -> None:
         ctx, fs = self.ctx, self.ctx.freetext
         q = f.question
+        if p is not None and p.handoff and f.required:                 # no JD to draft a motivation answer from: nothing is drafted, the job is handed off
+            ctx.needs_user[q] = p.handoff
+            self.skipped[f.key] = "required: " + p.handoff
+            self.log(f, "give_up", required=True, why=p.handoff)
+            from .formfind import HandOff
+
+            raise HandOff(p.handoff)
         if f.required:                                      # the person writes it (strict) or is told (assist), as before
             text = fs._write(q, p.cls, p.plan, p.limit, ctx.strict, p.why_not)
             if text and self._put(f, text):

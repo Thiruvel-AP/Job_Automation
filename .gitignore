@@ -1,6 +1,7 @@
 .env
 .venv/
 data/
+data/dryruns/          # the record of a filled form (careerops live --record): personal data
 __pycache__/
 *.pyc
 *.egg-info/

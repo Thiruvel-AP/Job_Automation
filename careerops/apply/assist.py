@@ -35,7 +35,7 @@ from pathlib import Path
 
 from ..discovery import countries
 from . import answers as answers_mod
-from . import ats_vendor, attest, eo, failures as failures_mod, filler, formfind, formloop, handoff as handoff_mod, knockout, verify
+from . import ats_vendor, attest, dryrun, eo, failures as failures_mod, filler, formfind, formloop, handoff as handoff_mod, knockout, letter_demand, requiredgate, shortfields, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .guard import check_job_files
@@ -44,6 +44,14 @@ from .visa import VisaPlan, plan_for, require_plan, work_for
 # A field is a visa question when its label says so. These are answered from applicant.yaml -> visa.by_country, never from never_fill.
 VISA_FIELD = re.compile(r"right to work|visa|sponsor|immigration|work permit|work authori[sz]ation|share code", re.I)
 VISA_COLOUR = "3px solid magenta"
+
+
+def is_visa_question(text: str) -> bool:
+    """A visa / right-to-work question the visa plan answers. The visa TYPE ("please specify the type of visa you hold") is not one: it is a short
+    answer of its own that only answers.yaml `visa_type` gives (apply/shortfields.py), never the plan's Graduate-visa paragraph."""
+    return bool(VISA_FIELD.search(text)) and not shortfields.is_visa_type(text)
+
+
 EO_COLOUR = "3px solid blue"
 TEXT_TYPES = ("text", "textarea", "search", "")          # the boxes a free-text answer is typed into
 APPLY_BUTTON = formfind.APPLY_BUTTON
@@ -209,7 +217,7 @@ def _upload_files(page, cv_pdf: str | None, letter_pdf: str | None, report: dict
 def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
               letter_text: str | None = None, job=None, plan: VisaPlan | None = None,
               book: "answers_mod.AnswerBook | None" = None, history=None, freetext=None, quiet_ms: int = verify.QUIET_MS,
-              knock_ask=None, fact_bank=None) -> dict:
+              knock_ask=None, fact_bank=None, ask=None, letter_note: str = "", record: bool = False) -> dict:
     """Fill what we safely can on the current page. Returns a report of filled / manual / uploaded fields.
 
     Order (apply/verify.py): the files first (never the "Autofill from resume" control); then, if a file was uploaded, wait until the form has
@@ -239,8 +247,10 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     never = applicant.get("never_fill", [])
     tracker = verify.Tracker()
     ctx = filler.Ctx(dict(job) if job is not None else {}, applicant, book or answers_mod.AnswerBook(), Path("answers.yaml"), plan, cv_pdf, letter_pdf,
-                     letter_text, ask=lambda prompt: "", out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
+                     letter_text, ask=ask or (lambda prompt: ""), out=print, history=history or (lambda company: False), result=_Filled(), strict=False,
                      freetext=freetext, tracker=tracker)
+    ctx.letter_note = letter_note
+    ctx.combobox = shortfields.generic_combobox                           # a script-built drop-down: its options are read, then the answers.yaml one is picked
     loop = ctx.loop = formloop.FormLoop(ctx, formloop.output_folder(ctx.job, cv_pdf))
     fields = loop.begin(page)                                            # every field of the form, printed before anything is filled
     knocks = knockout.scan([(f.question, f.options) for f in fields], applicant, book, ctx.job, plan, fact_bank)       # before anything is uploaded or drafted
@@ -273,7 +283,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             return
 
         lever_note = ""
-        if VISA_FIELD.search(f"{question} {label}"):
+        if is_visa_question(f"{question} {label}"):
             # Before never_fill on purpose: visa/sponsor/right-to-work are in never_fill so that an unrecognised variant is
             # left to the user, but a recognised one is answered from the visa block. Every one is highlighted and printed.
             if typ == "radio":
@@ -327,6 +337,7 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
             if why.startswith("Lever"):
                 ctx.recommended.append(f"{question[:100]} -> {why.split('recommended: ')[-1]}")
             if picked == UNCHECKED_NO:                       # a single check box and the answer is No: nothing to tick, and nothing is missing
+                ctx.source(question, "answered No (equal opportunities)")
                 print(f"CHECK EO ANSWER [{entry.key}]: {question[:150]} -> {picked}")
                 report["eo"].append({"question": question, "key": entry.key, "value": "No", "options": texts})
                 return
@@ -370,10 +381,22 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     report["attestations"] = list(ctx.attestations)
     report["drafts"] = loop.paste_drafts()
 
+    report["verified"], report["lost"] = [], []
     if tracker.fills:                                                    # pass 3: read back everything this run filled
         print("\nReading back every field that was filled:")
         report["verified"], report["lost"] = tracker.verify(page)
         report["required_empty"].extend(x for x in report["lost"] if x not in report["required_empty"])
+    rows = requiredgate.check(page, ctx, report["verified"], report["lost"], loop.status, getattr(ctx, "letter_note", ""))        # F4: every required field, one status
+    report["required_table"] = [r.as_dict() for r in rows]
+    report["needs_user"] = dict(ctx.needs_user)
+    report["sources"] = dict(ctx.sources)
+    if record:                                                           # the dry-run record (apply/dryrun.py) wants every field, not only the required ones
+        report["all_fields"] = [x.as_dict() for x in requiredgate.check(page, ctx, report["verified"], report["lost"], loop.status,
+                                                                          getattr(ctx, "letter_note", ""), required_only=False)]
+    print()
+    for line in requiredgate.render(rows):
+        print(line)
+    report["required_empty"].extend(r.label[:60] for r in requiredgate.blocking(rows) if r.label[:60] not in report["required_empty"])
     return report
 
 
@@ -438,7 +461,7 @@ def write_unpasted(job: dict, rep: dict, applicant: dict, book, plan, url: str, 
 
 
 def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
-           handoff=None, failures=None, fact_bank=None, tokens=()) -> dict:
+           handoff=None, failures=None, fact_bank=None, tokens=(), letter_maker=None, record=False) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. Whatever happens to the browser (the person closed it
     after submitting, the page went away), the confirmation prompt is always reached and the browser teardown cannot raise a Playwright
     error, so the application record is never lost: `live` goes on to "Did YOU submit?" and mark-applied.
@@ -517,9 +540,26 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                 if count(problem):
                     raise formfind.HandOff(f"{failures.limit} failed attempts on this job: {problem}")
             else:
+                note = ""
+                if by_agent is None:                        # letter.mode if_field: a form that asks for a cover letter gets one, written now if need be
+                    from ..tailoring.letter_reason import letter_reason
+
+                    prov = letter_demand.provide(page, rep, letter, letter_text, letter_maker, print, reason=letter_reason(rep.get("letter")))
+                    letter, letter_text, note = prov.pdf, prov.text, prov.note
+                    if prov.handoff:
+                        raise formfind.HandOff(prov.handoff)
+                    if prov.made:
+                        check_job_files(job, cv, letter)
                 r = agent_report(by_agent) if by_agent is not None else fill_page(
                     page, applicant, cv, letter, letter_text=letter_text, job=job, plan=plan, book=book, history=history, freetext=freetext,
-                    knock_ask=ask, fact_bank=fact_bank)
+                    knock_ask=ask, fact_bank=fact_bank, ask=ask, letter_note=note, record=record)
+                if record and by_agent is None and r.get("all_fields"):
+                    try:
+                        dryrun.record(dryrun.folder_for(rep, job), page, job, rep, [requiredgate.Row(**d) for d in r.pop("all_fields")],
+                                      cv=cv, letter=letter, letter_text=letter_text, freetext=freetext)
+                    except OSError as e:
+                        print(f"  dry-run record not written: {e}")
+                r.pop("all_fields", None)
                 refused = verify.upload_refused(page)
                 trouble = (f"the form refused an upload: {refused}" if refused else
                            f"the form emptied field(s) after they were filled: {'; '.join(r['lost'][:5])}" if r.get("lost") else "")
