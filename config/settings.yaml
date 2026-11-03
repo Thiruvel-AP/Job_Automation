@@ -178,6 +178,9 @@ discover:
   ats:
     board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
     board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
+    # v2.6: also look for these providers' boards when a slug is guessed from a company name; each hit must pass board_name_match on the company name its own reply gives.
+    # (SmartRecruiters is left out: api.smartrecruiters.com/robots.txt disallows scripts as of 3 Nov 2026. Pinpoint and Eploy are never guessed: name them under sources:.)
+    providers: [workable, teamtailor, recruitee, personio]
   reed:
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
     location: null                 # Reed's locationName; null = all of the UK

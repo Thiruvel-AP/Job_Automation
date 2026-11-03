@@ -35,6 +35,9 @@ GMAIL = "gmail.received"
 SOURCES = {"greenhouse.first_published": "Greenhouse first_published", "lever.createdAt": "Lever createdAt",
            "ashby.publishedAt": "Ashby publishedAt", "reed.date": "Reed date", "adzuna.created": "Adzuna created",
            "workday.postedOn": "Workday postedOn (to the day; \"30+ Days Ago\" is dated 30 days back)",
+           "workable.published_on": "Workable published_on", "smartrecruiters.releasedDate": "SmartRecruiters releasedDate",
+           "teamtailor.pubDate": "Teamtailor pubDate", "recruitee.published_at": "Recruitee published_at",
+           "personio.createdAt": "Personio createdAt", "eploy.datePosted": "Eploy datePosted (JSON-LD)",
            GMAIL: "alert email received (an upper bound)"}
 TRUSTED = frozenset(SOURCES)
 _ISO = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$")

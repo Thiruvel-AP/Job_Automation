@@ -384,6 +384,29 @@ def reminder_checks(settings, today: date | None = None, now: datetime | None = 
     return out
 
 
+def provider_checks(settings) -> list[tuple[str, object, str]]:
+    """The v2.6 employer boards (discovery/more_ats.py). Offline; warnings only: the settings these providers read, the sources.yaml entries not there yet (the lines
+    to paste are printed; this tool never edits that file) and any enabled VC board that this tool refuses by rule (robots.txt, a session cookie)."""
+    from .discovery import more_ats, registry
+
+    out: list[tuple[str, object, str]] = []
+    bad = more_ats.config_problems(settings)
+    out.append((f"employer-board settings ({len(bad)} problem(s))" if bad else "employer-board settings", True if not bad else WARN, "\n".join(bad)))
+    try:
+        reg = registry.load(settings)
+    except registry.RegistryError:
+        return out
+    lines = more_ats.missing_source_lines(reg)
+    if lines:
+        out.append((f"{len(lines)} v2.6 employer-board source(s) are not in sources.yaml", WARN, "paste into the `sources:` list (the tool never edits sources.yaml):\n" + "\n".join(lines)))
+    live = [s.id for s in reg.vc() if s.method == "consider" or "getro" in s.method]
+    if live:
+        out.append((f"VC board(s) enabled that this tool refuses by rule: {', '.join(live)}", WARN,
+                    "Consider's search needs a session cookie and CSRF token and Getro's API disallows scripts in robots.txt (checked 3 Nov 2026): set enabled: false, "
+                    "or check again with `careerops sources check`"))
+    return out
+
+
 def region_size_checks(settings) -> list[tuple[str, object, str]]:
     """Warnings only: the Companies House key (present or absent), the sources in sources.yaml with no `regions:` tag (the lines to add are printed; this tool
     never edits that file) and the share of the inbox whose company size is not known yet (the overrides, the 90-day cache and the ad text only: no network)."""
@@ -445,6 +468,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
     checks += region_size_checks(settings)
+    checks += provider_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

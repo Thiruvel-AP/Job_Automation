@@ -402,6 +402,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         c = d.run.sources.get(label, {})
         print("  " + (", ".join(f"{k} {v}" for k, v in c.items() if v) or "nothing found"))
         if label == "ats":
+            print("\n".join(d.ats_tally()))                                # board: none before / after the v2.6 providers
             print("\n".join(d.ats_report()))
     for n in d.run.notes:
         print(f"  note: {n}")

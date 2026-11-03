@@ -41,6 +41,7 @@ career-ops/
 │   │   ├── intake.py             `add-url` / `live --url`: one job ad from its link into the inbox (+ CV-Library pages)
 │   │   ├── robots.py             robots.txt rules (RFC 9309) cached 24 h; hosts never fetched (linkedin.com)
 │   │   ├── applykind.py          apply_kind (greenhouse | lever | ashby | workday | employer_other | aggregator_only) from a URL; the hosts alert resolution never fetches
+│   │   ├── more_ats.py           v2.6 employer boards: Workable · SmartRecruiters · Teamtailor · Recruitee · Personio · Pinpoint · Eploy, alert-link → board, VC boards (Getro · Consider)
 │   │   ├── http.py               the polite client discovery shares: 1 req/s per host, robots, a 401/403/429 stops the host
 │   │   ├── discover.py           `discover --ats --reed --adzuna --gmail-alerts --jobbank`: filters, dedupe, inbox files, manual queue, report
 │   │   ├── registry.py · health.py   config/sources.yaml (every source and how it is read) · the health check of each source
@@ -289,13 +290,25 @@ finds and ranks without writing, and every run is listed best priority first.
   settings.yaml (those boards are never name-checked). `discover.ignore_companies` (names, case and spacing ignored) lists archive folders
   that are not companies ("New folder", "AI Engineer"): `--ats` skips them; the folders themselves are never touched. The boards named
   token by token in `sources:` are still read. Posting lists are cached for 6
-  hours. **Workable is not read**: its API needs the account owner's token and no public posting API is documented.
+  hours. **More employer boards (v2.6, `discovery/more_ats.py`)**: Workable (the public widget, `apply.workable.com/api/v1/widget/accounts/<slug>`; the owner-token
+  API is not used), SmartRecruiters, Teamtailor (`jobs.rss`), Recruitee (`/api/offers/`), Personio (`/xml`), Pinpoint (`postings.json`) and Eploy (`/live-jobs.xml`
+  + the vacancy page's JSON-LD) are read like Greenhouse / Lever / Ashby: public no-auth endpoints, robots.txt first, one request a second per host, no cookie,
+  session, key or forged header. A slug GUESSED from a company name is tried only for providers whose reply names the company (`discover.ats.providers`), and that
+  name must match at `board_name_match` (0.90) even for a slug that spells the whole name. Pinpoint and Eploy name no company, so they are used only from a real
+  link (an alert) or from `sources:` (`sources.pinpoint: [slug]`, `sources.eploy: [{company, url}]`), never from a guess. A 401 / 403 / 429 stops that provider for
+  the run; a robots.txt that says no is counted and honoured (checked 3 Nov 2026: `api.smartrecruiters.com` and `api.getro.com` disallow scripts, so SmartRecruiters is
+  off in the shipped `discover.ats.providers`; Consider's search needs a session cookie and CSRF token, which this tool does not use). The run prints
+  `board: none  N of M companies before the v2.6 providers ... -> K of M after`, and `discover --report` the alert-resolution rate before and after. `careerops doctor`
+  prints the `sources.yaml` entries to paste (this tool never edits that file). VC portfolio boards (`method: getro | consider` in sources.yaml) list jobs of many
+  employers with a link but no ad text: each job in a role family and the selected region is looked for in full like an alert; they are all `enabled: false` for the
+  reasons above.
   **Workday** is read for the sites you list yourself, `sources.workday: [{company: Acme, url: 'https://acme.wd3.myworkdayjobs.com/en-US/External'}]`
   (also `https://<wdN>.myworkdaysite.com/recruiting/<tenant>/<site>`; empty by default; optional `queries: [...]` and `max_pages` per entry): the
   public JSON list the careers page itself uses (`POST .../wday/cxs/<tenant>/<site>/jobs`), only after the tenant's robots.txt allows `/wday/cxs/`, at
   one request a second, at most 10 list pages per tenant per run. A matching posting (role family, UK place) is read in full once. "Posted Today / N Days Ago"
   becomes the posted date, "30+ Days Ago" is freshness tier 3. An outage (HTTP 422, the maintenance page) is a note and is asked again next run,
-  never "zero jobs". Workday careers PAGES are still never fetched.
+  never "zero jobs". Workday careers PAGES are still never fetched. A Workday address in an alert is resolved the same way (v2.6): the site named by the link is
+  read through its public list and the posting whose id is in the link is the ad.
 - **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
   recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
   (`details_per_run`). An expired posting is closed.
@@ -305,7 +318,9 @@ finds and ranks without writing, and every run is listed best priority first.
   redirect links are never followed.
 - **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
   title, company and link. **linkedin.com, Indeed, CV-Library and Workday pages (`*.myworkdayjobs.com`, `*.myworkday.com`) are never
-  fetched**, to resolve an alert or for anything else in discover (only the `/wday/cxs/` list of a site under `sources.workday` is read): the job is looked for on the employer's own board by title (as for
+  fetched**, to resolve an alert or for anything else in discover (only the `/wday/cxs/` list of a Workday site, from `sources.workday` or an alert's link, is read): a link that
+  is itself on a board this tool reads (`apply.workable.com/<slug>/j/<id>`, `<slug>.teamtailor.com/jobs/<id>`, `<slug>.pinpointhq.com/postings/<id>`, a Greenhouse / Lever /
+  Ashby / Workday address ...) resolves to that employer posting (`board_link`); otherwise the job is looked for on the employer's own board by title (as for
   Adzuna); Reed links go through the Reed API. A job that cannot be resolved stays in the queue (nothing is dropped): it is appended to
   `data/jds/manual_queue.csv` (`ts, source, company, title, location, link, reason, apply_kind`, one row per link; a file from before
   `apply_kind` gets the column added to its header, its rows kept) for you to open, copy the ad and run `careerops live --clipboard`. A

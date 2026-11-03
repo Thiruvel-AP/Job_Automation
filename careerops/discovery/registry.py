@@ -21,8 +21,10 @@ import yaml
 from . import countries
 from . import region as region_mod
 
-METHODS = ("greenhouse", "ashby", "lever", "reed", "jobbank_csv", "gmail_alerts", "dedupe_only")
 ATS_METHODS = ("greenhouse", "ashby", "lever")
+MORE_METHODS = ("workable", "smartrecruiters", "teamtailor", "pinpoint", "recruitee", "personio", "workday")        # v2.6: more_ats.py (+ workday.py), boards found per company
+VC_METHODS = ("getro", "consider")                                                                                # v2.6: multi-employer VC portfolio boards (more_ats.vc_read)
+METHODS = ("greenhouse", "ashby", "lever", "reed", "jobbank_csv", "gmail_alerts", "dedupe_only", *MORE_METHODS, *VC_METHODS)
 PARSERS = ("linkedin", "cvlibrary", "indeed", "reed")           # the dedicated alert parsers (gmail.py); others use the generic one
 ID_RX = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
 TOKEN_RX = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$")
@@ -116,6 +118,10 @@ class Registry:
                 best = rank
         return best[2] if best else None
 
+    def vc(self) -> list[Source]:
+        """The enabled VC portfolio boards (getro / consider): `url` is the board's page, `token` its collection / board id when the page does not carry it."""
+        return [s for s in self.active() if s.method in VC_METHODS]
+
     # ---- boards named by token
     def boards(self) -> list:
         """ats.Board for every enabled greenhouse / ashby / lever entry that has a token."""
@@ -128,8 +134,12 @@ class Registry:
         method (reed, cv-library, a tokenless greenhouse / ashby / lever entry). None for what the registry does not list (adzuna)."""
         if c.origin.startswith("gmail:"):
             return self.by_kind(c.origin.split(":", 1)[1])
+        if c.origin.startswith("vc:"):                               # an ad found through a VC portfolio board is credited to that board
+            return self.get(c.origin.split(":", 1)[1])
         if c.board:
             ats, _, slug = c.board.partition(":")
+            if ats in VC_METHODS:                                  # a VC board's jobs are credited to its source (the board's slug is the source id)
+                return self.get(slug)
             for s in self.with_method(*ATS_METHODS):
                 if s.token and s.method == ats.replace("lever_eu", "lever") and s.token.lower() == slug.lower():
                     return s
@@ -189,8 +199,8 @@ def parse(raw: object, source_file: str = "sources.yaml") -> Registry:
         if method == "gmail_alerts" and not domains:
             raise RegistryError(f"{where}: a gmail_alerts source needs 'domains' (the alert emails' sender domains)")
         token = str(e.get("token") or "").strip()
-        if token and method not in ATS_METHODS:
-            raise RegistryError(f"{where}: 'token' only goes with greenhouse, ashby or lever")
+        if token and method not in (*ATS_METHODS, *VC_METHODS):
+            raise RegistryError(f"{where}: 'token' only goes with greenhouse, ashby, lever, getro or consider")
         if token and not TOKEN_RX.match(token):
             raise RegistryError(f"{where}: token {token!r} is not a board token")
         parser = str(e.get("parser") or "").strip()

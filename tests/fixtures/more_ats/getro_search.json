@@ -1,0 +1,33 @@
+{
+ "results": {
+  "count": 2,
+  "jobs": [
+   {
+    "id": 1,
+    "title": "Data Scientist",
+    "url": "https://job-boards.greenhouse.io/acme/jobs/9001",
+    "organization": {
+     "name": "Acme Analytics"
+    },
+    "locations": [
+     "London, United Kingdom"
+    ],
+    "created_at": 1793000000,
+    "work_mode": "hybrid"
+   },
+   {
+    "id": 2,
+    "title": "Data Scientist",
+    "url": "https://job-boards.greenhouse.io/globex/jobs/9002",
+    "organization": {
+     "name": "Globex"
+    },
+    "locations": [
+     "New York, NY, United States"
+    ],
+    "created_at": 1793000000,
+    "work_mode": "onsite"
+   }
+  ]
+ }
+}

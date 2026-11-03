@@ -19,8 +19,9 @@ from difflib import SequenceMatcher
 from typing import Callable
 
 from . import ats as ats_mod
+from . import more_ats
 from .ats import Board, Posting
-from .http import FetchError, Fetcher
+from .http import Blocked, FetchError, Fetcher
 from .register import normalise
 from .seeds import Seed
 
@@ -35,6 +36,10 @@ class BoardIndex:
         self.days = float(settings["discover"].get("ats", {}).get("board_cache_days", 30))
         self.name_match = float(settings["discover"].get("ats", {}).get("board_name_match", BOARD_NAME_MATCH))
         self.clock = clock
+        wanted = (settings["discover"].get("ats") or {}).get("providers")        # discover.ats.providers: the v2.6 providers asked when a slug is guessed
+        self.more = tuple(p for p in (wanted if isinstance(wanted, list) else more_ats.NAME_CHECKED) if p in more_ats.NAME_CHECKED)
+        self.stopped: dict[str, str] = {}               # provider -> why: it answered 401 / 403 / 429 this run, so it is not asked again (never worked around)
+        self.refused: dict[str, list] = {}              # provider -> [count, first message]: robots.txt (or a session requirement) said no this run
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.data: dict[str, dict] = data if isinstance(data, dict) else {}
@@ -51,8 +56,26 @@ class BoardIndex:
             pass
         return None
 
-    def put(self, ats: str, token: str, found: bool) -> None:
-        self.data[f"{ats}:{token}"] = {"ts": self.clock().isoformat(timespec="seconds"), "found": found}
+    def put(self, ats: str, token: str, found: bool, slug: str = "") -> None:
+        self.data[f"{ats}:{token}"] = {"ts": self.clock().isoformat(timespec="seconds"), "found": found, **({"slug": slug} if slug else {})}
+
+    def slug(self, ats: str, token: str) -> str:
+        """The slug a provider answered for this token (Personio: the host that has the board), else the token."""
+        return str((self.data.get(f"{ats}:{token}") or {}).get("slug") or token)
+
+    def notes(self) -> list[str]:
+        """One line per provider that was stopped or refused in this run (for the run's notes)."""
+        out = [f"ats: {a} stopped for this run: {why}" for a, why in sorted(self.stopped.items())]
+        out += [f"ats: {a} refused {n} request(s) (not asked again where it said no): {why}" for a, (n, why) in sorted(self.refused.items())]
+        return out
+
+    def stop(self, ats: str, e: Blocked) -> None:
+        """A provider said no: a 401 / 403 / 429 stops the provider for the run; a robots.txt refusal or a session requirement is counted."""
+        if getattr(e, "status", None):
+            self.stopped.setdefault(ats, str(e))
+        else:
+            row = self.refused.setdefault(ats, [0, str(e)])
+            row[0] += 1
 
     def name(self, ats: str, token: str) -> str | None:
         """The company name the board gave itself ('' = it has none), kept with the answer; None when it was never asked."""
@@ -95,6 +118,20 @@ def names_match(board_name: str, company: str, threshold: float = BOARD_NAME_MAT
     """Is this board's own company name the company's? Normalised (case, punctuation, Ltd / plc) and compared at `threshold`."""
     a, b = normalise(board_name or ""), normalise(company or "")
     return bool(a and b) and SequenceMatcher(None, a, b).ratio() >= threshold
+
+
+def verify_named(ats: str, token: str, company: str, index: BoardIndex, hint: str | None = None) -> tuple[bool, str]:
+    """(accepted, why not) for a board of a v2.6 provider found by GUESSING a slug: the company name its own reply gives must match the company's at
+    discover.ats.board_name_match (0.90), even for a slug that spells the whole name (a Workable `monzo` is not necessarily Monzo). A slug already verified
+    for this company (`hint`) is taken at its word."""
+    if hint and token == hint:
+        return True, ""
+    name = index.name(ats, token)
+    if not name:
+        return False, f"{ats}/{token} gives no company name, so the guessed slug '{token}' cannot be checked against '{company}'"
+    if names_match(more_ats.clean_name(name), company, index.name_match):
+        return True, ""
+    return False, f"the {ats} board '{token}' is called '{name}', not '{company}' (needs a {index.name_match:.2f} match)"
 
 
 def board_name(ats: str, token: str, fetcher: Fetcher, index: BoardIndex) -> str | None:
@@ -156,8 +193,36 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             index.put(ats, token, found)
             if found:
                 hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
+        for ats in index.more:                            # the v2.6 providers: their reply names the company, so every guess is name-checked
+            if ats in index.stopped:
+                continue
+            known = index.get(ats, token)
+            if known is False:
+                continue
+            slug = index.slug(ats, token)
+            if known is True:
+                hits.append((Board(ats, slug, seed.name, seed.origin), None))
+                continue
+            asked = True
+            try:
+                reply = more_ats.fetch(ats, token, fetcher, seed.name)
+            except Blocked as e:
+                index.stop(ats, e)
+                continue
+            except FetchError as e:
+                f.errors.append(str(e))
+                continue
+            if reply.dns:
+                continue
+            index.put(ats, token, reply.found, reply.slug if reply.slug != token else "")
+            if reply.found:
+                index.set_name(ats, token, reply.name)
+                hits.append((Board(ats, reply.slug or token, seed.name, seed.origin), None if reply.detail else reply.postings))
         for board, posts in hits:
-            ok, why = (True, "") if token in full or token == seed.hint else verify_shortened(board, seed.name, fetcher, index)
+            if board.ats in more_ats.NAME_CHECKED:
+                ok, why = verify_named(board.ats, token, seed.name, index, seed.hint)
+            else:
+                ok, why = (True, "") if token in full or token == seed.hint else verify_shortened(board, seed.name, fetcher, index)
             if not ok:
                 f.unverified.append((board, why))
                 continue

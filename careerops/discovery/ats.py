@@ -8,7 +8,8 @@ The three APIs are the ones their own documentation publishes for programs, no k
   Greenhouse  GET boards-api.greenhouse.io/v1/boards/{token}[/jobs?content=true]     (docs.greenhouse.io/job-board.html)
   Lever       GET api.lever.co/v0/postings/{site}?mode=json  (api.eu.lever.co for EU) (github.com/lever/postings-api)
   Ashby       GET api.ashbyhq.com/posting-api/job-board/{board}                        (developers.ashbyhq.com)
-Workable has no public posting API: its API (workable.com/spi/v3) needs the account owner's token, so Workable is not read.
+Workable's account API (workable.com/spi/v3) needs the owner's token and is not used; its public widget (apply.workable.com/api/v1/widget/accounts/<slug>)
+is, with the other providers added in v2.6 (discovery/more_ats.py: Workable, SmartRecruiters, Teamtailor, Recruitee, Personio, Pinpoint, Eploy).
 Everything goes through discovery/http.py: robots.txt, one request a second per host, a 401 / 403 / 429 stops the host.
 """
 from __future__ import annotations
@@ -18,6 +19,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 from ..db import DB, now
 from .http import Blocked, FetchError, Fetcher
@@ -200,6 +202,9 @@ PROVIDERS = ("greenhouse", "lever", "lever_eu", "ashby")
 
 def board_request(ats: str, slug: str) -> tuple[str, dict | None, str]:
     """(url, params, what) of the call that lists a board's postings with their text."""
+    from . import more_ats                                       # imported here: more_ats.py imports Board and Posting from this module
+    if ats in more_ats.SINGLE:
+        return more_ats.endpoint(ats, slug)
     if ats == "greenhouse":
         return f"{GH}/{slug}/jobs", {"content": "true"}, f"Greenhouse board {slug}"
     if ats in LEVER:
@@ -245,9 +250,13 @@ def parse_postings(ats: str, data, name: str) -> list[Posting]:
     return out
 
 
-def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None) -> list[Posting]:
+def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None, keep=None) -> list[Posting]:
     """Every open posting on the board, with its description (one request: all three APIs return the text in the list).
-    [] for a board that does not exist. Raises FetchError / Blocked on a failure."""
+    [] for a board that does not exist. Raises FetchError / Blocked on a failure. The v2.6 providers (more_ats.py) whose list has no text
+    (SmartRecruiters, Eploy) read in full the postings `keep` accepts."""
+    from . import more_ats
+    if board.ats in more_ats.SINGLE:
+        return more_ats.board_postings(board, fetcher, keep)
     if board.ats == "workday":                                  # its own request (a POST) and its own shape: discovery/workday.py
         from . import workday
         return workday.board_postings(board, fetcher)
@@ -383,7 +392,16 @@ def configured_boards(settings) -> list[Board]:
         for e in src.get(key) or []:
             slug, name = (e["slug"], e.get("name") or e["slug"]) if isinstance(e, dict) else (e, e.replace("-", " ").title())
             out.append(Board(ats, str(slug), str(name), "config"))
-    from . import workday                                      # imported here: workday.py imports Board and Posting from this module
+    from . import more_ats, workday                            # imported here: workday.py and more_ats.py import Board and Posting from this module
+    for key in more_ats.SINGLE:                                # sources.workable / smartrecruiters / teamtailor / recruitee / personio / pinpoint: slugs, as above
+        for e in src.get(key) or []:
+            if key == "eploy":                                 # sources.eploy: [{company, url}]: the tenant's host
+                host = urlparse(str(e.get("url") or "")).hostname if isinstance(e, dict) else None
+                if host and e.get("company"):
+                    out.append(Board("eploy", host.lower(), str(e["company"]), "config"))
+                continue
+            slug, name = (e["slug"], e.get("name") or e["slug"]) if isinstance(e, dict) else (e, e.replace("-", " ").title())
+            out.append(Board(key, str(slug), str(name), "config"))
     out += [e.board() for e in workday.entries(settings)]       # sources.workday: [{company, url}] (discovery/workday.py)
     return out
 

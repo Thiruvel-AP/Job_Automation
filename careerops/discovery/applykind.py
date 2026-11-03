@@ -49,8 +49,9 @@ def kind_of(url: str | None) -> str:
 
 
 def board_kind(ats: str) -> str:
-    """The kind of a posting read off a board of this provider (lever_eu is Lever)."""
-    return "lever" if ats.startswith("lever") else ats
+    """The kind of a posting read off a board of this provider (lever_eu is Lever). The v2.6 providers have no form agent: their kind is the employer's page."""
+    ats = "lever" if ats.startswith("lever") else ats
+    return ats if ats in KINDS else "employer_other"
 
 
 def line(url: str | None, kind: str | None = None) -> str:

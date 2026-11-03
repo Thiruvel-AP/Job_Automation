@@ -31,12 +31,15 @@ from . import ats as ats_mod
 from . import discover as disc
 from . import gmail, jobbank, reed
 from .http import Blocked, FetchError, Fetcher
-from .registry import ATS_METHODS, Registry, Source
+from . import more_ats
+from .registry import ATS_METHODS, MORE_METHODS, VC_METHODS, Registry, Source
 from .robots import host_of
 
 COLUMNS = ["ts", "source", "name", "method", "country", "status", "new_jobs", "reachable", "robots", "credentials", "alerts",
            "postings", "detail", "jobs_parsed"]
-API_PROBE = {"greenhouse": ats_mod.GH, "lever": ats_mod.LEVER["lever"], "ashby": ats_mod.ASHBY}
+API_PROBE = {"greenhouse": ats_mod.GH, "lever": ats_mod.LEVER["lever"], "ashby": ats_mod.ASHBY,
+             "workable": "https://apply.workable.com/api/v1/widget/accounts", "smartrecruiters": "https://api.smartrecruiters.com/v1/companies"}
+VC_API = {"getro": "https://api.getro.com/api/v2/collections/", "consider": "/api-boards/search-jobs"}
 
 
 @dataclass
@@ -185,6 +188,47 @@ def _check_ats(row: Row, ctx: Context) -> None:
         row.detail = "the boards are found per company by `discover --ats`; this checks the API host only"
 
 
+def _check_more(row: Row, ctx: Context) -> None:
+    """The v2.6 single-company providers. Workable and SmartRecruiters have one API host: robots.txt and the host answering are checked. Teamtailor, Recruitee,
+    Personio and Pinpoint have one host per company, so there is nothing to probe in general: each board's robots.txt is read before its first request.
+    Workday boards are the sites under `sources.workday`."""
+    src = row.source
+    if src.method == "workday":
+        from . import workday
+        n, bad = len(workday.entries(ctx.settings)), workday.config_problems(ctx.settings)
+        row.detail = f"{n} Workday site(s) in settings sources.workday" + (f"; {bad[0]}" if bad else "")
+        if ctx.run is not None and "ats" in ctx.run.sources:
+            row.postings = int(ctx.run.sources["ats"].get("seen", 0))
+        return
+    if src.method in API_PROBE:
+        return _check_ats(row, ctx)
+    row.detail = ("one host per company: each board's robots.txt is read before its first request; "
+                  + ("found from a link or sources:, never guessed" if src.method in more_ats.LINK_ONLY else "found per company by `discover --ats`"))
+    if ctx.run is not None and "ats" in ctx.run.sources:
+        row.postings = int(ctx.run.sources["ats"].get("seen", 0))
+
+
+def _check_vc(row: Row, ctx: Context) -> None:
+    """A VC portfolio board: robots.txt of its search API, then (when allowed) one read of the board."""
+    src = row.source
+    api = VC_API[src.method] if src.method == "getro" else f"https://{host_of(src.url)}{VC_API['consider']}"
+    row.robots = ctx.fetcher.robots_state(api)
+    if row.robots == "disallowed":
+        row.status, row.reachable = "blocked", "no"
+        row.detail = f"robots.txt of {host_of(api)} disallows its search API; the board is not read"
+        return
+    try:
+        posts = more_ats.vc_read(src.method, src.url, src.token, ctx.fetcher)
+    except Blocked as e:
+        return _blocked(row, e)
+    except FetchError as e:
+        row.status, row.reachable, row.detail = "unreachable", "no", str(e)
+        return
+    row.reachable, row.postings = "yes", len(posts)
+    if not posts:
+        row.status, row.detail = "quiet", "the board answered but lists no job"
+
+
 def _check_reed(row: Row, ctx: Context) -> None:
     if not os.environ.get("REED_API_KEY", "").strip():
         row.status, row.credentials = "no_credentials", "missing"
@@ -242,6 +286,10 @@ def check_source(src: Source, ctx: Context) -> Row:
     try:
         if src.method in ATS_METHODS:
             _check_ats(row, ctx)
+        elif src.method in MORE_METHODS:
+            _check_more(row, ctx)
+        elif src.method in VC_METHODS:
+            _check_vc(row, ctx)
         elif src.method == "reed":
             _check_reed(row, ctx)
         elif src.method == "jobbank_csv":

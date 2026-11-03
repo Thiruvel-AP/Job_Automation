@@ -63,7 +63,7 @@ from . import candidate as cand
 from ..apply import decided as decided_mod
 from ..apply import listing_keys as LK
 from . import boards as boards_mod
-from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, more_ats, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import region as region_mod
 from . import workday as workday_mod
 from . import register as sponsors
@@ -85,7 +85,8 @@ SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or
 TITLE_MATCH = 0.9                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
 COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_capped",
             "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified", "possible_repost")
-RESOLVED_BY = ("reed", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
+RESOLVED_BY = ("reed", "board_link", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
+OLD_PROVIDERS = (*ats_mod.PROVIDERS, "workday")                 # the boards read before v2.6: the "before" of the v2.6 report lines
 
 
 def role_reason(title: str) -> str:
@@ -435,6 +436,11 @@ class BoardCache:
                 return cand.family_of(c, self.settings) is not None and cand.uk_ok(c, self.settings)
             posts = workday_mod.board_postings(board, self.fetcher, keep=keep, today=self.clock().date(),
                                                **workday_mod.options_for(self.settings, board))
+        elif board.ats in more_ats.SINGLE:                 # SmartRecruiters / Eploy lists have no text: the postings in a role family (and a place, when known) are read in full
+            def keep_more(p: ats_mod.Posting) -> bool:
+                c = posting_candidate(board, p)
+                return cand.family_of(c, self.settings) is not None and (not p.location or cand.uk_ok(c, self.settings))
+            posts = ats_mod.board_postings(board, self.fetcher, keep=keep_more)
         else:
             posts = ats_mod.board_postings(board, self.fetcher)
         self.put(board, posts)
@@ -492,6 +498,31 @@ class BoardLookup:
         self.findings.append(finding)
         self.guessed[norm] = finding.boards
         return finding.boards
+
+    def find_by_link(self, company: str, title: str, location: str, link: str) -> tuple[ats_mod.Board, ats_mod.Posting] | None:
+        """The employer's own posting an alert's LINK points to, when the link is on a board this tool reads (more_ats.link_board: Workable, SmartRecruiters,
+        Teamtailor, Recruitee, Personio, Pinpoint, Workday, and the Greenhouse / Lever / Ashby addresses): the board is named by the link (no slug is guessed, so
+        Pinpoint works too), the posting is the one whose id is in the link, else (a link to the board only) the one titled like the alert. Nothing is requested
+        from a linkedin / indeed / cv-library address (they name no board). None when the link names no such board or the posting is not on it any more."""
+        lk = more_ats.link_board(link)
+        if lk is None or applykind.host_of(link).endswith(applykind.NEVER_FETCH[:4]):
+            return None
+        board = ats_mod.Board(lk.ats, lk.slug, company or "", "link")
+        try:
+            posts = self.cache.postings(board)
+        except (FetchError, Blocked):
+            return None
+        want = cand.norm_title(title)
+        post = next((p for p in posts if p.listed and more_ats.matches(p, lk)), None)
+        if post is None and not lk.ref:
+            scored = [(SequenceMatcher(None, want, cand.norm_title(p.title)).ratio(), p) for p in posts if p.listed and cand.places_agree(location, p.location)]
+            scored = [t for t in scored if t[0] >= self.title_match and cand.level_words(title) == cand.level_words(t[1].title)]
+            post = max(scored, key=lambda t: t[0])[1] if scored else None
+        if post is None:
+            return None
+        if not post.description and lk.ats in ("smartrecruiters", "eploy"):
+            more_ats.fill(lk.ats, lk.slug, post, self.fetcher)
+        return board, post
 
     def board_name(self, board: ats_mod.Board) -> str | None:
         """The company name a Greenhouse board gives itself (one request, kept for the run); None when it cannot be read."""
@@ -554,7 +585,9 @@ def merge_boards(boards: list[ats_mod.Board], extra: list[ats_mod.Board]) -> lis
     return out
 
 
-POSTED_FIELD = {"greenhouse": "first_published", "lever": "createdAt", "lever_eu": "createdAt", "ashby": "publishedAt", "workday": "postedOn"}
+POSTED_FIELD = {"greenhouse": "first_published", "lever": "createdAt", "lever_eu": "createdAt", "ashby": "publishedAt", "workday": "postedOn",
+                "workable": "published_on", "smartrecruiters": "releasedDate", "teamtailor": "pubDate", "recruitee": "published_at", "personio": "createdAt",
+                "eploy": "datePosted"}
 
 
 def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = "") -> Candidate:
@@ -563,7 +596,7 @@ def posting_candidate(board: ats_mod.Board, p: ats_mod.Posting, origin: str = ""
     return Candidate(source=board.ats.replace("lever_eu", "lever"), company=board.name or p.company, title=p.title,
                      location=p.location, url=p.url, description=p.description, posted=posted, ext_id=p.ext_id,
                      posted_source=freshness.label(board.ats.replace("lever_eu", "lever"), POSTED_FIELD[board.ats])
-                     if posted and freshness.is_iso(posted) else "",
+                     if posted and board.ats in POSTED_FIELD and freshness.is_iso(posted) else "",
                      country=p.country, origin=origin, board=f"{board.ats}:{board.slug}", apply_url=p.url,
                      apply_kind=applykind.board_kind(board.ats))
 
@@ -849,12 +882,38 @@ class Discover:
                     return
         if self.f.backed_off:
             self.run.notes.append("ats: stopped asking " + ", ".join(f"{h} (HTTP {c})" for h, c in sorted(self.f.backed_off.items())))
+        self.run.notes += self.index.notes()
+        self.from_vc(label)
+
+    def from_vc(self, label: str) -> None:
+        """The VC portfolio boards in sources.yaml (method getro / consider): their jobs name the portfolio company and carry a link but no ad text, so each job
+        in a role family and the selected place is looked for in full like an alert (resolve_link: the link's own board, else the company's)."""
+        for src in self.registry.vc():
+            try:
+                posts = more_ats.vc_read(src.method, src.url, src.token, self.f, now=self.today)
+            except (Blocked, FetchError) as e:
+                self.run.notes.append(f"{src.id}: {e}")
+                continue
+            for p in posts:
+                self.run.count(label, "seen")
+                c = Candidate(source=src.method, company=p.company, title=p.title, location=p.location, url=p.url, description="",
+                              posted=p.posted_at or "", ext_id=p.ext_id, board=f"{src.method}:{src.id}", apply_url=p.url,
+                              apply_kind=applykind.kind_of(p.url) or "employer_other")
+                if not self.wanted(c, label) or self.duplicate(c, label):
+                    continue
+                if self.resolve_link(label, src.method, p.company, p.title, p.location, p.url, f"vc:{src.id}", counted=True, source_id=src.id) == "full":
+                    return
 
     def read_board(self, board: ats_mod.Board, finding: boards_mod.Finding, label: str) -> str:
         """Run every posting of one board through the filters; counts the ones that match the role and place into the finding."""
+        if board.ats in self.index.stopped:
+            finding.errors.append(f"{board.ats} was stopped for this run: {self.index.stopped[board.ats]}")
+            return "error"
         try:
             posts = self.cache.postings(board)
         except (Blocked, FetchError) as e:
+            if isinstance(e, Blocked) and board.ats in more_ats.SINGLE:
+                self.index.stop(board.ats, e)
             finding.errors.append(str(e))
             self.run.notes.append(str(e) if isinstance(e, (Blocked, workday_mod.WorkdayError)) else f"{board.ats}:{board.slug}: {e}")
             return "error"
@@ -868,10 +927,21 @@ class Discover:
                 return "full"
         return "ok"
 
+    def ats_tally(self) -> list[str]:
+        """The 'board: none' counts before and after the v2.6 providers, kept in the run record (`discover --report` prints them later) and returned as the line to print.
+        Before = companies with no board among Greenhouse / Lever / Ashby / Workday; after = companies with no board at all."""
+        fs = self.findings
+        before = [f for f in fs if any(b.ats in OLD_PROVIDERS for b in f.boards)]
+        self.run.sources["ats"]["companies"] = len(fs)
+        self.run.sources["ats"]["board_none_before"] = len(fs) - len(before)
+        self.run.sources["ats"]["board_none_after"] = len([f for f in fs if not f.boards])
+        return ats_none_lines(self.run.sources["ats"])
+
     def ats_report(self) -> list[str]:
         """Per company: the tokens tried, the board found (provider/token) or none, the postings that matched. Boards found first."""
         fs = self.findings
         got = [f for f in fs if f.boards]
+        self.ats_tally()
         lines = [f"ats: {len(fs)} company(ies) looked at · {len(got)} with a board · {len(fs) - len(got)} without · "
                  f"{sum(f.matched for f in fs)} job(s) matched the role and place"]
         lines += self.board_check_lines(fs)
@@ -977,6 +1047,10 @@ class Discover:
                 why = str(e)
             if c is not None:
                 step, c.apply_url, c.apply_kind = "reed", c.apply_url or c.url, c.apply_kind or "aggregator_only"
+        if c is None and link:
+            found = self.lookup.find_by_link(company, title, location, link)
+            if found:
+                c, step = posting_candidate(found[0], found[1], origin), "board_link"
         if c is None and company:
             found = self.lookup.find(company, title, location)
             if found:
@@ -997,7 +1071,7 @@ class Discover:
         link_kind = applykind.kind_of(link) or "aggregator_only"
         if c is None:
             if link_kind == "workday":
-                why = "Workday careers site (nothing is fetched from it): " + (why or "no company given")
+                why = "Workday careers site (its pages are never fetched; only the public list API was asked): " + (why or "no company given")
             self.run.credit(source_id or kind, "unresolved")
             self.to_queue(label, kind, company, title, location, link, why or "no company given", seen_at=seen_at, apply_kind=link_kind)
             return "queued"
@@ -1005,6 +1079,9 @@ class Discover:
         self.run.count(label, f"resolved_via_{step}")
         self.run.credit(source_id or kind, "resolved")
         self.run.credit(source_id or kind, f"via_{step}")
+        if step == "board_link" or (c.board.partition(":")[0] in more_ats.SINGLE):          # found only because of the v2.6 providers: the "after" of the report lines
+            self.run.count(label, "resolved_new_provider")
+            self.run.credit(source_id or kind, "via_new_provider")
         c.origin = origin
         if seen:
             c.seen = seen
@@ -1320,8 +1397,20 @@ def format_report(settings, run: Run | None = None) -> str:
         lines += resolution_lines(runs[-1].get("by_source") or {}, "Alerts resolved to the employer's board or a full ad, last run:")
         lines += resolution_lines(by_source, f"Alerts resolved, all {len(runs)} run(s):")
         lines += step_lines(runs[-1].get("sources") or {}, "Alerts resolved by step, last run:")
+        last_ats = next((r["sources"]["ats"] for r in reversed(runs) if (r.get("sources") or {}).get("ats", {}).get("companies")), None)
+        if last_ats:
+            lines += ["Companies without a job board (the last `discover --ats` run):", *("  " + x for x in ats_none_lines(last_ats))]
         lines += step_lines({s: dict(c) for s, c in total.items()}, f"Alerts resolved by step, all {len(runs)} run(s):")
     return "\n".join(lines)
+
+
+def ats_none_lines(ats: dict) -> list[str]:
+    """'board: none  219 of 267 before the v2.6 providers -> 190 of 267 after' from the ats counters of a run; [] when the run did not look at companies."""
+    n = int(ats.get("companies", 0))
+    if not n:
+        return []
+    return [f"board: none  {int(ats.get('board_none_before', 0))} of {n} companies before the v2.6 providers (Workable, SmartRecruiters, Teamtailor, Recruitee, Personio) "
+            f"-> {int(ats.get('board_none_after', 0))} of {n} after"]
 
 
 def step_lines(sources: dict, title: str) -> list[str]:
@@ -1340,6 +1429,8 @@ def resolution_lines(by_source: dict, title: str) -> list[str]:
     rows = []
     for sid in sorted(by_source):
         ok, no = int(by_source[sid].get("resolved", 0)), int(by_source[sid].get("unresolved", 0))
+        new = int(by_source[sid].get("via_new_provider", 0))
         if ok + no:
-            rows.append(f"  {sid:16s} {ok} of {ok + no} ({100 * ok / (ok + no):.0f}%)")
+            rows.append(f"  {sid:16s} {ok} of {ok + no} ({100 * ok / (ok + no):.0f}%)"
+                        + (f" · before the v2.6 providers {ok - new} of {ok + no} ({100 * (ok - new) / (ok + no):.0f}%)" if new else ""))
     return [title, *rows] if rows else []

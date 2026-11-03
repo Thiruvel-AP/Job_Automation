@@ -288,6 +288,13 @@ def check(url: str, fetcher: Fetcher, cache: Cache | None = None, now: datetime 
         hit = cache.get(url, now)
         if hit is not None:
             return hit
+    from . import more_ats
+    board = more_ats.liveness(url, fetcher)                  # a v2.6 provider's link: the employer's board says whether the posting is still listed
+    if board is not None:
+        result = Result(board[0], board[1], url)
+        if cache is not None:
+            cache.put(url, result, now)
+        return result
     try:
         r = fetcher.request(url, what="liveness check")
     except Blocked as e:

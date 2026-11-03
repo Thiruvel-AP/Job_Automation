@@ -1766,3 +1766,38 @@ entered the database), so the log, `why` and the shortlist's repost label had no
    and each `jds_done/` folder; a match is counted `duplicate`. `approved/<date>/` also joins the company + title check (as the inbox does); `jds_done/` is keys only, so a
    same-title repost of a skipped job is still written with its `Possible repost:` label. Cause of the bug: `load_known` read inbox / done / rejected only, never `approved/` or `jds_done/`.
 4. `careerops skip --url LINK` (the same as the positional argument; it did not exist before this round).
+
+## 5ay. v2.6 — more employer boards (3 Nov 2026) — **done offline** (fixtures only); the live `discover --ats --report` run is yours (see below)
+
+Why: `discover --ats` found a board for 48 of 267 archive companies; many of the 219 others use an ATS it did not read, and only 6-7% of LinkedIn / Indeed alerts (0% of
+CV-Library) reach the employer's own page, so 302 jobs sit in the manual queue. Source: `ext/career-ops/providers/` at 20b9fd3 (behaviour ported, not the JavaScript).
+
+1. **`discovery/more_ats.py`**: Workable (widget API; the fanned-out one-entry-per-location replies folded into one posting), SmartRecruiters (paged list + one detail GET per
+   posting in a role family and place), Teamtailor (`jobs.rss`), Recruitee (`/api/offers/`, sample postings dropped), Personio (`/xml`, `.de` then `.com`), Pinpoint
+   (`postings.json`, the seeded demo posting dropped), Eploy (`/live-jobs.xml` + JSON-LD of the vacancy page). Workday stays in `workday.py`. NOT ported from the reference:
+   the browser User-Agent / `Origin` / `Referer` headers it sends to Workable and Getro (forged headers), Personio's Next.js-payload page parse (only `/xml` is used).
+2. **Guessing** (`boards.find`, `BoardIndex.more`, `discover.ats.providers`): Workable, SmartRecruiters, Teamtailor, Recruitee and Personio only (their reply names the company),
+   each hit name-checked at 0.90 (`boards.verify_named`), Pinpoint and Eploy never. Answers are cached 30 days like the older providers. A 401 / 403 / 429 stops the provider for
+   the run (`BoardIndex.stop`); robots.txt refusals are counted, not retried, and listed in the run notes. A host that does not resolve is "no such board", not an error.
+3. **Alert resolution** (`discover.resolve_link`, step `board_link`; `BoardLookup.find_by_link`): the link itself names the board (`more_ats.link_board`: the seven providers, Workday,
+   and Greenhouse / Lever / Ashby addresses), the posting is the one whose id is in the link. This also resolves Workday alert links through the public `/wday/cxs/` list
+   (their careers PAGES are still never fetched; two older tests that said "nothing is requested from a Workday host" now say "only robots.txt and /wday/cxs/").
+   Companies named without a usable link go through the existing company lookup, which now also asks the new providers.
+4. **VC portfolio boards** (`method: getro | consider`, `more_ats.vc_read`, `Discover.from_vc`): jobs name the portfolio company and carry a link but no ad text, so each job
+   in a role family and the selected region is resolved like an alert. Verified by hand on 3 Nov 2026 (robots.txt first, a few GETs, one POST each): **Atomico** (Getro):
+   `atomico.com` is behind a Vercel security checkpoint (a bot check, not bypassed), so the board address could not be found from the fund's own site, and
+   `api.getro.com/robots.txt` is `Disallow: /`. **Balderton** (`careers.balderton.com/jobs`, found on balderton.com) and **Notion Capital** (`jobs.notioncapital.com/jobs`,
+   found on notioncapital.com; notion.vc redirects there): robots.txt allows, the page confirms Consider (board ids `balderton-capital`, `notion-capital`), but
+   `POST /api-boards/search-jobs` answers HTTP 412 `INVALID_CSRF` without a session cookie and CSRF token, which CLAUDE.md-level rules forbid, so it is refused (`SessionRequired`).
+   All three entries are `enabled: false` with these reasons. `api.smartrecruiters.com/robots.txt` is also `User-agent: * / Disallow: /` (only LinkedInBot allowed), so SmartRecruiters
+   is `enabled: false` and left out of the shipped `discover.ats.providers`.
+5. **Health / liveness / doctor**: a health row per new method (`health._check_more`, `_check_vc`: robots state of the API, reachability, postings); `liveness.check` asks the employer's board
+   first for a link on one of the seven providers (listed = open, not listed = closed; a board that cannot answer falls back to the page check); `careerops doctor` prints the
+   `sources.yaml` entries to paste (`more_ats.SOURCES_YAML`, 10 entries, all with `regions: [any]`; the tool never edits that file) and warns about bad settings
+   (`sources.<provider>`, `sources.eploy`, `discover.ats.providers`) and about an enabled VC board it must refuse.
+6. **Report**: `ats_tally` stores `companies`, `board_none_before` (no board among Greenhouse / Lever / Ashby / Workday) and `board_none_after` in the run record; the run prints
+   `board: none N of M companies before the v2.6 providers ... -> K of M after`, and `discover --report` prints it for the last `--ats` run. The alert-resolution lines add
+   `before the v2.6 providers X of Y` (resolved minus the ones that only the new providers or link step found).
+
+Unverified (needs your network): the live `careerops discover --ats --report` run. It writes to the real inbox and DB, so it was not run here; the numbers above come from that run. Slug guessing
+adds up to 4 tokens x 4 providers (Workable on one host, one request a second; the others one host each) per company, cached 30 days; set `discover.ats.providers: []` to turn it off.

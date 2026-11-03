@@ -182,6 +182,7 @@ discover:
   ats:
     board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
     board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
+    providers: []                  # the v2.6 providers asked when a slug is guessed (none in the tests: a test that wants one sets it)
   reed:
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
     location: null                 # Reed's locationName; null = all of the UK

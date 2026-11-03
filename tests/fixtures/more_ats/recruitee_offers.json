@@ -1,0 +1,28 @@
+{
+ "offers": [
+  {
+   "id": 7001,
+   "slug": "data-scientist",
+   "title": "Data Scientist",
+   "company_name": "Acme Analytics",
+   "status": "published",
+   "remote": false,
+   "city": "London",
+   "country": "United Kingdom",
+   "country_code": "GB",
+   "location": "London, United Kingdom",
+   "published_at": "2026-10-27 09:00:00 UTC",
+   "careers_url": "https://acme-analytics.recruitee.com/o/data-scientist",
+   "description": "<p>We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. </p>",
+   "requirements": "<ul><li>Python</li><li>SQL</li></ul>"
+  },
+  {
+   "id": 7002,
+   "slug": "sample-job",
+   "title": "Example role (sample)",
+   "company_name": "Acme Analytics",
+   "careers_url": "https://acme-analytics.recruitee.com/o/sample-job",
+   "description": "demo"
+  }
+ ]
+}

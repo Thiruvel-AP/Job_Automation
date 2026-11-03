@@ -1,0 +1,47 @@
+{
+ "offset": 0,
+ "limit": 100,
+ "totalFound": 2,
+ "content": [
+  {
+   "id": "743999000111",
+   "name": "Data Scientist",
+   "uuid": "u1",
+   "refNumber": "REF-1",
+   "releasedDate": "2026-10-27T09:00:00.000Z",
+   "language": {
+    "code": "en"
+   },
+   "location": {
+    "city": "London",
+    "region": "England",
+    "country": "gb",
+    "fullLocation": "London, England, United Kingdom",
+    "remote": false
+   },
+   "company": {
+    "identifier": "AcmeAnalytics",
+    "name": "Acme Analytics"
+   },
+   "ref": "https://api.smartrecruiters.com/v1/companies/acme-analytics/postings/743999000111"
+  },
+  {
+   "id": "743999000222",
+   "name": "Machine Learning Engineer",
+   "uuid": "u2",
+   "refNumber": "REF-2",
+   "releasedDate": "2026-10-26T09:00:00.000Z",
+   "location": {
+    "city": "Paris",
+    "country": "fr",
+    "fullLocation": "Paris, France",
+    "remote": false
+   },
+   "company": {
+    "identifier": "AcmeAnalytics",
+    "name": "Acme Analytics"
+   },
+   "ref": "https://api.smartrecruiters.com/v1/companies/acme-analytics/postings/743999000222"
+  }
+ ]
+}

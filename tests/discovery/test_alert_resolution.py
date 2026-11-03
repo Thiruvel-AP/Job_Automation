@@ -189,13 +189,26 @@ def test_an_unresolved_alert_is_kept_in_the_manual_queue_with_its_apply_kind(sig
     assert {r["source"] for r in q} >= {"linkedin", "indeed", "cvlibrary"}
 
 
-def test_a_workday_link_is_queued_as_workday_and_nothing_is_requested_from_it(cfg, db):
-    net = Net()                                                               # strict: any request fails the test
+def workday_only(d, posts=()):
+    """The CLI's fetcher rules for Workday (its pages are never asked, the public /wday/cxs/ list API is), and a `post` that answers a Workday list (nothing real is sent)."""
+    asked = []
+
+    def post(url, json=None, **kw):
+        asked.append(url)
+        return Resp({"jobPostings": list(posts), "total": len(posts)})
+    d.f.never, d.f.allow_paths, d.f._post = applykind.NEVER_FETCH, ("/wday/cxs/",), post
+    return asked
+
+
+def test_a_workday_link_not_on_its_board_is_queued_as_workday_and_only_the_public_list_api_is_asked(cfg, db):
+    net = Net()                                                               # strict: any request but robots.txt fails the test
     d = make(cfg, db, net)
+    asked = workday_only(d)
     out = d.resolve_link("gmail", "indeed", "Zeta Holdings", "Data Scientist", "London",
                          "https://zeta.wd3.myworkdayjobs.com/en-US/careers/job/London/Data-Scientist_R1", "gmail:indeed", source_id="indeed-uk")
     d.finish()
-    assert out == "queued" and net.requests == []
+    assert out == "queued" and asked and all("/wday/cxs/" in u for u in asked)
+    assert all(u.endswith("/robots.txt") for u in net.urls(True))             # no careers PAGE was fetched
     (row,) = queue(cfg)
     assert row["apply_kind"] == "workday" and "myworkdayjobs.com" in row["link"] and "Workday" in row["reason"]
 
@@ -242,11 +255,13 @@ def test_no_request_goes_to_linkedin_indeed_cv_library_or_workday(signed_in, db,
     net = gmail_net({"api/1.0/jobs/5001": fixture_json("reed_job_5001.json"), "api/1.0/jobs/5555": {"jobId": 0},
                      "boards/acme/jobs": fixture_json("gh_jobs_acme.json"), "boards/acme": fixture_json("gh_board_acme.json")})
     d = make(signed_in, db, net)
+    posted = workday_only(d)
     d.from_gmail()
     d.resolve_link("gmail", "indeed", "Acme Corp", "Data Scientist", "London", "https://acme.wd3.myworkdayjobs.com/x/job/1", "gmail:indeed")
     asked = net.urls(True)
-    assert asked and not [u for u in asked if any(b in u for b in BANNED)]
-    assert net.hosts() <= {"gmail.googleapis.com", "boards-api.greenhouse.io", "www.reed.co.uk", "api.lever.co", "api.eu.lever.co", "api.ashbyhq.com"}
+    assert asked and not [u for u in asked if any(b in u for b in BANNED[:4])]       # linkedin, indeed, cv-library: never
+    assert all(u.endswith("/robots.txt") for u in asked if "myworkday" in u) and all("/wday/cxs/" in u for u in posted)   # Workday: robots.txt and its public list API only
+    assert net.hosts() <= {"gmail.googleapis.com", "boards-api.greenhouse.io", "www.reed.co.uk", "api.lever.co", "api.eu.lever.co", "api.ashbyhq.com", "acme.wd3.myworkdayjobs.com"}
 
 
 def test_the_cv_library_page_of_an_alert_is_not_fetched_and_its_job_is_queued(signed_in, db, monkeypatch):

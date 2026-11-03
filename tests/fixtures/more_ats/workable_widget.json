@@ -1,0 +1,53 @@
+{
+ "name": "Acme Analytics",
+ "description": "",
+ "jobs": [
+  {
+   "title": "Data Scientist",
+   "shortcode": "ABC123",
+   "shortlink": "https://apply.workable.com/j/ABC123",
+   "url": "https://apply.workable.com/acme-analytics/j/ABC123/",
+   "department": "Data",
+   "city": "London",
+   "state": "England",
+   "country": "United Kingdom",
+   "telecommuting": false,
+   "published_on": "2026-10-28",
+   "description": "<p>We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. </p>"
+  },
+  {
+   "title": "Data Scientist",
+   "shortcode": "ABC123",
+   "shortlink": "https://apply.workable.com/j/ABC123",
+   "url": "https://apply.workable.com/acme-analytics/j/ABC123/",
+   "department": "Data",
+   "city": "Berlin",
+   "state": "",
+   "country": "Germany",
+   "telecommuting": false,
+   "published_on": "2026-10-28",
+   "description": "<p>We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. </p>"
+  },
+  {
+   "title": "Machine Learning Engineer",
+   "shortcode": "DEF456",
+   "shortlink": "https://apply.workable.com/j/DEF456",
+   "url": "https://apply.workable.com/acme-analytics/j/DEF456/",
+   "department": "Data",
+   "city": "New York",
+   "state": "NY",
+   "country": "United States",
+   "telecommuting": false,
+   "published_on": "2026-10-27",
+   "description": "<p>We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. We build forecasting and pricing models for retailers and need a data scientist who writes clear Python, tests it, and explains results to non-experts. You will own experiments end to end, from the question to the dashboard, working with engineers and product managers in a small team in London. Requirements: Python, SQL, scikit-learn, statistics. Nice to have: Spark, dbt. We value careful testing and honest reporting of uncertainty. </p>"
+  },
+  {
+   "title": "Off-site",
+   "shortcode": "EVIL1",
+   "url": "https://evil.example.com/acme/j/EVIL1/",
+   "city": "London",
+   "country": "United Kingdom",
+   "description": "x"
+  }
+ ]
+}
