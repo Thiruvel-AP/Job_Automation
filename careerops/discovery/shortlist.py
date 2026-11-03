@@ -7,7 +7,8 @@ the ones you approve go to data/jds/approved/<date>/, and `careerops live` reads
        be offered, best T first, because it costs a request each);
     3. offered = T >= targeting.min_triage_score, best T first then freshest, at most targeting.shortlist_size; an ad older than targeting.max_posting_age_days
        needs T >= 4.5; a company at targeting.per_company_max_open open applications, or inside its cooldown, is left out (apply/volume.py);
-    4. [a] approves all · `1 3 5` approves those · `s 2` skips job 2 for good (filed in jds_done/skipped/, so discover does not bring it back) ·
+    4. [a] approves all, except a possible repost of a job you skipped (that needs its number typed) · `1 3 5` approves those ·
+   `s 2` skips job 2 for good (filed in jds_done/skipped/, so discover does not bring it back) ·
    [x] skips every job in the list that you did not approve · [q] quits.
 Nothing is tailored here, and nothing is sent anywhere.
 
@@ -30,7 +31,8 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from .. import targeting as targeting_mod
-from ..apply import decided, volume
+from ..apply import decided, targets, volume
+from ..apply import decisions as decisions_mod
 from ..db import DB
 from . import applykind, liveness, triage
 from . import region as region_mod
@@ -448,7 +450,9 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
     extra = ((" · [u] include the size-unknown ads" if plan.unknown_rows else "") + (" · [i] evidence" if any(r.size or r.region for r in rows) else ""))
     while numbered:
         try:
-            answer = ask("[a] approve all · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list" + extra + " · [q] quit > ")
+            n_repost = sum(1 for r in numbered.values() if r.repost)
+            answer = ask("[a] approve all" + (f" (not the {n_repost} possible repost(s): type their numbers)" if n_repost else "")
+                         + " · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list" + extra + " · [q] quit > ")
         except (EOFError, KeyboardInterrupt):
             out("(cut short: nothing more was approved)")
             break
@@ -486,11 +490,24 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
                 out(f"  {len(plan.unknown_rows)} more size-unknown ad(s) did not fit in the list")
             continue
         picked = [numbered[n] for n in (list(numbered) if verb in ("all", "rest") else nums) if n in numbered]
+        if verb == "all":
+            # a possible repost of a job you skipped is never approved by [a]: it needs its own number (v2.5 fix)
+            held = [(n, r) for n, r in numbered.items() if r.repost]
+            picked = [r for r in picked if not r.repost]
+            if held:
+                out("  [a] did not approve these (you skipped the job before; type a number to approve one, s n to skip it again):")
+                out("\n".join(f"    {n}. {r.name}: {r.repost}" for n, r in held))
         if not picked:
-            out("  those are already decided")
+            out("  nothing to approve: only possible reposts are left" if verb == "all" and any(r.repost for r in numbered.values())
+                else "  those are already decided")
             continue
         if verb in ("skip", "rest"):
-            gone = [r for r in picked if file_away(settings, r.path, "skipped", SKIP_REASON) is not None]
+            gone = []
+            for r in picked:
+                dst = file_away(settings, r.path, "skipped", SKIP_REASON)
+                if dst is not None:
+                    gone.append(r)
+                    targets.record_file(settings, dst, decided.SKIPPED, SKIP_REASON)          # the decision log too (v2.5 fix: it was only a moved file)
             log_events(settings, [_event(r, "skipped") for r in gone], now)
             out(f"  skipped {len(gone)}: filed in jds_done/skipped/ as skipped {SKIP_MARK}, never offered again (`careerops unskip --shortlist` brings them back)")
         else:
@@ -539,6 +556,7 @@ def restore(settings, *, match: str | None = None, now: datetime | None = None) 
         if want(name):
             hdr = decided.header_of(p)
             dst = decided.move_file(settings, p, decided.inbox_dir(settings))
+            decisions_mod.append(settings, decided.file_keys(dst), decisions_mod.UNSKIPPED, "careerops unskip --shortlist", decided.file_job_id(dst))
             events.append({"event": "reset", "key": _key(hdr["company"], hdr["title"]), "company": hdr["company"], "title": hdr["title"]})
             out.append(f"back in the inbox: {name} ({dst.name})")
     for key, name in parked_here(settings).items():

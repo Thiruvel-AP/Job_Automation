@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING, Callable
 
 from .. import bands
 from ..db import DB
-from ..discovery import applykind, countries, freshness, manual
+from ..discovery import applykind, countries, freshness, gates, manual
 from . import autolog, decided, snapshot
 from .errors import ArchiveError
 
@@ -804,6 +804,9 @@ class Live:
                 return "rejected (JD)"
             elif st == "skipped" and not job["out_dir"]:
                 self.out(f"  The rules skipped this job: {job['reason']}")
+                if gates.is_excluded_reason(job["reason"]) and not (self.s.raw.get("rules") or {}).get("ask_on_excluded", False):
+                    self.out("  Excluded title or level: skipped without a question (rules.ask_on_excluded: false); its JD is filed in jds_done/skipped/.")
+                    return "skipped (rules)"
                 if self.h.ask("  Tailor it anyway? [y/N] ").strip().lower() not in ("y", "yes"):
                     return "skipped (rules)"
                 db.update_job(jid, status="triaged")

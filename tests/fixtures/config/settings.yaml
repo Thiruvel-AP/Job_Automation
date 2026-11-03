@@ -80,6 +80,11 @@ sources:
     pages_per_query: 2
     max_days_old: 7
 
+rules:
+  # `careerops live`: a job whose title matches roles.levels.exclude (senior, manager ...) or no role family is marked skipped (rules) and its JD
+  # is filed in jds_done/skipped/ without a question. true = ask "Tailor it anyway? [y/N]" for those too (other rule skips always ask).
+  ask_on_excluded: false
+
 roles:
   # Lower tier = higher priority. Patterns are case-insensitive regexes on the job TITLE.
   # Families are matched in LIST order, first match wins, so the list is ordered most specific first on purpose ("Data Science

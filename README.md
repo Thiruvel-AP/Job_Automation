@@ -213,20 +213,22 @@ careerops sources list             # the registry, no network
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
-careerops skip --id JOB            # skip a job for good: data/state/decisions.jsonl gets its keys, its JD leaves the inbox and approved/ folders
-careerops why ID|URL|ats:KEY       # every decision recorded for a job and the key that matched (id, ats:<vendor>:<board>:<id>, URL, fingerprint)
-careerops unskip --id JOB          # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
+careerops skip ID|URL|FILE         # (also --id ID, --url LINK) skip a job for good (--id ID still works): data/state/decisions.jsonl gets its keys, its JD leaves the inbox and approved/ folders; a job that is only a JD file (never in the database) or only a link is recorded the same way
+careerops why ID|URL|FILE|ats:KEY  # every decision recorded for a job and the key that matched (id, ats:<vendor>:<board>:<id>, URL, JD file name, fingerprint); an OLD id the database and folders no longer hold is found in the decision log / events, with its keys and source (board, Gmail alert, shortlist log)
+careerops backfill-decisions [--apply]   # the decision log's missing lines (skipped / applied jobs of the database, dated by the real event; JD files in jds_done/ the database never held); a dry run unless --apply
+careerops unskip --id ID|URL|FILE  # undo a skip: the job, its copies and their JD files go back to the inbox (an applied job is final)
 careerops unskip --shortlist [--match TEXT | --all]   # lists the ads you skipped at the shortlist and the parked ones; --match / --all brings them back
 careerops add-jd --company X --title Y --url U --file jd.txt   # LinkedIn/email/agency roles (--file: UTF-8, at least 500 bytes, else a one-line error)
 careerops add-jd --id adzuna:123 --file full_jd.txt            # replace a truncated Adzuna snippet
 careerops add-url https://job-boards.greenhouse.io/monzo/jobs/123   # fetch one job ad into data/jds/inbox/ (see "Adding a job from its link")
 careerops live --url URL           # the same fetch, then live works on that one file
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
+careerops live --id manual:ff68fffd015a   # work on one job the database already has: its JD file from the inbox or approved/, or written again from the stored ad (a skipped / applied job is refused)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
-careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve, [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
+careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
@@ -442,7 +444,10 @@ fact bank lacks or another company's name. Attachments: the CV PDF made for the 
 `careerops add-url <link>` fetches one job ad and writes `data/jds/inbox/<company>-<title>-<id>.txt` with `Company:`, `Title:`,
 `URL:` and `Location:` header lines filled in, then the ad's text. It adds nothing to the database: `careerops live` does that, with
 you at every gate. `careerops live --url <link>` is the same fetch followed by a live session on that one file (the rest of the
-inbox is left alone; a rerun finds the file already there). `--company` / `--title` replace what the page or API gives.
+inbox is left alone; a rerun finds the file already there). `--company` / `--title` replace what the page or API gives. A Greenhouse link on the EU
+hosts (`job-boards.eu.greenhouse.io`, `boards.eu.greenhouse.io`) is read from the same public API as a US one (`boards-api.greenhouse.io`: there is no
+`boards-api.eu` host); the company and title come from the job reply, the company's name from `/v1/boards/<board>` when the reply has none.
+`careerops live --id <job id>` is the same session for a job already in the database (no fetch).
 
 **robots.txt first.** Before any fetch (a page, or one of the job-board APIs) the host's `robots.txt` is read once and cached in
 `data/robots/<host>.json` for 24 hours; a path it disallows for this tool (user-agent token `career-ops`; `*` and `$` rules as in

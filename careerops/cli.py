@@ -24,7 +24,7 @@
   careerops retriage --decided [--apply]
                                 move the inbox files of jobs (and copies of jobs) you skipped or applied to into paths.jds_done
                                 (dry run: lists them; --apply moves them and skips the database copies)
-  careerops skip --id JOB       skip a job for good: status 'skipped (user)', a line in data/state/decisions.jsonl, its JD files (inbox, approved
+  careerops skip JOB|--id JOB|--url LINK   skip a job for good: status 'skipped (user)', a line in data/state/decisions.jsonl, its JD files (inbox, approved
                                 folders) to jds_done/skipped/; discover, intake, shortlist and live never bring it back (`unskip` does)
   careerops why ID|URL|ats:KEY  every decision recorded for a job, and which key matched (id, ats:<vendor>:<board>:<id>, URL, fingerprint)
   careerops unskip --id JOB     undo a skip: the job, its copies and their JD files go back to the inbox
@@ -34,7 +34,7 @@
   careerops add-url URL [--company C] [--title T]
                                 fetch one job ad (Greenhouse, Lever, Ashby API; else the page) into data/jds/inbox/
   careerops judge-report        the LLM judge vs your review decisions: agreement, kappa, false approves (review.judge)
-  careerops live [--max N] [--dry-run] [--auto [--no-submit] [--confirm]] [--url URL | --clipboard]
+  careerops live [--max N] [--dry-run] [--auto [--no-submit] [--confirm]] [--url URL | --clipboard | --id JOB]
                                 every JD in data/jds/inbox/ through add-jd → tailor → review → apply assist, one job at
                                 a time, with you at every gate and an archive check after each job (see README)
   careerops tailor [--limit N | --id JOB] [--one-page]
@@ -630,44 +630,80 @@ def cmd_unskip(args):
             _fail(str(e))
         return
     if not args.id:
-        _fail("unskip needs --id JOB, or --shortlist")
+        _fail("unskip needs --id JOB (an id, a link or a JD file name), or --shortlist")
+    from .apply import targets
+
     try:
-        print("\n".join(decided.restore(db, s, args.id).lines()))
+        if db.job(args.id) is not None:
+            print("\n".join(decided.restore(db, s, args.id).lines()))
+        else:
+            print("\n".join(targets.restore_files(s, targets.resolve(s, db, args.id))))
     except decided.DecidedError as e:
         _fail(str(e))
 
 
 def cmd_skip(args):
-    """`careerops skip --id JOB` (v2.5): the same as `s` in review, for a job you are not reviewing now."""
+    """`careerops skip <id | link | JD file name>` (v2.5; link and file name in the fix round after it): the same as `s` in review, for a job you are not
+    reviewing now. A job in the database is skipped as before; one that is only a JD file (or only a link) has its files moved to jds_done/skipped/ and a
+    line written to the decision log all the same."""
+    from .apply import targets
+
     s, db = _ctx(args)
-    job = db.job(args.id)
-    if job is None:
-        _fail(f"no such job: {args.id}")
-    if str(job["status"] or "").startswith("applied"):
-        _fail(f"{args.id} is applied: an applied decision is final")
-    review.skip_user(db, s, args.id, where="skip")
-    print(f"Skipped {args.id} ({job['company']} | {job['title']}). Check: careerops why {args.id}")
+    what = args.what or args.id or args.url
+    if not what:
+        _fail("skip needs a job: careerops skip <id | link | JD file name>  (or --id JOB, --url LINK)")
+    try:
+        t = targets.resolve(s, db, what)
+        job = t.job
+        if job is not None and str(job["status"] or "").startswith("applied"):
+            _fail(f"{job['id']} is applied: an applied decision is final")
+        if job is not None and str(job["status"] or "") != "skipped":
+            review.skip_user(db, s, job["id"], where="skip")
+            lines = [f"database row {job['id']} set to skipped; its copies and JD files followed"]
+            t = targets.resolve(s, db, what)                      # whatever file of the listing is still live (a copy under another id)
+            lines += targets.skip_files(s, t) if t.live_files(s) else []
+        else:
+            lines = targets.skip_files(s, t)
+    except decided.DecidedError as e:
+        _fail(str(e))
+    print(f"Skipped {t.company or what} | {t.title or ''} ({t.job_id or 'no job id'}).")
+    print("\n".join(f"  {x}" for x in lines))
+    print(f"Check: careerops why {what}")
 
 
 def cmd_why(args):
-    """`careerops why <id|url|ats:key>` (v2.5): every decision-log line for the job, and which key matched."""
+    """`careerops why <id | link | JD file name | ats:key>` (v2.5): every decision-log line for the job, and which key matched. A job that is only a JD
+    file (never in the database) is found by its link or file name."""
     from .apply import decisions as decisions_mod
     from .apply import listing_keys as LK
+    from .apply import targets
 
     s, db = _ctx(args)
     q = args.what.strip()
-    job = db.job(q)
-    keys = LK.keys_of_row(job) if job is not None else LK.parse_query(q)
-    jobs = [job] if job is not None else [r for r in db.jobs() if decided.same_listing(keys, LK.keys_of_row(r))]
-    for r in jobs:
+    try:
+        t = targets.resolve(s, db, q)
+    except decided.DecidedError as e:
+        _fail(str(e))
+    for r in t.rows:
         print(f"{r['id']}: {r['company']} | {r['title']} | status '{r['status']}'" + (f" ({r['reason']})" if r["reason"] else ""))
         rk = LK.keys_of_row(r)
         print(f"  keys: id:{r['id']}" + "".join(f"  {k}" for k in rk.all()))
-    if not jobs:
-        print(f"no job in the database has the keys of {q!r}: " + ", ".join(keys.all() or ["(none)"]))
+    if not t.rows:
+        who = f"{t.company} | {t.title}" if t.company or t.title else "(no file or database row has it)"
+        print(f"not in the database: {t.job_id or '-'}: {who}")
+        print("  keys: " + ("id:" + t.job_id + "  " if t.job_id else "")
+              + "  ".join(dict.fromkeys([*targets._keys_with_fingerprint(t).all(), *t.more_keys]) or ["(none)"]))
+    for src in targets.sources_of(s, db, t):
+        print(f"  source: {src}")
+    evs = t.events or (db.conn.execute("SELECT ts, stage, detail FROM events WHERE job_id = ? ORDER BY ts", (t.job_id,)).fetchall() if t.job_id else [])
+    for e in evs[-6:]:
+        print(f"  event: {str(e['ts'])[:19]}  {e['stage']}  {str(e['detail'] or '')[:100]}")
+    for f in t.files:
+        print(f"  file: {f.parent.parent.name}/{f.parent.name}/{f.name}")
     found = []
-    for r in jobs or [None]:
-        found += decisions_mod.why(s, LK.keys_of_row(r) if r is not None else keys, r["id"] if r is not None else None)
+    for r in t.rows or [None]:
+        found += decisions_mod.why(s, LK.keys_of_row(r) if r is not None else targets._keys_with_fingerprint(t),
+                                   r["id"] if r is not None else (t.job_id or None), extra=targets.record_keys(t) if r is None else ())
     seen = set()
     for rec, hit in found:
         tag = json.dumps(rec, sort_keys=True)
@@ -679,10 +715,26 @@ def cmd_why(args):
     if not found:
         print("  no decision recorded for it in " + str(decisions_mod.path(s)))
     d = decided.load(s, db)
-    for r in jobs:
-        now_ = d.hit(r["company"], r["title"], r["url"], r["location"], r["apply_url"], r["id"])
-        print(f"  now: {'decided: ' + now_ if now_ else 'not decided'}" + (f"; {d.repost(r['company'], r['title'], r['url'], r['location'], r['apply_url'], r['id'])}"
-                                                                         if not now_ and d.repost(r['company'], r['title'], r['url'], r['location'], r['apply_url'], r['id']) else ""))
+    ads = [(r["company"], r["title"], r["url"], r["location"], r["apply_url"], r["id"]) for r in t.rows] or \
+          ([(t.company, t.title, t.url or t.keys.url, t.location, t.apply_url, t.job_id or None)] if (t.company and t.title) or t.keys.strong() else [])
+    for company, title, url, location, apply_url, jid in ads:
+        now_ = d.hit(company, title, url, location, apply_url, jid)
+        rep = d.repost(company, title, url, location, apply_url, jid) if not now_ else ""
+        print(f"  now: {'decided: ' + now_ if now_ else 'not decided'}" + (f"; {rep}" if rep else ""))
+
+
+def cmd_backfill_decisions(args):
+    """`careerops backfill-decisions [--apply]` (v2.5 fix round 2): the decision log's missing lines, from the database's skipped / applied jobs (dated by
+    the real event in the events table) and the JD files in jds_done/skipped and applied (dated by the shortlist log, else the `.reason.txt`'s time). A dry run lists
+    them; --apply appends them (never rewrites or deletes a line); a second run finds nothing."""
+    from .apply import targets
+
+    s, db = _ctx(args)
+    lines = targets.backfill(db, s, apply=args.apply)
+    for r in lines:
+        print(f"  {(r['ts'] or '(no date)')[:19]}  {r['decision']:<13} {r['job_id'] or '-':<24} {len(r['keys'])} key(s)  [{r['source']}]")
+    print(f"{len(lines)} line(s) {'written to' if args.apply else 'would be written to'} the decision log."
+          + ("" if args.apply or not lines else " Dry run: run again with --apply to write them."))
 
 
 def cmd_add_jd(args):
@@ -998,6 +1050,8 @@ def cmd_live(args):
         _fail("--url fetches the ad over the network; --mock never uses the network (put a JD file in the mock inbox instead)")
     if args.url and args.clipboard:
         _fail("--url and --clipboard are two ways to get one ad into the inbox: use one of them")
+    if args.id and (args.url or args.clipboard):
+        _fail("--id works on a job the database already has; --url and --clipboard bring a new ad in: use one of them")
     s, db = _ctx(args)
     from . import choices
     from .discovery import region as region_mod
@@ -1042,6 +1096,14 @@ def cmd_live(args):
         except intake.IntakeError as e:
             _fail(str(e))
         print(f"{'Fetched' if created else 'Already in the inbox:'} {only.name}  ({ad.company} | {ad.title})")
+    elif args.id:
+        from .discovery import intake
+        try:
+            only, created = intake.file_for_job(s, db, args.id)
+        except intake.IntakeError as e:
+            _fail(str(e))
+        job_ = db.job(args.id)
+        print(f"{'Written again from the stored ad:' if created else 'Found:'} {only.name}  ({job_['company']} | {job_['title']})")
     elif args.clipboard:
         from .discovery import intake
         try:
@@ -1200,7 +1262,7 @@ def cmd_live(args):
                                                            refetch_jd=jd_refetcher(job)))
 
     resume = ("careerops" + (f" --config {args.config}" if args.config else "") + f" live --max {args.max}"
-              + (f" --url {args.url}" if args.url else "")      # no --clipboard here: that job is in the inbox now
+              + (f" --url {args.url}" if args.url else "") + (f" --id {args.id}" if args.id else "")      # no --clipboard here: that job is in the inbox now
               + (" --fresh" if getattr(args, "fresh", False) else "")
               + (" --dry-run" if args.dry_run else "") + (" --mock" if args.mock else "")      # resume: not --retailor
               + (" --auto" if args.auto else "") + (" --no-submit" if args.no_submit else "") + (" --confirm" if args.confirm else ""))
@@ -1824,12 +1886,18 @@ def main(argv=None):
                          "tailoring and bring the jobs that reach the review band back")
     rt.add_argument("--mock", action="store_true", help="with --ats: the isolated data/mock database and MockLLM")
     rt.set_defaults(fn=cmd_retriage)
-    sk = sub.add_parser("skip", help="skip a job for good (decision log, JD files to jds_done/skipped/); `unskip` reverses it")
-    sk.add_argument("--id", required=True)
+    sk = sub.add_parser("skip", help="skip a job for good: a job id, its link or its JD file name (decision log, JD files to jds_done/skipped/); `unskip` reverses it")
+    sk.add_argument("what", nargs="?", help="a job id, a link, or the name of a JD file in the inbox / approved/")
+    sk.add_argument("--id", help="the same as the positional argument")
+    sk.add_argument("--url", help="the same as the positional argument: the job's link (any form of the address)")
     sk.set_defaults(fn=cmd_skip)
-    wy = sub.add_parser("why", help="every decision recorded for a job (id, URL or ats:<vendor>:<board>:<id>) and which key matched")
+    wy = sub.add_parser("why", help="every decision recorded for a job (id, link, JD file name or ats:<vendor>:<board>:<id>) and which key matched")
     wy.add_argument("what")
     wy.set_defaults(fn=cmd_why)
+    bf = sub.add_parser("backfill-decisions", help="write the decision log's missing lines (skipped / applied jobs of the database and JD files in jds_done/), dated by the real event; dry run unless --apply")
+    bf.add_argument("--apply", action="store_true")
+    bf.add_argument("--mock", action="store_true", help="the isolated data/mock root")
+    bf.set_defaults(fn=cmd_backfill_decisions)
     us = sub.add_parser("unskip", help="undo a skip: the job, its copies and their JD files go back to the inbox")
     us.add_argument("--id")
     us.add_argument("--shortlist", action="store_true", help="the ads you skipped at the shortlist and the parked ones (lists them; --match / --all brings them back)")
@@ -1860,6 +1928,8 @@ def main(argv=None):
     lv.add_argument("--re-extract", action="store_true", help="extract the JD keywords again (a job keeps its first "
                     "extraction otherwise, so --retailor gives the same keywords and ATS)")
     lv.add_argument("--url", help="fetch this job ad into the inbox first (like add-url) and work on that one file only")
+    lv.add_argument("--id", help="work on this one job the database already has (e.g. manual:ff68fffd015a): its JD file is found in the inbox or approved/, "
+                    "or written again from the stored ad; a job you skipped or applied to is refused")
     lv.add_argument("--company", help="with --url: the company name to use instead of the page's")
     lv.add_argument("--title", help="with --url: the job title to use instead of the page's")
     lv.add_argument("--clipboard", action="store_true", help="read the job text from the Windows clipboard (from WSL), "

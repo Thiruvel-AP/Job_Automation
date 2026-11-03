@@ -3,8 +3,10 @@
 Greenhouse renders its drop-downs as react-select widgets whose options live in a portal: a DOM scan cannot see them. The board API publishes every
 question of a job, with its options, at
 
-    https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{id}?questions=true          (job-boards.greenhouse.io, boards.greenhouse.io)
-    https://boards-api.eu.greenhouse.io/v1/boards/{token}/jobs/{id}?questions=true       (job-boards.eu.greenhouse.io, boards.eu.greenhouse.io)
+    https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{id}?questions=true
+
+for the US hosts (job-boards.greenhouse.io, boards.greenhouse.io) AND the EU ones (job-boards.eu.greenhouse.io, boards.eu.greenhouse.io): there is no
+boards-api.eu host (it does not resolve), and the one API answers for an EU board (checked 3 Nov 2026 with RightShip: 16 questions).
 
 and each field's `name` is the id of its element on the form ("first_name", "question_123"). The request goes through discovery.http.Fetcher: the
 host's robots.txt first, at most one request a second per host, the tool's own User-Agent. A disallow, no answer or anything that is not the schema
@@ -33,8 +35,7 @@ class Board:
 
     @property
     def api_url(self) -> str:
-        host = "boards-api.eu.greenhouse.io" if self.eu else "boards-api.greenhouse.io"
-        return f"https://{host}/v1/boards/{self.token}/jobs/{self.job_id}?questions=true"
+        return f"https://boards-api.greenhouse.io/v1/boards/{self.token}/jobs/{self.job_id}?questions=true"          # `eu` only says which page the job is on
 
     @property
     def key(self) -> str:

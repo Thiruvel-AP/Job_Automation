@@ -24,6 +24,7 @@ import json
 import os
 import shutil
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from ..db import DB, now
@@ -143,8 +144,7 @@ class Decided:
             return m.label()
         got = (self.prints.get(lk.fingerprint) or self.prints.get(_no_country(lk.fingerprint))) if lk.fingerprint else None
         if got and got[2] != jid:
-            what = "applied to" if got[0] == APPLIED else "skipped"
-            return f"possible repost of a job you {what} on {got[1][:10] or '?'} ({got[2] or '?'})"
+            return decisions_mod.repost_label(got[0] == APPLIED, got[1][:10], got[2])
         return ""
 
 
@@ -153,13 +153,31 @@ def load(settings, db: DB) -> Decided:
     jds_done/applied (those stay decided even if a later retriage gives the row a new status)."""
     d = Decided(book=decisions_mod.Book.load(settings))
     for r in db.conn.execute("SELECT * FROM jobs WHERE status IN (?, ?)", (SKIPPED, APPLIED)):
-        d.add(key_of(r["company"], r["title"]), STATUS_DECISION[r["status"]], r["id"], LK.keys_of_row(r), str(r["updated_at"] or ""))
+        d.add(key_of(r["company"], r["title"]), STATUS_DECISION[r["status"]], r["id"], LK.keys_of_row(r), decided_on(db, r))
     for decision in DECISIONS:
         for p in txt_files(decision_dir(settings, decision)):
             key = file_key(p)
             if key:
-                d.add(key, decision, file_job_id(p), file_keys(p))
+                d.add(key, decision, file_job_id(p), file_keys(p), filed_on(p))
     return d
+
+
+def filed_on(path: Path) -> str:
+    """YYYY-MM-DD a JD file was filed in jds_done/: the time of its `.reason.txt` (written when it was filed), else of the JD itself. "" if neither can be read."""
+    for p in (path.with_name(path.stem + ".reason.txt"), path):
+        try:
+            return datetime.fromtimestamp(p.stat().st_mtime).date().isoformat()
+        except OSError:
+            continue
+    return ""
+
+
+def decided_on(db: DB, row) -> str:
+    """When a skipped / applied database row was decided: its updated_at, else the time of its newest event in the events table ("" if neither)."""
+    if row["updated_at"]:
+        return str(row["updated_at"])
+    last = db.conn.execute("SELECT max(ts) FROM events WHERE job_id = ?", (row["id"],)).fetchone()
+    return str(last[0] or "") if last else ""
 
 
 def _no_country(fp: str) -> str:
@@ -301,7 +319,9 @@ def sweep(db: DB, settings, *, apply: bool = False) -> Sweep:
     lack (decisions.backfill), then skips the rows and moves the files (to jds_done/<decision>/, never deleted)."""
     plan = Sweep()
     if apply:
-        plan.backfilled = decisions_mod.backfill(db, settings)
+        from . import targets
+
+        plan.backfilled = targets.backfill(db, settings)
     decided = load(settings, db)
     for folder in (inbox_dir(settings), *approved_dirs(settings)):
         for p in txt_files(folder):

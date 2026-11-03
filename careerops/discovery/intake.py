@@ -5,8 +5,10 @@ The file starts with `Company:` / `Title:` / `URL:` / `Location:` header lines (
 the ad's text. Nothing here adds a job to the database or applies to anything: `careerops live` does that with you at every
 gate. Public, unauthenticated APIs only, at most one request per second per host, identified by the shared `UA` header.
 
-  Greenhouse  GET boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}        (job-boards.greenhouse.io, boards.greenhouse.io)
-              GET boards-api.eu.greenhouse.io/v1/boards/{board}/jobs/{id}     (job-boards.eu.greenhouse.io, boards.eu.greenhouse.io: the EU region)
+  Greenhouse  GET boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}        (job-boards.greenhouse.io, boards.greenhouse.io, and the EU region's
+              job-boards.eu.greenhouse.io / boards.eu.greenhouse.io: there is NO boards-api.eu host (it does not resolve); the one API serves both
+              regions and the job's `absolute_url` names the EU page. Checked against the live API on 3 Nov 2026 with RightShip's EU board.)
+              GET boards-api.greenhouse.io/v1/boards/{board}                  (the company's `name`, when the job reply has no `company_name`)
   Lever       GET api.lever.co/v0/postings/{site}/{id}  (api.eu.lever.co for jobs.eu.lever.co)  - documented single posting
   Ashby       the board list GET api.ashbyhq.com/posting-api/job-board/{board}, then the posting in it by its id. Ashby
               documents no single-posting endpoint, so this is the one documented call, filtered here.
@@ -42,8 +44,9 @@ from .sources import UA, html_to_text
 MIN_PAGE_CHARS = 2000                  # a page with less text than this is not taken for a job description
 MIN_HOST_GAP_S = 1.0                   # at most one request per second per host
 MAX_BYTES = 5_000_000                  # a bigger response is not a job ad
-GREENHOUSE_HOSTS = {"job-boards.greenhouse.io": "boards-api.greenhouse.io", "boards.greenhouse.io": "boards-api.greenhouse.io",
-                    "job-boards.eu.greenhouse.io": "boards-api.eu.greenhouse.io", "boards.eu.greenhouse.io": "boards-api.eu.greenhouse.io"}   # board host -> its API host
+GREENHOUSE_API = "boards-api.greenhouse.io"
+GREENHOUSE_HOSTS = {"job-boards.greenhouse.io": GREENHOUSE_API, "boards.greenhouse.io": GREENHOUSE_API,
+                    "job-boards.eu.greenhouse.io": GREENHOUSE_API, "boards.eu.greenhouse.io": GREENHOUSE_API}   # board host -> its API host (one API for both regions)
 LEVER_HOSTS = {"jobs.lever.co": "api.lever.co", "jobs.eu.lever.co": "api.eu.lever.co"}
 ASHBY_HOSTS = ("jobs.ashbyhq.com",)
 CVLIBRARY_HOSTS = ("www.cv-library.co.uk", "cv-library.co.uk")
@@ -232,10 +235,24 @@ def _first_published(j: dict) -> str:
     return v if freshness.is_iso(v) else ""
 
 
+def _board_name(t: Target, robots: RobotsCache | None = None) -> str:
+    """The company's name from the board API (GET /v1/boards/{board} -> {"name": ...}), for a job reply that has no `company_name`. A board that
+    does not answer is not an error here ("": the caller uses the board's slug); a refusal is never worked around."""
+    try:
+        j = _json(f"https://{t.api_host or GREENHOUSE_API}/v1/boards/{t.board}", f"Greenhouse board {t.board}", robots)
+    except BlockedError:
+        raise
+    except RobotsRefused:
+        raise
+    except IntakeError:
+        return ""
+    return str(j.get("name") or "").strip() if isinstance(j, dict) else ""
+
+
 def greenhouse_ad(t: Target, robots: RobotsCache | None = None) -> Ad:
-    j = _json(f"https://{t.api_host or 'boards-api.greenhouse.io'}/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}",
-              robots)
-    return Ad(company=str(j.get("company_name") or "").strip() or _name(t.board), title=str(j.get("title") or "").strip(),
+    j = _json(f"https://{t.api_host or GREENHOUSE_API}/v1/boards/{t.board}/jobs/{t.ad_id}", f"Greenhouse job {t.board}/{t.ad_id}", robots)
+    company = str(j.get("company_name") or "").strip() or _board_name(t, robots) or _name(t.board)
+    return Ad(company=company, title=str(j.get("title") or "").strip(),
               url=_http_url(j.get("absolute_url"), t.url), location=str((j.get("location") or {}).get("name") or "").strip(),
               text=html_to_text(j.get("content")), source="greenhouse", ad_id=t.ad_id,
               posted=_first_published(j), posted_source=freshness.label("greenhouse", "first_published") if _first_published(j) else "")
@@ -504,24 +521,9 @@ def fetch_ad(url: str, company: str | None = None, title: str | None = None, rob
     """Fetch the ad behind `url`. `company` / `title` replace what the page or API says. The host's robots.txt is read first
     (`robots`: the cache to use; default one in memory)."""
     t = parse_url(url)
-    try:
-        ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "cvlibrary": cvlibrary_ad,
-              "page": page_ad}[t.kind](t, robots)
-    except RobotsRefused as e:
-        # A host that cannot be reached at all is not a refusal: the EU API address is a guess that has not been checked against the live service, so
-        # when ITS robots.txt cannot even be fetched the board's own page is read instead (under that host's own robots.txt). A robots.txt that
-        # answers and disallows, or any HTTP refusal, is never worked around.
-        if t.kind != "greenhouse" or t.api_host == "boards-api.greenhouse.io" or "could not be fetched" not in str(e):
-            raise
-        ad = page_ad(Target("page", t.url, ad_id=t.ad_id), robots)               # the board's own ad number, so the file keeps its name
-    except BlockedError:
-        raise                                                  # a refusal is never worked around
-    except IntakeError:
-        if t.kind != "greenhouse" or t.api_host == "boards-api.greenhouse.io":
-            raise
-        # an EU board whose API address did not answer (the EU host is not verified against the live service): the board's own public page, which
-        # is what the run used before the EU hosts were known, read under the same robots.txt rules
-        ad = page_ad(Target("page", t.url, ad_id=t.ad_id), robots)
+    # An EU board (job-boards.eu.greenhouse.io) is read from the same API as a US one. The earlier guess of a boards-api.eu host fell back to the
+    # board's page, a script-built page with no company or title; a refusal or a 404 is an error, never worked around.
+    ad = {"greenhouse": greenhouse_ad, "lever": lever_ad, "ashby": ashby_ad, "cvlibrary": cvlibrary_ad, "page": page_ad}[t.kind](t, robots)
     if company:
         ad.company = company.strip()
     if title:
@@ -696,6 +698,33 @@ def refuse_decided(settings, ad: Ad) -> None:
         what = "applied to" if m.decision == decisions.APPLIED else "skipped"
         raise IntakeError(f"you {what} this job on {m.date} ({m.record.get('job_id') or '?'}); it is not added again. "
                           f"See: careerops why {m.key}; undo a skip: careerops unskip --id {m.record.get('job_id') or 'JOB'}")
+
+
+def file_for_job(settings, db, job_id: str) -> tuple[Path, bool]:
+    """`live --id JOB`: the JD file of a job the database already knows, as (file, created). The file is looked for in the inbox and in
+    approved/<date>/ (the same job id as `live` gives it); when it was filed away it is written again into the inbox from the stored ad (the same
+    company, title and URL, so the same job id). A job you skipped or applied to is refused (`careerops unskip --id` undoes a skip). Nothing is fetched."""
+    from ..apply import decided
+
+    job = db.job(job_id)
+    if job is None:
+        raise IntakeError(f"no job {job_id} in the database; use --url with its link to bring the ad in")
+    which = decided.load(settings, db).hit(job["company"], job["title"], job["url"], job["location"], job["apply_url"], job["id"])
+    if which:
+        raise IntakeError(f"you {'applied to' if which == decided.APPLIED else 'skipped'} {job['company']} | {job['title']} ({job_id}); it is not worked on "
+                          f"again. Undo a skip: careerops unskip --id {job_id}")
+    jds = settings.path("jds")
+    days = sorted((d for d in (jds / "approved").glob("*") if d.is_dir()), reverse=True) if (jds / "approved").is_dir() else []
+    for folder in [jds / "inbox", *days]:
+        for p in decided.txt_files(folder):
+            if decided.file_job_id(p) == job["id"]:
+                return p, False
+    text = str(job["description"] or "")
+    if len(text.encode("utf-8")) < manual.MIN_JD_BYTES:
+        raise IntakeError(f"{job_id} has no stored ad text to work from ({len(text)} characters); use --url with its link")
+    ad = Ad(company=str(job["company"]), title=str(job["title"]), url=str(job["url"] or ""), location=str(job["location"] or ""), text=text,
+            source=str(job["source"] or "manual"), ad_id=job_id.split(":", 1)[-1], apply_url=str(job["apply_url"] or ""))
+    return write_inbox(jds / "inbox", ad)
 
 
 def add_url(settings, url: str, company: str | None = None, title: str | None = None) -> tuple[Path, bool, Ad]:

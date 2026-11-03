@@ -23,10 +23,10 @@ SCHEMA = json.loads((Path(__file__).parent.parent / "fixtures" / "apply" / "gree
     ("https://job-boards.greenhouse.io/anthropic/jobs/5423029008?gh_src=x", "anthropic", "5423029008", False),
     ("https://boards.greenhouse.io/embed/job_app?for=acme&token=123", "acme", "123", False),
 ])
-def test_a_greenhouse_url_gives_its_board_and_the_api_host_of_its_region(url, token, job_id, eu):
+def test_a_greenhouse_url_gives_its_board_and_the_one_api_for_both_regions(url, token, job_id, eu):
     b = gh_schema.parse(url)
     assert (b.token, b.job_id, b.eu) == (token, job_id, eu)
-    assert b.api_url.startswith("https://boards-api.eu.greenhouse.io/" if eu else "https://boards-api.greenhouse.io/") and b.api_url.endswith("?questions=true")
+    assert b.api_url == f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{job_id}?questions=true"      # there is no boards-api.eu host
 
 
 def test_other_urls_are_not_greenhouse_boards():
@@ -49,7 +49,7 @@ def test_a_refused_or_failed_fetch_falls_back_to_the_page_scan(tmp_path):
     out = []
 
     def refused(url):
-        raise Blocked("robots.txt of boards-api.eu.greenhouse.io disallows /v1/")
+        raise Blocked("robots.txt of boards-api.greenhouse.io disallows /v1/")
     assert gh_schema.load(tmp_path, gh_schema.parse(JOB_ROW["url"]), refused, out=out.append) is None
     assert any("planned from a page scan" in line for line in out) and not (tmp_path / gh_schema.CACHE).exists()
 

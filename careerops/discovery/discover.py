@@ -61,6 +61,7 @@ from . import applykind
 from . import ats as ats_mod
 from . import candidate as cand
 from ..apply import decided as decided_mod
+from ..apply import listing_keys as LK
 from . import boards as boards_mod
 from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import region as region_mod
@@ -155,6 +156,19 @@ class Known:
         self.spellings: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)  # (company family, title) -> {folder_key(company): where}
         self.waiting: dict[tuple[str, str], list[Waiting]] = defaultdict(list)     # inbox files still to be worked on
         self.notes: list[str] = []                                                 # what could not be read while loading
+        self.keys: dict[str, str] = {}                                             # id: / ATS key / URL key of every file already filed -> where
+
+    def add_keys(self, keys: Iterable[str], where: str) -> None:
+        for k in keys:
+            if k:
+                self.keys.setdefault(k, where)
+
+    def key_where(self, company: str, title: str, url: str | None, apply_url: str | None = None, location: str | None = None) -> str | None:
+        """Where a file with the same id, ATS key or URL key already is (inbox, approved/<date>/, jds_done/, done, rejected), else None. The
+        fingerprint (company + title + country) is not used here: it only ever labels a possible repost."""
+        jid = manual.job_id_for(company, title, url)
+        lk = LK.keys_for(company, title, url, apply_url, location)
+        return next((self.keys[k] for k in (f"id:{jid}", *lk.strong()) if k in self.keys), None)
 
     def add(self, company: str, title: str, location: str, where: str, *, path: Path | None = None, posted: str = "") -> None:
         c, t, p = cand.dedupe_key(company, title, location)
@@ -256,10 +270,31 @@ def load_known(settings, db: DB) -> Known:
                     waits = sub == "inbox" and not h.get("duplicate_of")
                     k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/{sub}",
                           path=p if waits else None, posted=h.get("posted", ""))
+    for d in decided_mod.approved_dirs(settings):                   # approved at the shortlist, not yet filed: as good as in the inbox
+        for p in d.glob("*.txt"):
+            h = _header_of(p)
+            if h.get("company") and h.get("title"):
+                k.add(h["company"], h["title"], h.get("location", ""), f"already in jds/approved/{d.name}")
+    for where, folder in file_folders(settings):
+        for p in folder.glob("*.txt"):
+            jid = decided_mod.file_job_id(p)
+            k.add_keys(([f"id:{jid}"] if jid else []) + decided_mod.file_keys(p).strong(), where)
     for company, role in archive_pairs(settings.archive_roots()):
         k.add(company, role, "", "already applied (application archive)")
     add_aiapply(settings, k)
     return k
+
+
+def file_folders(settings) -> list[tuple[str, Path]]:
+    """Every folder a JD file can already sit in: the inbox, done/, rejected/, approved/<date>/ and each folder of jds_done/ (skipped, applied, closed)."""
+    jds, out = settings.path("jds"), []
+    out += [(f"already in jds/{sub}", jds / sub) for sub in ("inbox", "done", "rejected")]
+    out += [(f"already in jds/approved/{d.name}", d) for d in decided_mod.approved_dirs(settings)]
+    try:
+        out += [(f"already in jds_done/{d.name}", d) for d in sorted(settings.path("jds_done").iterdir()) if d.is_dir()]
+    except OSError:
+        pass
+    return [(w, f) for w, f in out if f.is_dir()]
 
 
 def read_aiapply(path: Path) -> tuple[list[tuple[str, str]], str]:
@@ -623,6 +658,9 @@ class Discover:
         """Seen before? Not when it is a NEWER copy of an inbox file (the same job on another board of the employer): that one replaces it.
         A job you already decided on (skipped or applied, any copy of it) is counted as `already_decided`, not as a duplicate."""
         if self.already_decided(c.company, c.title, c.url, label, c.location):
+            return True
+        if self.known.key_where(c.company, c.title, c.url, c.apply_url, c.location):       # the same id / ATS key / URL in inbox, approved/ or jds_done/
+            self.run.count(label, "duplicate")
             return True
         where = self.known.where(c.company, c.title, c.location)
         if where and self.known.older_copy(c.company, c.title, c.posted) is None:

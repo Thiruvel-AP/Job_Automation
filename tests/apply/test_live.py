@@ -197,17 +197,47 @@ def test_missing_company_and_title_are_asked_for_and_a_blank_answer_rejects_the_
     assert (settings.path("jds") / "rejected" / "b.reason.txt").read_text().strip() == "no company or title given"
 
 
+BRITISH_ONLY = "\nThis role is open to british citizens only.\n"          # a jd_rules skip: not about the title, so it is still asked
+
+
 def test_a_job_the_rules_skip_is_only_tailored_when_the_user_says_so(db, settings, inbox, archive, jd):
-    put(inbox, "a.txt", jd, title="Plumber")
+    put(inbox, "a.txt", jd + BRITISH_ONLY)
     fake = Fake(db, settings, {"Tailor it anyway": ["n"]})
     live, _ = session(db, settings, fake)
     live.run()
     assert fake.calls == [] and live.results[0].status == "skipped (rules)"
     assert [p.name for p in filed(settings, "skipped")] == ["a.txt"] and not (inbox / "a.txt").exists()
-    put(inbox, "b.txt", jd, title="Plumber", n=2)
+    put(inbox, "b.txt", jd + BRITISH_ONLY, n=2)
     fake2 = Fake(db, settings, yes(**{"Tailor it anyway": ["y"]}))
     session(db, settings, fake2)[0].run()
     assert fake2.names() == ["tailor", "review", "preflight", "assist", "mark_applied"]
+
+
+@pytest.mark.parametrize("title", ["Data Science Manager", "Senior Data Scientist", "Plumber"])
+def test_an_excluded_title_or_level_is_skipped_silently_and_leaves_the_inbox(db, settings, inbox, archive, jd, title):
+    put(inbox, "a.txt", jd, title=title)
+    fake = Fake(db, settings)                                            # any prompt raises: no question may be asked
+    live, lines = session(db, settings, fake)
+    assert live.run() == 0
+    assert fake.calls == [] and fake.prompts == [] and live.results[0].status == "skipped (rules)"
+    assert db.jobs()[0]["status"] == "skipped" and "Excluded title or level" in "\n".join(lines)
+    assert [p.name for p in filed(settings, "skipped")] == ["a.txt"] and not (inbox / "a.txt").exists()
+
+
+def test_ask_on_excluded_true_brings_the_question_back(db, settings, inbox, archive, jd):
+    settings.raw["rules"]["ask_on_excluded"] = True
+    put(inbox, "a.txt", jd, title="Data Science Manager")
+    fake = Fake(db, settings, {"Tailor it anyway": ["n"]})
+    session(db, settings, fake)[0].run()
+    assert fake.prompts and "Tailor it anyway" in fake.prompts[0] and filed(settings, "skipped")
+
+
+def test_an_absent_setting_still_means_no_question_for_an_excluded_title(db, settings, inbox, archive, jd):
+    settings.raw.pop("rules", None)                                     # an old settings file: excluded titles are still not asked
+    put(inbox, "a.txt", jd, title="Data Science Manager")
+    fake = Fake(db, settings)
+    session(db, settings, fake)[0].run()
+    assert fake.prompts == [] and filed(settings, "skipped")
 
 
 def test_an_existing_job_past_triage_is_not_reset_by_the_same_jd_again(db, settings, inbox, archive, jd):

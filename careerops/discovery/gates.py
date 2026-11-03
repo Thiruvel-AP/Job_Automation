@@ -55,6 +55,11 @@ class Family:
     skills_from: str | None = None     # the fact-bank family whose skill_lines this role family prints (a bank family of its own name wins)
 
 
+def is_excluded_reason(reason: str | None) -> bool:
+    """Is a skipped job's `reason` (the verdict's reasons joined by '; ') about the title: no role family, or an excluded level word?"""
+    return any(r.strip() == FAMILY_REASON or r.strip().startswith("level excluded") for r in (reason or "").split(";"))
+
+
 def verdict_status(v: Verdict) -> str:
     return ("skipped" if not v.passed else "needs_jd" if v.needs_full_jd else "needs_country" if v.needs_country else "triaged")
 
@@ -122,9 +127,18 @@ def skills_from(settings, name: str | None) -> str | None:
     return f.skills_from if f else None
 
 
+SENIOR_WORD = re.compile(r"\b(?:sr|snr)\b(\.?)", re.I)
+
+
+def canonical_level(title: str) -> str:
+    """The title with `Sr`, `Sr.` and `Snr` written as `Senior`: they are one level and the level rule treats them alike ("Sr. X" and "Senior X"
+    both match a `senior` pattern in roles.levels.exclude, or neither does). A list that names only `sr` therefore excludes nothing."""
+    return SENIOR_WORD.sub(lambda m: "Senior" + (" " if m.group(1) else ""), title or "")
+
+
 def level_excluded(title: str, settings) -> str | None:
-    """The level pattern (senior, lead, intern, ...) that excludes this title, if any."""
-    return _any(settings["roles"]["levels"]["exclude"], title)
+    """The level pattern (senior, lead, intern, ...) that excludes this title, if any. `Sr` / `Sr.` count as `Senior` (canonical_level)."""
+    return _any(settings["roles"]["levels"]["exclude"], canonical_level(title))
 
 
 def pre_ceiling(jd: str, fb: dict, settings) -> float:

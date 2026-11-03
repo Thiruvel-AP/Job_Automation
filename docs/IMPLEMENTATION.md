@@ -1648,7 +1648,7 @@ What the RightShip dry run showed, and what was done (each has tests; `tests/app
 4. **Required-field table** (`apply/requiredgate.py`). FILLED / VERIFIED / LOST / EMPTY / NEEDS USER for every required field, red when it blocks; printed by the assist and `autoapply.run` before the submit gate
    (also when the run stops early); LOST / EMPTY / NEEDS USER block an auto-submit. The declaration and the consent are NEEDS USER (attestation).
 5. **`[e]dit` YAML check** (`review.workflow.read_edit_file`): a broken edit.yaml prints line and column and offers `[r]eopen` / `[d]iscard`; it is never passed on.
-6. **Greenhouse EU** (`discovery/intake.py`, `apply/ats_vendor.py`): `job-boards.eu.greenhouse.io` / `boards.eu.greenhouse.io` use `boards-api.eu.greenhouse.io` (unverified against the live API: no network here) and are never rewritten to the US host.
+6. **Greenhouse EU** (`discovery/intake.py`, `apply/ats_vendor.py`): `job-boards.eu.greenhouse.io` / `boards.eu.greenhouse.io` were meant to use `boards-api.eu.greenhouse.io`; that host does not exist (corrected in 5av: they are read from `boards-api.greenhouse.io`), and they are never rewritten to the US board host.
 7. **`careerops live --record`**: keeps the record of a form that was filled and not submitted under `data/dryruns/` (git-ignored).
 
 Choices: `live --dry-run` opens no form (it stops after tailor + review), so the form in the report was filled by the assist or by `--auto --no-submit`; the working-rights drop-down was left NEEDS USER here; v2.4.2 (section 5at)
@@ -1715,3 +1715,54 @@ re-read it from `jds/approved/2026-10-27/`; the per-paragraph name guard ran wit
 Choices: discovery's own duplicate index (company + title + place, pre-v2.5) is unchanged; `parked_region` is not written to the decision log (a park is
 never permanent, CLAUDE.md); the EU board API host is not added to robots.DOCUMENTED_API_HOSTS (its robots.txt did not answer on 31 Oct): the RightShip
 form is planned from the headless scan when the schema cannot be had. Unverified here: the real RightShip page and board API (no network in tests).
+
+## 5av. Fixes after v2.5 (3 Nov 2026) — **done** (offline tests; the public Greenhouse API was read once by hand with a few GETs, robots.txt first, to find the cause)
+
+1. **`live --url` on a Greenhouse EU link** (`discovery/intake.py`, `apply/gh_schema.py`). Cause, found with a GET on the public API: `boards-api.eu.greenhouse.io`
+   (the host 5as/5au assumed, "unverified") does not resolve. `boards-api.greenhouse.io` answers for the EU board too: `/v1/boards/rightship` gives
+   `{"name": "RightShip"}`, `/v1/boards/rightship/jobs/4982444101` gives `title: AI Engineer`, `company_name: RightShip`, `absolute_url: https://job-boards.eu.greenhouse.io/...`,
+   `first_published`, and `?questions=true` gives the 16 questions. So the old code fell back to the script-built board page, which has no company or title. Now
+   all four board hosts map to `boards-api.greenhouse.io`; the fallback to the page is gone (a 404 / block / robots disallow is an error, never worked around);
+   the company is `company_name`, else the board's `name` (one more GET), else the slug. `RightShip | AI Engineer | <EU link>` hashes to `manual:ff68fffd015a`, the id the
+   database already has. `gh_schema.Board.api_url` uses the same host, so the plan-first schema is fetched instead of falling back to the scan.
+2. **`live --id JOB`** (`intake.file_for_job`, `cli.cmd_live`): the JD file of a job the database knows, from the inbox or `approved/<date>/`, else written again into the inbox
+   from the stored ad (same company, title, URL, so the same id). A skipped / applied job is refused (`careerops unskip --id`); unknown id or no stored text: a one-line error.
+   Not with `--url` / `--clipboard`. Like `--url`, naming the job is the approval for that one file.
+3. **One senior level** (`discovery/gates.canonical_level`, `level_excluded`): `Sr`, `Sr.`, `Snr` are read as `Senior` before `roles.levels.exclude` is matched, so all
+   spellings get one result. The list is the user's: since they removed `\bsenior\b` it holds `\bsr\.?\b` only, which now excludes nothing (senior allowed, as its comment says);
+   adding `\bsenior\b` (or `sr`) back excludes all three spellings. Priority (`L`) and triage already treated `sr` as `senior`.
+4. **Shortlist `[a]`** (`discovery/shortlist.run`): never approves a row tagged `possible repost of a job you skipped`; those are listed with the reason and need their number
+   (`[x]` still skips them with the rest). The prompt says how many `[a]` leaves out. The label's date is the decision log's, else the database row's (`updated_at`, else its newest
+   event), else the time the JD was filed in `jds_done/skipped/` (`decided.filed_on`); a missing date reads `(date not recorded)`, never `?` (`decisions.repost_label`).
+
+## 5aw. Skip gaps after v2.5 (3 Nov 2026) — **done** (offline tests; the real data was only read: a read-only preview of the backfill, never `--apply`)
+
+Found: `data/state/decisions.jsonl` held one line (the Anthropic FDE). The shortlist's `[s]` / `[x]` only moved the JD file (and a job approved or skipped there never
+entered the database), so the log, `why` and the shortlist's repost label had nothing to show; the label read `on ?` (and discover wrote that `?` into the
+`Possible repost:` header of the files it created: the two approved ads of 3 Nov still carry it; the shortlist and `why` now compute the label afresh).
+
+1. **Backfill** (`apply/targets.py`, `decisions.plan_db` / `event_ts`, `careerops backfill-decisions [--apply]`, also run first by `retriage --decided --apply`):
+   a line for every skipped / applied job of the database, dated by its real event (the application's `applied_at`; `skip` / `live "skipped in review"` for your skips; the
+   tailoring event for an ATS-band skip; else `updated_at`, which a later update moves), and for every JD file in `jds_done/skipped` and `jds_done/applied` the log does not know
+   (dated by the last `skipped` event of `shortlist_log.jsonl`, else the `.reason.txt`'s time). Each line has `id:`, the ATS triple, the URL key and the fingerprint. A line
+   whose id, ATS key or URL key is already in the log is not written again; a second run finds nothing. Dry run by default.
+2. **`skip` / `why` / `unskip` by id, link or JD file name** (`targets.resolve`): the job's database rows, its JD files (inbox, `approved/<date>/`, `jds_done/`) and keys. A job with
+   no database row has its files moved to `jds_done/skipped/` (with a `.reason.txt`) and the log line written with the link as given and the address of each file; a bare link
+   with no file is recorded by its keys. A second skip writes no second line. `unskip` of such a job moves the files back and appends `unskipped`.
+3. **The shortlist's own skips are logged** (`[s n]`, `[x]` write the line; `unskip --shortlist` appends `unskipped`, otherwise the log would keep the ad hidden).
+4. **Same ATS triple = decided** (unchanged, now pinned by tests): the id, the ATS key and the URL key decide; only the fingerprint labels. Checked on the real data: Deliveroo
+   `manual:e68c252102ba` is 8202372 "Senior Data Scientist", the new ad is 8242432 "...(Economist)": different triples. Databricks `manual:763935c22603` is gh_jid 8884753002, the new ad
+   8927390002: different, and neither address has a triple (a company-domain link with `gh_jid`; the board is not in it), so only the URL key could decide. Both are fingerprint-only reposts.
+
+## 5ax. Fix round 3 after v2.5 (3 Nov 2026, evening) — **done** (offline tests; the backfill was applied to the real log at the user's request)
+
+1. **Backfill applied for real**: `data/state/decisions.jsonl` 1 -> 145 lines (38 from database rows, 106 from JD files in `jds_done/`); a second run adds 0. Dates are the real events where
+   they exist (events table, `applied_at`, shortlist log); a JD file the shortlist log does not know is dated by its `.reason.txt` mtime, which is when it was FILED, so some share the
+   timestamp of one bulk sweep (27 Oct 21:51:40): that is the filing time, not the day you chose.
+2. **`why` finds an old id** (`targets._old_id`, `decisions.find_id`): an id the database has no row for and no folder has a file of is looked up in the decision log and the events
+   table; it prints the keys of the log lines (ATS key, every address, fingerprint), the events, and `source:` lines (database row source, the JD file's `Source:` header, the Gmail
+   alert queue `manual_queue*.csv` with the alert's origin, the shortlist log). The records are listed oldest first.
+3. **Discover checks every key before it writes** (`discover.Known.key_where`, `load_known`): the id, ATS key and URL key of every JD file in the inbox, `done/`, `rejected/`, `approved/<date>/`
+   and each `jds_done/` folder; a match is counted `duplicate`. `approved/<date>/` also joins the company + title check (as the inbox does); `jds_done/` is keys only, so a
+   same-title repost of a skipped job is still written with its `Possible repost:` label. Cause of the bug: `load_known` read inbox / done / rejected only, never `approved/` or `jds_done/`.
+4. `careerops skip --url LINK` (the same as the positional argument; it did not exist before this round).

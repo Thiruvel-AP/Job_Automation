@@ -59,6 +59,7 @@ def test_the_inbox_listing_calls_the_number_an_estimate(db, settings, inbox, arc
 
 def test_the_final_table_is_printed_before_the_first_prompt_with_every_column(db, settings, inbox, archive, jd):
     three(inbox, jd, titles=("AI Engineer", "Senior AI Engineer", "Manager, Applied AI"))
+    settings.raw["rules"]["ask_on_excluded"] = True                    # these titles are rule-skipped and the test answers the question
     fake = Tailoring(db, settings, {"Tailor it anyway": ["y", "y"]}, review="skipped")       # the triage rules skip a senior / manager title
     lines: list[str] = []
     seen = []
@@ -79,6 +80,7 @@ def test_the_final_table_is_printed_before_the_first_prompt_with_every_column(db
 def test_the_level_factor_changes_the_final_order(db, settings, inbox, archive, jd):
     # Beta (0.90) is a director role: P = 0.90 x 1.0 x 0.3 = 0.27, below Gamma (0.60) and above Alpha (0.25)
     three(inbox, jd, titles=("AI Engineer", "Director, Applied AI", "AI Engineer"))
+    settings.raw["rules"]["ask_on_excluded"] = True                    # these titles are rule-skipped and the test answers the question
     fake = Tailoring(db, settings, {"Tailor it anyway": ["y"]}, review="skipped")
     session(db, settings, fake)[0].run()
     assert [db.job(j)["company"] for n, j in fake.calls if n == "review"] == ["Gamma", "Beta", "Alpha"]
@@ -137,6 +139,7 @@ def test_a_retailor_run_tailors_once_not_again_at_the_review_pass(db, settings, 
 def test_the_inbox_estimate_and_the_final_table_show_r_with_the_family_and_its_priority(db, settings, inbox, archive, jd):
     put(inbox, "1.txt", jd + "\nMARK-Alpha\n", company="Alpha", title="Forward Deployed Engineer", n=1)
     put(inbox, "2.txt", jd + "\nMARK-Beta\n", company="Beta", title="Software Engineer", n=2)       # no family: no R
+    settings.raw["rules"]["ask_on_excluded"] = True                    # these titles are rule-skipped and the test answers the question
     fake = Tailoring(db, settings, {"Tailor it anyway": ["y", "y"]}, review="skipped")
     live, lines = session(db, settings, fake)
     live.run()

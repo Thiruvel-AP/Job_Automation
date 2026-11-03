@@ -73,6 +73,12 @@ def _kind(key: str) -> str:
     return "id" if key.startswith("id:") else "ats" if key.startswith("ats:") else "url" if key.startswith("https://") else "fingerprint"
 
 
+def repost_label(applied: bool, date: str, job_id: str = "") -> str:
+    """`possible repost of a job you skipped on 2026-10-20 (manual:abc)`. Never a `?`: a date that was not recorded is said so, a missing id is left out."""
+    what = "applied to" if applied else "skipped"
+    return f"possible repost of a job you {what} " + (f"on {date}" if date else "(date not recorded)") + (f" ({job_id})" if job_id else "")
+
+
 @dataclass
 class Match:
     record: dict
@@ -88,8 +94,7 @@ class Match:
         return str(self.record.get("ts") or "")[:10]
 
     def label(self) -> str:
-        what = "applied to" if self.decision == APPLIED else "skipped"
-        return f"possible repost of a job you {what} on {self.date} ({self.record.get('job_id') or '?'})"
+        return repost_label(self.decision == APPLIED, self.date, self.record.get("job_id") or "")
 
 
 @dataclass
@@ -125,15 +130,23 @@ class Book:
         return self._hit([fp, fp.rsplit("|", 1)[0] + "|" if fp else ""], ("fingerprint",))      # a decided job with no place recorded still counts
 
 
-def why(settings, keys: LK.Keys, job_id: str | None = None) -> list[tuple[dict, list[str]]]:
-    """Every record that names one of these keys, oldest first, with the keys that matched."""
-    mine = set(keys_list(keys, job_id))
+def why(settings, keys: LK.Keys, job_id: str | None = None, extra: Iterable[str] = ()) -> list[tuple[dict, list[str]]]:
+    """Every record that names one of these keys (`extra`: more keys of the same listing), oldest first, with the keys that matched."""
+    mine = set(keys_list(keys, job_id)) | {k for k in extra if k}
     out = []
     for r in records(settings):
         hit = [k for k in r["keys"] if k in mine]
         if hit:
             out.append((r, hit))
+    out.sort(key=lambda x: str(x[0].get("ts") or ""))
     return out
+
+
+def find_id(settings, job_id: str) -> list[dict]:
+    """The records of an old job id (it may no longer be in the database or in any folder): by their `id:` key or their `job_id`, oldest first."""
+    want = id_key(job_id)
+    out = [r for r in records(settings) if want in r["keys"] or r.get("job_id") == job_id]
+    return sorted(out, key=lambda r: str(r.get("ts") or ""))
 
 
 def decision_of_row(row) -> str | None:
@@ -150,14 +163,41 @@ def decision_of_row(row) -> str | None:
     return None
 
 
-def backfill(db, settings) -> list[dict]:
-    """A line for every skipped / applied job of the database that has none yet (by its id). Returns the lines written."""
-    have = {k for r in records(settings) for k in r["keys"] if k.startswith("id:")}
+def event_ts(db, row, decision: str) -> str:
+    """When a skip / application really happened, from the events table: the application's `applied_at`; a skip of yours (`skip`, `live` \"skipped in
+    review\", review's skip); an ATS-band skip's tailoring; else the row's `updated_at`; else its newest event; else when it was first seen."""
+    jid, upd = row["id"], str(row["updated_at"] or "")[:19]
+    evs = db.conn.execute("SELECT ts, stage, detail FROM events WHERE job_id = ? ORDER BY ts", (jid,)).fetchall()
+
+    def last(pred) -> str:
+        got = [str(e["ts"])[:19] for e in evs if pred(str(e["stage"] or ""), str(e["detail"] or ""))]
+        return got[-1] if got else ""
+    when = ""
+    if decision == APPLIED and row["applied_at"]:
+        a = str(row["applied_at"])[:19]
+        when = a if len(a) > 10 else a + "T00:00:00"
+    elif decision == SKIPPED_USER:
+        when = last(lambda s, d: s == "skip" or (s == "live" and d.startswith("skipped")) or (s == "review" and "skip" in d.lower()))
+    elif decision == SKIPPED_ATS:
+        when = last(lambda s, d: s == "tailor")
+    return when or upd or (str(evs[-1]["ts"])[:19] if evs else "") or str(row["first_seen"] or "")[:19]
+
+
+def plan_db(db, have: set[str]) -> list[dict]:
+    """The lines the log lacks for the database's skipped / applied jobs (those whose `id:` key it does not hold), each dated by its real event."""
     out = []
     for row in db.jobs():
         d = decision_of_row(row)
         if d is None or id_key(row["id"]) in have:
             continue
-        out.append(append(settings, LK.keys_of_row(row), d, f"backfill: status '{row['status']}'" + (f", {row['reason']}" if row["reason"] else ""),
-                          row["id"], ts=str(row["updated_at"] or "")[:19] or None))
+        out.append({"ts": event_ts(db, row, d), "job_id": row["id"], "keys": keys_list(LK.keys_of_row(row), row["id"]), "decision": d,
+                    "reason": f"backfill: status '{row['status']}'" + (f", {row['reason']}" if row["reason"] else ""), "source": f"database row {row['id']}"})
+        have.add(id_key(row["id"]))
     return out
+
+
+def backfill(db, settings) -> list[dict]:
+    """A line for every skipped / applied job of the database that has none yet (by its id), dated by its real event. Returns the lines written.
+    (`apply/targets.backfill` also covers the JD files the database never held.)"""
+    have = {k for r in records(settings) for k in r["keys"] if k.startswith("id:")}
+    return [append(settings, r["keys"], r["decision"], r["reason"], r["job_id"], ts=r["ts"] or None) for r in plan_db(db, have)]
