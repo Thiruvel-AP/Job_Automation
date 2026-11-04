@@ -40,6 +40,7 @@ class BoardIndex:
         self.more = tuple(p for p in (wanted if isinstance(wanted, list) else more_ats.NAME_CHECKED) if p in more_ats.NAME_CHECKED)
         self.stopped: dict[str, str] = {}               # provider -> why: it answered 401 / 403 / 429 this run, so it is not asked again (never worked around)
         self.refused: dict[str, list] = {}              # provider -> [count, first message]: robots.txt (or a session requirement) said no this run
+        self.refusals: dict[str, int] = {}              # provider -> every request it refused this run, of either kind (the "refused requests per provider" report)
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.data: dict[str, dict] = data if isinstance(data, dict) else {}
@@ -69,8 +70,13 @@ class BoardIndex:
         out += [f"ats: {a} refused {n} request(s) (not asked again where it said no): {why}" for a, (n, why) in sorted(self.refused.items())]
         return out
 
+    def refused_counts(self) -> dict[str, int]:
+        """provider -> how many requests it refused this run (a 401 / 403 / 429, a robots.txt refusal, a session requirement), for the run record."""
+        return dict(sorted(self.refusals.items()))
+
     def stop(self, ats: str, e: Blocked) -> None:
         """A provider said no: a 401 / 403 / 429 stops the provider for the run; a robots.txt refusal or a session requirement is counted."""
+        self.refusals[ats] = self.refusals.get(ats, 0) + 1
         if getattr(e, "status", None):
             self.stopped.setdefault(ats, str(e))
         else:
@@ -187,13 +193,15 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             try:
                 data = fetcher.json(url, params=params, what=what)
             except FetchError as e:                       # Blocked is a FetchError: not an answer, so not remembered
+                if isinstance(e, Blocked):
+                    index.refusals[ats] = index.refusals.get(ats, 0) + 1
                 f.errors.append(str(e))
                 continue
             found = ats_mod.is_board(ats, data)
             index.put(ats, token, found)
             if found:
                 hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
-        for ats in index.more:                            # the v2.6 providers: their reply names the company, so every guess is name-checked
+        for ats in index.more:                            # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
             if ats in index.stopped:
                 continue
             known = index.get(ats, token)

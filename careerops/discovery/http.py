@@ -8,6 +8,8 @@
   * an HTTP 401 / 403 / 429 stops that host for the rest of the run: `Blocked` is raised, nothing is retried or worked around, and
     later requests to the host raise at once without sending anything. With a `blocklog` (blocklog.py) the refusal is written down (time,
     requests to that host before it), and the next runs keep at least blocklog.SLOW_GAP_S between requests to it;
+  * a 429 from a host in LONG_BACKOFF_HOSTS (Workable) is remembered in the blocklog with an `until` time: no run asks that host for 24 h, or for as
+    long as its `Retry-After` header says when that is longer (never more than blocklog.MAX_BACKOFF_S). The `Blocked` it raises says until when;
   * a connection error is retried once; other statuses are returned for the caller to read;
   * `method="POST", json=...` sends a JSON body (the public Workday CXS list endpoint); `follow=False` returns a redirect instead of following it, so the
     caller can read where it points (a Workday outage page);
@@ -20,12 +22,13 @@ from __future__ import annotations
 
 import time
 from collections import Counter
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from urllib.parse import urljoin, urlparse
 
 import requests
 
-from .blocklog import SLOW_GAP_S, BlockLog
+from .blocklog import SLOW_GAP_S, BlockLog, backoff_seconds
 from .robots import DOCUMENTED_API_HOSTS, RobotsCache, RobotsError, host_of, never_fetch
 from .sources import UA
 
@@ -36,6 +39,7 @@ REDIRECT_STATUSES = (301, 302, 303, 307, 308)
 BLOCKED_STATUSES = (401, 403, 429)
 MAX_BYTES = 20_000_000
 MAX_CRAWL_DELAY_S = 30
+LONG_BACKOFF_HOSTS = ("workable.com",)            # a 429 from these (or a subdomain) keeps every later run away for 24 h (or its Retry-After)
 
 
 class FetchError(RuntimeError):
@@ -75,20 +79,38 @@ class Fetcher:
         self.last: dict[str, float] = {}
         self.host_gap: dict[str, float] = {}          # host -> the Crawl-delay its robots.txt asks for, when longer than gap_s
         self.backed_off: dict[str, int] = {}          # host -> the 401 / 403 / 429 it answered
+        self.backoff_until: dict[str, datetime] = {}  # host -> when it may be asked again (a long backoff: 429 from LONG_BACKOFF_HOSTS, this run or an earlier one)
         self.requests = 0
         self.by_host: Counter = Counter()             # requests actually sent, per host (robots.txt included)
         self.blocklog = blocklog                      # the memory of refusals between runs (None: this run only)
         for host in (blocklog.slow_hosts() if blocklog is not None else []):
             self.host_gap[host] = SLOW_GAP_S          # it refused us recently: a slower pace, however the robots.txt reads
+        for host, (status, until) in (blocklog.active_backoffs() if blocklog is not None else {}).items():
+            self.backed_off[host] = status            # asked for a long pause by an earlier run (429 from Workable): not one request until it ends
+            self.backoff_until[host] = until
 
-    def _refused(self, host: str, status: int) -> None:
-        """A host said no: remember it for the rest of this run, and write down when and after how many requests."""
+    def _now(self) -> datetime:
+        return self.blocklog.now() if self.blocklog is not None else datetime.now(timezone.utc)
+
+    def _refused(self, host: str, status: int, retry_after: object = None) -> None:
+        """A host said no: remember it for the rest of this run, and write down when and after how many requests. A 429 from a LONG_BACKOFF_HOSTS host also
+        sets the time before which no later run asks it (24 h, or its Retry-After when longer)."""
         self.backed_off[host] = status
+        until = None
+        if status == 429 and any(host == h or host.endswith("." + h) for h in LONG_BACKOFF_HOSTS):
+            now = self._now()
+            until = now + timedelta(seconds=backoff_seconds(retry_after, now))
+            self.backoff_until[host] = until
         if self.blocklog is not None:
             try:
-                self.blocklog.record(host, status, max(self.by_host[host] - 1, 0), sum(self.by_host.values()))
+                self.blocklog.record(host, status, max(self.by_host[host] - 1, 0), sum(self.by_host.values()), until=until)
             except OSError:
                 pass                                  # the memory is a courtesy; the refusal is honoured either way
+
+    def _again(self, host: str) -> str:
+        """`earlier in this run` or `until 2026-11-05 14:07 UTC` for the message of a host that is not asked."""
+        until = self.backoff_until.get(host)
+        return f"until {until.astimezone(timezone.utc):%Y-%m-%d %H:%M} UTC" if until is not None else "earlier in this run"
 
     # ---- pacing
     def _throttle(self, host: str) -> None:
@@ -109,7 +131,7 @@ class Fetcher:
         except requests.RequestException:
             return None, ""
         if r.status_code in BLOCKED_STATUSES and (r.status_code == 429 or host not in DOCUMENTED_API_HOSTS):
-            self._refused(host, r.status_code)             # the host said no to a script: not asked again this run
+            self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"))      # the host said no to a script: not asked again this run
         return r.status_code, (r.text[:500_000] if getattr(r, "ok", False) else "")
 
     def robots_state(self, url: str) -> str:
@@ -138,13 +160,13 @@ class Fetcher:
             if any(host == h or host.endswith("." + h) for h in self.never) and not any(urlparse(url).path.startswith(p) for p in self.allow_paths):
                 raise Blocked(f"{what}: {host} is never requested by this tool (it is only recorded as the place to apply)")
             if host in self.backed_off:
-                raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} earlier in this run; not asked again")
+                raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} {self._again(host)}; not asked again", self.backed_off[host])
             if robots:
                 try:
                     self.robots.check(url, self._robots_get)
                 except RobotsError as e:
                     if host in self.backed_off:
-                        raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]}; not asked again",
+                        raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} {self._again(host)}; not asked again",
                                       self.backed_off[host]) from None
                     raise Blocked(str(e)) from None
                 delay = self.robots.crawl_delay(url)
@@ -166,9 +188,9 @@ class Fetcher:
                     if attempt == 1 or not isinstance(e, requests.ConnectionError):
                         raise FetchError(f"{what}: could not be fetched ({type(e).__name__})") from None
             if r.status_code in BLOCKED_STATUSES:
-                self._refused(host, r.status_code)
-                raise Blocked(f"{what}: HTTP {r.status_code}: {host} blocks automated access; it is not asked again this run",
-                              r.status_code)
+                self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"))
+                raise Blocked(f"{what}: HTTP {r.status_code}: {host} blocks automated access; it is not asked again " +
+                              (f"{self._again(host)}" if host in self.backoff_until else "this run"), r.status_code)
             where = (getattr(r, "headers", None) or {}).get("Location") if r.status_code in REDIRECT_STATUSES else None
             if where and follow:
                 method, json = "GET", None                         # a redirect is followed with a GET

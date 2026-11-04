@@ -17,6 +17,17 @@ Region and size (v2.4): an ad outside the chosen region(s) (discovery/region.py)
 shown before you choose: `sme` / `large` keep that bucket and list the size-unknown ads under [u] (they count towards the daily limit only when you press
 u); `sme-first` / `large-first` order by T + 0.3 for the preferred bucket and drop nobody; `both` changes nothing. [i] prints the evidence of each line.
 
+What it did not read (v2.7): when the last `discover` run did not read the alert emails (no --gmail-alerts, or Gmail failed), the list starts with
+`alerts not read since <time>: run discover --gmail-alerts`. `careerops daily` runs discover --ats --gmail-alerts --report and then this.
+
+Alerts that could not be traced to the employer (the manual queue, paths.jds/manual_queue.csv and its overflow) are their own block below the list:
+`From alerts, apply on the board (N): company | title | board | link`, the top ALERT_BLOCK_SIZE by T (no ad text, so E is neutral and the freshness is the day
+it was queued). `c n` prints what to do: open the link, copy the whole ad, run `careerops live --clipboard`; `s c n` dismisses one (parked, `unskip
+--shortlist` brings it back). The board page is never fetched here.
+
+`--all` lists every undecided in-region ad again, not only the new ones: an ad parked after being shown PARK_AFTER times is included, a list with
+nothing new is still printed, and the list is not counted as a showing (so it never parks anything). The caps and the age / T rules still apply.
+
 Repeats: an ad already approved (waiting in data/jds/approved/), skipped, applied to, closed, or parked is never offered again. Every list you were asked
 about is logged in data/jds/shortlist_log.jsonl (times_shown per job); an ad shown in PARK_AFTER lists with no decision is parked: it stays in the inbox but is
 only counted ("parked: N"). `careerops unskip --shortlist` brings skipped and parked ads back. With nothing new since the last list, no list is printed.
@@ -34,7 +45,7 @@ from .. import targeting as targeting_mod
 from ..apply import decided, targets, volume
 from ..apply import decisions as decisions_mod
 from ..db import DB
-from . import applykind, liveness, triage
+from . import applykind, freshness, liveness, triage, workcountry
 from . import region as region_mod
 from . import register as sponsors
 from . import size as size_mod
@@ -47,6 +58,7 @@ PARK_AFTER = 3                                  # lists an ad may be shown in wi
 SKIP_MARK = "(user, shortlist)"
 SKIP_REASON = f"skipped {SKIP_MARK}: skipped at the shortlist, not offered again"
 SIZE_FIRST_BONUS = 0.3                          # T added for the preferred bucket by `sme-first` / `large-first`
+ALERT_BLOCK_SIZE = 10                           # alerts that could not be traced to the employer: at most this many are listed, best T first
 
 
 def approved_root(settings) -> Path:
@@ -112,6 +124,33 @@ class Row:
 
 
 @dataclass
+class AlertRow:
+    """An alert that could not be traced to the employer's own board (a manual-queue row): there is no ad text, so it is listed with the link to apply on the board."""
+    company: str
+    title: str
+    board: str                                  # where the alert came from (linkedin, indeed ...), with the kind of page when it is the employer's own (workday ...)
+    link: str
+    t: triage.Triage
+    location: str = ""
+    repost: str = ""                            # "possible repost of a job you skipped on <date> (<id>)": only company + title + country match (v2.5: shown, never skipped on that alone)
+
+    @property
+    def name(self) -> str:
+        return f"{self.company} | {self.title}"
+
+    @property
+    def key(self) -> str:
+        return _key(self.company, self.title)
+
+    def line(self, n: int) -> str:
+        return f"  c{n}. {self.company} | {self.title} | {self.board} | {self.link}  ({self.t.text()})" + (f" [{self.repost}]" if self.repost else "")
+
+    def steps(self, n: int) -> str:
+        return (f"  c{n}. {self.name} ({self.board}): open {self.link} in your browser, copy the whole ad, then run  careerops live --clipboard\n"
+                f"      (it asks for Company: {self.company} · Job title: {self.title} · Application URL; this program never opens or fetches that page)")
+
+
+@dataclass
 class Plan:
     rows: list[Row] = field(default_factory=list)
     dropped: list[tuple[Path, str, str]] = field(default_factory=list)       # (file, folder in jds_done, reason line)
@@ -134,6 +173,9 @@ class Plan:
     unknown_rows: list[Row] = field(default_factory=list)                    # size-unknown ads under `sme` / `large`: listed under [u], offered only when you press u
     alive: Callable[[dict], str | None] | None = None                        # liveness check, used when [u] adds an ad
     size_notes: list[str] = field(default_factory=list)                      # what the size lookups said (no key, lookup limit, refusals)
+    show_all: bool = False                                                   # --all: every undecided in-region ad, not only the new ones
+    alert_rows: list[AlertRow] = field(default_factory=list)                 # the manual queue's best ALERT_BLOCK_SIZE by T
+    alert_total: int = 0                                                     # ... of this many that could be listed
 
 
 @dataclass
@@ -231,14 +273,15 @@ def make_alive(fetcher: Fetcher | None, cache, now: datetime) -> Callable[[dict]
 def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=None, now: datetime | None = None,
           archive: list[tuple[str, str]] | None = None, files: list[Path] | None = None, regions: Sequence[str] | None = None,
           size_mode: str | None = None, size_resolver: size_mod.Resolver | None = None,
-          choose_size: Callable[[Counter], str] | None = None) -> Plan:
+          choose_size: Callable[[Counter], str] | None = None, show_all: bool = False) -> Plan:
     """Score the inbox and decide what is offered. Writes the scores to the database; moves nothing (see `file_away`).
 
+    `show_all`: also the ads that were parked after PARK_AFTER showings without a decision (every undecided in-region ad, not only the new ones).
     `regions`: the selected region keys; an ad outside them is parked (region), not scored. None = no region filter.
     `size_resolver`: works out each pooled ad's company size; `size_mode` (or `choose_size(counts)`, asked once the counts are known) then applies it."""
     now = now or datetime.now(timezone.utc)
     cfg = targeting_mod.config(settings)
-    plan = Plan(selection=tuple(regions) if regions is not None else None)
+    plan = Plan(selection=tuple(regions) if regions is not None else None, show_all=show_all)
     non_uk_ok = bool(regions) and (region_mod.ANY in regions or bool(region_mod.iso_of(regions) - {"GB"}))      # S = unknown, not "not home", for a job abroad
     hist = read_history(settings)
     plan.last_shown = hist.last
@@ -270,7 +313,7 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
             plan.decided += 1
             continue
         repost = known.repost(job["company"], job["title"], job.get("url") or job.get("apply_url"), job.get("location"))
-        if _key(job["company"], job["title"]) in hist.parked:
+        if _key(job["company"], job["title"]) in hist.parked and not show_all:
             plan.parked.append(f"{job['company']} | {job['title']}")
             continue
         rm = None
@@ -336,7 +379,64 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
     plan.unknown_rows = [r for r in plan.unknown_rows if not volume.company_block(db, settings, r.job["company"], day, apps=apps)][:cfg.shortlist_size]
     for r in plan.unknown_rows:
         r.shown = hist.shown.get(r.key, 0)
+    plan.alert_rows, plan.alert_total = alert_block(settings, db, fb, idx=idx, floor=floor, now=now, regions=regions, non_uk_ok=non_uk_ok, known=known,
+                                                    hist=hist, archive=archive, others=others)
     return plan
+
+
+def _taken_keys(settings, db: DB, others: list[dict]) -> set[str]:
+    """(company, title) keys of the ads already in hand: the inbox, approved/<date>/, and the database (a job you skipped or applied to is not "in hand": the same
+    company + title alone is only a possible repost, v2.5)."""
+    out = {_key(r["company"], r["title"]) for r in others if not str(r.get("status") or "").startswith(("skipped", "applied"))}
+    for p in [*decided.txt_files(decided.inbox_dir(settings)), *approved_files(settings)]:
+        h = decided.header_of(p)
+        if h.get("company") and h.get("title"):
+            out.add(_key(h["company"], h["title"]))
+    return out
+
+
+def alert_block(settings, db: DB, fb: dict, *, idx, floor: int | None, now: datetime, regions: Sequence[str] | None, non_uk_ok: bool, known, hist: History,
+                archive: list[tuple[str, str]], others: list[dict]) -> tuple[list[AlertRow], int]:
+    """(the best ALERT_BLOCK_SIZE manual-queue rows by T, how many could be listed). A row is an alert `discover` could not trace to the employer's own board
+    (paths.jds/manual_queue.csv and its overflow). It needs a company, a title and a link; it is left out when the job is decided, already in hand (inbox,
+    approved, the database), dismissed with `s c n`, outside the chosen region, disqualified (blacklist, level, the same role under another channel), or older than
+    targeting.max_posting_age_days without T >= 4.5. There is no ad text, so E is neutral; the age is the day the row was queued. Nothing is fetched."""
+    from . import discover as disc
+
+    cfg = targeting_mod.config(settings)
+    raw = [*disc.read_rows(disc.manual_queue_path(settings)), *disc.read_rows(disc.overflow_path(settings))]
+    if not raw:
+        return [], 0
+    taken = _taken_keys(settings, db, others)
+    rules = workcountry.rules_from(workcountry.applicant_visa(settings))
+    threshold = settings["sponsors"].get("fuzzy_threshold", 0.92)
+    seen: set[str] = set()
+    out: list[AlertRow] = []
+    for r in raw:
+        company, title, link = (r.get("company") or "").strip(), (r.get("title") or "").strip(), (r.get("link") or "").strip()
+        if not (company and title and link) or link in seen:                  # an alert e-mail nothing was read from has no company: it is not a job
+            continue
+        seen.add(link)
+        loc = (r.get("location") or "").strip()
+        key = _key(company, title)
+        if key in hist.parked or key in taken or known.hit(company, title, link, loc):
+            continue
+        if regions is not None and region_mod.match(loc, "", regions).verdict == region_mod.OUT:
+            continue
+        work = workcountry.resolve(location=loc, description="", title=title, override="", rules=rules)
+        job = {"id": link, "company": company, "title": title, "description": "", "location": loc, "url": link, "apply_url": link, "source": r.get("source") or "",
+               "sponsor_match": idx.lookup(company, threshold).label if idx is not None else None, "agency": False, "work_country": work.country,
+               "posted_at": r.get("ts") or None, "posted_at_source": freshness.GMAIL if r.get("ts") else None, "region_target": non_uk_ok}
+        if triage.disqualify(job, settings, db, archive=archive, others=others) is not None:
+            continue
+        t = triage.score(job, settings, fb, floor=floor, now=now)
+        if t.age_days is not None and t.age_days > cfg.max_posting_age_days and t.t < targeting_mod.OLD_POSTING_MIN_T:
+            continue
+        kind = (r.get("apply_kind") or "").strip()
+        board = (r.get("source") or "alert") + (f"/{kind}" if kind and kind != "aggregator_only" else "")
+        out.append(AlertRow(company, title, board, link, t, loc, known.repost(company, title, link, loc)))
+    out.sort(key=lambda a: (-a.t.t, a.t.age_days if a.t.age_days is not None else float("inf"), a.company, a.title))
+    return out[:ALERT_BLOCK_SIZE], len(out)
 
 
 def file_away(settings, path: Path, folder: str, reason: str) -> Path | None:
@@ -386,30 +486,73 @@ def unknown_lines(plan: Plan) -> list[str]:
     return [f"Size unknown ({len(plan.unknown_rows)}): [u] include them"] + [f"     {r.name} ({r.size.evidence or 'no evidence'})" for r in plan.unknown_rows[:10]]
 
 
+def alert_lines(plan: Plan) -> list[str]:
+    """The block of alerts that could not be traced to the employer: apply on the board (nothing here is fetched)."""
+    if not plan.alert_rows:
+        return []
+    count = f"{plan.alert_total}, the top {len(plan.alert_rows)} by T" if plan.alert_total > len(plan.alert_rows) else f"{len(plan.alert_rows)}"
+    return [f"From alerts, apply on the board ({count}): company | title | board | link   [c n] = open the link, copy the whole ad, run `careerops live --clipboard` · [s c n] = dismiss"
+            ] + [a.line(n) for n, a in enumerate(plan.alert_rows, 1)]
+
+
 def lines(plan: Plan, cfg: targeting_mod.Targeting) -> list[str]:
-    if not plan.new:                                                         # nothing you have not been shown: no list
+    if not plan.new and not plan.show_all:                                   # nothing you have not been shown: no list
         since = f"since {plan.last_shown.astimezone():%Y-%m-%d %H:%M}" if plan.last_shown else "yet"
-        return [f"No new jobs {since}. Run careerops discover --ats --gmail-alerts."] + region_lines(plan) + unknown_lines(plan) + parked_line(plan)
+        return ([f"No new jobs {since}. Run careerops discover --ats --gmail-alerts."]
+                + region_lines(plan) + unknown_lines(plan) + parked_line(plan) + alert_lines(plan))
     out = [f"Shortlist: {plan.scored} ad(s) scored; {len(plan.rows)} offered (at most {cfg.shortlist_size}, T >= {cfg.min_triage_score:g}). "
            f"Left out: {len(plan.dropped)} disqualified, {plan.below_min} under T {cfg.min_triage_score:g}, "
            f"{plan.too_old} older than {cfg.max_posting_age_days} d without T >= {targeting_mod.OLD_POSTING_MIN_T:g}, {len(plan.held)} at a company limit"
            + (f", {plan.approved} already approved" if plan.approved else "") + (f", {plan.decided} already decided" if plan.decided else "")
            + (f", {plan.unreadable} unreadable" if plan.unreadable else "") + (f", {plan.size_hidden} in the other size bucket" if plan.size_hidden else "") + ".",
-           f"new since last shortlist: {plan.new}"]
+           f"new since last shortlist: {plan.new}" + (" (--all: every undecided in-region ad is listed, not only the new ones)" if plan.show_all else "")]
     if plan.region_unknown:
         out.append(f"region unknown for {plan.region_unknown} ad(s): kept, flagged [{region_mod.FLAG}] (the place does not say where the work is)")
     out += [r.line(n) for n, r in enumerate(plan.rows, 1)]
     out += [f"  held back: {name}: {why}" for name, why in plan.held[:10]]
     out += [f"  disqualified: {p.name}: {why}" for p, _, why in plan.dropped[:10]]
     out += [f"  size: {note}" for note in plan.size_notes]
-    return out + unknown_lines(plan) + region_lines(plan) + parked_line(plan)
+    return out + unknown_lines(plan) + region_lines(plan) + parked_line(plan) + alert_lines(plan)
 
 
-def parse(answer: str, n: int) -> tuple[str, list[int]]:
-    """('all', []) | ('approve', [numbers]) | ('skip', [numbers]) | ('rest', []) | ('quit', []) | ('bad', []). Numbers are 1..n."""
+def unread_lines(settings) -> list[str]:
+    """What the shortlist did not read: `alerts not read since <time>: run discover --gmail-alerts` when the last recorded `discover` run did not read the alert
+    emails (it was not asked for --gmail-alerts, or Gmail failed). [] when it did."""
+    from . import discover
+
+    runs = discover.read_runs(settings)
+    read, last = discover.last_alert_read(runs)
+    if read:
+        return []
+    if last is None:
+        return ["alerts not read: no recorded discover run has read them yet: run discover --gmail-alerts"]
+    try:
+        when = f"{datetime.fromisoformat(last).astimezone():%Y-%m-%d %H:%M}"
+    except ValueError:
+        when = last
+    return [f"alerts not read since {when}: run discover --gmail-alerts"]
+
+
+def _alert_verb(toks: list[str], alerts: int) -> tuple[str, list[int]] | None:
+    """('copy' | 'dismiss', [n]) for `c 2`, `c2`, `s c 2`, `s c2` (numbers 1..alerts); ('bad', []) when the number is out of range; None when the answer is not about the alerts."""
+    skip = toks[0] == "s" and len(toks) > 1
+    words = toks[1:] if skip else toks
+    if not words or not (words[0] == "c" or (words[0][0] == "c" and words[0][1:].isdigit())):
+        return None
+    nums = ([words[0][1:]] if words[0] != "c" else []) + words[1:]
+    if not nums or not all(t.isdigit() and 1 <= int(t) <= alerts for t in nums):
+        return "bad", []
+    return ("dismiss" if skip else "copy"), sorted({int(t) for t in nums})
+
+
+def parse(answer: str, n: int, alerts: int = 0) -> tuple[str, list[int]]:
+    """('all', []) | ('approve', [numbers]) | ('skip', [numbers]) | ('rest', []) | ('quit', []) | ('bad', []). Numbers are 1..n.
+    With `alerts` > 0 also ('copy', [n]) for `c 2` / `c2` and ('dismiss', [n]) for `s c 2` / `s c2`, n in 1..alerts (the alert block's own numbers)."""
     toks = answer.replace(",", " ").lower().split()
     if not toks:
         return "bad", []
+    if alerts and (got := _alert_verb(toks, alerts)) is not None:
+        return got
     if toks[0] in ("q", "quit"):
         return "quit", []
     if toks[0] in ("a", "all"):
@@ -429,38 +572,53 @@ def parse(answer: str, n: int) -> tuple[str, list[int]]:
 def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Callable[[str], None] = print, fetcher: Fetcher | None = None,
         now: datetime | None = None, dry_run: bool = False, archive: list[tuple[str, str]] | None = None, regions: Sequence[str] | None = None,
         size_mode: str | None = None, size_resolver: size_mod.Resolver | None = None,
-        choose_size: Callable[[Counter], str] | None = None) -> Plan:
-    """Build the list, file the disqualified ads, print it, and (with `ask`) take your choices. `ask` None or `dry_run`: print only, nothing is moved."""
+        choose_size: Callable[[Counter], str] | None = None, show_all: bool = False, preface: Sequence[str] = ()) -> Plan:
+    """Build the list, file the disqualified ads, print it, and (with `ask`) take your choices. `ask` None or `dry_run`: print only, nothing is moved.
+    `preface`: lines printed first (what the shortlist did not read: `unread_lines`). `show_all`: see `build`; the list is then not counted as a showing."""
     now = now or datetime.now(timezone.utc)
     cfg = targeting_mod.config(settings)
     plan = build(settings, db, fb, fetcher=fetcher, now=now, archive=archive, regions=regions, size_mode=size_mode, size_resolver=size_resolver,
-                 choose_size=choose_size)
+                 choose_size=choose_size, show_all=show_all)
     if not dry_run:
         apply_drops(settings, plan)
-    out("\n".join(lines(plan, cfg)))
-    if not plan.new:
+    out("\n".join([*preface, *lines(plan, cfg)]))
+    interactive = ask is not None and not dry_run
+    if not plan.new and not plan.show_all and not (plan.alert_rows and interactive):
         return plan
-    if ask is None or dry_run:
+    if not interactive:
         if not dry_run:
             out("(no terminal: nothing was approved; run `careerops shortlist` in one)")
         return plan
-    rows = list(plan.rows)
+    listed = bool(plan.new or plan.show_all)                                    # with nothing new the list was not printed: only the alert block is asked about
+    rows = list(plan.rows) if listed else []
     numbered = {n: r for n, r in enumerate(rows, 1)}
-    log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for r in rows], now)
-    extra = ((" · [u] include the size-unknown ads" if plan.unknown_rows else "") + (" · [i] evidence" if any(r.size or r.region for r in rows) else ""))
-    while numbered:
+    alerts = {n: a for n, a in enumerate(plan.alert_rows, 1)}                   # the block's own numbers (c1 ...): stable, a dismissed one is removed
+    if listed and not plan.show_all:                                            # --all is a look, not a showing: it never counts towards parking
+        log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for r in rows], now)
+    extra = ((" · [u] include the size-unknown ads" if listed and plan.unknown_rows else "") + (" · [i] evidence" if any(r.size or r.region for r in rows) else "")
+             + (" · [c n] how to apply on the board · [s c n] dismiss an alert" if alerts else ""))
+    while numbered or alerts:
         try:
             n_repost = sum(1 for r in numbered.values() if r.repost)
-            answer = ask("[a] approve all" + (f" (not the {n_repost} possible repost(s): type their numbers)" if n_repost else "")
-                         + " · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list" + extra + " · [q] quit > ")
+            head = ("[a] approve all" + (f" (not the {n_repost} possible repost(s): type their numbers)" if n_repost else "")
+                    + " · [1 3 5] approve these · [s n] skip job n for good · [x] skip every job left in this list") if numbered else "Nothing left to approve"
+            answer = ask(head + extra + " · [q] quit > ")
         except (EOFError, KeyboardInterrupt):
             out("(cut short: nothing more was approved)")
             break
-        verb, nums = parse(answer, len(rows))
+        verb, nums = parse(answer, len(rows), len(plan.alert_rows))
         if verb == "quit":
             break
         if verb == "bad":
-            out("  not understood: type a, numbers such as 1 3 5, s and a number such as s 2, or q")
+            out("  not understood: type a, numbers such as 1 3 5, s and a number such as s 2, " + ("c and an alert number such as c1, " if alerts else "") + "or q")
+            continue
+        if verb == "copy":
+            out("\n".join(plan.alert_rows[n - 1].steps(n) if n in alerts else f"  c{n}: already dismissed" for n in nums))
+            continue
+        if verb == "dismiss":
+            gone = [alerts.pop(n) for n in nums if n in alerts]
+            log_events(settings, [{"event": "parked", "key": a.key, "company": a.company, "title": a.title} for a in gone], now)
+            out(f"  dismissed {len(gone)}: not listed again (`careerops unskip --shortlist` brings them back)" if gone else "  those are already dismissed")
             continue
         if verb == "info":
             out("\n".join(r.evidence(n) for n, r in numbered.items()))
@@ -484,7 +642,8 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
                 rows.append(r)
                 numbered[n] = r
                 added.append((n, r))
-            log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for _, r in added], now)
+            if not plan.show_all:
+                log_events(settings, [_event(r, "shown", times_shown=r.shown + 1) for _, r in added], now)
             out("\n".join(r.line(n) for n, r in added) if added else "  none of them is still open")
             if plan.unknown_rows:
                 out(f"  {len(plan.unknown_rows)} more size-unknown ad(s) did not fit in the list")
@@ -516,7 +675,7 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
             out(f"  approved {len(moved)}: data/jds/approved/{now.date().isoformat()}/ (careerops live reads these)")
         for n in [n for n, r in numbered.items() if r in picked]:
             numbered.pop(n)
-    tired = [r for r in numbered.values() if r.shown + 1 >= PARK_AFTER]          # shown for the PARK_AFTER-th time and still undecided
+    tired = [] if plan.show_all else [r for r in numbered.values() if r.shown + 1 >= PARK_AFTER]          # shown for the PARK_AFTER-th time and still undecided
     if tired:
         log_events(settings, [_event(r, "parked") for r in tired], now)
         out(f"  parked {len(tired)}: shown {PARK_AFTER} times with no decision, not offered again ({'; '.join(r.name for r in tired)}); "

@@ -1,10 +1,10 @@
-"""Country gate: a job outside the UK is not dropped but written `Country:` / `Status: listed_only`, ranked with S = 0.5, kept apart from
-the UK limit. (`live` refusing it is tested in tests/apply/test_live.py.) No network: `Net` answers every request."""
+"""Country gate: a job outside the UK is not dropped but PARKED (v2.7: a row in data/discover/parked.csv, never a file in the inbox), counted apart from
+the UK limit. An inbox file marked `Status: listed_only` is still ranked with S = 0.5 and refused by `live` (tests/apply/test_live.py). No network: `Net` answers every request."""
 from datetime import datetime, timezone
 
 import pytest
 
-from careerops.discovery import countries, intake, manual, priority
+from careerops.discovery import countries, discover as disc, intake, manual, priority
 from careerops.discovery.candidate import Candidate
 from careerops.discovery.discover import Discover
 from careerops.discovery.http import Fetcher
@@ -75,17 +75,17 @@ def test_a_visa_block_is_found_by_country_name_or_code_and_must_not_be_empty():
 
 
 # ------------------------------------------------------------------ discover writes it listed_only
-def test_a_job_outside_the_uk_is_written_with_country_and_status_headers(cfg, db):
+def test_a_job_outside_the_uk_is_parked_and_not_written_to_the_inbox(cfg, db):
     d = make(cfg, db, acme_net())
     d.from_boards()
-    assert titles(d) == ["AI Engineer | New York, NY", "Data Scientist | London, UK", "Data Scientist | Manchester",
-                         "Machine Learning Engineer | Remote"]
-    ny = inbox_text(cfg, "ai-engineer-103")
-    head = manual.header_fields(ny)
-    assert head["country"] == "United States" and head["status"] == "listed_only" and head["location"] == "New York, NY"
+    assert titles(d) == ["Data Scientist | London, UK", "Data Scientist | Manchester", "Machine Learning Engineer | Remote"]
+    assert not [p for p in (cfg.path("jds") / "inbox").glob("*.txt") if "ai-engineer-103" in p.name]
+    (row,) = disc.read_rows(disc.parked_path(cfg))
+    assert (row["company"], row["title"], row["location"], row["country"]) == ("Acme Analytics Ltd", "AI Engineer", "New York, NY", "United States")
+    assert row["link"] and "outside the UK" in row["reason"]
     assert "Country:" not in inbox_text(cfg, "data-scientist-101") and "listed_only" not in inbox_text(cfg, "data-scientist-101")
     c = d.run.sources["ats"]
-    assert (c["written"], c["listed_only"], c["place_filtered"]) == (4, 1, 1)          # the bare "Remote" ad of Applied Scientist is still out
+    assert (c["written"], c["listed_only"], c["listed_parked"], c["place_filtered"]) == (3, 1, 1, 1)          # the bare "Remote" ad of Applied Scientist is still out
 
 
 def test_the_headers_come_in_the_first_ten_lines_even_with_every_other_header(cfg):
@@ -112,8 +112,8 @@ def test_the_listed_only_limit_is_its_own(cfg, db):
 def test_the_uk_limit_does_not_stop_a_listed_ad_and_a_listed_ad_does_not_use_the_uk_limit(cfg, db):
     d = make(cfg, db, acme_net(), limit=1)
     d.from_boards()
-    assert titles(d) == ["AI Engineer | New York, NY", "Data Scientist | London, UK"]          # one UK ad (the limit) + the listed one
-    assert d.new_files == 1 and d.listed_files == 1
+    assert titles(d) == ["Data Scientist | London, UK"]                                        # one UK ad (the limit) ...
+    assert d.new_files == 1 and d.listed_files == 1 and len(disc.read_rows(disc.parked_path(cfg))) == 1       # ... and the parked one
 
 
 def test_turned_off_it_is_the_old_behaviour(cfg, db):
@@ -126,7 +126,8 @@ def test_turned_off_it_is_the_old_behaviour(cfg, db):
 def test_a_dry_run_counts_it_and_writes_nothing(cfg, db):
     d = make(cfg, db, acme_net(), dry_run=True)
     d.from_boards()
-    assert len(d.run.written) == 4 and d.run.sources["ats"]["listed_only"] == 1 and not (cfg.path("jds") / "inbox").exists()
+    assert len(d.run.written) == 3 and d.run.sources["ats"]["listed_only"] == 1 and d.run.sources["ats"]["listed_parked"] == 1
+    assert not (cfg.path("jds") / "inbox").exists() and not disc.parked_path(cfg).exists()
 
 
 def test_a_listed_ad_is_credited_to_its_board_in_the_by_source_counts(cfg, db):
@@ -144,14 +145,12 @@ def test_the_same_job_is_not_listed_twice(cfg, db):
 
 
 # ------------------------------------------------------------------ priority
-def test_priority_s_is_half_outside_the_uk_by_default_and_the_listing_says_so(cfg, db):
+def test_a_parked_ad_is_not_ranked_or_listed_and_the_ads_that_are_written_keep_their_s(cfg, db):
     d = make(cfg, db, acme_net())
     d.from_boards()
     by = {c.title + " | " + c.location: pr for pr, c, _ in d.ranked()}
-    ny = by["AI Engineer | New York, NY"]
-    assert ny.s == 0.5 and "work location United States is not home" in ny.s_reason
-    assert all(pr.s > 0.5 for k, pr in by.items() if "New York" not in k)
-    assert any("listed only" in line and "is not home" in line for line in d.listing())
+    assert "AI Engineer | New York, NY" not in by and all(pr.s > 0.5 for pr in by.values())
+    assert not any("listed only" in line or "New York" in line for line in d.listing())
 
 
 def test_the_weight_is_a_setting_and_can_only_lower_s(cfg):

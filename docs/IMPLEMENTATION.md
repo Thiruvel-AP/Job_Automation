@@ -1801,3 +1801,34 @@ CV-Library) reach the employer's own page, so 302 jobs sit in the manual queue. 
 
 Unverified (needs your network): the live `careerops discover --ats --report` run. It writes to the real inbox and DB, so it was not run here; the numbers above come from that run. Slug guessing
 adds up to 4 tokens x 4 providers (Workable on one host, one request a second; the others one host each) per company, cached 30 days; set `discover.ats.providers: []` to turn it off.
+
+## 5az. v2.7 — shortlist visibility (4 Nov 2026) — **done offline** (fixtures only, `--mock` for the pipeline); the live runs are yours
+
+Why: the shortlist said "no new jobs" without saying that the alert emails had not been read, left the manual queue (alerts that could not be traced to the employer) out of sight,
+filled the inbox with out-of-region ads, and the first live run of v2.6 asked Personio hosts that do not exist and was refused by Workable (429) again on every run.
+
+1. **What it did not read** (`shortlist.unread_lines`, `discover.last_alert_read`, `Run.asked`): the run record keeps the source steps the run was asked for; `careerops shortlist` starts with
+   `alerts not read since <time>: run discover --gmail-alerts` when the last run did not read them (not asked, or `failures` has a `gmail:` line); a run recorded before `asked` existed counts by its
+   `gmail` counters. `careerops daily` (`cli.cmd_daily`) is `discover --ats --gmail-alerts --report` then `shortlist`; a failing discover does not stop the shortlist, its exit code is kept; no `--mock`.
+2. **Alerts block** (`shortlist.alert_block`, `AlertRow`, `parse` verbs `c n` / `s c n`): the rows of `manual_queue.csv` and `manual_queue_overflow.csv` with a company, title and link, scored with
+   the zero-token T (no description: E = 3, the age is the queue time as a Gmail arrival), top `ALERT_BLOCK_SIZE` (10, a constant: it is a display count, not an application cap). Left out: decided
+   (`Decided.hit`), in hand (inbox, approved, database rows not skipped / applied), dismissed (`parked` event in `shortlist_log.jsonl`, so `unskip --shortlist` reverses it), outside the region,
+   disqualified (blacklist, level, same role on record under another channel), too old without T >= 4.5. A match on company + title with a skipped / applied job is shown with the v2.5 repost label.
+   `c n` prints the steps (open the link, copy the ad, `live --clipboard`); nothing is fetched. The prompt also runs when only the block has something to ask.
+3. **`shortlist --all`** (`build(show_all=True)`): the ads parked after `PARK_AFTER` showings are included, a list with nothing new is printed and asked about, no `shown` / `parked` event is logged.
+   Interpretation chosen: "older in-region ads not yet approved or decided" = ads shown before, including the parked ones; the age rule (`max_posting_age_days`), `min_triage_score` and
+   `shortlist_size` still apply (code never raises them).
+4. **Listed-only ads are parked** (`Discover.park_listed`, `discover.park_inbox_listed`, `parked_path`): an ad outside the selected region (the UK when none) is a row in
+   `data/discover/parked.csv`, not an inbox file (counters `listed_only` and `listed_parked`; not in `written`). An ad already parked is a `duplicate`; choosing its region writes it as a normal ad.
+   `careerops shortlist` (not with `--dry-run` / `--mock`) moves the `Status: listed_only` inbox files that are outside the chosen region to `data/discover/parked/` with one row each
+   (`decided.move_file`: never over a file, never out of the archive); an ad of a region chosen since stays.
+5. **Guessing** (`more_ats.NAME_CHECKED` = Workable, SmartRecruiters, Teamtailor, Recruitee; `LINK_ONLY` = Personio, Pinpoint): Personio is read only from a link or `sources.personio`. A `personio` in
+   `discover.ats.providers` is ignored and `careerops doctor` names it. **Refused requests per provider** (`BoardIndex.refusals`, `Run.refused`, `discover.refused_lines`): every `Blocked` a provider
+   raised in the run, stored in the run record; the run and `discover --report` print `before -> after` (the previous recorded run against this one; a run recorded before the field existed is read from
+   its `ats: <provider> refused N request(s)` notes).
+6. **Workable 429** (`http.LONG_BACKOFF_HOSTS`, `blocklog.backoff_seconds`): `until` = now + max(24 h, `Retry-After`), never more than 7 days; the next `Fetcher` starts with that host backed off (status 429,
+   the `Blocked` says until when, so a provider is stopped for the run) and sends not even robots.txt until it passes. Other hosts keep the old rule (this run, then a 2 s pace for 7 days).
+   Interpretation chosen: "24 h and use Retry-After if present" = whichever is longer.
+
+Unverified (needs your network and your data): a live `careerops daily`; the first real `shortlist` will move the listed-only files already in your inbox (not run here: real data is only touched by
+`--mock` runs). `config/settings.yaml` (yours, left untouched) still lists `personio` under `discover.ats.providers` and its `listed_only` comment still says "written to the inbox": edit both when you like.

@@ -145,10 +145,9 @@ def test_an_alert_from_a_one_country_source_gives_the_job_that_country_unless_it
     cfg.raw["sources"]["greenhouse"].append({"slug": "maple", "name": "Maple Analytics"})
     d = make(cfg, db, net)
     d.from_gmail()
-    ((c, path),) = d.run.written
-    assert (c.company, c.country, c.listed_only, c.origin) == ("Maple Analytics", "Australia", True, "gmail:seek-au")
-    head = manual.header_fields(path.read_text(encoding="utf-8"))
-    assert (head["country"], head["status"]) == ("Australia", "listed_only")
+    assert d.run.written == []                                              # outside the UK: parked in parked.csv, not written to the inbox (v2.7)
+    (row,) = disc.read_rows(disc.parked_path(cfg))
+    assert (row["company"], row["country"], row["title"]) == ("Maple Analytics", "Australia", "Data Scientist")
     assert d.run.by_source["seek-au"]["listed_only"] == 1 and d.run.new_jobs("seek-au") == 1
 
 
@@ -160,7 +159,7 @@ def test_a_posting_whose_place_says_another_country_keeps_that_one(cfg, db):
     cfg.raw["sources"]["greenhouse"].append({"slug": "maple", "name": "Maple Analytics"})
     d = make(cfg, db, net)
     d.from_gmail()
-    assert [c.country for c, _ in d.run.written] == ["New Zealand"]
+    assert d.run.written == [] and [r["country"] for r in disc.read_rows(disc.parked_path(cfg))] == ["New Zealand"]
 
 
 def test_a_uk_source_does_not_make_a_bare_remote_ad_uk(cfg, db):

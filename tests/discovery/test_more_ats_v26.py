@@ -189,7 +189,7 @@ def test_pinpoint_and_eploy_are_never_guessed_even_when_the_settings_name_them(c
     boards_mod.find(seed(), fx(net), index)
     assert net.urls() and not [u for u in net.urls(True) if "pinpointhq" in u or "live-jobs" in u]
     assert any("pinpoint" in p and "never guessed" in p for p in more_ats.config_problems(cfg))
-    assert more_ats.LINK_ONLY == ("pinpoint",) and more_ats.CONFIG_ONLY == ("eploy",) and not set(more_ats.NAME_CHECKED) & {"pinpoint", "eploy"}
+    assert more_ats.LINK_ONLY == ("personio", "pinpoint") and more_ats.CONFIG_ONLY == ("eploy",) and not set(more_ats.NAME_CHECKED) & {"personio", "pinpoint", "eploy"}
 
 
 def test_a_host_that_does_not_resolve_is_no_board_not_an_error_and_is_not_remembered(cfg):

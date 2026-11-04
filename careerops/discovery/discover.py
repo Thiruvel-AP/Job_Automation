@@ -19,10 +19,11 @@ Sources
   jobbank  Canada's Job Bank open-data CSV (jobbank.py): rows are only LISTED (no employer, no ad text), in listed_only.csv
 
 The source registry (config/sources.yaml, registry.py) says which sources exist and how each is read; health.py checks each of them
-after every run. Outside the UK: a job whose place is another country (the ad's own country, else read from its place) is not dropped
-but written with `Country:` and `Status: listed_only` headers (at most discover.listed_only.max_per_run a run, apart from the
-UK limit); `careerops live` will not apply to it without a visa block for that country in applicant.yaml, and its priority S is
-priority.sponsor_weights.non_home. Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
+after every run. Outside the selected region (the UK when none is chosen): a job whose place is another country (the ad's own country, else read from its place)
+is not dropped and not written to the inbox either: it is PARKED, one row in paths.discover/parked.csv (company, title, place, link; at most
+discover.listed_only.max_per_run a run), so the shortlist never offers it and `live` never meets it. Choose its region (`--region`) and the next run
+writes it like any other ad. Inbox files from before this (`Status: listed_only`) are moved to paths.discover/parked/ by `careerops shortlist`
+(park_inbox_listed). Jobs already applied to through AIApply (paths.aiapply_applied, company + title) are skipped as duplicates.
 
 Resolving an alert (or an Adzuna link): the company's name gives up to four board tokens (boards.py), each asked of Greenhouse, Lever
 and Ashby (answers, hits and misses, cached 30 days; a board found only through a shortened token must prove it is this company); the
@@ -78,12 +79,13 @@ FILTERED_COLUMNS = ["ts", "source", "company", "title", "location", "filter", "r
 ALERT_EMAIL_RELEVANCE = 0.5        # an alert email nothing could be read from: ranked mid-queue, below a clear title and above a stray one
 INTEREST = re.compile(r"data|machine learning|\bml\b|\bai\b|analy|scien|llm|nlp|statist|intelligence|model", re.I)
 LISTED_COLUMNS = ["ts", "source", "country", "company", "title", "location", "posted", "salary", "ref", "link", "note"]
+PARKED_COLUMNS = ["ts", "source", "country", "company", "title", "location", "posted", "link", "reason", "file"]
 ALERT_SUBJECT = re.compile(r"job|vacanc|stellen|vacature|alert|match|recommend|new roles?|positions?|offres?|opportunit", re.I)
 COMPANY_COLUMNS = ("company", "company_name", "employer", "employer_name", "organisation", "organization")
 TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
 TITLE_MATCH = 0.9                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
-COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_capped",
+COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_parked", "listed_capped",
             "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified", "possible_repost")
 RESOLVED_BY = ("reed", "board_link", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
 OLD_PROVIDERS = (*ats_mod.PROVIDERS, "workday")                 # the boards read before v2.6: the "before" of the v2.6 report lines
@@ -118,6 +120,8 @@ class Run:
     dry_run: bool = False
     tiers: list[int] = field(default_factory=lambda: [0, 0, 0, 0])      # the freshness tiers (0 <= 24 h ... 3 older) of the ads written
     no_job_subjects: dict[str, str] = field(default_factory=dict)      # alert source id -> the first subject of a mail it read no job from
+    asked: list[str] = field(default_factory=list)                     # the source steps this run was asked for (ats, gmail_alerts ...): `shortlist` says when the alerts were last read
+    refused: dict[str, int] = field(default_factory=dict)              # provider -> requests it refused this run (boards.BoardIndex.refused_counts)
 
     def count(self, source: str, what: str, n: int = 1) -> None:
         self.sources[source][what] += n
@@ -133,7 +137,7 @@ class Run:
     def as_json(self) -> dict:
         return {"ts": self.started, "dry_run": self.dry_run, "tiers": list(self.tiers), "failures": self.failures[:20], "sources": {s: dict(c) for s, c in self.sources.items()},
                 "by_source": {s: dict(c) for s, c in self.by_source.items()}, "notes": self.notes[:50],
-                "no_job_subjects": dict(self.no_job_subjects),
+                "no_job_subjects": dict(self.no_job_subjects), "asked": list(self.asked), "refused": dict(self.refused),
                 "written": [{"company": c.company, "title": c.title, "file": p.name} for c, p in self.written]}
 
 
@@ -636,6 +640,7 @@ class Discover:
         lo = settings["discover"].get("listed_only") or {}
         self.listed_enabled = bool(lo.get("enabled", True))
         self.listed_cap = int(lo.get("max_per_run", 20))
+        self.parked_keys = parked_keys(settings)                     # the ads already parked (an ad outside the region is parked once, not every run)
         self.findings: list[boards_mod.Finding] = []
 
     # ---- filters, in the order that spends least first
@@ -737,6 +742,8 @@ class Discover:
         if len(c.description.encode("utf-8")) < manual.MIN_JD_BYTES:
             self.run.count(label, "needs_full_text")
             return "dropped"
+        if c.listed_only:
+            return self.park_listed(c, label)
         if self.dry_run:
             would = self.inbox / intake.file_name(c.to_ad())
             self.known.add(c.company, c.title, c.location, "found earlier in this run", path=would, posted=c.posted)
@@ -769,15 +776,31 @@ class Discover:
         return "written"
 
     def wrote(self, c: Candidate, label: str) -> None:
-        """Count one new inbox ad: against the UK limit, or (outside the UK) against the listed-only one; credit its registry source."""
-        if c.listed_only:
-            self.listed_files += 1
-            self.run.count(label, "listed_only")
-        else:
-            self.new_files += 1
+        """Count one new inbox ad against the run's limit and credit its registry source."""
+        self.new_files += 1
         self.run.count(label, "written")
         src = self.registry.attribute(c)
-        self.run.credit(src.id if src else "other", "listed_only" if c.listed_only else "new")
+        self.run.credit(src.id if src else "other", "new")
+
+    def park_listed(self, c: Candidate, label: str) -> str:
+        """An ad outside the selected region (the UK when no region is chosen) is parked, not written: one row in paths.discover/parked.csv, counted
+        against its own per-run limit (the inbox, the shortlist and `live` never see it). An ad already parked is a duplicate. A dry run counts only."""
+        key = parked_key(c.company, c.title, c.location, c.url)
+        if key in self.parked_keys:
+            self.run.count(label, "duplicate")
+            return "dropped"
+        self.parked_keys.add(key)
+        if not self.dry_run:
+            where = f"region {','.join(self.regions)}" if self.regions is not None else "the UK"
+            append_rows(parked_path(self.s), PARKED_COLUMNS,
+                        [{"ts": self.today.isoformat(timespec="seconds"), "source": c.source, "country": c.country, "company": c.company, "title": c.title,
+                          "location": c.location, "posted": c.posted, "link": c.url, "reason": f"outside {where}: parked, not written to the inbox", "file": ""}])
+        self.listed_files += 1
+        self.run.count(label, "listed_only")
+        self.run.count(label, "listed_parked")
+        src = self.registry.attribute(c)
+        self.run.credit(src.id if src else "other", "listed_only")
+        return "parked"
 
     def to_queue(self, label: str, source: str, company: str, title: str, location: str, link: str, reason: str,
                  relevance: float | None = None, seen_at: str = "", apply_kind: str = "") -> None:
@@ -845,6 +868,7 @@ class Discover:
         self.flush_queue()
         self.flush_filtered()
         self.first_seen.save()
+        self.run.refused = self.index.refused_counts()
         self.run.tiers = freshness.tier_counts(
             ({"posted_at": c.posted or None, "posted_at_source": c.posted_source or None, "seen_on": c.first_seen or None}
              for c, _ in self.run.written), self.today)
@@ -1294,6 +1318,108 @@ def append_listed(settings, rows: list[dict]) -> None:
         w.writerows(rows)
 
 
+# ------------------------------------------------------------------ ads outside the region: parked, not written (append-only)
+def parked_path(settings) -> Path:
+    return settings.path("discover") / "parked.csv"
+
+
+def parked_dir(settings) -> Path:
+    return settings.path("discover") / "parked"
+
+
+def parked_key(company: str, title: str, location: str, link: str) -> str:
+    return (link or f"{company}|{title}|{location}").strip().lower()
+
+
+def parked_keys(settings) -> set[str]:
+    return {parked_key(r.get("company") or "", r.get("title") or "", r.get("location") or "", r.get("link") or "") for r in read_rows(parked_path(settings))}
+
+
+def park_inbox_listed(settings, regions: Sequence[str] | None = None, *, dry_run: bool = False, now: datetime | None = None) -> list[Path]:
+    """Move the inbox files that `discover` wrote before listed ads were parked (`Status: listed_only`) and that are outside `regions` (every one when
+    `regions` is None: the UK-only reading) to paths.discover/parked/, one row each in paths.discover/parked.csv (its `file` column names where the ad
+    went). An ad of a region you have chosen since stays in the inbox. Nothing is deleted or overwritten; a dry run moves and writes nothing. Returns the
+    files it moved (or would move)."""
+    now = now or datetime.now(timezone.utc)
+    have = parked_keys(settings)
+    moved: list[Path] = []
+    for p in decided_mod.txt_files(decided_mod.inbox_dir(settings)):
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        hdr = manual.header_fields(text)
+        if (hdr.get("status") or "").strip().lower() != "listed_only":
+            continue
+        if regions is not None and region_mod.match(hdr.get("location"), text, regions, country=hdr.get("country")).verdict != region_mod.OUT:
+            continue
+        moved.append(p)
+        if dry_run:
+            continue
+        try:
+            dst = decided_mod.move_file(settings, p, parked_dir(settings))
+        except (OSError, decided_mod.DecidedError):
+            moved.pop()
+            continue
+        moved[-1] = dst
+        key = parked_key(hdr.get("company") or "", hdr.get("title") or "", hdr.get("location") or "", hdr.get("url") or "")
+        if key not in have:
+            have.add(key)
+            where = f"outside region {','.join(regions)}" if regions is not None else "outside the UK"
+            append_rows(parked_path(settings), PARKED_COLUMNS,
+                        [{"ts": now.isoformat(timespec="seconds"), "source": hdr.get("source") or "", "country": hdr.get("country") or "",
+                          "company": hdr.get("company") or "", "title": hdr.get("title") or "", "location": hdr.get("location") or "",
+                          "posted": hdr.get("posted") or "", "link": hdr.get("url") or "", "reason": f"{where}: moved out of the inbox", "file": f"parked/{dst.name}"}])
+    return moved
+
+
+def last_alert_read(runs: list[dict]) -> tuple[bool, str | None]:
+    """(did the LAST recorded run read the alert emails, the start time of the latest run that did). A run counts as having read them when it was asked for
+    `gmail_alerts` and Gmail did not fail (a lapsed sign-in is a failure); a run recorded before runs said what they were asked for counts when it has gmail counts."""
+    def read(r: dict) -> bool:
+        asked = r.get("asked")
+        asked_gmail = ("gmail_alerts" in asked) if isinstance(asked, list) else bool((r.get("sources") or {}).get("gmail"))
+        return asked_gmail and not any(str(f).startswith("gmail") for f in r.get("failures") or [])
+    last = next((r.get("ts") for r in reversed(runs) if read(r)), None)
+    return (bool(runs) and read(runs[-1])), last
+
+
+REFUSED_NOTE = re.compile(r"^ats: (\w+) refused (\d+) request\(s\)")
+STOPPED_NOTE = re.compile(r"^ats: (\w+) stopped for this run")
+
+
+def refused_of(run: dict) -> dict[str, int]:
+    """provider -> requests it refused in one recorded run: the `refused` field, else (a run recorded before it existed) read back from its notes."""
+    got = run.get("refused")
+    if isinstance(got, dict):
+        return {str(k): int(v) for k, v in got.items()}
+    out: dict[str, int] = {}
+    for n in run.get("notes") or []:
+        if (m := REFUSED_NOTE.match(str(n))):
+            out[m.group(1)] = out.get(m.group(1), 0) + int(m.group(2))
+        elif (m := STOPPED_NOTE.match(str(n))):
+            out[m.group(1)] = out.get(m.group(1), 0) + 1
+    return out
+
+
+def refused_lines(runs: list[dict], current: dict[str, int] | None = None) -> list[str]:
+    """`Refused requests per provider, before -> after: workable 31 -> 0 · personio 52 -> 0`. `before` is the run before, `after` the run now (`current`, the
+    run in hand, else the last recorded one). Providers with none either time are left out; [] when there is nothing to compare."""
+    if current is None:
+        after, before = (refused_of(runs[-1]) if runs else None), (refused_of(runs[-2]) if len(runs) > 1 else None)
+    else:
+        after, before = current, (refused_of(runs[-1]) if runs else None)
+    if after is None:
+        return []
+    names = sorted({*after, *(before or {})})
+    shown = [n for n in names if after.get(n, 0) or (before or {}).get(n, 0)]
+    if before is None:
+        return ["Refused requests per provider (first run recorded): " + (" · ".join(f"{n} {after[n]}" for n in shown) or "none")]
+    if not shown:
+        return ["Refused requests per provider, before -> after: none in either run"]
+    return ["Refused requests per provider, before -> after: " + " · ".join(f"{n} {before.get(n, 0)} -> {after.get(n, 0)}" for n in shown)]
+
+
 def save_run(settings, run: Run) -> None:
     p = settings.path("discover") / "runs.jsonl"
     try:
@@ -1401,6 +1527,8 @@ def format_report(settings, run: Run | None = None) -> str:
         if last_ats:
             lines += ["Companies without a job board (the last `discover --ats` run):", *("  " + x for x in ats_none_lines(last_ats))]
         lines += step_lines({s: dict(c) for s, c in total.items()}, f"Alerts resolved by step, all {len(runs)} run(s):")
+        if run is None:                                 # a run in hand printed its own line (cli._discover_inbox)
+            lines += refused_lines(runs)
     return "\n".join(lines)
 
 

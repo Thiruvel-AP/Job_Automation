@@ -6,15 +6,16 @@ Single-company ATS providers. Each turns a board address into a list of `ats.Pos
   smartrecruiters  GET api.smartrecruiters.com/v1/companies/<slug>/postings (+ one detail GET per posting worth reading)   name = posting company.name
   teamtailor       GET <slug>.teamtailor.com/jobs.rss                                     name = RSS channel title
   recruitee        GET <slug>.recruitee.com/api/offers/                                   name = offer company_name
-  personio         GET <slug>.jobs.personio.(de|com)/xml                                  name = position subcompany
+  personio         GET <slug>.jobs.personio.(de|com)/xml                                  name = position subcompany: LINK-ONLY (a guessed host is a request to a
+                                                                                          company that may not exist, and the subcompany is not a reliable name)
   pinpoint         GET <slug>.pinpointhq.com/postings.json                                no name in the feed: LINK-ONLY
   eploy            GET <host>/live-jobs.xml (+ one detail page each, JSON-LD)             no name in the feed: CONFIG-ONLY
 
 Rules (CLAUDE.md): public no-auth endpoints only; every request goes through discovery/http.py (robots.txt first, one request a second per host, a
 401 / 403 / 429 stops the host and is never worked around); no cookie, no session, no key, no forged Referer / User-Agent (the reference sends a
 browser User-Agent and an Origin to Workable: this tool does not). A slug GUESSED from a company name is allowed only for the providers whose reply
-names the company (NAME_CHECKED) and is held to the board-name check in boards.py (0.90). Pinpoint and Eploy are used only from a real link or from
-your configuration, never from a guess.
+names the company (NAME_CHECKED: Workable, SmartRecruiters, Teamtailor, Recruitee) and is held to the board-name check in boards.py (0.90). Personio and
+Pinpoint (LINK_ONLY) are used only from a real link, Eploy only from your configuration, never from a guess.
 
 Multi-employer VC portfolio boards (`getro`, `consider`) are read by `vc_read`. Getro's API host disallows scripts in its robots.txt and Consider's
 search endpoint needs a session cookie and a CSRF token; both are refused at run time (see their sources.yaml notes), not worked around.
@@ -38,8 +39,8 @@ from .ats import Board, Posting
 from .http import Blocked, FetchError, Fetcher
 from .sources import html_to_text
 
-NAME_CHECKED = ("workable", "smartrecruiters", "teamtailor", "recruitee", "personio")      # may be found by guessing a slug; the reply names the company
-LINK_ONLY = ("pinpoint",)                                                                  # no name in the feed: only from a link
+NAME_CHECKED = ("workable", "smartrecruiters", "teamtailor", "recruitee")                  # may be found by guessing a slug; the reply names the company
+LINK_ONLY = ("personio", "pinpoint")                                                       # no reliable name in the feed: only from a real link (or sources:)
 CONFIG_ONLY = ("eploy",)                                                                   # no name in the feed: only from `sources.eploy`
 SINGLE = NAME_CHECKED + LINK_ONLY + CONFIG_ONLY
 VC = ("getro", "consider")
@@ -564,7 +565,8 @@ SOURCES_YAML = (
     "  - {id: recruitee-boards, regions: [any], name: Recruitee boards, url: 'https://recruitee.com', country: multi, method: recruitee, note: 'public "
     "<slug>.recruitee.com/api/offers/ (company = offer company_name, name-checked)'}",
     "  - {id: personio-boards, regions: [any], name: Personio boards, url: 'https://www.personio.com', country: multi, method: personio, note: 'public XML feed "
-    "<slug>.jobs.personio.(de|com)/xml (company = position subcompany, name-checked); robots.txt allows it (checked 3 Nov 2026)'}",
+    "<slug>.jobs.personio.(de|com)/xml; link-detected only: a slug is never guessed from a company name (a guess is a request to a host that may not exist); "
+    "robots.txt allows it (checked 3 Nov 2026)'}",
     "  - {id: workday-boards, regions: [any], name: Workday boards, url: 'https://www.workday.com', country: multi, method: workday, note: 'the sites under sources.workday "
     "in settings.yaml, and alert links on *.myworkdayjobs.com (public CXS list API only, never the careers pages)'}",
     "  - {id: vc-atomico, regions: [any], name: Atomico portfolio jobs, url: 'https://www.atomico.com', country: multi, method: getro, enabled: false, note: 'NOT read: "
@@ -593,7 +595,8 @@ def config_problems(settings) -> list[str]:
         out.append("discover.ats.providers must be a list of provider names")
     for p in wanted if isinstance(wanted, list) else []:
         if p not in NAME_CHECKED:
-            out.append(f"discover.ats.providers: {p!r} is not one of {', '.join(NAME_CHECKED)} (pinpoint and eploy are never guessed; list them under sources:)")
+            out.append(f"discover.ats.providers: {p!r} is not one of {', '.join(NAME_CHECKED)} (personio, pinpoint and eploy are never guessed: remove it from the list; "
+                       "a board you know goes under sources:, and one an alert links to is found from the link)")
     src = settings["sources"] or {}
     for key in SINGLE:
         for e in src.get(key) or []:

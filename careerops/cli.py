@@ -9,7 +9,7 @@
   careerops discover            pull jobs from configured boards, triage with rule gates
   careerops discover --ats | --reed | --adzuna | --gmail-alerts | --jobbank [--limit N] [--dry-run]
                                 find open jobs and write each as a JD file in data/jds/inbox/ (best priority first); a job outside
-                                the UK is written as `Status: listed_only` (live will not apply to it without a visa block);
+                                the selected region is PARKED as a row in data/discover/parked.csv, never written to the inbox;
                                 every run ends with a health table of the sources in config/sources.yaml
   careerops sources check | list [--mock]
                                 health of every source in config/sources.yaml (method reachable, robots.txt, credentials, alerts
@@ -45,11 +45,17 @@
                                 archive + mark an application you made outside the assist
   careerops outcome --id JOB --event applied|acknowledged|screen|interview|offer|rejected|withdrawn [--date D] [--note T]
                                 log what happened after an application (mark-applied logs 'applied' itself)
-  careerops shortlist [--dry-run] [--no-liveness] [--mock]
+  careerops daily [--region R] [--size S] [--yes] [--limit N] [--dry-run] [--no-liveness] [--all]
+                                the morning in one command: discover --ats --gmail-alerts --report, then shortlist
+  careerops shortlist [--dry-run] [--no-liveness] [--mock] [--all]
                                 score the inbox with the zero-token triage score T, file what a hard stop disqualifies, offer the best few
                                 (targeting.shortlist_size); [a] / [1 3 5] approve, [s n] skip for good, [x] skip every job left in the list. Approved ads go
                                 to data/jds/approved/<date>/. Never re-offers an approved, skipped, applied, closed or parked ad; a job shown 3 times with
-                                no decision is parked; with nothing new it prints "No new jobs since <time>" (shown counts: data/jds/shortlist_log.jsonl)
+                                no decision is parked; with nothing new it prints "No new jobs since <time>" (shown counts: data/jds/shortlist_log.jsonl).
+                                It says when the alert emails were last read ("alerts not read since <time>") if the last discover run skipped them; alerts that
+                                could not be traced to the employer are their own block ("From alerts, apply on the board": c n = how to apply, s c n =
+                                dismiss); --all lists every undecided in-region ad again (also the ones parked after three showings), not only the new ones;
+                                listed-only ads still in the inbox from before are moved to data/discover/parked/ and data/discover/parked.csv
   careerops live ... [--include-unapproved]   works only on the approved ads; --include-unapproved (never with --auto) takes the whole inbox
   careerops patterns [--db] [--mock]
                                 replies / interviews / rejections by role family, ATS kind, triage band, region and company size, from the
@@ -390,6 +396,7 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
                       limit=getattr(args, "limit", None), regions=sel)
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
              "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank)}
+    d.run.asked = list(sources_asked)                                           # `shortlist` says when the alerts were last read from this
     for name in sources_asked:
         label, fn = steps[name]
         print(f"discover: {label} ...")
@@ -413,12 +420,17 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     alert_check = d.board_check_lines(d.lookup.findings)
     if alert_check:
         print("\n".join(alert_check).replace("ats: ", "alerts: ", 1))
+    print("\n".join(disc.refused_lines(disc.read_runs(s), d.run.refused)))            # requests each provider refused: the previous run -> this one
     _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
     print("\n".join(lines))
     if len(d.run.written) > len(lines):
         print(f"  (the top {len(lines)} of {len(d.run.written)} by freshness tier, then priority P = F x S)")
+    parked = sum(c.get("listed_parked", 0) for c in d.run.sources.values())
+    if parked:
+        print(f"{parked} ad(s) outside {','.join(sel) if sel is not None else 'the UK'} {'would be ' if d.dry_run else ''}parked in {disc.parked_path(s)} "
+              "(not written to the inbox; choose that region with --region and the next run writes them)")
     queued = sum(c.get("to_manual_queue", 0) for c in d.run.sources.values())
     over = sum(c.get("to_manual_queue_overflow", 0) for c in d.run.sources.values())
     if queued or over:
@@ -1344,6 +1356,7 @@ def cmd_shortlist(args):
     from .discovery import pretailor, shortlist
 
     from . import choices
+    from .discovery import region as region_mod
     from .discovery import size as size_mod
 
     s, db = _ctx(args)
@@ -1361,6 +1374,11 @@ def cmd_shortlist(args):
     if not dry:
         _park_region(db, rc)
     interactive = ask is not None and not getattr(args, "yes", False)
+    if not dry:                                           # ads `discover` wrote to the inbox as `listed_only` before listed ads were parked: out of the region, out of the inbox
+        from .discovery import discover as disc
+        moved = disc.park_inbox_listed(s, rc.value)
+        if moved:
+            print(f"parked {len(moved)} listed-only ad(s) outside {region_mod.label_of(rc.value)} out of the inbox: {disc.parked_path(s)} (the ads are in {disc.parked_dir(s)})")
 
     def choose_size(counts) -> str:
         ch = choices.resolve_size(s, flag=getattr(args, "size", None), interactive=interactive, ask=input, counts=lambda: counts)
@@ -1369,11 +1387,30 @@ def cmd_shortlist(args):
     resolver = size_mod.Resolver(s, key="" if args.mock else None, fetcher=fetcher)
     try:
         shortlist.run(s, db, fb, ask=ask, fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None, regions=rc.value,
-                      size_resolver=resolver, choose_size=choose_size)
+                      size_resolver=resolver, choose_size=choose_size, show_all=getattr(args, "all", False), preface=shortlist.unread_lines(s))
     except targeting.TargetingError as e:
         _fail(str(e))
     if args.mock:
         print("(--mock: the isolated data root, no network, nothing moved)")
+
+
+def cmd_daily(args):
+    """The morning in one command: `discover --ats --gmail-alerts --report`, then `shortlist`. A discover that fails (a lapsed Gmail sign-in exits 1) does not stop
+    the shortlist, which then says the alerts were not read; the exit code is discover's. There is no --mock: discover reads the network."""
+    import argparse
+
+    dargs = argparse.Namespace(**{**vars(args), "cmd": "discover", "ats": True, "gmail_alerts": True, "report": True, "reed": False, "adzuna": False,
+                                  "jobbank": False, "gmail_auth": False, "mock": False})
+    rc = 0
+    try:
+        cmd_discover(dargs)
+    except SystemExit as e:
+        rc = e.code if isinstance(e.code, int) else 1
+        print(f"\ndaily: discover ended with exit code {rc}; the shortlist is built from what is in the inbox.", file=sys.stderr)
+    print("\n--- shortlist ---")
+    cmd_shortlist(argparse.Namespace(**{**vars(args), "cmd": "shortlist", "mock": False}))
+    if rc:
+        sys.exit(rc)
 
 
 def cmd_patterns(args):
@@ -1972,7 +2009,18 @@ def main(argv=None):
     sl.add_argument("--size", help="company size: sme | large | both | sme-first | large-first (SME = up to 250 staff; Companies Act limits). `sme` / `large` list the "
                                    "size-unknown ads under [u]; `*-first` orders by T + 0.3 for that bucket")
     sl.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
+    sl.add_argument("--all", action="store_true", help="list every undecided in-region ad, not only the new ones (also the ones parked after being shown "
+                                                      "three times); the list is not counted as a showing")
     sl.set_defaults(fn=cmd_shortlist)
+    da = sub.add_parser("daily", help="discover --ats --gmail-alerts --report, then shortlist (the whole morning in one command)")
+    da.add_argument("--region", help="as for discover and shortlist")
+    da.add_argument("--size", help="as for shortlist: sme | large | both | sme-first | large-first")
+    da.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
+    da.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
+    da.add_argument("--dry-run", dest="dry_run", action="store_true", help="discover writes nothing; the shortlist prints and moves nothing")
+    da.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")
+    da.add_argument("--all", action="store_true", help="as for shortlist: every undecided in-region ad, not only the new ones")
+    da.set_defaults(fn=cmd_daily)
     pt = sub.add_parser("patterns", help="replies, interviews and rejections by role family, ATS kind and triage score (information only)")
     pt.add_argument("--db", action="store_true", help="read the outcome log in the database instead of the tracker Sheet's Status column")
     pt.add_argument("--mock", action="store_true", help="use the isolated data/mock database")

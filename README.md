@@ -100,7 +100,7 @@ career-ops/
     ├── jds/{inbox,done,rejected}/   `careerops live`: JD .txt files to do / finished / refused (+ .reason.txt)
     ├── judge/                    log.csv (the judge's verdict beside your decision) · verdicts/ (cache)
     ├── robots/                   <host>.json: each host's robots.txt rules, kept 24 h
-    ├── discover/                 boards/ (posting lists, 6 h) · boards.json (token answers, 30 d) · first_seen.json · filtered.csv · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv
+    ├── discover/                 boards/ (posting lists, 6 h) · boards.json (token answers, 30 d) · first_seen.json · filtered.csv · gmail_seen.json · runs.jsonl · health/<date>.csv · listed_only.csv · parked.csv (+ parked/: ads outside the region)
     ├── secrets/                  gmail_client.json (you put it here) · gmail_token.json (read mail, create drafts, edit the Sheet); git-ignored like all of data/
     ├── outreach/                 do_not_contact.csv (`value,note`: addresses and domains no draft goes to; `careerops init` creates it)
     ├── live/                     state.json (resume) · one summary .md per live session · applied_auto.csv (every auto-apply run)
@@ -230,6 +230,8 @@ careerops tailor --limit 15        # CV (two full pages) + note.md per job (lett
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
+careerops shortlist --all         # v2.7: every undecided in-region ad again, not only the new ones (also the ones parked after three showings); a look, never a showing
+careerops daily                   # v2.7: discover --ats --gmail-alerts --report, then shortlist (--region, --size, --yes, --limit, --dry-run, --no-liveness, --all pass through)
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
@@ -293,10 +295,13 @@ finds and ranks without writing, and every run is listed best priority first.
   hours. **More employer boards (v2.6, `discovery/more_ats.py`)**: Workable (the public widget, `apply.workable.com/api/v1/widget/accounts/<slug>`; the owner-token
   API is not used), SmartRecruiters, Teamtailor (`jobs.rss`), Recruitee (`/api/offers/`), Personio (`/xml`), Pinpoint (`postings.json`) and Eploy (`/live-jobs.xml`
   + the vacancy page's JSON-LD) are read like Greenhouse / Lever / Ashby: public no-auth endpoints, robots.txt first, one request a second per host, no cookie,
-  session, key or forged header. A slug GUESSED from a company name is tried only for providers whose reply names the company (`discover.ats.providers`), and that
-  name must match at `board_name_match` (0.90) even for a slug that spells the whole name. Pinpoint and Eploy name no company, so they are used only from a real
-  link (an alert) or from `sources:` (`sources.pinpoint: [slug]`, `sources.eploy: [{company, url}]`), never from a guess. A 401 / 403 / 429 stops that provider for
-  the run; a robots.txt that says no is counted and honoured (checked 3 Nov 2026: `api.smartrecruiters.com` and `api.getro.com` disallow scripts, so SmartRecruiters is
+  session, key or forged header. A slug GUESSED from a company name is tried only for providers whose reply names the company (Workable, SmartRecruiters, Teamtailor, Recruitee:
+  `discover.ats.providers`), and that name must match at `board_name_match` (0.90) even for a slug that spells the whole name. Personio, Pinpoint and Eploy are used only from a
+  real link (an alert) or from `sources:` (`sources.personio: [slug]`, `sources.pinpoint: [slug]`, `sources.eploy: [{company, url}]`), never from a guess (v2.7: Personio was
+  guessed before; a `personio` left in `discover.ats.providers` is named by `careerops doctor` and ignored). A 401 / 403 / 429 stops that provider for the run; a **429 from
+  Workable** also keeps every later run away from that host for 24 h, or for the `Retry-After` it sent when that is longer (never more than a week): `data/discover/blocked_hosts.json`
+  holds the time, and the next run sends not even a robots.txt request until it passes. Each run prints, and `discover --report` shows, the requests each provider refused
+  (`Refused requests per provider, before -> after: personio 52 -> 0 · workable 31 -> 2`: the run before against this one); a robots.txt that says no is counted and honoured (checked 3 Nov 2026: `api.smartrecruiters.com` and `api.getro.com` disallow scripts, so SmartRecruiters is
   off in the shipped `discover.ats.providers`; Consider's search needs a session cookie and CSRF token, which this tool does not use). The run prints
   `board: none  N of M companies before the v2.6 providers ... -> K of M after`, and `discover --report` the alert-resolution rate before and after. `careerops doctor`
   prints the `sources.yaml` entries to paste (this tool never edits that file). VC portfolio boards (`method: getro | consider` in sources.yaml) list jobs of many
@@ -376,10 +381,11 @@ to Gmail), `not_found`, `no_file`, `error`, `disabled`. A source failing never s
 
 #### Jobs outside the UK, and AIApply
 
-A job whose place is another country (the ad's own country, else read from its place: `Toronto, ON` is Canada) is not dropped: it is
-written to the inbox with `Country: Canada` and `Status: listed_only` headers (at most `discover.listed_only.max_per_run` a run,
-counted apart from the UK limit; `discover.listed_only.enabled: false` drops them as before). Its priority S is
-`priority.sponsor_weights.non_home` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
+A job whose place is another country (the ad's own country, else read from its place: `Toronto, ON` is Canada) is not dropped, and (v2.7) it is no longer written to the
+inbox either: it is **parked**, one row in `data/discover/parked.csv` (company, title, place, country, link, reason), at most `discover.listed_only.max_per_run` a run, so the shortlist
+never offers it and `live` never meets it; choose that region (`--region ca`) and the next run writes it like any other ad (`discover.listed_only.enabled: false` drops them as
+before). `careerops shortlist` moves the `Status: listed_only` files already in the inbox out of it (to `data/discover/parked/`, one row each in `parked.csv`) when they are outside the
+chosen region. A file that is in the inbox with those headers is still ranked with S = `priority.sponsor_weights.non_home` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
 it in `inbox/` and does not count it towards `--max`, unless `applicant.yaml` has a block for exactly that country, which you add yourself
 (`visa.by_country.CA`, a code or a name; `default` does not count, so a job abroad is never worked on just because a default exists).
 A country with such a block also passes the triage location rule; the same location rule still skips a foreign job without one
@@ -1181,6 +1187,16 @@ ads away and moving the ones you approve.
   `data/jds/shortlist_log.jsonl` (`times_shown` per job). The list prints `new since last shortlist: N` and marks a job shown before with `(shown 2×)`. A job shown 3 times with no decision is
   **parked**: it stays in the inbox, is never in the list, and is only counted in a `parked: N` line (`careerops unskip --shortlist` brings it back, counted from zero). With nothing new since the
   last list it prints `No new jobs since <time>. Run careerops discover --ats --gmail-alerts.` instead of the old list. `live --url` and `live --clipboard` are your own act for one ad, so they need no approval.
+- **What it did not read (v2.7)**: when the last `discover` run was not asked for `--gmail-alerts` (or Gmail failed), the output starts with `alerts not read since <time>: run discover --gmail-alerts`
+  (`data/discover/runs.jsonl` records what each run was asked for). `careerops daily` is `discover --ats --gmail-alerts --report` and then `shortlist`; a discover that fails does not stop the
+  shortlist (which then says the alerts were not read) and its exit code is kept.
+- **Alerts that could not be traced to the employer (v2.7)**: the manual queue (`data/jds/manual_queue.csv` and its overflow) is its own block under the list, `From alerts, apply on the board (N):
+  company | title | board | link`, the top 10 by T (there is no ad text, so E is neutral and the freshness is the day the row was queued). Not listed: a row with no company or link (an
+  alert mail nothing was read from), a job already in hand (inbox, approved, database), decided, dismissed, outside the region, blacklisted, or older than `max_posting_age_days` without T >= 4.5; a
+  job whose company + title match one you skipped is listed with the `possible repost` label. `c 2` says what to do (open the link, copy the whole ad, run `careerops live --clipboard`);
+  `s c 2` dismisses it (`unskip --shortlist` brings it back). The board's page is never fetched.
+- **`shortlist --all` (v2.7)**: lists every undecided in-region ad again, not only the new ones: the ads parked after three showings are included and a list with nothing new is still printed
+  and asked about. It is a look, never a showing (nothing is logged, so it cannot park an ad), and every other rule (region, decided, the caps, the age and T rules) still applies.
 - **Volume caps are enforced where the action happens**: `live` stops with the count when `daily_max_applications` (5) submits (yours or auto's) have been made today, before it tailors and again
   right before a form opens; the per-company limit and cooldown are checked again right before a form opens (a held job stays `approved`). `live --auto` never takes unapproved ads.
 - **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It
