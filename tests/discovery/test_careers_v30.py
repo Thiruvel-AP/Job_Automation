@@ -86,14 +86,20 @@ def test_an_address_no_reader_understands_says_why_and_nothing_is_guessed(url, p
 
 
 def test_problems_name_bad_entries_duplicates_and_unreadable_addresses(cfg):
-    write_careers(cfg, "companies:\n  - {company: Acme, url: 'https://jobs.lever.co/acme'}\n  - {company: acme ltd, url: 'https://jobs.lever.co/acme2'}\n"
+    write_careers(cfg, "companies:\n  - {company: Acme, url: 'https://jobs.lever.co/acme'}\n  - {company: acme ltd, url: 'https://jobs.lever.co/acme/'}\n"
                        "  - {company: Beta}\n  - {company: Gamma, url: 'https://gamma.example.com'}\n")
     probs = careers.problems(cfg)
-    assert any("listed twice" in p for p in probs) and any("needs both company and url" in p for p in probs)
+    assert any("lists https://jobs.lever.co/acme/ twice" in p for p in probs) and any("needs both company and url" in p for p in probs)
     assert any("Gamma" in p and "no reader for gamma.example.com" in p for p in probs)
-    assert [b.slug for b in careers.boards(cfg)] == ["acme"]                       # the first entry of a duplicate wins
+    assert [b.slug for b in careers.boards(cfg)] == ["acme"]                       # the first entry of a repeat wins
     write_careers(cfg, "companies: [unclosed")
     assert careers.load(cfg)[0] == [] and "not valid YAML" in careers.problems(cfg)[0]
+
+
+def test_a_company_may_have_several_addresses(cfg):
+    write_careers(cfg, "companies:\n  - {company: Salesforce, url: 'https://salesforce.wd12.myworkdayjobs.com/External_Career_Site'}\n"
+                       "  - {company: Salesforce, url: 'https://salesforce.wd12.myworkdayjobs.com/Slack'}\n")
+    assert careers.problems(cfg) == [] and len(careers.boards(cfg)) == 2 and careers.keys(cfg) == {"salesforce"}
 
 
 def test_configured_boards_carry_the_careers_boards_under_the_name_in_the_file(cfg):

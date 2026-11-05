@@ -8,7 +8,7 @@ board name from the company's name (a guess is a request to a host that may not 
       - {company: NVIDIA, url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite}
       - {company: British Heart Foundation, url: https://jobs.bhf.org.uk/, provider: eploy}
 
-(a plain list of the same entries, or a `Company: url` mapping, is read too). The address is matched to a reader by its host, nothing is fetched here:
+(a plain list of the same entries, or a `Company: url` mapping, is read too). A company may have several entries (several Workday sites, a graduate board). The address is matched to a reader by its host, nothing is fetched here:
 
     Greenhouse (boards.greenhouse.io/<slug>, job-boards.greenhouse.io/<slug>), Lever (jobs.lever.co/<slug>, jobs.eu.lever.co/<slug>), Ashby (jobs.ashbyhq.com/<slug>),
     Workable (apply.workable.com/<slug>), SmartRecruiters, Teamtailor / Recruitee / Pinpoint (<slug>.<their host>), Personio (<slug>.jobs.personio.de|com),
@@ -105,10 +105,11 @@ def load(settings) -> tuple[list[Entry], list[str]]:
             problems.append(f"careers_urls.yaml entry {n} needs both company and url")
             continue
         entry = Entry(company, url, str(e.get("provider") or "").strip().lower())
-        if entry.key in seen:
-            problems.append(f"careers_urls.yaml: {company} is listed twice (the first entry is used)")
+        same = (entry.key, url.rstrip("/").lower())                    # a company may have several addresses (Workday sites, a graduate board); only a repeat is a duplicate
+        if same in seen:
+            problems.append(f"careers_urls.yaml: {company} lists {url} twice (the first entry is used)")
             continue
-        seen.add(entry.key)
+        seen.add(same)
         out.append(entry)
     return out, problems
 
