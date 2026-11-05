@@ -282,12 +282,21 @@ def check(url: str, fetcher: Fetcher, cache: Cache | None = None, now: datetime 
     now = now or datetime.now(timezone.utc)
     if not url:
         return Result(UNCERTAIN, "the job has no address to check")
-    if never_fetch(url) or applykind.never_fetched(url):
+    if never_fetch(url):
         return Result(UNCERTAIN, "this host is never fetched by this tool (the ad is only recorded)", url)
     if cache is not None:
         hit = cache.get(url, now)
         if hit is not None:
             return hit
+    from . import liveness_api
+    api = liveness_api.check(url, fetcher)                   # v3.0: the ATS's own API first (Greenhouse, Lever, Ashby, Workday); the page only when it cannot say
+    if api is not None:
+        result = Result(api[0], api[1], url)
+        if cache is not None:
+            cache.put(url, result, now)
+        return result
+    if applykind.never_fetched(url):                         # a Workday careers PAGE is never read (its API above is the only way in)
+        return Result(UNCERTAIN, "this host is never fetched by this tool (the ad is only recorded)", url)
     from . import more_ats
     board = more_ats.liveness(url, fetcher)                  # a v2.6 provider's link: the employer's board says whether the posting is still listed
     if board is not None:

@@ -38,7 +38,8 @@ class Gate:
 
 
 def default_fetcher(settings) -> Fetcher:
-    return Fetcher(RobotsCache(settings.path("robots")), never=applykind.NEVER_FETCH, blocklog=BlockLog(settings.path("discover") / BLOCKLOG_FILE))
+    return Fetcher(RobotsCache(settings.path("robots")), never=applykind.NEVER_FETCH, blocklog=BlockLog(settings.path("discover") / BLOCKLOG_FILE),
+                   allow_paths=("/wday/cxs/",))                # a Workday posting's public API is asked for liveness; its careers pages stay refused
 
 
 def _get(job: Mapping[str, Any], key: str) -> Any:
