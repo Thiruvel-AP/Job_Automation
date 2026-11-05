@@ -40,9 +40,9 @@ def test_a_workday_posting_is_judged_by_its_public_detail_api():
 
 def test_when_the_api_cannot_say_the_answer_is_none_and_the_page_check_goes_on():
     url = "https://boards.greenhouse.io/acme/jobs/123"
-    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io", Resp("", 500)))) is None
-    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io", Resp("", 403)))) is None            # never worked around
-    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io", Resp("<html>", 200)))) is None
+    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io/v1/boards/acme/jobs/123", Resp("", 500)))) is None
+    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io", Resp("", 403))))[0] == "uncertain"    # a refusal: said so, nothing else asked
+    assert liveness_api.check(url, fx(Net(strict=False).add("boards-api.greenhouse.io/v1/boards/acme/jobs/123", Resp("<html>", 200)))) is None
     assert liveness_api.check("https://careers.acme.com/job?gh_jid=123", fx(Net())) is None                                # an employer-hosted link: not ours to read
     assert liveness_api.check("https://boards.greenhouse.io/acme", fx(Net())) is None                                      # no posting id
     assert liveness_api.check("", fx(Net())) is None
@@ -58,6 +58,14 @@ def test_the_liveness_check_asks_the_api_first_and_then_remembers_the_answer(cfg
     assert again.cached and len(net.urls()) == 1
     closed = liveness.check("https://boards.greenhouse.io/acme/jobs/9", fx(Net(strict=False)), cache)
     assert closed.status == "closed"
+
+
+def test_a_refusal_from_the_api_ends_the_check_and_the_vendors_page_is_not_asked_instead():
+    url = "https://jobs.ashbyhq.com/acme/0a1b2c3d-1111-2222-3333-444455556666"
+    net = Net(strict=False).add("api.ashbyhq.com", Resp("", 401)).add("jobs.ashbyhq.com", "<html><title>Data Scientist</title> Apply</html>")
+    r = liveness.check(url, fx(net), liveness.Cache(None))
+    assert r.status == "uncertain" and "API said no" in r.reason and "401" in r.reason
+    assert not [u for u in net.urls() if "jobs.ashbyhq.com" in u]                    # the page host is not used to get round the 401
 
 
 def test_other_pages_are_still_judged_by_the_page_and_a_workday_page_is_never_read():

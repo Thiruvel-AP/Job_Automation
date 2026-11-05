@@ -1893,14 +1893,19 @@ Study and decisions: `docs/study/v3.0_discovery_comparison.md` (what career-ops 
    host per company (Teamtailor, Recruitee, Personio, Pinpoint): `discover.ats.providers` may still name them, the run says they are no longer guessed. Such boards are read from an alert link, `sources:` or
    `careers_urls.yaml`.
 6. **Liveness by the ATS's own API first** (`discovery/liveness_api.py`, called by `liveness.check`): Greenhouse `/boards/<slug>/jobs/<id>`, Lever `/postings/<slug>/<id>` (404 = closed), Ashby (the board lists the id
-   and `isListed`), Workday `/wday/cxs/.../job/...` (the careers page itself is never read; the default fetcher allows `/wday/cxs/`). Anything the API cannot say (a redirect, 401/403/429, 5xx, another shape of
-   link) falls through to the page check as before.
+   and `isListed`), Workday `/wday/cxs/.../job/...` (the careers page itself is never read; the default fetcher allows `/wday/cxs/`). Anything the API cannot say (a redirect, 5xx, another shape of
+   link) falls through to the page check as before. A 401 / 403 / 429 or robots.txt refusal from the API is NOT worked around by asking the vendor's page: the answer is `uncertain` (found out in the live run,
+   when Ashby's API answered 401 and the first version then asked jobs.ashbyhq.com 23 times).
 7. **An EU job that refuses sponsorship is parked** (`region.refusal_parks`, inside `region.match`): the matched region lies wholly in `eu` and the ad has a "no sponsorship" sentence, so the verdict is out with
    the sentence as evidence: status `parked (region)`, never skipped, brought back when the ad changes. A UK job that says it does not sponsor keeps the lower weight (`priority.sponsor_weights`).
 8. **Reed** stays as built (`reed.py`; your key in `.env` as `REED_API_KEY`). Its published developer pages carry no API terms or rate limit (see the study); the CLAUDE.md line you add says keyed APIs follow their
    own terms. `careerops doctor` shows whether the key is present. Adzuna stays off.
 9. Settings (all read with defaults, none needed): `discover.ats.misses_needed`, `discover.ats.dataset_checks_per_provider`, `discover.dataset.enabled`, `discover.dataset.refresh_days`; the test copy has them. Lines for
    your `config/settings.yaml` (the tool does not edit it) are printed by the final report.
+
+Live run (the one allowed, 5 Nov 2026 16:12 UTC, `discover --ats --gmail-alerts --report`): see the end of `docs/study/v3.0_discovery_comparison.md`. It found two faults, both fixed: a board already found was
+ignored when the public list placed the same name at another provider, or for Teamtailor / Recruitee (no longer guessed but still read once found); and a provider that said no earlier in the run (Workable, 429)
+hid the boards it was already known to have from the report.
 
 Tests: `tests/discovery/test_careers_v30.py`, `test_liveness_api_v30.py`, `test_region_refusal_v30.py`; 19 existing v2.6-v2.8 tests were changed and one removed because their rule changed (a miss cached after one run, a limit of 60, Teamtailor and
 Recruitee guessed); the ones about the cache itself now ask for `misses_needed: 1`, and the three-run rule has its own test. Unverified: how many boards the one live run finds; the dataset's recall on your companies beyond the 104-company check; Workday sites the list suggests (nothing checks whose they are).

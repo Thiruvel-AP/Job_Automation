@@ -206,6 +206,35 @@ def test_a_name_in_the_list_is_checked_with_one_request_and_nothing_else_is_gues
     assert counts["guesses"] == 0 and counts["checked_from_list"] == 1 and "in the public board list: lever" in f.line()
 
 
+def test_a_board_already_found_is_kept_when_the_list_places_the_name_elsewhere_or_the_provider_is_not_guessed(cfg):
+    cfg.raw["discover"]["ats"]["providers"] = ["workable", "teamtailor", "recruitee"]
+    cfg.raw["discover"]["dataset"] = {"enabled": True}
+    net = lists(Net(strict=False), greenhouse=["acmeanalytics"])                       # the list says Greenhouse; two boards were found earlier elsewhere
+    index = BoardIndex(cfg)
+    index.put("ashby", "acmeanalytics", True)
+    index.put("teamtailor", "acmeanalytics", True)
+    index.set_name("teamtailor", "acmeanalytics", "Acme Analytics")
+    index.dataset = dataset_mod.Dataset(cfg, fx(net))
+    f = boards_mod.find(Seed("Acme Analytics Ltd", "archive"), fx(net), index)
+    assert sorted((b.ats, b.slug) for b in f.boards) == [("ashby", "acmeanalytics"), ("teamtailor", "acmeanalytics")]
+    asked = [u for u in net.urls() if "companies.json" not in u]
+    assert asked == ["https://boards-api.greenhouse.io/v1/boards/acmeanalytics/jobs"]  # only the list's own provider was asked; the known boards cost no request
+
+
+def test_a_provider_that_said_no_this_run_still_has_the_boards_it_was_known_to_have(cfg):
+    cfg.raw["discover"]["ats"]["providers"] = ["workable"]
+    net = Net(strict=False)
+    index = BoardIndex(cfg)
+    index.put("workable", "acmeanalytics", True)
+    index.set_name("workable", "acmeanalytics", "Acme Analytics")
+    index.stopped["workable"] = "HTTP 429"                                             # Workable answered 429 earlier in the run
+    f = boards_mod.find(Seed("Acme Analytics Ltd", "archive"), fx(net), index)
+    assert [(b.ats, b.slug) for b in f.boards] == [("workable", "acmeanalytics")]       # still "with a board" in the report
+    assert not [u for u in net.urls(True) if "workable" in u]                           # and nothing was asked of it
+    other = boards_mod.find(Seed("Beta Works", "archive"), fx(net), index)
+    assert other.boards == [] and not [u for u in net.urls(True) if "workable" in u]    # an unknown name is not guessed on a stopped provider
+
+
 def test_the_list_gives_the_slug_as_written_so_a_camel_case_ashby_board_is_found(cfg):
     cfg.raw["discover"]["dataset"] = {"enabled": True}
     net = lists(Net(strict=False), ashby=["AlephAlpha"])

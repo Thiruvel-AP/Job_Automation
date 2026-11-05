@@ -355,9 +355,9 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
         listed = index.dataset.hits(token) if index.dataset is not None else {}      # {provider: slug}: where the public board list says this name's board is
         f.listed |= set(listed)
         for ats in ats_mod.PROVIDERS:
-            if listed and ats not in listed:              # the list says where the board is: nothing else is guessed for this name
-                continue
             known = index.get(ats, token)
+            if listed and ats not in listed and known is not True:      # the list says where the board is: nothing else is guessed for this name (a board already found stays)
+                continue
             if known is False:
                 index.cache_hits[ats] += 1
                 continue
@@ -386,10 +386,12 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             index.put(ats, token, found, slug if slug != token else "")
             if found:
                 hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
-        for ats in (() if listed else index.more):        # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
-            if ats in index.stopped:
-                continue
+        for ats in (*index.more, *index.not_guessed):     # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
             known = index.get(ats, token)
+            if ats in index.stopped and known is not True:        # a provider that said no is not asked; a board it was already known to have still counts (reading it is refused by read_board)
+                continue
+            if known is not True and (listed or ats in index.not_guessed):     # one host per company, or a name the list places elsewhere: never guessed, but a board found before is read
+                continue
             if known is False or (known is None and index.dns_missed(ats, token)):
                 index.cache_hits[ats] += 1
                 continue

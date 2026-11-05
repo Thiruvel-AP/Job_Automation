@@ -8,9 +8,9 @@ a script shell with no text; Greenhouse and Lever pages differ per employer) and
     Ashby        api.ashbyhq.com/posting-api/job-board/<slug>               the posting is open when the board still lists its id; closed when it does not
     Workday      <site>/wday/cxs/<tenant>/<site>/job/...                    200 with the posting = open, 404 = closed (the page host stays unread)
 
-Conservative on purpose: "closed" only for a definite answer (a 404, or a board that is read in full and lacks the id). A redirect, a 401 / 403 / 429 (never worked
-around), a 5xx, a body that is not what the API returns, a link of another shape (an employer-hosted `?gh_jid=`), or a host the fetcher is not allowed to ask: None, and
-`liveness.check` goes on to the page check as before. The caller caches the answer for the usual hours.
+Conservative on purpose: "closed" only for a definite answer (a 404, or a board that is read in full and lacks the id). A redirect, a 5xx, a body that is not what the API
+returns or a link of another shape (an employer-hosted `?gh_jid=`): None, and `liveness.check` goes on to the page check as before. A 401 / 403 / 429 or a robots.txt refusal
+from the API is NOT worked around by asking the vendor's page instead: the answer is "uncertain" and nothing more is requested. The caller caches the answer for the usual hours.
 """
 from __future__ import annotations
 
@@ -28,11 +28,17 @@ _LEVER_PATH = re.compile(r"^/([A-Za-z0-9_-]+)/([0-9a-f]{8}-[0-9a-f-]{20,})", re.
 _ASHBY_PATH = re.compile(r"^/([A-Za-z0-9_-]+)/([0-9a-f]{8}-[0-9a-f-]{20,})", re.I)
 
 
+class Refused(Exception):
+    """The vendor's API (or its robots.txt) said no: not a reason to ask somewhere else."""
+
+
 def _get(fetcher: Fetcher, url: str, what: str, headers: dict | None = None) -> Any | None:
     """The response, or None when the API cannot say (blocked, no answer, a redirect)."""
     try:
         r = fetcher.request(url, what=what, follow=False, **({"headers": headers} if headers else {}))
-    except (Blocked, FetchError):
+    except Blocked as e:
+        raise Refused(str(e)[:140]) from None
+    except FetchError:
         return None
     return None if 300 <= r.status_code < 400 else r
 
@@ -45,7 +51,14 @@ def _json(r: Any) -> Any:
 
 
 def check(url: str, fetcher: Fetcher) -> tuple[str, str] | None:
-    """('open'|'closed', reason) from the ATS's API, or None when the link is not one of these or the API cannot say."""
+    """('open'|'closed', reason) from the ATS's API; ('uncertain', reason) when the API refused; None when the link is not one of these or the API cannot say."""
+    try:
+        return _check(url, fetcher)
+    except Refused as e:
+        return "uncertain", f"not checked, the ATS API said no: {e}"
+
+
+def _check(url: str, fetcher: Fetcher) -> tuple[str, str] | None:
     u = urlparse(str(url or "").strip())
     host, path = (u.hostname or "").lower(), u.path or ""
     if u.scheme not in ("http", "https") or not host:
