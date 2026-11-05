@@ -1,6 +1,5 @@
 # fact_bank.yaml — reviewed against linkedin_diff.md (2026-10-11)
 # Source of truth for every change: your LinkedIn export or your own hand-made CV. Nothing invented.
-# Lines marked DECIDE are factual choices only you can make — check them before a live run.
 
 identity:
   name: Thiruvel Andagurunathan Pandian
@@ -29,7 +28,7 @@ skills:
   core: [Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git]
   Languages: [Python, SQL, R, TypeScript, JavaScript, Swift, Dart]
   ML & Statistics: [scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time-series forecasting, customer segmentation (k-means, HAC, DBSCAN), class-imbalance handling (SMOTE), model validation (cross-validation, MCC), hypothesis testing, ANOVA, bootstrap, PCA, statistics, maximum likelihood estimation, experimental design (MSc coursework)]
-  LLMs & Agents: [ReAct agent loops, agent memory, "AI-assisted development (Claude Code, Cursor, OpenAI Codex)", LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, LLM evaluation, prompt design]
+  LLMs & Agents: [ReAct agent loops, agent memory, "AI-assisted development (Claude Code, Cursor, OpenAI Codex)", LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, "QLoRA (4-bit, Unsloth, PEFT, TRL)", LLM evaluation, prompt design]   # 21 Oct: QLoRA added from llama3-8b-qlora-math-t4
   Data & Visualisation: [pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, ggplot2, Tableau, Streamlit, tidyverse, tidymodels, NLTK, networkx, Leiden clustering, Databricks/PySpark (coursework)]
   Databases: [PostgreSQL, MongoDB, DynamoDB, ChromaDB]
   Cloud & MLOps: [AWS Lambda, ECR, IAM, EC2, S3, SQS, GCP Cloud Run, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)"]
@@ -42,7 +41,7 @@ experience:
     title: Data Scientist
     org: AstraZeneca                       # LinkedIn. Was "AstraZeneca · GeneTraceAI, University of Bristol"
     location: Bristol, UK (Remote)
-    employment_type: indirect contract     # DECIDE: LinkedIn says "Indirect Contract"; your own CV says "(MSc Dissertation)". Make CV and LinkedIn say the same true thing.
+    employment_type: indirect contract (MSc Dissertation)    
     dates: May 2026 – Sep 2026
     situation: "Needed an LLM a research team could trust before it shipped"
     bullets:
@@ -172,7 +171,7 @@ experience:
 
   - id: avasoft
     display_org: "Avasoft LTD., Chennai, India"   # 17 Oct: heading exactly as on your daily CV
-    title: "Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)"   # DECIDE: LinkedIn dates. Your hand-made CV said Jul 2023 and Jun 2023.
+    title: "Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)"   
     org: Avasoft
     location: Chennai, India
     employment_type: full-time
@@ -243,7 +242,7 @@ projects:
       - id: p_gg5                          # NEW 17 Oct: your daily CV, verbatim
         verbatim: true
         replaces: [p_gg1, p_gg2, p_gg4]
-        text: "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, cut RAM from 8.2 to 5.5 GB on a free T4 GPU, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
+        text: "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
         result: "1,399 cell lines × 16,385 genes; RAM 8.2 → 5.5 GB; train Pearson 0.807 vs test 0.545"
         terms: [graph, data integration, omics, bioinformatics, gpu, memory optimisation, evaluation, overfitting, debugging, root cause analysis, reproducibility]
   - id: iata
@@ -361,19 +360,40 @@ projects:
         text: "Trained a PyTorch CNN on CIFAR-10 and compared it with ImageNet pretrained ResNet50 transfer learning (frozen backbone, new 10 class head), judged by confusion matrices and validation loss rather than accuracy alone."
         terms: [pytorch, deep learning, cnn, convolutional neural network, transfer learning, computer vision, image classification, model evaluation, coursework]
 
+  - id: qlora                              # NEW 21 Oct: llama3-8b-qlora-math-t4 (your notebook + README)
+    display_name: "Llama 3.1 8B QLoRA -- Maths Fine-Tuning on a Free T4"
+    name: llama3-8b-qlora-math-t4 — QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget
+    stack: Python, Unsloth, PEFT, TRL, Hugging Face, PyTorch, sentence-transformers, scikit-learn
+    github: https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4
+    situation: "Needed to know what fine-tuning can change in an 8B model on a free 15 GB GPU"
+    bullets:
+      - id: p_ql1
+        situation_included: true
+        text: "Needed to know what fine-tuning can change in an 8B model on a free 15 GB GPU: QLoRA-fine-tuned Llama 3.1 8B (4-bit, Unsloth, TRL) training 0.52% of its parameters, which under a fixed 384-token budget raised answer completion from 32% to 52% and exact-answer accuracy from 16.2% to 27.3% on held-out NuminaMath problems (n=99)."
+        result: "answer completion 32% → 52%; exact-answer accuracy 16.2% → 27.3% (n=99); 0.52% of parameters trained"
+        terms: [fine-tuning, llm fine-tuning, qlora, lora, peft, parameter-efficient fine-tuning, quantisation, quantization, 4-bit, unsloth, trl, sft, supervised fine-tuning, llama, llm, hugging face, gpu, low-memory, edge, inference cost, evaluation]
+      - id: p_ql2
+        text: "Audited all 859,494 training rows for completeness, structure and duplicates (44,369 excess duplicate rows found), hand-reviewed 181 flagged records, and used embedding-based topic clusters (MiniLM, KMeans, GMM) to build topic-grouped training folds."
+        result: "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed"
+        terms: [data quality, data audit, deduplication, data curation, training data, embeddings, clustering, gmm, kmeans, cross-validation, eda, exploratory data analysis]
+      - id: p_ql3
+        text: "Reported the limits openly: accuracy on completed answers barely moved (50% vs 52%), so the gain came from finishing answers inside the token budget rather than stronger reasoning; traced out-of-memory errors to several models loaded in one runtime, not the KV cache."
+        result: "accuracy on completed answers 50% vs 52%"
+        terms: [evaluation, llm evaluation, root cause analysis, debugging, memory optimisation, gpu memory, kv cache, scientific rigour, reporting limitations]
+
 education:
   - degree: MSc Data Science
     display_org: "University of Bristol, UK"
     display_line: "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)"   # 17 Oct: heading exactly as on your daily CV
     org: University of Bristol
     dates: Sep 2025 – Sep 2026            # LinkedIn. Was "2025 – 2026"
-    note: Distinction (Expected)           # DECIDE: keep, update with your final grade, or remove
+    note: Distinction (Expected)          
     modules: [Large-Scale Data Engineering, Statistical Computing & Empirical Methods, AI & Text Analytics, Visual Analytics, Data Science Methods & Practices, "Technology, Innovation, Business & Society"]   # LinkedIn unit names
     research_focus: "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"   # LinkedIn
   - degree: B.E. Electrical and Electronics Engineering
     display_line: "B.E. Electrical & Electronics Engineering, First Class with Distinction"   # 17 Oct: heading exactly as on your daily CV
     org: St. Joseph's College of Engineering
-    dates: Aug 2019 – May 2023             # DECIDE: LinkedIn. Your hand-made CV said Sep 2019 – Apr 2023.
+    dates: Aug 2019 – April 2023            
     note: First Class with Distinction
     grade: "91%"                           # LinkedIn
 
@@ -422,7 +442,7 @@ families:
       - label: "Machine Learning, Deep Learning & Statistics"
         items: "Predictive modelling (gradient boosting with XGBoost, random forest, scikit-learn), clustering (K-Means, HAC, DBSCAN, Leiden), deep learning (PyTorch, TensorFlow/Keras, LSTM, GRU, BiRNN, CNN), time-series forecasting (cyclic time encoding, TimeSeriesSplit), anomaly detection (Isolation Forest), class-imbalance handling (SMOTE), hyper-parameter tuning (grid search, two-stage Bayesian), model evaluation (held-out, cross-validation, Pearson, MCC), statistical inference and experimental design (confidence intervals, bootstrap, hypothesis testing; MSc coursework), MLflow experiment tracking"
       - label: "Python, Data Quality & Cloud"
-        items: "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS (Lambda, ECR, IAM, S3, Bedrock), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), serverless deployment (Lambda, Cloud Run), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git"
+        items: "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS, GCP, Docker, Kubernetes (AWS EKS), serverless deployment (Lambda, Cloud Run), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git"
       - label: "NLP, LLMs, Embeddings & Evaluation"
         items: "NLP (text preprocessing, TF-IDF, SBERT embeddings, text clustering), Hugging Face Transformers, large language models (Claude, OpenAI, open-weight via Ollama), prompt engineering, RAG with embeddings (ChromaDB), agents (LangChain, LangGraph), team LoRA fine-tune of Llama, LLM evaluation (hallucination-rate analysis, deterministic guardrails)"
       - label: "Client Delivery & Communication"
@@ -431,49 +451,53 @@ families:
 # Short certifications line set # NEW 17 Oct: your daily CV, verbatim
 certifications_short:
   - "Anthropic MCP Advanced & Introductory, 2026"
-  - "AWS Academy Cloud Foundations, 2025 · 180DC Data Science Consultant, 2025"
-  - "Lloyd's Datathon 3rd Place, 2026 · Bristol PLUS Award, 2026"
+  - "AWS Academy Cloud Foundations, 2025"  
+  - "180DC Data Science Consultant, 2025"
+  - "Lloyd's Datathon 3rd Place, 2026" 
+  - " Bristol PLUS Award, 2026"
 
-# Hook library (15 Oct, checked against this file). Picked per job by term overlap; used word for word.
 hook_library:
-  - id: h_agent_harness       # NEW 17 Oct: your daily CV headline and profile sentence 1
+  # Rules (21 Oct): headline <= 60 chars, one result (an "A → B" pair counts as one), no hardware/resource units.
+  # profile_line <= ~35 words. Detail (RAM, gene counts, model ids) stays in the proof bullet, not the hook.
+  # terms must be specific to this hook: generic words (python, regression, models) make it win jobs it doesn't fit.
+  - id: h_agent_harness
     proof: az10
-    terms: [agent, agents, agentic, harness, tool calling, failure, recovery, reliability, evals, evaluation, llm, guardrails, mcp, typescript]
-    headline: "agents that recover from tool failure | ~65-test evals"
-    profile_line: "AI engineer (MSc Data Science, University of Bristol) who builds the harness around the model: at AstraZeneca, built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) that recovers when its tools fail (circuit breakers with a 19,213-gene parquet fallback, deterministic Ensembl and HGNC calls) and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness, which also validated a Groq-to-Bedrock model migration."
+    terms: [agent, agents, agentic, harness, tool calling, failure, recovery, reliability, evals, evaluation, guardrails, mcp, typescript]
+    headline: "LLM agent that recovers from tool failure, ~65-test evals"
+    profile_line: "AI engineer who builds the harness around the model: at AstraZeneca I built a tool-calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three-tier, ~65-test evaluation harness."
     letter_line: "At AstraZeneca I built a tool-calling agent that recovers when its tools fail, and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness."
 
   - id: h_prod_tests
     proof: az4
-    terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, evaluation, quality, aws, lambda, prototype]
+    terms: [production, deployment, testing, tests, mlops, ci/cd, reliability, quality, aws, lambda, prototype]
     headline: "LLM agent shipped to AWS Lambda behind ~65 automated tests"
-    profile_line: "Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests."
-    letter_line: "At AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests."
+    profile_line: "Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three-tier framework of ~65 tests."
+    letter_line: "At AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three-tier framework of ~65 tests."
 
   - id: h_llm_guard
     proof: az2
-    terms: [llm, llms, genai, generative ai, agent, agents, agentic, rag, guardrails, hallucination, langchain, bedrock]
-    headline: "LLM agent with hallucination guards and a 19,213 gene fallback"
-    profile_line: "AI engineer who makes LLM systems trustworthy: at AstraZeneca I built an agent with deterministic hallucination guards and a 19,213 gene fallback, tested by ~65 tests."
-    letter_line: "At AstraZeneca I built an LLM agent that stays correct when sources fail: deterministic hallucination guards, circuit breakers and a 19,213 gene fallback, tested by ~65 tests."
+    terms: [genai, generative ai, rag, guardrails, hallucination, hallucinations, langchain, bedrock, trustworthy, safety]
+    headline: "LLM agent with deterministic hallucination guards, ~65 tests"
+    profile_line: "AI engineer who makes LLM systems trustworthy: at AstraZeneca I built an agent with deterministic hallucination guards and circuit-breaker fallbacks, tested by ~65 tests."
+    letter_line: "At AstraZeneca I built an LLM agent that stays correct when sources fail: deterministic hallucination guards, circuit breakers and a 19,213-gene fallback, tested by ~65 tests."
 
-  - id: h_scale_gpu
+  - id: h_scale_gpu             # 21 Oct: RAM moved out of the hook, generic terms removed (id kept so nothing breaks)
     proof: p_gg2
-    terms: [scale, scalable, gpu, performance, optimisation, optimization, large scale, big data, model training, regression, random forest]
-    headline: "11,459 per gene models on one GPU, RAM cut from 8.2 to 5.5 GB"
-    profile_line: "Data scientist who scales modelling and reports its limits: trained 11,459 per gene models on a single T4 GPU, cut RAM from 8.2 to 5.5 GB, and caught overfitting on held out data."
-    letter_line: "I trained 11,459 per gene models on a single GPU, cut memory from 8.2 to 5.5 GB, and used held out testing to surface overfitting (train Pearson 0.807 vs test 0.545)."
+    terms: [large scale, scalable, high-dimensional, genomics, bioinformatics, omics, biology, overfitting, model validation, held-out]
+    headline: "Per-gene models for 11,459 genes, validated on held-out data"
+    profile_line: "Data scientist who scales modelling and reports its limits: trained per-gene models for 11,459 genes on a single GPU and caught overfitting on held-out data."
+    letter_line: "I trained per-gene models for 11,459 genes on a single GPU and used held-out testing to surface overfitting (train Pearson 0.807 vs test 0.545)."
 
   - id: h_client
     proof: dc2
-    terms: [client, clients, stakeholder, stakeholders, consulting, customer, delivery, requirements, communication, onboarding]
-    headline: "Client prototype now in live daily use, rated five stars by leadership"
+    terms: [client, clients, stakeholder, stakeholders, consulting, consultant, customer, delivery, requirements, communication, forward deployed]
+    headline: "Client prototype now in live daily use, rated five stars"
     profile_line: "Data scientist who turns loose client briefs into working systems: at 180 Degrees Consulting my prototype went into the client's production repository, in live daily use, rated five stars by senior leadership."
     letter_line: "At 180 Degrees Consulting I turned a loosely defined client brief into a prototype that is now in live daily use in the client's production repository, rated five stars by senior leadership."
 
   - id: h_cost_latency
     proof: p_cf1
-    terms: [cost, latency, api, apis, fastapi, product, llm, efficiency, inference]
+    terms: [cost, latency, fastapi, inference, efficiency, unit economics, real-time]
     headline: "LLM matching API at ~£0.003 per query, under 3 s"
     profile_line: "Data scientist who keeps solutions simple and cheap: built a deterministic matching API with one LLM call at ~£0.003 per query and under 3 s."
     letter_line: "I built a deterministic matching API that makes a single LLM call, costing ~£0.003 per query and answering in under 3 s."
@@ -481,13 +505,20 @@ hook_library:
   - id: h_imbalance
     proof: p_ll1
     terms: [anomaly detection, fraud, imbalanced, imbalance, banking, financial services, fintech, risk, outlier]
-    headline: "3rd place, Lloyd's Datathon: anomaly detection at 200:1 imbalance"
+    headline: "3rd place, Lloyd's Datathon: anomalies at 200:1 imbalance"
     profile_line: "Data scientist with banking data experience: placed 3rd at the Lloyd's Banking Group Datathon detecting anomalies under 200:1 class imbalance, with experiments tracked in MLflow."
     letter_line: "At the Lloyd's Banking Group Datathon I placed 3rd detecting anomalies under 200:1 class imbalance, comparing Isolation Forest with ensemble classifiers in MLflow."
 
-  - id: h_forecast            # no number exists for this project yet: the pipeline flags "hook has no number"
+  - id: h_forecast            # still no number: the pipeline flags "hook has no number"
     proof: p_bt1
     terms: [forecasting, forecast, time series, timeseries, demand, lstm, temporal, sequence]
-    headline: "LSTM forecasting validated on time ordered data, served via REST API"
+    headline: "LSTM forecasts validated on time-ordered data, via REST API"
     profile_line: "Data scientist who validates forecasts the way they will be used: an LSTM forecaster tuned with TimeSeriesSplit and served through a TensorFlow Serving REST API."
-    letter_line: "I built an LSTM forecaster validated on time ordered data with TimeSeriesSplit and served it through a REST API."
+    letter_line: "I built an LSTM forecaster validated on time-ordered data with TimeSeriesSplit and served it through a REST API."
+
+  - id: h_finetune
+    proof: p_ql1
+    terms: [fine-tuning, fine-tune, lora, qlora, peft, sft, llama, open-weight, small models, quantisation, quantization, on-device]
+    headline: "QLoRA on Llama 3.1 8B: held-out accuracy 16.2% → 27.3%"
+    profile_line: "AI engineer who fine-tunes under real constraints: QLoRA-fine-tuned Llama 3.1 8B on a single free GPU and raised held-out maths accuracy from 16.2% to 27.3% (n=99), reporting that the gain came from completing answers, not stronger reasoning."
+    letter_line: "I QLoRA-fine-tuned Llama 3.1 8B on a free T4 GPU, training 0.52% of its parameters, and under a 384-token budget raised exact-answer accuracy on held-out maths problems from 16.2% to 27.3%."

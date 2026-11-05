@@ -19,7 +19,8 @@ paths:
   facts_proposed: data/facts/proposed.yaml   # facts you typed in review (`f`) for a gap keyword: provisional for their own job until you save them to the fact bank after the job (tailoring/provisional.py); runtime data, never the fact bank itself (built-in default when the key is absent)
   # archive of submitted applications — the user's own folder D:\Professional\UK\Companies, outside the repo.
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
-  applications: /mnt/d/Professional/UK/Companies
+  applications: /mnt/d/Professional/UK/Companies    
+  applications_auto: /mnt/d/Professional/UK/Careeroops                                 # READ only: history, company list, duplicate check (never written)  
   judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   jds_done: data/jds_done                 # JD files of jobs you skipped or applied to: skipped/ and applied/ (every copy of the job goes with it; never deleted; `careerops unskip` brings a skip back)
@@ -142,8 +143,8 @@ roles:
        projects: [churn, lloyds, bitcoin, coverfit]}
 
   levels:
-    # Junior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
-    exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
+    # Junior, senior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
+    exclude: ['\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
               '\bmanager\b', '\bvp\b', '\b(iii|iv)\b', '\bintern(ship)?\b']
   floor: 0.70                 # same as scoring.band[0]; jobs whose honest ceiling can't reach it queue last
   tier3_max_share: 0.20       # tier 3 gets at most 20 % of a run's tailoring slots unless tiers 1–2 run out
@@ -261,11 +262,13 @@ cv:
   skills_when_asked: [TypeScript, JavaScript]
 
 hook:
-  # Every CV carries one hook (careerops/hook.py), taken from `hook_library` in the fact bank, never written by a model: the entry whose
-  # `terms` carry the most keyword weight for the ad, used word for word. It shows as a 12pt navy headline under the name (its
-  # `headline`), as sentence 1 of the profile (its `profile_line`), as its `proof` bullet moved to the top of its role (with the entry's
-  # `situation:` opener) and, when letters are on, as sentence 1 of the cover letter (its `letter_line`). A bank with no library, or no
-  # entry that matches, gets a code-made template hook (also no model).
+  # A CV carries a hook (careerops/hook.py) taken from `hook_library` in the fact bank, never written by a model or by code: an entry is
+  # eligible only when its `terms` hit at least 2 of the ad's top 10 weighted keywords; of those, the one with the most keyword weight
+  # wins and is used word for word. It shows as a 12pt navy headline under the name (its `headline`), as sentence 1 of the profile (its
+  # `profile_line`), as its `proof` bullet moved to the top of its role (with the entry's `situation:` opener) and, when letters are on,
+  # as sentence 1 of the cover letter (its `letter_line`). No eligible entry = no hook: the headline is the role family's, with no number.
+  # The review screen says why the hook won, and warns (never rewrites) about a headline over 60 characters, with more than one number
+  # or with a hardware unit; `careerops doctor` shows the same warnings for the whole library.
   # false = none of that: no headline slot, no hook line, no reordering.
   enabled: true
 
@@ -308,7 +311,7 @@ letter:
   # Default off: a live run uploads the CV only. hook = the letter is ASSEMBLED, no model writes it: the hook entry's letter_line, two
   # sentences each built from one selected bullet's own words, and the call to action (its problem phrase = the hook entry's terms, lower
   # case). draft = the model drafts one (legacy, under every letter check and the same our/we/"I help <Company>"/linked-noun-phrase guard).
-  mode: "off"                # off | draft | hook | company (quoted: an unquoted off is the boolean false in YAML)
+  mode: "company"                # off | draft | hook | company (quoted: an unquoted off is the boolean false in YAML)
   # company = ONE short letter in up to seven paragraphs (tailoring/company_letter.py, v2.3). Code writes P1 (the ad's or the company page's
   # problem phrase, a semicolon, the hook's letter line), P2 (the hook fact's `limits` / `result`, word for word; left out when the fact
   # bank has neither), P6 (the honest gap, below) and P7 (the 20-minute ask). The cover_letter model writes P3 (the ad's 2 or 3 required
@@ -460,7 +463,7 @@ targeting:
 # Gated auto-apply (careerops/autoapply.py, Greenhouse / Ashby / Lever only). `careerops live --auto` submits a form only when EVERY gate below passes;
 # a job that fails any gate goes to the normal review prompt with the failed gates printed at the top (`AUTO BLOCKED: ATS 58 < 70; level: senior`).
 apply:
-  mode: assist          # off = review only, no form is opened | assist = you press Submit | auto = `live --auto` may submit (you set this; it is never the default)
+  mode: auto          # off = review only, no form is opened | assist = you press Submit | auto = `live --auto` may submit (you set this; it is never the default)
   min_ats_strict: 70    # the strict CV score (the CV's own text, negation-aware), not the claimable ceiling
   max_auto_per_day: 5   # auto-submits per calendar day, counted from data/live/applied_auto.csv
   confirm_first_n: 3    # the first N auto-submits ever (rows in applied_auto.csv) ask `Submit? [y/N]` after showing the filled-form screenshot
