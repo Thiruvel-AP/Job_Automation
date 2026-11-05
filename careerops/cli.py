@@ -421,6 +421,9 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if alert_check:
         print("\n".join(alert_check).replace("ats: ", "alerts: ", 1))
     print("\n".join(disc.refused_lines(disc.read_runs(s), d.run.refused)))            # requests each provider refused: the previous run -> this one
+    trace = disc.trace_lines(d.run.as_json())                                        # slug guesses per provider; why board_link / board_known found nothing; CV-Library
+    if trace:
+        print("\n".join(trace))
     _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))

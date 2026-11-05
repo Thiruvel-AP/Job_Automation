@@ -33,6 +33,10 @@ rest to the boards. What is found carries apply_url and apply_kind (greenhouse |
 aggregator_only); what is not goes to the manual queue with its apply_kind. Per source and per step, the report says how many
 alerts were resolved.
 
+v2.8: every alert that could not be resolved keeps a trace (what each step tried, why it failed, run.unresolved). The report names five of them when
+board_link or board_known resolved none ("Why board_link and board_known resolved 0 ..."), five CV-Library alerts with the reason each stayed unresolved (a
+CV-Library job page is "agency or board-only"), and the slug guesses and requests per provider (boards.py: at most discover.ats.max_guesses_per_provider a run).
+
 The manual queue (paths.jds/manual_queue.csv, append-only, one row per link) lists what could not be resolved, for
 `careerops live --clipboard`: the best discover.manual_queue_max (10) of a run by title relevance x S, the rest in
 manual_queue_overflow.csv. Every title the role or place filter turned away is in paths.discover/filtered_<date>.csv with the reason (one
@@ -122,6 +126,10 @@ class Run:
     no_job_subjects: dict[str, str] = field(default_factory=dict)      # alert source id -> the first subject of a mail it read no job from
     asked: list[str] = field(default_factory=list)                     # the source steps this run was asked for (ats, gmail_alerts ...): `shortlist` says when the alerts were last read
     refused: dict[str, int] = field(default_factory=dict)              # provider -> requests it refused this run (boards.BoardIndex.refused_counts)
+    guesses: dict[str, dict[str, int]] = field(default_factory=dict)   # provider -> guesses / requests / cached / over_cap this run (boards.BoardIndex.guess_counts)
+    guess_cap: int = 0                                                 # discover.ats.max_guesses_per_provider
+    slug_rejected: dict = field(default_factory=dict)                  # {"count": n, "examples": [...]}: tokens never asked because they are not company names
+    unresolved: list[dict] = field(default_factory=list)               # every link resolve_link could not resolve: what was tried and why not (unresolved_row)
 
     def count(self, source: str, what: str, n: int = 1) -> None:
         self.sources[source][what] += n
@@ -138,6 +146,9 @@ class Run:
         return {"ts": self.started, "dry_run": self.dry_run, "tiers": list(self.tiers), "failures": self.failures[:20], "sources": {s: dict(c) for s, c in self.sources.items()},
                 "by_source": {s: dict(c) for s, c in self.by_source.items()}, "notes": self.notes[:50],
                 "no_job_subjects": dict(self.no_job_subjects), "asked": list(self.asked), "refused": dict(self.refused),
+                "guesses": {a: dict(v) for a, v in self.guesses.items()}, "guess_cap": self.guess_cap, "slug_rejected": dict(self.slug_rejected),
+                "unresolved_total": len(self.unresolved), "unresolved_kinds": dict(Counter(r.get("category") or "?" for r in self.unresolved)),
+                "unresolved": example_rows(self.unresolved),
                 "written": [{"company": c.company, "title": c.title, "file": p.name} for c, p in self.written]}
 
 
@@ -485,6 +496,7 @@ class BoardLookup:
         self.findings: list[boards_mod.Finding] = []
         self.not_looked: set[str] = set()                            # companies left alone because the per-run limit was reached
         self.names: dict[tuple[str, str], str | None] = {}
+        self.link_note = ""                                          # why the last find_by_link found nothing (the trace of an unresolved alert)
 
     def boards_for(self, company: str) -> list[ats_mod.Board]:
         norm = sponsors.normalise(company)
@@ -500,6 +512,8 @@ class BoardLookup:
         self.probes -= 1
         finding = boards_mod.find(Seed(company, "alert"), self.fetcher, self.index, on_postings=lambda b, posts: self.cache.put(b, posts))
         self.findings.append(finding)
+        if not finding.tokens:                                       # every token was rejected as not a company name: nothing was asked, so it costs no probe
+            self.probes += 1
         self.guessed[norm] = finding.boards
         return finding.boards
 
@@ -508,13 +522,18 @@ class BoardLookup:
         Teamtailor, Recruitee, Personio, Pinpoint, Workday, and the Greenhouse / Lever / Ashby addresses): the board is named by the link (no slug is guessed, so
         Pinpoint works too), the posting is the one whose id is in the link, else (a link to the board only) the one titled like the alert. Nothing is requested
         from a linkedin / indeed / cv-library address (they name no board). None when the link names no such board or the posting is not on it any more."""
+        self.link_note = ""
         lk = more_ats.link_board(link)
         if lk is None or applykind.host_of(link).endswith(applykind.NEVER_FETCH[:4]):
+            host = applykind.host_of(link) or "no host"
+            self.link_note = (f"{host} is never fetched by this tool, and the link names no employer board" if applykind.never_fetched(link)
+                              else f"{host} is not the address of a board this tool reads (Greenhouse, Lever, Ashby, Workable, Teamtailor ...)")
             return None
         board = ats_mod.Board(lk.ats, lk.slug, company or "", "link")
         try:
             posts = self.cache.postings(board)
-        except (FetchError, Blocked):
+        except (FetchError, Blocked) as e:
+            self.link_note = f"reading the {lk.ats}/{lk.slug} board the link names failed: {e}"
             return None
         want = cand.norm_title(title)
         post = next((p for p in posts if p.listed and more_ats.matches(p, lk)), None)
@@ -523,10 +542,36 @@ class BoardLookup:
             scored = [t for t in scored if t[0] >= self.title_match and cand.level_words(title) == cand.level_words(t[1].title)]
             post = max(scored, key=lambda t: t[0])[1] if scored else None
         if post is None:
+            self.link_note = f"the {lk.ats}/{lk.slug} board the link names was read; no open posting has the link's id or the alert's title"
             return None
         if not post.description and lk.ats in ("smartrecruiters", "eploy"):
             more_ats.fill(lk.ats, lk.slug, post, self.fetcher)
         return board, post
+
+    def explain(self, company: str) -> tuple[str, str]:
+        """(category, sentence) for a company whose alert found no posting: what board_known and board_guessed did, read from the state this lookup already
+        holds (no request). Categories: no_company | no_posting | not_looked | board_unverified | not_a_company | guess_limit | provider_error | no_board."""
+        norm = sponsors.normalise(company)
+        if not norm:
+            return "no_company", "board_known / board_guessed: the alert names no company"
+        known = list(self.by_name.get(norm, [])) or list(self.by_name.get("".join(norm.split()), []))
+        if known:
+            b = known[0]
+            return "no_posting", (f"board_known: the {b.ats}/{b.slug} board (listed in your settings or sources.yaml, or verified from the register) was read; "
+                                  "no open posting is titled like the alert in the same place")
+        guessed = self.guessed.get(norm)
+        if guessed:
+            b = guessed[0]
+            return "no_posting", f"board_guessed: the {b.ats}/{b.slug} board was found from the name; no open posting is titled like the alert in the same place"
+        if norm in self.not_looked:
+            return "not_looked", (f"board_guessed: not tried, this run's limit of {self.probes_allowed} compan(ies) (discover.alert_probes_per_run) was reached")
+        known_text = f"board_known: no board is listed for '{company}' (settings, sources.yaml, the register)"
+        f = next((x for x in self.findings if sponsors.normalise(x.seed.name) == norm), None)
+        if f is None:
+            return "no_board", known_text + "; board_guessed: nothing was asked"
+        cat = ("board_unverified" if f.unverified else "not_a_company" if f.rejected and not f.tokens else "guess_limit" if f.capped
+               else "provider_error" if f.errors else "no_board")
+        return cat, known_text + "; board_guessed: " + f.tried_text()
 
     def board_name(self, board: ats_mod.Board) -> str | None:
         """The company name a Greenhouse board gives itself (one request, kept for the run); None when it cannot be read."""
@@ -869,6 +914,7 @@ class Discover:
         self.flush_filtered()
         self.first_seen.save()
         self.run.refused = self.index.refused_counts()
+        self.run.guesses, self.run.guess_cap, self.run.slug_rejected = self.index.guess_counts(), self.index.max_guesses, self.index.reject_summary()
         self.run.tiers = freshness.tier_counts(
             ({"posted_at": c.posted or None, "posted_at_source": c.posted_source or None, "seen_on": c.first_seen or None}
              for c, _ in self.run.written), self.today)
@@ -1071,31 +1117,48 @@ class Discover:
                 why = str(e)
             if c is not None:
                 step, c.apply_url, c.apply_kind = "reed", c.apply_url or c.url, c.apply_kind or "aggregator_only"
+        tried: list[str] = []                                  # what each step did, for the trace of an alert that stays unresolved
+        category = ""
+        if c is None:
+            tried.append("reed: " + ((why or "REED_API_KEY is not set") if host.endswith("reed.co.uk") and reed.job_id_from_url(link) else "not a Reed job link"))
         if c is None and link:
             found = self.lookup.find_by_link(company, title, location, link)
             if found:
                 c, step = posting_candidate(found[0], found[1], origin), "board_link"
+            else:
+                tried.append("board_link: " + self.lookup.link_note)
+        elif c is None:
+            tried.append("board_link: the alert has no link")
         if c is None and company:
             found = self.lookup.find(company, title, location)
             if found:
                 c = posting_candidate(found[0], found[1], origin)
                 step = "board_guessed" if found[0].origin == "alert" else "board_known"
-            elif not why:
-                boards = self.lookup.boards_for(company)
-                if boards:
-                    why = f"no posting titled like this on the {boards[0].ats} board of {company}: closed, or titled differently, or in another place"
-                elif sponsors.normalise(company) in self.lookup.not_looked:
-                    why = (f"board of {company} not looked for: the limit of {self.lookup.probes_allowed} compan(ies) a run "
-                           "(discover.alert_probes_per_run) was reached")
-                else:
-                    why = f"no public job board known for {company}"
-                    unverified = [x for f in self.lookup.findings if f.seed.name == company for x in f.unverified]
-                    if unverified:
-                        why += f" (board_unverified: {unverified[0][1]})"
+            else:
+                category, text = self.lookup.explain(company)
+                tried.append(text)
+                if not why:
+                    boards = self.lookup.boards_for(company)
+                    if boards:
+                        why = f"no posting titled like this on the {boards[0].ats} board of {company}: closed, or titled differently, or in another place"
+                    elif sponsors.normalise(company) in self.lookup.not_looked:
+                        why = (f"board of {company} not looked for: the limit of {self.lookup.probes_allowed} compan(ies) a run "
+                               "(discover.alert_probes_per_run) was reached")
+                    else:
+                        why = f"no public job board known for {company}"
+                        unverified = [x for f in self.lookup.findings if f.seed.name == company for x in f.unverified]
+                        if unverified:
+                            why += f" (board_unverified: {unverified[0][1]})"
+        elif c is None:
+            tried.append("board_known / board_guessed: the alert names no company")
+            category = "no_company"
         link_kind = applykind.kind_of(link) or "aggregator_only"
         if c is None:
             if link_kind == "workday":
                 why = "Workday careers site (its pages are never fetched; only the public list API was asked): " + (why or "no company given")
+                category = "workday"
+            if len(self.run.unresolved) < 500:
+                self.run.unresolved.append(self.unresolved_row(label, kind, source_id or kind, company, title, location, link, tried, why or "no company given", category or "no_board"))
             self.run.credit(source_id or kind, "unresolved")
             self.to_queue(label, kind, company, title, location, link, why or "no company given", seen_at=seen_at, apply_kind=link_kind)
             return "queued"
@@ -1123,6 +1186,16 @@ class Discover:
                           "add it with `careerops live --url`, or run discover again", seen_at=seen_at, apply_kind=c.apply_kind)
             return "queued"
         return result
+
+    @staticmethod
+    def unresolved_row(label: str, kind: str, source: str, company: str, title: str, location: str, link: str, tried: list[str], why: str, category: str) -> dict:
+        """One alert that stayed unresolved, as it goes in the run record: who sent it, what each step tried, why it failed, and for CV-Library whether the link is
+        a job page (the ad is on CV-Library or an agency only) or a click-tracker link."""
+        cv = ""
+        if applykind.host_of(link).endswith("cv-library.co.uk"):
+            cv = "tracker link" if gmail.is_cv_tracking(link) else "agency or board-only"
+        return {"label": label, "kind": kind, "source": source, "company": company, "title": title, "location": location, "link": link,
+                "tried": list(tried), "why": why, "category": category, "cv": cv}
 
     def alert_source(self, from_header: str, subject: str) -> registry_mod.Source | None:
         """Which source an alert email belongs to. With discover.gmail.senders set (kinds) or no registry: the four built-in senders;
@@ -1195,14 +1268,17 @@ class Discover:
                 self.run.count(label, f"alerts_{kind}")
                 self.run.credit(src.id, "alerts")
                 if self.already_decided(item.company, item.title, None, label):
+                    self.run.credit(src.id, "already_decided")
                     continue
                 if self.known.where(item.company, item.title, item.location):
                     self.run.count(label, "duplicate")
+                    self.run.credit(src.id, "duplicate")
                     continue
                 probe = Candidate(source=kind, company=item.company, title=item.title, location=item.location, url=item.link,
                                   description="")
                 if cand.family_of(probe, self.s) is None:
                     self.run.count(label, "role_filtered")
+                    self.run.credit(src.id, "role_filtered")
                     self.filtered_out(kind, item.company, item.title, item.location, item.link, "role", role_reason(item.title))
                     continue
                 if self.resolve_link(label, kind, item.company, item.title, item.location, item.link, f"gmail:{kind}",
@@ -1527,8 +1603,9 @@ def format_report(settings, run: Run | None = None) -> str:
         if last_ats:
             lines += ["Companies without a job board (the last `discover --ats` run):", *("  " + x for x in ats_none_lines(last_ats))]
         lines += step_lines({s: dict(c) for s, c in total.items()}, f"Alerts resolved by step, all {len(runs)} run(s):")
-        if run is None:                                 # a run in hand printed its own line (cli._discover_inbox)
+        if run is None:                                 # a run in hand printed its own lines (cli._discover_inbox)
             lines += refused_lines(runs)
+            lines += trace_lines(runs[-1])
     return "\n".join(lines)
 
 
@@ -1550,6 +1627,103 @@ def step_lines(sources: dict, title: str) -> list[str]:
     if not sum(got.values()):
         return []
     return [f"{title} " + " · ".join(f"{step} {got[step]}" for step in RESOLVED_BY)]
+
+
+def diverse(rows: list[dict], n: int) -> list[dict]:
+    """Up to n rows: the first of each category first (in the order met), then the rest in order. A short list that shows every way an alert failed."""
+    first, rest, seen = [], [], set()
+    for r in rows:
+        (rest if r.get("category") in seen else first).append(r)
+        seen.add(r.get("category"))
+    return (first + rest)[:n]
+
+
+def example_rows(rows: list[dict]) -> list[dict]:
+    """The unresolved alerts kept in the run record: 30 that show every way it failed, and up to 10 CV-Library ones the same way."""
+    keep = diverse(rows, 30)
+    for r in diverse([r for r in rows if r.get("kind") == "cvlibrary"], 10):
+        if r not in keep:
+            keep.append(r)
+    return keep
+
+
+CV_NOTES = {"agency or board-only": "a CV-Library job page: agency or board-only (the employer's own board was not found; CV-Library pages are never fetched)",
+            "tracker link": "a CV-Library click-tracker link: it names no job page (open the alert email to see the job); never fetched"}
+
+
+def _example(n: int, r: dict) -> list[str]:
+    mark = {"agency or board-only": " [agency or board-only]", "tracker link": " [click-tracker link]"}.get(r.get("cv") or "", "")
+    out = [f"  {n}. {r.get('company') or '(no company)'} | {r.get('title') or '?'} | {r.get('link') or 'no link'}{mark}"]
+    out += [f"     - {t}" for t in r.get("tried") or []]
+    out.append(f"     failed: {r.get('why') or 'no reason recorded'}")
+    return out
+
+
+def alert_why_lines(rec: dict, n: int = 5) -> list[str]:
+    """When board_link or board_known resolved none of the run's alerts: `Why board_link and board_known resolved 0 of 37 alert(s)`, the reasons by count, and n example
+    alerts with the company, what each step tried and why it failed. [] when both resolved some, or nothing was left unresolved. `rec` is a run record (Run.as_json)."""
+    srcs = rec.get("sources") or {}
+    zero = [s for s in ("board_link", "board_known") if not sum(int(c.get(f"resolved_via_{s}", 0) or 0) for c in srcs.values())]
+    rows = [r for r in rec.get("unresolved") or [] if r.get("label") != "ats"]
+    if not zero or not rows:
+        return []
+    alerts = sum(int(c.get("alerts", 0) or 0) for c in srcs.values())
+    total = int(rec.get("unresolved_total") or len(rows))
+    shown = diverse(rows, n)
+    kinds = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in sorted((rec.get("unresolved_kinds") or {}).items(), key=lambda kv: -kv[1]))
+    out = [f"Why {' and '.join(zero)} resolved 0 of {alerts or total} alert(s) this run ({total} unresolved; {len(shown)} example(s) below):"]
+    if kinds:
+        out.append(f"  unresolved by reason: {kinds}")
+    for i, r in enumerate(shown, 1):
+        out += _example(i, r)
+    return out
+
+
+def cvlibrary_lines(rec: dict, n: int = 5) -> list[str]:
+    """CV-Library in a run: mails read, alerts parsed, what became of them, and n parsed alerts that stayed unresolved with the reason of each. A link on a CV-Library
+    job page is marked `agency or board-only`; a click-tracker link is said to name no job page. [] when the run saw no CV-Library mail and no CV-Library alert."""
+    by = rec.get("by_source") or {}
+    rows = [r for r in rec.get("unresolved") or [] if r.get("kind") == "cvlibrary"]
+    sids = sorted({r.get("source") for r in rows if r.get("source")} | {s for s in by if re.sub(r"[^a-z]", "", s.lower()) == "cvlibrary"})
+
+    def total(key: str) -> int:
+        return sum(int((by.get(s) or {}).get(key, 0) or 0) for s in sids)
+    mails, parsed, ok, no = total("mails"), total("parsed"), total("resolved"), total("unresolved")
+    if not (mails or parsed or rows):
+        return []
+    gone = ", ".join(f"{k.replace('_', ' ')} {total(k)}" for k in ("role_filtered", "duplicate", "already_decided") if total(k))
+    head = f"CV-Library: {mails} alert mail(s) read, {parsed} alert(s) parsed, {ok} resolved, {no or len(rows)} unresolved" + (f", {gone}" if gone else "")
+    if mails and not parsed:
+        subj = next((rec.get("no_job_subjects", {}).get(s) for s in sids if (rec.get("no_job_subjects") or {}).get(s)), "")
+        head += "; no job could be read from them" + (f" (first subject: {subj})" if subj else "")
+    out = [head]
+    shown = rows[:n]
+    if shown:
+        out.append(f"  {len(shown)} parsed alert(s) that stayed unresolved, with the reason:")
+    for i, r in enumerate(shown, 1):
+        out += _example(i, r)
+        if r.get("cv") in CV_NOTES:
+            out.append(f"     note: {CV_NOTES[r['cv']]}")
+    return out
+
+
+def guess_lines(rec: dict) -> list[str]:
+    """`Slug guesses per provider this run (limit 60 each): greenhouse 60 guess(es), 61 request(s), 14 cached, 22 over the limit ...` and the tokens never asked because
+    they are not company names. [] when the run guessed nothing."""
+    g, rej = rec.get("guesses") or {}, rec.get("slug_rejected") or {}
+    out = []
+    if g:
+        parts = " · ".join(f"{a} {v.get('guesses', 0)} guess(es), {v.get('requests', 0)} request(s), {v.get('cached', 0)} cached"
+                           + (f", {v['over_cap']} over the limit" if v.get("over_cap") else "") for a, v in sorted(g.items()))
+        out.append(f"Slug guesses per provider this run (limit {rec.get('guess_cap') or '-'} each): {parts}")
+    if rej.get("count"):
+        out.append(f"Slugs not asked because they are not company names: {rej['count']}" + (" (" + "; ".join(rej.get("examples") or [])[:300] + ")" if rej.get("examples") else ""))
+    return out
+
+
+def trace_lines(rec: dict) -> list[str]:
+    """The v2.8 lines of a run record: slug guesses per provider, why board_link / board_known resolved nothing, CV-Library."""
+    return [*guess_lines(rec), *alert_why_lines(rec), *cvlibrary_lines(rec)]
 
 
 def resolution_lines(by_source: dict, title: str) -> list[str]:

@@ -155,6 +155,37 @@ def board_tokens(name: str, hint: str | None = None) -> list[str]:
     return list(dict.fromkeys(c for c in cands if c and SLUG_OK.match(c)))[:4]
 
 
+MAX_SLUG = 30                                                   # a board name is a word or two; longer is a sentence, a job title or a folder name
+DIGIT_RUN = re.compile(r"\d{4,}")                                # a salary (50000), a year, a phone number (bet365 and 360Learning have three digits and pass)
+SALARY_IN_NAME = re.compile(r"[£$€]\s*\d|\b\d+(?:\.\d+)?\s*k\b", re.I)    # £50k, 60k, $90,000
+POSTCODE = re.compile(r"\b[a-z]{1,2}\d[a-z\d]?\s*\d[a-z]{2}\b", re.I)    # SW1A 2AA, M1 1AE
+POSTCODE_SLUG = re.compile(r"^[a-z]{1,2}\d[a-z\d]?\d[a-z]{2}$")        # the same joined into a slug: sw1a2aa
+
+
+def name_reject_reason(name: str) -> str | None:
+    """Why a name is not a company name, so that no board token is guessed from it: it holds a postcode, a salary or a long number (an alert's company
+    field that took in the job's place or pay). None when it can be a company."""
+    text = name or ""
+    if POSTCODE.search(text):
+        return "the name contains a postcode"
+    if SALARY_IN_NAME.search(text):
+        return "the name contains a salary"
+    if DIGIT_RUN.search(text.replace(",", "")):
+        return "the name contains a long number"
+    return None
+
+
+def slug_reject_reason(token: str) -> str | None:
+    """Why a guessed board token is not a company's: longer than MAX_SLUG characters, a run of four or more digits, or a postcode. None when it can be."""
+    if len(token) > MAX_SLUG:
+        return f"{len(token)} characters is longer than {MAX_SLUG}: not a company name"
+    if DIGIT_RUN.search(token):
+        return "the slug contains a run of digits (a salary, a year, a phone number)"
+    if POSTCODE_SLUG.match(token):
+        return "the slug is a postcode"
+    return None
+
+
 def verify_rule(hit: Hit, company_norm: str, slug_is_full_name: bool) -> tuple[bool, str]:
     """(verified, rule), first match wins: name_exact | name_prefix_uk | full_slug_uk | name_mismatch (rejected) | weak."""
     if hit.board_name:

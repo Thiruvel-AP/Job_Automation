@@ -64,9 +64,14 @@ class Triage:
     pay_top: int | None = None
     floor: int | None = None
 
-    def text(self) -> str:
-        """`T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3`"""
-        return (f"T {_fmt(self.t)} = A{_fmt(self.a)} E{_fmt(self.e)} V{_fmt(self.v)} L{_fmt(self.l)} Fr{_fmt(self.fr)} P{_fmt(self.p)}")
+    def text(self, e_unknown: bool = False) -> str:
+        """`T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3`; with `e_unknown` (an alert: there is no ad text to read) E is written `E ?`, not the neutral 3 it is scored with."""
+        e = "E ?" if e_unknown else f"E{_fmt(self.e)}"
+        return (f"T {_fmt(self.t)} = A{_fmt(self.a)} {e} V{_fmt(self.v)} L{_fmt(self.l)} Fr{_fmt(self.fr)} P{_fmt(self.p)}")
+
+    def alert_rank(self) -> float:
+        """What orders the alerts of the shortlist: A, Fr and V at the weights T gives them. An alert has no ad text, so E is a constant (3) and says nothing."""
+        return WEIGHTS["A"] * self.a + WEIGHTS["Fr"] * self.fr + WEIGHTS["V"] * self.v
 
     def factors(self) -> dict[str, float]:
         return {"A": self.a, "E": self.e, "V": self.v, "L": self.l, "Fr": self.fr, "P": self.p}

@@ -171,7 +171,7 @@ def test_the_block_lists_the_best_ten_by_t_as_company_title_board_link(settings,
     plan = build(settings, db, fb)
     assert [a.company for a in plan.alert_rows] == [f"Co{i:02d}" for i in range(1, 11)] and plan.alert_total == 12
     lines = shortlist.alert_lines(plan)
-    assert lines[0].startswith("From alerts, apply on the board (12, the top 10 by T): company | title | board | link")
+    assert lines[0].startswith("From alerts, apply on the board (12, the top 10 by A, Fr, V): company | title | board | link")      # v2.8: ranked by A, Fr, V, not T
     assert "[c n]" in lines[0] and "careerops live --clipboard" in lines[0]
     assert lines[1].startswith("  c1. Co01 | Data Scientist | linkedin | https://www.linkedin.com/jobs/view/1001  (T ") and len(lines) == 11
     ts = [a.t.t for a in plan.alert_rows]

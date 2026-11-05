@@ -282,7 +282,9 @@ finds and ranks without writing, and every run is listed best priority first.
   (lower-case, Ltd / Limited / plc / Group / UK / Holdings / Technologies dropped, spaces and punctuation removed: `Monzo Bank Ltd` ->
   `monzobank`, `monzo-bank`, `monzo`) and asks each provider; a token counts only when the API answers 200 with a jobs list. Every
   answer, found or not, is kept 30 days (`discover.ats.board_cache_days`) in `data/discover/boards.json`, so a company is asked about
-  once a month; a blocked host or an error is not kept. The run prints, per company, the tokens tried, the board found
+  once a month (v2.8: also a host that does not exist, and a company-per-host provider whose robots.txt only redirects: board none, not a refusal); a blocked host or an error is not kept.
+  No token is asked that is not a company name (over 30 characters, four or more digits, a postcode, a name with a postcode or a salary, a folder in `discover.ignore_companies`), and at
+  most `discover.ats.max_guesses_per_provider` (60) tokens go to one provider in a run (the next run carries on); the run prints the guesses and requests per provider. The run prints, per company, the tokens tried, the board found
   (`greenhouse/monzo`) or none and the jobs that matched the role and place, then the top 10 by priority P with title, company,
   location and URL. A token is a guess, so a board found only through a SHORTENED token (the first word, the first two words, the name
   without Group / Holdings / Technologies: `octagon` for Octagon Group, `focus` for Focus Group) is accepted only if the board's own
@@ -1191,7 +1193,8 @@ ads away and moving the ones you approve.
   (`data/discover/runs.jsonl` records what each run was asked for). `careerops daily` is `discover --ats --gmail-alerts --report` and then `shortlist`; a discover that fails does not stop the
   shortlist (which then says the alerts were not read) and its exit code is kept.
 - **Alerts that could not be traced to the employer (v2.7)**: the manual queue (`data/jds/manual_queue.csv` and its overflow) is its own block under the list, `From alerts, apply on the board (N):
-  company | title | board | link`, the top 10 by T (there is no ad text, so E is neutral and the freshness is the day the row was queued). Not listed: a row with no company or link (an
+  company | title | board | link`, the top 10 (v2.8: ranked by A, Fr and V, then how well the title matches `roles.families`; there is no ad text, so E is written `E ?`, and the freshness is the day the row was queued; the same
+  job in two alerts is one row with both links; a CV-Library job page is marked `[agency or board-only]`). Not listed: a row with no company or link (an
   alert mail nothing was read from), a job already in hand (inbox, approved, database), decided, dismissed, outside the region, blacklisted, or older than `max_posting_age_days` without T >= 4.5; a
   job whose company + title match one you skipped is listed with the `possible repost` label. `c 2` says what to do (open the link, copy the whole ad, run `careerops live --clipboard`);
   `s c 2` dismisses it (`unskip --shortlist` brings it back). The board's page is never fetched.

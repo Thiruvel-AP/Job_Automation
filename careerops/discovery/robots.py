@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
 
+ROBOTS_REDIRECTS = (301, 302, 303, 307, 308)      # robots.txt that answers with one of these (a host per company that has no such company)
 PRODUCT_TOKEN = "career-ops"            # the product token of sources.UA ("career-ops/2.0 (personal job search)")
 TTL_S = 24 * 3600
 NEVER_FETCH = ("linkedin.com", "lnkd.in")      # a host or any subdomain of it
@@ -37,6 +38,11 @@ LINKEDIN_MESSAGE = ("linkedin.com is never fetched (its robots.txt disallows aut
 
 class RobotsError(ValueError):
     """The fetch is not allowed (or cannot be checked). One line, fit to print as it is."""
+
+
+class RobotsRedirect(RobotsError):
+    """robots.txt answered with a redirect instead of rules. A provider with one host per company (Teamtailor, Recruitee ...) answers so for a company
+    that has no account there; more_ats.fetch reads that as "no such board". For any other host it is still a refusal (the rules cannot be checked)."""
 
 
 def host_of(url: str) -> str:
@@ -135,6 +141,7 @@ class RobotsCache:
     def __init__(self, directory: Path | None = None, clock: Callable[[], float] = time.time):
         self.dir, self.clock = directory, clock
         self.memory: dict[str, tuple[float, Rules | str]] = {}      # host -> (when, Rules | the refusal message)
+        self.redirected: set[str] = set()                           # hosts whose robots.txt answered a redirect this run (their refusal is a RobotsRedirect)
 
     def _load(self, host: str) -> tuple[float, Rules | str] | None:
         if host in self.memory:
@@ -163,10 +170,11 @@ class RobotsCache:
         have = self._load(host)
         if have is not None and self.clock() - have[0] < TTL_S:
             if isinstance(have[1], str):
-                raise RobotsError(have[1])
+                raise (RobotsRedirect if host in self.redirected else RobotsError)(have[1])
             return have[1]
         scheme = urlparse(url).scheme or "https"
         status, text = fetch(f"{scheme}://{urlparse(url).netloc}/robots.txt")
+        self.redirected.discard(host)
         if status is not None and 200 <= status < 300:
             rules = parse(text)
         elif status in (404, 410):
@@ -178,6 +186,9 @@ class RobotsCache:
             msg = (f"{why}, so whether {host} allows automated access cannot be checked: this site blocks automated access, "
                    "copy the job text and use --clipboard")
             self.memory[host] = (self.clock(), msg)           # remembered for this run only: not written to disk
+            if status in ROBOTS_REDIRECTS:
+                self.redirected.add(host)
+                raise RobotsRedirect(msg)
             raise RobotsError(msg)
         self._store(host, rules)
         return rules

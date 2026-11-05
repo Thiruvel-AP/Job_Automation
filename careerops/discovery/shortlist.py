@@ -21,9 +21,11 @@ What it did not read (v2.7): when the last `discover` run did not read the alert
 `alerts not read since <time>: run discover --gmail-alerts`. `careerops daily` runs discover --ats --gmail-alerts --report and then this.
 
 Alerts that could not be traced to the employer (the manual queue, paths.jds/manual_queue.csv and its overflow) are their own block below the list:
-`From alerts, apply on the board (N): company | title | board | link`, the top ALERT_BLOCK_SIZE by T (no ad text, so E is neutral and the freshness is the day
-it was queued). `c n` prints what to do: open the link, copy the whole ad, run `careerops live --clipboard`; `s c n` dismisses one (parked, `unskip
---shortlist` brings it back). The board page is never fetched here.
+`From alerts, apply on the board (N): company | title | board | link`, the top ALERT_BLOCK_SIZE (no ad text, so E is unknown and is written `E ?`; the freshness is the
+day it was queued). They are ranked by A, Fr and V at T's weights (Triage.alert_rank), then by how well the title matches roles.families, then freshest. Rows with the
+same company and title (the same job on LinkedIn and Indeed) are one row with all their links. A link on a CV-Library job page is marked `[agency or board-only]`: the
+employer's own board was not found, so the ad is on CV-Library (or an agency) only. `c n` prints what to do: open the link, copy the whole ad, run `careerops live
+--clipboard`; `s c n` dismisses one (parked, `unskip --shortlist` brings it back). The board page is never fetched here.
 
 `--all` lists every undecided in-region ad again, not only the new ones: an ad parked after being shown PARK_AFTER times is included, a list with
 nothing new is still printed, and the list is not counted as a showing (so it never parks anything). The caps and the age / T rules still apply.
@@ -46,6 +48,8 @@ from ..apply import decided, targets, volume
 from ..apply import decisions as decisions_mod
 from ..db import DB
 from . import applykind, freshness, liveness, triage, workcountry
+from . import candidate as cand
+from .gmail import CV_TRACKING_HOST
 from . import region as region_mod
 from . import register as sponsors
 from . import size as size_mod
@@ -58,7 +62,8 @@ PARK_AFTER = 3                                  # lists an ad may be shown in wi
 SKIP_MARK = "(user, shortlist)"
 SKIP_REASON = f"skipped {SKIP_MARK}: skipped at the shortlist, not offered again"
 SIZE_FIRST_BONUS = 0.3                          # T added for the preferred bucket by `sme-first` / `large-first`
-ALERT_BLOCK_SIZE = 10                           # alerts that could not be traced to the employer: at most this many are listed, best T first
+ALERT_BLOCK_SIZE = 10                           # alerts that could not be traced to the employer: at most this many are listed, best first (A, Fr, V, title match)
+BOARD_ONLY = "agency or board-only"             # a CV-Library job page: the ad is on CV-Library (or an agency) only, the employer's own board was not found
 
 
 def approved_root(settings) -> Path:
@@ -133,6 +138,11 @@ class AlertRow:
     t: triage.Triage
     location: str = ""
     repost: str = ""                            # "possible repost of a job you skipped on <date> (<id>)": only company + title + country match (v2.5: shown, never skipped on that alone)
+    links: list[str] = field(default_factory=list)    # every link of the same company + title (the same job in two alerts): `link` is the first
+    boards: list[str] = field(default_factory=list)   # ... and where each came from
+    rank: float = 0.0                           # Triage.alert_rank: A, Fr, V at T's weights
+    relevance: float = 0.0                      # candidate.title_relevance: how close the title is to roles.families
+    board_only: bool = False                    # a link is a CV-Library job page: agency or board-only
 
     @property
     def name(self) -> str:
@@ -142,12 +152,20 @@ class AlertRow:
     def key(self) -> str:
         return _key(self.company, self.title)
 
+    @property
+    def all_links(self) -> list[str]:
+        return self.links or [self.link]
+
     def line(self, n: int) -> str:
-        return f"  c{n}. {self.company} | {self.title} | {self.board} | {self.link}  ({self.t.text()})" + (f" [{self.repost}]" if self.repost else "")
+        return (f"  c{n}. {self.company} | {self.title} | {', '.join(self.boards) or self.board} | {' · '.join(self.all_links)}  ({self.t.text(e_unknown=True)})"
+                + (f" [{self.repost}]" if self.repost else ""))
 
     def steps(self, n: int) -> str:
-        return (f"  c{n}. {self.name} ({self.board}): open {self.link} in your browser, copy the whole ad, then run  careerops live --clipboard\n"
-                f"      (it asks for Company: {self.company} · Job title: {self.title} · Application URL; this program never opens or fetches that page)")
+        links = self.all_links
+        where = links[0] + (f" (or {', '.join(links[1:])})" if links[1:] else "")
+        return (f"  c{n}. {self.name} ({', '.join(self.boards) or self.board}): open {where} in your browser, copy the whole ad, then run  careerops live --clipboard\n"
+                f"      (it asks for Company: {self.company} · Job title: {self.title} · Application URL; this program never opens or fetches that page)"
+                + (f"\n      CV-Library job page: {BOARD_ONLY}, the employer's own board was not found" if self.board_only else ""))
 
 
 @dataclass
@@ -174,7 +192,7 @@ class Plan:
     alive: Callable[[dict], str | None] | None = None                        # liveness check, used when [u] adds an ad
     size_notes: list[str] = field(default_factory=list)                      # what the size lookups said (no key, lookup limit, refusals)
     show_all: bool = False                                                   # --all: every undecided in-region ad, not only the new ones
-    alert_rows: list[AlertRow] = field(default_factory=list)                 # the manual queue's best ALERT_BLOCK_SIZE by T
+    alert_rows: list[AlertRow] = field(default_factory=list)                 # the manual queue's best ALERT_BLOCK_SIZE (A, Fr, V, title match), one row per company + title
     alert_total: int = 0                                                     # ... of this many that could be listed
 
 
@@ -411,7 +429,7 @@ def alert_block(settings, db: DB, fb: dict, *, idx, floor: int | None, now: date
     rules = workcountry.rules_from(workcountry.applicant_visa(settings))
     threshold = settings["sponsors"].get("fuzzy_threshold", 0.92)
     seen: set[str] = set()
-    out: list[AlertRow] = []
+    groups: dict[str, list[tuple[dict, str, str, str, str]]] = {}              # company + title -> its rows (the same job in two alerts is one row)
     for r in raw:
         company, title, link = (r.get("company") or "").strip(), (r.get("title") or "").strip(), (r.get("link") or "").strip()
         if not (company and title and link) or link in seen:                  # an alert e-mail nothing was read from has no company: it is not a job
@@ -423,20 +441,38 @@ def alert_block(settings, db: DB, fb: dict, *, idx, floor: int | None, now: date
             continue
         if regions is not None and region_mod.match(loc, "", regions).verdict == region_mod.OUT:
             continue
+        groups.setdefault(key, []).append((r, company, title, link, loc))
+    out: list[AlertRow] = []
+    for rows in groups.values():
+        r, company, title, link, loc = rows[0]
+        ts = max((x[0].get("ts") or "" for x in rows), default="") or None            # the freshest alert of the group dates it
         work = workcountry.resolve(location=loc, description="", title=title, override="", rules=rules)
         job = {"id": link, "company": company, "title": title, "description": "", "location": loc, "url": link, "apply_url": link, "source": r.get("source") or "",
                "sponsor_match": idx.lookup(company, threshold).label if idx is not None else None, "agency": False, "work_country": work.country,
-               "posted_at": r.get("ts") or None, "posted_at_source": freshness.GMAIL if r.get("ts") else None, "region_target": non_uk_ok}
+               "posted_at": ts, "posted_at_source": freshness.GMAIL if ts else None, "region_target": non_uk_ok}
         if triage.disqualify(job, settings, db, archive=archive, others=others) is not None:
             continue
         t = triage.score(job, settings, fb, floor=floor, now=now)
         if t.age_days is not None and t.age_days > cfg.max_posting_age_days and t.t < targeting_mod.OLD_POSTING_MIN_T:
             continue
-        kind = (r.get("apply_kind") or "").strip()
-        board = (r.get("source") or "alert") + (f"/{kind}" if kind and kind != "aggregator_only" else "")
-        out.append(AlertRow(company, title, board, link, t, loc, known.repost(company, title, link, loc)))
-    out.sort(key=lambda a: (-a.t.t, a.t.age_days if a.t.age_days is not None else float("inf"), a.company, a.title))
+        boards = list(dict.fromkeys(_board_label(x[0], x[3]) for x in rows))
+        links = list(dict.fromkeys(x[3] for x in rows))
+        out.append(AlertRow(company, title, boards[0], link, t, loc, known.repost(company, title, link, loc), links=links, boards=boards, rank=t.alert_rank(),
+                            relevance=cand.title_relevance(title, settings), board_only=any(_cv_job_page(x[3]) for x in rows)))
+    out.sort(key=lambda a: (-round(a.rank, 6), -a.relevance, a.t.age_days if a.t.age_days is not None else float("inf"), a.company, a.title))
     return out[:ALERT_BLOCK_SIZE], len(out)
+
+
+def _cv_job_page(link: str) -> bool:
+    """A CV-Library job page (not its click-tracker link): such an ad is on CV-Library, or with an agency, and nowhere the program could find on the employer's board."""
+    host = applykind.host_of(link)
+    return host.endswith("cv-library.co.uk") and host != CV_TRACKING_HOST
+
+
+def _board_label(r: dict, link: str) -> str:
+    """`linkedin`, `indeed/workday`, `cvlibrary [agency or board-only]`: where the alert came from, the kind of page when it is the employer's own."""
+    kind = (r.get("apply_kind") or "").strip()
+    return (r.get("source") or "alert") + (f"/{kind}" if kind and kind != "aggregator_only" else "") + (f" [{BOARD_ONLY}]" if _cv_job_page(link) else "")
 
 
 def file_away(settings, path: Path, folder: str, reason: str) -> Path | None:
@@ -490,9 +526,11 @@ def alert_lines(plan: Plan) -> list[str]:
     """The block of alerts that could not be traced to the employer: apply on the board (nothing here is fetched)."""
     if not plan.alert_rows:
         return []
-    count = f"{plan.alert_total}, the top {len(plan.alert_rows)} by T" if plan.alert_total > len(plan.alert_rows) else f"{len(plan.alert_rows)}"
+    count = f"{plan.alert_total}, the top {len(plan.alert_rows)} by A, Fr, V" if plan.alert_total > len(plan.alert_rows) else f"{len(plan.alert_rows)}"
+    note = ([f"  [{BOARD_ONLY}] = a CV-Library job page: the employer's own board was not found, so this ad is on CV-Library (or with an agency) only; apply there"]
+            if any(a.board_only for a in plan.alert_rows) else [])
     return [f"From alerts, apply on the board ({count}): company | title | board | link   [c n] = open the link, copy the whole ad, run `careerops live --clipboard` · [s c n] = dismiss"
-            ] + [a.line(n) for n, a in enumerate(plan.alert_rows, 1)]
+            ] + note + [a.line(n) for n, a in enumerate(plan.alert_rows, 1)]
 
 
 def lines(plan: Plan, cfg: targeting_mod.Targeting) -> list[str]:

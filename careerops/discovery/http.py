@@ -29,7 +29,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 
 from .blocklog import SLOW_GAP_S, BlockLog, backoff_seconds
-from .robots import DOCUMENTED_API_HOSTS, RobotsCache, RobotsError, host_of, never_fetch
+from .robots import DOCUMENTED_API_HOSTS, RobotsCache, RobotsError, RobotsRedirect, host_of, never_fetch
 from .sources import UA
 
 MIN_HOST_GAP_S = 1.0
@@ -52,6 +52,11 @@ class Blocked(FetchError):
     def __init__(self, msg: str, status: int | None = None):
         super().__init__(msg)
         self.status = status
+
+
+class RobotsRedirected(Blocked):
+    """The host's robots.txt answered with a redirect, not rules (robots.RobotsRedirect). Still a Blocked for every caller that does not care; a provider with
+    one host per company reads it as "no such company" (more_ats.fetch)."""
 
 
 def _real_get(url: str, **kw) -> requests.Response:
@@ -168,6 +173,8 @@ class Fetcher:
                     if host in self.backed_off:
                         raise Blocked(f"{what}: {host} answered HTTP {self.backed_off[host]} {self._again(host)}; not asked again",
                                       self.backed_off[host]) from None
+                    if isinstance(e, RobotsRedirect):
+                        raise RobotsRedirected(str(e)) from None
                     raise Blocked(str(e)) from None
                 delay = self.robots.crawl_delay(url)
                 if delay and delay > self.gap_s:

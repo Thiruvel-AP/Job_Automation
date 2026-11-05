@@ -181,6 +181,7 @@ discover:
   ignore_companies: []             # names `discover --ats` skips, for archive folders that are not companies: ["New folder", "AI Engineer"]. The folders are never touched
   ats:
     board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
+    max_guesses_per_provider: 60   # board tokens asked of ONE provider in one run (a guess is a token not in the cache); the rest wait for the next run, so no host sees hundreds of requests; 0 = guess nothing
     board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
     providers: []                  # the v2.6 providers asked when a slug is guessed (none in the tests: a test that wants one sets it)
   reed:

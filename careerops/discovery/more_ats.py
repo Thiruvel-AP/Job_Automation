@@ -36,7 +36,7 @@ from urllib.parse import quote, unquote, urlparse
 
 from . import freshness
 from .ats import Board, Posting
-from .http import Blocked, FetchError, Fetcher
+from .http import Blocked, FetchError, Fetcher, RobotsRedirected
 from .sources import html_to_text
 
 NAME_CHECKED = ("workable", "smartrecruiters", "teamtailor", "recruitee")                  # may be found by guessing a slug; the reply names the company
@@ -428,6 +428,10 @@ def fetch(ats: str, slug: str, fetcher: Fetcher, company: str = "") -> Reply:
     is `Reply(dns=True)`: no such board, not an error."""
     try:
         reply = _FETCH[ats](slug, fetcher, company)
+    except RobotsRedirected:
+        if ats in SUBDOMAIN:                                  # <slug>.<provider>: robots.txt redirects to the provider's own site when nobody has that name: no board, not a refusal
+            return Reply()
+        raise
     except Blocked:
         raise
     except FetchError as e:

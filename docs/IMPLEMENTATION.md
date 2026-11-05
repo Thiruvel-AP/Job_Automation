@@ -1832,3 +1832,38 @@ filled the inbox with out-of-region ads, and the first live run of v2.6 asked Pe
 
 Unverified (needs your network and your data): a live `careerops daily`; the first real `shortlist` will move the listed-only files already in your inbox (not run here: real data is only touched by
 `--mock` runs). `config/settings.yaml` (yours, left untouched) still lists `personio` under `discover.ats.providers` and its `listed_only` comment still says "written to the inbox": edit both when you like.
+
+## 5ba. v2.8 — fixes from the 5 Nov daily run (5 Nov 2026) — **done offline** (fixtures only); the live run is yours
+
+Why: the alert block ranked by a T whose E was always the neutral 3 (so its top 10 was close to random) and listed the same job twice; slug guessing asked for company names that were
+postcodes, salaries or sentences, asked Ashby 186 times in one run until it said 401, counted a robots.txt redirect on a made-up tenant as a refusal, and said nothing about why
+`board_link` and `board_known` resolved no alert, nor why CV-Library's alerts stayed unresolved.
+
+1. **Alert block** (`shortlist.alert_block`, `Triage.alert_rank`, `Triage.text(e_unknown=True)`): rows are ranked by A, Fr and V at T's weights (0.30 A + 0.10 Fr + 0.15 V; E is a constant for an
+   alert, L and P say nothing about which alert to open), then by `candidate.title_relevance` (how close the title is to `roles.families`), then freshest. The line writes `E ?` instead of `E3`;
+   T is still printed (it still decides the age rule). Rows with the same company + title (`_key`) are one row: all links on the line (` · `), all boards (`linkedin, indeed`), freshest queue time;
+   `c n` lists every link; `s c n` dismisses the job, so both links go. The header says `the top 10 by A, Fr, V` (it said `by T`; the one v2.7 test that read it is changed).
+2. **Slug guessing** (`ats.name_reject_reason`, `ats.slug_reject_reason`, `BoardIndex.reject_reason`, `boards.find`): a slug is not asked when it is over 30 characters, holds a run of four or more
+   digits, or is a postcode (`sw1a2aa`); no slug is made from a name that holds a postcode, a `£`/`$`/`€` figure, a `50k`, or a run of four digits; a name or slug that is a folder in
+   `discover.ignore_companies` is not asked either (the seeds already skipped the folder, the alerts did not). Three digits pass (`bet365`, `360Learning`). A slug already verified for the company
+   (`Seed.hint`) is exempt. What was left out is in `Finding.rejected` (`Finding.line`, `tried_text`) and counted in the run record (`slug_rejected`); an alert whose company is rejected costs no probe
+   of `discover.alert_probes_per_run`. "No board" is kept 30 days per (provider, slug) for every provider: it already was for found-nothing replies; a host that does not resolve
+   (`Reply.dns`) is now kept too, but only once the run has had any real answer (`BoardIndex.answered`; an offline run remembers nothing). A robots.txt that answers a redirect (`robots.RobotsRedirect`,
+   `http.RobotsRedirected`, a `Blocked`) on a company-per-host provider (`more_ats.SUBDOMAIN`: Teamtailor, Recruitee, Personio, Pinpoint) is `Reply()` = board: none, cached, not counted as refused; on any
+   other host it is still a refusal.
+3. **Cap** (`discover.ats.max_guesses_per_provider`, default 60 in code and in both settings files; `BoardIndex.may_guess`, `counting`): each provider is asked at most that many uncached tokens a run (Greenhouse,
+   Lever, Lever EU, Ashby and the v2.6 providers each have their own count). A token left over is not cached, so the next run carries on from it; `Finding.line` says `not asked (guess limit)`, the run
+   notes say how many tokens are left. 0 asks nothing. The run prints, and `discover --report` shows, `Slug guesses per provider this run (limit 60 each): ashby 60 guess(es), 61 request(s), 14 cached, 22 over the limit`
+   (`Run.guesses`: requests are what the fetcher sent meanwhile, robots.txt included) and the number of slugs not asked because they are not company names, with examples.
+4. **Why board_link and board_known resolved nothing** (`Discover.resolve_link`, `BoardLookup.explain`, `Run.unresolved`, `discover.alert_why_lines`): every alert that stays unresolved keeps a trace in the
+   run record: the reed step, what `board_link` found out about the link (`BoardLookup.link_note`: a host that is never fetched, a board the link names that has no such posting, a failed read), what
+   `board_known` and `board_guessed` did (tokens asked and of which providers, the ones rejected, the ones over the cap, `board_unverified`, errors, the probe limit), and the reason (`why`). When either step resolved
+   none, the run and `--report` print `Why board_link and board_known resolved 0 of N alert(s) this run`, the reasons by count, and five examples (one of each way of failing first). Interpretation chosen:
+   it is printed whenever either of the two steps has 0, not only when both do, and then names the one(s) with 0.
+5. **CV-Library** (`discover.cvlibrary_lines`, `Discover.unresolved_row`): the report shows mails read, alerts parsed, resolved, unresolved and (new per-source credits) role-filtered / duplicate / already decided,
+   and five parsed alerts that stayed unresolved with company, title, link, what was tried and why. A link on a CV-Library job page is marked `[agency or board-only]` (the employer's own board was not found;
+   the page is never fetched); a click-tracker link (`clicks.cv-library.co.uk/f/a/...`, which is what the mails really carry) is said to name no job page. In the shortlist alert block a CV-Library job page's board
+   reads `cvlibrary [agency or board-only]` and a line under the header explains it. A mail from which no job could be read says so, with its first subject.
+
+Tests: `tests/discovery/test_alert_fixes_v28.py`, `test_alert_fixes_cv_v28.py`. Unverified (needs your network and Gmail): a live `careerops daily`; whether the tenant hosts of Teamtailor / Recruitee really redirect
+their robots.txt (reported by you; read as a redirect on any status in 301, 302, 303, 307, 308); the real ordering of your queue.
