@@ -320,9 +320,11 @@ finds and ranks without writing, and every run is listed best priority first.
   becomes the posted date, "30+ Days Ago" is freshness tier 3. An outage (HTTP 422, the maintenance page) is a note and is asked again next run,
   never "zero jobs". Workday careers PAGES are still never fetched. A Workday address in an alert is resolved the same way (v2.6): the site named by the link is
   read through its public list and the posting whose id is in the link is the ad.
-- **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` runs twice (direct employers, then
-  recruitment agencies, whose jobs get `Agency: yes`), then every job worth keeping costs one request for its full description
-  (`details_per_run`). An expired posting is closed.
+- **`--reed`** uses the Reed Jobseeker API (`REED_API_KEY`): each query in `discover.reed.queries` is searched with `postedByDirectEmployer=true` (v3.0: direct
+  employers only; with `discover.reed.include_agencies: true` a second search per query adds recruitment agencies, whose jobs get `Agency: yes`), then every job worth
+  keeping costs one request for its full description (`details_per_run`, one request a second; a 401 / 403 / 429 stops Reed). When the ad has an `externalUrl` it is the
+  apply URL and its ATS (Greenhouse, Lever, Ashby, Workday, Workable ...) is recognised; the run record counts results, direct employers, ads with an `externalUrl` and
+  those on a known ATS. An expired posting is closed.
 - **`--adzuna`** uses the Adzuna API (`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`, `sources.adzuna.queries`). Its descriptions are snippets, so a
   result is a **link**: it is looked for on the employer's own board (a known board, else the company's name is turned into up to four
   board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); anything else goes to the manual queue. Adzuna's own

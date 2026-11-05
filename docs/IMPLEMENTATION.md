@@ -1898,8 +1898,12 @@ Study and decisions: `docs/study/v3.0_discovery_comparison.md` (what career-ops 
    when Ashby's API answered 401 and the first version then asked jobs.ashbyhq.com 23 times).
 7. **An EU job that refuses sponsorship is parked** (`region.refusal_parks`, inside `region.match`): the matched region lies wholly in `eu` and the ad has a "no sponsorship" sentence, so the verdict is out with
    the sentence as evidence: status `parked (region)`, never skipped, brought back when the ad changes. A UK job that says it does not sponsor keeps the lower weight (`priority.sponsor_weights`).
-8. **Reed** stays as built (`reed.py`; your key in `.env` as `REED_API_KEY`). Its published developer pages carry no API terms or rate limit (see the study); the CLAUDE.md line you add says keyed APIs follow their
-   own terms. `careerops doctor` shows whether the key is present. Adzuna stays off.
+8. **Reed** (`reed.py`; your key in `.env` as `REED_API_KEY`). Its published developer pages carry no API terms or rate limit (re-read 5 Nov 2026, quoted in the study); the CLAUDE.md line you add says keyed APIs
+   follow their own terms. `careerops doctor` shows whether the key is present. Adzuna stays off. Reed v3.0 change: `GET /api/1.0/search?...&postedByDirectEmployer=true` only, unless `discover.reed.include_agencies: true`
+   (then a second search per query with `postedByRecruitmentAgency=true`, flagged as agency); `GET /api/1.0/jobs/{id}` for each job worth keeping; the details' `externalUrl`, when http(s), is `apply_url` and
+   `apply_kind` comes from its host (`applykind`), and a known ATS is counted (`reed.known_ats`: Greenhouse, Lever, Ashby, Workday by host; Workable, Teamtailor ... by link shape). Counts in the run record under `reed`:
+   `results`, `direct_employer` (`agency_results`), `details_read`, `with_external_url`, `external_known_ats`, `external_<ats>`. One request a second (the Fetcher), a 401 / 403 / 429 stops Reed for the run.
+   The `externalUrl` list is only known for jobs whose details were read (role, place and duplicate filters and `details_per_run` come first).
 9. Settings (all read with defaults, none needed): `discover.ats.misses_needed`, `discover.ats.dataset_checks_per_provider`, `discover.dataset.enabled`, `discover.dataset.refresh_days`; the test copy has them. Lines for
    your `config/settings.yaml` (the tool does not edit it) are printed by the final report.
 

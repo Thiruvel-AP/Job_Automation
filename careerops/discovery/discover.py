@@ -1052,6 +1052,9 @@ class Discover:
                 if kind == "note":
                     self.run.notes.append(str(item))
                     continue
+                if kind == "count":
+                    self.run.count(label, item[0], item[1])
+                    continue
                 if self.accept(item, label) == "full":
                     return
         except reed.ReedKeyMissing as e:

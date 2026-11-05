@@ -192,7 +192,8 @@ discover:
   reed:
     queries: ["data scientist", "machine learning engineer", "ai engineer", "applied scientist"]
     location: null                 # Reed's locationName; null = all of the UK
-    pages_per_query: 1             # pages of 100 per query, for direct employers and again for agencies
+    pages_per_query: 1             # pages of 100 per query
+    include_agencies: false        # false = only postedByDirectEmployer=true; true = a second search per query for recruitment agencies, flagged as agency posts (v3.0)
     details_per_run: 60            # full ads fetched per run (one request each, one per second)
   gmail:
     senders: []                    # [] = the alert emails of every source in config/sources.yaml that lists sender domains; or restrict to the older built-in kinds, e.g. [linkedin, reed]

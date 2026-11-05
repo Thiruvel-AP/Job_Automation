@@ -421,9 +421,17 @@ def reed_net():
             .add("api/1.0/jobs/6001", fixture_json("reed_job_6001.json")))
 
 
-def test_reed_jobs_are_written_with_their_full_text_and_agency_posts_are_flagged(cfg, db, monkeypatch):
+def test_reed_writes_direct_employer_jobs_only_by_default(cfg, db, monkeypatch):
     monkeypatch.setenv("REED_API_KEY", "k")
     cfg.raw["discover"]["reed"]["queries"] = ["data scientist"]
+    d = make(cfg, db, reed_net())
+    d.from_reed()
+    assert titles(d) == ["Data Scientist | Leeds"] and d.run.sources["reed"]["direct_employer"] == 3 and "agency_results" not in d.run.sources["reed"]
+
+
+def test_reed_jobs_are_written_with_their_full_text_and_agency_posts_are_flagged(cfg, db, monkeypatch):
+    monkeypatch.setenv("REED_API_KEY", "k")
+    cfg.raw["discover"]["reed"].update({"queries": ["data scientist"], "include_agencies": True})       # v3.0: agency ads only when asked for
     d = make(cfg, db, reed_net())
     d.from_reed()
     assert titles(d) == ["Data Scientist | Leeds", "Machine Learning Engineer | Reading"]
