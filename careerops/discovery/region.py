@@ -417,8 +417,8 @@ def body_decision(body: str, regs: Sequence[Region], defs: Mapping[str, Region] 
 
 
 # ------------------------------------------------------------------ the verdict for a job
-def match(location: str | None, body: str | None = "", selection: Sequence[str] | str | None = None, *, country: str | None = "",
-          defs: Mapping[str, Region] | None = None) -> Match:
+def _match(location: str | None, body: str | None = "", selection: Sequence[str] | str | None = None, *, country: str | None = "",
+            defs: Mapping[str, Region] | None = None) -> Match:
     """Is this job in the selected region(s)? `location` is the structured place (a source's `locationName`, the `Location:` header), `country` the
     code or name a source gives for it, `body` the ad's text (read only for a place that does not say where the work is)."""
     defs = defs if defs is not None else load()
@@ -452,6 +452,32 @@ def match(location: str | None, body: str | None = "", selection: Sequence[str] 
             return got if place else Match(got.verdict, "no place given; " + got.evidence, got.region)
         return Match(UNKNOWN, f'location "{place}" does not say where; {got.evidence}')
     return Match(OUT, firsts_out or f'location "{place}": not in {label_of(keys, defs)}')
+
+
+def refusal_parks(m: Match, body: str | None, defs: Mapping[str, Region] | None = None) -> Match:
+    """v3.0: an EU job (the region that matched lies wholly inside the `eu` region, the UK does not) whose ad says it does not sponsor is PARKED (out, with the sentence as the
+    evidence), never skipped: there is no register to check and no visa for it, so it waits for you. A UK job that says "no sponsorship" is untouched: that only lowers the
+    sponsorship weight (priority.py), because you can work there now."""
+    if m.verdict != IN or not m.region or m.region == ANY or not body:
+        return m
+    defs = defs if defs is not None else load()
+    try:
+        eu, here = get("eu", defs).iso, get(m.region, defs).iso
+    except RegionError:
+        return m
+    if not here or not here <= eu:
+        return m
+    from . import priority                                # imported here: priority.py imports modules that import this one
+    said = next((w for w in priority.sponsor_wording(str(body)) if w.kind == "no_sponsorship"), None)
+    if said is None:
+        return m
+    return Match(OUT, f'EU job that refuses sponsorship ("{said.text}"): parked, not skipped; no visa answer for it', m.region)
+
+
+def match(location: str | None, body: str | None = "", selection: Sequence[str] | str | None = None, *, country: str | None = "",
+          defs: Mapping[str, Region] | None = None) -> Match:
+    """`_match`, then the v3.0 rule that parks an EU job which refuses sponsorship (refusal_parks)."""
+    return refusal_parks(_match(location, body, selection, country=country, defs=defs), body, defs)
 
 
 def job_match(job: Mapping, selection: Sequence[str] | str | None = None, defs: Mapping[str, Region] | None = None) -> Match:
