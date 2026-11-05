@@ -172,7 +172,8 @@ def test_an_external_url_on_no_known_ats_is_still_the_apply_url_but_is_not_count
     assert counts["with_external_url"] == 1 and "external_known_ats" not in counts
 
 
-@pytest.mark.parametrize("url", [None, "", "   ", "javascript:alert(1)", "ftp://example.com/x", "not a url"])
+@pytest.mark.parametrize("url", [None, "", "   ", "javascript:alert(1)", "ftp://example.com/x", "not a url",
+                                 "https://www.reed.co.uk/jobs/data-scientist/5001", "https://reed.co.uk/jobs/5001", "https://jobs.reed.co.uk/x"])      # Reed's own page is no external URL
 def test_no_external_url_or_one_that_is_not_http_leaves_the_apply_url_empty(settings, key, url):
     c, counts = run_one(settings, url)
     assert c.apply_url == "" and c.apply_kind == ""

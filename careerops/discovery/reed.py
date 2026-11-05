@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import os
 import re
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from typing import Iterator
 
@@ -81,9 +82,13 @@ def details(fetcher: Fetcher, key: str, job_id) -> dict | None:
 
 
 def external_url(d: dict) -> str:
-    """The employer's own application address, when the ad has one (an http(s) address only), else ''."""
+    """The employer's own application address, when the ad has one (an http(s) address only, and not on reed.co.uk), else ''. Reed fills `externalUrl` with the ad's own
+    reed.co.uk page for the jobs that are applied for on Reed (checked on the first live run: every details answer had it, and the ones looked at equalled `jobUrl`)."""
     u = str(d.get("externalUrl") or "").strip()
-    return u if re.match(r"https?://[^\s]+$", u, re.I) else ""
+    if not re.match(r"https?://[^\s]+$", u, re.I):
+        return ""
+    host = (urlparse(u).hostname or "").lower()
+    return "" if host == "reed.co.uk" or host.endswith(".reed.co.uk") else u
 
 
 def known_ats(url: str) -> str:
