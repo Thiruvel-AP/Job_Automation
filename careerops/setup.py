@@ -407,6 +407,25 @@ def provider_checks(settings) -> list[tuple[str, object, str]]:
     return out
 
 
+def careers_checks(settings) -> list[tuple[str, object, str]]:
+    """v3.0, offline: the addresses in careers_urls.yaml and any a reader does not understand, the public board list (licence and switch) and the Reed key."""
+    from .discovery import careers, dataset
+
+    out: list[tuple[str, object, str]] = []
+    entries, _ = careers.load(settings)
+    bad = careers.problems(settings)
+    out.append((f"careers_urls.yaml: {len(entries)} address(es)" + (f", {len(bad)} problem(s)" if bad else ""), True if not bad else WARN,
+                "\n".join(bad) if bad else f"companies whose board is read from the address you gave, not guessed ({careers.path(settings)}); `careerops search-plan` lists the ones without"))
+    cfg = settings["discover"].get("dataset")
+    on = not (isinstance(cfg, dict) and cfg.get("enabled") is False)
+    out.append((f"public board list {'on' if on else 'off'} (discover.dataset.enabled)", True,
+                f"{dataset.SOURCE}: personal, non-commercial use, attribution kept here; off with discover.dataset.enabled: false"))
+    have = bool(os.environ.get("REED_API_KEY", "").strip())
+    out.append((f"Reed API key (REED_API_KEY) {'present' if have else 'absent'}", True if have else WARN,
+                "a free key from reed.co.uk/developers goes in .env as REED_API_KEY=...; then enable the `reed` source in sources.yaml and run `careerops discover --reed`"))
+    return out
+
+
 def region_size_checks(settings) -> list[tuple[str, object, str]]:
     """Warnings only: the Companies House key (present or absent), the sources in sources.yaml with no `regions:` tag (the lines to add are printed; this tool
     never edits that file) and the share of the inbox whose company size is not known yet (the overrides, the 90-day cache and the ad text only: no network)."""
@@ -469,6 +488,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += reminder_checks(settings)
     checks += region_size_checks(settings)
     checks += provider_checks(settings)
+    checks += careers_checks(settings)
     todos = fact_bank_open_items(settings.path("fact_bank"))
     checks.append((f"fact bank open items ({todos})", todos == 0,
                    "answer every `# CONFIRM` and fill or delete every TODO in fact_bank.yaml"))

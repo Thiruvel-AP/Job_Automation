@@ -168,15 +168,15 @@ def test_a_guessed_slug_whose_board_name_matches_is_accepted(cfg):
     cfg.raw["discover"]["ats"]["providers"] = ["workable", "recruitee"]
     net = Net(strict=False).add("widget/accounts/acmeanalytics", js("workable_widget.json")).add("acmeanalytics.recruitee.com/api/offers", js("recruitee_offers.json"))
     f = boards_mod.find(seed("Acme Analytics Ltd"), fx(net), boards_mod.BoardIndex(cfg))
-    assert sorted((b.ats, b.slug) for b in f.boards) == [("recruitee", "acmeanalytics"), ("workable", "acmeanalytics")] and f.unverified == []
+    assert sorted((b.ats, b.slug) for b in f.boards) == [("workable", "acmeanalytics")] and f.unverified == []
+    assert not [u for u in net.urls(True) if "recruitee.com" in u]                            # v3.0: Recruitee (one host per company) is never guessed
 
 
 def test_a_provider_whose_reply_has_no_name_cannot_vouch_for_a_guess(cfg):
-    cfg.raw["discover"]["ats"]["providers"] = ["recruitee"]
-    body = js("recruitee_offers.json")
-    for o in body["offers"]:
-        o.pop("company_name")
-    net = Net(strict=False).add("acmeanalytics.recruitee.com/api/offers", body)
+    cfg.raw["discover"]["ats"]["providers"] = ["workable"]
+    body = js("workable_widget.json")
+    body.pop("name")
+    net = Net(strict=False).add("widget/accounts/acmeanalytics", body)
     f = boards_mod.find(seed(), fx(net), boards_mod.BoardIndex(cfg))
     assert f.boards == [] and "gives no company name" in f.unverified[0][1]
 
@@ -192,32 +192,33 @@ def test_pinpoint_and_eploy_are_never_guessed_even_when_the_settings_name_them(c
     assert more_ats.LINK_ONLY == ("personio", "pinpoint") and more_ats.CONFIG_ONLY == ("eploy",) and not set(more_ats.NAME_CHECKED) & {"personio", "pinpoint", "eploy"}
 
 
-def test_a_host_that_does_not_resolve_is_no_board_not_an_error_and_is_not_remembered(cfg):
-    cfg.raw["discover"]["ats"]["providers"] = ["teamtailor"]
+def test_a_host_that_does_not_resolve_is_never_asked_because_a_company_per_host_provider_is_not_guessed(cfg):
+    cfg.raw["discover"]["ats"]["providers"] = ["teamtailor"]                                    # v3.0: an unknown name there is a host that does not exist
     net = Net(strict=False).add("teamtailor.com", lambda url, **kw: requests.ConnectionError("no such host"))
     index = boards_mod.BoardIndex(cfg)
     f = boards_mod.find(seed(), fx(net), index)
-    assert f.boards == [] and f.errors == [] and index.get("teamtailor", "acmeanalytics") is None
+    assert f.boards == [] and f.errors == [] and index.get("teamtailor", "acmeanalytics") is None and not [u for u in net.urls(True) if "teamtailor" in u]
+    assert index.more == () and index.not_guessed == ["teamtailor"] and any("no longer guessed" in n and "teamtailor" in n for n in index.notes())
 
 
-def test_an_unknown_company_whose_host_answers_with_a_web_page_is_no_board_and_is_remembered(cfg):
+def test_an_unknown_company_whose_host_answers_with_a_web_page_cannot_happen_because_that_host_is_not_asked(cfg):
     cfg.raw["discover"]["ats"]["providers"] = ["recruitee"]
     net = Net(strict=False).add("recruitee.com/api/offers", Resp("<html>You are being redirected.</html>"))
     index = boards_mod.BoardIndex(cfg)
     f = boards_mod.find(seed(), fx(net), index)
-    assert f.boards == [] and f.errors == [] and index.get("recruitee", "acmeanalytics") is False
+    assert f.boards == [] and f.errors == [] and not [u for u in net.urls(True) if "recruitee" in u]
 
 
 def test_a_401_or_403_stops_the_provider_for_the_rest_of_the_run(cfg):
-    cfg.raw["discover"]["ats"]["providers"] = ["teamtailor"]
-    net = Net(strict=False).add("alphalabs.teamtailor.com/jobs.rss", Resp("denied", 403))
+    cfg.raw["discover"]["ats"]["providers"] = ["workable"]
+    net = Net(strict=False).add("apply.workable.com/api/v1/widget/accounts/alphalabs", Resp("denied", 403))
     index, f = boards_mod.BoardIndex(cfg), fx(net)
     first = boards_mod.find(seed("Alpha Labs"), f, index)
     second = boards_mod.find(seed("Beta Labs"), f, index)
-    assert "teamtailor" in index.stopped and "403" in index.stopped["teamtailor"]
+    assert "workable" in index.stopped and "403" in index.stopped["workable"]
     assert first.boards == [] and second.boards == [] and first.errors == [] and second.errors == []
-    assert not [u for u in net.urls(True) if "teamtailor" in u and ("betalabs" in u or "beta-labs" in u)]   # the provider was not asked again, whatever the host
-    assert any("teamtailor stopped for this run" in n for n in index.notes())
+    assert not [u for u in net.urls(True) if "workable" in u and ("betalabs" in u or "beta-labs" in u)]   # the provider was not asked again, whatever the slug
+    assert any("workable stopped for this run" in n for n in index.notes())
 
 
 def test_a_robots_txt_that_says_no_is_counted_and_not_worked_around(cfg):

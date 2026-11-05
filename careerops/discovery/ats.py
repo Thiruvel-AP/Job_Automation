@@ -434,6 +434,8 @@ def configured_boards(settings) -> list[Board]:
             slug, name = (e["slug"], e.get("name") or e["slug"]) if isinstance(e, dict) else (e, e.replace("-", " ").title())
             out.append(Board(key, str(slug), str(name), "config"))
     out += [e.board() for e in workday.entries(settings)]       # sources.workday: [{company, url}] (discovery/workday.py)
+    from . import careers                                      # careers_urls.yaml: the employers' own addresses, as you gave them (discovery/careers.py)
+    out += careers.boards(settings)
     return out
 
 

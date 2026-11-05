@@ -107,6 +107,7 @@ def test_an_alerts_company_gets_up_to_four_tokens_asked_of_greenhouse_lever_and_
 
 
 def test_hits_and_misses_are_remembered_for_thirty_days_across_runs(cfg, db):
+    cfg.raw["discover"]["ats"]["misses_needed"] = 1                            # v3.0: normally 3 separate runs; this test is about the cache, test_careers_v30 about the count
     html = linkedin_alert(("Data Scientist", "Maple Analytics Ltd", "London"), ("AI Engineer", "Unknown Startup Ltd", "Leeds"))
     routes = gh("maple", "Maple Analytics", ("7", "Data Scientist", "London, UK"))
     net = mail_net({"m1": (LINKEDIN, "Data Scientist jobs", html, None)}, routes)

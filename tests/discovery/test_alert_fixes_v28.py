@@ -20,7 +20,7 @@ from careerops.discovery.discover import Discover
 from careerops.discovery.http import Blocked, RobotsRedirected
 from careerops.discovery.seeds import Seed
 
-ALL_PROVIDERS = {"greenhouse", "lever", "lever_eu", "ashby", "workable", "teamtailor", "recruitee"}
+ALL_PROVIDERS = {"greenhouse", "lever", "lever_eu", "ashby", "workable"}          # v3.0: Teamtailor and Recruitee (one host per company) are not guessed any more
 
 
 @pytest.fixture
@@ -170,32 +170,37 @@ def test_an_alert_naming_a_postcode_costs_no_probe(cfg, db):
 
 
 # ------------------------------------------------------------------ "no board" is kept per (provider, slug)
-def test_no_board_is_kept_for_every_provider_and_not_asked_again(cfg_all):
+def test_no_board_is_believed_after_three_separate_runs_and_not_asked_again_after_that(cfg_all):
     cfg = cfg_all
-    net, index = Net(strict=False), BoardIndex(cfg)
-    boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)
-    counts, first = index.guess_counts(), len(net.urls(True))
-    assert set(counts) == ALL_PROVIDERS and all(v["guesses"] == 3 and v["cached"] == 0 for v in counts.values())       # three tokens each
-    again = BoardIndex(cfg)                                                                                       # a later run: boards.json is read back
-    f = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), again)
-    assert len(net.urls(True)) == first and f.boards == [] and f.cached == {"acmeanalytics", "acme-analytics", "acme"}
-    assert all(v["guesses"] == 0 and v["cached"] == 3 for v in again.guess_counts().values())
+    net = Net(strict=False)
+    for run in (1, 2, 3):                                                                                         # v3.0: three separate runs must each find no board
+        index = BoardIndex(cfg)
+        f = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)
+        counts = index.guess_counts()
+        assert set(counts) == ALL_PROVIDERS and all(v["guesses"] == 3 and v["cached"] == 0 for v in counts.values())       # three tokens each, asked every time
+        assert f.cached == set() and index.misses("ashby", "acme") == run
+        again_now = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)                             # the same run: an answered token is not asked twice
+        assert again_now.cached == {"acmeanalytics", "acme-analytics", "acme"} and index.guess_counts()["ashby"]["guesses"] == 3
+        index.save()
+    before = len(net.urls(True))
+    fourth = BoardIndex(cfg)                                                                                      # the fourth run: "no board" is believed
+    f = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), fourth)
+    assert len(net.urls(True)) == before and f.boards == [] and f.cached == {"acmeanalytics", "acme-analytics", "acme"}
+    assert all(v["guesses"] == 0 and v["cached"] == 3 for v in fourth.guess_counts().values())
 
 
 def tenants_down(url, **kw):
     return Resp("", 404) if url.endswith("/robots.txt") else requests.ConnectionError("no such host")
 
 
-def test_a_host_that_does_not_exist_is_no_board_once_the_run_has_had_a_real_answer(cfg_all):
+def test_a_provider_with_one_host_per_company_is_not_guessed_at_all(cfg_all):
     cfg = cfg_all
     net = Net(strict=False).add("teamtailor.com", tenants_down).add("recruitee.com", tenants_down)
     index = BoardIndex(cfg)
-    boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)                    # Greenhouse, Lever, Ashby and Workable answered 404: the network is up
-    again = BoardIndex(cfg)
-    assert again.get("teamtailor", "acmeanalytics") is False and again.get("recruitee", "acme") is False
-    before = len(net.urls(True))
-    boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), again)
-    assert len(net.urls(True)) == before                                                  # nothing is asked again
+    boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)                    # v3.0: Teamtailor and Recruitee are named in the settings and still never asked
+    assert not [u for u in net.urls(True) if "teamtailor" in u or "recruitee" in u]
+    assert index.more == ("workable",) and index.not_guessed == ["teamtailor", "recruitee"]
+    assert any("teamtailor, recruitee in discover.ats.providers are no longer guessed" in n for n in index.notes())
 
 
 def test_an_offline_run_remembers_nothing(cfg_all):
@@ -207,19 +212,6 @@ def test_an_offline_run_remembers_nothing(cfg_all):
 
 
 # ------------------------------------------------------------------ a robots.txt that redirects
-def test_a_redirected_robots_txt_on_a_tenant_host_is_board_none_and_not_a_refusal(cfg_all):
-    cfg = cfg_all
-    net = Net(strict=False).add("teamtailor.com", robots_redirect)
-    index = BoardIndex(cfg)
-    f = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), index)
-    assert "teamtailor" not in index.refused_counts() and "teamtailor" not in index.stopped and "teamtailor" not in index.refused
-    assert not [e for e in f.errors if "teamtailor" in e] and f.boards == [] and "board: none" in f.line()
-    assert index.get("teamtailor", "acmeanalytics") is False                              # kept like any other "no board"
-    before = len([u for u in net.urls(True) if "teamtailor" in u])
-    boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), BoardIndex(cfg))
-    assert len([u for u in net.urls(True) if "teamtailor" in u]) == before
-
-
 def test_a_redirected_robots_txt_on_a_fixed_host_is_still_a_refusal(cfg_all):
     cfg = cfg_all
     net = Net(strict=False).add("apply.workable.com", robots_redirect)
@@ -242,6 +234,7 @@ def test_the_fetcher_raises_robots_redirected_which_is_still_a_blocked():
 def test_each_provider_is_asked_at_most_the_cap_a_run_and_the_next_run_carries_on(cfg_all):
     cfg = cfg_all
     cfg.raw["discover"]["ats"]["max_guesses_per_provider"] = 4
+    cfg.raw["discover"]["ats"]["misses_needed"] = 1                                      # the count of runs is test_careers_v30's; here a miss is believed at once
     names = [f"Company{c}" for c in "ABCDEFGH"]                                          # one token each
     net, index = Net(strict=False), BoardIndex(cfg)
     findings = [boards_mod.find(Seed(n, "archive"), fx(net), index) for n in names]
@@ -257,10 +250,12 @@ def test_each_provider_is_asked_at_most_the_cap_a_run_and_the_next_run_carries_o
     assert all(v["guesses"] == 4 and v["cached"] == 4 for v in second.guess_counts().values())
 
 
-def test_the_default_cap_is_sixty_and_zero_asks_nothing(cfg_all):
+def test_the_default_cap_is_twenty_it_cannot_be_set_higher_and_zero_asks_nothing(cfg_all):
     cfg = cfg_all
     cfg.raw["discover"]["ats"].pop("max_guesses_per_provider")
-    assert BoardIndex(cfg).max_guesses == boards_mod.MAX_GUESSES == 60
+    assert BoardIndex(cfg).max_guesses == boards_mod.MAX_GUESSES == 20
+    cfg.raw["discover"]["ats"]["max_guesses_per_provider"] = 60                          # v3.0: "at most 20 per provider per run"
+    assert BoardIndex(cfg).max_guesses == boards_mod.GUESS_CEILING == 20
     cfg.raw["discover"]["ats"]["max_guesses_per_provider"] = 0
     net = Net(strict=False)
     f = boards_mod.find(Seed("Acme Analytics", "archive"), fx(net), BoardIndex(cfg))
@@ -273,10 +268,10 @@ def test_the_run_record_and_the_report_carry_the_guesses_and_requests_per_provid
     boards_mod.find(Seed("Data Scientist SW1A 2AA", "alert"), d.f, d.index)
     d.finish()
     rec = d.run.as_json()
-    assert rec["guess_cap"] == 60 and rec["guesses"]["ashby"]["guesses"] == 3 and rec["guesses"]["ashby"]["requests"] >= 3
+    assert rec["guess_cap"] == 20 and rec["guesses"]["ashby"]["guesses"] == 3 and rec["guesses"]["ashby"]["requests"] >= 3
     assert rec["slug_rejected"]["count"] >= 1 and "postcode" in rec["slug_rejected"]["examples"][0]
     first, second = disc.guess_lines(rec)
-    assert first.startswith("Slug guesses per provider this run (limit 60 each): ") and "ashby 3 guess(es)," in first and "request(s)" in first
+    assert first.startswith("Slug guesses per provider this run (limit 20 each): ") and "ashby 3 guess(es)," in first and "request(s)" in first
     assert second.startswith("Slugs not asked because they are not company names: ") and "postcode" in second
     assert disc.guess_lines({}) == []
 
@@ -311,7 +306,7 @@ def test_every_unresolved_alert_keeps_what_was_tried_and_why(six):
     assert zeta["tried"][0] == "reed: not a Reed job link"
     assert zeta["tried"][1] == "board_link: www.linkedin.com is never fetched by this tool, and the link names no employer board"
     assert zeta["tried"][2].startswith("board_known: no board is listed for 'Zeta Analytics'")
-    assert ("board_guessed: tokens zetaanalytics, zeta-analytics, zeta asked of greenhouse, lever, lever_eu, ashby, workable, teamtailor, recruitee: none is a board"
+    assert ("board_guessed: tokens zetaanalytics, zeta-analytics, zeta asked of greenhouse, lever, lever_eu, ashby, workable: none is a board"
             in zeta["tried"][2]) and zeta["why"] == "no public job board known for Zeta Analytics"
     assert rows[""]["tried"][-1] == "board_known / board_guessed: the alert names no company" and rows[""]["why"] == "no company given"
     assert "not asked, not a company name: " in rows["Data Scientist SW1A 2AA"]["tried"][-1] and "postcode" in rows["Data Scientist SW1A 2AA"]["tried"][-1]

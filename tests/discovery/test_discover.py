@@ -307,6 +307,7 @@ def test_requests_to_one_host_are_at_least_a_second_apart(seeded, db):
 
 # ------------------------------------------------------------------ ats: the board cache (boards.json, 30 days, misses too)
 def test_hits_and_misses_are_cached_for_thirty_days_and_not_asked_again(seeded, db):
+    seeded.raw["discover"]["ats"]["misses_needed"] = 1                    # v3.0: normally three separate runs before a miss is believed (test_careers_v30)
     (seeded.path("applications") / "Monzo Bank Ltd").mkdir()
     net = monzo_net()
     make(seeded, db, net).from_boards()
@@ -323,6 +324,7 @@ def test_hits_and_misses_are_cached_for_thirty_days_and_not_asked_again(seeded, 
 
 
 def test_a_cached_answer_expires_after_board_cache_days(seeded):
+    seeded.raw["discover"]["ats"]["misses_needed"] = 1                    # v3.0: an entry with no count is one miss, believed when one is enough
     ts = "2026-10-10T12:00:00+00:00"
     idx = boards_module.BoardIndex(seeded, clock=lambda: datetime(2026, 11, 5, tzinfo=timezone.utc))              # 26 days later
     idx.data = {"greenhouse:monzo": {"ts": ts, "found": True}, "greenhouse:nope": {"ts": ts, "found": False}}
@@ -490,6 +492,7 @@ def test_adzuna_without_keys_is_a_note(cfg, db, monkeypatch):
 
 
 def test_an_unknown_company_is_probed_once_and_remembered_when_probing_is_allowed(cfg, db, monkeypatch):
+    cfg.raw["discover"]["ats"]["misses_needed"] = 1                       # v3.0: normally three separate runs before a miss is believed (test_careers_v30)
     monkeypatch.setenv("ADZUNA_APP_ID", "id")
     monkeypatch.setenv("ADZUNA_APP_KEY", "key")
     cfg.raw["discover"]["alert_probes_per_run"] = 5

@@ -104,6 +104,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import sys
@@ -504,6 +505,24 @@ def cmd_sources(args):
     rows = _print_health(s, reg)
     if rows and all(r.status in ("blocked", "unreachable", "error") for r in rows if r.source.enabled):
         sys.exit(1)
+
+
+def cmd_search_plan(args):
+    """`search-plan` lists the companies that have no board and no entry in careers_urls.yaml (offline); `search-plan --check FILE` says which reader each address in a
+    CSV (company,url[,evidence]) would get and prints the lines to paste. It searches nothing and writes nothing: the searches are run by hand in a Claude Code
+    session and you decide what goes into careers_urls.yaml."""
+    from .discovery import searchplan
+
+    s, db = _ctx(args)
+    if args.check:
+        try:
+            rows = searchplan.read_proposals(Path(args.check))
+        except (OSError, UnicodeDecodeError, csv.Error) as e:
+            _fail(f"{args.check}: cannot be read ({type(e).__name__})")
+        print("\n".join(searchplan.check_lines(s, rows)))
+        return
+    items, total = searchplan.pending(s, db, limit=None if args.all else args.limit)
+    print("\n".join(searchplan.plan_lines(items, total, s)))
 
 
 def cmd_set_country(args):
@@ -1909,6 +1928,13 @@ def main(argv=None):
     so.add_argument("what", choices=["check", "list"])
     so.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
     so.set_defaults(fn=cmd_sources)
+    sp = sub.add_parser("search-plan", help="companies with no board and no entry in careers_urls.yaml (offline); --check FILE = which reader each proposed address "
+                                            "would get, and the lines to paste into careers_urls.yaml")
+    sp.add_argument("--limit", type=int, default=20, help="how many companies to list (default 20)")
+    sp.add_argument("--all", action="store_true", help="list every company")
+    sp.add_argument("--check", metavar="FILE", help="a CSV with the columns company,url[,evidence]: check the addresses, write nothing")
+    sp.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
+    sp.set_defaults(fn=cmd_search_plan)
     sc = sub.add_parser("set-country", help="give a job the country its work is in (visa answers and priority follow it); "
                                             "triages a needs_country job again")
     sc.add_argument("--id", required=True)

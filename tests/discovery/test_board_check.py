@@ -134,6 +134,7 @@ def test_the_report_lists_every_unverified_board_and_how_to_accept_one(cfg, db):
 
 
 def test_an_unverified_board_is_remembered_so_the_name_is_asked_once(cfg, db):
+    cfg.raw["discover"]["ats"]["misses_needed"] = 1                          # v3.0: normally 3 separate runs before a miss is believed (test_careers_v30)
     folder(cfg, "Octagon Group")
     net = routes(Net(strict=False), **gh("octagon", "Octagon Software", UK_DS))
     make(cfg, db, net).from_boards()

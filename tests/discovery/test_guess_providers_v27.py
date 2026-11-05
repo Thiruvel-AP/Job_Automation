@@ -33,7 +33,7 @@ def test_only_the_providers_whose_reply_names_the_company_are_guessed():
 def test_a_personio_slug_is_never_guessed_even_when_the_settings_name_it(cfg):
     cfg.raw["discover"]["ats"]["providers"] = ["workable", "personio", "recruitee"]
     index = boards_mod.BoardIndex(cfg)
-    assert index.more == ("workable", "recruitee")
+    assert index.more == ("workable",) and index.not_guessed == ["recruitee"]          # v3.0: Recruitee has one host per company: never guessed
     net = Net(strict=False)
     boards_mod.find(seed(), fx(net), index)
     assert net.urls() and not [u for u in net.urls(True) if "personio" in u]
@@ -44,7 +44,7 @@ def test_a_personio_slug_is_never_guessed_even_when_the_settings_name_it(cfg):
 def test_the_default_providers_ask_no_personio_host_either(cfg):
     cfg.raw["discover"]["ats"].pop("providers", None)
     index = boards_mod.BoardIndex(cfg)
-    assert index.more == more_ats.NAME_CHECKED
+    assert index.more == ("workable", "smartrecruiters")                                # v3.0: NAME_CHECKED without Teamtailor and Recruitee (one host per company)
     net = Net(strict=False)
     boards_mod.find(seed("Acme Analytics Ltd"), fx(net), index)
     assert not [u for u in net.urls(True) if "personio" in u or "pinpointhq" in u]

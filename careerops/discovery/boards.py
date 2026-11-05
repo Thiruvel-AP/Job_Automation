@@ -15,6 +15,13 @@ name holding a postcode or a salary; a name or token in discover.ignore_companie
 tokens are asked of each provider in a run (the next run carries on: an answered token is cached). "No board" is kept 30 days for every provider, also when the host
 does not exist (kept once the run has had any real answer, so an outage is not remembered) or its robots.txt only redirects (a company-per-host provider's answer for a
 name nobody has: board none, not a refusal). The run reports guesses and requests sent per provider.
+
+v3.0: guessing is the last resort, not the first. (1) A company with an entry in careers_urls.yaml is not guessed at: its address is the answer (careers.py). (2) A name
+that is a slug in the public board list (dataset.py) is checked with ONE request to the provider that lists it, and nothing else is guessed for that name (a separate
+limit, `discover.ats.dataset_checks_per_provider`, 60). (3) What is left is guessed only on Greenhouse, Lever (both hosts), Ashby, Workable and SmartRecruiters, at most 20
+tokens per provider and run (`max_guesses_per_provider`, which cannot be set higher), and never on a provider with one host per company (Teamtailor, Recruitee, Personio,
+Pinpoint): an unknown company there is a host that does not exist. (4) "No board" is believed only after `discover.ats.misses_needed` (3) separate runs each found none;
+until then the name is asked again next run (an answered token is not asked twice in one run). A board found resets the count.
 """
 from __future__ import annotations
 
@@ -28,6 +35,7 @@ from typing import Callable
 
 from ..apply.naming import folder_key
 from . import ats as ats_mod
+from . import careers as careers_mod
 from . import more_ats
 from .ats import Board, Posting
 from .http import Blocked, FetchError, Fetcher
@@ -35,7 +43,10 @@ from .register import normalise
 from .seeds import Seed
 
 BOARD_NAME_MATCH = 0.9             # default of discover.ats.board_name_match
-MAX_GUESSES = 60                   # default of discover.ats.max_guesses_per_provider
+MAX_GUESSES = 20                   # default of discover.ats.max_guesses_per_provider (v3.0: it was 60)
+GUESS_CEILING = 20                 # ... and the most it can be set to (v3.0: "guess only what is left, at most 20 per provider per run")
+DIRECTED_MAX = 60                  # default of discover.ats.dataset_checks_per_provider: names the public list holds, checked once each
+MISSES_NEEDED = 3                  # default of discover.ats.misses_needed: separate runs that must each find no board before "no board" is believed
 REJECT_EXAMPLES = 10               # rejected tokens named in the run record
 
 
@@ -54,11 +65,16 @@ class BoardIndex:
         self.path = settings.path("discover") / "boards.json"
         self.days = float(settings["discover"].get("ats", {}).get("board_cache_days", 30))
         self.name_match = float(settings["discover"].get("ats", {}).get("board_name_match", BOARD_NAME_MATCH))
-        self.max_guesses = max(0, int(settings["discover"].get("ats", {}).get("max_guesses_per_provider", MAX_GUESSES)))
+        self.max_guesses = min(GUESS_CEILING, max(0, int(settings["discover"].get("ats", {}).get("max_guesses_per_provider", MAX_GUESSES))))
+        self.directed_max = max(0, int(settings["discover"].get("ats", {}).get("dataset_checks_per_provider", DIRECTED_MAX)))
+        self.misses_needed = max(1, int(settings["discover"].get("ats", {}).get("misses_needed", MISSES_NEEDED)))
+        self.run_id = clock().isoformat(timespec="microseconds")          # a "separate run" is a different BoardIndex
         self.ignored = {k for k in (folder_key(str(n)) for n in settings["discover"].get("ignore_companies") or []) if k}   # folders that are not companies
         self.clock = clock
         wanted = (settings["discover"].get("ats") or {}).get("providers")        # discover.ats.providers: the v2.6 providers asked when a slug is guessed
-        self.more = tuple(p for p in (wanted if isinstance(wanted, list) else more_ats.NAME_CHECKED) if p in more_ats.NAME_CHECKED)
+        asked_for = [p for p in (wanted if isinstance(wanted, list) else more_ats.NAME_CHECKED) if p in more_ats.NAME_CHECKED]
+        self.more = tuple(p for p in asked_for if p not in more_ats.SUBDOMAIN)         # v3.0: never guessed on a provider with one host per company
+        self.not_guessed = [p for p in asked_for if p in more_ats.SUBDOMAIN]
         self.stopped: dict[str, str] = {}               # provider -> why: it answered 401 / 403 / 429 this run, so it is not asked again (never worked around)
         self.refused: dict[str, list] = {}              # provider -> [count, first message]: robots.txt (or a session requirement) said no this run
         self.refusals: dict[str, int] = {}              # provider -> every request it refused this run, of either kind (the "refused requests per provider" report)
@@ -71,6 +87,10 @@ class BoardIndex:
         self.answered = False                           # has any provider given a real answer this run (so a host that does not resolve is not an outage)
         self.dns_missing: set[tuple[str, str]] = set()  # (provider, token) whose host did not resolve: kept as "no board" once the run has had a real answer
         self.dns_kept: set[tuple[str, str]] = set()     # ... of those, the ones already written to the cache
+        self.directed: Counter = Counter()              # provider -> names the public list holds, checked with one request each this run
+        self.over_directed: Counter = Counter()         # provider -> such checks left for the next run because dataset_checks_per_provider was reached
+        self.dataset = None                             # dataset.Dataset (set by the run); None = the public list is not used
+        self.careers = careers_mod.keys(settings)       # folder_key of every company with an entry in careers_urls.yaml: its name is not guessed
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.data: dict[str, dict] = data if isinstance(data, dict) else {}
@@ -78,18 +98,33 @@ class BoardIndex:
             self.data = {}
 
     def get(self, ats: str, token: str) -> bool | None:
-        """True / False when the pair was asked inside the cache window, None when it is unknown or the answer is stale."""
+        """True when a board was found inside the cache window. False when it is believed there is none: it was asked in THIS run and found none, or `misses_needed`
+        separate runs each found none (an old entry with no count is one miss). None when it is unknown, stale, or has been missed fewer times than that: ask again."""
         e = self.data.get(f"{ats}:{token}")
         try:
             if e and self.clock() - datetime.fromisoformat(e["ts"]) < timedelta(days=self.days):
-                return bool(e["found"])
+                if e["found"]:
+                    return True
+                if e.get("run") == self.run_id or int(e.get("misses", 1)) >= self.misses_needed:
+                    return False
         except (KeyError, ValueError, TypeError):
             pass
         return None
 
+    def misses(self, ats: str, token: str) -> int:
+        """How many separate runs have found no board for this pair (0 when it is unknown or was found)."""
+        e = self.data.get(f"{ats}:{token}")
+        return 0 if not e or e.get("found") else int(e.get("misses", 1))
+
     def put(self, ats: str, token: str, found: bool, slug: str = "") -> None:
         self.answered = True
-        self.data[f"{ats}:{token}"] = {"ts": self.clock().isoformat(timespec="seconds"), "found": found, **({"slug": slug} if slug else {})}
+        key = f"{ats}:{token}"
+        prev = self.data.get(key) or {}
+        entry: dict = {"ts": self.clock().isoformat(timespec="seconds"), "found": found, "run": self.run_id, **({"slug": slug} if slug else {})}
+        if not found:
+            before = 0 if (not prev or prev.get("found")) else int(prev.get("misses", 1))
+            entry["misses"] = min(self.misses_needed, max(1, before) if prev.get("run") == self.run_id else before + 1)
+        self.data[key] = entry
 
     def slug(self, ats: str, token: str) -> str:
         """The slug a provider answered for this token (Personio: the host that has the board), else the token."""
@@ -101,6 +136,11 @@ class BoardIndex:
         out += [f"ats: {a} refused {n} request(s) (not asked again where it said no): {why}" for a, (n, why) in sorted(self.refused.items())]
         out += [f"ats: {a} guesses stopped at the limit of {self.max_guesses} a run (discover.ats.max_guesses_per_provider): {n} token(s) left for the next run"
                 for a, n in sorted(self.over_cap.items()) if n]
+        out += [f"ats: {a} checks of names in the public board list stopped at {self.directed_max} a run (discover.ats.dataset_checks_per_provider): {n} left for the next run"
+                for a, n in sorted(self.over_directed.items()) if n]
+        if self.not_guessed:
+            out.append(f"ats: {', '.join(self.not_guessed)} in discover.ats.providers are no longer guessed (one host per company: an unknown name is a host that does not exist); "
+                       "a board you know goes in careers_urls.yaml or under sources:, and one an alert links to is found from the link")
         return out
 
     # ---- v2.8: what is not guessed, how much is guessed
@@ -125,11 +165,19 @@ class BoardIndex:
             return False
         return True
 
+    def may_check(self, ats: str) -> bool:
+        """May one more name that the public board list holds be checked with this provider in this run (dataset_checks_per_provider)?"""
+        if self.directed[ats] >= self.directed_max:
+            self.over_directed[ats] += 1
+            return False
+        return True
+
     @contextmanager
-    def counting(self, ats: str, fetcher):
-        """Around the request(s) of one guess: it counts as a guess, and the requests the fetcher sent meanwhile (robots.txt included) are added to the provider's."""
+    def counting(self, ats: str, fetcher, directed: bool = False):
+        """Around the request(s) of one guess: it counts as a guess (or, when `directed`, as a check of a name the public list holds), and the requests the fetcher
+        sent meanwhile (robots.txt included) are added to the provider's."""
         before = sent(fetcher)
-        self.guesses[ats] += 1
+        (self.directed if directed else self.guesses)[ats] += 1
         try:
             yield
         finally:
@@ -145,8 +193,9 @@ class BoardIndex:
 
     def guess_counts(self) -> dict[str, dict[str, int]]:
         """provider -> {guesses, requests, cached, over_cap} of this run (the run record)."""
-        names = sorted({*self.guesses, *self.requests, *self.cache_hits, *self.over_cap})
-        return {a: {"guesses": self.guesses[a], "requests": self.requests[a], "cached": self.cache_hits[a], "over_cap": self.over_cap[a]} for a in names}
+        names = sorted({*self.guesses, *self.requests, *self.cache_hits, *self.over_cap, *self.directed})
+        return {a: {"guesses": self.guesses[a], "requests": self.requests[a], "cached": self.cache_hits[a], "over_cap": self.over_cap[a],
+                    **({"checked_from_list": self.directed[a]} if self.directed[a] else {})} for a in names}
 
     def reject_summary(self) -> dict:
         return {"count": self.reject_count, "examples": list(self.reject_examples)}
@@ -199,6 +248,9 @@ class Finding:
     rejected: list[tuple[str, str]] = field(default_factory=list)       # (token, why) never asked: not a company name
     capped: set[str] = field(default_factory=set)         # providers a token was not asked of because the run's guess limit was reached
     providers: list[str] = field(default_factory=list)    # the providers a token is asked of
+    skipped: str = ""                                     # why nothing was guessed (it has a careers address)
+    listed: set[str] = field(default_factory=set)         # providers whose public board list holds one of the tokens (asked instead of guessing)
+    suggested: list[str] = field(default_factory=list)    # Workday addresses the public list holds for the name: NOT read, for you to confirm in careers_urls.yaml
 
     def line(self) -> str:
         tried = ", ".join(t + (" (cached)" if t in self.cached else "") for t in self.tokens) or "-"
@@ -207,12 +259,17 @@ class Finding:
         extra += f" | {len(self.errors)} error(s): {self.errors[0]}" if self.errors else ""
         extra += f" | rejected: {', '.join(f'{t} ({w})' for t, w in self.rejected)}" if self.rejected else ""
         extra += f" | not asked (guess limit): {', '.join(sorted(self.capped))}" if self.capped else ""
+        extra += f" | {self.skipped}" if self.skipped else ""
+        extra += f" | in the public board list: {', '.join(sorted(self.listed))}" if self.listed else ""
+        extra += f" | the list suggests (not read; check, then add to careers_urls.yaml): {', '.join(self.suggested)}" if self.suggested else ""
         reg = ", register" if self.seed.on_register else ""
         return f"  {self.seed.name} [{self.seed.origin}{reg}] | tried: {tried} | board: {board} | {self.matched} matched{extra}"
 
     def tried_text(self) -> str:
         """What was done to find this company's board, in a sentence (the trace of an alert that could not be resolved)."""
         bits = []
+        if self.skipped:
+            return self.skipped
         if self.tokens:
             asked = ", ".join(t + (" (answered earlier: no board)" if t in self.cached else "") for t in self.tokens)
             bits.append(f"tokens {asked} asked of {', '.join(self.providers) or 'the providers'}: " + ("a board was found but not verified" if self.unverified else "none is a board"))
@@ -282,6 +339,9 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
     are asked for that token). `on_postings(board, postings)` gets the list a fresh request already returned. A board found through a
     shortened token goes to `unverified` unless its name matches (see the top of this file)."""
     f = Finding(seed, providers=[*ats_mod.PROVIDERS, *index.more])
+    if folder_key(seed.name) in index.careers:
+        f.skipped = "has an entry in careers_urls.yaml: its board is read from that address, not guessed"
+        return f
     full = ats_mod.full_name_tokens(seed.name)
     for token in ats_mod.board_tokens(seed.name, seed.hint):
         why = None if token == seed.hint else index.reject_reason(token, seed.name)
@@ -292,24 +352,30 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
         f.tokens.append(token)
         asked = skipped = False
         hits: list[tuple[Board, list[Posting] | None]] = []
+        listed = index.dataset.hits(token) if index.dataset is not None else {}      # {provider: slug}: where the public board list says this name's board is
+        f.listed |= set(listed)
         for ats in ats_mod.PROVIDERS:
+            if listed and ats not in listed:              # the list says where the board is: nothing else is guessed for this name
+                continue
             known = index.get(ats, token)
             if known is False:
                 index.cache_hits[ats] += 1
                 continue
-            board = Board(ats, token, seed.name, seed.origin)
+            slug = listed.get(ats) or index.slug(ats, token)
+            board = Board(ats, slug, seed.name, seed.origin)
             if known is True:
                 index.cache_hits[ats] += 1
                 hits.append((board, None))
                 continue
-            if not index.may_guess(ats):                  # the run's limit for this provider: left for the next run (nothing is cached for it)
+            directed = ats in listed
+            if not (index.may_check(ats) if directed else index.may_guess(ats)):    # the run's limit for this provider: left for the next run (nothing is cached for it)
                 f.capped.add(ats)
                 skipped = True
                 continue
             asked = True
-            url, params, what = ats_mod.board_request(ats, token)
+            url, params, what = ats_mod.board_request(ats, slug)
             try:
-                with index.counting(ats, fetcher):
+                with index.counting(ats, fetcher, directed):
                     data = fetcher.json(url, params=params, what=what)
             except FetchError as e:                       # Blocked is a FetchError: not an answer, so not remembered
                 if isinstance(e, Blocked):
@@ -317,10 +383,10 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
                 f.errors.append(str(e))
                 continue
             found = ats_mod.is_board(ats, data)
-            index.put(ats, token, found)
+            index.put(ats, token, found, slug if slug != token else "")
             if found:
                 hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
-        for ats in index.more:                            # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
+        for ats in (() if listed else index.more):        # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
             if ats in index.stopped:
                 continue
             known = index.get(ats, token)
@@ -368,5 +434,8 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             f.cached.add(token)
         if f.boards:
             break
+    if not f.boards and index.dataset is not None:
+        for t in f.tokens:                                # a Workday site the list holds for this name: shown, never read
+            f.suggested += [u for u in index.dataset.workday_urls(t) if u not in f.suggested]
     index.save()
     return f

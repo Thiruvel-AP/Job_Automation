@@ -71,6 +71,8 @@ from . import boards as boards_mod
 from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, more_ats, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import region as region_mod
 from . import workday as workday_mod
+from . import careers as careers_mod
+from . import dataset as dataset_mod
 from . import register as sponsors
 from .candidate import Candidate
 from .http import Blocked, FetchError, Fetcher
@@ -673,6 +675,7 @@ class Discover:
                     self.run.notes.append(f"not run for region {','.join(self.regions)}: " + ", ".join(f"{s.id} ({'/'.join(s.region_tags)})" for s in left if s.enabled))
         self.cache = BoardCache(settings, fetcher, clock=lambda: self.today)          # "Posted Today" is relative to the run's day
         self.index = boards_mod.BoardIndex(settings)                 # one for the run: boards.json is written whole
+        self.index.dataset = dataset_mod.Dataset(settings, fetcher)  # the public board list (dataset.py); read on first use, off with discover.dataset.enabled: false
         self.lookup = BoardLookup(settings, db, fetcher, self.cache, extra_boards=self.registry.boards(), index=self.index)
         self.first_seen = firstseen.FirstSeen(settings, persist=not dry_run)
         self.today_day = firstseen.day(self.today)
@@ -928,6 +931,7 @@ class Discover:
         label = "ats"
         self.findings = []
         self.run.notes += workday_mod.config_problems(self.s)         # a sources.workday entry that is not a Workday address
+        self.run.notes += careers_mod.problems(self.s)                # an entry of careers_urls.yaml that no reader understands, and why
         index = self.index
         listed = merge_boards(ats_mod.configured_boards(self.s), self.registry.boards())     # boards named by token: sources: and sources.yaml
         for board in listed:
@@ -940,6 +944,8 @@ class Discover:
         for i, seed in enumerate(seeds):
             if i and i % 20 == 0:
                 self.say(f"ats: {i}/{len(seeds)} companies looked at ...")
+            if folder_key(seed.name) in index.careers:                  # its address is in careers_urls.yaml: read above, not guessed
+                continue
             f = boards_mod.find(seed, self.f, index, on_postings=lambda b, posts: self.cache.put(b, posts))
             self.findings.append(f)
             self.run.count(label, "board_unverified", len(f.unverified))
@@ -953,6 +959,10 @@ class Discover:
         if self.f.backed_off:
             self.run.notes.append("ats: stopped asking " + ", ".join(f"{h} (HTTP {c})" for h, c in sorted(self.f.backed_off.items())))
         self.run.notes += self.index.notes()
+        ds = self.index.dataset
+        if ds is not None and ds.enabled and ds.ready:
+            self.run.notes.append(ds.summary())
+            self.run.notes += ds.notes
         self.from_vc(label)
 
     def from_vc(self, label: str) -> None:
@@ -1014,6 +1024,10 @@ class Discover:
         self.ats_tally()
         lines = [f"ats: {len(fs)} company(ies) looked at · {len(got)} with a board · {len(fs) - len(got)} without · "
                  f"{sum(f.matched for f in fs)} job(s) matched the role and place"]
+        entries, _ = careers_mod.load(self.s)
+        if entries:
+            ok = sum(1 for e in entries if careers_mod.board_of(e.url, e.company, e.provider)[0] is not None)
+            lines.append(f"careers_urls.yaml: {len(entries)} address(es), {ok} with a reader (those companies are read from their address, not guessed)")
         lines += self.board_check_lines(fs)
         lines += [f.line() for f in got] + [f.line() for f in fs if not f.boards]
         return lines
@@ -1714,7 +1728,8 @@ def guess_lines(rec: dict) -> list[str]:
     out = []
     if g:
         parts = " · ".join(f"{a} {v.get('guesses', 0)} guess(es), {v.get('requests', 0)} request(s), {v.get('cached', 0)} cached"
-                           + (f", {v['over_cap']} over the limit" if v.get("over_cap") else "") for a, v in sorted(g.items()))
+                           + (f", {v['over_cap']} over the limit" if v.get("over_cap") else "")
+                           + (f", {v['checked_from_list']} checked from the public list" if v.get("checked_from_list") else "") for a, v in sorted(g.items()))
         out.append(f"Slug guesses per provider this run (limit {rec.get('guess_cap') or '-'} each): {parts}")
     if rej.get("count"):
         out.append(f"Slugs not asked because they are not company names: {rej['count']}" + (" (" + "; ".join(rej.get("examples") or [])[:300] + ")" if rej.get("examples") else ""))
