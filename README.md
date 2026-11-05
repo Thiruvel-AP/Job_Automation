@@ -211,6 +211,7 @@ careerops discover --report --no-liveness   # the same without fetching any ad
 scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
+careerops search-plan              # companies with no board and no entry in careers_urls.yaml (offline); --check FILE = which reader each proposed address would get + the lines to paste
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
@@ -284,7 +285,10 @@ finds and ranks without writing, and every run is listed best priority first.
   answer, found or not, is kept 30 days (`discover.ats.board_cache_days`) in `data/discover/boards.json`, so a company is asked about
   once a month (v2.8: also a host that does not exist, and a company-per-host provider whose robots.txt only redirects: board none, not a refusal); a blocked host or an error is not kept.
   No token is asked that is not a company name (over 30 characters, four or more digits, a postcode, a name with a postcode or a salary, a folder in `discover.ignore_companies`), and at
-  most `discover.ats.max_guesses_per_provider` (60) tokens go to one provider in a run (the next run carries on); the run prints the guesses and requests per provider. The run prints, per company, the tokens tried, the board found
+  most `discover.ats.max_guesses_per_provider` (20, the ceiling) tokens go to one provider in a run (the next run carries on), never to a provider with one host per company (Teamtailor, Recruitee, Personio, Pinpoint); the run prints the guesses and requests per provider.
+  v3.0: guessing is the last resort. A company with an entry in `data/discover/careers_urls.yaml` (you write it; `careerops search-plan` lists the companies without one) is read from that address; a name that is in the
+  public board list (github.com/Feashliaa/job-board-aggregator, CC BY-NC 4.0, personal use) is checked with one request; and "no board" is believed only after 3 separate runs each found none (`discover.ats.misses_needed`).
+  An EU job whose ad says it does not sponsor is parked, not skipped. The run prints, per company, the tokens tried, the board found
   (`greenhouse/monzo`) or none and the jobs that matched the role and place, then the top 10 by priority P with title, company,
   location and URL. A token is a guess, so a board found only through a SHORTENED token (the first word, the first two words, the name
   without Group / Holdings / Technologies: `octagon` for Octagon Group, `focus` for Focus Group) is accepted only if the board's own

@@ -1867,3 +1867,40 @@ postcodes, salaries or sentences, asked Ashby 186 times in one run until it said
 
 Tests: `tests/discovery/test_alert_fixes_v28.py`, `test_alert_fixes_cv_v28.py`. Unverified (needs your network and Gmail): a live `careerops daily`; whether the tenant hosts of Teamtailor / Recruitee really redirect
 their robots.txt (reported by you; read as a redirect on any status in 301, 302, 303, 307, 308); the real ordering of your queue.
+
+## 5bb. v3.0 — boards from addresses, not guesses (5 Nov 2026) — **done offline** (fixtures only); the one live `discover --ats --gmail-alerts --report` is shown to you
+
+Study and decisions: `docs/study/v3.0_discovery_comparison.md` (what career-ops does, the UK/EU provider table with robots.txt results, the 20-company coverage sample, decisions D1-D6).
+
+1. **`careers_urls.yaml`** (`paths.discover/careers_urls.yaml`, written by you, never by the tool; `discovery/careers.py`). `companies: [{company, url[, provider: eploy]}]` (a plain list or a `Company: url` mapping
+   is read too). The address is matched to a reader by its host, nothing is fetched: Greenhouse, Lever (both hosts), Ashby, Workable, SmartRecruiters, Teamtailor, Recruitee, Pinpoint, Personio, Workday
+   (`<tenant>.<wdN>.myworkdayjobs.com/<site>`), Eploy (its posting shape `/vacancies/<id>/<slug>.html`, or `provider: eploy`). Those boards join `ats.configured_boards` under the company name you wrote
+   (origin `careers_url`); a company with an entry is not guessed (`boards.find` returns at once) and is not looked for among the seeds. An address no reader understands is named in the run notes and
+   `careerops doctor` with the reason (`no reader for <host> yet`); LinkedIn, Indeed and CV-Library addresses are refused.
+2. **`careerops search-plan`** (`discovery/searchplan.py`, offline): the companies with no board and no entry, sponsor-register companies first, with their tokens, how many runs found nothing, the board names
+   the public list holds and any Workday site it suggests. `--check FILE` (CSV `company,url[,evidence]`) says which reader each proposed address would get and prints the lines to paste. The searches are NOT
+   done by the tool: in an interactive Claude Code session one WebSearch is run per company and the results go to `data/discover/careers_proposed.csv`; you read it and paste what you accept.
+3. **The public board list** (`discovery/dataset.py`): `github.com/Feashliaa/job-board-aggregator`, `data/{greenhouse,lever,ashby,workday}_companies.json` from raw.githubusercontent.com (robots.txt: none).
+   Licence read on 5 Nov 2026 from the repository's README: "The curated company datasets in `data/` are licensed under CC BY-NC 4.0 ... You're free to use, modify, and share the data for non-commercial
+   purposes. Commercial use of the datasets requires permission"; the code is MIT. A personal job search is non-commercial; the attribution is the `SOURCE` line the run prints. Repository head at that
+   check: `c410462c2f2c3f6cf51f566c5624916d102875c8` (2026-11-04T16:37:31Z, "Trend snapshot 2026-11-04"). Four files, kept in `paths.discover/dataset/`, asked again after `discover.dataset.refresh_days` (7); a
+   refusal stops the download for the run. A name that is a slug in the list is checked with ONE request to that provider (the slug as the list writes it, so a camel-case Ashby board works) and nothing else is
+   guessed for it; checks have their own limit, `discover.ats.dataset_checks_per_provider` (60). A name not in the list is still guessed (the list holds about half of the boards found by name). Workday sites
+   are only suggested. Off with `discover.dataset.enabled: false`.
+4. **"No board" needs three runs** (`BoardIndex`): `discover.ats.misses_needed` (3) separate runs must each find none before a (provider, token) is believed missing for `board_cache_days`; until then it is asked
+   again next run, never twice in one run. A board found resets the count; an entry from before v3.0 counts as one miss.
+5. **Guessing is the last resort**: at most 20 tokens per provider and run (`max_guesses_per_provider`; it cannot be set higher, so the 60 in your settings.yaml is read as 20), and never on a provider with one
+   host per company (Teamtailor, Recruitee, Personio, Pinpoint): `discover.ats.providers` may still name them, the run says they are no longer guessed. Such boards are read from an alert link, `sources:` or
+   `careers_urls.yaml`.
+6. **Liveness by the ATS's own API first** (`discovery/liveness_api.py`, called by `liveness.check`): Greenhouse `/boards/<slug>/jobs/<id>`, Lever `/postings/<slug>/<id>` (404 = closed), Ashby (the board lists the id
+   and `isListed`), Workday `/wday/cxs/.../job/...` (the careers page itself is never read; the default fetcher allows `/wday/cxs/`). Anything the API cannot say (a redirect, 401/403/429, 5xx, another shape of
+   link) falls through to the page check as before.
+7. **An EU job that refuses sponsorship is parked** (`region.refusal_parks`, inside `region.match`): the matched region lies wholly in `eu` and the ad has a "no sponsorship" sentence, so the verdict is out with
+   the sentence as evidence: status `parked (region)`, never skipped, brought back when the ad changes. A UK job that says it does not sponsor keeps the lower weight (`priority.sponsor_weights`).
+8. **Reed** stays as built (`reed.py`; your key in `.env` as `REED_API_KEY`). Its published developer pages carry no API terms or rate limit (see the study); the CLAUDE.md line you add says keyed APIs follow their
+   own terms. `careerops doctor` shows whether the key is present. Adzuna stays off.
+9. Settings (all read with defaults, none needed): `discover.ats.misses_needed`, `discover.ats.dataset_checks_per_provider`, `discover.dataset.enabled`, `discover.dataset.refresh_days`; the test copy has them. Lines for
+   your `config/settings.yaml` (the tool does not edit it) are printed by the final report.
+
+Tests: `tests/discovery/test_careers_v30.py`, `test_liveness_api_v30.py`, `test_region_refusal_v30.py`; 19 existing v2.6-v2.8 tests were changed and one removed because their rule changed (a miss cached after one run, a limit of 60, Teamtailor and
+Recruitee guessed); the ones about the cache itself now ask for `misses_needed: 1`, and the three-run rule has its own test. Unverified: how many boards the one live run finds; the dataset's recall on your companies beyond the 104-company check; Workday sites the list suggests (nothing checks whose they are).
