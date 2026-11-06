@@ -1973,6 +1973,13 @@ Tests: `tests/discovery/test_shortlist_fixes_v31.py`; two existing tests changed
    three wrongly rejected alert URLs added M&G's Workday board and resolved 2 more alerts (M&G | Data Scientist, Nexcade AI | AI Engineer). Jazz Pharmaceuticals' Workday
    answered 422 both times (transient by Workday's own meaning; asked again next run). Three alert companies were recruitment agencies `looks_like_agency` does not catch
    (Information Tech Consultants, Durlston Partners, Gazelle Global): their queries found nothing of theirs, as expected.
+6. **The Ashby 401, found** (the `daily` after the cycle, with the URL logging of part 1): `blocked_hosts.json` named `https://api.ashbyhq.com/posting-api/job-board`, the
+   BARE path that `sources check` (health.py, run at the end of every discover) asks to see whether the host is up. Ashby answers it 401 ("no such board"), and the probe
+   recorded the host as blocking scripts: the slower pace for 7 days and the "blocked" health row came from our own probe, not from a refusal of real board reads. The
+   probe now asks with `soft_401="guess"`.
+   That daily: 40 search boards read (20 with a matching job), 38 new ATS ads written (5 Nov: 1) and 2 from alerts, which used up `max_new_per_run` (40), so the seed companies
+   were not looked at this once; alerts resolved 4 of 36 (11%) against 0 of 50 (0%) on 5 Nov, plus the 4 resolved by ingest-search before it. The shortlist filed the three
+   ITOL ads as `training scheme (fees)`, held 5 rows at a company limit, and every row carried its `apply:` route.
 
 Tests: `tests/discovery/test_agentsearch_v31.py` (plan size and exclusions, rest and slot hand-over, URL parsing for every vendor, a board cached once and read by discover,
 non-ATS URLs dropped, an alert query resolving its alert, a wrong company's board rejected, no snippet stored, the commands); one v3.0 test now calls `search-plan --companies`.

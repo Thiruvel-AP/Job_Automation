@@ -15,11 +15,11 @@ ASHBY = "https://api.ashbyhq.com/posting-api/job-board"
 NOW = datetime(2026, 10, 21, 14, 7, 46, tzinfo=timezone.utc)
 
 
-def ashby_net(blocked_after: int = 3) -> Net:
-    """Ashby answers 200 until `blocked_after` requests to it were made, then 401."""
+def ashby_net(blocked_after: int = 3, status: int = 401) -> Net:
+    """Ashby answers 200 until `blocked_after` requests to it were made, then `status` (401)."""
     net = Net(strict=False)
     net.add("api.ashbyhq.com/posting-api", lambda url, **kw: Resp({"jobs": []}) if sum("ashbyhq" in r["url"] and not r["url"].endswith("robots.txt")
-                                                                                         for r in net.requests) <= blocked_after else Resp("", 401))
+                                                                                         for r in net.requests) <= blocked_after else Resp("", status))
     return net
 
 
@@ -106,10 +106,10 @@ def test_a_log_that_cannot_be_read_is_an_empty_one(tmp_path):
 def test_the_health_table_shows_blocked_with_the_time_it_was_last_seen(settings, tmp_path):
     reg = registry.parse({"sources": [{"id": "ashby-boards", "name": "Ashby boards", "url": "https://x.example", "country": "GB", "method": "ashby"}]})
     log = log_at(tmp_path)
-    f = fetcher(ashby_net(blocked_after=0), log)
+    f = fetcher(ashby_net(blocked_after=0, status=403), log)          # v3.1: a 401 on the bare path is Ashby's "no such board", not a refusal (see test_agentsearch_v31)
     (row,) = health.check_all(settings, reg, f, cache=disc.BoardCache(settings, f))
     assert row.status == "blocked" and row.reachable == "no"
-    assert "14:07:46" in row.detail and "api.ashbyhq.com" in row.detail and "401" in row.detail
+    assert "14:07:46" in row.detail and "api.ashbyhq.com" in row.detail and "403" in row.detail
 
 
 def test_a_recent_block_is_noted_on_a_row_that_works_again(settings, tmp_path):

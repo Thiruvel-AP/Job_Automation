@@ -276,6 +276,20 @@ def test_a_board_found_by_a_role_query_is_filed_under_a_readable_name(url, name)
     assert ag.display_name(ag.parse_url(url)) == name
 
 
+def test_the_health_probe_of_the_bare_ashby_api_does_not_block_the_host(settings, tmp_path):
+    # regression (the daily of 6 Nov 2026): `sources check` asked https://api.ashbyhq.com/posting-api/job-board with no board name, Ashby answered 401 (no
+    # such board), and the probe recorded api.ashbyhq.com as blocking automated access
+    from careerops.discovery import health, registry
+    from careerops.discovery.blocklog import BlockLog
+    from careerops.discovery.http import Fetcher
+    from careerops.discovery.robots import RobotsCache
+    net = Net(strict=False).add("api.ashbyhq.com", lambda url, **kw: Resp("", 404) if url.endswith("robots.txt") else Resp("", 401))
+    f = Fetcher(RobotsCache(), get=net.get, sleep=lambda s: None, clock=lambda: 0.0, gap_s=0.0, blocklog=BlockLog(tmp_path / "blocked.json"))
+    reg = registry.parse({"sources": [{"id": "ashby-boards", "name": "Ashby boards", "url": "https://jobs.ashbyhq.com", "country": "multi", "method": "ashby"}]})
+    (row,) = health.check_all(settings, reg, f, cache=disc.BoardCache(settings, f))
+    assert (row.status, row.reachable) == ("ok", "yes") and "api.ashbyhq.com" not in f.backed_off and not (tmp_path / "blocked.json").exists()
+
+
 # ------------------------------------------------------------------ untrusted text
 def test_no_snippet_or_title_from_the_search_results_is_stored(cfg, db, fb, tmp_path):
     marker = "ZZ-IGNORE-PREVIOUS-INSTRUCTIONS-ZZ"

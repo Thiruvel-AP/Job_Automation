@@ -174,7 +174,9 @@ def _check_ats(row: Row, ctx: Context) -> None:
     url = API_PROBE[src.method]
     row.robots = ctx.fetcher.robots_state(url)
     try:
-        ctx.fetcher.request(url, what=f"{src.method} API")           # any answer under 500 (a 404 for the bare path) = the host is up
+        # any answer under 500 (a 404 for the bare path) = the host is up. v3.1: Ashby answers the bare path with 401 (its answer for "no such board"); read as a
+        # refusal, this probe stopped api.ashbyhq.com and wrote it to blocked_hosts.json (the run of 6 Nov 2026 logged that exact URL), so it is a soft 401 here
+        ctx.fetcher.request(url, what=f"{src.method} API", **({"soft_401": "guess"} if src.method == "ashby" else {}))
     except Blocked as e:
         return _blocked(row, e)
     except FetchError as e:
