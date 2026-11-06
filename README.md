@@ -211,7 +211,10 @@ careerops discover --report --no-liveness   # the same without fetching any ad
 scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
-careerops search-plan              # companies with no board and no entry in careers_urls.yaml (offline); --check FILE = which reader each proposed address would get + the lines to paste
+careerops search-plan              # v3.1 agent search: the queries to run (at most 20; offline), saved to data/search/plan-<date>.json, with the yield table
+careerops search-plan --emit-prompt   # the same as an instruction for a Claude Code session: run the queries, write data/search/<date>.csv (query_id,url), run ingest-search, show the report
+careerops ingest-search data/search/<date>.csv   # check each board once, verify each job through the ATS API, write those that pass the gates; resolves alerts whose employer's board was found
+careerops search-plan --companies  # v3.0: companies with no board and no entry in careers_urls.yaml; --check FILE = which reader each proposed address would get + the lines to paste
 careerops retriage                 # re-run triage on all non-applied jobs (after changing roles/gates)
 careerops retriage --ats           # score the `skipped (ats)` jobs again after the fact bank changed (dry run: a scratch folder; --apply keeps the new tailoring and brings back every job that now reaches the review band)
 careerops retriage --decided       # dry run: inbox files that are copies of a job you skipped or applied to (--apply moves them to data/jds_done/)
@@ -262,6 +265,28 @@ careerops export-prefs             # your edits → DPO pairs (chosen = yours, r
 careerops status                   # counts per status, plus a tier × status table
 careerops calibrate                # tailor the calibration JDs with the real model and measure it (see below)
 ```
+
+### Agent search: web search finds boards, `daily` watches them (v3.1)
+
+Search is the expensive step, done rarely; every board it finds is then read by `careerops daily` for free.
+
+1. `careerops search-plan` prints (and saves to `data/search/plan-<date>.json`) at most 20 queries: up to 8 **alert queries**, one per company of the shortlist's
+   alert block that has no board (highest T first; agencies, place names and companies with a known board are left out):
+   `"<company>" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)`; up to 12
+   **role queries**, the top 4 role families by priority x Greenhouse / Lever / Ashby: `site:<board host> ("<title 1>" OR "<title 2>") ("London" OR ... OR "UK")
+   -senior -lead -principal -staff -manager -chief -director -intern`; and one Workday query. A role query that found no new board in 3 runs in a row rests for 30
+   days and the next family (forward_deployed_engineer, data_consultant, ai_consultant ...) takes its slot. The yield table (runs, new boards, new UK jobs per
+   query, from `data/search/yield.jsonl`) is printed with the plan.
+2. In an interactive Claude Code session, `careerops search-plan --emit-prompt` is the instruction to paste: run each query with WebSearch and write
+   `data/search/<date>.csv` with the columns `query_id,url` only: URLs, never titles, snippets or page text, only URLs that appeared in the results, at most 10 per query.
+   It can also run twice a week (Mon and Thu) with Claude Code's scheduling. Nothing in this flow applies or submits anything.
+3. `careerops ingest-search data/search/<date>.csv` reads only the `query_id` and `url` columns (others are ignored and said so). An ATS URL (Greenhouse US / EU,
+   Lever, Ashby, Workday, Workable, Teamtailor ...) becomes vendor + board + job id; anything else is dropped and counted. A new board: robots.txt, then one request to
+   its public API (Greenhouse gives its name, which must match an alert's company at 0.90); it goes into `data/discover/boards.json` with `source: search`, the query
+   id and the date, and from then on `discover --ats` (so `daily`) reads it and alerts of that company resolve on it. A known board costs no request. Each job is
+   verified through the API (on the board's open list: open, place, posted date), then the training-scheme filter, the level list and the usual role / region /
+   decided / duplicate gates; what passes is written to the inbox. An alert whose employer's board was found is resolved at once. The report: URLs read, ATS URLs,
+   new / known / rejected boards (with reasons), jobs written with their freshness tiers, alerts resolved, requests per host. `--dry-run` writes nothing.
 
 ### Finding jobs: `careerops discover`
 

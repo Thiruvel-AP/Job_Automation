@@ -327,7 +327,7 @@ def test_search_plan_check_says_which_reader_each_address_gets_and_prints_the_li
 def test_the_search_plan_command_prints_and_checks(cfg, db, tmp_path, monkeypatch, capsys):
     folder(cfg, "Mistral AI")
     monkeypatch.setattr(cli, "_ctx", lambda args: (cfg, db))
-    cli.main(["search-plan"])
+    cli.main(["search-plan", "--companies"])                                       # v3.1: the plain command prints the agent-search queries
     out = capsys.readouterr().out
     assert "1 compan(ies) with no board and no entry in careers_urls.yaml" in out and "Mistral AI" in out
     p = tmp_path / "p.csv"

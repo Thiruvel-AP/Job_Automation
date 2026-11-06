@@ -1937,3 +1937,29 @@ Recruitee guessed); the ones about the cache itself now ask for `misses_needed: 
 7. **How each row is applied to** (`shortlist.apply_route`): `employer form (<ats>)`, `Reed page (manual)` or `unknown`; a Reed ad's `externalUrl` goes through `reed.known_ats`.
 
 Tests: `tests/discovery/test_shortlist_fixes_v31.py`; two existing tests changed with their rule (the row's last column; the default guess cap 20 -> 0). Unverified: the live effect on your next `daily`.
+
+## 5bd. v3.1 part 2 — agent search finds employer boards (6 Nov 2026) — **done offline** (fixtures only); one real cycle run in a Claude Code session
+
+`discovery/agentsearch.py`; data in `paths.search` (built-in default `data/search`, config.DEFAULT_PATHS; tests redirect it): `plan-<date>.json`, `<date>.csv`, `yield.jsonl`, `ingest.jsonl`.
+1. **`careerops search-plan`** (offline): at most 20 queries. Alert queries first (up to 8; `alert_rows` = the shortlist's alert block, read only, highest T first; no agency
+   (`intake.looks_like_agency`), no CV-Library place name, no `name_reject_reason`, no company with a known board), then role queries (`roles.families` by priority, two titles
+   each from `FAMILY_TITLES`, else the headline; x Greenhouse US+EU, Lever US+EU, Ashby; at most 12, fewer when alerts need the room), then the Workday query. Rest rule:
+   `REST_AFTER` (3) runs in a row with no new board start `REST_DAYS` (30) days of rest from the last of them; the runs before a rest do not count after it. The plan is saved
+   (ingest reads the query kinds and the alert rows from it). `--emit-prompt` prints the session instruction; `--companies` / `--check` are the v3.0 forms (the plain command
+   used to print the company list). The family is `genai_engineer` as in your settings (the task text wrote `gen_ai_engineer`).
+2. **The CSV** (`read_csv`): the header must hold `query_id` and `url`; only those are read, any other column is reported as ignored and never stored. At most 10 URLs per
+   query id, repeats read once.
+3. **`careerops ingest-search FILE`** (`Ingest`): `parse_url` (Greenhouse boards./job-boards. US and EU and `embed/job_app?for=&token=`, Lever both hosts, Ashby, Workday
+   `<tenant>.wdN.myworkdayjobs.com/[locale/]<site>/job/..._<id>`, the v2.6 providers by `more_ats.link_board`). A board configured or already found (boards.json) costs no
+   request; a new one: `Fetcher.robots_state` first, then one request (Greenhouse `/v1/boards/<slug>` for the name, Lever / Ashby the posting list, Ashby with
+   `soft_401="guess"`, Workday one CXS list POST, v2.6 `more_ats.fetch`); for an alert query the board must be the alert company's (`names_match` 0.90 on the board's name,
+   else its slug against the company's name forms). Found boards go into boards.json with `source, query_id, date, company[, name]`; `BoardIndex.put` keeps those fields;
+   `boards.search_boards` -> `ats.configured_boards` (origin `search`), so `discover --ats` reads them every run and `BoardLookup` resolves alerts on them. Jobs: the
+   posting whose id the URL names must be on the board's open list (Workday: the posting's CXS detail); then `blacklist.training_scheme`, `gates.level_excluded`,
+   `Discover.accept` (role family, region `uk`, decided, duplicate, size). Alerts: every alert row of the plan and of the manual queue whose company owns a board found or
+   met in this ingest is looked up on it (`BoardLookup.find`, board_known) and written. Writes: inbox files, first_seen, boards.json, `yield.jsonl` (per query id: urls,
+   ats_urls, new_boards, new_jobs), `ingest.jsonl` (counts). Nothing reaches a model; nothing is applied to or submitted.
+4. Settings: none new (the limits are constants of the module, as the task fixed them). Your settings.yaml needs no change.
+
+Tests: `tests/discovery/test_agentsearch_v31.py` (plan size and exclusions, rest and slot hand-over, URL parsing for every vendor, a board cached once and read by discover,
+non-ATS URLs dropped, an alert query resolving its alert, a wrong company's board rejected, no snippet stored, the commands); one v3.0 test now calls `search-plan --companies`.

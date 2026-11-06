@@ -54,6 +54,26 @@ GUESS_CEILING = 20                 # ... and the most it can be set to (v3.0: "g
 DIRECTED_MAX = 60                  # default of discover.ats.dataset_checks_per_provider: names the public list holds, checked once each
 MISSES_NEEDED = 3                  # default of discover.ats.misses_needed: separate runs that must each find no board before "no board" is believed
 REJECT_EXAMPLES = 10               # rejected tokens named in the run record
+SEARCH_FIELDS = ("source", "query_id", "date", "company", "name")        # what an agent-search board carries in boards.json (agentsearch.py)
+
+
+def search_boards(settings) -> list[Board]:
+    """v3.1: the boards the agent search added to paths.discover/boards.json (`source: search`, still a board), under the company name it gave them (origin
+    `search`). Read by ats.configured_boards, so `discover --ats` reads them every run and an alert of the company resolves on them (board_known). The cache
+    window does not apply: a board stays until a check finds it gone."""
+    try:
+        data = json.loads((settings.path("discover") / "boards.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    out = []
+    for key, e in (data.items() if isinstance(data, dict) else []):
+        if not isinstance(e, dict) or e.get("source") != "search" or not e.get("found"):
+            continue
+        ats, _, token = key.partition(":")
+        if ats and token:
+            slug = str(e.get("slug") or token)
+            out.append(Board(ats, slug, str(e.get("company") or e.get("name") or slug), "search"))
+    return out
 
 
 def sent(fetcher) -> int:
@@ -131,6 +151,10 @@ class BoardIndex:
         key = f"{ats}:{token}"
         prev = self.data.get(key) or {}
         entry: dict = {"ts": self.clock().isoformat(timespec="seconds"), "found": found, "run": self.run_id, **({"slug": slug} if slug else {})}
+        if found and prev.get("found"):                   # v3.1: a board the agent search added keeps where it came from (search_boards reads it)
+            entry.update({k: prev[k] for k in SEARCH_FIELDS if k in prev})
+            if prev.get("slug"):
+                entry.setdefault("slug", prev["slug"])
         if not found:
             before = 0 if (not prev or prev.get("found")) else int(prev.get("misses", 1))
             entry["misses"] = min(self.misses_needed, max(1, before) if prev.get("run") == self.run_id else before + 1)

@@ -507,11 +507,19 @@ def cmd_sources(args):
         sys.exit(1)
 
 
+def _search_regions(args) -> tuple[str, ...]:
+    from .discovery import region as region_mod
+    try:
+        return region_mod.parse_selection(args.region) if getattr(args, "region", None) else (region_mod.DEFAULT_REGION,)
+    except region_mod.RegionError as e:
+        _fail(f"--region: {e}")
+
+
 def cmd_search_plan(args):
-    """`search-plan` lists the companies that have no board and no entry in careers_urls.yaml (offline); `search-plan --check FILE` says which reader each address in a
-    CSV (company,url[,evidence]) would get and prints the lines to paste. It searches nothing and writes nothing: the searches are run by hand in a Claude Code
-    session and you decide what goes into careers_urls.yaml."""
-    from .discovery import searchplan
+    """v3.1: the agent-search queries of this run (offline; at most 20: alert queries, role queries, one Workday query), saved to paths.search/plan-<date>.json, with
+    the yield table; `--emit-prompt` prints them as a self-contained instruction for a Claude Code session. v3.0 forms: `--companies` lists the companies with no
+    board and no careers_urls.yaml entry; `--check FILE` says which reader each address in a CSV (company,url[,evidence]) would get. Nothing is searched or fetched."""
+    from .discovery import agentsearch, searchplan
 
     s, db = _ctx(args)
     if args.check:
@@ -521,8 +529,58 @@ def cmd_search_plan(args):
             _fail(f"{args.check}: cannot be read ({type(e).__name__})")
         print("\n".join(searchplan.check_lines(s, rows)))
         return
-    items, total = searchplan.pending(s, db, limit=None if args.all else args.limit)
-    print("\n".join(searchplan.plan_lines(items, total, s)))
+    if args.companies:
+        items, total = searchplan.pending(s, db, limit=None if args.all else args.limit)
+        print("\n".join(searchplan.plan_lines(items, total, s)))
+        return
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    plan = agentsearch.build_plan(s, db, fb, today=date.today(), regions=_search_regions(args))
+    path = agentsearch.save_plan(s, plan)
+    if args.emit_prompt:
+        print(agentsearch.prompt_text(s, plan, path))
+        return
+    print("\n".join(agentsearch.plan_lines(s, plan)))
+    print(f"plan saved: {path}\nnext: `careerops search-plan --emit-prompt` for a Claude Code session, then `careerops ingest-search {agentsearch.csv_path(s, plan.day)}`")
+
+
+def cmd_ingest_search(args):
+    """v3.1: read a search CSV (query_id,url; nothing else is read), check each board once (robots.txt, one API request for a new board, none for a known one),
+    verify each job through the API, run the normal gates and write the jobs to the inbox; resolve the alerts whose employer's board was found. Nothing is applied
+    to or submitted. `--dry-run` writes nothing (no inbox file, no cache, no yield)."""
+    import requests
+
+    from .discovery import agentsearch, applykind
+    from .discovery.http import Fetcher
+    from .discovery.robots import RobotsCache
+
+    s, db = _ctx(args)
+    path = Path(args.file)
+    try:
+        rows, notes = agentsearch.read_csv(path)
+    except (OSError, UnicodeDecodeError, csv.Error, ValueError) as e:
+        _fail(f"{args.file}: cannot be read ({e if isinstance(e, ValueError) else type(e).__name__})")
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    queries = agentsearch.load_plan(s, agentsearch.csv_day(path))
+    if args.mock:                                          # the isolated mock root, and no network at all: every board is reported as not read
+        def offline(url, **kw):
+            raise requests.ConnectionError("--mock: no network")
+        fetcher = Fetcher(RobotsCache(None), get=offline, post=offline, sleep=lambda s_: None)
+    else:
+        fetcher = Fetcher(RobotsCache(s.path("robots")), never=applykind.NEVER_FETCH, blocklog=BlockLog(s.path("discover") / BLOCKLOG_FILE),
+                          allow_paths=("/wday/cxs/",))
+    from datetime import datetime, timezone
+    when = datetime.now(timezone.utc)
+    ing = agentsearch.Ingest(s, db, fetcher, fb=fb, today=when, dry_run=args.dry_run, regions=_search_regions(args), say=print)
+    report = ing.run(rows, queries)
+    report.notes = notes + report.notes + ([] if queries else [f"no plan file in {agentsearch.search_dir(s)}: every query id is read as a role query"])
+    print("\n".join(report.lines()))
+    if not args.dry_run:
+        agentsearch.record_yield(s, report, queries, when)
+        agentsearch.record_ingest(s, report, path, when)
+    if args.mock:
+        print("(--mock: the isolated data root, no network)")
 
 
 def cmd_set_country(args):
@@ -1928,13 +1986,23 @@ def main(argv=None):
     so.add_argument("what", choices=["check", "list"])
     so.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
     so.set_defaults(fn=cmd_sources)
-    sp = sub.add_parser("search-plan", help="companies with no board and no entry in careers_urls.yaml (offline); --check FILE = which reader each proposed address "
-                                            "would get, and the lines to paste into careers_urls.yaml")
-    sp.add_argument("--limit", type=int, default=20, help="how many companies to list (default 20)")
-    sp.add_argument("--all", action="store_true", help="list every company")
+    sp = sub.add_parser("search-plan", help="v3.1: the agent-search queries (at most 20; offline), saved to data/search/plan-<date>.json, with the yield table; "
+                                            "--emit-prompt = the instruction for a Claude Code session; --companies / --check FILE = the v3.0 careers-address forms")
+    sp.add_argument("--emit-prompt", dest="emit_prompt", action="store_true", help="print a self-contained instruction: run the queries, write the CSV, run ingest-search")
+    sp.add_argument("--region", help="the region of the alert rows planned (default uk)")
+    sp.add_argument("--companies", action="store_true", help="v3.0: list the companies with no board and no entry in careers_urls.yaml instead")
+    sp.add_argument("--limit", type=int, default=20, help="with --companies: how many companies to list (default 20)")
+    sp.add_argument("--all", action="store_true", help="with --companies: list every company")
     sp.add_argument("--check", metavar="FILE", help="a CSV with the columns company,url[,evidence]: check the addresses, write nothing")
     sp.add_argument("--mock", action="store_true", help="use the isolated data/mock folders (no real data/ is read or written)")
     sp.set_defaults(fn=cmd_search_plan)
+    ig = sub.add_parser("ingest-search", help="v3.1: read a search CSV (query_id,url only), check each board once, verify each job through the ATS API, write the "
+                                              "ones that pass the gates to the inbox; resolves alerts whose employer's board is found. Applies to nothing")
+    ig.add_argument("file", help="the CSV, e.g. data/search/2026-11-06.csv")
+    ig.add_argument("--region", help="the region jobs must be in (default uk)")
+    ig.add_argument("--dry-run", dest="dry_run", action="store_true", help="read and check, write nothing (no inbox file, no board cache, no yield)")
+    ig.add_argument("--mock", action="store_true", help="use the isolated data/mock root and no network")
+    ig.set_defaults(fn=cmd_ingest_search)
     sc = sub.add_parser("set-country", help="give a job the country its work is in (visa answers and priority follow it); "
                                             "triages a needs_country job again")
     sc.add_argument("--id", required=True)

@@ -437,6 +437,9 @@ def configured_boards(settings) -> list[Board]:
     out += [e.board() for e in workday.entries(settings)]       # sources.workday: [{company, url}] (discovery/workday.py)
     from . import careers                                      # careers_urls.yaml: the employers' own addresses, as you gave them (discovery/careers.py)
     out += careers.boards(settings)
+    from . import boards                                       # v3.1: the boards the agent search found (boards.json, source: search)
+    have = {(b.ats, b.slug.lower()) for b in out}
+    out += [b for b in boards.search_boards(settings) if (b.ats, b.slug.lower()) not in have]
     return out
 
 

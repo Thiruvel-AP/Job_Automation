@@ -17,7 +17,8 @@ SETTINGS_ENV = "CAREEROPS_SETTINGS"      # a settings file to use when none is g
 # (discovery/size.py); company_size_overrides.yaml is YOURS (`Graphcore: large`): read only, a missing file means no overrides.
 DEFAULT_PATHS = {"applications_auto": "data/applications_auto", "jds_done": "data/jds_done", "letter_feedback": "data/letters/feedback.jsonl",
                  "facts_proposed": "data/facts/proposed.yaml",     # where the pipeline writes its archive; paths.applications is read-only
-                 "state": "data/state", "company_size": "data/company_size.jsonl", "company_size_overrides": "data/company_size_overrides.yaml"}
+                 "state": "data/state", "company_size": "data/company_size.jsonl", "company_size_overrides": "data/company_size_overrides.yaml",
+                 "search": "data/search"}         # v3.1 agent search: plan-<date>.json, <date>.csv (query_id,url), yield.jsonl, ingest.jsonl
 
 
 @dataclass
