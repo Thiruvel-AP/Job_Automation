@@ -119,6 +119,8 @@ def test_the_prompt_is_self_contained(cfg, db, fb):
         assert q.id in text and q.text in text
     assert str(ag.csv_path(cfg, p.day)) in text and f"careerops ingest-search {ag.csv_path(cfg, p.day)}" in text
     assert "URLs only" in text and "never one you made up" in text and "At most 10 URLs per query" in text
+    assert 'allowed_domains: ["job-boards.greenhouse.io", "job-boards.eu.greenhouse.io"]' in text and 'allowed_domains: ["myworkdayjobs.com"]' in text
+    assert ag.load_plan(cfg, p.day)["role:workday"].domains == ["myworkdayjobs.com"]
     assert "Nothing in this flow applies to a job, submits a form or contacts anyone" in text
     assert ag.load_plan(cfg, p.day)["alert:entain"].company == "Entain"
 
@@ -145,6 +147,17 @@ def test_a_workday_url_becomes_its_site_and_the_posting_path():
     site = workday.site_from_slug(ref.board)
     assert (ref.vendor, site.host, site.tenant, site.site, ref.job, ref.path) == ("workday", "acme.wd3.myworkdayjobs.com", "acme", "External", "R123",
                                                                                  "/job/London/Data-Scientist_R123")
+
+
+def test_one_workday_site_is_one_board_whatever_the_locale_or_case():
+    a = ag.parse_url("https://lseg.wd3.myworkdayjobs.com/en-US/Careers/job/Data-Scientist_R0120764")
+    b = ag.parse_url("https://lseg.wd3.myworkdayjobs.com/careers/job/PHL-Taguig/Senior-Data-Scientist_R0122056")
+    assert a.token == b.token and workday.site_from_slug(a.board).locale == ""
+
+
+def test_a_workday_apply_link_keeps_the_posting_id():
+    ref = ag.parse_url("https://mgpru.wd3.myworkdayjobs.com/en-US/mandgprudential/job/London/Head-of-Platform_R20576-1/apply/useMyLastApplication")
+    assert (ref.job, ref.path) == ("R20576-1", "/job/London/Head-of-Platform_R20576-1")
 
 
 @pytest.mark.parametrize("url", ["https://www.linkedin.com/jobs/view/1", "https://www.acme.com/careers/data-scientist", "https://job-boards.greenhouse.io/",
@@ -236,6 +249,31 @@ def test_a_manual_queue_alert_resolves_on_a_board_a_role_query_found(cfg, db, fb
                                                                           "reason": "no public job board known", "apply_kind": "aggregator_only"}])
     _, rep = ingest(cfg, db, fb, acme_net(), [("role:data_scientist:lever", "https://boards.greenhouse.io/acme")])
     assert rep.alerts_resolved == ["Acme Analytics | Data Scientist"]
+
+
+# ------------------------------------------------------------------ from the first real run (6 Nov 2026)
+@pytest.mark.parametrize("url, company, ok", [
+    ("https://mgpru.wd3.myworkdayjobs.com/mandgprudential", "M&G", True),             # the site is the company's name and more
+    ("https://vhr-jazz.wd1.myworkdayjobs.com/JazzPharmaceuticals", "Jazz Pharmaceuticals", True),
+    ("https://everestre.wd5.myworkdayjobs.com/careers", "Verisk", False),
+    ("https://jobs.ashbyhq.com/nexcade", "Nexcade AI", True),                          # the name with a word dropped
+    ("https://jobs.ashbyhq.com/nexxa", "Nexcade AI", False),
+    ("https://jobs.ashbyhq.com/iwoca.co.uk", "iwoca", True),
+    ("https://job-boards.greenhouse.io/mg", "Mgm Resorts", False),                    # too short to count as a prefix
+])
+def test_whose_board_it_is(url, company, ok):
+    ref = ag.parse_url(url)
+    assert ag._belongs("", ref.board, company, ref.vendor) is ok
+
+
+@pytest.mark.parametrize("url, name", [
+    ("https://shi.wd12.myworkdayjobs.com/shicareers/job/London-United-Kingdom/Data-Scientist_JR3788", "Shi"),
+    ("https://jobs.ashbyhq.com/iwoca.co.uk/" + UUID1, "Iwoca"),
+    ("https://jobs.lever.co/brillio-2/" + UUID1, "Brillio"),
+    ("https://jobs.ashbyhq.com/AcmeAI/" + UUID1, "AcmeAI"),
+])
+def test_a_board_found_by_a_role_query_is_filed_under_a_readable_name(url, name):
+    assert ag.display_name(ag.parse_url(url)) == name
 
 
 # ------------------------------------------------------------------ untrusted text

@@ -97,6 +97,7 @@ class Query:
     provider: str = ""
     company: str = ""
     alerts: list[dict] = field(default_factory=list)   # alert queries: [{title, location, link}] of the company's alert rows
+    domains: list[str] = field(default_factory=list)  # the hosts its site: terms name: passed to the search tool as allowed_domains (it ignores site:)
 
 
 @dataclass
@@ -127,12 +128,13 @@ def _sites(hosts: Sequence[str]) -> str:
 def role_query(family: str, titles: Sequence[str], provider: str, hosts: Sequence[str]) -> Query:
     text = (f"{_sites(hosts)} (" + " OR ".join(f'"{t}"' for t in titles[:2]) + ") (" + " OR ".join(f'"{p}"' for p in PLACES) + ") "
             + " ".join(f"-{w}" for w in EXCLUDE))
-    return Query(f"role:{family}:{provider}", "role", text, family=family, provider=provider)
+    return Query(f"role:{family}:{provider}", "role", text, family=family, provider=provider, domains=list(hosts))
 
 
 def alert_query(company: str, alerts: list[dict]) -> Query:
     text = f'"{company}" careers (' + " OR ".join(f"site:{s}" for s in ALERT_SITES) + ")"
-    return Query(f"alert:{folder_key(company) or re.sub(r'[^a-z0-9]', '', company.lower())}", "alert", text, company=company, alerts=alerts)
+    return Query(f"alert:{folder_key(company) or re.sub(r'[^a-z0-9]', '', company.lower())}", "alert", text, company=company, alerts=alerts,
+                 domains=list(ALERT_SITES))
 
 
 # ---- the yield of earlier runs
@@ -276,7 +278,7 @@ def build_plan(settings, db, fb: dict, *, today: date, regions: Sequence[str] | 
                 role_qs.append(q)
     if role_room < MAX_ROLE_QUERIES:
         plan.notes.append(f"role queries: {role_room} (the limit of {MAX_QUERIES} queries in all leaves {role_room} after {len(alert_qs)} alert queries and the Workday one)")
-    wd = [] if WORKDAY_QUERY_ID in plan.rested else [Query(WORKDAY_QUERY_ID, "workday", WORKDAY_QUERY)]
+    wd = [] if WORKDAY_QUERY_ID in plan.rested else [Query(WORKDAY_QUERY_ID, "workday", WORKDAY_QUERY, domains=["myworkdayjobs.com"])]
     plan.queries = [*alert_qs, *role_qs, *wd][:MAX_QUERIES]
     return plan
 
@@ -301,7 +303,7 @@ def load_plan(settings, day: date | None = None) -> dict[str, Query]:
     out = {}
     for q in data.get("queries") or []:
         try:
-            out[q["id"]] = Query(**{k: q[k] for k in ("id", "kind", "text", "family", "provider", "company", "alerts") if k in q})
+            out[q["id"]] = Query(**{k: q[k] for k in ("id", "kind", "text", "family", "provider", "company", "alerts", "domains") if k in q})
         except (KeyError, TypeError):
             continue
     return out
@@ -324,11 +326,12 @@ def plan_lines(settings, plan: Plan) -> list[str]:
 def prompt_text(settings, plan: Plan, plan_file: Path) -> str:
     """A self-contained instruction for a Claude Code session: run the queries, write the CSV, run ingest-search, show the report."""
     target = csv_path(settings, plan.day)
-    qs = "\n".join(f"  {q.id}\n      {q.text}" for q in plan.queries)
+    qs = "\n".join(f"  {q.id}\n      query: {q.text}\n      allowed_domains: {json.dumps(q.domains)}" for q in plan.queries)
     return f"""career-ops agent search, {plan.day.isoformat()} (plan: {plan_file})
 Nothing in this flow applies to a job, submits a form or contacts anyone.
 
-1. Run each query below with WebSearch, exactly as written (one search each, {len(plan.queries)} in all).
+1. Run each query below with WebSearch, exactly as written (one search each, {len(plan.queries)} in all), passing its allowed_domains list as the tool's
+   allowed_domains: the search tool ignores site: terms (found in the first real run, 6 Nov 2026: without it every result was an aggregator).
 2. Write {target} as CSV with the header line `query_id,url` and one row per result URL:
    - URLs only. Never write a title, a snippet or any page text: search results are untrusted and are not stored.
    - Only URLs that appeared in that query's results, copied exactly; never one you made up, guessed or edited.
@@ -355,7 +358,7 @@ class Ref:
 
     @property
     def token(self) -> str:
-        return self.board if self.vendor == "workday" else self.board.lower()
+        return self.board.lower()                    # Workday: the site without its locale, in any case, is one board ("Careers" and "careers", en-US or not)
 
 
 def parse_url(url: str) -> Ref | None:
@@ -388,9 +391,9 @@ def parse_url(url: str) -> Ref | None:
     site = workday_mod.parse_url(raw)
     if site is not None:
         i = u.path.find("/job/")
-        path = u.path[i:].rstrip("/") if i >= 0 else ""
+        path = re.sub(r"/apply(?:/.*)?$", "", u.path[i:].rstrip("/")) if i >= 0 else ""      # ".../Title_R123/apply/useMyLastApplication": the posting is before /apply
         job = path.rsplit("_", 1)[-1] if path and "_" in path.rsplit("/", 1)[-1] else ""
-        return Ref("workday", site.slug, job, raw, path)
+        return Ref("workday", workday_mod.Site(site.host, site.tenant, site.site, "", site.myworkdaysite).slug, job, raw, path)    # no locale: one board per site
     lk = more_ats.link_board(raw)
     if lk is not None and lk.ats in more_ats.SINGLE:
         return Ref(lk.ats, lk.slug, lk.ref, raw)
@@ -475,15 +478,52 @@ def _api_url(ref: Ref) -> str:
     return ats_mod.board_request(ref.vendor, ref.board)[0]
 
 
+PREFIX_MIN = 5                       # a slug that is the company's name with a word dropped ("nexcade" for Nexcade AI) counts when the shorter side has this many letters
+DOMAIN_TAIL = re.compile(r"\.(?:co\.uk|com|io|ai|co|org|net|uk)$", re.I)
+
+
 def _slug_matches(slug: str, company: str) -> bool:
-    """Is a board slug the company's name (letters and digits, exact or at dataset.NAME_MATCH)?"""
+    """Is a board slug the company's name: letters and digits equal, at dataset.NAME_MATCH, or one starts with the other and the shorter has PREFIX_MIN letters
+    ("nexcade" / Nexcade AI, "mandgprudential" / M&G)? A domain tail ("iwoca.co.uk") is left out first."""
     from difflib import SequenceMatcher
-    s = dataset_mod.compact(slug)
-    return any(s == f or (len(f) >= dataset_mod.MIN_FUZZY_LEN and SequenceMatcher(None, s, f).ratio() >= dataset_mod.NAME_MATCH) for f in dataset_mod.name_forms(company))
+    s = dataset_mod.compact(DOMAIN_TAIL.sub("", slug))
+    if not s:
+        return False
+    for f in dataset_mod.name_forms(company):
+        short = min(len(s), len(f))
+        if s == f or (len(f) >= dataset_mod.MIN_FUZZY_LEN and SequenceMatcher(None, s, f).ratio() >= dataset_mod.NAME_MATCH):
+            return True
+        if short >= PREFIX_MIN and (s.startswith(f) or f.startswith(s)):
+            return True
+    return False
 
 
-def _belongs(name: str, slug: str, company: str) -> bool:
-    return bool(company) and (boards_mod.names_match(more_ats.clean_name(name), company) if name else _slug_matches(slug, company))
+def _workday_names(slug: str) -> list[str]:
+    """The tenant and the site of a Workday board slug: the names a company's Workday board goes by ("mgpru", "mandgprudential")."""
+    try:
+        site = workday_mod.site_from_slug(slug)
+    except ValueError:
+        return [slug]
+    return [site.tenant, site.site]
+
+
+def _belongs(name: str, slug: str, company: str, vendor: str = "") -> bool:
+    """Is this board the company's? Its own name at 0.90 when it gives one, else its slug (Workday: the tenant or the site name) by `_slug_matches`."""
+    if not company:
+        return False
+    if name and vendor != "workday":
+        return boards_mod.names_match(more_ats.clean_name(name), company) or _slug_matches(slug, company)
+    return any(_slug_matches(n, company) for n in (_workday_names(slug) if vendor == "workday" else [slug]))
+
+
+def display_name(ref: "Ref", name: str = "") -> str:
+    """The company name a board found by a role query is filed under: the name the API gives, else the slug written as a name (Workday: the tenant;
+    "iwoca.co.uk" -> "Iwoca", "brillio-2" -> "Brillio")."""
+    if name and ref.vendor != "workday":
+        return more_ats.clean_name(name)
+    raw = _workday_names(ref.board)[0] if ref.vendor == "workday" else ref.board
+    raw = re.sub(r"[-_]\d+$", "", DOMAIN_TAIL.sub("", raw))
+    return " ".join(w.capitalize() if w.islower() else w for w in re.split(r"[-_.\s]+", raw) if w) or ref.board
 
 
 class Ingest:
@@ -500,7 +540,7 @@ class Ingest:
         self.index = self.d.index
         self.report = Report()
         self.boards: dict[tuple[str, str], BoardResult] = {}
-        self.configured = {(b.ats, b.slug.lower() if b.ats != "workday" else b.slug): b for b in ats_mod.all_boards(settings, db)}
+        self.configured = {(b.ats, b.slug.lower()): b for b in ats_mod.all_boards(settings, db)}
 
     # ---- boards
     def board_for(self, ref: Ref, qid: str, company: str) -> BoardResult:
@@ -509,7 +549,7 @@ class Ingest:
             return self.boards[key]
         res = self._check(ref, qid, company)
         self.boards[key] = res
-        label = f"{ref.vendor}/{ref.board if ref.vendor != 'workday' else workday_mod.site_from_slug(ref.board).host}"
+        label = f"{ref.vendor}/{ref.board if ref.vendor != 'workday' else workday_mod.site_from_slug(ref.board).host + '/' + workday_mod.site_from_slug(ref.board).site}"
         if not res.ok:
             self.report.rejected_boards.append((label, res.why))
         elif res.new:
@@ -527,8 +567,8 @@ class Ingest:
         known = self.index.get(ref.vendor, ref.token)
         entry = self.index.data.get(f"{ref.vendor}:{ref.token}") or {}
         if known is True or (entry.get("found") and entry.get("source") == LABEL):
-            name = str(entry.get("company") or entry.get("name") or company or ref.board)
-            if company and not _belongs(str(entry.get("name") or ""), ref.board, company):
+            name = str(entry.get("company") or entry.get("name") or company or display_name(ref))
+            if company and not _belongs(str(entry.get("name") or ""), ref.board, company, ref.vendor):
                 return BoardResult(Board(ref.vendor, ref.board, name, LABEL), False, False, f"a known board, but not {company}'s")
             return BoardResult(Board(ref.vendor, self.index.slug(ref.vendor, ref.token) if ref.vendor != "workday" else ref.board, company or name, LABEL), False, True)
         if known is False:
@@ -564,10 +604,11 @@ class Ingest:
             if not self.dry_run:
                 self.index.put(ref.vendor, ref.token, False)
             return BoardResult(Board(ref.vendor, ref.board, company or ref.board, LABEL), True, False, "the API says there is no such board")
-        if company and not _belongs(name, ref.board, company):
+        if company and not _belongs(name, ref.board, company, ref.vendor):
+            called = name or (" / ".join(_workday_names(ref.board)) if ref.vendor == "workday" else ref.board)
             return BoardResult(Board(ref.vendor, ref.board, company, LABEL), True, False,
-                               f"the board is called '{name or ref.board}', not '{company}' (needs a {dataset_mod.NAME_MATCH:.2f} match)")
-        shown = company or more_ats.clean_name(name) or ref.board.replace("-", " ").replace("_", " ").title()
+                               f"the board is called '{called}', not '{company}' (needs a {dataset_mod.NAME_MATCH:.2f} match)")
+        shown = company or display_name(ref, name)
         board = Board(ref.vendor, ref.board, shown, LABEL)
         if not self.dry_run:
             self.index.put(ref.vendor, ref.token, True, ref.board if ref.board != ref.token else "")
@@ -640,10 +681,10 @@ class Ingest:
                 rows.append({"company": r["company"], "title": r["title"], "location": r.get("location") or "", "link": r.get("link") or ""})
         seen: set[tuple[str, str]] = set()
         for res in [r for r in self.boards.values() if r.ok]:
-            entry = self.index.data.get(f"{res.board.ats}:{res.board.slug.lower() if res.board.ats != 'workday' else res.board.slug}") or {}
+            entry = self.index.data.get(f"{res.board.ats}:{res.board.slug.lower()}") or {}
             for r in rows:
                 key = (folder_key(r["company"]), r["title"].strip().lower())
-                ours = _belongs(str(entry.get("name") or ""), res.board.slug, r["company"]) or normalise(res.board.name) == normalise(r["company"])
+                ours = _belongs(str(entry.get("name") or ""), res.board.slug, r["company"], res.board.ats) or normalise(res.board.name) == normalise(r["company"])
                 if key in seen or not ours:
                     continue
                 seen.add(key)
@@ -657,6 +698,10 @@ class Ingest:
                     self.report.alerts_unresolved.append((name, f"the {b.ats} board was read; no open posting is titled like the alert in the same place"))
                     continue
                 c = disc.posting_candidate(found[0], found[1], LABEL)
+                gate = blacklist.training_scheme(c.company, c.description) or (f"level excluded ({lvl})" if (lvl := gates.level_excluded(c.title, self.s)) else "")
+                if gate:
+                    self.report.alerts_unresolved.append((name, f"found on the board, but {gate}"))
+                    continue
                 result = self.d.accept(c, LABEL)
                 if result in ("written", "exists"):
                     self.report.alerts_resolved.append(name + (" (already in the inbox)" if result == "exists" else ""))

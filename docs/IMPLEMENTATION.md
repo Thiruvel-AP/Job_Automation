@@ -1960,6 +1960,19 @@ Tests: `tests/discovery/test_shortlist_fixes_v31.py`; two existing tests changed
    met in this ingest is looked up on it (`BoardLookup.find`, board_known) and written. Writes: inbox files, first_seen, boards.json, `yield.jsonl` (per query id: urls,
    ats_urls, new_boards, new_jobs), `ingest.jsonl` (counts). Nothing reaches a model; nothing is applied to or submitted.
 4. Settings: none new (the limits are constants of the module, as the task fixed them). Your settings.yaml needs no change.
+5. **First real cycle (6 Nov 2026)** and what it changed. Plan: 20 queries (8 alert, 11 role, 1 Workday); "Entain" and "Expedia" had boards already. The search tool
+   ignores `site:` terms: run as written, the first 10 queries returned only aggregators (0 ATS URLs). Each query now carries `domains`, and the prompt tells the session to
+   pass them as the tool's `allowed_domains`; with that, 106 URL rows -> 99 ATS URLs, 3 dropped, 4 repeated; 52 new boards, 2 known, 29 rejected (mostly boards of other
+   companies that an alert query turned up: the name check worked); 9 jobs written (all tier 3, older than 7 days), 2 alerts resolved (LiveScore Group, iwoca, from the
+   manual queue). Requests: boards-api.greenhouse.io 50, api.lever.co 14, api.ashbyhq.com 13, 2-5 per Workday host; one Workday host answered 403 (stopped). Fixed after it:
+   a Workday board was named by its cache slug (two inbox files said `Company: Shi.Wd12.Myworkdayjobs.Com~...`; repaired by hand, `boards.json` backed up to
+   `boards.json.bak-20261106-ingest1` and its search entries renamed) -> `display_name` (the tenant; a domain tail and a `-2` dropped); the Workday name check compared the
+   cache slug -> it compares the tenant and the site name; a slug that is the company's name with a word dropped (`nexcade` / Nexcade AI, `mandgprudential` / M&G) counts
+   when the shorter side has 5 letters; one Workday site in two locales or cases was two boards -> one locale-free, case-free key (the old keys keep their cache answer and lose
+   `source: search`); a `.../apply` Workday link lost its posting id; an alert resolved on a search board now passes the training-scheme and level gates too. Re-ingesting the
+   three wrongly rejected alert URLs added M&G's Workday board and resolved 2 more alerts (M&G | Data Scientist, Nexcade AI | AI Engineer). Jazz Pharmaceuticals' Workday
+   answered 422 both times (transient by Workday's own meaning; asked again next run). Three alert companies were recruitment agencies `looks_like_agency` does not catch
+   (Information Tech Consultants, Durlston Partners, Gazelle Global): their queries found nothing of theirs, as expected.
 
 Tests: `tests/discovery/test_agentsearch_v31.py` (plan size and exclusions, rest and slot hand-over, URL parsing for every vendor, a board cached once and read by discover,
 non-ATS URLs dropped, an alert query resolving its alert, a wrong company's board rejected, no snippet stored, the commands); one v3.0 test now calls `search-plan --companies`.
