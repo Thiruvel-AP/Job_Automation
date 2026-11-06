@@ -103,6 +103,16 @@ def daily_block(db: DB, settings, day: date | None = None) -> str | None:
     return None
 
 
+def open_count(db: DB, settings, company: str, day: date | None = None, *, apps: list[Application] | None = None) -> int:
+    """How many open applications (no reply yet, made in the last NO_RESPONSE_DAYS days) there are at `company` (the shortlist adds its own rows to it, v3.1)."""
+    key, now = folder_key(company or ""), day or today()
+    if not key:
+        return 0
+    window = timedelta(days=NO_RESPONSE_DAYS)
+    return sum(1 for a in (apps if apps is not None else applications(db, settings))
+               if folder_key(a.company) == key and not a.answered and a.closed_on is None and now - a.on <= window)
+
+
 def company_block(db: DB, settings, company: str, day: date | None = None, *, apps: list[Application] | None = None) -> str | None:
     """Why no application to `company` may be started now, or None."""
     cfg = targeting_mod.config(settings)

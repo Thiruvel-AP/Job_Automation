@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 
 from . import ats as ats_mod
 from . import workday
-from .http import Blocked, FetchError, Fetcher
+from .http import Blocked, FetchError, Fetcher, Soft401
 
 _GH_HOST = re.compile(r"^(?:job-)?boards(?:\.eu)?\.greenhouse\.io$")
 _GH_PATH = re.compile(r"^/([A-Za-z0-9_-]+)/jobs/(\d+)")
@@ -32,12 +32,12 @@ class Refused(Exception):
     """The vendor's API (or its robots.txt) said no: not a reason to ask somewhere else."""
 
 
-def _get(fetcher: Fetcher, url: str, what: str, headers: dict | None = None) -> Any | None:
+def _get(fetcher: Fetcher, url: str, what: str, headers: dict | None = None, soft_401: str = "") -> Any | None:
     """The response, or None when the API cannot say (blocked, no answer, a redirect)."""
     try:
-        r = fetcher.request(url, what=what, follow=False, **({"headers": headers} if headers else {}))
-    except Blocked as e:
-        raise Refused(str(e)[:140]) from None
+        r = fetcher.request(url, what=what, follow=False, **({"headers": headers} if headers else {}), **({"soft_401": soft_401} if soft_401 else {}))
+    except (Blocked, Soft401) as e:              # v3.1: a 401 on a known Ashby board ends the check too (the host is only stopped at the third in a row)
+        raise Refused(str(e)[:160]) from None
     except FetchError:
         return None
     return None if 300 <= r.status_code < 400 else r
@@ -91,7 +91,7 @@ def _check(url: str, fetcher: Fetcher) -> tuple[str, str] | None:
         if not m:
             return None
         slug, jid = m.groups()
-        r = _get(fetcher, f"{ats_mod.ASHBY}/{slug}", f"Ashby board {slug}")
+        r = _get(fetcher, f"{ats_mod.ASHBY}/{slug}", f"Ashby board {slug}", soft_401="known")    # v3.1: a board a real link names; 3 401s in a row stop the host
         data = _json(r) if r is not None and r.status_code == 200 else None
         jobs = data.get("jobs") if isinstance(data, dict) else None
         if not isinstance(jobs, list) or not jobs:

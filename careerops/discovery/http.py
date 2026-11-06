@@ -11,6 +11,10 @@
   * a 429 from a host in LONG_BACKOFF_HOSTS (Workable) is remembered in the blocklog with an `until` time: no run asks that host for 24 h, or for as
     long as its `Retry-After` header says when that is longer (never more than blocklog.MAX_BACKOFF_S). The `Blocked` it raises says until when;
   * a connection error is retried once; other statuses are returned for the caller to read;
+  * v3.1, `soft_401` (the Ashby posting API answers 401, not 404, for a board name that does not exist): "guess" = a 401 for a GUESSED board is "no board
+    there" (returned like a 404, the host is not stopped); "known" = a 401 for a board known to exist counts towards KNOWN_401_STREAK in a row, and only the
+    KNOWN_401_STREAK-th stops the host (the ones before raise a FetchError: no answer, nothing cached); any other answer from the host resets the count.
+    Without it (the default) a 401 stops the host at once, as before. Every refusal records the exact URL that got it (`refused_url`, the blocklog, the notes);
   * `method="POST", json=...` sends a JSON body (the public Workday CXS list endpoint); `follow=False` returns a redirect instead of following it, so the
     caller can read where it points (a Workday outage page);
   * `allow_paths`: path prefixes that are fetched even on a host in `never` (the Workday /wday/cxs/ API; the careers PAGES on that host stay refused);
@@ -40,6 +44,8 @@ BLOCKED_STATUSES = (401, 403, 429)
 MAX_BYTES = 20_000_000
 MAX_CRAWL_DELAY_S = 30
 LONG_BACKOFF_HOSTS = ("workable.com",)            # a 429 from these (or a subdomain) keeps every later run away for 24 h (or its Retry-After)
+KNOWN_401_STREAK = 3                              # v3.1: 401s in a row on boards known to exist before the host is stopped (soft_401="known")
+SOFT_401 = ("", "guess", "known")
 
 
 class FetchError(RuntimeError):
@@ -52,6 +58,10 @@ class Blocked(FetchError):
     def __init__(self, msg: str, status: int | None = None):
         super().__init__(msg)
         self.status = status
+
+
+class Soft401(FetchError):
+    """v3.1: a 401 on a board known to exist, below KNOWN_401_STREAK in a row: not an answer (nothing is read or cached), and the host is not stopped."""
 
 
 class RobotsRedirected(Blocked):
@@ -88,6 +98,9 @@ class Fetcher:
         self.requests = 0
         self.by_host: Counter = Counter()             # requests actually sent, per host (robots.txt included)
         self.blocklog = blocklog                      # the memory of refusals between runs (None: this run only)
+        self.refused_url: dict[str, str] = {}         # host -> the exact URL that got the 401 / 403 / 429 (v3.1)
+        self.soft_401s: list[str] = []                # URLs of guessed boards that answered 401: "no board", the host was not stopped (v3.1)
+        self.known_401: Counter = Counter()           # host -> 401s in a row on boards known to exist (soft_401="known")
         for host in (blocklog.slow_hosts() if blocklog is not None else []):
             self.host_gap[host] = SLOW_GAP_S          # it refused us recently: a slower pace, however the robots.txt reads
         for host, (status, until) in (blocklog.active_backoffs() if blocklog is not None else {}).items():
@@ -97,10 +110,12 @@ class Fetcher:
     def _now(self) -> datetime:
         return self.blocklog.now() if self.blocklog is not None else datetime.now(timezone.utc)
 
-    def _refused(self, host: str, status: int, retry_after: object = None) -> None:
-        """A host said no: remember it for the rest of this run, and write down when and after how many requests. A 429 from a LONG_BACKOFF_HOSTS host also
-        sets the time before which no later run asks it (24 h, or its Retry-After when longer)."""
+    def _refused(self, host: str, status: int, retry_after: object = None, url: str = "") -> None:
+        """A host said no: remember it for the rest of this run, and write down when, after how many requests, and the URL that got it. A 429 from a
+        LONG_BACKOFF_HOSTS host also sets the time before which no later run asks it (24 h, or its Retry-After when longer)."""
         self.backed_off[host] = status
+        if url:
+            self.refused_url[host] = url
         until = None
         if status == 429 and any(host == h or host.endswith("." + h) for h in LONG_BACKOFF_HOSTS):
             now = self._now()
@@ -108,7 +123,7 @@ class Fetcher:
             self.backoff_until[host] = until
         if self.blocklog is not None:
             try:
-                self.blocklog.record(host, status, max(self.by_host[host] - 1, 0), sum(self.by_host.values()), until=until)
+                self.blocklog.record(host, status, max(self.by_host[host] - 1, 0), sum(self.by_host.values()), until=until, url=url)
             except OSError:
                 pass                                  # the memory is a courtesy; the refusal is honoured either way
 
@@ -136,7 +151,7 @@ class Fetcher:
         except requests.RequestException:
             return None, ""
         if r.status_code in BLOCKED_STATUSES and (r.status_code == 429 or host not in DOCUMENTED_API_HOSTS):
-            self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"))      # the host said no to a script: not asked again this run
+            self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"), url)      # the host said no to a script: not asked again this run
         return r.status_code, (r.text[:500_000] if getattr(r, "ok", False) else "")
 
     def robots_state(self, url: str) -> str:
@@ -151,9 +166,10 @@ class Fetcher:
     # ---- the request
     def request(self, url: str, *, params: dict | None = None, headers: dict | None = None, auth: tuple | None = None,
                 robots: bool = True, what: str = "", stream: bool = False, method: str = "GET", json: Any = None,
-                follow: bool = True) -> requests.Response:
+                follow: bool = True, soft_401: str = "") -> requests.Response:
         """GET `url`. Raises Blocked (401 / 403 / 429, robots.txt, a host already backed off, linkedin.com) or FetchError
-        (no answer, 5xx, too many redirects, a response over MAX_BYTES). 404 and other statuses are returned.
+        (no answer, 5xx, too many redirects, a response over MAX_BYTES). 404 and other statuses are returned. `soft_401`: see the module text
+        ("guess": a 401 is returned like a 404; "known": a 401 is a FetchError until the KNOWN_401_STREAK-th in a row, which stops the host).
         `stream=True` leaves the body unread (and the MAX_BYTES check to the caller, who must close the response): for an open-data
         file that is larger than a job-board answer."""
         what = what or url
@@ -194,8 +210,18 @@ class Fetcher:
                 except requests.RequestException as e:
                     if attempt == 1 or not isinstance(e, requests.ConnectionError):
                         raise FetchError(f"{what}: could not be fetched ({type(e).__name__})") from None
+            if r.status_code == 401 and soft_401 == "guess":
+                self.soft_401s.append(url)                         # a guessed board that does not exist: "no board", not a refusal
+                return r
+            if r.status_code == 401 and soft_401 == "known":
+                self.known_401[host] += 1
+                if self.known_401[host] < KNOWN_401_STREAK:
+                    raise Soft401(f"{what}: HTTP 401 at {url} ({self.known_401[host]} of {KNOWN_401_STREAK} in a row on known boards before {host} "
+                                     "is stopped); nothing was read")
+            elif soft_401:
+                self.known_401[host] = 0                           # any other answer: the run of 401s is over
             if r.status_code in BLOCKED_STATUSES:
-                self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"))
+                self._refused(host, r.status_code, (getattr(r, "headers", None) or {}).get("Retry-After"), url)
                 raise Blocked(f"{what}: HTTP {r.status_code}: {host} blocks automated access; it is not asked again " +
                               (f"{self._again(host)}" if host in self.backoff_until else "this run"), r.status_code)
             where = (getattr(r, "headers", None) or {}).get("Location") if r.status_code in REDIRECT_STATUSES else None
@@ -214,9 +240,9 @@ class Fetcher:
         raise FetchError(f"{what}: too many redirects")
 
     def json(self, url: str, **kw) -> Any:
-        """The JSON body of a 200 answer; None for a 404 (not there); FetchError for anything else or a body that is not JSON."""
+        """The JSON body of a 200 answer; None for a 404 (not there), or a 401 with soft_401="guess"; FetchError for anything else or a body that is not JSON."""
         r = self.request(url, **kw)
-        if r.status_code == 404:
+        if r.status_code == 404 or (r.status_code == 401 and kw.get("soft_401") == "guess"):
             return None
         if not r.ok:
             raise FetchError(f"{kw.get('what') or url}: HTTP {r.status_code}")

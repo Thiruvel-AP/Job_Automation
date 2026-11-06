@@ -182,6 +182,7 @@ discover:
   ats:
     board_cache_days: 30           # a board token's answer, found or not, is reused this long (paths.discover/boards.json)
     max_guesses_per_provider: 60   # board tokens asked of ONE provider in one run (a guess is a token not in the cache); the rest wait for the next run, so no host sees hundreds of requests; 0 = guess nothing
+    blind_guesses: true            # v3.1: guess slugs the public board list does not hold (built-in default false: no blind guesses); on here so the guessing tests keep running
     board_name_match: 0.9          # a board found only through a shortened slug (first word ...) is the company's only if the board's own name matches this well; else board_unverified
     providers: []                  # the v2.6 providers asked when a slug is guessed (none in the tests: a test that wants one sets it)
     misses_needed: 3               # separate runs that must each find no board for a token before "no board" is believed (v3.0)

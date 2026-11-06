@@ -7,6 +7,10 @@ the ones you approve go to data/jds/approved/<date>/, and `careerops live` reads
        be offered, best T first, because it costs a request each);
     3. offered = T >= targeting.min_triage_score, best T first then freshest, at most targeting.shortlist_size; an ad older than targeting.max_posting_age_days
        needs T >= 4.5; a company at targeting.per_company_max_open open applications, or inside its cooldown, is left out (apply/volume.py);
+       v3.1: the same limit holds for the list itself: a company's rows in this list plus its open applications never pass per_company_max_open (2), and
+       ads with the same company + title + location are ONE row with all their links (approving it files the copies in jds_done/duplicate/);
+       every row says how it is applied to: `apply: employer form (greenhouse)`, `apply: Reed page (manual)` or `apply: unknown` (a Reed ad whose externalUrl
+       is a known ATS is an employer-form row);
     4. [a] approves all, except a possible repost of a job you skipped (that needs its number typed) · `1 3 5` approves those ·
    `s 2` skips job 2 for good (filed in jds_done/skipped/, so discover does not bring it back) ·
    [x] skips every job in the list that you did not approve · [q] quits.
@@ -46,10 +50,12 @@ from typing import Callable, Sequence
 from .. import targeting as targeting_mod
 from ..apply import decided, targets, volume
 from ..apply import decisions as decisions_mod
+from ..apply.naming import folder_key
 from ..db import DB
 from . import applykind, freshness, liveness, triage, workcountry
 from . import candidate as cand
 from .gmail import CV_TRACKING_HOST
+from . import reed as reed_mod
 from . import region as region_mod
 from . import register as sponsors
 from . import size as size_mod
@@ -64,6 +70,32 @@ SKIP_REASON = f"skipped {SKIP_MARK}: skipped at the shortlist, not offered again
 SIZE_FIRST_BONUS = 0.3                          # T added for the preferred bucket by `sme-first` / `large-first`
 ALERT_BLOCK_SIZE = 10                           # alerts that could not be traced to the employer: at most this many are listed, best first (A, Fr, V, title match)
 BOARD_ONLY = "agency or board-only"             # a CV-Library job page: the ad is on CV-Library (or an agency) only, the employer's own board was not found
+FORM_KINDS = ("greenhouse", "lever", "ashby", "workday")                 # an employer form this pipeline knows (v3.1 `apply:` column)
+DUPLICATE = "duplicate"                         # jds_done/duplicate/: a copy of an approved row (same company + title + location), filed with it
+
+
+def apply_route(job: dict) -> str:
+    """How the job is applied to (v3.1): `employer form (<ats>)` when the apply page is on Greenhouse / Lever / Ashby / Workday (or a v2.6 ATS by its link shape),
+    `Reed page (manual)` for a Reed ad with no externalUrl (it is applied for on reed.co.uk), `unknown` otherwise (an employer page of no known ATS). A Reed ad's
+    externalUrl goes through the same provider detection (reed.known_ats). Nothing is fetched."""
+    url, apply_url = str(job.get("url") or "").strip(), str(job.get("apply_url") or "").strip()
+    on_reed = lambda u: applykind.host_of(u) == "reed.co.uk" or applykind.host_of(u).endswith(".reed.co.uk")      # noqa: E731
+    if str(job.get("source") or "").lower() == "reed" or on_reed(url):
+        if not apply_url or on_reed(apply_url):
+            return "Reed page (manual)"
+        ats = reed_mod.known_ats(apply_url)
+        return f"employer form ({ats})" if ats else "unknown"
+    kind = str(job.get("apply_kind") or "").strip() or applykind.kind_of(apply_url or url)
+    if kind in FORM_KINDS:
+        return f"employer form ({kind})"
+    ats = reed_mod.known_ats(apply_url or url) if (apply_url or url) else ""
+    return f"employer form ({ats})" if ats else "unknown"
+
+
+def merge_key(job: dict) -> tuple[str, str, str]:
+    """(company family, normalised title, normalised location): ads with the same key are one shortlist row (v3.1)."""
+    company, title = decided.key_of(job.get("company"), job.get("title"))
+    return company, title, " ".join(str(job.get("location") or "").lower().replace(",", " ").split())
 
 
 def approved_root(settings) -> Path:
@@ -100,10 +132,21 @@ class Row:
     region: region_mod.Match | None = None      # in / unknown (an out ad is parked before it becomes a Row)
     size: size_mod.Size | None = None           # None when the size was not asked for (no resolver)
     repost: str = ""                            # v2.5: "possible repost of a job you skipped on <date> (<id>)": only company + title + country match
+    dups: list["Row"] = field(default_factory=list)     # v3.1: other inbox ads of the same company + title + location, merged into this row
 
     @property
     def name(self) -> str:
         return f"{self.job['company']} | {self.job['title']}"
+
+    @property
+    def route(self) -> str:
+        return apply_route(self.job)
+
+    @property
+    def links(self) -> list[str]:
+        """The address of this ad and of every merged copy (no repeats)."""
+        got = [str(r.job.get("url") or r.job.get("apply_url") or r.path.name) for r in (self, *self.dups)]
+        return list(dict.fromkeys(got))
 
     @property
     def key(self) -> str:
@@ -112,8 +155,9 @@ class Row:
     def line(self, n: int) -> str:
         age = "date unknown" if self.t.age_days is None else f"{self.t.age_days:.0f} d"
         seen = f" (shown {self.shown}×)" if self.shown else ""
+        links = f" | {len(self.links)} links: {' · '.join(self.links)}" if self.dups and len(self.links) > 1 else ""
         return (f"{n:>2}. {self.name} | {age} | {self.t.text()} | have: {', '.join(self.t.have[:HAVE_SHOWN]) or '-'} | "
-                f"lack: {', '.join(self.t.lack[:LACK_SHOWN]) or '-'} | {self.kind}{seen}{self.tags()}")
+                f"lack: {', '.join(self.t.lack[:LACK_SHOWN]) or '-'} | apply: {self.route}{seen}{self.tags()}{links}")
 
     def tags(self) -> str:
         """` [SME·small] [region?]`: the size and the unknown region of the line (nothing for what was not asked)."""
@@ -381,6 +425,8 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         elif plan.size_mode in ("sme-first", "large-first"):
             pref = size_mod.SME if plan.size_mode == "sme-first" else size_mod.LARGE
             pool.sort(key=lambda r: (-(r.t.t + (SIZE_FIRST_BONUS if r.size.size == pref else 0.0)), by_age(r), r.path.name))
+    pool = merge_rows(pool)                                                   # v3.1: one row per company + title + location, with every link
+    in_list: Counter = Counter()                                              # company -> rows already in this list (v3.1: the cap counts them too)
     for r in pool:
         if len(plan.rows) >= cfg.shortlist_size:
             break
@@ -388,11 +434,18 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         if why:
             plan.held.append((r.name, why))
             continue
+        fam = folder_key(r.job["company"])
+        opened = volume.open_count(db, settings, r.job["company"], day, apps=apps)
+        if in_list[fam] and in_list[fam] + opened >= cfg.per_company_max_open:
+            plan.held.append((r.name, f"{r.job['company']}: {in_list[fam]} row(s) already in this list" + (f" and {opened} open application(s)" if opened else "")
+                              + f" (targeting.per_company_max_open is {cfg.per_company_max_open} a company, counting this list's rows)"))
+            continue
         if (closed := alive(r.job)):
             plan.dropped.append((r.path, "closed", f"disqualified, liveness: {closed}"))
             continue
         r.shown = hist.shown.get(r.key, 0)
         plan.rows.append(r)
+        in_list[fam] += 1
     plan.new = sum(1 for r in plan.rows if not r.shown)
     plan.unknown_rows = [r for r in plan.unknown_rows if not volume.company_block(db, settings, r.job["company"], day, apps=apps)][:cfg.shortlist_size]
     for r in plan.unknown_rows:
@@ -400,6 +453,20 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
     plan.alert_rows, plan.alert_total = alert_block(settings, db, fb, idx=idx, floor=floor, now=now, regions=regions, non_uk_ok=non_uk_ok, known=known,
                                                     hist=hist, archive=archive, others=others)
     return plan
+
+
+def merge_rows(pool: list[Row]) -> list[Row]:
+    """The pool with the ads of the same company + title + location (merge_key) folded into the first (best) one as `dups`, in order."""
+    first: dict[tuple[str, str, str], Row] = {}
+    out: list[Row] = []
+    for r in pool:
+        k = merge_key(r.job)
+        if all(k[:2]) and k in first:
+            first[k].dups.append(r)
+            continue
+        first[k] = r
+        out.append(r)
+    return out
 
 
 def _taken_keys(settings, db: DB, others: list[dict]) -> set[str]:
@@ -493,13 +560,17 @@ def apply_drops(settings, plan: Plan) -> int:
 
 
 def approve(settings, rows: list[Row], day: date) -> list[Path]:
-    """Move the approved ads to data/jds/approved/<day>/."""
+    """Move the approved ads to data/jds/approved/<day>/. The merged copies of a row (same company + title + location) go to jds_done/duplicate/ with a reason
+    naming the approved file, so `live` tailors the job once."""
     out = []
     for r in rows:
         try:
-            out.append(decided.move_file(settings, r.path, approved_root(settings) / day.isoformat()))
+            dst = decided.move_file(settings, r.path, approved_root(settings) / day.isoformat())
         except (OSError, decided.DecidedError):
-            pass
+            continue
+        out.append(dst)
+        for d in r.dups:
+            file_away(settings, d.path, DUPLICATE, f"duplicate of {dst.name} (same company, title and location), approved on {day.isoformat()}")
     return out
 
 
@@ -548,7 +619,7 @@ def lines(plan: Plan, cfg: targeting_mod.Targeting) -> list[str]:
         out.append(f"region unknown for {plan.region_unknown} ad(s): kept, flagged [{region_mod.FLAG}] (the place does not say where the work is)")
     out += [r.line(n) for n, r in enumerate(plan.rows, 1)]
     out += [f"  held back: {name}: {why}" for name, why in plan.held[:10]]
-    out += [f"  disqualified: {p.name}: {why}" for p, _, why in plan.dropped[:10]]
+    out += [f"  disqualified: {why.removeprefix('disqualified, ')} ({p.name})" for p, _, why in plan.dropped[:10]]
     out += [f"  size: {note}" for note in plan.size_notes]
     return out + unknown_lines(plan) + region_lines(plan) + parked_line(plan) + alert_lines(plan)
 
@@ -705,6 +776,9 @@ def run(settings, db: DB, fb: dict, *, ask: Callable[[str], str] | None, out: Ca
                 if dst is not None:
                     gone.append(r)
                     targets.record_file(settings, dst, decided.SKIPPED, SKIP_REASON)          # the decision log too (v2.5 fix: it was only a moved file)
+                for d in r.dups:                                                              # v3.1: the merged copies are skipped with it
+                    if (ddst := file_away(settings, d.path, "skipped", SKIP_REASON)) is not None:
+                        targets.record_file(settings, ddst, decided.SKIPPED, SKIP_REASON)
             log_events(settings, [_event(r, "skipped") for r in gone], now)
             out(f"  skipped {len(gone)}: filed in jds_done/skipped/ as skipped {SKIP_MARK}, never offered again (`careerops unskip --shortlist` brings them back)")
         else:

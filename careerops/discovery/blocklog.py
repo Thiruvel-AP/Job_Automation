@@ -1,7 +1,8 @@
 """data/discover/blocked_hosts.json: the hosts that answered a script with HTTP 401 / 403 / 429, and when.
 
 http.py stops a host for the rest of the run the moment it says no (nothing is retried or worked around); this file is the memory between
-runs. For each host: the status, the time (UTC), how many requests to it came before the refusal, and how many the run had made in all.
+runs. For each host: the status, the time (UTC), how many requests to it came before the refusal, how many the run had made in all, and (v3.1) the exact
+URL that got the refusal (`url`).
 For MEMORY_DAYS afterwards the next runs keep at least SLOW_GAP_S seconds between requests to that host (http.Fetcher reads it), and the
 health table (health.py) says when the host was last seen refusing. The file is rewritten whole (discovery code deletes and moves nothing);
 one that cannot be read is an empty log, never an error.
@@ -56,10 +57,10 @@ class BlockLog:
             return {}
         return data if isinstance(data, dict) else {}
 
-    def record(self, host: str, status: int, requests_before: int, run_requests: int, until: datetime | None = None) -> None:
+    def record(self, host: str, status: int, requests_before: int, run_requests: int, until: datetime | None = None, url: str = "") -> None:
         hosts = self.hosts()
         hosts[host] = {"status": status, "at": self.now().astimezone(timezone.utc).isoformat(timespec="seconds"),
-                       "requests_before": requests_before, "run_requests": run_requests,
+                       "requests_before": requests_before, "run_requests": run_requests, **({"url": url} if url else {}),
                        **({"until": until.astimezone(timezone.utc).isoformat(timespec="seconds")} if until is not None else {})}
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps({"version": 1, "hosts": hosts}, indent=2), encoding="utf-8")
@@ -104,4 +105,5 @@ class BlockLog:
         until = self.backoff_until(host)
         later = (f"not asked at all until {until.astimezone(timezone.utc):%Y-%m-%d %H:%M} UTC, then requests to it are at least {SLOW_GAP_S:g} s apart for {MEMORY_DAYS} days"
                  if until is not None else f"requests to it are at least {SLOW_GAP_S:g} s apart for {MEMORY_DAYS} days")
-        return f"{host} last answered HTTP {e.get('status')} at {e.get('at')} after {e.get('requests_before')} request(s) that run; {later}"
+        where = f" (to {e['url']})" if e.get("url") else ""
+        return f"{host} last answered HTTP {e.get('status')}{where} at {e.get('at')} after {e.get('requests_before')} request(s) that run; {later}"

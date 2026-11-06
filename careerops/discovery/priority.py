@@ -39,7 +39,7 @@ DEFAULT_LEVELS = {"manager": 0.3, "lead": 0.4, "senior": 0.6, "other": 1.0}
 DEFAULT_ROLE_STEP = 0.03
 ROLE_FLOOR = 0.5
 # Title words per level, highest level first: "Senior Manager" is a manager, "Manager, Applied AI Architects" too. Whole words only.
-LEVEL_WORDS = [("manager", re.compile(r"\b(?:manager|director|head)\b", re.I)),
+LEVEL_WORDS = [("manager", re.compile(r"\b(?:manager|director|head|chief|vp)\b", re.I)),            # v3.1: chief and vp are levels too
                ("lead", re.compile(r"\b(?:lead|principal|staff|architect)\b", re.I)),
                ("senior", re.compile(r"\b(?:senior|sr)\b", re.I))]
 

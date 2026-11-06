@@ -173,7 +173,7 @@ def test_a_row_shows_company_role_age_t_and_factors_keywords_and_apply_kind(sett
     [row] = build(settings, db, fb).rows
     line = row.line(1)
     assert line.startswith(" 1. Acme | Data Scientist | 3 d | T ") and " = A5 E3 " in line and "Fr5" in line
-    assert "have: python, sql, scikit-learn" in line and "lack: spark, airflow" in line and line.endswith("| greenhouse")
+    assert "have: python, sql, scikit-learn" in line and "lack: spark, airflow" in line and line.endswith("| apply: employer form (greenhouse)")
 
 
 def test_the_apply_kind_comes_from_the_address_when_the_ad_has_no_header(settings, db, fb, inbox):

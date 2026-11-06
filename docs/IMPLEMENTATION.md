@@ -1913,3 +1913,27 @@ hid the boards it was already known to have from the report.
 
 Tests: `tests/discovery/test_careers_v30.py`, `test_liveness_api_v30.py`, `test_region_refusal_v30.py`; 19 existing v2.6-v2.8 tests were changed and one removed because their rule changed (a miss cached after one run, a limit of 60, Teamtailor and
 Recruitee guessed); the ones about the cache itself now ask for `misses_needed: 1`, and the three-run rule has its own test. Unverified: how many boards the one live run finds; the dataset's recall on your companies beyond the 104-company check; Workday sites the list suggests (nothing checks whose they are).
+
+## 5bc. v3.1 part 1 — shortlist fixes from the 5 Nov `careerops daily` run (6 Nov 2026) — **done offline** (fixtures only)
+
+1. **Fee-charging training schemes** (`blacklist.training_scheme`, called by `triage.disqualify` after your blacklist): an ad holding `training course and fees apply`, `fees apply`, `course fee`, `job guarantee`,
+   `job guaranteed`, `money back`, or `funded training` / `traineeship` together with `fee`, or from a company in `TRAINING_SCHEME_COMPANIES` (ITOL Recruit), is disqualified with the blacklist reason
+   `training_scheme`, printed `disqualified: training scheme (fees): the ad says "..."`. Built into the code: `config/profile/blacklist.yaml` is the user's and is not edited.
+2. **Per-company cap per shortlist** (`shortlist.build`, `volume.open_count`): a company's rows already in the list plus its open applications must stay under `per_company_max_open` (2); the extra rows are
+   `held` ("N row(s) already in this list"), so the header's "at a company limit" counts them. **One job, one row** (`shortlist.merge_rows`): same company family + title + location; the row lists every
+   link; approving it moves one file to `approved/<date>/` and the copies to `jds_done/duplicate/` (reason names the approved file); skipping skips all.
+3. **Executive levels** (`gates.ALWAYS_EXCLUDED`: chief, head of, vp, director, principal, staff) are excluded after `roles.levels.exclude`, by the same whole-word rule; `priority.LEVEL_WORDS` gives chief / vp L1.
+4. **US-only location lists** (`region.remote_country`, `_match`): `Remote - <US state, US city or Washington D.C.>` is a US place; a multi-place location none of whose options is in the region is out even
+   with a `Remote` / `EMEA` option; only a place made of nothing but such options goes to the ad text. Found on the way: bare `New York` matched the UK city `York` (added to `homonym_block` in the code-owned
+   `config/regions.yaml`).
+5. **Ashby 401** (`http.Fetcher.request(soft_401=...)`): `guess` (boards.find, ats.probe) = a 401 is "no board", the host is not stopped (`soft_401s` lists them, the run notes count them); `known`
+   (`ats.board_postings`, Ashby liveness) = `Soft401` until the third 401 in a row, which stops the host; any other answer resets the count. Every refusal records its URL (`refused_url`, `blocked_hosts.json`
+   `url`, the `ats: stopped asking` note, the health line). The 5 Nov 401 came after 42 Ashby requests, most of them guesses of names that do not exist.
+6. **No blind guesses** (`boards.find`, `dataset.match` / `workday_match`): a company is asked of a provider only when its normalised name (register.normalise, letters and digits; "M&G" is `mandg` or `mg`)
+   equals a board name in the public list or matches one at 0.90 (names under 6 characters exactly), with one verifying request; Workday tenants are verified with one CXS list request and then read.
+   A board already in `boards.json` is still read. Report: `ats: from the public board list: <provider> N matched, N verified, N failed` (notes) and `Matched from the public board list ...` (`--report`);
+   an alert whose company the list does not hold is category `not_listed`. `discover.ats.blind_guesses: true` restores v3.0 guessing (`max_guesses_per_provider`, default now 0, at most 20); the test copy of the
+   settings sets it so the guessing tests still run. Your settings.yaml's `max_guesses_per_provider: 60` has no effect unless you add `blind_guesses: true`.
+7. **How each row is applied to** (`shortlist.apply_route`): `employer form (<ats>)`, `Reed page (manual)` or `unknown`; a Reed ad's `externalUrl` goes through `reed.known_ats`.
+
+Tests: `tests/discovery/test_shortlist_fixes_v31.py`; two existing tests changed with their rule (the row's last column; the default guess cap 20 -> 0). Unverified: the live effect on your next `daily`.

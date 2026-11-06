@@ -253,7 +253,7 @@ def test_each_provider_is_asked_at_most_the_cap_a_run_and_the_next_run_carries_o
 def test_the_default_cap_is_twenty_it_cannot_be_set_higher_and_zero_asks_nothing(cfg_all):
     cfg = cfg_all
     cfg.raw["discover"]["ats"].pop("max_guesses_per_provider")
-    assert BoardIndex(cfg).max_guesses == boards_mod.MAX_GUESSES == 20
+    assert BoardIndex(cfg).max_guesses == boards_mod.MAX_GUESSES == 0                   # v3.1: no blind guesses by default (it was 20)
     cfg.raw["discover"]["ats"]["max_guesses_per_provider"] = 60                          # v3.0: "at most 20 per provider per run"
     assert BoardIndex(cfg).max_guesses == boards_mod.GUESS_CEILING == 20
     cfg.raw["discover"]["ats"]["max_guesses_per_provider"] = 0

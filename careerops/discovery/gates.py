@@ -136,9 +136,16 @@ def canonical_level(title: str) -> str:
     return SENIOR_WORD.sub(lambda m: "Senior" + (" " if m.group(1) else ""), title or "")
 
 
+# v3.1: levels that are never a junior / mid role, whatever roles.levels.exclude lists ("Chief AI Engineer" scored L5 on 5 Nov 2026). Same rule as the list:
+# a whole word in the title, case-insensitive.
+ALWAYS_EXCLUDED = (r"\bchief\b", r"\bhead of\b", r"\bvp\b", r"\bdirector\b", r"\bprincipal\b", r"\bstaff\b")
+
+
 def level_excluded(title: str, settings) -> str | None:
-    """The level pattern (senior, lead, intern, ...) that excludes this title, if any. `Sr` / `Sr.` count as `Senior` (canonical_level)."""
-    return _any(settings["roles"]["levels"]["exclude"], canonical_level(title))
+    """The level pattern (senior, lead, intern, ...) that excludes this title, if any: roles.levels.exclude, then ALWAYS_EXCLUDED (chief, head of, vp, director,
+    principal, staff). `Sr` / `Sr.` count as `Senior` (canonical_level)."""
+    t = canonical_level(title)
+    return _any(settings["roles"]["levels"]["exclude"], t) or _any(list(ALWAYS_EXCLUDED), t)
 
 
 def pre_ceiling(jd: str, fb: dict, settings) -> float:

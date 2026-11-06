@@ -12,6 +12,9 @@ The order, per job (config/regions.yaml defines the regions; it is code-owned):
      zone", a country named in it -> in; "must be based in the US", "US-based candidates only", "EU work authorisation required" -> out; both, or
      neither -> unknown (kept, flagged `region?`: missing data is never a penalty).
   5. Anything else -> out.
+v3.1: "Remote - <US state or US city>" ("Remote - California", "Remote - Washington D.C.") is a US place, not a bare "Remote". A multi-location text with no
+option in the region is out even when one option is a "Remote" or "EMEA" (the Databricks list "Alabama; ...; Remote - California; ..." of 5 Nov 2026): only a
+place made of nothing but such options ("Remote", "Remote; EMEA") goes to the ad's text.
 
 A job outside the region is PARKED, never skipped: a later `--region` brings it back (`park_queue`). Only the user's [s] makes a skip permanent.
 Several regions may be chosen ("uk,ie"): a job passes when it passes any one of them. `any` turns the filter off (the old behaviour).
@@ -305,6 +308,24 @@ def _qualifier(text: str, reg_words: Sequence[str]) -> tuple[frozenset[str], str
     return None
 
 
+_REMOTE_PLACE = re.compile(r"^\s*remote\s*(?:[-\u2013\u2014:]|\()\s*(?P<place>[^()]+?)\s*\)?\s*$", re.I)
+
+
+def remote_country(opt: str) -> tuple[str, str] | None:
+    """(alpha-2, the place) for "Remote - <US state or city>" ("Remote - California", "Remote (Texas)", "Remote - Washington D.C."): a remote job in that
+    country, not a bare "Remote". None for any other text (and for "Remote - UK" / "Remote - EMEA", which the region words decide)."""
+    m = _REMOTE_PLACE.match(opt or "")
+    if not m:
+        return None
+    place = m.group("place").strip().rstrip(".")
+    low = place.lower()
+    if low in _US_STATE_NAMES or re.fullmatch(r"washington,?\s*d\.?\s?c", low) or (len(place) == 2 and place in _US_STATES and place not in NAME_OF):
+        return "US", place
+    found = countries.detect(place)
+    code = countries.code(found) if found else ""
+    return (code, place) if code == "US" else None
+
+
 # ------------------------------------------------------------------ one option, one region
 def _option(opt: str, reg: Region, defs: Mapping[str, Region]) -> tuple[str, str]:
     """('in' | 'out' | 'ambiguous', evidence) for one place option against one region."""
@@ -317,6 +338,10 @@ def _option(opt: str, reg: Region, defs: Mapping[str, Region]) -> tuple[str, str
     if q is not None:
         codes, ev = q
         return (IN, f"{ev} is in {reg.label}") if codes & reg.iso else (OUT, f"{ev}: not in {reg.label}")
+    rc = remote_country(opt)                                # v3.1: "Remote - California" is a US place, not a bare "Remote"
+    if rc is not None:
+        code, place = rc
+        return (IN, f"remote in {place}, {NAME_OF.get(code, code)}") if code in reg.iso else (OUT, f"remote in {place} ({NAME_OF.get(code, code)}): not in {reg.label}")
     for p in reg.always_allow:
         if _phrase(p).search(opt):
             return IN, f"always_allow: {p}"
@@ -446,6 +471,8 @@ def _match(location: str | None, body: str | None = "", selection: Sequence[str]
             ambiguous = True
         elif seen_out and not firsts_out:
             firsts_out = f'location "{opt}": {seen_out}'
+    if ambiguous and len(options) > 1 and firsts_out:       # v3.1: a list of places none of which is in the region is out, whatever "Remote" option it also has
+        return Match(OUT, f"{firsts_out}; no option of the {len(options)} places is in {label_of(keys, defs)}")
     if ambiguous:
         got = body_decision(str(body or ""), regs, defs)
         if got.verdict != UNKNOWN or not place:

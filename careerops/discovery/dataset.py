@@ -13,12 +13,17 @@ checked by anything), in `search-plan` and the run report: you put one in career
 
 The four files are kept in paths.discover/dataset/ and asked again after `discover.dataset.refresh_days` (7): at most four requests a week. A refusal (401 / 403 /
 429) stops the download for the run and the cached copy, if any, is used.
+
+v3.1: `match(company)` is how a company is matched to the list: its normalised name (register.normalise, then letters and digits only; "M&G plc" is `mandg` or `mg`)
+equals a board name written the same way, or is at least NAME_MATCH (0.90) like one. `workday_match(company)` does the same with the Workday tenants. Only a
+provider that matches is asked about the company (boards.py: one verifying request; Workday through its CXS endpoint), and nothing is guessed.
 """
 from __future__ import annotations
 
 import json
 import re
 from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Callable
 
@@ -30,6 +35,21 @@ SOURCE = "github.com/Feashliaa/job-board-aggregator (data/), CC BY-NC 4.0"
 FILES = {"greenhouse": "greenhouse_companies.json", "lever": "lever_companies.json", "ashby": "ashby_companies.json", "workday": "workday_companies.json"}
 REFRESH_DAYS = 7
 TOKEN_OK = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$")
+NAME_MATCH = 0.90                  # v3.1: a company name and a board name in the list, both written as letters and digits only, are one at this ratio
+MIN_FUZZY_LEN = 6                  # ... a shorter name must match exactly ("mg" is not "mgm")
+
+
+def compact(text: str) -> str:
+    """Letters and digits only, lower case: "Jazz-Pharmaceuticals" -> "jazzpharmaceuticals"."""
+    return re.sub(r"[^a-z0-9]", "", str(text or "").lower())
+
+
+def name_forms(company: str) -> list[str]:
+    """The ways a company name is written as a board name: the normalised name (no Ltd / plc, "&" as "and") and the same with the "and" dropped."""
+    from .register import normalise                         # imported here: register imports much of the package
+    norm = normalise(company or "")
+    forms = [compact(norm), compact(re.sub(r"\band\b", " ", norm))]
+    return [f for f in dict.fromkeys(forms) if f]
 
 
 class Dataset:
@@ -43,6 +63,8 @@ class Dataset:
         self.slugs: dict[str, dict[str, str]] = {"greenhouse": {}, "lever": {}, "ashby": {}}       # provider -> {lower-case slug: the slug as written}
         self.workday: dict[str, list[Site]] = {}                                                  # tenant (lower case) -> sites
         self.ready = False
+        self._compact: dict[str, dict[str, str]] = {}                                            # provider -> {compact slug: slug as written} (v3.1)
+        self._wd_compact: dict[str, str] = {}                                                    # compact tenant -> tenant (v3.1)
         self._stopped = False
         self.requests = 0
         self.notes: list[str] = []
@@ -116,8 +138,10 @@ class Dataset:
             inst, _, site = rest.partition("|")
             if tenant and inst.startswith("wd") and site and TOKEN_OK.match(tenant):
                 self.workday.setdefault(tenant.lower(), []).append(Site(f"{tenant.lower()}.{inst}.myworkdayjobs.com", tenant.lower(), site))
+                self._wd_compact.setdefault(compact(tenant), tenant.lower())
         elif TOKEN_OK.match(s):
             self.slugs[name].setdefault(s.lower(), s)
+            self._compact.setdefault(name, {}).setdefault(compact(s), s)
 
     # ---- lookups
     def hits(self, token: str) -> dict[str, str]:
@@ -127,6 +151,49 @@ class Dataset:
         self.ensure()
         t = token.lower()
         return {p: m[t] for p, m in self.slugs.items() if t in m}
+
+    @staticmethod
+    def _best(forms: list[str], table: dict[str, str]) -> tuple[str, float] | None:
+        """(the entry of `table` the name forms match, the ratio): an exact form first, else the best one at NAME_MATCH or more. None when none."""
+        for f in forms:
+            if f in table:
+                return table[f], 1.0
+        best: tuple[str, float] | None = None
+        for f in forms:
+            if len(f) < MIN_FUZZY_LEN:
+                continue
+            for key, value in table.items():
+                if key[:1] != f[:1] or abs(len(key) - len(f)) > max(2, len(f) // 5):
+                    continue
+                sm = SequenceMatcher(None, f, key)
+                if sm.real_quick_ratio() < NAME_MATCH or sm.quick_ratio() < NAME_MATCH:
+                    continue
+                r = sm.ratio()
+                if r >= NAME_MATCH and (best is None or r > best[1]):
+                    best = (value, r)
+        return best
+
+    def match(self, company: str) -> dict[str, tuple[str, float]]:
+        """{provider: (slug as the list writes it, ratio)} for the providers (greenhouse, lever, ashby) whose list has a board named like this company:
+        the same name in letters and digits, or one at NAME_MATCH or more. {} when none matches or the list is off."""
+        if not self.enabled:
+            return {}
+        self.ensure()
+        forms = name_forms(company)
+        out = {}
+        for prov in ("greenhouse", "lever", "ashby"):
+            got = self._best(forms, self._compact.get(prov, {}))
+            if got is not None:
+                out[prov] = got
+        return out
+
+    def workday_match(self, company: str) -> list[Site]:
+        """The Workday sites of the tenant named like this company (same rule as `match`), at most 3; [] when none."""
+        if not self.enabled:
+            return []
+        self.ensure()
+        got = self._best(name_forms(company), self._wd_compact)
+        return list(self.workday.get(got[0], []))[:3] if got else []
 
     def workday_urls(self, token: str) -> list[str]:
         """The Workday careers addresses the list holds for a tenant spelled like this token (a suggestion only: nothing checks whose they are)."""

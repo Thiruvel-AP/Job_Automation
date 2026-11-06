@@ -288,7 +288,11 @@ finds and ranks without writing, and every run is listed best priority first.
   most `discover.ats.max_guesses_per_provider` (20, the ceiling) tokens go to one provider in a run (the next run carries on), never to a provider with one host per company (Teamtailor, Recruitee, Personio, Pinpoint); the run prints the guesses and requests per provider.
   v3.0: guessing is the last resort. A company with an entry in `data/discover/careers_urls.yaml` (you write it; `careerops search-plan` lists the companies without one) is read from that address; a name that is in the
   public board list (github.com/Feashliaa/job-board-aggregator, CC BY-NC 4.0, personal use) is checked with one request; and "no board" is believed only after 3 separate runs each found none (`discover.ats.misses_needed`).
-  An EU job whose ad says it does not sponsor is parked, not skipped. The run prints, per company, the tokens tried, the board found
+  An EU job whose ad says it does not sponsor is parked, not skipped. v3.1: **no blind guesses**. A company is asked of a provider only when its normalised name matches a board in the public list
+  (the same letters and digits, or a 0.90 match), with one verifying request (a Workday tenant through its CXS endpoint); the run prints, per provider, the names matched from the list, verified and
+  failed. Guessing comes back only with `discover.ats.blind_guesses: true` (then within `max_guesses_per_provider`, default 0, at most 20). Ashby's API answers 401 for a board name that does not
+  exist: for a looked-up name that is "no board"; on a board known to exist only the third 401 in a row stops the host, and every refusal records the exact URL (run notes, `blocked_hosts.json`).
+  A multi-place location with no UK place ("Alabama; ...; Remote - California") is out of the UK even when it has a "Remote" option, and "Remote - <US state or city>" is a US place. The run prints, per company, the tokens tried, the board found
   (`greenhouse/monzo`) or none and the jobs that matched the role and place, then the top 10 by priority P with title, company,
   location and URL. A token is a guess, so a board found only through a SHORTENED token (the first word, the first two words, the name
   without Group / Holdings / Technologies: `octagon` for Octagon Group, `focus` for Focus Group) is accepted only if the board's own
@@ -1182,12 +1186,17 @@ ads away and moving the ones you approve.
   **P pay**: the top of the ad's band at or above your `answers.yaml` salary figure 5, no band (or no figure on file) 3, below it 1. A missing salary is never a penalty.
 - **Hard stops** (zero tokens; the ad is filed in `jds_done/skipped/` with the reason beside it and never offered), in this order: liveness (asked only for the ads that would otherwise be
   offered, best T first; a closed posting goes to `jds_done/closed/`), your blacklist, the same role under another channel or an agency ad that hides the employer, the level exclude
-  list, then `targeting.dealbreakers`. **A dealbreaker needs an ad sentence that states the fact, and it is quoted**: `DEALBREAKER "people management" <- "You will line-manage a team of 4"`
+  list, then `targeting.dealbreakers`. v3.1: a fee-charging training course advertised as a job ("training course and fees apply", "course fee", "job guaranteed", "money back", "funded
+  training" or "traineeship" with "fee"; and ITOL Recruit by name) is `disqualified: training scheme (fees)` (blacklist reason `training_scheme`, built into the code; your blacklist.yaml is untouched),
+  and `chief`, `head of`, `vp`, `director`, `principal` and `staff` in a title are excluded levels whatever `roles.levels.exclude` lists. **A dealbreaker needs an ad sentence that states the fact, and it is quoted**: `DEALBREAKER "people management" <- "You will line-manage a team of 4"`
   (a few ideas are read by what an ad says: people management, clearance, "N days on-site", "N+ years", "salary below £N"; any other phrase is matched as words). A sentence that denies
   it ("no people management") or calls it optional is not a hit; a senior-sounding title with no stated years, or a missing salary, breaks nothing.
 - **Offered**: T >= `min_triage_score` (3.5), best T first then freshest, at most `shortlist_size` (8). An ad older than `max_posting_age_days` (60) needs T >= 4.5. A company with
   `per_company_max_open` (2) applications and no reply yet, or inside its `per_company_cooldown_days` (30) after a rejection or withdrawal, is left out. An application counts as open
   for 28 days (then the funnel counts it as no response); the count includes the tracker's jobs (the database) and the archive folders for the same company.
+  v3.1: the list itself counts too: a company's rows in this list plus its open applications never pass `per_company_max_open` (2), and ads with the same company, title and location are one row
+  with all their links (approving it files the copies in `jds_done/duplicate/`; skipping it skips them all). Each row ends with how it is applied to: `apply: employer form (greenhouse)` (Lever, Ashby,
+  Workday, or a v2.6 ATS by its link), `apply: Reed page (manual)` (a Reed ad with no `externalUrl`), or `apply: unknown`; a Reed ad whose `externalUrl` is a known ATS is an employer-form row.
 - **Choices**: `a` approves all, `1 3 5` approves those, `s 2` skips job 2 for good (filed in `jds_done/skipped/` as `skipped (user, shortlist)`, so `discover` does not bring it back), `x` skips every
   job left in the list that you did not approve (the same), `q` quits. `careerops unskip --shortlist` lists what was skipped this way and the parked ads; `--match TEXT` or `--all` brings them back.
   `shortlist --dry-run` prints the list and moves and counts nothing; without a terminal it only prints (and counts nothing).

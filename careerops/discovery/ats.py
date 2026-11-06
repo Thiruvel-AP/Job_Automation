@@ -292,7 +292,8 @@ def board_postings(board: Board, fetcher: Fetcher, name_hint: str | None = None,
         from . import workday
         return workday.board_postings(board, fetcher)
     url, params, what = board_request(board.ats, board.slug)
-    return parse_postings(board.ats, fetcher.json(url, params=params, what=what), board.name)
+    soft = {"soft_401": "known"} if board.ats == "ashby" else {}          # v3.1: Ashby answers 401 for a board that is gone; three in a row stop the host
+    return parse_postings(board.ats, fetcher.json(url, params=params, what=what, **soft), board.name)
 
 
 def probe(slug: str, *, fetcher: Fetcher | None = None, settings=None) -> list[Hit]:
@@ -320,7 +321,7 @@ def probe(slug: str, *, fetcher: Fetcher | None = None, settings=None) -> list[H
         if isinstance(data, list) and data:
             hits.append(Hit(ats, slug, None, sum(_uk_text((j.get("categories") or {}).get("location"), settings)
                                                  or str(j.get("country") or "").upper() == "GB" for j in data), len(data)))
-    data = attempt(lambda: f.json(f"{ASHBY}/{slug}", what=f"Ashby board {slug}"))
+    data = attempt(lambda: f.json(f"{ASHBY}/{slug}", what=f"Ashby board {slug}", soft_401="guess"))     # v3.1: a 401 for a guessed name is "no board"
     if isinstance(data, dict) and isinstance(data.get("jobs"), list) and data["jobs"] and "error" not in data:
         def uk(j):
             addr = (j.get("address") or {}).get("postalAddress") or {}

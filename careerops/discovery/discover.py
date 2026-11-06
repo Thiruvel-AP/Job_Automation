@@ -552,7 +552,7 @@ class BoardLookup:
 
     def explain(self, company: str) -> tuple[str, str]:
         """(category, sentence) for a company whose alert found no posting: what board_known and board_guessed did, read from the state this lookup already
-        holds (no request). Categories: no_company | no_posting | not_looked | board_unverified | not_a_company | guess_limit | provider_error | no_board."""
+        holds (no request). Categories: no_company | no_posting | not_looked | board_unverified | not_a_company | not_listed | guess_limit | provider_error | no_board."""
         norm = sponsors.normalise(company)
         if not norm:
             return "no_company", "board_known / board_guessed: the alert names no company"
@@ -571,8 +571,8 @@ class BoardLookup:
         f = next((x for x in self.findings if sponsors.normalise(x.seed.name) == norm), None)
         if f is None:
             return "no_board", known_text + "; board_guessed: nothing was asked"
-        cat = ("board_unverified" if f.unverified else "not_a_company" if f.rejected and not f.tokens else "guess_limit" if f.capped
-               else "provider_error" if f.errors else "no_board")
+        cat = ("board_unverified" if f.unverified else "not_a_company" if f.rejected and not f.tokens else "not_listed" if getattr(f, "not_listed", False)
+               else "guess_limit" if f.capped else "provider_error" if f.errors else "no_board")
         return cat, known_text + "; board_guessed: " + f.tried_text()
 
     def board_name(self, board: ats_mod.Board) -> str | None:
@@ -957,7 +957,13 @@ class Discover:
                                               "this run (the next run carries on)")
                     return
         if self.f.backed_off:
-            self.run.notes.append("ats: stopped asking " + ", ".join(f"{h} (HTTP {c})" for h, c in sorted(self.f.backed_off.items())))
+            urls = getattr(self.f, "refused_url", {}) or {}
+            self.run.notes.append("ats: stopped asking " + ", ".join(f"{h} (HTTP {c}" + (f" at {urls[h]}" if urls.get(h) else "") + ")"
+                                                                for h, c in sorted(self.f.backed_off.items())))
+        soft = getattr(self.f, "soft_401s", None)
+        if isinstance(soft, list) and soft:
+            self.run.notes.append(f"ats: {len(soft)} guessed board name(s) answered HTTP 401 (Ashby's answer for a board that does not exist): read as no board, "
+                                  f"the host was not stopped; the first: {soft[0]}")
         self.run.notes += self.index.notes()
         ds = self.index.dataset
         if ds is not None and ds.enabled and ds.ready:
@@ -1734,6 +1740,10 @@ def guess_lines(rec: dict) -> list[str]:
                            + (f", {v['over_cap']} over the limit" if v.get("over_cap") else "")
                            + (f", {v['checked_from_list']} checked from the public list" if v.get("checked_from_list") else "") for a, v in sorted(g.items()))
         out.append(f"Slug guesses per provider this run (limit {rec.get('guess_cap') or '-'} each): {parts}")
+        listed = [(a, v) for a, v in sorted(g.items()) if v.get("list_matched")]
+        if listed:
+            out.append("Matched from the public board list (v3.1, no blind guesses): " + " · ".join(
+                f"{a} {v['list_matched']} matched, {v.get('list_verified', 0)} verified, {v.get('list_failed', 0)} failed" for a, v in listed))
     if rej.get("count"):
         out.append(f"Slugs not asked because they are not company names: {rej['count']}" + (" (" + "; ".join(rej.get("examples") or [])[:300] + ")" if rej.get("examples") else ""))
     return out

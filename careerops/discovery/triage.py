@@ -16,8 +16,9 @@
 E replaces the pre-tailoring "estimate F" in this role: it counts only terms the fact bank really has, so the ad alone cannot inflate it. Information and
 ordering only: T decides what `careerops shortlist` OFFERS; a human still approves.
 
-`disqualify` runs the hard stops in order: liveness (when a check is passed in), the blacklist, the same role under another channel or an agency ad that hides
-the employer, the level exclude list, then your dealbreakers (each needs a quoted ad sentence, dealbreakers.py).
+`disqualify` runs the hard stops in order: liveness (when a check is passed in), the blacklist, a fee-charging training scheme (v3.1, blacklist reason
+`training_scheme`, reported as `training scheme (fees)`), the same role under another channel or an agency ad that hides the employer, the level exclude list
+(plus the executive words gates.ALWAYS_EXCLUDED), then your dealbreakers (each needs a quoted ad sentence, dealbreakers.py).
 """
 from __future__ import annotations
 
@@ -208,7 +209,7 @@ def inbox_job(path: Path, settings, fb: Mapping[str, Any], idx) -> dict | None:
         return None
     hdr = manual.header_fields(job["description"])
     job.update(url=hdr.get("url"), apply_url=hdr.get("apply_url"), apply_kind=hdr.get("apply_kind"), location=hdr.get("location"),
-               salary=hdr.get("salary"), file=str(path))
+               salary=hdr.get("salary"), file=str(path), source=hdr.get("source") or "")
     return job
 
 
@@ -217,8 +218,11 @@ def inbox_job(path: Path, settings, fb: Mapping[str, Any], idx) -> dict | None:
 class Disqualified:
     stage: str            # liveness | blacklist | channel | level | dealbreaker
     reason: str
+    code: str = ""        # v3.1: blacklist.TRAINING_SCHEME for a fee-charging training course
 
     def line(self) -> str:
+        if self.code == blacklist.TRAINING_SCHEME:
+            return f"{blacklist.TRAINING_SCHEME_LABEL}: {self.reason}"
         return f"{self.stage}: {self.reason}"
 
 
@@ -236,6 +240,8 @@ def disqualify(job: Mapping[str, Any], settings, db, *, archive: list[tuple[str,
         return Disqualified("blacklist", f"{e} (fix config/profile/blacklist.yaml)")
     if hit is not None:
         return Disqualified("blacklist", f"{company} is on your blacklist" + (f" since {hit.since}" if hit.since else "") + (f": {hit.reason}" if hit.reason else ""))
+    if (scheme := blacklist.training_scheme(company, str(_get(job, "description") or ""))):       # v3.1: a fee-charging training course is not a job
+        return Disqualified("blacklist", scheme, blacklist.TRAINING_SCHEME)
     if channel.hidden_employer(job):
         return Disqualified("channel", "an agency ad that does not name the employer")
     others = [r for r in (others if others is not None else (dict(x) for x in db.jobs())) if r["id"] != _get(job, "id")]

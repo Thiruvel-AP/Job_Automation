@@ -23,7 +23,8 @@ uk:
   homonym_block: ["Cambridge, MA", "Cambridge, Massachusetts", "London, ON", "London, Ontario",
                   "Birmingham, AL", "Manchester, NH", "Bristol, CT", "Bristol, TN", "Bristol, VA",
                   "Reading, PA", "Newcastle, NSW", "Perth, WA", "Perth, Australia", "Plymouth, MA",
-                  "Richmond, VA", "Durham, NC", "Worcester, MA", "Portsmouth, NH", "York, PA", "Oxford, MS"]
+                  "Richmond, VA", "Durham, NC", "Worcester, MA", "Portsmouth, NH", "York, PA", "Oxford, MS",
+                  "New York"]       # v3.1: "New York" matched allow_cities "York"
   ambiguous_remote: ["Remote", "Remote - EMEA", "EMEA", "Europe", "Remote Europe", "Anywhere"]
 ie:   { label: "Ireland", iso: [IE, IRL], always_allow: ["Ireland", "Dublin", "Cork", "Galway", "Limerick"] }
 eu:   { label: "EU (27)", iso: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE] }

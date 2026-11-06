@@ -22,6 +22,12 @@ limit, `discover.ats.dataset_checks_per_provider`, 60). (3) What is left is gues
 tokens per provider and run (`max_guesses_per_provider`, which cannot be set higher), and never on a provider with one host per company (Teamtailor, Recruitee, Personio,
 Pinpoint): an unknown company there is a host that does not exist. (4) "No board" is believed only after `discover.ats.misses_needed` (3) separate runs each found none;
 until then the name is asked again next run (an answered token is not asked twice in one run). A board found resets the count.
+
+v3.1: no blind guesses. A company is asked of a provider ONLY when its normalised name matches a board in the public list (dataset.match: the same name in letters
+and digits, or a 0.90 match), with one verifying request; a Workday tenant the list matches is verified through its CXS endpoint (one POST) and then read like any
+board. A name the list does not hold is not asked anywhere (a board found earlier, still in boards.json, is still read). The old guessing comes back only with
+`discover.ats.blind_guesses: true`, and then within max_guesses_per_provider (default now 0, never above 20). The run reports, per provider, the names matched from
+the list, verified, and failed.
 """
 from __future__ import annotations
 
@@ -43,7 +49,7 @@ from .register import normalise
 from .seeds import Seed
 
 BOARD_NAME_MATCH = 0.9             # default of discover.ats.board_name_match
-MAX_GUESSES = 20                   # default of discover.ats.max_guesses_per_provider (v3.0: it was 60)
+MAX_GUESSES = 0                    # default of discover.ats.max_guesses_per_provider (v3.1: no blind guesses by default; v3.0: 20; before: 60)
 GUESS_CEILING = 20                 # ... and the most it can be set to (v3.0: "guess only what is left, at most 20 per provider per run")
 DIRECTED_MAX = 60                  # default of discover.ats.dataset_checks_per_provider: names the public list holds, checked once each
 MISSES_NEEDED = 3                  # default of discover.ats.misses_needed: separate runs that must each find no board before "no board" is believed
@@ -65,7 +71,11 @@ class BoardIndex:
         self.path = settings.path("discover") / "boards.json"
         self.days = float(settings["discover"].get("ats", {}).get("board_cache_days", 30))
         self.name_match = float(settings["discover"].get("ats", {}).get("board_name_match", BOARD_NAME_MATCH))
-        self.max_guesses = min(GUESS_CEILING, max(0, int(settings["discover"].get("ats", {}).get("max_guesses_per_provider", MAX_GUESSES))))
+        self.blind = (settings["discover"].get("ats") or {}).get("blind_guesses") is True       # v3.1: guessing slugs is opt-in
+        self.max_guesses = min(GUESS_CEILING, max(0, int(settings["discover"].get("ats", {}).get("max_guesses_per_provider", MAX_GUESSES)))) if self.blind else 0
+        self.list_matched: Counter = Counter()          # provider -> companies whose name matched a board in the public list this run (v3.1)
+        self.list_verified: Counter = Counter()         # ... whose verifying request found the board
+        self.list_failed: Counter = Counter()           # ... whose verifying request found none, or failed
         self.directed_max = max(0, int(settings["discover"].get("ats", {}).get("dataset_checks_per_provider", DIRECTED_MAX)))
         self.misses_needed = max(1, int(settings["discover"].get("ats", {}).get("misses_needed", MISSES_NEEDED)))
         self.run_id = clock().isoformat(timespec="microseconds")          # a "separate run" is a different BoardIndex
@@ -141,6 +151,10 @@ class BoardIndex:
         if self.not_guessed:
             out.append(f"ats: {', '.join(self.not_guessed)} in discover.ats.providers are no longer guessed (one host per company: an unknown name is a host that does not exist); "
                        "a board you know goes in careers_urls.yaml or under sources:, and one an alert links to is found from the link")
+        if self.list_matched:
+            out.append("ats: from the public board list: " + " · ".join(
+                f"{a} {self.list_matched[a]} matched, {self.list_verified[a]} verified, {self.list_failed[a]} failed" for a in sorted(self.list_matched))
+                + ("" if self.blind else "; nothing was guessed (discover.ats.blind_guesses is off)"))
         return out
 
     # ---- v2.8: what is not guessed, how much is guessed
@@ -193,9 +207,11 @@ class BoardIndex:
 
     def guess_counts(self) -> dict[str, dict[str, int]]:
         """provider -> {guesses, requests, cached, over_cap} of this run (the run record)."""
-        names = sorted({*self.guesses, *self.requests, *self.cache_hits, *self.over_cap, *self.directed})
+        names = sorted({*self.guesses, *self.requests, *self.cache_hits, *self.over_cap, *self.directed, *self.list_matched})
         return {a: {"guesses": self.guesses[a], "requests": self.requests[a], "cached": self.cache_hits[a], "over_cap": self.over_cap[a],
-                    **({"checked_from_list": self.directed[a]} if self.directed[a] else {})} for a in names}
+                    **({"checked_from_list": self.directed[a]} if self.directed[a] else {}),
+                    **({"list_matched": self.list_matched[a], "list_verified": self.list_verified[a], "list_failed": self.list_failed[a]}
+                       if self.list_matched[a] else {})} for a in names}
 
     def reject_summary(self) -> dict:
         return {"count": self.reject_count, "examples": list(self.reject_examples)}
@@ -251,6 +267,7 @@ class Finding:
     skipped: str = ""                                     # why nothing was guessed (it has a careers address)
     listed: set[str] = field(default_factory=set)         # providers whose public board list holds one of the tokens (asked instead of guessing)
     suggested: list[str] = field(default_factory=list)    # Workday addresses the public list holds for the name: NOT read, for you to confirm in careers_urls.yaml
+    not_listed: bool = False                              # v3.1: the public list holds no board named like the company, so nothing was asked (no blind guesses)
 
     def line(self) -> str:
         tried = ", ".join(t + (" (cached)" if t in self.cached else "") for t in self.tokens) or "-"
@@ -262,6 +279,7 @@ class Finding:
         extra += f" | {self.skipped}" if self.skipped else ""
         extra += f" | in the public board list: {', '.join(sorted(self.listed))}" if self.listed else ""
         extra += f" | the list suggests (not read; check, then add to careers_urls.yaml): {', '.join(self.suggested)}" if self.suggested else ""
+        extra += " | not in the public board list: nothing guessed" if self.not_listed else ""
         reg = ", register" if self.seed.on_register else ""
         return f"  {self.seed.name} [{self.seed.origin}{reg}] | tried: {tried} | board: {board} | {self.matched} matched{extra}"
 
@@ -270,6 +288,9 @@ class Finding:
         bits = []
         if self.skipped:
             return self.skipped
+        if self.not_listed:
+            return ("not in the public board list (Greenhouse, Lever, Ashby, Workday) under this name, so no provider was asked: nothing is guessed "
+                    "(discover.ats.blind_guesses is off); a careers address you find goes in careers_urls.yaml")
         if self.tokens:
             asked = ", ".join(t + (" (answered earlier: no board)" if t in self.cached else "") for t in self.tokens)
             bits.append(f"tokens {asked} asked of {', '.join(self.providers) or 'the providers'}: " + ("a board was found but not verified" if self.unverified else "none is a board"))
@@ -343,8 +364,14 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
         f.skipped = "has an entry in careers_urls.yaml: its board is read from that address, not guessed"
         return f
     full = ats_mod.full_name_tokens(seed.name)
-    for token in ats_mod.board_tokens(seed.name, seed.hint):
-        why = None if token == seed.hint else index.reject_reason(token, seed.name)
+    ds = index.dataset if index.dataset is not None and index.dataset.enabled else None
+    name_hits = ds.match(seed.name) if ds is not None and not index.blind else {}         # v3.1: {provider: (slug, ratio)}: the list's boards named like the company
+    list_tokens = {s.lower() for s, _ in name_hits.values()}
+    for ats in name_hits:
+        index.list_matched[ats] += 1
+    order = [*([seed.hint] if seed.hint else []), *sorted(list_tokens), *ats_mod.board_tokens(seed.name, seed.hint)]
+    for token in dict.fromkeys(order):
+        why = None if token == seed.hint or token in list_tokens else index.reject_reason(token, seed.name)
         if why:                                           # not a company name: not asked, and the report says so
             f.rejected.append((token, why))
             index.note_reject(seed.name, token, why)
@@ -352,7 +379,10 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
         f.tokens.append(token)
         asked = skipped = False
         hits: list[tuple[Board, list[Posting] | None]] = []
-        listed = index.dataset.hits(token) if index.dataset is not None else {}      # {provider: slug}: where the public board list says this name's board is
+        if index.blind:                                   # v3.0 behaviour (blind guessing on): the token itself is looked up in the list
+            listed = index.dataset.hits(token) if index.dataset is not None else {}      # {provider: slug}: where the public board list says this name's board is
+        else:                                             # v3.1: only the list's boards named like the company
+            listed = {a: s for a, (s, _) in name_hits.items() if s.lower() == token}
         f.listed |= set(listed)
         for ats in ats_mod.PROVIDERS:
             known = index.get(ats, token)
@@ -368,30 +398,37 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
                 hits.append((board, None))
                 continue
             directed = ats in listed
+            if not directed and not index.blind:          # v3.1: a name the list does not place on this provider is not asked (no blind guess)
+                continue
             if not (index.may_check(ats) if directed else index.may_guess(ats)):    # the run's limit for this provider: left for the next run (nothing is cached for it)
                 f.capped.add(ats)
                 skipped = True
                 continue
             asked = True
             url, params, what = ats_mod.board_request(ats, slug)
+            soft = {"soft_401": "guess"} if ats == "ashby" else {}     # v3.1: Ashby answers 401 for a board name that does not exist: "no board", not a refusal
             try:
                 with index.counting(ats, fetcher, directed):
-                    data = fetcher.json(url, params=params, what=what)
+                    data = fetcher.json(url, params=params, what=what, **soft)
             except FetchError as e:                       # Blocked is a FetchError: not an answer, so not remembered
                 if isinstance(e, Blocked):
                     index.refusals[ats] = index.refusals.get(ats, 0) + 1
                 f.errors.append(str(e))
+                if directed and not index.blind:
+                    index.list_failed[ats] += 1
                 continue
             found = ats_mod.is_board(ats, data)
             index.put(ats, token, found, slug if slug != token else "")
+            if directed and not index.blind:
+                (index.list_verified if found else index.list_failed)[ats] += 1
             if found:
                 hits.append((board, ats_mod.parse_postings(ats, data, seed.name)))
         for ats in (*index.more, *index.not_guessed):     # the v2.6 providers whose reply names the company (more_ats.NAME_CHECKED): every guess is name-checked
             known = index.get(ats, token)
             if ats in index.stopped and known is not True:        # a provider that said no is not asked; a board it was already known to have still counts (reading it is refused by read_board)
                 continue
-            if known is not True and (listed or ats in index.not_guessed):     # one host per company, or a name the list places elsewhere: never guessed, but a board found before is read
-                continue
+            if known is not True and (listed or ats in index.not_guessed or not index.blind):     # one host per company, a name the list places elsewhere, or no blind guessing
+                continue                                                                          # (v3.1): never guessed, but a board found before is read
             if known is False or (known is None and index.dns_missed(ats, token)):
                 index.cache_hits[ats] += 1
                 continue
@@ -426,6 +463,8 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
                 ok, why = verify_named(board.ats, token, seed.name, index, seed.hint)
             else:
                 ok, why = (True, "") if token in full or token == seed.hint else verify_shortened(board, seed.name, fetcher, index)
+            if not ok and token in list_tokens:           # v3.1: the list's board is named like the company (exact or 0.90) and the request found it: verified
+                ok = True
             if not ok:
                 f.unverified.append((board, why))
                 continue
@@ -436,8 +475,54 @@ def find(seed: Seed, fetcher: Fetcher, index: BoardIndex, on_postings: Callable[
             f.cached.add(token)
         if f.boards:
             break
-    if not f.boards and index.dataset is not None:
+    sites = ds.workday_match(seed.name) if ds is not None and not index.blind and not f.boards else []
+    if sites:                                             # v3.1: a Workday tenant the list names like the company: verified through its CXS endpoint, then read
+        index.list_matched["workday"] += 1
+        for site in sites:
+            board = Board("workday", site.slug, seed.name, seed.origin)
+            known = index.get("workday", site.slug)
+            if known is True:
+                index.cache_hits["workday"] += 1
+                f.boards.append(board)
+                break
+            if known is False:
+                index.cache_hits["workday"] += 1
+                continue
+            if not index.may_check("workday"):
+                f.capped.add("workday")
+                break
+            ok, why = verify_workday(site, fetcher, index)
+            if ok is None:
+                f.errors.append(why)
+                index.list_failed["workday"] += 1
+                continue
+            index.put("workday", site.slug, ok)
+            (index.list_verified if ok else index.list_failed)["workday"] += 1
+            if ok:
+                f.boards.append(board)
+                break
+    f.not_listed = ds is not None and not index.blind and not name_hits and not sites and not f.boards
+    if not f.boards and index.dataset is not None and index.blind:
         for t in f.tokens:                                # a Workday site the list holds for this name: shown, never read
             f.suggested += [u for u in index.dataset.workday_urls(t) if u not in f.suggested]
     index.save()
     return f
+
+
+def verify_workday(site, fetcher: Fetcher, index: BoardIndex) -> tuple[bool | None, str]:
+    """(is it a Workday site, why not) from ONE list request to its CXS endpoint (the first page). None when Workday could not say (an outage, a refusal):
+    nothing is kept and the next run asks again."""
+    from . import workday
+    try:
+        with index.counting("workday", fetcher, directed=True):
+            workday._list_page(fetcher, site, "", 0, f"Workday {site.tenant}/{site.site}")
+    except workday.Transient as e:
+        return None, str(e)
+    except Blocked as e:
+        index.stop("workday", e)
+        return None, str(e)
+    except workday.WorkdayError as e:
+        return False, str(e)
+    except FetchError as e:
+        return None, str(e)
+    return True, ""
