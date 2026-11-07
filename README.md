@@ -236,6 +236,11 @@ careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --l
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops shortlist --all         # v2.7: every undecided in-region ad again, not only the new ones (also the ones parked after three showings); a look, never a showing
 careerops daily                   # v2.7: discover --ats --gmail-alerts --report, then shortlist (--region, --size, --yes, --limit, --dry-run, --no-liveness, --all pass through)
+careerops shortlist               # v3.2 (agent.decide: veto, the default): the AGENT decides: quick score (zero tokens) -> full evaluation (Groq gpt-oss-120b, <= 12 a day) -> AUTO-APPROVED / READY FOR YOU / MARGINAL / AGENT-SKIP / NEEDS CONFIRMATION, one numbered line each; no [a] prompt
+careerops veto 2                  # v3.2: line 2 of the latest agent digest (or a job id / JD file name), auto-approved, becomes your permanent skip (as [s]); do it before `careerops live`
+careerops promote 5               # v3.2: a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION line becomes approved, logged as your override
+careerops shortlist --ask         # v3.2: this run only, the old manual list and [a] prompt (agent.decide: ask makes it the default)
+careerops calibrate --scores      # v3.2: reply rate per agent score band once 20+ scored applications have an outcome; suggests a higher approval line, never changes one
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
@@ -1245,6 +1250,42 @@ ads away and moving the ones you approve.
 - **`careerops patterns`** (weekly) reads the Sheet's Status column and prints, per role family, ATS kind and T band, the applications, replies, interviews, rejections and the reply rate. It
   may suggest ("T >= 4.0 had 3/9 replies; T 3.5-4.0 had 0/7: consider `min_triage_score: 4.0`") and **never changes a setting or a weight**. Not taken from the reference project: its LLM
   1-5 score (the ATS bands stay deterministic), its immigration templates.
+
+### The agent decides, you veto (v3.2, `agent.decide`)
+
+Ported from career-ops (`ext/career-ops`, modes `triage`, `oferta`, `auto-pipeline` and `_shared.md`, checked at 8ce89bdc): the agent approves, you only veto.
+`careerops shortlist` (and `daily`) no longer asks `[a]`; it prints the agent's decisions, one numbered line each, for example
+
+    1. AUTO-APPROVED 4.6 (High) | Iwoca | Data Scientist – Credit Risk | why: <2 strongest supported points> | risk: <top check> | legitimacy high
+
+1. **Quick score** (zero tokens, `discovery/agent_triage.py`): `archetype x 0.35 + comp x 0.25 + location x 0.25 + cv_match x 0.15`, minus 0.5 per soft red flag, from
+   the T factors (archetype = A, comp = P, cv_match = E, location = 5 onsite/hybrid within commuting distance of Bristol or London, 4 remote in the UK, 3 elsewhere in the
+   UK, 1 abroad). Soft red flags: senior, older than 60 days, `evergreen?` / `possible repost`, not on the sponsor register, no salary, more than 3 skills the bank lacks.
+   A hard disqualifier caps it at 2.5 (training scheme, excluded level, "no sponsorship" with work abroad, blacklisted, a stated start more than 9 months away, the top of
+   the band below your floor). PASS >= `agent.triage_threshold` (3.5) · MARGINAL 3.0-3.4 · FAIL < 3.0; a company in `targeting.priority_companies` PASSES (read only).
+2. **Full evaluation** of the PASS ads (`discovery/evaluate.py`): one call on the cover letter's route (Groq gpt-oss-120b, task `job_eval`, temperature 0, JSON; the
+   ad goes in a fence as untrusted data), at most `agent.max_evals_per_day` (12) a day; an ad evaluated before with the same text is read back for free. Five dimension
+   scores with a status (supported / partial / unknown) and a source line, a global 1-5, a confidence tier (Low / Medium / High), red flags, legitimacy (separate,
+   never in the score) and up to three checks. Code checks the model cannot override: a strict ATS < 50 (a job tailored before) caps CV match at 2 and the global
+   below 3.5 (below 4.0 when the ceiling reaches `apply.bands.rescue_ceiling`); a ceiling >= 70 lifts CV match to 3; a hard disqualifier caps the global at 2.5;
+   confidence is the lower of the model's and the career-ops tier rules, and Low for an ad under 150 words. Stored in `data/evals/<job id>.json` + `evals.jsonl`.
+3. **The decision** (`discovery/decide.py`): >= 4.5 with Medium/High confidence and an employer form: AUTO-APPROVED (priority); 4.0-4.4 the same: AUTO-APPROVED; >= 4.0
+   but a Reed page (or an unknown apply route): READY FOR YOU (also moved to `approved/`, so `live` builds the pack; you apply); 3.5-3.9 or Low confidence: MARGINAL;
+   < 3.5 or quick FAIL: AGENT-SKIP; your blacklist, a closed posting, an unreadable ad, an agency ad with no employer: NEEDS CONFIRMATION (`needs_confirmation: <gate>
+   <detail> - <how to resume>`). Approvals land in `data/jds/approved/<date>/` exactly as `[a]` did. Caps: `targeting.daily_max_applications` (5) approvals a day,
+   `per_company_max_open` (2) at one company counting open applications and approved files still waiting, the cooldown; the highest global x freshness wins, the rest
+   WAIT for the next run (no new tokens). MARGINAL, AGENT-SKIP (evaluated) and NEEDS CONFIRMATION are held in `data/evals/decisions.jsonl` (the file stays in the inbox):
+   `careerops unskip --shortlist` lists them and brings them back; your own skips and vetoes stay permanent.
+4. **You**: `careerops veto N` before `careerops live` (a permanent skip, as `[s]`), `careerops promote N` (your logged override). `agent.decide`: `veto` (code
+   default), `ask` (the old manual list), `auto` (the agent decides and `daily` starts a plain `careerops live` straight after in a terminal: assist, you press Submit;
+   only `live --auto` submits, through its gates, and never from `daily`). The digest also prints the evaluation tokens (this run and today), the 4.5+ jobs that only
+   reached Low confidence, the marginal jobs of the last 7 days, and what was held at a company limit.
+5. **`careerops calibrate --scores`**: with 20 or more scored applications that have an outcome (a reply, or 28 days with none), the reply rate per band; when 4.0-4.4
+   replies no better than 3.5-3.9 it suggests `agent: approve_from: 4.5`. It never changes a setting.
+
+New settings (all optional; none is in your settings.yaml, the code defaults hold): `agent.decide` (veto), `agent.max_evals_per_day` (12), `agent.triage_threshold`
+(3.5), `agent.approve_from` (4.0, a value below 4.0 is not used), `agent.commute_places` (a list replacing the built-in Bristol / London places),
+`targeting.priority_companies` ([]). The evaluations and decisions live in `paths.evals` (built-in default `data/evals`).
 
 ### Region and company size (v2.4)
 

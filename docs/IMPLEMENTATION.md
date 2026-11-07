@@ -1983,3 +1983,43 @@ Tests: `tests/discovery/test_shortlist_fixes_v31.py`; two existing tests changed
 
 Tests: `tests/discovery/test_agentsearch_v31.py` (plan size and exclusions, rest and slot hand-over, URL parsing for every vendor, a board cached once and read by discover,
 non-ATS URLs dropped, an alert query resolving its alert, a wrong company's board rejected, no snippet stored, the commands); one v3.0 test now calls `search-plan --companies`.
+
+## 5be. v3.2 — the agent approves jobs (career-ops evaluation logic), you veto (7 Nov 2026) — **done offline** (fixtures, a fake LLM); one real `daily` shown to you
+
+Reference: `ext/career-ops` pulled to 8ce89bdc (7 Nov 2026; the task was checked at 20b9fd3). Between the two, `modes/_shared.md` did not change; `triage.md` adds "a
+posting that says it is closed is SKIP even when the JD follows"; `oferta.md` adds a read-only known-ATS JD fallback and session titles; `auto-pipeline.md` only session
+titles; `AGENTS.md` adds Oh My Pi and `pi -a`. None changes the scoring, the verdicts, Block G or the unattended rules ported here. Logic ported, not text.
+
+1. **Quick score** `discovery/agent_triage.py`: `formula` = archetype (A) x 0.35 + comp (P) x 0.25 + location x 0.25 + cv_match (E) x 0.15 - 0.5 a soft flag, half-up to
+   0.1, cap 2.5 on a hard disqualifier. `location_score` (5 within `COMMUTE_PLACES` / `agent.commute_places` unless remote-only, 4 remote UK, 3 elsewhere or unknown, 1 abroad,
+   3 abroad in a region you chose). Soft flags `soft_flags`; hard `hard_disqualifiers` (training scheme, level excluded, no sponsorship + abroad, blacklist, a stated start >
+   9 months away (`start_months_away`), the band's top below the floor). Verdicts PASS >= `agent.triage_threshold` (3.5) / MARGINAL >= 3.0 / FAIL; `targeting.priority_companies`
+   PASS unless a hard disqualifier applies (my choice: a blacklisted or excluded-level ad of a priority company is not sent to the model).
+2. **Full evaluation** `discovery/evaluate.py`: task `job_eval`, which `llm/router.TASK_ROUTES` sends on the `cover_letter` route (task_providers, models, max_tokens) unless
+   settings name it; temperature 0 via the context; the ad fenced (```ad, a fence in the ad defused), cut at 9,000 characters. `check` = the code-side checks (strict < 50 ->
+   cv_match <= 2 and global <= 3.4, or <= 3.9 when the ceiling reaches `apply.bands.rescue_ceiling`; ceiling >= 70 -> cv_match >= 3; hard -> 2.5; confidence = min(model,
+   `tier()`), Low under 150 words; unknown statuses / tiers / scores clamped; no `dimensions` or `global` -> EvalError, the job waits). Strict ATS exists only for a job a
+   `live` run tailored before (jobs.score with out_dir); otherwise only the pre-tailoring ceiling is known, because CLAUDE.md forbids tailoring an unapproved job. Ad text
+   matching `formagent.INJECTION` (copied, a test keeps them equal, so this code never imports the form modules) is stored as `anomalies`. Storage: `paths.evals` (new
+   built-in default `data/evals`; tests and `--mock` redirect it) `<job id>.json` (re-used while the ad's text hash is the same) and `evals.jsonl`.
+3. **Decision** `discovery/decide.py`: `classify` (the table in the module docstring; a possible repost of a job you skipped is MARGINAL; `agent.approve_from` 4.0 can only
+   be raised); `caps` (daily approvals = `targeting.daily_max_applications`, counted from today's agent approvals in `decisions.jsonl`; per company = open applications + approved
+   files waiting + this run's < `per_company_max_open`; `volume.company_block`; ranked by global x `freshness`); `commit` moves approved files to `approved/<date>/` (copies to
+   `jds_done/duplicate/`) and logs MARGINAL / AGENT-SKIP of an evaluated job / NEEDS CONFIRMATION as held; WAITING and quick-score verdicts are not logged (worked out again,
+   free). `shortlist.build(agent=...)` gives the pool (quick PASS, ordered by it, at most max_evals_per_day + daily cap rows), `plan.marginal`, `plan.failed`, `plan.confirm`
+   (blacklist and hidden-employer agency via `shortlist.confirm_gate`, unreadable files, closed postings, which are still filed in `jds_done/closed/` as before) and leaves
+   the held keys out. Interpretations: `apply.daily_cap` of the task is `targeting.daily_max_applications` (there is no `apply.daily_cap`); READY FOR YOU (Reed page, or an
+   unknown route) is moved to `approved/` too so `live` builds the pack; the training-scheme, level, channel-duplicate and dealbreaker stops keep filing to `jds_done/skipped/`.
+4. **CLI**: `shortlist` and `daily` print `decide.lines` (counts, tokens this run / today from `llm_task_usage`, the lines, 4.5+ with Low confidence, marginal of the last 7
+   days, held at a company limit) unless `agent.decide: ask` or `--ask`. `veto N|id|file` (`targets.skip_files` with the shortlist skip mark: permanent, as `[s]`), `promote
+   N|id|file` (inbox -> approved, `promoted` by user in the log), `unskip --shortlist` also lists / resets the agent's holds (an evaluation is renamed `.reset-<stamp>.json` so the
+   next run evaluates afresh), `unskip --id` resets a held job, `calibrate --scores` (bands 4.5+ / 4.0-4.4 / 3.5-3.9 / < 3.5 once 20 scored applications have an outcome;
+   suggests `agent.approve_from: 4.5`, writes nothing). `daily` under `agent.decide: auto` starts `careerops live` (plain: assist) in a terminal only; never `--auto`.
+5. Settings: none written. Code defaults: `agent.decide` veto, `max_evals_per_day` 12, `triage_threshold` 3.5, `approve_from` 4.0. The test copy
+   (`tests/fixtures/config/settings.yaml`) says `agent.decide: ask` so the manual-list tests keep their meaning; the v3.2 tests set veto / auto on their tmp copy.
+
+Tests: `tests/discovery/test_agent_decide_v32.py` (the formula on an example vector, each hard disqualifier capping at 2.5, verdicts, priority, location, the ATS / hard /
+confidence checks, a fake LLM's 5 on a strict ATS of 40 capped through `evaluate`, injection logged and fenced, the route alias, the decision table, Low 4.6 -> MARGINAL,
+Reed 4.2 -> READY FOR YOU, 7 eligible -> 5 approved and 2 waiting then read back the next day with no call, a third job at one company never approved, the eval allowance,
+a failing model, blacklist / agency -> NEEDS CONFIRMATION and held, dry run, veto permanent, promote logged, agent skip reversible, `unskip` CLI, `shortlist` / `veto` CLI,
+`--ask`, daily -> live only under auto in a terminal, calibrate, and a subprocess check that importing the decision code loads no submit / form / browser / mail module).

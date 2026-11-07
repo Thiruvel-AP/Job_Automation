@@ -711,17 +711,29 @@ def cmd_unskip(args):
     if args.shortlist:
         from .discovery import shortlist
 
+        from .discovery import decide
+
         if not (args.match or args.all):
             here = [name for name, _ in shortlist.skipped_here(s)] + list(shortlist.parked_here(s).values())
+            held = decide.held_lines(s)
             print("\n".join(f"  {name}" for name in here) if here else "Nothing skipped at the shortlist or parked.")
-            if here:
+            if held:
+                print("Held by the agent (marginal, agent-skip, needs confirmation):\n" + "\n".join(held))
+            if here or held:
                 print("Bring back: careerops unskip --shortlist --match TEXT  (company or role contains TEXT), or --all")
             return
         try:
-            print("\n".join(shortlist.restore(s, match=args.match) or ["Nothing matched."]))
+            print("\n".join((shortlist.restore(s, match=args.match) + decide.reset(s, match=args.match)) or ["Nothing matched."]))
         except decided.DecidedError as e:
             _fail(str(e))
         return
+    if args.id:
+        from .discovery import decide
+
+        mine = [e for e in decide.latest(s).values() if e.get("decision") in decide.HELD and args.id in (e.get("job_id"), e.get("key"))]
+        if mine:
+            print("\n".join(decide.reset(s, match=f"{mine[0].get('company')} | {mine[0].get('title')}")))
+            return
     if not args.id:
         _fail("unskip needs --id JOB (an id, a link or a JD file name), or --shortlist")
     from .apply import targets
@@ -1465,6 +1477,18 @@ def cmd_shortlist(args):
         print(ch.line("size"))
         return ch.value
     resolver = size_mod.Resolver(s, key="" if args.mock else None, fetcher=fetcher)
+    from .discovery import decide
+
+    if decide.mode(s) != "ask" and not getattr(args, "ask", False):
+        try:
+            d = decide.run(s, db, fb, _llm(args, s, db), fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None, regions=rc.value,
+                           size_resolver=resolver, choose_size=choose_size)
+        except targeting.TargetingError as e:
+            _fail(str(e))
+        print("\n".join([*shortlist.unread_lines(s), *decide.lines(d), *shortlist.alert_lines(d.plan)]))
+        if args.mock:
+            print("(--mock: the isolated data root, no network; the mock model's evaluation is plumbing only)")
+        return
     try:
         shortlist.run(s, db, fb, ask=ask, fetcher=fetcher, dry_run=dry, archive=[] if args.mock else None, regions=rc.value,
                       size_resolver=resolver, choose_size=choose_size, show_all=getattr(args, "all", False), preface=shortlist.unread_lines(s))
@@ -1489,8 +1513,43 @@ def cmd_daily(args):
         print(f"\ndaily: discover ended with exit code {rc}; the shortlist is built from what is in the inbox.", file=sys.stderr)
     print("\n--- shortlist ---")
     cmd_shortlist(argparse.Namespace(**{**vars(args), "cmd": "shortlist", "mock": False}))
+    from .discovery import decide
+
+    s = load_settings(args.config)
+    if decide.mode(s) == "auto" and not args.dry_run and not getattr(args, "ask", False):
+        if not sys.stdin.isatty():
+            print("\nagent.decide is auto, but this is not a terminal: `careerops live` was not started (it asks you at every gate). Run it yourself.")
+        else:
+            print("\n--- live (agent.decide: auto) ---\n`careerops live` on the approved files; it fills forms and stops before Submit (only `live --auto` may submit, "
+                  "through its gates)")
+            try:
+                main((["--config", args.config] if args.config else []) + ["live"])
+            except SystemExit as e:
+                rc = rc or (e.code if isinstance(e.code, int) else 1)
     if rc:
         sys.exit(rc)
+
+
+def cmd_veto(args):
+    """`careerops veto <n | id>` (v3.2): an auto-approved job of the latest agent digest becomes your permanent skip (as [s])."""
+    from .discovery import decide
+
+    s, db = _ctx(args)
+    try:
+        print("\n".join(decide.veto(s, db, args.what)))
+    except decide.DecideError as e:
+        _fail(str(e))
+
+
+def cmd_promote(args):
+    """`careerops promote <n | id>` (v3.2): a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION job of the latest digest is approved (your override, logged)."""
+    from .discovery import decide
+
+    s, db = _ctx(args)
+    try:
+        print("\n".join(decide.promote(s, db, args.what)))
+    except (decide.DecideError, decided.DecidedError) as e:
+        _fail(str(e))
 
 
 def cmd_patterns(args):
@@ -1637,6 +1696,11 @@ def cmd_calibrate(args):
     from .reporting import calibrate as cal
 
     s, db = _ctx(args)
+    if getattr(args, "scores", False):
+        from .discovery import decide
+
+        print("\n".join(decide.calibrate(s, db)))
+        return
     # --mock moves every generated-data path (reports included) under data/mock; the manifest stays where the user keeps it
     manifest = Path(args.manifest) if args.manifest else load_settings(args.config).path("calibration") / "manifest.yaml"
     out = Path(args.out) if args.out else s.path("calibration")
@@ -1903,6 +1967,8 @@ def main(argv=None):
     sub.add_parser("llm-check", help="one tiny request per LLM provider: reachable, model, latency, JSON, json_mode"
                    ).set_defaults(fn=cmd_llm_check)
     ca = sub.add_parser("calibrate", help="tailor the calibration JDs with the real model and measure the result")
+    ca.add_argument("--scores", action="store_true", help="v3.2: the reply rate per agent score band once 20+ scored applications have an outcome; suggests a "
+                    "higher approval line when 4.0-4.4 does no better than 3.5-3.9 (zero tokens, changes no setting)")
     ca.add_argument("--manifest", help="default: <paths.calibration>/manifest.yaml")
     ca.add_argument("--out", help="folder for report-<stamp>.md/.json, rubric.csv and runs/ (default: paths.calibration)")
     ca.add_argument("--only", nargs="+", metavar="ID", help="just these manifest ids")
@@ -2108,7 +2174,17 @@ def main(argv=None):
     sl.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
     sl.add_argument("--all", action="store_true", help="list every undecided in-region ad, not only the new ones (also the ones parked after being shown "
                                                       "three times); the list is not counted as a showing")
+    sl.add_argument("--ask", action="store_true", help="this run only: the old manual list and [a] prompt instead of the agent's decisions (agent.decide: ask)")
+    sl.add_argument("--provider", metavar="NAME", help=argparse.SUPPRESS)
     sl.set_defaults(fn=cmd_shortlist)
+    vt = sub.add_parser("veto", help="v3.2: an auto-approved job of the latest agent digest (its number, job id or JD file name) becomes a permanent skip")
+    vt.add_argument("what")
+    vt.add_argument("--mock", action="store_true", help="the isolated data/mock root")
+    vt.set_defaults(fn=cmd_veto)
+    pm = sub.add_parser("promote", help="v3.2: a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION job of the latest digest is approved (logged as your override)")
+    pm.add_argument("what")
+    pm.add_argument("--mock", action="store_true", help="the isolated data/mock root")
+    pm.set_defaults(fn=cmd_promote)
     da = sub.add_parser("daily", help="discover --ats --gmail-alerts --report, then shortlist (the whole morning in one command)")
     da.add_argument("--region", help="as for discover and shortlist")
     da.add_argument("--size", help="as for shortlist: sme | large | both | sme-first | large-first")
@@ -2117,6 +2193,7 @@ def main(argv=None):
     da.add_argument("--dry-run", dest="dry_run", action="store_true", help="discover writes nothing; the shortlist prints and moves nothing")
     da.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")
     da.add_argument("--all", action="store_true", help="as for shortlist: every undecided in-region ad, not only the new ones")
+    da.add_argument("--ask", action="store_true", help="as for shortlist: the old manual list and [a] prompt this run")
     da.set_defaults(fn=cmd_daily)
     pt = sub.add_parser("patterns", help="replies, interviews and rejections by role family, ATS kind and triage score (information only)")
     pt.add_argument("--db", action="store_true", help="read the outcome log in the database instead of the tracker Sheet's Status column")

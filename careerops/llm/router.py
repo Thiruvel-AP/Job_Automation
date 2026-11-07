@@ -37,6 +37,9 @@ DEFAULT_TPM, DEFAULT_RPM = 8000, 30     # used when a provider's config names no
 DEFAULT_MAX_TOKENS = 1000               # completion cap for a task with no llm.max_tokens entry and no `default`
 BACKOFF_S = (2, 4, 8)      # waits before the 1st, 2nd and 3rd retry of a 429 that names no Retry-After
 BODY_MAX = 500             # chars of an error response body kept in messages and events; headers are never kept
+# v3.2: a task that takes another task's route (llm.task_providers, llm.models, llm.max_tokens) unless settings name it themselves. The agent's job
+# evaluation runs where the cover letter runs (Groq gpt-oss-120b) and its tokens are counted under its own task name.
+TASK_ROUTES = {"job_eval": "cover_letter"}
 
 
 class BudgetExhausted(RuntimeError):
@@ -149,7 +152,7 @@ class Provider:
         return max(tpd - self.db.llm_tokens_today(self.key(model)), 0) if tpd else None
 
     def max_tokens_for(self, task: str) -> int:
-        return int(self.max_tokens.get(task) or self.max_tokens.get("default") or DEFAULT_MAX_TOKENS)
+        return int(self.max_tokens.get(task) or self.max_tokens.get(TASK_ROUTES.get(task, "")) or self.max_tokens.get("default") or DEFAULT_MAX_TOKENS)
 
     def overflow(self, system: str, user: str, task: str) -> str | None:
         """Why this request cannot go to this provider: its estimated input + completion cap exceeds `context_tokens`
@@ -304,15 +307,22 @@ class Router:
         self._allowed: set[str] | None = None   # providers the current job may use (set by begin_job)
         self.last_raw: str | None = None        # the reply text of the last answered call, kept even if it was not valid JSON
 
+    def providers_for(self, task: str) -> list[str] | None:
+        """The providers `task` is restricted to (llm.task_providers; a TASK_ROUTES task borrows its source's entry when it has none), None for any.
+        The borrowed route is looked up, never copied into task_providers / task_models, so `doctor` asks no extra model."""
+        if task in self.task_providers:
+            return self.task_providers[task]
+        return self.task_providers.get(TASK_ROUTES.get(task, ""))
+
     def model_for(self, p: Provider, task: str) -> str | None:
         """The model `task` uses on provider `p` when llm.models names one for that pair, else None (p's own model)."""
-        m = self.task_models.get(task)
+        m = self.task_models[task] if task in self.task_models else self.task_models.get(TASK_ROUTES.get(task, ""))
         return m["model"] if m and m["provider"] == p.name else None
 
     def serving(self, task: str) -> list[tuple[Provider, str]]:
         """Every (provider, model) this task could be sent to, in the order json() tries them: the providers it is restricted
         to (llm.task_providers), else all, each with the task's own model on that provider (llm.models) or its own."""
-        only = self.task_providers.get(task)
+        only = self.providers_for(task)
         return [(p, self.model_for(p, task) or p.cfg["model"]) for p in self.providers if only is None or p.name in only]
 
     def begin_job(self, est_tokens: int, task: str | None = None) -> list[str]:
@@ -345,7 +355,7 @@ class Router:
         errors = []
         self.last_raw = None
         temperature = (context or {}).get("temperature")
-        only = self.task_providers.get(task)          # None: any provider may take this task
+        only = self.providers_for(task)               # None: any provider may take this task
         failed_for_real = False                        # an answer that was wrong, not a provider that was unavailable
         for p in self.providers:
             if only is not None and p.name not in only:

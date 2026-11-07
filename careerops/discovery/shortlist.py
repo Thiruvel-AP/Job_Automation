@@ -45,14 +45,14 @@ from dataclasses import dataclass, field
 from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 
 from .. import targeting as targeting_mod
 from ..apply import decided, targets, volume
 from ..apply import decisions as decisions_mod
 from ..apply.naming import folder_key
 from ..db import DB
-from . import applykind, freshness, liveness, triage, workcountry
+from . import applykind, blacklist, channel, freshness, liveness, triage, workcountry
 from . import candidate as cand
 from .gmail import CV_TRACKING_HOST
 from . import reed as reed_mod
@@ -133,6 +133,7 @@ class Row:
     size: size_mod.Size | None = None           # None when the size was not asked for (no resolver)
     repost: str = ""                            # v2.5: "possible repost of a job you skipped on <date> (<id>)": only company + title + country match
     dups: list["Row"] = field(default_factory=list)     # v3.1: other inbox ads of the same company + title + location, merged into this row
+    quick: Any = None                           # v3.2 agent mode: the career-ops quick score (agent_triage.Quick)
 
     @property
     def name(self) -> str:
@@ -238,6 +239,10 @@ class Plan:
     show_all: bool = False                                                   # --all: every undecided in-region ad, not only the new ones
     alert_rows: list[AlertRow] = field(default_factory=list)                 # the manual queue's best ALERT_BLOCK_SIZE (A, Fr, V, title match), one row per company + title
     alert_total: int = 0                                                     # ... of this many that could be listed
+    marginal: list[Row] = field(default_factory=list)                        # v3.2 agent mode: quick score MARGINAL (no full evaluation)
+    failed: list[Row] = field(default_factory=list)                          # ... quick score FAIL
+    confirm: list[tuple[Path, dict | None, str, str]] = field(default_factory=list)   # ... (file, job, gate, detail): the agent hands these to you
+    held_agent: int = 0                                                      # ... ads the agent holds (marginal, agent-skip, needs confirmation)
 
 
 @dataclass
@@ -335,8 +340,12 @@ def make_alive(fetcher: Fetcher | None, cache, now: datetime) -> Callable[[dict]
 def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=None, now: datetime | None = None,
           archive: list[tuple[str, str]] | None = None, files: list[Path] | None = None, regions: Sequence[str] | None = None,
           size_mode: str | None = None, size_resolver: size_mod.Resolver | None = None,
-          choose_size: Callable[[Counter], str] | None = None, show_all: bool = False) -> Plan:
+          choose_size: Callable[[Counter], str] | None = None, show_all: bool = False, agent: Any = None) -> Plan:
     """Score the inbox and decide what is offered. Writes the scores to the database; moves nothing (see `file_away`).
+
+    `agent` (v3.2, discovery/decide.py): the agent's view (`held` keys, row `limit`, `quick(job, t)`). The pool is then the quick-score PASS ads (MARGINAL and
+    FAIL ones go to plan.marginal / plan.failed), ordered by that score, at most `limit` rows; a blacklist hit, an agency ad hiding the employer, an unreadable
+    file and a closed posting are listed in plan.confirm (career-ops: an unattended run never decides those), and the held keys are left out.
 
     `show_all`: also the ads that were parked after PARK_AFTER showings without a decision (every undecided in-region ad, not only the new ones).
     `regions`: the selected region keys; an ad outside them is parked (region), not scored. None = no region filter.
@@ -366,6 +375,11 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         job = triage.inbox_job(p, settings, fb, idx)
         if job is None:
             plan.unreadable += 1
+            if agent is not None:
+                if f"file:{p.name}" in agent.held:
+                    plan.held_agent += 1
+                else:
+                    plan.confirm.append((p, None, "jd_unavailable", f"{p.name} could not be read as a job ad"))
             continue
         jkeys = {*decided.file_keys(p).strong(), decided.file_job_id(p) or ""} - {""}
         if jkeys & waiting:
@@ -377,6 +391,9 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         repost = known.repost(job["company"], job["title"], job.get("url") or job.get("apply_url"), job.get("location"))
         if _key(job["company"], job["title"]) in hist.parked and not show_all:
             plan.parked.append(f"{job['company']} | {job['title']}")
+            continue
+        if agent is not None and _key(job["company"], job["title"]) in agent.held:
+            plan.held_agent += 1
             continue
         rm = None
         if regions is not None:
@@ -390,7 +407,14 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         t = triage.score(job, settings, fb, floor=floor, now=now)
         save_score(db, job, t, day, rm)
         if (d := triage.disqualify(job, settings, db, archive=archive, others=others)) is not None:
-            plan.dropped.append((p, "skipped", f"disqualified, {d.line()}"))
+            if agent is not None and (gate := confirm_gate(d, job)):
+                plan.confirm.append((p, job, gate, d.reason))
+            else:
+                plan.dropped.append((p, "skipped", f"disqualified, {d.line()}"))
+            continue
+        if agent is not None:
+            row = Row(p, job, t, kind_of(job), region=rm, repost=repost, quick=agent.quick(job, t))
+            (pool if row.quick.verdict == "PASS" else plan.marginal if row.quick.verdict == "MARGINAL" else plan.failed).append(row)
             continue
         if t.t < cfg.min_triage_score:
             plan.below_min += 1
@@ -425,10 +449,16 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
         elif plan.size_mode in ("sme-first", "large-first"):
             pref = size_mod.SME if plan.size_mode == "sme-first" else size_mod.LARGE
             pool.sort(key=lambda r: (-(r.t.t + (SIZE_FIRST_BONUS if r.size.size == pref else 0.0)), by_age(r), r.path.name))
+    if agent is not None:                                                     # v3.2: the quick score orders the agent's pool, a priority company first
+        pref = {"sme-first": size_mod.SME, "large-first": size_mod.LARGE}.get(plan.size_mode or "")
+        bonus = lambda r: SIZE_FIRST_BONUS if pref and r.size is not None and r.size.size == pref else 0.0     # noqa: E731
+        pool.sort(key=lambda r: (not r.quick.priority, -(r.quick.score + bonus(r)), -r.t.t, by_age(r), r.path.name))
+        plan.marginal.sort(key=lambda r: (-r.quick.score, by_age(r), r.path.name))
+        plan.failed.sort(key=lambda r: (-r.quick.score, by_age(r), r.path.name))
     pool = merge_rows(pool)                                                   # v3.1: one row per company + title + location, with every link
     in_list: Counter = Counter()                                              # company -> rows already in this list (v3.1: the cap counts them too)
     for r in pool:
-        if len(plan.rows) >= cfg.shortlist_size:
+        if len(plan.rows) >= (agent.limit if agent is not None else cfg.shortlist_size):
             break
         why = volume.company_block(db, settings, r.job["company"], day, apps=apps)
         if why:
@@ -442,6 +472,8 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
             continue
         if (closed := alive(r.job)):
             plan.dropped.append((r.path, "closed", f"disqualified, liveness: {closed}"))
+            if agent is not None:
+                plan.confirm.append((r.path, r.job, "posting_closed", closed))
             continue
         r.shown = hist.shown.get(r.key, 0)
         plan.rows.append(r)
@@ -453,6 +485,16 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
     plan.alert_rows, plan.alert_total = alert_block(settings, db, fb, idx=idx, floor=floor, now=now, regions=regions, non_uk_ok=non_uk_ok, known=known,
                                                     hist=hist, archive=archive, others=others)
     return plan
+
+
+def confirm_gate(d: triage.Disqualified, job: dict) -> str | None:
+    """v3.2 agent mode: the hard stops career-ops never decides in an unattended run (`needs_confirmation: <gate>`): your blacklist, an agency ad that hides
+    the employer. None for the others (a training scheme, the level list, the same role under another channel, a dealbreaker): those are filed as before."""
+    if d.stage == "blacklist" and d.code != blacklist.TRAINING_SCHEME:
+        return "blacklist"
+    if d.stage == "channel" and channel.hidden_employer(job):
+        return "agency"
+    return None
 
 
 def merge_rows(pool: list[Row]) -> list[Row]:

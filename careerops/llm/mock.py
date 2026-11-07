@@ -59,4 +59,8 @@ class MockLLM:
             return {"answer": src[0]["text"] if src else "", "ad_phrases": []}
         if task == "judge":                                    # a fixed second opinion: plumbing only, never a real judgement
             return {"would_send": True, "score": 4, "issues": []}
+        if task == "job_eval":                                 # v3.2: a fixed, middling evaluation: plumbing only (Medium confidence, never 4.5+)
+            dim = {"score": 3, "status": "partial", "source": "mock evaluation"}
+            return {"dimensions": {k: dict(dim) for k in ("cv_match", "north_star", "comp", "culture", "red_flags")}, "global": 3.8,
+                    "confidence": "Medium", "red_flags": [], "legitimacy": "medium", "top3_checks": ["mock: no real evaluation was made"]}
         raise LLMError(f"MockLLM has no handler for task {task}")

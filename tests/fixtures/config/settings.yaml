@@ -466,6 +466,16 @@ targeting:
   per_company_cooldown_days: 30  # after a rejection or withdrawal at a company, no new application there for this long
   max_posting_age_days: 60     # older postings are offered only with T >= 4.5
   dealbreakers: []             # yours, e.g. ["people management", "SC clearance", "5 days on-site outside the UK"]; an ad must STATE one (its sentence is quoted)
+  priority_companies: []       # v3.2: companies whose ads PASS the agent's quick score whatever it is (read, never written)
+
+# v3.2 (careerops/discovery/decide.py): who approves the shortlist. veto = the agent decides and you veto before `live` (the code default when this block
+# is absent) | ask = the old manual list and [a] prompt | auto = the agent decides and `daily` starts `live` (assist, you press Submit) straight after.
+# The fixture says `ask` so the manual-list tests run as before; the agent tests set veto / auto on their own copy.
+agent:
+  decide: ask
+  max_evals_per_day: 12        # full evaluations (one model call each) a day; a stored evaluation of the same ad costs nothing
+  triage_threshold: 3.5        # the quick score that PASSES to the full evaluation (career-ops pipeline.triage_threshold)
+  approve_from: 4.0            # the global score the agent approves from (a value below 4.0 is not used)
 
 # Gated auto-apply (careerops/autoapply.py, Greenhouse / Ashby / Lever only). `careerops live --auto` submits a form only when EVERY gate below passes;
 # a job that fails any gate goes to the normal review prompt with the failed gates printed at the top (`AUTO BLOCKED: ATS 58 < 70; level: senior`).
