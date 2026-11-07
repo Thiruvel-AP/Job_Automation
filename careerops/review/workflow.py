@@ -286,6 +286,19 @@ def provisional_lines(rep: dict) -> list[str]:
     return out
 
 
+def ats_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
+    """v3.3: `ATS structure 94/A (0 critical) | lints: ... | title match: yes | years: ... | degree met | skills-only required: 2` and its details
+    (review/screeners.py). Red, with the reason, when the CV may not go out. Nothing without settings (a bare summary)."""
+    if settings is None or fb is None:
+        return []
+    from . import screeners
+
+    try:
+        return screeners.check(rep, settings, fb, job).lines()
+    except Exception as e:                                      # noqa: BLE001 - a check that cannot run says so; it is never a pass
+        return [f"{screeners.RED}ATS structure: the check could not run ({type(e).__name__}: {str(e)[:80]}){screeners.RESET}"]
+
+
 def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
     """`DOC CHECK: pass`, or the list of failures, on the review screen. Nothing without settings (a bare summary)."""
     if settings is None or fb is None:
@@ -379,6 +392,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
         f"| band: {f['band']} | pages {f['pages']}"
         + f" | attempts {len(rep['attempts'])}",
         *(gap_lines(rep, gap) if gap is not None else ats_lines(rep)),
+        *ats_check_lines(rep, settings, fb, job),
         *provisional_lines(rep),
         *hook_lines(rep),
         *letter_lines(rep),

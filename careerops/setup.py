@@ -185,6 +185,36 @@ def profile_word_checks(path: Path) -> list[tuple[str, object, str]]:
     return out
 
 
+def ats_structure_checks(settings) -> list[tuple[str, object, str]]:
+    """v3.3: the structural ATS check of the newest tailored CV under paths.outputs (read only): its score, grade and lints. A critical issue fails,
+    lints or a score under 80 warn, no tailored CV yet says so."""
+    import json as json_mod
+
+    from . import ats_structure as AS
+    from .config import load_yaml
+
+    try:
+        found = sorted(settings.path("outputs").glob("*/report.json"), key=lambda p: p.stat().st_mtime)
+    except OSError:
+        found = []
+    if not found:
+        return [("ATS structure: no tailored CV yet", "warn", "run `careerops live` (or `careerops run --mock --limit 1`) first")]
+    try:
+        rep = json_mod.loads(found[-1].read_text(encoding="utf-8"))
+        fb = load_yaml(settings.path("fact_bank"))
+    except (OSError, ValueError) as e:
+        return [(f"ATS structure: {found[-1]} could not be read", "warn", str(e)[:80])]
+    st = AS.for_report(rep, fb)
+    where = found[-1].parent.name
+    if st.cv is None:
+        return [(f"ATS structure of the newest CV ({where}): not checked ({st.error})", False, "careerops ats-check for details")]
+    codes = ", ".join(dict.fromkeys(f"{l.code} ({l.where})" for l in st.lints)) or "none"
+    ok: object = True if st.ok and not st.lints else ("warn" if not st.cv.critical else False)
+    crit = "; ".join(i.code for i in st.cv.critical)
+    return [(f"ATS structure of the newest CV ({where}): {st.cv.score}/{st.cv.grade}, {len(st.cv.critical)} critical"
+             + (f" ({crit})" if crit else "") + f"; lints: {codes}", ok, "careerops ats-check prints every issue and the decision each lint needs")]
+
+
 def project_public_checks(path: Path) -> list[tuple[str, object, str]]:
     """Doctor warnings for projects (Document rules, A4): every project with `github:` should say `public: true` or `public: false` (a missing key
     is treated as public, so its URL is printed). Read only."""
@@ -484,6 +514,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += skill_repeat_checks(settings.path("fact_bank"))
     checks += profile_word_checks(settings.path("fact_bank"))
     checks += project_public_checks(settings.path("fact_bank"))
+    checks += ats_structure_checks(settings)
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
     checks += region_size_checks(settings)

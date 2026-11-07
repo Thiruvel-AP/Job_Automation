@@ -13,6 +13,9 @@
   doc check      the Document rules hold for the CV and the letter (tailoring/doccheck.py: hook, profile 100-150 words, no skill twice, at most 3
                  projects, certifications as a list, a 300-500 word letter with the CV's header, evidence and an opening that quotes the ad, no
                  reuse). A failure always blocks auto-submit; only a person can approve over it, by typing `override doc check` in review.
+  ats structure  v3.3 (ats_structure.py): the CV's PDF text layer parses: no critical issue (no text layer, no Experience heading, no e-mail in the
+                 text, scrambled reading order) and a structural score of at least 80; a letter PDF with a critical issue blocks too. A check that
+                 cannot run (poppler missing, no PDF) blocks. The keyword band (strict >= min_ats_strict) is unchanged; lints are advisory.
 
 Nothing here opens a browser or clicks anything. A failed gate sends the job to the normal review prompt, with `Gates.line()` printed first.
 """
@@ -27,6 +30,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from ..discovery import applykind, discover, priority
+from .. import ats_structure
 from ..tailoring import doccheck
 from ..tailoring.render import page_count, pdf_text
 from . import autolog
@@ -334,6 +338,16 @@ def _doc_check(rep: Mapping[str, Any], settings, fb: Mapping[str, Any], job: Map
     return Gate("doc check", False, f"doc check: {len(found.failures)} failure(s), first: {found.failures[0][:70]}", found.text())
 
 
+def _ats_structure(rep: Mapping[str, Any], fb: Mapping[str, Any]) -> Gate:
+    """v3.3: the structural ATS check of the CV (and the letter) PDF. A check that cannot run is a failure."""
+    try:
+        st = ats_structure.for_report(rep, fb)
+    except Exception as e:  # noqa: BLE001
+        st = ats_structure.JobStructure(None, None, [], error=f"{type(e).__name__}: {str(e)[:80]}")
+    info = st.cv.line() if st.cv is not None else ""
+    return Gate("ats structure", st.ok, "" if st.ok else st.why_not(), info)
+
+
 def evaluate(db, settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], *, today: date | None = None,
              tracker: Callable[[], set[str]] | None = None, submitting: bool = True) -> Gates:
     """Every gate for one tailored job, in the order of the table above. `tracker` returns the job ids in the tracker Sheet (it may raise);
@@ -343,4 +357,4 @@ def evaluate(db, settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: M
     log = autolog.rows(settings)
     return Gates([_ats(rep, cfg), _format(rep, fb), _faithfulness(rep), _level(job, settings), _sponsorship(job), _kind(job, cfg),
                   _duplicates(db, settings, job, log, tracker, submitting), _cap(cfg, log, today or date.today()),
-                  _doc_check(rep, settings, fb, job)])
+                  _doc_check(rep, settings, fb, job), _ats_structure(rep, fb)])

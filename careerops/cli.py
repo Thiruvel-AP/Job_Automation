@@ -1126,6 +1126,60 @@ def _assist_answers(db: DB, s) -> dict:
     return {"book": book, "history": autoapply.default_history(db, s), "handoff": Handoff(s), "failures": Failures(s)}
 
 
+def _with_ats_check(rep: dict, s, fb, job) -> dict:
+    """v3.3: the report with rep["ats_check"] (review/screeners.py) for the dry-run record's report.md. Never written back to report.json."""
+    from .review import screeners
+
+    try:
+        rep["ats_check"] = screeners.check(rep, s, fb, job).as_dict()
+    except Exception as e:  # noqa: BLE001 - the record then says the check could not run
+        rep["ats_check"] = {"line": f"ATS structure: the check could not run ({type(e).__name__}: {str(e)[:80]})", "lines": [], "ok": False}
+    return rep
+
+
+def cmd_ats_check(args):
+    """`careerops ats-check [PDF | --id JOB]` (v3.3): the structural ATS score, the lints and (with a job) the screener signals. Reads only."""
+    from . import ats_structure
+    from .review import screeners
+
+    s, db = _ctx(args)
+    fb = load_yaml(s.path("fact_bank"))
+    if args.pdf:
+        try:
+            st = ats_structure.check_pdf(args.pdf, kind=args.kind)
+        except ats_structure.ToolMissing as e:
+            _fail(str(e))
+        text = ats_structure.extract(args.pdf).layout
+        roles = ats_structure.roles_on_cv(fb, text) if args.kind == "cv" else []
+        print("\n".join([st.line()] + [f"  {i.line()}" for i in st.issues] + [f"  {l.line()}" for l in ats_structure.lints(roles, text)]))
+        sys.exit(0 if st.ok else 1)
+    job = db.job(args.id) if args.id else None
+    if args.id and job is None:
+        _fail(f"no such job: {args.id}")
+    rep = review.load_report(job) if job is not None else newest_report(s)
+    if rep is None:
+        _fail(f"no tailored job in {s.path('outputs')}: give a PDF or --id JOB")
+    gates.load_roles(s, fb)
+    chk = screeners.check(rep, s, fb, job if job is not None else db.job(rep.get("job_id") or ""))
+    print(f"{rep.get('out_dir')}")
+    print("\n".join(chk.lines()))
+    sys.exit(0 if chk.ok else 1)
+
+
+def newest_report(s) -> dict | None:
+    """The report.json of the most recently tailored job under paths.outputs (by the file's time), None when there is none."""
+    try:
+        found = sorted(s.path("outputs").glob("*/report.json"), key=lambda p: p.stat().st_mtime)
+    except OSError:
+        return None
+    for p in reversed(found):
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+    return None
+
+
 def cmd_live(args):
     """Interactive batch: every JD in data/jds/inbox through add-jd -> tailor -> review -> apply assist, one job at a time."""
     from . import tracker
@@ -1324,7 +1378,7 @@ def cmd_live(args):
         from .apply import browser as browser_mod
 
         job = db.job(jid)
-        rep = review.load_report(job)
+        rep = _with_ats_check(review.load_report(job), s, fb, job)
         kw = _assist_answers(db, s)
         kw["letter_maker"], kw["record"] = letter_maker_for(job, rep), (args.record if record is None else record)
         kw["freetext"] = freetext.for_job(job, rep, fb, llm, s, kw["book"] or answers_mod.AnswerBook(), ask=input, refetch_jd=jd_refetcher(job))
@@ -1359,7 +1413,7 @@ def cmd_live(args):
 
         def auto_apply_it(jid: str):
             job = db.job(jid)
-            rep = review.load_report(job)
+            rep = _with_ats_check(review.load_report(job), s, fb, job)
             return autoapply.run(job, rep, applicant, s, submit=not args.no_submit, confirm=args.confirm, ask=input,
                                  history=autoapply.default_history(db, s), ats_strict=(rep.get("ats") or {}).get("strict"), handoff=Handoff(s), failures=Failures(s),
                                  letter_maker=letter_maker_for(job, rep), record=args.record,
@@ -2102,6 +2156,13 @@ def main(argv=None):
     sk.add_argument("--id", help="the same as the positional argument")
     sk.add_argument("--url", help="the same as the positional argument: the job's link (any form of the address)")
     sk.set_defaults(fn=cmd_skip)
+    ak = sub.add_parser("ats-check", help="v3.3: can an ATS parser read the CV? The structural score of a CV PDF (0-100, grade, critical issues) on its "
+                                          "text layer, the content lints, and with a job the screener signals (title match, years, degree, skills-only, knock-outs)")
+    ak.add_argument("pdf", nargs="?", help="a PDF to check (default: the newest tailored job's CV)")
+    ak.add_argument("--id", help="a tailored job: its CV and letter, the lints of its roles and the signals against its ad")
+    ak.add_argument("--kind", choices=["cv", "letter"], default="cv", help="with a PDF: score it as a CV (default) or a letter")
+    ak.add_argument("--mock", action="store_true", help="the isolated data/mock root")
+    ak.set_defaults(fn=cmd_ats_check)
     wy = sub.add_parser("why", help="every decision recorded for a job (id, link, JD file name or ats:<vendor>:<board>:<id>) and which key matched")
     wy.add_argument("what")
     wy.set_defaults(fn=cmd_why)

@@ -10,6 +10,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 
+from careerops import ats_structure
 from careerops.apply import autogate, autolog
 from careerops.tailoring import doccheck
 
@@ -39,6 +40,8 @@ def pdf_is_fine(monkeypatch, request):
     """The gate tests do not render PDFs: the PDF checks say all is well, except in the tests marked slow, which use real ones."""
     if request.node.get_closest_marker("slow") is None:
         monkeypatch.setattr(autogate, "pdf_problems", lambda *a, **k: [])
+        # v3.3: the structural ATS check reads a real PDF; it has its own tests (tests/test_ats_structure_v33.py)
+        monkeypatch.setattr(ats_structure, "for_report", lambda *a, **k: ats_structure.JobStructure(ats_structure.Structure("cv", 100), None, []))
     monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck())        # the document check has its own tests (below, and test_doccheck.py)
 
 
@@ -54,7 +57,8 @@ def names(g):
 def test_a_clean_job_passes_every_gate(settings, db):
     g = run(settings, db)
     assert g.ok and g.failed == [] and g.line() == ""
-    assert [x.name for x in g.items] == ["ATS", "format", "faithfulness", "level", "sponsorship", "kind", "duplicates", "daily cap", "doc check"]
+    assert [x.name for x in g.items] == ["ATS", "format", "faithfulness", "level", "sponsorship", "kind", "duplicates", "daily cap", "doc check",
+                                         "ats structure"]
 
 
 def test_every_failed_gate_is_named_in_one_line_in_table_order(settings, db):
@@ -141,7 +145,7 @@ def test_a_missing_cv_pdf_is_a_failed_format_gate(settings, db, monkeypatch):
     monkeypatch.undo()
     monkeypatch.setattr(doccheck, "for_report", lambda *a, **k: doccheck.DocCheck())
     g = run(settings, db, rep={"cv_pdf": None})
-    assert names(g) == ["format"] and "no CV PDF" in g.line()
+    assert names(g) == ["format", "ats structure"] and "no CV PDF" in g.line()          # v3.3: nothing to check is never a pass
 
 
 def test_a_claim_guard_violation_or_warning_in_the_chosen_attempt_blocks(settings, db):

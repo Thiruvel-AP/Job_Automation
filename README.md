@@ -242,6 +242,7 @@ careerops promote 5               # v3.2: a MARGINAL / AGENT-SKIP / WAITING / NE
 careerops shortlist --ask         # v3.2: this run only, the old manual list and [a] prompt (agent.decide: ask makes it the default)
 careerops calibrate --scores      # v3.2: reply rate per agent score band once 20+ scored applications have an outcome; suggests a higher approval line, never changes one
 careerops recheck [--apply]       # v3.2.1: the latest agent digest under today's rules, zero tokens: quick-score moves, new hard stops (--apply records WAITING / MARGINAL ones as AGENT-SKIP)
+careerops ats-check [PDF | --id JOB]   # v3.3: can an ATS parser READ the CV? structural score 0-100 + grade on the PDF text layer, the content lints (never applied), with a job the screener signals
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
@@ -937,6 +938,28 @@ ranked first**; only a stated or structural one is marked `<- top priority`, and
   seamless, robust, strong, solid ...; adjectives and adverbs, never a noun, verb, tool, number or capability), those words are
   deleted (a/an, commas and "and" tidied, nothing added), the full check is re-run on the edited draft, and it is accepted only
   if that passes. The review screen then says `Letter removed: <words>`. The letter prompt also bans these qualifiers up front.
+
+### ATS parseability: the structural score and the lints (v3.3, `ats_structure.py`, `review/screeners.py`)
+
+`ats.py` measures keyword coverage. This measures whether a parser can READ the CV at all, on the real PDF text layer (`pdftotext -layout` and
+`-raw`, `pdffonts`, `pdfimages -list`), ported from career-ops' `ats` mode (`verify-ats.mjs`, `ats-payload.mjs`). Zero tokens, deterministic.
+
+- **Structural score 0-100**: selectable text 15 · standard headings on their own lines 20 (Experience, Education, Skills; Profile, Projects,
+  Certifications a bonus) · e-mail and phone in the extracted text 15 (not only in a `mailto:` link) · reading order 20 (one column; in `-raw` order a
+  role's title, employer and dates come before its bullets; sections do not interleave) · no text in images 10 · fonts embedded, no ligature or mojibake
+  glyphs 10 · UTF-8 (£ – é survive) 5 · no hidden text or stuffing 5 (no keyword more than 4 times outside Skills). Grades A >= 90, B >= 80, C >= 70,
+  D >= 60, F. **Critical**: no text layer, no Experience heading, no e-mail in the text, scrambled reading order. A letter is scored on the checks
+  that apply to it.
+- **Lints, reported and never applied** (a title, an employer or a date is yours to change in `fact_bank.yaml`): `multiple-date-ranges`,
+  `parenthetical-in-title` / `-in-company`, `employer-in-role`, `date-format-mixed`, `skills-undelimited`. Each prints the exact line and the decision.
+- **Screener signals** (advisory, `review/screeners.py`): title match yes / partial / no (`roles.families`); years each "N+ years" of the ad asks against
+  the CV's dated roles (overlaps counted once; per skill, the roles that name it): met / short by X months; degree met / not met; skills-only required
+  keywords; the knock-outs the ad states (right to work / sponsorship, on-site days, clearance) with what `applicant.yaml` / `answers.yaml` would answer.
+- **Where**: the review screen shows `ATS structure 95/A (0 critical) | lints: ... | title match: yes | years: ... | degree met | skills-only required: 2`
+  and the details (red, with the reason, when the CV may not go out); `live --dry-run --record` writes it into the record's `report.md` and `run.json`;
+  `careerops doctor` checks the newest tailored CV; `careerops ats-check` prints it all for a PDF or a job.
+- **Gate**: a critical issue, or a CV under 80, blocks auto-submit (`apply/autogate.py`, gate `ats structure`; a check that cannot run blocks too);
+  assist shows it in red. The keyword band (strict 70) is unchanged; lints and signals never gate.
 
 ### Calibration
 

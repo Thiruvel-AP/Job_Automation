@@ -2050,3 +2050,29 @@ a failing model, blacklist / agency -> NEEDS CONFIRMATION and held, dry run, vet
 
 Tests: `tests/discovery/test_agent_followups_v321.py`; three v3.2 expectations changed with the rules (no-salary flag, the route in the approved line, a fixture that FAILed
 only through the dropped flag).
+
+## 5bg. v3.3 — ATS parseability on the PDF text layer, next to the keyword score (7 Nov 2026) — **done offline** (xelatex-built PDFs and text fixtures); the live dry run is yours
+
+Reference `ext/career-ops` at 8ce89bdc (no commit since v3.2): `modes/ats.md`, `verify-ats.mjs` (weights 15/20/15/20/10/10/5/5, grades, critical rules),
+`ats-payload.mjs` (the three lints and their regexes: corporate suffix, at/@, client marker, another entry's employer, parenthetical, date ranges),
+`modes/pdf.md` "ATS Rules". Ported as checks on the PDF, not the HTML.
+
+1. `careerops/ats_structure.py`: `extract` (poppler; `ToolMissing` when absent: never a pass), `score` (pure, on an `Extract`), `check_pdf`, `for_report` (CV +
+   letter of a tailored job, the roles of the fact bank whose employer is on the CV, the keywords for stuffing, the `.tex` for white text and the characters
+   UTF-8 must keep). Reading order: `two_column_lines` (a wide gap with 3+ words each side whose right side is not a date range or a link, at least 5 lines
+   and 15 %), `interleave_problems` (headings in `-raw` vs `-layout` order), `role_order_problems` (a bullet between a role's employer / title / dates, or
+   its first bullet on the page read before them). Link targets come from the PDF's objects and its Flate streams (`pdf_uris`), so a `mailto:`-only
+   e-mail is caught. Lints: `role_lints`, `date_lints`, `skills_lints`.
+2. `careerops/review/screeners.py`: `title_match`, `jd_years` + `years` (role blocks of the text layer: a line ending in a date range after a gap starts one;
+   `merged_months`), `degree` (knockout.LEVELS; "desirable" / "graduate scheme" do not ask), `skills_only`, `knockouts` (visa.plan_for, answers.yaml,
+   dealbreakers' on-site reading, agent_triage.clearance_sentence), `check` -> `AtsCheck.line()` / `lines()` / `as_dict()`.
+3. Wired: `review/workflow.summary` (`ats_check_lines`, red when the CV may not go out), `apply/autogate.py` gate `ats structure` (critical or < 80, a letter
+   with a critical issue, or a check that cannot run), `apply/dryrun.record` writes `report.md` (new: no code wrote one before) and `run.json["ats_structure"]`
+   from `rep["ats_check"]` (cli `_with_ats_check`, set by live's assist and auto-apply hooks, never written back to report.json) or the PDF-only check,
+   `setup.ats_structure_checks` in doctor, `careerops ats-check`.
+4. On the user's CVs (read only): RightShip 95/A, 0 critical (-5: llm x5, production x5 outside Skills), letter 100/A; lints: Avasoft multiple-date-ranges and
+   parenthetical-in-title, 180 Degrees parenthetical-in-title. The task's "the current CV mixes - and --" does not hold: every range in the PDF and the .tex is
+   `–` (the fact bank's "April 2023" prints as "Apr 2023"), so date-format-mixed is silent on it. The mock run (real fact bank, MockLLM) is 95/A.
+
+Tests: `tests/test_ats_structure_v33.py` (slow: xelatex) and `tests/review/test_screeners_v33.py`; `tests/apply/test_autogate.py` stubs the new gate like the
+PDF checks, its gate list has `ats structure`, and a missing CV PDF now fails `format` and `ats structure`.

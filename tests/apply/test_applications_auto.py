@@ -10,7 +10,7 @@ from test_autogate import names as failed_gates
 from test_autogate import run as run_gate
 from test_live import Fake, archive, inbox, put, session, yes               # noqa: F401  (fixtures and helpers of the live tests)
 
-from careerops import autoapply, cli, mockroot
+from careerops import ats_structure, autoapply, cli, mockroot
 from careerops.apply import autogate
 from careerops.apply.archive import preflight, record_application
 from careerops.apply.errors import ArchiveError
@@ -23,6 +23,8 @@ from careerops.setup import init
 @pytest.fixture(autouse=True)
 def pdf_is_fine(monkeypatch):
     monkeypatch.setattr(autogate, "pdf_problems", lambda *a, **k: [])
+    # v3.3: the structural ATS check reads a real PDF; it has its own tests (tests/test_ats_structure_v33.py)
+    monkeypatch.setattr(ats_structure, "for_report", lambda *a, **k: ats_structure.JobStructure(ats_structure.Structure("cv", 100), None, []))
 
 
 # ------------------------------------------------------------------ the setting
