@@ -2018,6 +2018,13 @@ titles; `AGENTS.md` adds Oh My Pi and `pi -a`. None changes the scoring, the ver
 5. Settings: none written. Code defaults: `agent.decide` veto, `max_evals_per_day` 12, `triage_threshold` 3.5, `approve_from` 4.0. The test copy
    (`tests/fixtures/config/settings.yaml`) says `agent.decide: ask` so the manual-list tests keep their meaning; the v3.2 tests set veto / auto on their tmp copy.
 
+6. **The one real `careerops daily` (7 Nov 2026)**, agent.decide veto (your settings have no `agent:` block): 5 auto-approved (2 priority: Lseg Core AI Engineer
+   4.7 High, Iwoca Data Scientist - Credit Risk Modelling 4.6 High; then Nexcade AI 4.4, Scale AI Senior Applied AI Engineer 4.2, M&G Data Scientist 4.0), 9 waiting (5 over
+   the daily cap, 4 over the eval allowance), 23 marginal (2 evaluated: Anthropic Applied AI Architect 4.4 held on Low confidence; 21 by the quick score), 100
+   agent-skip by the quick score, 0 needing confirmation, 7 held at a company limit. 12 evaluations, 27,795 `job_eval` tokens. Most quick-score FAILs carry `no salary
+   given` and `not on the sponsor register` (-1.0 together): the career-ops soft flags as specified, not tuned. "(2027 start)" with no month is not a stated start
+   date, so it is no hard disqualifier (an inferred fact is never a hit).
+
 Tests: `tests/discovery/test_agent_decide_v32.py` (the formula on an example vector, each hard disqualifier capping at 2.5, verdicts, priority, location, the ATS / hard /
 confidence checks, a fake LLM's 5 on a strict ATS of 40 capped through `evaluate`, injection logged and fenced, the route alias, the decision table, Low 4.6 -> MARGINAL,
 Reed 4.2 -> READY FOR YOU, 7 eligible -> 5 approved and 2 waiting then read back the next day with no call, a third job at one company never approved, the eval allowance,
