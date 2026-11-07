@@ -34,7 +34,7 @@ from ..apply.naming import folder_key
 from ..db import DB
 from . import agent_triage as quick_mod
 from . import evaluate as eval_mod
-from . import gates, repost, shortlist
+from . import gates, repost, shortlist, triage
 from . import size as size_mod
 from .http import Fetcher
 
@@ -54,6 +54,7 @@ RESUME = {"blacklist": "`careerops promote N` to evaluate it anyway", "posting_c
 LOG = "decisions.jsonl"
 VETO_REASON = f"skipped {shortlist.SKIP_MARK}: vetoed after the agent approved it, not offered again"
 WEEK = 7
+WORKDAY_HANDOFF = "hand-off: Workday needs a candidate account (never signed in by code)"
 LIST_MAX = 15                                    # lines printed per block of the digest (the counts are always complete)
 
 
@@ -95,6 +96,7 @@ class Item:
     n: int = 0
     rank: float = 0.0
     dups: list[Path] = field(default_factory=list)
+    freed_by: str = ""                           # v3.2.1: the veto whose freed slot this approval took ("<key>@<ts>")
 
     @property
     def name(self) -> str:
@@ -105,8 +107,15 @@ class Item:
             return f"{self.ev.global_score:.1f} ({self.ev.confidence})"
         return f"quick {self.quick.score:.1f}" if self.quick is not None else "-"
 
+    def route_text(self) -> str:
+        """` | apply: employer form (greenhouse)`; a Workday form adds the hand-off (v3.2.1). Only on an approved line."""
+        if self.decision not in APPROVING:
+            return ""
+        out = f" | apply: {self.route or 'unknown'}"
+        return out + (f" | {WORKDAY_HANDOFF}" if "workday" in (self.route or "").lower() else "")
+
     def line(self) -> str:
-        head = f"{self.n:>2}. {LABEL[self.decision]} {self.score_text()} | {self.name}"
+        head = f"{self.n:>2}. {LABEL[self.decision]} {self.score_text()} | {self.name}{self.route_text()}"
         if self.ev is not None and self.decision in (*APPROVING, WAITING, MARGINAL):
             why = "; ".join(self.ev.why()) or "-"
             return f"{head} | why: {why} | risk: {self.ev.risk()} | legitimacy {self.ev.legitimacy}" + (f" | {self.reason}" if self.reason else "")
@@ -211,6 +220,8 @@ class Digest:
     week_marginal: list[dict] = field(default_factory=list)
     mode: str = DEFAULT_MODE
     dry_run: bool = False
+    levels: list[str] = field(default_factory=list)       # v3.2.1: the effective roles.levels.exclude (header)
+    freed: list[str] = field(default_factory=list)        # v3.2.1: what happened to the slots your vetoes freed
 
     def low_confidence_high(self) -> list[Item]:
         return [i for i in self.items if i.ev is not None and i.ev.global_score >= PRIORITY_FROM and i.ev.confidence == "Low"]
@@ -340,7 +351,11 @@ def run(settings, db: DB, fb: dict, llm, *, now: datetime | None = None, fetcher
         items.append(_item(row, MARGINAL, f"quick score {row.quick.score:.1f} MARGINAL ({row.quick.text()}): no full evaluation"))
     for row in plan.failed:
         items.append(_item(row, SKIP, f"quick score FAIL: {row.quick.text()}"))
-    caps(items, settings, db, day)
+    slots = freed_slots(settings, day)
+    prev = prev_waiting(settings, day)
+    caps(items, settings, db, day, freed=slots, prev=prev)
+    d.freed = freed_lines(settings, items, slots, day)
+    d.levels = level_lines(settings)
     order = {k: i for i, k in enumerate(ORDER)}
     items.sort(key=lambda i: (order[i.decision], -(i.ev.global_score if i.ev else (i.quick.score if i.quick else 0)), i.name))
     for n, it in enumerate(items, 1):
@@ -355,15 +370,20 @@ def run(settings, db: DB, fb: dict, llm, *, now: datetime | None = None, fetcher
     return d
 
 
-def caps(items: list[Item], settings, db: DB, day: date) -> None:
+def caps(items: list[Item], settings, db: DB, day: date, *, freed: Sequence[dict] = (), prev: set[str] | frozenset = frozenset()) -> None:
     """Demote the approvals over the caps to WAITING: the daily approvals, the per-company limit (open applications + approved files waiting + this run's),
-    the cooldown. The highest global x freshness is kept first."""
+    the cooldown. The highest global x freshness is kept first, except that a slot your veto freed (`freed`, freed_slots) goes first to the best job that was
+    WAITING in an earlier digest (`prev`). A freed slot is priority inside the daily cap, never an extra approval: code never raises a cap."""
     cfg = targeting_mod.config(settings)
     room = cfg.daily_max_applications - approvals_on(settings, day)
     apps = volume.applications(db, settings)
     waiting = Counter(folder_key(decided.header_of(p).get("company") or "") for p in shortlist.approved_files(settings, db))
     taken: Counter = Counter()
-    for it in sorted((i for i in items if i.decision in APPROVING), key=lambda i: -i.rank):
+    slots = list(freed)
+    pending = sorted((i for i in items if i.decision in APPROVING), key=lambda i: -i.rank)
+    while pending:
+        it = next((i for i in pending if slots and i.key in prev), pending[0])
+        pending = [i for i in pending if i is not it]
         fam = folder_key(it.company)
         if (why := volume.company_block(db, settings, it.company, day, apps=apps)):
             it.decision, it.reason = WAITING, f"waiting: {why}"
@@ -378,6 +398,64 @@ def caps(items: list[Item], settings, db: DB, day: date) -> None:
             continue
         room -= 1
         taken[fam] += 1
+        if slots and it.key in prev:
+            v = slots.pop(0)
+            it.freed_by = v["id"]
+            it.reason = f"the slot your veto of {v['company']} | {v['title']} ({str(v['ts'])[:10]}) freed"
+
+
+def freed_slots(settings, day: date) -> list[dict]:
+    """The slots your vetoes freed that a WAITING job may take on `day`: a veto frees one from the day after it (never the same day: that day's approvals
+    are already counted), until an approval takes it. Oldest first."""
+    rows = read_log(settings)
+    used = {e.get("freed_by") for e in rows if e.get("freed_by")}
+    out = []
+    for e in rows:
+        vid = f"{e['key']}@{e.get('ts')}"
+        if e.get("decision") == VETOED and str(e.get("frees_slot_on") or "9999") <= day.isoformat() and vid not in used:
+            out.append({"id": vid, "company": e.get("company"), "title": e.get("title"), "ts": e.get("ts")})
+    return out
+
+
+def pending_slots(settings, day: date) -> list[dict]:
+    """Vetoes whose freed slot only opens after `day` (made today): said in the header, used at the next run."""
+    return [e for e in read_log(settings) if e.get("decision") == VETOED and str(e.get("frees_slot_on") or "") > day.isoformat()]
+
+
+def prev_waiting(settings, day: date) -> set[str]:
+    """The keys that were WAITING in the latest digest of a day before `day`."""
+    for d, rows in reversed(_digests(settings)):
+        if d < day.isoformat():
+            return {r["key"] for r in rows if r.get("decision") == WAITING and r.get("key")}
+    return set()
+
+
+def freed_lines(settings, items: list[Item], slots: list[dict], day: date) -> list[str]:
+    out = [f"slot freed by your veto of {i.reason.split('veto of ', 1)[-1].removesuffix(' freed')} -> approved {i.name} (it was WAITING)"
+           for i in items if i.freed_by]
+    left = len(slots) - len(out)
+    if left > 0:
+        out.append(f"{left} slot(s) freed by your vetoes: no earlier WAITING job could take one this run; the next run tries again")
+    later = pending_slots(settings, day)
+    if later:
+        names = "; ".join(f"{e.get('company')} | {e.get('title')}" for e in later)
+        out.append(f"{len(later)} slot(s) freed by your veto today ({names}): the best WAITING job takes it at the next run, not today")
+    return out
+
+
+def level_lines(settings) -> list[str]:
+    """The effective roles.levels.exclude, as the quick score's hard stop reads it, and whether a Senior / Sr. title is excluded."""
+    def plain(p: str) -> str:
+        return p.replace("\\b", "").replace("\\.?", ".").replace("\\s", " ")
+    mine = [plain(p) for p in settings["roles"]["levels"]["exclude"]]
+    always = [plain(p) for p in gates.ALWAYS_EXCLUDED]
+    out = [f"levels.exclude (effective): {', '.join(mine) or '(none)'} + always: {', '.join(always)}"]
+    if gates.level_excluded("Senior Data Scientist", settings) is None:
+        out.append("  senior: NOT excluded: a Senior or Sr. title passes (Sr. / Snr are read as Senior, so a `sr` pattern alone excludes nothing); "
+                   "add '\\bsenior\\b' to roles.levels.exclude to exclude both (only you edit settings.yaml)")
+    else:
+        out.append("  senior: excluded (Senior, Sr. and Snr titles alike)")
+    return out
 
 
 def commit(settings, items: list[Item], now: datetime) -> None:
@@ -394,7 +472,7 @@ def commit(settings, items: list[Item], now: datetime) -> None:
             for dp in it.dups:
                 shortlist.file_away(settings, dp, shortlist.DUPLICATE, f"duplicate of {dst.name} (same company, title and location), approved by the agent on {now.date()}")
             it.path = dst
-            events.append(_event(it, it.decision))
+            events.append(_event(it, it.decision, **({"freed_by": it.freed_by} if it.freed_by else {})))
         elif it.decision == CONFIRM or (it.decision in (MARGINAL, SKIP) and it.ev is not None):      # a quick-score verdict is worked out again each run
             events.append(_event(it, it.decision))
     log(settings, events, now)
@@ -419,7 +497,7 @@ def lines(d: Digest) -> list[str]:
            f"{c[SKIP]} agent-skip, {c[CONFIRM]} need confirmation.",
            f"evaluations: {d.evals_new} new, {d.evals_cached} read back" + (f", {d.eval_waiting} waiting for tomorrow's allowance" if d.eval_waiting else "")
            + f" · {eval_mod.TASK} tokens this run: {d.tokens:,} (today: {d.tokens_today:,})"
-           + f" · quick score: {d.triage_marginal} marginal and {d.triage_fail} fail without a model call"]
+           + f" · quick score: {d.triage_marginal} marginal and {d.triage_fail} fail without a model call", *d.levels, *d.freed]
     by: dict[str, list[Item]] = {}
     for it in d.items:
         by.setdefault(it.decision, []).append(it)
@@ -454,23 +532,35 @@ def digest_path(settings, day: date) -> Path:
 def save_digest(settings, d: Digest) -> None:
     rows = [{"n": i.n, "key": i.key, "job_id": i.job_id, "company": i.company, "title": i.title, "decision": i.decision,
              "global": i.ev.global_score if i.ev else None, "confidence": i.ev.confidence if i.ev else None, "quick": i.quick.score if i.quick else None,
-             "file": str(i.path) if i.path else "", "reason": i.reason} for i in d.items]
-    p = digest_path(settings, d.day)
+             "file": str(i.path) if i.path else "", "reason": i.reason, "route": i.route} for i in d.items]
+    write_digest(settings, d.day.isoformat(), rows)
+
+
+def write_digest(settings, day: str, rows: list[dict]) -> None:
+    p = eval_mod.root(settings) / f"digest-{day}.json"
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps({"day": d.day.isoformat(), "items": rows}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    p.write_text(json.dumps({"day": day, "items": rows}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
-def last_digest(settings) -> list[dict]:
+def _digests(settings) -> list[tuple[str, list[dict]]]:
+    """(day, lines) of every readable digest, oldest first."""
     try:
         files = sorted(eval_mod.root(settings).glob("digest-*.json"))
     except OSError:
         return []
-    for p in reversed(files):
+    out = []
+    for p in files:
         try:
-            return list(json.loads(p.read_text(encoding="utf-8")).get("items") or [])
+            d = json.loads(p.read_text(encoding="utf-8"))
+            out.append((str(d.get("day") or p.stem.removeprefix("digest-")), list(d.get("items") or [])))
         except (OSError, ValueError, AttributeError):
             continue
-    return []
+    return out
+
+
+def last_digest(settings) -> list[dict]:
+    got = _digests(settings)
+    return got[-1][1] if got else []
 
 
 def find(settings, what: str) -> dict:
@@ -523,10 +613,64 @@ def veto(settings, db: DB, what: str, *, now: datetime | None = None) -> list[st
         out += targets.skip_files(settings, targets.resolve(settings, db, str(p)), VETO_REASON)
     except decided.DecidedError as e:
         raise DecideError(str(e)) from e
+    opens = (now.date() + timedelta(days=1)).isoformat()
     log(settings, [{"key": row["key"], "job_id": row.get("job_id"), "company": row["company"], "title": row["title"], "decision": VETOED, "by": "user",
-                    "global": row.get("global"), "reason": "careerops veto"}], now)
+                    "global": row.get("global"), "reason": "careerops veto", "frees_slot_on": opens}], now)
     shortlist.log_events(settings, [{"event": "skipped", "key": row["key"], "company": row["company"], "title": row["title"], "by": "user veto"}], now)
-    return [f"vetoed {row['company']} | {row['title']}: skipped for good (as [s]); `careerops unskip --shortlist --match ...` is the only way back", *out]
+    return [f"vetoed {row['company']} | {row['title']}: skipped for good (as [s]); `careerops unskip --shortlist --match ...` is the only way back",
+            f"the slot it held goes to the best WAITING job at the next run from {opens} (not today: today's approvals are already counted)", *out]
+
+
+# ------------------------------------------------------------------ recheck (v3.2.1)
+def recheck(settings, db: DB, fb: dict, *, now: datetime | None = None, apply: bool = False) -> list[str]:
+    """The latest digest's lines under today's rules, zero tokens: no evaluation is run again. Reports how the quick-score verdicts move, and the WAITING /
+    MARGINAL / approved lines a hard disqualifier now stops. With `apply`, a WAITING or MARGINAL line that is now hard-disqualified becomes AGENT-SKIP (held,
+    logged; `unskip --shortlist` reverses it) and the digest line says so; an approved line is only named (a veto is yours). Nothing else is written."""
+    from . import register as sponsors
+
+    now = now or datetime.now(timezone.utc)
+    got = _digests(settings)
+    if not got:
+        return ["recheck: no agent digest yet: run `careerops shortlist` (or `daily`) first"]
+    day, rows = got[-1]
+    idx = sponsors.load_index(db)
+    floor = triage.salary_floor(settings)
+    view = _View(settings, db, set(), 0, now)
+    moves: dict[str, Counter] = {"FAIL": Counter(), "MARGINAL": Counter()}
+    stopped, approved_hit, events = [], [], []
+    for r in rows:
+        p = _current_file(settings, r)
+        job = triage.inbox_job(p, settings, fb, idx) if p is not None else None
+        if job is None:
+            continue
+        q = view.quick(job, triage.score(job, settings, fb, floor=floor, now=now))
+        was, quick_only = r.get("decision"), r.get("global") is None
+        if quick_only and was in (SKIP, MARGINAL):
+            moves["FAIL" if was == SKIP else "MARGINAL"][q.verdict] += 1
+        if not q.hard:
+            continue
+        name = f"{r.get('n')}. {r['company']} | {r['title']} ({LABEL.get(was, was)})"
+        if was in APPROVING:
+            approved_hit.append(f"  {name}: {q.hard[0]} -> approved before this rule: `careerops veto {r.get('n')}` if you agree")
+        elif was in (WAITING, MARGINAL):
+            stopped.append(f"  {name}: {q.hard[0]} -> AGENT-SKIP" + ("" if apply else " (dry run: --apply records it)"))
+            if apply:
+                r["decision"], r["reason"] = SKIP, f"recheck {now.date().isoformat()}: hard disqualifier {q.hard[0]}"
+                events.append({"key": r["key"], "job_id": r.get("job_id"), "company": r["company"], "title": r["title"], "decision": SKIP, "by": "agent",
+                               "global": r.get("global"), "quick": q.score, "reason": r["reason"], "file": str(p)})
+    out = [f"Recheck of the agent digest of {day} under today's rules (zero tokens: no evaluation was run again):", *level_lines(settings)]
+    for old, c in moves.items():
+        n = sum(c.values())
+        if n:
+            out.append(f"  quick-score {old} lines ({n}): -> PASS {c['PASS']}, -> MARGINAL {c['MARGINAL']}, still FAIL {c['FAIL']}"
+                       if old == "FAIL" else f"  quick-score {old} lines ({n}): -> PASS {c['PASS']}, still MARGINAL {c['MARGINAL']}, -> FAIL {c['FAIL']}")
+    out += ["  newly hard-disqualified:"] + stopped if stopped else ["  newly hard-disqualified (waiting / marginal): none"]
+    out += ["  approved but now hard-disqualified:"] + approved_hit if approved_hit else []
+    out.append("  a line that moves to PASS is evaluated at the next run (agent.max_evals_per_day); a quick-score verdict is never logged, so nothing else changes")
+    if apply and events:
+        log(settings, events, now)
+        write_digest(settings, day, rows)
+    return out
 
 
 def promote(settings, db: DB, what: str, *, now: datetime | None = None) -> list[str]:

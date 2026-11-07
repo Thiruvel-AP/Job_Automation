@@ -1541,6 +1541,16 @@ def cmd_veto(args):
         _fail(str(e))
 
 
+def cmd_recheck(args):
+    """`careerops recheck [--apply]` (v3.2.1): the latest agent digest under today's rules, zero tokens (decide.recheck)."""
+    from .discovery import decide
+
+    s, db = _ctx(args)
+    fb = load_yaml(s.path("fact_bank"))
+    gates.load_roles(s, fb)
+    print("\n".join(decide.recheck(s, db, fb, apply=args.apply)))
+
+
 def cmd_promote(args):
     """`careerops promote <n | id>` (v3.2): a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION job of the latest digest is approved (your override, logged)."""
     from .discovery import decide
@@ -2185,6 +2195,11 @@ def main(argv=None):
     pm.add_argument("what")
     pm.add_argument("--mock", action="store_true", help="the isolated data/mock root")
     pm.set_defaults(fn=cmd_promote)
+    rk = sub.add_parser("recheck", help="v3.2.1: the latest agent digest under today's rules (zero tokens, no evaluation run again): how the quick-score verdicts "
+                                         "move and which waiting / marginal / approved lines a hard disqualifier now stops; --apply records the stops as AGENT-SKIP")
+    rk.add_argument("--apply", action="store_true", help="record the new hard stops of WAITING / MARGINAL lines (held; `unskip --shortlist` reverses it)")
+    rk.add_argument("--mock", action="store_true", help="the isolated data/mock root")
+    rk.set_defaults(fn=cmd_recheck)
     da = sub.add_parser("daily", help="discover --ats --gmail-alerts --report, then shortlist (the whole morning in one command)")
     da.add_argument("--region", help="as for discover and shortlist")
     da.add_argument("--size", help="as for shortlist: sme | large | both | sme-first | large-first")

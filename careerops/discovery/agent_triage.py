@@ -9,11 +9,15 @@
                 · 3 anywhere else in the UK, or the place is not known · 1 the work is outside your home country (3 when you chose a region abroad)
     cv_match    E of triage.py (fact-bank coverage of the ad's required keywords); an alert with no ad text ("E ?") counts as 3
 
-Soft red flags (-0.5 each): the level is senior · the posting is older than 60 days · `evergreen?` or `possible repost` · the company is not on the
-sponsor register · no salary is given · more than 3 required skills the fact bank lacks.
-Hard disqualifiers (cap 2.5): a fee-charging training scheme · an excluded level (roles.levels.exclude and gates.ALWAYS_EXCLUDED) · the ad says no
-sponsorship and the work is outside the UK · a blacklisted company · a start date the ad states more than 9 months away · the top of the stated band
-below your floor. Each one is a fact the ad (or your own list) states; nothing is inferred.
+Soft red flags (-0.5 each): the level is senior (when roles.levels.exclude does not exclude it) · the posting is older than 60 days · `evergreen?` or
+`possible repost` · the company is not on the sponsor register · more than 3 required skills the fact bank lacks. (v3.2.1: "no salary given" is no flag:
+an unknown pay already makes comp 3, so it counted twice.)
+Hard disqualifiers (cap 2.5): a fee-charging training scheme · an excluded level (roles.levels.exclude and gates.ALWAYS_EXCLUDED; "Sr." / "Snr" are read
+as "Senior", gates.canonical_level) · the ad says no sponsorship and the work is outside the UK · a blacklisted company · a start date the ad states more
+than 9 months away · the top of the stated band below your floor · v3.2.1: security clearance or a UK-residence period ("SC clearance", "DV clearance",
+"Security Check (SC) ... clearance", "eligible for security clearance", "resided in the UK for the last 5 years", "BPSS" with "5 years"), reason
+`security clearance / residency`. Each one is a fact an ad SENTENCE (or your own list) states, quoted; a sentence that denies it or calls it optional is
+no hit (dealbreakers.py's reading); nothing is inferred.
 
 Verdicts (career-ops modes/triage.md): PASS at or above agent.triage_threshold (default 3.5) · MARGINAL from 3.0 · FAIL below 3.0. A company listed in
 targeting.priority_companies PASSES whatever its score (the list is read, never written).
@@ -26,7 +30,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Mapping, Sequence
 
-from . import blacklist, gates, priority
+from . import blacklist, dealbreakers, gates, priority
 from . import triage as triage_mod
 from .candidate import family_key
 
@@ -56,6 +60,15 @@ _MONTHS = {m: i for i, m in enumerate(("january", "february", "march", "april", 
 _MONTHS.update({m[:3]: i for m, i in list(_MONTHS.items())})
 _MONTHS["sept"] = 9
 _MON = r"(?P<m>jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+CLEARANCE_LABEL = "security clearance / residency"
+CLEARANCE = (
+    re.compile(r"\b(?:SC|DV)\s+(?:level\s+)?(?:security\s+)?clear(?:ance|ed)\b", re.I),
+    re.compile(r"\b(?:security\s+check|developed\s+vetting)\s*(?:\(\s*(?:SC|DV)\s*\)\s*)?(?:level\s+)?(?:security\s+)?clear(?:ance|ed)\b", re.I),
+    re.compile(r"\beligible\s+(?:for|to\s+(?:obtain|gain|hold))\s+(?:(?:SC|DV|UK)\s+)?(?:security\s+)?clearance\b", re.I),
+    re.compile(r"\b(?:resided|resident|lived|living|residing|residence|residency)\b[^.]{0,40}?\bin\s+the\s+(?:UK|U\.K\.|United\s+Kingdom)\b[^.]{0,50}?"
+               r"\b(?:\d{1,2}|three|five|ten)\s+years\b", re.I),
+    re.compile(r"\bBPSS\b[^.]{0,80}?\b(?:5|five)\s+years\b|\b(?:5|five)\s+years\b[^.]{0,80}?\bBPSS\b", re.I),
+)
 START = (re.compile(r"\bstart(?:ing|s)?(?:\s+date)?\s*(?:[:\-–]|is|in|from|of|on)?\s*(?:early|mid|late)?\s*(?:-\s*)?" + _MON + r"\.?\s+(?P<y>20\d\d)\b", re.I),
          re.compile(r"\b" + _MON + r"\.?\s+(?P<y>20\d\d)\s+(?:start|intake|cohort)\b", re.I),
          re.compile(r"\bcommenc\w*\s+(?:in|on|from)?\s*" + _MON + r"\.?\s+(?P<y>20\d\d)\b", re.I))
@@ -153,6 +166,15 @@ def start_months_away(jd: str, now: datetime) -> tuple[float, str] | None:
     return best
 
 
+def clearance_sentence(jd: str) -> str | None:
+    """The first ad sentence that STATES a security clearance or a UK-residence period (CLEARANCE), else None. A sentence with a negation before the words,
+    or one that calls them optional ("SC clearance desirable"), states nothing (dealbreakers._states)."""
+    for s in dealbreakers.sentences(jd):
+        if any(dealbreakers._states(rx, s) for rx in CLEARANCE):
+            return s
+    return None
+
+
 def hard_disqualifiers(job: Mapping[str, Any], t: triage_mod.Triage, settings, *, now: datetime) -> list[str]:
     """Every hard disqualifier the ad (or your own blacklist) states. Each line names the fact."""
     company, title, jd = str(job.get("company") or ""), str(job.get("title") or ""), str(job.get("description") or "")
@@ -173,6 +195,8 @@ def hard_disqualifiers(job: Mapping[str, Any], t: triage_mod.Triage, settings, *
         out.append(f"start date {start[0]:.0f} months away (\"{start[1]}\")")
     if t.pay_top is not None and t.floor is not None and t.pay_top < t.floor:
         out.append(f"pay below your floor (top £{t.pay_top:,} < £{t.floor:,})")
+    if (s := clearance_sentence(jd)):
+        out.append(f'{CLEARANCE_LABEL} ("{s}")')
     return out
 
 
@@ -187,8 +211,6 @@ def soft_flags(job: Mapping[str, Any], t: triage_mod.Triage, *, repost_flags: Se
         out.append(next(f for f in repost_flags if f.startswith(("evergreen?", "possible repost"))))
     if str(job.get("sponsor_match") or "") == "none":
         out.append("not on the sponsor register")
-    if t.pay_top is None:
-        out.append("no salary given")
     if len(t.lack) > MAX_LACK:
         out.append(f"{len(t.lack)} required skills the fact bank lacks")
     return out

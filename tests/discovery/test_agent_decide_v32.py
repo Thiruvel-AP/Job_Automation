@@ -125,7 +125,7 @@ def test_soft_red_flags_take_half_a_point_each(settings, fb, inbox):
     job = triage.inbox_job(p, settings, fb, None)
     t = triage.score(job, settings, fb, floor=None, now=NOW)
     q = qt.quick(job, t, settings, now=NOW)
-    assert "no salary given" in q.flags and any("days ago" in f for f in q.flags)
+    assert "no salary given" not in q.flags and any("days ago" in f for f in q.flags)          # v3.2.1: no salary is comp 3, not also a flag
     assert q.score == qt.formula(q.archetype, q.comp, q.location, q.cv_match, len(q.flags))
 
 
@@ -138,7 +138,7 @@ def test_location_scores_bristol_or_london_highest(settings):
 
 
 def test_a_priority_company_passes_whatever_its_score(settings, fb, inbox):
-    p = write_ad(inbox, "x.txt", company="Iwoca", title="Plumber", extra=LONG, age_days=1)
+    p = write_ad(inbox, "x.txt", company="Iwoca", title="Plumber", extra=LONG, age_days=70)
     job = triage.inbox_job(p, settings, fb, None)
     t = triage.score(job, settings, fb, floor=None, now=NOW)
     assert qt.quick(job, t, settings, now=NOW).verdict == "FAIL"
@@ -245,7 +245,8 @@ def test_an_auto_approved_line_says_why_and_the_risk(settings, db, fb, inbox):
     ad(inbox, "a.txt", "Iwoca", title="Data Scientist")
     d = run(settings, db, fb, FakeLLM(lambda ctx: answer(4.6, "High", cv_match=5, north_star=5)))
     line = next(l for l in decide.lines(d) if "AUTO-APPROVED" in l and "|" in l)
-    assert line.startswith(" 1. AUTO-APPROVED 4.6 (High) | Iwoca | Data Scientist | why: cv_match source line; north_star source line | risk: ask about")
+    assert line.startswith(" 1. AUTO-APPROVED 4.6 (High) | Iwoca | Data Scientist | apply: employer form (greenhouse) | why: cv_match source line; "
+                           "north_star source line | risk: ask about")
     assert approved_files(settings) == ["a.txt"]
 
 

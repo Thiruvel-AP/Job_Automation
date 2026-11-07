@@ -2030,3 +2030,23 @@ confidence checks, a fake LLM's 5 on a strict ATS of 40 capped through `evaluate
 Reed 4.2 -> READY FOR YOU, 7 eligible -> 5 approved and 2 waiting then read back the next day with no call, a third job at one company never approved, the eval allowance,
 a failing model, blacklist / agency -> NEEDS CONFIRMATION and held, dry run, veto permanent, promote logged, agent skip reversible, `unskip` CLI, `shortlist` / `veto` CLI,
 `--ask`, daily -> live only under auto in a terminal, calibrate, and a subprocess check that importing the decision code loads no submit / form / browser / mail module).
+
+## 5bf. v3.2.1 — follow-ups to the agent's decisions (7 Nov 2026) — **done offline** (fixtures, a fake LLM); `recheck --apply` run once on the real digest
+
+1. **Security clearance / UK residence** (`agent_triage.CLEARANCE`, `clearance_sentence`): a hard disqualifier of the quick score, reason `security clearance / residency`
+   with the ad sentence quoted; read sentence by sentence with dealbreakers.py's negation and "optional" rules. Only the quick score has it (the manual `ask` list does not).
+   The 7 Nov Cambridge Consultants pair: only *Graduate Human-Centric AI Engineer (2027 start)* states it (and *Agentic AI Engineer, Defence & Security*); *Graduate AI
+   Engineer (2027 start)* says nothing about clearance or residence, so it is not stopped (an inferred fact is never a hit).
+2. **Levels**: unchanged matching (Sr. / Snr read as Senior, so the 3 Nov list that names only `\bsr\.?\b` excludes neither; tests/discovery/test_levels_v25b.py). The digest
+   header and `recheck` print the effective `roles.levels.exclude` (+ gates.ALWAYS_EXCLUDED) and whether a Senior title passes. Your list does not exclude senior; adding
+   `'\bsenior\b'` is your edit.
+3. **"no salary given"** is no longer a soft flag.
+4. **A veto's slot**: the veto line carries `frees_slot_on` (the next day); `decide.freed_slots` lists the unused ones, `caps` gives each to the best job WAITING in the
+   latest earlier digest (`prev_waiting`) before ranking the rest, the approval line logs `freed_by`; the daily cap is not raised. Header lines say where a slot went, or
+   that one freed today waits for the next run.
+5. **Route**: approved lines print `apply: <route>`, Workday ones `hand-off: Workday needs a candidate account (never signed in by code)`; the digest file keeps the route.
+6. **`careerops recheck [--apply]`** (`decide.recheck`): the latest digest under today's rules, zero tokens. Counts the quick-score moves (FAIL -> PASS / MARGINAL), lists the
+   WAITING / MARGINAL lines a hard disqualifier now stops (`--apply` logs them AGENT-SKIP, held, and rewrites that digest line) and names approved ones (a veto is yours).
+
+Tests: `tests/discovery/test_agent_followups_v321.py`; three v3.2 expectations changed with the rules (no-salary flag, the route in the approved line, a fixture that FAILed
+only through the dropped flag).

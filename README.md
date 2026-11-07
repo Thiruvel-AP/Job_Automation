@@ -241,6 +241,7 @@ careerops veto 2                  # v3.2: line 2 of the latest agent digest (or 
 careerops promote 5               # v3.2: a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION line becomes approved, logged as your override
 careerops shortlist --ask         # v3.2: this run only, the old manual list and [a] prompt (agent.decide: ask makes it the default)
 careerops calibrate --scores      # v3.2: reply rate per agent score band once 20+ scored applications have an outcome; suggests a higher approval line, never changes one
+careerops recheck [--apply]       # v3.2.1: the latest agent digest under today's rules, zero tokens: quick-score moves, new hard stops (--apply records WAITING / MARGINAL ones as AGENT-SKIP)
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
@@ -1260,9 +1261,13 @@ Ported from career-ops (`ext/career-ops`, modes `triage`, `oferta`, `auto-pipeli
 
 1. **Quick score** (zero tokens, `discovery/agent_triage.py`): `archetype x 0.35 + comp x 0.25 + location x 0.25 + cv_match x 0.15`, minus 0.5 per soft red flag, from
    the T factors (archetype = A, comp = P, cv_match = E, location = 5 onsite/hybrid within commuting distance of Bristol or London, 4 remote in the UK, 3 elsewhere in the
-   UK, 1 abroad). Soft red flags: senior, older than 60 days, `evergreen?` / `possible repost`, not on the sponsor register, no salary, more than 3 skills the bank lacks.
-   A hard disqualifier caps it at 2.5 (training scheme, excluded level, "no sponsorship" with work abroad, blacklisted, a stated start more than 9 months away, the top of
-   the band below your floor). PASS >= `agent.triage_threshold` (3.5) · MARGINAL 3.0-3.4 · FAIL < 3.0; a company in `targeting.priority_companies` PASSES (read only).
+   UK, 1 abroad). Soft red flags: senior (when `levels.exclude` lets it through), older than 60 days, `evergreen?` / `possible repost`, not on the sponsor register,
+   more than 3 skills the bank lacks (v3.2.1: a missing salary is no flag: comp is already 3). A hard disqualifier caps it at 2.5 (training scheme, excluded level, "no
+   sponsorship" with work abroad, blacklisted, a stated start more than 9 months away, the top of the band below your floor, v3.2.1: a security clearance or UK-residence
+   period the ad states, "SC / DV clearance", "Security Check (SC) ... clearance", "eligible for security clearance", "resided in the UK for the last 5 years", "BPSS" with
+   "5 years": `security clearance / residency` with the sentence quoted; "desirable" or a denial is no hit). PASS >= `agent.triage_threshold` (3.5) · MARGINAL 3.0-3.4 ·
+   FAIL < 3.0; a company in `targeting.priority_companies` PASSES (read only). The digest's header prints the effective `roles.levels.exclude` and says whether a Senior /
+   Sr. title is excluded ("Sr." and "Snr" are read as "Senior", so a `sr` pattern alone excludes neither).
 2. **Full evaluation** of the PASS ads (`discovery/evaluate.py`): one call on the cover letter's route (Groq gpt-oss-120b, task `job_eval`, temperature 0, JSON; the
    ad goes in a fence as untrusted data), at most `agent.max_evals_per_day` (12) a day; an ad evaluated before with the same text is read back for free. Five dimension
    scores with a status (supported / partial / unknown) and a source line, a global 1-5, a confidence tier (Low / Medium / High), red flags, legitimacy (separate,
@@ -1276,7 +1281,10 @@ Ported from career-ops (`ext/career-ops`, modes `triage`, `oferta`, `auto-pipeli
    `per_company_max_open` (2) at one company counting open applications and approved files still waiting, the cooldown; the highest global x freshness wins, the rest
    WAIT for the next run (no new tokens). MARGINAL, AGENT-SKIP (evaluated) and NEEDS CONFIRMATION are held in `data/evals/decisions.jsonl` (the file stays in the inbox):
    `careerops unskip --shortlist` lists them and brings them back; your own skips and vetoes stay permanent.
-4. **You**: `careerops veto N` before `careerops live` (a permanent skip, as `[s]`), `careerops promote N` (your logged override). `agent.decide`: `veto` (code
+4. **You**: `careerops veto N` before `careerops live` (a permanent skip, as `[s]`; v3.2.1: the slot it held goes to the best job that was WAITING, at the next run
+   from the next day, never the same day, and inside the daily cap, which is never raised; the header says where it went), `careerops promote N` (your logged override).
+   v3.2.1: each approved line shows its route (`apply: employer form (greenhouse)`; a Workday one adds `hand-off: Workday needs a candidate account (never signed in by
+   code)`), and `careerops recheck [--apply]` reads the latest digest again under the current rules without a model call. `agent.decide`: `veto` (code
    default), `ask` (the old manual list), `auto` (the agent decides and `daily` starts a plain `careerops live` straight after in a terminal: assist, you press Submit;
    only `live --auto` submits, through its gates, and never from `daily`). The digest also prints the evaluation tokens (this run and today), the 4.5+ jobs that only
    reached Low confidence, the marginal jobs of the last 7 days, and what was held at a company limit.
