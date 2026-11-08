@@ -50,7 +50,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ..tailoring import faithfulness, fluency as fluency_mod, letter_reuse, letters as letters_mod
+from ..tailoring import faithfulness, fluency as fluency_mod, letter_reuse, letters as letters_mod, plain as plain_mod
 from ..tailoring.grounding import sentences as split_sentences
 from ..tailoring.letter_rules import term_dump_problems
 from ..tailoring.scorer import Keyword, _contains, gap_terms, keyword_hits, norm_literal
@@ -631,7 +631,9 @@ class FreeText:
         phrases = AL.noun_phrases(about_sentences(self.ad, self.company, self.kws), self.company)
         phrases = sorted(phrases, key=lambda p: norm_literal(p) in said)
         proof = self._proof()
-        told = [AL.first_person(b["text"]) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]
+        use_plain = self._settings is not None and plain_mod.style(self._settings) == "plain"      # v3.4: the approved plain wording
+        told = [AL.first_person(str(b.get("plain") or "") if use_plain and str(b.get("plain") or "").strip() else b["text"])
+                for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]
                 if proof is not None and str(b["id"]) == proof.id][:1]
         rest = told + list(self.book.motivations)
         out = []
@@ -843,6 +845,13 @@ class FreeText:
         return (f"no JD: the job ad has {len(self.ad.split())} words (a motivation answer needs {MIN_JD_WORDS}+), even after fetching it again; "
                 f"nothing is drafted from the title alone")
 
+    def _jargon_problems(self, text: str) -> list[str]:
+        """cv.style plain (v3.4): a rewritten answer names technical terms only from the allow-list and the ad's keywords."""
+        if self._settings is None or plain_mod.style(self._settings) != "plain":
+            return []
+        terms = plain_mod.jargon(text, self.fb, None, [*plain_mod.allow_list(self._settings), *(k.term for k in self.kws)])
+        return [f"answer: jargon not on the allow-list: {', '.join(terms)}"] if terms else []
+
     def _text_problems(self, text: str) -> list[str]:
         """tailoring/fluency.py's (b) to (d) for a motivation answer, and its overlap with this job's letter."""
         one = {"answer": text}
@@ -879,7 +888,7 @@ class FreeText:
                 break
             text = " ".join(str((reply or {}).get("answer") or "").split())
             estimate += (len(FLUENCY_SYSTEM) + len(user) + len(text)) // 4
-            problems = (fluency_mod.fact_problems(text, "\n".join(facts), self.ad, self.guard.tools) + self._text_problems(text)
+            problems = (fluency_mod.fact_problems(text, "\n".join(facts), self.ad, self.guard.tools) + self._text_problems(text) + self._jargon_problems(text)
                         + self.guard.problems(text, plan, limit)) if text else ["the answer is empty"]
             if not problems:
                 info.update(source="model", tokens=fluency_mod._spent(self.llm, start, estimate))

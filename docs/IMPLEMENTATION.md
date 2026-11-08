@@ -2123,3 +2123,50 @@ the assembled draft"); notes say so. "I built X to Y" is written purpose-first (
 
 Tests: `tests/tailoring/test_fluency_v34.py`, `tests/apply/test_motivation_v34.py`; adapted: `test_letter_assembled_v25.py` (a bullet is told once; the
 P5 fallback frame), `tests/apply/test_motivation.py` (the plan's sources), `test_letter_format.py` (the new settings key).
+
+## 5bi. v3.4 part 2 — plain-language STAR bullets for a non-technical first reader, keywords kept for the ATS (8 Nov 2026) — **done offline** (fixtures, MockLLM, xelatex PDFs); approving bullets and the live dry run are yours
+
+Why: a UK recruiter's advice (the first reader is not technical: each bullet says the situation, what you did and what came of it, technologies as
+keywords only) and a senior's 2026 graduate template. ATS strict = sum(w * hit) / sum(w) over the JD's keywords, so jargon the JD does not name can go
+for free and every JD keyword must stay.
+
+1. **`careerops plain-draft [--limit N] [--id a,b] [--no-hooks] [--dry-run]`** (`review/plaindraft.py`, `tailoring/plain.py`): one candidate per bullet with
+   no `plain:` and per hook entry field with no `plain_headline` / `plain_profile_line` / `plain_letter_line` (task `plain_bullet`, routed like
+   `rephrase_bullets`; two tries, the second told the first's problems). Checked in code before it is shown: facts (numbers in the bullet's text or
+   `result:`; no tool, organisation, name or outcome phrase the bullet does not have; deny list), jargon (allow-list only: `plain.ALLOW` + `cv.plain_allow`;
+   fact-bank library / product names, `plain.JARGON` (HGNC, parquet, circuit breaker, Leiden, Pydantic ...) and code-like tokens refused; the role's own
+   organisation and the project's own name are not jargon), length (one sentence, <= 30 words, <= 2 CV lines of 92 characters), Flesch reading ease
+   >= `cv.plain_min_flesch` (50; built-in formula, textstat is not a dependency), a result clause (a number or an outcome). A bullet that states no result
+   is NEEDS RESULT and is not drafted. A failed candidate is never offered. `y`, or `e` + your text + `y`, saves through **`factbank_append.add_field`**:
+   one `plain...:` line inserted after the bullet's (or hook entry's) last line, dated backup first, the file reloaded and validated (nothing else
+   reads back differently, no new deny-list hit) or restored; an existing field is never replaced. `--mock` implies `--dry-run`; a non-terminal run needs
+   `--dry-run`. `doctor` prints the allow-list and the part of it the fact bank evidences.
+2. **Plain style in tailoring** (`cv.style: plain`, the code default; `technical` = before): after the claimable ceiling (which reads the technical text),
+   `plain.plain_bank` gives the selection a copy of the bank whose bullets read their `plain:` plus, in brackets before the full stop, up to 3 JD keywords
+   the original says literally and the plain text does not ("... used (LLM, AWS)."), and whose hook entries read their plain fields. A plain bullet is
+   never reworded by the model (rephrase and wording passes leave it alone). After the attempts, `plain_style_report` scores the CV's words both ways
+   (`plain.ctx_text`, the technical text put back per bullet); if plain is lower, `plain.top_up` adds the missing JD keywords (no cap) to the brackets of a
+   plain bullet whose original says them. Printed: `plain style: strict X% (technical Y%), on the CV's words`; `report["style"]` has both numbers, the
+   brackets, the readability per plain bullet, the plain bullets on the CV and those with none (also an analysis warning: "plain version missing for ...").
+   The Skills section is unchanged (the keyword store).
+3. **Letter and motivation**: the plain bank is the letter's fact source (the bullets, the hook's letter line). In plain style the fluency rewrite is
+   refused when it names a technical term outside the allow-list and the ad's keywords (P1's quoted ad phrase excluded); its prompt says so. The
+   motivation answer's code-built version tells the proof bullet's `plain:`, and its rewrite gets the same jargon check (the code-built version does not:
+   it is verified text).
+4. **Layout options** (all off in the settings: the 23 Oct layout stands): `cv.additional_experience` (a role, never the most recent nor the hook's, whose
+   best bullet on the CV carries < `additional_experience_below` JD weight becomes "Additional experience: <title>, <employer> (<place>, <dates>)" at the
+   end of Experience; applied to the chosen attempt before the final render, so page 2 may come out a little shorter), `cv.achievements_one_line`
+   (certifications first, then each award project as one dated line), `cv.graduate_order` + `cv.section_order_graduate` (only for an ad whose title or
+   text says graduate, entry-level, early careers or "20XX start"). The template loops over `section_order` (default: the old order); with the default it
+   renders byte-identical to before (checked on the test contexts).
+
+Not done, and why: **D4 (summary sentence pattern)**: the Document rules say the profile is assembled only from fact-bank text and never padded; a sentence
+built in code from the title, domains, skills and applicant.yaml's work authorisation would be new text, so it needs your decision (or profile
+sentences in the bank written that way). **Plain profile sentences**: only the hook's profile line has a plain twin; the family `profile_body` and
+`profile.sentences` keep their wording. The **CLAUDE.md fact-bank rule** speaks of "a fact the user typed"; `y` on a shown candidate is the exact-text
+confirmation this round's task asked for, and the rule's wording may want updating. Unverified here: the real model's candidates (`plain-draft` with
+you) and the RightShip `live --dry-run --record` in plain style.
+
+Tests: `tests/tailoring/test_plain_v34.py` (checks, review flow, add_field, plain bank, brackets, top-up, letter jargon rule, layout options, doctor),
+`tests/tailoring/test_plain_pipeline_v34.py` (slow: both styles through the whole tailoring); `test_fluency_v34.py` and `test_motivation_v34.py` pin
+`cv.style: technical` (they test the fluency mechanics).

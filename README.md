@@ -232,6 +232,10 @@ careerops live --id manual:ff68fffd015a   # work on one job the database already
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
+careerops plain-draft --id az10,dc1,p_ll1   # v3.4: a plain-language (STAR) version of these bullets / hook lines for a non-technical first reader;
+                                   # each candidate passes the checks before you see it; [y] save as plain / [e] edit then save / [n] skip / [q] quit.
+                                   # Saved as `plain:` under the bullet by factbank_append.py (dated backup first); the bullet's text never changes.
+                                   # --limit N, --no-hooks, --dry-run (show only). cv.style: plain (default) prints the plain versions, technical the old wording
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops shortlist --all         # v2.7: every undecided in-region ad again, not only the new ones (also the ones parked after three showings); a look, never a showing

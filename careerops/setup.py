@@ -156,6 +156,20 @@ def skill_repeat_checks(path: Path) -> list[tuple[str, object, str]]:
     return [(f"no skill repeats in the fact bank's family skill lines ({len(fams)} families)", True, "")]
 
 
+def plain_allow_checks(settings) -> list[tuple[str, object, str]]:
+    """v3.4: the keyword allow-list of plain style (cv.style), and the part of it the fact bank evidences. Information only."""
+    from .config import load_yaml
+    from .tailoring import plain as plain_mod
+
+    try:
+        fb = load_yaml(settings.path("fact_bank"))
+    except Exception:  # noqa: BLE001  (a missing bank is another check's problem)
+        fb = {}
+    have = plain_mod.evidenced_allow(fb, settings)
+    return [(f"plain style ({plain_mod.style(settings)}): allow-list {', '.join(plain_mod.allow_list(settings))}; "
+             f"your fact bank evidences {', '.join(have) or 'none'}", True, "")]
+
+
 def profile_word_checks(path: Path) -> list[tuple[str, object, str]]:
     """Doctor lines for the CV profile's length (Document rules: 100 to 150 words), read only: for each role family, are there words enough in the
     family's `profile_body` and the bank's profile sentences (`profile.sentences`, and the older `profile_facts`; a deny-listed one does not count)
@@ -513,6 +527,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += hook_lint_checks(settings.path("fact_bank"))
     checks += skill_repeat_checks(settings.path("fact_bank"))
     checks += profile_word_checks(settings.path("fact_bank"))
+    checks += plain_allow_checks(settings)
     checks += project_public_checks(settings.path("fact_bank"))
     checks += ats_structure_checks(settings)
     checks += applicant_checks(settings.path("applicant"))

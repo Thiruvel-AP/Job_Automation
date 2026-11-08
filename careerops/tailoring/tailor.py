@@ -31,6 +31,7 @@ from .families import possible_evidence
 from . import freeze
 from .provisional import provisional_bullets
 from . import letters as letters_mod
+from . import plain as plain_mod
 from . import profile as profile_mod
 from . import typography
 from .jdtext import strip_benefits
@@ -567,7 +568,7 @@ def achievement_entries(fb: dict, pids: list[str], kws: list[Keyword]) -> list[d
         award = str(p["award"]).strip()
         b = max(p["bullets"], key=lambda b: sum(weight[i] for i in hits[b["id"]]))
         result = " ".join(str(b.get("result") or "").split())
-        out.append({"id": p["id"], "name": p["name"], "award": award, "bullet_id": b["id"],
+        out.append({"id": p["id"], "name": p["name"], "award": award, "bullet_id": b["id"], "dates": str(p.get("dates") or ""),
                     "text": typography.strip_award(" ".join(b["text"].split()), award),
                     "result": typography.strip_award(result, award) if result else ""})
     return out
@@ -1709,6 +1710,83 @@ def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict 
         raise
 
 
+# ------------------------------------------------------------------ v3.4: plain style and the layout options
+def _cv_cfg(settings) -> dict:
+    raw = getattr(settings, "raw", settings) or {}
+    return dict((raw.get("cv") or {}) if isinstance(raw, dict) else {})
+
+
+GRADUATE_JD = re.compile(r"\bgraduate\b|\bentry[- ]level\b|\bearly[- ]careers?\b|\b20\d\d\s+(?:start|intake|cohort)\b|\bgrad scheme\b", re.I)
+DEFAULT_SECTIONS = ("profile", "skills", "experience", "projects", "education", "research_focus", "publications", "certifications", "languages")
+GRADUATE_SECTIONS = ("profile", "education", "experience", "projects", "skills", "certifications")
+
+
+def graduate_jd(job: dict) -> bool:
+    """The ad's title or text says graduate, entry-level, early careers, or a "20XX start" scheme."""
+    return bool(GRADUATE_JD.search(f"{job.get('title') or ''}\n{job.get('description') or ''}"))
+
+
+def section_order(job: dict, settings) -> list[str] | None:
+    """cv.section_order_graduate, used ONLY when cv.graduate_order is true and the ad is a graduate one (else None: the template's own order).
+    Sections the list leaves out follow in the default order."""
+    cfg = _cv_cfg(settings)
+    if cfg.get("graduate_order") is not True or not graduate_jd(job):
+        return None
+    first = [s for s in (cfg.get("section_order_graduate") or GRADUATE_SECTIONS) if s in DEFAULT_SECTIONS]
+    return list(dict.fromkeys(first + [s for s in DEFAULT_SECTIONS if s not in first]))
+
+
+def additional_experience(ctx: dict, fb: dict, kws: list[Keyword], settings, protect: set[str] | None = None) -> list[str]:
+    """cv.additional_experience: a role (not the most recent) whose best bullet on the CV carries less JD keyword weight than
+    cv.additional_experience_below leaves the role list and becomes one line at the end of Experience ("Software Development Engineer, Avasoft
+    (Chennai, Jan 2023 – Sep 2024)"), so the timeline stays complete without spending bullets. `ctx` is changed in place; returns the lines."""
+    cfg = _cv_cfg(settings)
+    if cfg.get("additional_experience") is not True:
+        return []
+    below = float(cfg.get("additional_experience_below", 1.0))
+    hits, weight = bullet_hits(fb, kws), [k.weight for k in kws]
+    keep, lines = [], []
+    for n, e in enumerate(ctx.get("experience") or []):
+        best = max((sum(weight[i] for i in hits.get(b, ())) for b in e.get("bullet_ids") or []), default=0.0)
+        if n == 0 or best >= below or set(e.get("bullet_ids") or []) & (protect or set()):
+            keep.append(e)
+            continue
+        org = re.split(r"\s*,\s*", str(e.get("org") or ""))[0].strip()
+        where = ", ".join(x for x in (re.split(r"\s*,\s*", str(e.get("location") or ""))[0].strip(), str(e.get("dates") or "").strip()) if x)
+        lines.append(f"{e.get('title') or ''}, {org}" + (f" ({where})" if where else ""))
+    if lines:
+        ctx["experience"] = keep
+        ctx["additional_experience"] = lines
+    return lines
+
+
+def _restore_plain(ctx: dict, fb: dict, info: dict) -> None:
+    """An approved plain bullet is never reworded (the wording pass may only touch the others)."""
+    plain_ids, bidx = set(info.get("plain") or []), bullet_index(fb)
+    for sec in ("experience", "projects"):
+        for e in ctx.get(sec) or []:
+            for i, bid in enumerate(e.get("bullet_ids") or []):
+                if bid in plain_ids:
+                    e["bullets"][i] = bidx[bid]["text"]
+
+
+def plain_style_report(ctx: dict, info: dict, kws: list[Keyword], claimable: list[str]) -> dict:
+    """The strict ATS of the plain CV and of the same CV in the technical wording (both on the CV's words, plain.ctx_text); when plain is lower,
+    the missing JD keywords go into the brackets of a plain bullet whose original says them (plain.top_up). Readability per plain bullet on the CV,
+    and the CV's bullets that have no plain version."""
+    on_cv = [b for sec in ("experience", "projects") for e in ctx.get(sec) or [] for b in e.get("bullet_ids") or []]
+    plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
+    topped: list[str] = []
+    if plain_s < tech_s:
+        topped = plain_mod.top_up(ctx, info, kws, plain_mod.ctx_text(ctx))
+        plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
+    plain_set = set(info.get("plain") or [])
+    return {"style": "plain", "strict_plain": plain_s, "strict_technical": tech_s, "topped_up": topped,
+            "brackets": {b: t for b, t in (info.get("added") or {}).items() if b in on_cv},
+            "readability": {b: s for b, s in (info.get("readability") or {}).items() if b in on_cv},
+            "plain_on_cv": [b for b in on_cv if b in plain_set], "plain_missing": [b for b in on_cv if b not in plain_set]}
+
+
 def _keep_proof_number(ctx: dict, fb: dict, hk: hooks.Hook) -> None:
     """After the wording pass: a proof bullet whose new wording lost the hook's number goes back to its fact-bank text."""
     canonical = bullet_index(fb)[hk.proof_bullet_id]["text"]
@@ -1775,6 +1853,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     alts = {k.term: k.alts for k in kws if k.alts}
     possible = possible_evidence(fb, all_gaps, alts)
     gaps = [g for g in all_gaps if g not in possible]
+    plain_info: dict | None = None
+    if plain_mod.style(settings) == "plain":            # v3.4: each bullet's approved `plain:` (+ the JD keywords it lost, in brackets)
+        fb, plain_info = plain_mod.plain_bank(fb, kws)
     jd = job["description"] or ""
     groups_cfg = {} if one_page else skill_group_config(settings)
     from_family = gates.skills_from(settings, family)       # the bank family a role family without skill_lines of its own prints
@@ -1848,6 +1929,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes,
                                              other_text=profile_text + " " + skills_text(skills))
         accepted, viol, warn = guard_rephrases(fb, proposed, kws)
+        if plain_info and plain_info["plain"]:          # an approved plain bullet is yours: never reworded by the model
+            accepted = {k: v for k, v in accepted.items() if k not in set(plain_info["plain"])}
         if hk and hk.proof_bullet_id in accepted and not hooks.keeps_number(accepted[hk.proof_bullet_id], hk):
             del accepted[hk.proof_bullet_id]                     # a rewording that drops the hook's number is not the proof any more
             rephrase_notes.append(f"hook: the rewording of {hk.proof_bullet_id} lost {hk.number}; the fact-bank wording is kept")
@@ -1901,6 +1984,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         if s.wording_misses:
             before = [list(e["bullets"]) for sec in ("experience", "projects") for e in ctx[sec]]
             wording.update(wording_pass(job, fb, ctx, kws, s.wording_misses, llm, cache, rephrase_notes))
+            if plain_info:
+                _restore_plain(ctx, fb, plain_info)
             if hk:
                 _keep_proof_number(ctx, fb, hk)
             if wording["accepted"]:
@@ -1959,6 +2044,21 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             break
 
     rec, ctx = best
+    extra_roles = [] if one_page else additional_experience(ctx, fb, kws, settings, {hk.proof_bullet_id} if hk else set())
+    sec_order = None if one_page else section_order(job, settings)
+    if sec_order:
+        ctx["section_order"] = sec_order
+    if not one_page and _cv_cfg(settings).get("achievements_one_line") is True:
+        ctx["achievements_one_line"] = True
+    style_rep: dict = {"style": "technical"}
+    if plain_info is not None:
+        style_rep = plain_style_report(ctx, plain_info, kws, claimable)
+        print(f"  plain style: strict {style_rep['strict_plain']:.1f}% (technical {style_rep['strict_technical']:.1f}%), on the CV's words"
+              + (f"; added {', '.join(style_rep['topped_up'])} in brackets" if style_rep["topped_up"] else ""))
+        if style_rep["plain_missing"]:
+            report["analysis_warnings"].append(f"plain style: plain version missing for {', '.join(style_rep['plain_missing'])} (their original "
+                                               "wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)")
+    style_rep.update(additional_experience=extra_roles, section_order=sec_order or list(DEFAULT_SECTIONS))
     pdf = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)     # re-render the chosen attempt as the final file
     final_score = ats.score(pdf_text(pdf), kws)
     cv_pages = page_count(pdf)
@@ -2010,7 +2110,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         "typography": typography_report(ctx, pdf_text(pdf), sep, keep),
         "ranking": ranking_table(fb, kws, jd, chosen_ids),
         "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"], "placement": rec["placement"],
-        "letter": letter, "llm_usage": usage_since(llm, usage_from),
+        "letter": letter, "llm_usage": usage_since(llm, usage_from), "style": style_rep,
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": _final_path(letter_pdf, out_dir, final_dir),
         "context": ctx,
     })

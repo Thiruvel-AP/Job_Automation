@@ -1845,6 +1845,18 @@ def cmd_import_linkedin(args):
     print(f"{fact_bank.name} was not modified: merge by hand.")
 
 
+def cmd_plain_draft(args):
+    """v3.4: plain-language candidates for the fact bank's bullets and hook lines, saved only on your `y` (review/plaindraft.py)."""
+    from .review import plaindraft
+
+    dry = bool(getattr(args, "dry_run", False) or getattr(args, "mock", False))      # --mock never writes your fact bank
+    if not dry and not sys.stdin.isatty():
+        _fail("plain-draft asks you to approve each line: run it in a terminal (or with --dry-run to only see the candidates)")
+    s, db = _ctx(args)
+    ids = {x.strip() for x in ",".join(args.id or []).split(",") if x.strip()} or None
+    plaindraft.run(s.path("fact_bank"), _llm(args, s, db), s, limit=args.limit, ids=ids, hooks=not args.no_hooks, dry_run=dry)
+
+
 def cmd_learning(args):
     from .tailoring import learning
 
@@ -2024,6 +2036,14 @@ def main(argv=None):
     ap.add_argument("--config", default=None, help="path to settings.yaml")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init").set_defaults(fn=cmd_init)
+    pd = sub.add_parser("plain-draft", help="v3.4: one plain-language (STAR) version per fact-bank bullet and hook line that has none, for a "
+                        "non-technical reader; you approve each ([y]/[e]/[n]/[q]) and only then it is saved as `plain:` (backup first)")
+    pd.add_argument("--limit", type=int, help="draft at most this many")
+    pd.add_argument("--id", action="append", help="only these bullet or hook ids (comma-separated, repeatable): e.g. --id az10,dc1,p_ll1")
+    pd.add_argument("--no-hooks", action="store_true", help="bullets only, not the hook library's headline / profile / letter lines")
+    pd.add_argument("--dry-run", action="store_true", help="show the candidates, ask nothing, save nothing")
+    pd.add_argument("--mock", action="store_true", help="MockLLM (plumbing only); implies --dry-run")
+    pd.set_defaults(fn=cmd_plain_draft)
     dr = sub.add_parser("doctor")
     dr.add_argument("--no-ping", action="store_true", help="do not send the llm.models models a tiny request (the one "
                     "check that spends provider quota)")

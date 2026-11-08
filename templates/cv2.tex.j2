@@ -82,16 +82,20 @@
 
 \end{center}
 
+\BLOCK{for sec in section_order|default(['profile', 'skills', 'experience', 'projects', 'education', 'research_focus', 'publications', 'certifications', 'languages'])}
+\BLOCK{if sec == 'profile'}
 % ================= PROFILE =================
 \needspace{5\baselineskip}\section{Profile}
 \VAR{profile|e}
 
+\BLOCK{elif sec == 'skills'}
 % ================= SKILLS =================
 \needspace{5\baselineskip}\section{Skills}
 \BLOCK{for group, items in skills.items()}
 \skillgroup{\VAR{group|e}}{\VAR{items|skill_row}}
 \BLOCK{endfor}
 
+\BLOCK{elif sec == 'experience'}
 % ================= EXPERIENCE =================
 \needspace{5\baselineskip}\section{Work Experience}
 \BLOCK{for e in experience}
@@ -111,7 +115,12 @@
 \BLOCK{endfor}
 \end{itemize}
 \BLOCK{endfor}
+\BLOCK{if additional_experience|default([])}
+\gap
+\noindent\textbf{Additional experience:} \VAR{additional_experience|map('e')|join(dot)}\par
+\BLOCK{endif}
 
+\BLOCK{elif sec == 'projects'}
 % ================= PROJECTS =================
 \needspace{5\baselineskip}\section{Projects}
 \BLOCK{for p in projects}
@@ -154,6 +163,7 @@
 \end{itemize}
 \BLOCK{endfor}
 
+\BLOCK{elif sec == 'education'}
 % ================= EDUCATION =================
 \needspace{5\baselineskip}\section{Education}
 \BLOCK{for ed in education}
@@ -167,12 +177,14 @@
 {\color{muted}\small \VAR{el[1]|inline}}\par
 \BLOCK{endif}
 \BLOCK{endfor}
+\BLOCK{elif sec == 'research_focus'}
 \BLOCK{if research_focus|default('')}
 
 % ================= RESEARCH FOCUS (optional fact-bank section) =================
 \needspace{5\baselineskip}\section{Research Focus}
 \VAR{research_focus|e}
 \BLOCK{endif}
+\BLOCK{elif sec == 'publications'}
 \BLOCK{if publications|default([])}
 
 % ================= PUBLICATIONS (optional fact-bank section) =================
@@ -183,19 +195,30 @@
 \BLOCK{endfor}
 \end{itemize}
 \BLOCK{endif}
+\BLOCK{elif sec == 'certifications'}
 \BLOCK{if certifications or achievements|default([])}
 
 % ================= CERTIFICATIONS & ACHIEVEMENTS =================
 \needspace{5\baselineskip}\section{Certifications \& Achievements}
 \begin{itemize}
+\BLOCK{if achievements_one_line|default(false)}
+\BLOCK{for c in certifications}
+  \item \VAR{c|cert_tex}
+\BLOCK{endfor}
+\BLOCK{for a in achievements|default([])}
+  \item \textbf{\VAR{a|achievement_head}}\BLOCK{if a.get('dates')}, \VAR{a.dates|dates|e}\BLOCK{endif}
+\BLOCK{endfor}
+\BLOCK{else}
 \BLOCK{for a in achievements|default([])}
   \item \textbf{\VAR{a|achievement_head}}: \VAR{a.text|bullet(a.get('result', ''), 'num')}
 \BLOCK{endfor}
 \BLOCK{for c in certifications}
   \item \VAR{c|cert_tex}
 \BLOCK{endfor}
+\BLOCK{endif}
 \end{itemize}
 \BLOCK{endif}
+\BLOCK{elif sec == 'languages'}
 \BLOCK{if languages|default([])}
 
 % ================= LANGUAGES (optional fact-bank section) =================
@@ -205,4 +228,6 @@
 \end{itemize}
 \BLOCK{endif}
 
+\BLOCK{endif}
+\BLOCK{endfor}
 \end{document}

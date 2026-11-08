@@ -42,6 +42,8 @@ class MockLLM:
                     "company_hook": "", "team": ""}
         if task == "rephrase_bullets":
             return {}                                          # the mock never rewords: every bullet keeps its text
+        if task == "plain_bullet":                                          # v3.4: plumbing only, never a real plain version
+            return {"plain": ctx.get("original") or ""}
         if task == "cover_letter" and ctx.get("mode") == "fluency":         # v3.4: the mock never rewords: the assembled draft as it is
             return dict(ctx.get("draft") or {})
         if task == "free_text_answer" and ctx.get("mode") == "fluency_motivation":

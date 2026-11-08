@@ -233,6 +233,17 @@ cv:
   # What stands between the two dates of a range on the CV: " – " (an en dash, the default) or " to ". One space is kept each side.
   # The rest of the typography (no em dashes, which hyphens are closed up) is config/typography.yaml.
   date_separator: " – "
+  # v3.4 plain style. plain = each bullet prints its approved `plain:` (careerops plain-draft), with up to 3 JD keywords its original says added
+  # in brackets; technical = the fact bank's own wording, as before. The Skills section stays the keyword store either way.
+  style: plain
+  plain_allow: []             # technical names a plain bullet may keep, on top of the built-in list (careerops doctor shows it)
+  plain_min_flesch: 50        # Flesch reading ease a plain candidate must reach (built-in formula; one 30-word sentence needs short words)
+  # Layout options from the 2026 graduate template; all off, so the 23 Oct layout stands until you turn one on.
+  additional_experience: false        # true: a role whose best bullet carries < additional_experience_below JD weight becomes one line
+  additional_experience_below: 1.0    #   at the end of Experience ("Additional experience: <title>, <employer> (<place>, <dates>)")
+  achievements_one_line: false        # true: Certifications first, then each award as one dated line (no bullet text)
+  graduate_order: false               # true: section_order_graduate, only for an ad that says graduate / entry-level / early careers / "20XX start"
+  section_order_graduate: [profile, education, experience, projects, skills, certifications]
   # The four Skills groups of the two-page CV, in this order (config/reference/cv_style_reference.tex v2). Each fact-bank skill goes to one
   # group: by name (`skills`, which also places the pinned `skills.core` ones), else by the fact-bank group it sits in (`banks`: regexes
   # on that group's name), else, for a core skill no group names, to the `default` group. A fact-bank group no group claims is not

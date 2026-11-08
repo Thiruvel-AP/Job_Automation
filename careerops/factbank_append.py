@@ -17,6 +17,12 @@ line endings) stays byte-identical:
         source: user_<YYYYMMDD>
 
 Nothing is reworded, reordered or deleted, and no other module writes the file (tests/test_fact_bank_single_writer.py).
+
+v3.4, `add_field`: a plain-language twin of an existing bullet (`plain:`) or of a hook entry's line (`plain_headline:`, `plain_profile_line:`,
+`plain_letter_line:`), shown to the user by `careerops plain-draft` and saved only with `confirmed="y"` for that exact text (the candidate as
+shown, or the user's own edit of it). It is ONE new line, inserted after the last line of that bullet or entry, at its key indent; the entry's
+other lines (its `text:` included) stay byte-identical. The same backup-first, validate-or-restore rules apply, a field that is already there is
+never replaced, and the deny list is checked on the new text too.
 """
 from __future__ import annotations
 
@@ -34,6 +40,7 @@ from .tailoring.skills import core_deny_problems
 
 BACKUP_DIR = "backups"
 SECTIONS = ("experience", "projects")
+PLAIN_FIELDS = ("plain", "plain_headline", "plain_profile_line", "plain_letter_line")
 _ID_LINE = re.compile(r"^(\s*)-\s+id:\s*[\"']?([^\s\"'#]+)[\"']?\s*(?:#.*)?$")
 _PLAIN_TERM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .+#/&_-]*$")
 
@@ -75,7 +82,7 @@ def problems(fb: dict) -> list[str]:
     for sec in SECTIONS:
         for e in fb.get(sec) or []:
             for b in e.get("bullets") or []:
-                for d in deny_hits(" ".join([str(b.get("text") or ""), *[str(t) for t in b.get("terms") or []]]), deny):
+                for d in deny_hits(" ".join([str(b.get("text") or ""), str(b.get("plain") or ""), *[str(t) for t in b.get("terms") or []]]), deny):
                     out.append(f"bullet {b.get('id')} contains deny-listed '{d}'")
     return out + core_deny_problems(fb)
 
@@ -179,6 +186,85 @@ def _backup(path: Path, data: bytes, now: datetime) -> Path:
             return dst
         except FileExistsError:
             n += 1
+
+
+def _item_span(lines: list[str], owner: str) -> tuple[int, int, int] | None:
+    """(the `- id: <owner>` line, the end of that item, its dash indent) for a bullet of experience / projects or an entry of hook_library."""
+    for sec in (*SECTIONS, "hook_library"):
+        start = next((i for i, l in enumerate(lines) if l.rstrip("\r\n") == f"{sec}:"), None)
+        if start is None:
+            continue
+        end = next((i for i in range(start + 1, len(lines))
+                    if lines[i].strip() and not lines[i].startswith((" ", "#", "\t", "-"))), len(lines))
+        for i in range(start + 1, end):
+            m = _ID_LINE.match(lines[i].rstrip("\r\n"))
+            if not m or m.group(2) != owner:
+                continue
+            level = len(m.group(1))
+            stop = i
+            for j in range(i + 1, end):
+                if lines[j].strip() and not lines[j].lstrip().startswith("#") and _indent(lines[j]) <= level:
+                    break
+                if lines[j].strip() and _indent(lines[j]) > level:
+                    stop = j
+            return i, stop + 1, level
+    return None
+
+
+def _find(fb: dict, owner: str) -> dict | None:
+    for sec in SECTIONS:
+        for e in fb.get(sec) or []:
+            for b in e.get("bullets") or []:
+                if str(b.get("id")) == owner:
+                    return b
+    return next((h for h in fb.get("hook_library") or [] if str(h.get("id")) == owner), None)
+
+
+def add_field(path: Path, owner: str, key: str, text: str, *, confirmed: str | None, now: datetime | None = None) -> Appended:
+    """Add `key: "<text>"` (a PLAIN_FIELDS key) to the bullet or hook entry `owner`, after the user's `y` for this exact text. Raises NotConfirmed
+    without it (nothing touched); AppendError when the owner is unknown, already has the key, or the result does not validate (restored)."""
+    if (confirmed or "").strip().lower() != "y" or confirmed != confirmed.strip():
+        raise NotConfirmed("not saved: it needs a `y` for this text")
+    if key not in PLAIN_FIELDS:
+        raise AppendError(f"not saved: '{key}' is not a field this writer adds ({', '.join(PLAIN_FIELDS)})")
+    path, now = Path(path), now or datetime.now()
+    if not text.strip() or "\n" in text or "\r" in text:
+        raise AppendError("not saved: the text must be one non-empty line")
+    old = path.read_bytes()
+    eol = "\r\n" if b"\r\n" in old else "\n"
+    lines = old.decode("utf-8").splitlines(keepends=True)
+    before = _load(old)
+    item = _find(before, owner)
+    if item is None:
+        raise AppendError(f"not saved: there is no bullet or hook entry '{owner}' in the fact bank")
+    if str(item.get(key) or "").strip():
+        raise AppendError(f"not saved: '{owner}' already has `{key}:` (it is never replaced; edit the file yourself to change it)")
+    span = _item_span(lines, owner)
+    if span is None:
+        raise AppendError(f"not saved: the line of '{owner}' was not found in the file")
+    _, at, level = span
+    if lines and not lines[at - 1].endswith(("\n", "\r")):
+        lines[at - 1] += eol
+    lines[at:at] = [f"{' ' * (level + 2)}{key}: {_scalar(text)}{eol}"]
+    new = "".join(lines).encode("utf-8")
+    backup = _backup(path, old, now)                        # first: the old file, dated
+    _write_atomic(path, new)
+    try:
+        after = _load(new)
+        got = _find(after, owner)
+        if got is None or str(got.get(key)) != text:
+            raise AppendError(f"not saved: the file did not read back `{key}` on '{owner}' as written")
+        fresh = [p for p in problems(after) if p not in problems(before)]
+        if fresh:
+            raise AppendError("not saved: the fact bank would not validate (" + "; ".join(fresh) + ")")
+        for sec in SECTIONS:                                # nothing else of the bank changed
+            if [{k: v for k, v in b.items() if k != key or str(b.get("id")) != owner} for e in after.get(sec) or [] for b in e.get("bullets") or []] != \
+                    [b for e in before.get(sec) or [] for b in e.get("bullets") or []]:
+                raise AppendError("not saved: another part of the fact bank read back differently")
+    except AppendError as e:
+        _write_atomic(path, old)                            # put the backup's bytes back
+        raise AppendError(f"{e}. The fact bank is unchanged; the backup is {backup}") from None
+    return Appended(owner, owner, text, backup)
 
 
 def refresh(fb: dict, path: Path) -> None:

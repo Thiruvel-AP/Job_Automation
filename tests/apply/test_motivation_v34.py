@@ -31,6 +31,11 @@ OPENS_BADLY = "I am applying for the AI Engineer role at Northwind Health AI. " 
 TOO_LONG = GOOD + " " + "I also want to keep learning " + " ".join(["and building"] * 16) + " with the team every single day."
 
 
+@pytest.fixture(autouse=True)
+def technical(settings):
+    settings.raw["cv"]["style"] = "technical"                        # the plain-style jargon rule has its own tests (test_plain_v34.py)
+
+
 def rep_with_letter():
     return {**REP, "letter": LETTER}
 

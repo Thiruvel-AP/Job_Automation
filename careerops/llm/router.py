@@ -39,7 +39,7 @@ BACKOFF_S = (2, 4, 8)      # waits before the 1st, 2nd and 3rd retry of a 429 th
 BODY_MAX = 500             # chars of an error response body kept in messages and events; headers are never kept
 # v3.2: a task that takes another task's route (llm.task_providers, llm.models, llm.max_tokens) unless settings name it themselves. The agent's job
 # evaluation runs where the cover letter runs (Groq gpt-oss-120b) and its tokens are counted under its own task name.
-TASK_ROUTES = {"job_eval": "cover_letter"}
+TASK_ROUTES = {"job_eval": "cover_letter", "plain_bullet": "rephrase_bullets"}       # plain_bullet: careerops plain-draft (v3.4)
 
 
 class BudgetExhausted(RuntimeError):

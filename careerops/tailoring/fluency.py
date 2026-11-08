@@ -252,7 +252,7 @@ def _spent(llm, start: int, estimate: int) -> int:
 
 def polish_letter(llm, draft: Mapping[str, str], job: Mapping, ad: str, tools: Sequence[str], judge: Callable[[dict], list[str]], *,
                   skills: Sequence[str], employers: Sequence[str], filler: Sequence[str], notes: list[str],
-                  words: tuple[int, int] = (200, 320)) -> tuple[dict, dict]:
+                  words: tuple[int, int] = (200, 320), extra_rules: str = "") -> tuple[dict, dict]:
     """(the letter's parts, info): the model's rewrite of P1 to P5 when one of TRIES passes (a) to (d) and `judge` (e); else the draft as it is.
     info = {"source": "model" | "draft", "tries", "problems" (per try), "tokens"}."""
     from ..llm.router import TaskUnavailable
@@ -264,7 +264,7 @@ def polish_letter(llm, draft: Mapping[str, str], job: Mapping, ad: str, tools: S
     lo, hi = max(0, words[0] - fixed), max(0, words[1] - fixed)
     system = LETTER_SYSTEM.format(skills=", ".join(skills) or "(none)", employers=", ".join(employers) or "(none)", filler=", ".join(filler),
                                   lo=lo, hi=hi, aim=(lo + hi) // 2, now=sum(len(v.split()) for v in send.values()),
-                                  sizes=", ".join(f"{n} about {len(v.split())} words" for n, v in send.items()))
+                                  sizes=", ".join(f"{n} about {len(v.split())} words" for n, v in send.items())) + (f"\n{extra_rules}" if extra_rules else "")
     feedback = ""
     start = len(getattr(llm, "usage", []) or [])
     estimate = 0

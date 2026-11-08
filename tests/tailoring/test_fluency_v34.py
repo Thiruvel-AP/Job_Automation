@@ -24,6 +24,7 @@ RIGHTSHIP_ABOUT = ["RightShip is the maritime industry's leading safety and risk
 def world(settings, fb_fixture, monkeypatch):
     w = make_world(settings, fb_fixture)
     w.settings.raw["letter"]["compose"] = "assembled"
+    w.settings.raw["cv"]["style"] = "technical"                     # the fluency mechanics; the plain-style jargon rule: test_plain_v34.py
     w.written = []
 
     def record(job, kws, parts, team, fb, settings, out_dir, final_name, header=None, gap=None, **extra):

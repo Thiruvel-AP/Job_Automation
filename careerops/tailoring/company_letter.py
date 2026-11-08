@@ -1039,6 +1039,10 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
 
     from . import assembled_letter as AL
     from . import fluency as FL
+    from . import plain as PL
+
+    plain_rule = PL.style(settings) == "plain"                                   # the jargon rule (v3.4): JD keywords stay, other jargon goes
+    plain_allow = list(dict.fromkeys([*PL.allow_list(settings), *(k.term for k in kws)]))
 
     jd = job.get("description") or ""
     ad_all = jd + ("\n" + page_text if page_text else "")
@@ -1091,6 +1095,9 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
                 # (e) the guards the draft passed; a rewritten P3 / P4 sentence restates a verified bullet on purpose, so only the paste check skips it
                 own = frozenset(" ".join(s.split()) for n in ("P3", "P4") for s in sentences(new.get(n) or ""))
                 probs, _ = check(new, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled) | own)
+                if plain_rule:                                                   # cv.style plain (v3.4): technical names only from the allow-list
+                    probs += [f"{n}: jargon not on the allow-list: {', '.join(js)}" for n in FL.REWRITTEN
+                              if (js := PL.jargon(re.sub(r'"[^"]*"', " ", new.get(n) or ""), fb, None, plain_allow))]
                 if probs:
                     return probs
                 rb = [new[n] for n in REUSE_NAMES if new.get(n)]
@@ -1098,7 +1105,10 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
                 return [RU.problem(s2, w2, RU.shared_sentences(rb, w2))] if w2 is not None and s2 >= RU.LIMIT else []
             parts, fluency = FL.polish_letter(llm, draft, job, ad_all, [*L._tools(fb), *(k.term for k in kws)], judge, skills=reqs,
                                               employers=[employer(e) for e in g4], filler=FILLER, notes=notes,
-                                              words=(word_range(settings)[0], word_cap(settings)))
+                                              words=(word_range(settings)[0], word_cap(settings)),
+                                              extra_rules=("Plain style: the first reader is not technical. Technical names only from this list "
+                                                           f"(and the skills P3 must name): {', '.join(plain_allow)}; replace every other one "
+                                                           "with plain words.") if plain_rule else "")
             retry["tokens"] += fluency["tokens"]
         if fluency["source"] != "model":                                         # the draft is the letter: say what the rewrite would have fixed
             body_parts = {n: draft[n] for n in FL.REWRITTEN if draft.get(n)}
