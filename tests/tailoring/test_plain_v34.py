@@ -1,7 +1,7 @@
 """v3.4 plain style: a `plain:` version of each bullet for a non-technical first reader, approved by the user, with the JD keywords kept for the ATS.
 The checks on a candidate, the review flow (`y` writes through factbank_append with a backup, the original is never changed), the plain bank of
 tailoring (brackets only for keywords the original says), the strict ATS of both styles, the jargon rule of the letter, and the layout options
-(additional experience, graduate order, one-line achievements). Fixtures and MockLLM only."""
+(additional experience, one-line achievements; the section order is test_sections_v35.py). Fixtures and MockLLM only."""
 import copy
 import shutil
 from pathlib import Path
@@ -286,18 +286,6 @@ def test_the_additional_experience_line_is_off_unless_you_turn_it_on(settings):
     fb = bank()
     ctx = {"experience": [{**e, "bullet_ids": [e["bullets"][0]["id"]], "bullets": [e["bullets"][0]["text"]]} for e in fb["experience"]]}
     assert T.additional_experience(ctx, fb, [Keyword("llm", 3.0, True)], settings) == [] and "additional_experience" not in ctx
-
-
-GRAD = {"title": "Graduate Data Scientist (2027 start)", "description": "Our early careers programme ..."}
-NOT_GRAD = {"title": "Senior Data Scientist", "description": "Five years of experience."}
-
-
-def test_graduate_order_only_with_the_flag_on_and_a_graduate_ad(settings):
-    assert T.section_order(GRAD, settings) is None                                   # off by default
-    settings.raw["cv"]["graduate_order"] = True
-    assert T.section_order(NOT_GRAD, settings) is None
-    order = T.section_order(GRAD, settings)
-    assert order[:6] == ["profile", "education", "experience", "projects", "skills", "certifications"] and "languages" in order
 
 
 def _ctx():

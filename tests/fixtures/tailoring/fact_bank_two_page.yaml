@@ -284,6 +284,13 @@ experience:
     - presentation
     - visualisation
     - statistics
+  # d5: added on 8 Nov 2026 so page 2 still fills once Education became compact (tailoring/sections.py)
+  - id: d5
+    text: Checked 12 years of archived survey files against the codebook and fixed 40 mislabelled variables before the analysis
+      began.
+    terms:
+    - data quality
+    - data cleaning
 projects:
 - id: p1
   name: Customer churn prediction

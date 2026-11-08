@@ -250,8 +250,10 @@ cv:
   additional_experience: false        # true: a role whose best bullet carries < additional_experience_below JD weight becomes one line
   additional_experience_below: 1.0    #   at the end of Experience ("Additional experience: <title>, <employer> (<place>, <dates>)")
   achievements_one_line: false        # true: Certifications first, then each award as one dated line (no bullet text)
-  graduate_order: false               # true: section_order_graduate, only for an ad that says graduate / entry-level / early careers / "20XX start"
-  section_order_graduate: [profile, education, experience, projects, skills, certifications]
+  # Section order (8 Nov 2026): Profile, Education, Work Experience, Projects, Skills, Certifications & Achievements until this date, then
+  # Profile, Work Experience, Projects, Education, Skills, Certifications; an ad asking for 3+ years of experience gets Experience first anyway.
+  education_first_until: 2027-09-30
+  education_compact: true     # Education in at most 4 lines (one per degree, plus a `dissertation:` line); false = school, degree and modules
   # The four Skills groups of the two-page CV, in this order (config/reference/cv_style_reference.tex v2). Each fact-bank skill goes to one
   # group: by name (`skills`, which also places the pinned `skills.core` ones), else by the fact-bank group it sits in (`banks`: regexes
   # on that group's name), else, for a core skill no group names, to the `default` group. A fact-bank group no group claims is not

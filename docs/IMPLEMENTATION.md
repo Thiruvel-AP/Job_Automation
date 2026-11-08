@@ -2156,9 +2156,9 @@ for free and every JD keyword must stay.
 4. **Layout options** (all off in the settings: the 23 Oct layout stands): `cv.additional_experience` (a role, never the most recent nor the hook's, whose
    best bullet on the CV carries < `additional_experience_below` JD weight becomes "Additional experience: <title>, <employer> (<place>, <dates>)" at the
    end of Experience; applied to the chosen attempt before the final render, so page 2 may come out a little shorter), `cv.achievements_one_line`
-   (certifications first, then each award project as one dated line), `cv.graduate_order` + `cv.section_order_graduate` (only for an ad whose title or
-   text says graduate, entry-level, early careers or "20XX start"). The template loops over `section_order` (default: the old order); with the default it
-   renders byte-identical to before (checked on the test contexts).
+   (certifications first, then each award project as one dated line), ~~`cv.graduate_order` + `cv.section_order_graduate`~~ (replaced the same day by
+   5bj's section order). The template loops over `section_order` (default: the old order); with the default it renders byte-identical to before (checked
+   on the test contexts).
 
 Not done, and why: **D4 (summary sentence pattern)**: the Document rules say the profile is assembled only from fact-bank text and never padded; a sentence
 built in code from the title, domains, skills and applicant.yaml's work authorisation would be new text, so it needs your decision (or profile
@@ -2170,3 +2170,40 @@ you) and the RightShip `live --dry-run --record` in plain style.
 Tests: `tests/tailoring/test_plain_v34.py` (checks, review flow, add_field, plain bank, brackets, top-up, letter jargon rule, layout options, doctor),
 `tests/tailoring/test_plain_pipeline_v34.py` (slow: both styles through the whole tailoring); `test_fluency_v34.py` and `test_motivation_v34.py` pin
 `cv.style: technical` (they test the fluency mechanics).
+
+## 5bj. CV section order and a compact Education (8 Nov 2026, user decision; replaces 5bi's graduate order) — **done** (offline tests, xelatex PDFs; the RightShip CV re-rendered read-only)
+
+1. **Order** (`tailoring/sections.py`): Profile, Education, Work Experience, Projects, Skills, Certifications & Achievements, then the optional research
+   focus / publications / languages. After `cv.education_first_until` (code default and settings 2027-09-30): Profile, Work Experience, Projects,
+   Education, Skills, Certifications; `doctor` prints the order in force (a warning once the date has passed). An ad with an "N+ years ... experience"
+   requirement, N >= 3 (the v3.3 screener's `jd_years`, the overall requirement: any sentence naming years and experience, commercial, professional,
+   industry or hands-on), gets Experience first for that job, and the review shows `section order: Experience first for this job: the ad asks for N+
+   years of experience` (an analysis warning; `report["style"]["section_order"]` / `["section_order_reason"]`). The order and the compact Education are in
+   every render of every attempt, so the page fill measures the CV as it prints. The one-page CV is unchanged.
+2. **Compact Education** (at most 4 printed lines): one line per degree, `\textbf{degree}, university[, classification] \hfill dates` (the degree as the
+   user's `display_line` writes it when shorter: "B.E. Electrical & Electronics Engineering"; an "expected" grade is not printed), and under the degree
+   with a `dissertation:` field (a plain one-line title, new optional fact-bank field) "Dissertation with <affiliation> affiliation: <title>" (affiliation
+   from `dissertation_affiliation:`, else the "dissertation with X affiliation" of its `display_line`). No module lists. Over 4 estimated lines (100
+   characters a line, 112 for the small dissertation line): the dissertation line goes first, then the last degrees, with a note. Degree in italics,
+   school in bold (the typography rule), a classification only when it reads like one (`classification:`, else a `note:` of <= 6 words with a class
+   word; "Distinction (Expected)" and a long note are not printed), the dates right-aligned and moved to the next line whole when the line is full.
+   `cv.education_compact` (true; false = the older school / degree / modules block).
+3. **Position check**: after the final render, in Education-first order, the first Work Experience bullet must start in the top 55 % of page 1
+   (`layout.pdf_lines`: the first line under the heading indented past it); if not, the dissertation line is dropped, the CV rendered again and a warning
+   says so; still too low: a layout warning. `report["style"]["first_bullet_at"]`.
+4. Headings unchanged ("Profile", "Education", "Work Experience", "Projects", "Skills", "Certifications & Achievements").
+
+Checked on the RightShip CV (stored context, real fact bank read only, rendered into the scratchpad, no model): v3.3 structure **95/A, 0 critical** in the old
+layout, Education first and Experience first alike; first bullet at 65 % of page 1 (old), 46 % (Education first), 37 % (Experience first); Education 3
+printed lines (the B.E. line wraps). RightShip itself gets Experience first (its ad asks for 3+ years). The fact bank has no `dissertation:` yet, so no
+dissertation line prints (a note says so).
+
+Page 2 on the RightShip CV re-rendered from its stored context (no new fill): 100 % (old), 96 % (Education first), 92 % (Experience first); a new
+tailoring fills page 2 again from the bank. `apply/autogate.py` `expected_headings` follows the context's `section_order` (its format check had pinned
+the old order).
+
+Tests: `tests/tailoring/test_sections_v35.py` (order at the date and for an N >= 3 ad, the setting, doctor, the line cap, the classification, the
+dissertation line, the template, the first-bullet position, and (slow) the same structure score in both orders); 5bi's graduate-order test removed.
+Adapted to the new order and block: `test_cv_v2.py`, `test_cv_typography.py`, `test_two_page.py` (its fixture bank `fact_bank_two_page.yaml` gained one
+fictional bullet, d5, so page 2 still fills), `test_cv_template.py` (its fill and linespread tests are calibrated on the older block, so its helper
+sets `cv.education_compact: false`), `test_sections_v35.py`.

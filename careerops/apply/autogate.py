@@ -110,11 +110,18 @@ def _num(x: float) -> str:
 
 
 # ------------------------------------------------------------------ the PDF
+SECTION_HEADINGS = {"profile": "Profile", "skills": "Skills", "experience": "Work Experience", "projects": "Projects", "education": "Education",
+                    "research_focus": "Research Focus", "publications": "Publications", "certifications": "Certifications & Achievements",
+                    "languages": "Languages"}
+
+
 def expected_headings(ctx: Mapping[str, Any]) -> list[str]:
-    """The headings the two-page template prints for this CV's context, in its order."""
+    """The headings the two-page template prints for this CV's context, in its order: the context's `section_order` (tailoring/sections.py,
+    8 Nov 2026) when it has one, else the template's own default order."""
     optional = {"Research Focus": ctx.get("research_focus"), "Publications": ctx.get("publications"),
                 "Certifications & Achievements": ctx.get("certifications") or ctx.get("achievements"), "Languages": ctx.get("languages")}
-    return [h for h in HEADINGS if h in HEADINGS[:5] or optional.get(h)]
+    order = [SECTION_HEADINGS[k] for k in ctx.get("section_order") or [] if k in SECTION_HEADINGS] or HEADINGS
+    return [h for h in order if h in HEADINGS[:5] or optional.get(h)]
 
 
 def unembedded_fonts(pdffonts_output: str) -> list[str]:

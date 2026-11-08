@@ -166,6 +166,15 @@
 \BLOCK{elif sec == 'education'}
 % ================= EDUCATION =================
 \needspace{5\baselineskip}\section{Education}
+\BLOCK{if education_compact is defined and education_compact}
+\BLOCK{for r in education_compact}
+\BLOCK{if r.kind == 'degree'}
+\noindent\textit{\VAR{r.head|e}}\BLOCK{if r.school}, \textbf{\VAR{r.school|e}}\BLOCK{endif}\BLOCK{if r.cls}, \VAR{r.cls|e}\BLOCK{endif}\unskip\nobreak\hfill\penalty50\hskip1em\null\nobreak\hfill\mbox{\VAR{r.dates|dates|e}}\par
+\BLOCK{else}
+\noindent{\small \VAR{r.text|e}}\par
+\BLOCK{endif}
+\BLOCK{endfor}
+\BLOCK{else}
 \BLOCK{for ed in education}
 \BLOCK{if not loop.first}
 \gap
@@ -177,6 +186,7 @@
 {\color{muted}\small \VAR{el[1]|inline}}\par
 \BLOCK{endif}
 \BLOCK{endfor}
+\BLOCK{endif}
 \BLOCK{elif sec == 'research_focus'}
 \BLOCK{if research_focus|default('')}
 

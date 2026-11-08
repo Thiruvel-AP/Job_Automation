@@ -147,7 +147,7 @@ def test_the_type_scale_is_the_users_current_cv(run):
     ratio = lambda w: next(h for t, h in words if t == w) / body                           # noqa: E731
     assert ratio("Ada") == pytest.approx(SCALE["name"], rel=0.03) and ratio("Lovelace") == pytest.approx(SCALE["name"], rel=0.03)
     assert ratio("PROFILE") == pytest.approx(SCALE["section headings"], rel=0.03)             # headings are the body's size (bold, with a rule)
-    assert ratio("SKILLS") == pytest.approx(SCALE["section headings"], rel=0.03)
+    assert ratio("EDUCATION") == pytest.approx(SCALE["section headings"], rel=0.03)              # page 1 (Education first since 8 Nov 2026)
     assert ratio("Bristol,") == pytest.approx(SCALE["contact and stack lines"], rel=0.03)  # the contact line
     ratios = {round(h / body, 2) for _, h in words}
     assert all(any(abs(r - s) <= 0.03 for s in SCALE.values()) for r in ratios), ratios   # nothing at any other size
@@ -221,14 +221,16 @@ def test_bold_is_only_the_employer_school_project_name_labels_badges_and_results
     body = tex.split(r"\begin{document}")[1]
     t = typography.typeset(rep["context"])                                                  # what the template was given
     lead = re.compile(r"\\item \\textbf\{[^{}]*}")
-    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln and r"\small\textbf{" not in ln)    # the project-link layout (18 Oct) and the headline set their own bold
+    edu = [ln for ln in body.splitlines() if ln.startswith(r"\noindent\textit{") and r"\textbf{" in ln]                # the compact Education lines (8 Nov 2026)
+    plain = "\n".join(ln for ln in body.splitlines() if r"\url{" not in ln and r"\small\textbf{" not in ln and ln not in edu)    # the project-link layout (18 Oct) and the headline set their own bold
     assert len(lead.findall(body)) == len(rep["achievements"]) == 1 and r"\textbf" not in lead.sub("", plain)
     employers = {render.org_parts(e)[0] for e in t["experience"]}
     schools = {render.school_line(e) for e in t["education"]}
     roles, no_loc = _macro(body, "role", 4), _macro(body, "roleNoLoc", 3)
-    assert len(roles) + len(no_loc) == len(t["experience"]) + len(t["education"])
-    assert {_plain(o) for o, *_ in roles} <= employers and {_plain(o) for o, *_ in no_loc} <= employers | schools
-    assert {_plain(o) for o, *_ in roles} | {_plain(o) for o, *_ in no_loc} >= employers | schools   # every one is there
+    assert len(roles) + len(no_loc) == len(t["experience"])                                # Education is compact lines, not role macros
+    assert {_plain(o) for o, *_ in roles} <= employers and {_plain(o) for o, *_ in no_loc} <= employers
+    assert {_plain(o) for o, *_ in roles} | {_plain(o) for o, *_ in no_loc} >= employers   # every one is there
+    assert len(edu) == len(t["education"]) and all(ln.count(r"\textbf{") == 1 for ln in edu)            # one bold per line: the school
     assert all(r"\num" not in x and r"\textbf" not in x for a in roles + no_loc for x in a)           # dates, title, location: plain
     names = [_plain(n) for n, *_ in _macro(body, "project", 3)]
     assert names == [render.project_parts(p)[0] for p in t["projects"]]
@@ -263,15 +265,13 @@ def test_the_italic_list(run):
     rep, _, tex = run
     body = tex.split(r"\begin{document}")[1]
     it = _group(body, r"\textit")
-    assert "(Expected)" in it and "(coursework)" in it                                      # the markers
+    assert "(coursework)" in it                                                             # the marker (an expected grade is not printed since 8 Nov 2026)
     assert "Jun 2026" in it and "Nov 2025" in it                                            # a certification's date
     assert "Anthropic" not in it                                                            # its issuer is not italic
     roles, no_loc = _macro(body, "role", 4), _macro(body, "roleNoLoc", 3)
     assert "Data Scientist (MSc dissertation)" in [_plain(r[3]) for r in roles]              # job title: the macro's last argument
     assert "Bristol, UK" in [_plain(r[1]) for r in roles]                                    # location
-    degrees = [_plain(r[2]) for r in no_loc]
-    assert any(d.startswith("MSc Data Science") for d in degrees)                            # degree names
-    assert any(d.startswith("B.E. Electrical and Electronics Engineering") for d in degrees)
+    assert "MSc Data Science" in it and "B.E. Electrical and Electronics Engineering" in it    # degree names (the compact Education lines)
     assert any(_plain(s).startswith("Python, scikit-learn") for _, s, _ in _macro(body, "project", 3))   # a stack line
     fonts = subprocess.run(["pdffonts", str(rep["cv_pdf"])], capture_output=True, text=True, check=True).stdout
     names = [ln.split()[0].split("+")[-1] for ln in fonts.splitlines()[2:] if ln.strip()]

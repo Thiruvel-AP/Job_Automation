@@ -528,6 +528,8 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += skill_repeat_checks(settings.path("fact_bank"))
     checks += profile_word_checks(settings.path("fact_bank"))
     checks += plain_allow_checks(settings)
+    from .tailoring import sections as sections_mod
+    checks.append(sections_mod.doctor_line(settings))
     checks += project_public_checks(settings.path("fact_bank"))
     checks += ats_structure_checks(settings)
     checks += applicant_checks(settings.path("applicant"))
