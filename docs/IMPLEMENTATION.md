@@ -2076,3 +2076,50 @@ Reference `ext/career-ops` at 8ce89bdc (no commit since v3.2): `modes/ats.md`, `
 
 Tests: `tests/test_ats_structure_v33.py` (slow: xelatex) and `tests/review/test_screeners_v33.py`; `tests/apply/test_autogate.py` stubs the new gate like the
 PDF checks, its gate list has `ats structure`, and a missing CV PDF now fails `format` and `ats structure`.
+
+## 5bh. v3.4 — letter and motivation fluency (8 Nov 2026) — **done** (offline tests; the RightShip letter and motivation regenerated once with the real model in a scratch copy)
+
+Cause: the RightShip letter of 3 Nov printed the 180 Degrees bullet in P3 and again in P4 (`groups_for` fell back to the plan's P4 group, which held the
+bullet P3 had moved to), "What draws me to this role is RightShip is ..." (the old P5 fallback put an ad clause with its own verb after "is"), a 70-word
+P4 sentence ("I needed ...: built ..." from a "problem: action" bullet), and "The result, as measured: ~65 tests across 8 files" after P1's "~65 tests".
+The motivation answer was "I am applying for ..." + the letter's P5 + its P4 sentence, word for word.
+
+1. **Fluency pass** (`tailoring/fluency.py`, `letter.fluency`: true in config/settings.yaml, false in the test copy, code default on): after the assembled
+   letter passes `check` and the reuse check, the model (`cover_letter` task) rewrites P1 to P4 (P5 to P7 are never sent). Kept only when (a) every number,
+   capitalised name and tool (fact-bank tools + ad keywords) is in the draft (singular or plural; P1's quoted phrase is left to `opening.problems`), (b) no
+   sentence is over 35 words, (c) no two sentences share 5-word shingles >= 0.5 and none repeats another paragraph's (containment >= 0.5), (d) no banned
+   opening (a greeting, "I am writing / applying / excited", "I would like to apply", "please accept"), no ad sentence pasted (>= 0.5 of its shingles in the
+   ad, or its first 6 words those of an ad line), no paragraph ending mid-sentence, no "look forward to <base verb>" / "is <Name> is", and (e) `check`
+   (the paste-a-bullet check skips the rewritten P3 / P4 sentences: restating verified bullets is the point) and the reuse check. Two tries: the prompt gives
+   P1-P4's word budget and each paragraph's draft length; the second try is shown its own rejected rewrite and told to fix only what was named. Else the
+   assembled draft, with notes naming what it still has (long sentences, repeats). `letter["assembled_parts"]` keeps the draft; `retry["fluency"]` has
+   source / tries / problems / tokens (the router's own counts when it has them).
+2. **Templates** (`assembled_letter.py`, `company_letter.py`, `opening.py`): `first_person` turns "Needed X: built Y" into "To deliver X, I built Y.",
+   "A client needed X: led Y" into "For a client that needed X, I led Y.", "Built X: reconciled Y" into "I built X and reconciled Y."; `at_role` gives
+   "At <employer>, to deliver ...". `split_shared`: a bullet in P3 and P4 stays in P3 with its employer and P4 drops that role (else P3 drops it).
+   `prepare` leaves P2 out when it repeats a number of P1 (`p2_source: left out: repeats P1's number (...)`). The P5 fallback is "<Company>'s focus on
+   <noun phrase> is why I applied." (`noun_phrases`: what "<Company> is a / the ..." names, what "<Company> builds / provides ..." makes, what follows
+   "vision of / focus on / work on ..."; the frame's words "why" / "applied" are skipped by the company guard, `P5_FRAME`); the old frame is kept after it
+   without an ad clause that has its own verb or starts with the company, and an imperative ad bullet becomes "the chance to <verb> ...". `opening.fit_phrase`
+   trims P1's quoted phrase from its ends (a closing bracket, a lead such as "Demonstrated experience building", trailing words) so sentence 1 is <= 35 words.
+   Every paragraph and the model's P5 get the banned-opening and grammar checks. P3's growth bullets are ranked by the ad's keyword weight (CV order
+   had put an iOS bullet in), skip a bullet the guard reads as a list of terms, and, with the pass on, grow to the low end + 30 words (the rewrite runs
+   shorter). "That work used X and Y" takes the bullets' own spelling (LLM, Python).
+3. **Motivation answer** (`apply/freetext.py`): with a letter, (i) the fluency rewrite of a code-built answer (two tries; the same checks (a) to (d), the
+   guard, the letter overlap; the letter is NOT sent: on 8 Nov the model took AstraZeneca and AWS Lambda from it), else (ii) the code-built answer:
+   "The <role> role at <Company> stands out to me for its focus on <noun phrase>." + the hook's proof bullet in first person (when the letter does not
+   print it) + your `motivations`, 60-150 words, else (iii) the model draft as before. Every motivation draft must have 5-word-shingle Jaccard < 0.30 with
+   this job's letter and no sentence with half its shingles in it (`_reuse_checked` asks for one redraft, then none). "I am applying" is a banned opening
+   for every motivation draft. The plan's sources are the ad, the letter, the proof bullet and the motivations (so the bullet and motivation digests are kept).
+4. **RightShip, regenerated once with the real model** (scratch copy of its output folder and of the DB; nothing under data/ was written; data/careerops.db,
+   report.json and letter.txt mtimes unchanged): the final run's letter was the model's rewrite (2 tries, 5,706 tokens) with the fallback P5 (the model's two
+   P5 sentences failed their guards: 1,487 tokens), 7,193 tokens in all; the motivation was the code-built answer (2 rejected rewrites, 2,286 tokens). The
+   printed P5 figure was then an estimate (characters / 4); it is now the router's own count, as the fluency figure is.
+   Earlier runs while tuning this round spent about 60K more Groq tokens; they were counted only in the scratch DB copy, not in data/careerops.db.
+
+Choices: (a) is stricter than asked for P2 to P4: the ad is not a source for what is said about you (CLAUDE.md), only for P1's quote. P5 is not rewritten
+(it has its own company guards; a rewritten P5 failed them). The fallback letter keeps a long bullet sentence when the rewrite fails (the task: "fall back to
+the assembled draft"); notes say so. "I built X to Y" is written purpose-first ("To deliver Y, I built X") so a bullet whose object is "it" still reads.
+
+Tests: `tests/tailoring/test_fluency_v34.py`, `tests/apply/test_motivation_v34.py`; adapted: `test_letter_assembled_v25.py` (a bullet is told once; the
+P5 fallback frame), `tests/apply/test_motivation.py` (the plan's sources), `test_letter_format.py` (the new settings key).

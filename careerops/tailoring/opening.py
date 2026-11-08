@@ -23,6 +23,10 @@ from .scorer import Keyword, keyword_hits
 
 BANNED = re.compile(r"^\s*(?:i\s+am\s+writing\s+to\s+(?:apply|express)|i\s+would\s+like\s+to\s+apply|please\s+accept)", re.I)
 PHRASE_MIN_WORDS, PHRASE_MAX_WORDS = 3, 16
+SENTENCE_MAX_WORDS = 35          # v3.4: sentence 1 is at most this many words (tailoring/fluency.py); a longer one has its quoted phrase trimmed
+_EXPERIENCE_LEAD = re.compile(r"^(?:(?:demonstrated|proven|strong|solid|extensive|deep|hands-on|practical|good|excellent)\s+)?"
+                              r"(?:experience|knowledge|understanding|expertise)(?:\s+(?:of|in|with|building|designing|developing|delivering))?\s+", re.I)
+_TRAIL_STOP = frozenset("and or with of for the a an to in on including such as like using by from into at".split())
 CUES = re.compile(r"\b(?:hiring|seeking|looking (?:for|to)|solv\w*|build\w*|develop\w*|design\w*|deliver\w*|mission|responsib\w*|you will|help\w*|enabl\w*|"
                   r"improv\w*|optimi[sz]\w*|driv\w*|creat\w*|ship\w*|deploy\w*|forecast\w*|automat\w*|detect\w*|predict\w*|pipelines?|models?|platform|"
                   r"customers?|clients?|products?)\b", re.I)
@@ -122,6 +126,28 @@ def pick_phrase(text: str, hint: Sequence[str], kws: Sequence[Keyword], deny: Se
     return best[2] if best else None
 
 
+def fit_phrase(phrase: str, limit: int) -> str:
+    """`phrase` cut to at most `limit` words, only from its ends so it stays the ad's own words: a closing bracket first ("... LangGraph (and
+    LangChain or similar)" -> "... LangGraph"), then a lead such as "Demonstrated experience building", then the last words (never ending on
+    "and", "with", "of" ...). Never under PHRASE_MIN_WORDS words."""
+    p = " ".join(phrase.split())
+    while len(p.split()) > limit:
+        if p.endswith(")") and "(" in p and len(p[:p.rfind("(")].split()) >= PHRASE_MIN_WORDS:
+            p = p[:p.rfind("(")].rstrip(" ,;")
+            continue
+        m = _EXPERIENCE_LEAD.match(p)
+        if m and len(p[m.end():].split()) >= PHRASE_MIN_WORDS:
+            p = p[m.end():]
+            continue
+        words = p.split()[:-1]
+        while words and words[-1].lower().strip(",;") in _TRAIL_STOP:
+            words.pop()
+        if len(words) < PHRASE_MIN_WORDS:
+            break
+        p = " ".join(words).rstrip(",;")
+    return p
+
+
 # ------------------------------------------------------------------------------------------------------------------ the opening
 @dataclass
 class Opening:
@@ -192,6 +218,12 @@ def build(job: dict, fb: dict, kws: Sequence[Keyword], hk: Hook | None, chosen: 
     from .letter_rules import i_clause
 
     core = lower_first(fact.rstrip(".!? ")) if kind == "hook" else i_clause(fact.rstrip(".!? "))
+    rest = len(f"{LEAD[source].format(company=job['company'], phrase=phrase)}; {core}.".split()) - len(phrase.split())
+    if rest + len(phrase.split()) > SENTENCE_MAX_WORDS:                                  # RightShip, 3 Nov 2026: a 40-word sentence 1
+        short = fit_phrase(phrase, max(PHRASE_MIN_WORDS, SENTENCE_MAX_WORDS - rest))
+        if short != phrase:
+            out.notes.append(f"opening: the quoted phrase was trimmed to keep sentence 1 at {SENTENCE_MAX_WORDS} words or fewer")
+            phrase = short
     out.sentence = f"{LEAD[source].format(company=job['company'], phrase=phrase)}; {core}."
     out.paragraph = out.sentence if kind == "hook" else " ".join(x for x in (out.sentence, " ".join(family_line.split())) if x)
     out.fact_kind, out.hook_id, out.bullet_id, out.problem, out.source = kind, hid, bid, phrase, source

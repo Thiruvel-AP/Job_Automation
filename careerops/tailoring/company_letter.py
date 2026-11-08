@@ -4,7 +4,7 @@
                   The clause is verbatim from the ad (else from the company's own careers page); the hook's line is the user's own sentence, with
                   a number the fact bank holds, and ends with how it was validated (tailoring/opening.py). Written in code.
   P2  What it shows   the hook fact's `limits` field, else its `result` field, word for word (the hook entry first, then its proof bullet).
-                  Left out when the fact bank has neither. Written in code.
+                  Left out when the fact bank has neither, and (v3.4) when it repeats a number P1 already gives. Written in code.
   P3  JD-matched skills   the ad's 2 or 3 required skills, shown through a second CV project or bullet (never the hook's own bullet). Model.
   P4  Experience roll-up  one sentence per role (the most relevant role first, then the next): the employer, what I owned, one number. Model.
   P5  Why this team       ONE sentence that quotes or closely follows a sentence of the ad (else of the company's page). Model.
@@ -209,6 +209,11 @@ def stems(text: str, skip: frozenset[str] = frozenset()) -> set[str]:
         if s and s not in skip and s not in _SKIP:
             out.add(s)
     return out
+
+
+# the words of the fallback P5's frame ("<Company>'s focus on <ad phrase> is why I applied."): they say nothing about the company, so the company
+# guard does not ask the ad for them (v3.4)
+P5_FRAME = frozenset(stems("why applied"))
 
 
 # A heading line (short, no full stop) that opens a section of the ad about the company / the role / the team (kept), or one about what the
@@ -536,9 +541,9 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
         out.append(f"{n} words: the letter must be between {lo_words} and {cap}")
     page = plan.page_text
     ad_all = jd + ("\n" + page if page else "")
-    out += [f"P5: {p}" for p in company_problems(parts["P5"], ad_all, skip)]
+    out += [f"P5: {p}" for p in company_problems(parts["P5"], ad_all, skip | P5_FRAME)]
     out += one_sentence_problems(parts["P5"])
-    out += extractive_problems(parts["P5"], about_sentences(ad_all, company, kws), skip)
+    out += extractive_problems(parts["P5"], about_sentences(ad_all, company, kws), skip | P5_FRAME)
     opening = " ".join([parts["P1"], parts.get("P2") or ""])
     out += user_problems(body[:2], plan.groups, opening, fb, kws, plan.reqs, company, title, jd=ad_all, cv_names=(cv or {}).get("names", ""),
                          assembled=assembled)
@@ -559,6 +564,11 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
     if cv is not None:
         out += [f"P3/P4 draw on bullet {e['id']}, which is not printed on this job's CV" for e in plan.evidence if e["id"] not in cv["ids"]]
         out += skill_problems(body, fb, cv["text"])
+    from . import fluency as FL
+
+    for name in names:                                                         # v3.4: no paragraph opens "I am excited", "I am writing", a greeting ...
+        out += FL.opening_problems(str(parts.get(name) or ""), f"{name}: ")
+    out += FL.grammar_problems({n: str(parts.get(n) or "") for n in names})
     text = " ".join(paragraphs)
     out += T._deny_problems(text, fb.get("deny_terms", []), [])
     out += T._style_problems([*body, parts["P7"]], [e["text"] for e in plan.evidence])
@@ -755,6 +765,9 @@ def prepare(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_lin
     groups = [T._with_orgs(fb, g3), T._with_orgs(fb, g4)]
     problem = hk.problem.strip() if hk is not None and hk.problem.strip() else L.ad_problem(job, kws, fb, claimable)
     p2, p2_source = result_paragraph(fb, op)
+    same = numbers(p2) & numbers(op.paragraph) if p2 else set()
+    if same:                                   # "The result, as measured: ~65 tests ..." right after P1's "~65 tests" (RightShip, 3 Nov 2026)
+        p2, p2_source = "", f"left out: repeats P1's number ({', '.join(sorted(same))})"
     return Plan(op.paragraph, p2, ask_text(job, problem, settings), gap_paragraph(job, kws, fb, claimable, possible), [e for g in groups for e in g],
                 [skills, []], groups, opening=op, page_text=page_text, p2_source=p2_source)
 
@@ -1025,6 +1038,7 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
     import dataclasses
 
     from . import assembled_letter as AL
+    from . import fluency as FL
 
     jd = job.get("description") or ""
     ad_all = jd + ("\n" + page_text if page_text else "")
@@ -1038,8 +1052,9 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
     last_body: list[str] = []
     for variant in range(AL.VARIANTS):
         g3, g4, reqs = AL.groups_for(plan, fb, kws, chosen_ids, jd, hk, variant, st)
+        g3, g4, moved = AL.split_shared(g3, g4)                                  # a bullet in P3 and P4 is told once (v3.4)
         cparts = dict(code_parts)
-        b, assembled, bnotes, g3 = AL.body(plan, g3, g4, reqs, fb, chosen_ids, st, settings, cparts, p5)
+        b, assembled, bnotes, g3 = AL.body(plan, g3, g4, reqs, fb, chosen_ids, st, settings, cparts, p5, moved, kws)
         g4 = b.pop("_g4", g4)                                                    # type: ignore[assignment]  (the roles P4 kept: each with a number)
         if b.pop("drop_p2", None):
             cparts.pop("P2", None)
@@ -1069,12 +1084,36 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
             continue
         retry["outcome"] = "assembled" + (f" (variant {variant + 1})" if variant else "")
         retry["feedback"] = said
-        print(f"  cover letter: assembled ({words(assemble(parts)[0])} words); model tokens ~{retry['tokens']} (P5 only, {p5info['source']})")
+        draft = dict(parts)                                                      # the fact source of the fluency pass, and its fallback
+        fluency: dict = {"source": "off", "tries": 0, "problems": [], "tokens": 0}
+        if FL.enabled(settings):
+            def judge(new: dict, vplan=vplan, assembled=assembled) -> list[str]:
+                # (e) the guards the draft passed; a rewritten P3 / P4 sentence restates a verified bullet on purpose, so only the paste check skips it
+                own = frozenset(" ".join(s.split()) for n in ("P3", "P4") for s in sentences(new.get(n) or ""))
+                probs, _ = check(new, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled) | own)
+                if probs:
+                    return probs
+                rb = [new[n] for n in REUSE_NAMES if new.get(n)]
+                s2, w2 = RU.worst(rb, earlier)
+                return [RU.problem(s2, w2, RU.shared_sentences(rb, w2))] if w2 is not None and s2 >= RU.LIMIT else []
+            parts, fluency = FL.polish_letter(llm, draft, job, ad_all, [*L._tools(fb), *(k.term for k in kws)], judge, skills=reqs,
+                                              employers=[employer(e) for e in g4], filler=FILLER, notes=notes,
+                                              words=(word_range(settings)[0], word_cap(settings)))
+            retry["tokens"] += fluency["tokens"]
+        if fluency["source"] != "model":                                         # the draft is the letter: say what the rewrite would have fixed
+            body_parts = {n: draft[n] for n in FL.REWRITTEN if draft.get(n)}
+            notes.extend(f"cover_letter: the assembled draft still has: {w}" for w in FL.length_problems(body_parts) + FL.repeat_problems(body_parts))
+        retry["fluency"] = fluency
+        reuse_body = [parts[n] for n in REUSE_NAMES if parts.get(n)]
+        score, who = RU.worst(reuse_body, earlier)
+        print(f"  cover letter: assembled ({words(assemble(parts)[0])} words, {'rewritten for fluency' if fluency['source'] == 'model' else 'the assembled draft'}); "
+              f"model tokens ~{retry['tokens']} (P5 {p5info['tokens']}, {p5info['source']}; fluency {fluency['tokens']}, {fluency['tries']} tr"
+              f"{'y' if fluency['tries'] == 1 else 'ies'})")
         op = plan.opening
         gap = {**plan.gap, "included": "P6" in parts} if plan.gap else {}
         return write_letter(job, kws, parts, team, fb, settings, out_dir, final_name, header, gap, notes=notes, retry=retry,
                             evidence=[{"id": e["id"], "text": e["text"]} for e in vplan.evidence], requirements=vplan.reqs, target_words=target_words(settings),
-                            hook_source=(hk.source if hk is not None else "family profile line"),
+                            hook_source=(hk.source if hk is not None else "family profile line"), assembled_parts=draft,
                             reuse={"score": round(score, 3), "against": who.name if who else "", "redrafted": bool(variant)},
                             cites=citation_tags(parts, vplan.cite_ids()), dropped=sorted(dropped | ({"P2"} if "P2" in code_parts and "P2" not in cparts else set())),
                             p2_source=plan.p2_source,

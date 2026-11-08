@@ -833,6 +833,17 @@ other modes. **Memory, RAM and GB figures** are allowed in the body only when th
 without asking the model; "drop P6", "keep P6" and "drop P2" in the `l` feedback are read in code, anything else ("shorten P4") goes to the model by name (its prompt carries the paragraph table P1 to P7).
 Beside the PDF the letter is also written as **`letter.txt`** (greeting, paragraphs, sign-off and name as plain text) for a cover-letter text box. The letter's text goes through `render.letter_escape`
 (`% & $ # _ { }` escaped, `~` is `$\sim$`, `+5 pp` is `+5\,pp`).
+
+**Fluency pass** (v3.4, `letter.fluency: true`, with the default `letter.compose: assembled`): the assembled letter stays the fact source and the model
+rewrites P1 to P4 into natural prose (`tailoring/fluency.py`). Code keeps the rewrite only when every number, name and tool in it is in the draft, no sentence
+is over 35 words, nothing is said twice (5-word shingles), no paragraph opens with a banned phrase ("I am writing / applying / excited", a greeting), no ad
+sentence is pasted, the two grammar slips the letters made are absent ("look forward to prototype", "is RightShip is"), and every letter guard above still
+passes. Two tries (the second is shown its own rewrite and fixes only what was rejected), else the assembled draft. The templates were fixed too: P2 is left
+out when it repeats P1's number; a "problem: action" bullet reads "To deliver X, I built Y." (never "I needed X: built Y"); a bullet is never told in both P3
+and P4; P1's quoted phrase is trimmed from its ends so sentence 1 stays at 35 words; the fallback P5 is "<Company>'s focus on <a phrase of the ad> is why I
+applied."; P3 grows by the bullets that say most of the ad's keywords. The **motivation answer** ("What motivated you to apply?") is rewritten the same way
+from a code-built answer (the ad's phrase, the hook's proof bullet, your `motivations`) and never reuses the letter (Jaccard of 5-word shingles under 0.30,
+no sentence copied); the letter is never sent to that model call. Tokens are printed (`cover letter: ... model tokens ~N (P5 ..., fluency ...)`).
 A draft is checked and, if a guard rejects it, drafted **once more** with every rejection named; a second rejection means **no letter** and the review
 screen says why (`Letter draft 1 / 2 rejected: ...`, the `NO LETTER` banner and its reason; approving needs `no letter`, as for any lost letter).
 

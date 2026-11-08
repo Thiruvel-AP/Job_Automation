@@ -63,7 +63,8 @@ def test_with_a_letter_the_sources_are_its_p1_and_p5(make):
                                                        "P5": "The team builds clinical decision-support tools that help oncology researchers.", "P3": "NOT USED"}}}
     f = make(llm_with(WHY, ad_phrases=[AD_PHRASE]), "y", rep=rep)
     p = f.propose("What motivated you to apply for this position?")
-    assert p.plan.ids == ["ad", "letter"] and "NOT USED" not in p.plan.sources[1].text and "hiring for" in p.plan.sources[1].text
+    assert p.plan.ids[:2] == ["ad", "letter"] and "NOT USED" not in p.plan.sources[1].text and "hiring for" in p.plan.sources[1].text
+    assert "az2" in p.plan.ids and "m1" in p.plan.ids                  # v3.4: the proof bullet and the motivations a code-built answer may tell
 
 
 def test_without_a_letter_the_sources_are_the_ad_the_motivations_and_one_numbered_bullet(make):

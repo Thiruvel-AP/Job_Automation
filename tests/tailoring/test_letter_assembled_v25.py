@@ -73,8 +73,11 @@ def test_the_sentences_about_you_are_the_cvs_bullets_in_first_person(world):
     parts = world.written[0]
     for e in world.plan.groups[0][:1]:
         assert AL.first_person(e["text"]) in parts["P3"]
+    told_in_p3 = {e["id"] for e in world.plan.groups[0]}                                # v3.4: a bullet in both is told once, in P3
     for e in world.plan.groups[1]:
-        if numbers(e["text"]):                                                           # a role with no numbered bullet is left out of P4
+        if e["id"] in told_in_p3:
+            assert AL.first_person(e["text"])[2:] not in parts["P4"]
+        elif numbers(e["text"]):                                                         # a role with no numbered bullet is left out of P4
             assert AL.first_person(e["text"])[2:] in parts["P4"]
         else:
             assert AL.first_person(e["text"])[2:] not in parts["P4"]
@@ -91,7 +94,8 @@ def test_every_p4_sentence_holds_a_number_and_names_its_employer(world):
 def test_a_model_that_gives_garbage_for_p5_still_gives_a_letter_through_the_fallback(world, reply):
     pdf, letter = make(world, p5_model(reply, reply))
     assert letter["status"] == "ok", letter.get("reason")
-    assert world.written[0]["P5"].startswith("What draws me to this role is ") and letter["retry"]["p5"]["source"].startswith("fallback")
+    p5 = world.written[0]["P5"]                                                          # v3.4: the noun-phrase frame, never "is ... is"
+    assert p5.startswith(f"{world.job['company']}'s focus on ") and p5.endswith(" is why I applied.") and letter["retry"]["p5"]["source"].startswith("fallback")
     assert 200 <= letter["words"] <= 320
 
 

@@ -323,6 +323,8 @@ letter:
                              # scoring.letter_max_words_company can lower the top; the model is asked for the middle of the range
   honest_gap: true           # company mode: P6, "One honest gap: <what I have> only, never <ad requirement>, so <it> is where I will learn."
                              # In auto mode it is included only when this is true; in review it is shown apart and you keep ([k]) or drop ([d]) it
+  fluency: true              # company mode (assembled): the model rewrites the assembled letter and the motivation answer into natural prose,
+                             # under code checks (facts, sentences <= 35 words, no repeats, no banned opening, every letter guard); 2 tries, else the draft
   # hook mode: "Dear {company}{team} team" (the team only when the ad names one); a recruitment agency gets "Hi {company} team".
   greeting_hook: "Hi {company}{team} team"    # hook and company modes, when the contact's name is not known (with a name: "Hi <first name>,")
   greeting_agency: "Hi {company} team"

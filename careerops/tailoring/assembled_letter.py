@@ -7,11 +7,14 @@ ASSEMBLED from verified text and the model writes only the sentence about the co
   P1  the plan's opening (opening.py, code): the ad's problem phrase, a semicolon, the hook's letter line (verbatim, verified).
   P2  the hook fact's `limits` / `result` (code; left out when there is neither).
   P3  the one or two bullets of this CV that evidence the ad's required skills (skill_group), each turned into first person by ONE fixed rule:
-      a bullet that opens with a past-tense verb gets "I " before it ("Built X" -> "I built X"); any other wording stays word for word. When those
+      a bullet that opens with a past-tense verb gets "I " before it ("Built X" -> "I built X"); a "problem: action" bullet becomes one sentence
+      (v3.4: "Needed X: built Y" -> "To deliver X, I built Y."; "A client needed X: led Y" -> "For a client that needed X, I led Y.";
+      "Built X: reconciled Y" -> "I built X and reconciled Y."), never "I needed X: built Y"; any other wording stays word for word. When those
       bullets do not say two of the ad skills they evidence, one sentence names them from the bullets' own `terms`: "That work used X and Y."
   P4  one sentence per role (role_group: the most relevant roles), "At <employer>, " + that role's bullet on this CV that holds a number, first person.
+      A bullet in both P3 and P4 is told once (v3.4, split_shared): P3 keeps it, with its employer, and P4 leaves that role out.
   P5  the model: ONE sentence on why this team, holding a run of at least 4 words of the ad; two tries, each checked by the letter's own P5 guards;
-      then the fallback "What draws me to this role is <a clause of the ad>."
+      then the fallback "<Company>'s focus on <a noun phrase of the ad> is why I applied." (v3.4; never "... is <Company> is ...").
   P6  off unless letter.honest_gap (code, as before).
   P7  the plan's ask (code).
 
@@ -37,6 +40,7 @@ P5_TRIES = 2
 VARIANTS = 3
 GROW_MAX = 4
 FALLBACK = "What draws me to this role is {phrase}."
+FALLBACK_NP = "{owner} focus on {phrase} is why I applied."        # v3.4: the noun-phrase frame, tried first
 AD_RUN = 4
 PAST_IRREGULAR = frozenset("""built led ran wrote made set drove took cut grew won taught brought found gave kept held sold spent shipped rebuilt broke chose
 got put read saw sent told thought understood began became did drew fed hid hung knew lit met paid rode rose shot showed sang sat slept spoke stood stole
@@ -46,7 +50,8 @@ _WE = re.compile(r"\b(?:we|our|ours|us|we're|we've|we'll)\b", re.I)
 
 P5_SYSTEM = """You write ONE sentence (at most 40 words) for a cover letter: why this team and role appeal, in the first person.
 It must contain, word for word, a run of at least 4 consecutive words copied from one of the AD SENTENCES. Make no claim about the candidate's
-experience or skills, give no number, never write "we", "our" or "us", invent no name. Return JSON only: {"p5": "<the sentence>"}."""
+experience or skills, give no number, never write "we", "our" or "us", invent no name, never open with "I am excited", "I am writing" or "I am
+applying". Return JSON only: {"p5": "<the sentence>"}."""
 P5_USER = """COMPANY: {company}
 ROLE: {title}
 AD SENTENCES:
@@ -60,17 +65,65 @@ def compose_mode(settings) -> str:
     return v if v in ("assembled", "free") else "assembled"
 
 
+def _past(word: str, capital: bool = True) -> bool:
+    """A past-tense verb ("Built", "reconciled"); `capital`: it must open with a capital letter (the first word of a bullet)."""
+    w = word.strip(",;:")
+    low = w.lower()
+    if capital and not (w[:1].isupper() and not w.isupper()):
+        return False
+    if not capital and not w[:1].islower():
+        return False
+    return low in PAST_IRREGULAR or re.fullmatch(r"[a-z-]+ed", low) is not None
+
+
+def _colon_split(text: str) -> tuple[str, str] | None:
+    """(before, after) the first ": " outside brackets, or None ("gpt-oss:20b" and "(a: b)" do not split)."""
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif ch == ":" and depth == 0 and text[i + 1:i + 2] == " ":
+            return text[:i].strip(), text[i + 2:].strip()
+    return None
+
+
+_NEED = re.compile(r"^(?P<who>.*?)\b(?P<verb>needed|wanted|required|asked for)\s+(?P<what>.+)$", re.I)
+_ARTICLE = frozenset({"a", "an", "the"})
+
+
+def _stop(text: str) -> str:
+    return text if text.endswith((".", "!", "?")) else text + "."
+
+
 def first_person(text: str) -> str:
-    """The fixed rule: a bullet that opens with a past-tense verb gets "I " ("Built X" -> "I built X"); anything else stays word for word."""
+    """The fixed rule: a bullet that opens with a past-tense verb gets "I " ("Built X" -> "I built X"); a "problem: action" bullet (the part after
+    ": " opens with a past-tense verb) becomes one sentence: "Needed X: built Y" -> "To deliver X, I built Y."; "A client needed X: led Y" ->
+    "For a client that needed X, I led Y."; "Built X: reconciled Y" -> "I built X and reconciled Y." Anything else stays word for word."""
     t = _BULLET.sub("", " ".join(str(text or "").split())).strip()
     if not t:
         return ""
+    split = _colon_split(t)
+    if split and split[0] and split[1] and _past(split[1].split(" ", 1)[0], capital=False):
+        left, right = split
+        lhead = left.split(" ", 1)[0]
+        acted = _past(lhead) and lhead.lower() not in ("needed", "wanted", "required")      # "Built X: ..." is an action, "Needed X: ..." a need
+        m = None if acted else _NEED.match(left)
+        if m:
+            who, what = m.group("who").strip(), m.group("what").strip().rstrip(",")
+            if not who:
+                return _stop(f"To deliver {what}, I {right}")
+            first = who.split(" ", 1)[0]
+            who = who[0].lower() + who[1:] if first.lower() in _ARTICLE else who
+            return _stop(f"For {who} that {m.group('verb').lower()} {what}, I {right}")
+        if acted:
+            return _stop(f"I {lhead.lower()}{left[len(lhead):]} and {right}")
     head, _, rest = t.partition(" ")
     word = head.strip(",;:")
     low = word.lower()
-    verb = word[:1].isupper() and not word.isupper() and (low in PAST_IRREGULAR or re.fullmatch(r"[a-z-]+ed", low) is not None)
-    out = f"I {low}{head[len(word):]} {rest}".strip() if verb else t
-    return out if out.endswith((".", "!", "?")) else out + "."
+    out = f"I {low}{head[len(word):]} {rest}".strip() if _past(word) else t
+    return _stop(out)
 
 
 def at_role(e: dict) -> str:
@@ -81,7 +134,34 @@ def at_role(e: dict) -> str:
     body = first_person(e["text"])
     if body.startswith("I "):
         return f"At {who}, {body}" if who else body
+    if body.startswith(("To deliver ", "For ")):                               # a "problem: action" bullet: "At X, to deliver Y, I built Z."
+        return f"At {who}, {body[0].lower()}{body[1:]}" if who else body
     return f"At {who}: {body}" if who else body
+
+
+def split_shared(g3: list[dict], g4: list[dict]) -> tuple[list[dict], list[dict], set[str]]:
+    """(P3 bullets, P4 bullets, the ids P3 tells with their employer): a bullet in both P3 and P4 is told once. P3 keeps it (it evidences the ad's
+    skills) and P4 leaves that role out when another role is left; else P3 drops it when another bullet is left; else both stay (the fluency
+    pass then has to say it once). RightShip, 3 Nov 2026: the 180 Degrees bullet was printed in P3 and again in P4."""
+    shared = {e["id"] for e in g3} & {e["id"] for e in g4}
+    if not shared:
+        return g3, g4, set()
+    rest4 = [e for e in g4 if e["id"] not in shared]
+    if rest4:
+        return g3, rest4, shared
+    rest3 = [e for e in g3 if e["id"] not in shared]
+    if rest3:
+        return rest3, g4, set()
+    return g3, g4, set()
+
+
+def _spelling(term: str, group: list[dict]) -> str:
+    """How the bullets themselves write `term` ("Python", "LLM"), else their `terms`, else the keyword as given (keywords are lower case)."""
+    text = " ".join(e["text"] for e in group)
+    m = re.search(r"(?<![\w-])" + re.escape(term) + r"(?![\w-])", text, re.I)
+    if m:
+        return m.group(0)
+    return next((t for e in group for t in e.get("terms", []) if t.lower() == term.lower() and t != t.lower()), term)
 
 
 def _terms_sentence(group: list[dict], reqs: list[str], said: str) -> str:
@@ -93,7 +173,7 @@ def _terms_sentence(group: list[dict], reqs: list[str], said: str) -> str:
     missing = [r for r in reqs if r.lower() in have and norm_literal(r) not in lit]
     named = [r for r in reqs if norm_literal(r) in lit]
     need = max(0, min(2, len(reqs)) - len(named))
-    pick = missing[:need]
+    pick = [_spelling(r, group) for r in missing[:need]]
     if not pick:
         return ""
     return f"That work used {pick[0]}." if len(pick) == 1 else f"That work used {pick[0]} and {pick[1]}."
@@ -115,8 +195,11 @@ def steer(said: str) -> Steer:
     return Steer({p.lower() for p in prefer}, {a.lower() for a in avoid}, bool(re.search(r"\bshort(?:er|en)\b", s, re.I)), s)
 
 
-def _numbered_unused(fb: dict, chosen: set[str] | None, used: set[str], avoid: set[str]) -> list[dict]:
-    """The bullets of this CV not used yet: the numbered ones first (the length rule's "next-ranked numbered bullet"), then the rest."""
+def _numbered_unused(fb: dict, chosen: set[str] | None, used: set[str], avoid: set[str], kws=None) -> list[dict]:
+    """The bullets of this CV not used yet, the ones that say most of the ad's keywords first (v3.4: CV order put an iOS bullet in the RightShip
+    letter), the numbered ones first among equals (the length rule's "next-ranked numbered bullet"), then the rest."""
+    from .scorer import keyword_hits
+
     from . import tailor as T
 
     out = []
@@ -125,7 +208,9 @@ def _numbered_unused(fb: dict, chosen: set[str] | None, used: set[str], avoid: s
             for b in e["bullets"]:
                 if (chosen is None or b["id"] in chosen) and b["id"] not in used and b["id"].lower() not in avoid:
                     out.append(b)
-    out.sort(key=lambda b: 0 if re.search(r"\d", b["text"]) else 1)
+    def weight(b: dict) -> float:
+        return sum(kws[i].weight for i in keyword_hits(f"{b['text']} {' '.join(b.get('terms', []))}", kws)) if kws else 0.0
+    out.sort(key=lambda b: (-weight(b), 0 if re.search(r"\d", b["text"]) else 1))
     return T._with_orgs(fb, out)
 
 
@@ -155,13 +240,68 @@ _IS_TO = re.compile(r"\b(?:is|are)\s+to\s+(.+)$", re.I)
 _YOU = re.compile(r"\b(?:you|your|yours)\b", re.I)
 
 
+_HEAD_NOUNS = frozenset("""platform platforms company companies provider providers business businesses solution solutions firm organisation
+organization leader leaders marketplace service services brand group""".split())
+_ADJ_LEAD = frozenset("leading largest biggest best top premier first global trusted fastest-growing only foremost".split())
+_NP_STOP = re.compile(r"\s*(?:[,;:.!?()]|\s[-–—]\s|\b(?:that|which|who|whose|where|while|by|so|because|to|as|when|if|primarily|through|via|"
+                      r"using|and you)\b)", re.I)
+BASE_VERBS = frozenset("""design build develop deploy write explore communicate lead own create deliver drive partner collaborate maintain improve
+shape help support define run apply present contribute propose produce gather translate prototype experiment evaluate integrate work""".split())
+_NP_PUNCT = re.compile(r"\s*(?:[,;:.!?()]|\s[-–—]\s)")
+_FINITE = re.compile(r"\b(?:is|are|was|were|has|have)\b", re.I)
+
+
+def possessive(name: str) -> str:
+    """"RightShip" -> "RightShip's"; "Acme Systems" -> "Acme Systems'"."""
+    n = name.strip()
+    return f"{n}'" if n.endswith("s") else f"{n}'s"
+
+
+def noun_phrases(offered: list[str], company: str) -> list[str]:
+    """Noun phrases of the ad's About / role sentences, best first, for "<Company>'s focus on <phrase> is why I applied.": what "<Company> is a / the
+    ..." names ("the maritime industry's leading safety and risk intelligence platform" -> "safety and risk intelligence"), what "<Company> builds /
+    provides / develops ..." makes, then what follows "vision of", "focus on", "dedicated to", "committed to", "specialises in", "work on / across /
+    with". 3-14 words, no verb, no we / our / you."""
+    pats = [(re.compile(rf"^{re.escape(company)}\s+(?:is|are)\s+(?:the|a|an)\s+(.+)$", re.I), True),
+            (re.compile(rf"^{re.escape(company)}\s+(?:builds|makes|provides|develops|delivers|offers|creates|designs|runs|operates)\s+(.+)$", re.I), False),
+            ] if company.strip() else []
+    pats.append((re.compile(r"\b(?:vision of|focus(?:es|ed)? on|dedicated to|committed to|speciali[sz](?:es|ing) in|work(?:s|ing)? (?:on|across|with))"
+                            r"\s+(.+)$", re.I), False))
+    out: list[str] = []
+    longer: list[str] = []                       # the same phrase cut only at punctuation ("tools that help oncology researchers ..."): tried after
+    for pat, predicate in pats:
+        for s in offered:
+            s = re.sub(r"\bour\b", "the", " ".join(s.split()).rstrip("."), flags=re.I)
+            m = pat.search(s)
+            if not m:
+                continue
+            phrase = _NP_STOP.split(m.group(1), 1)[0].strip()
+            whole = _NP_PUNCT.split(m.group(1), 1)[0].strip()
+            if not predicate and whole != phrase and 4 <= len(whole.split()) <= 14 and not _FINITE.search(whole) and not _WE.search(whole) \
+                    and not _YOU.search(whole):
+                longer.append(whole)
+            if predicate:
+                phrase = phrase.rsplit("'s ", 1)[-1]                          # "the maritime industry's leading X" -> "leading X"
+                words = phrase.split()
+                while words and words[0].lower() in _ADJ_LEAD:
+                    words = words[1:]
+                if len(words) > 4 and words[-1].lower() in _HEAD_NOUNS:      # "safety and risk intelligence platform" -> "... intelligence"
+                    words = words[:-1]
+                phrase = " ".join(words)
+            if 3 <= len(phrase.split()) <= 14 and not _FINITE.search(phrase) and not _WE.search(phrase) and not _YOU.search(phrase):
+                out.append(phrase)
+    return list(dict.fromkeys(out + longer))
+
+
 def p5_candidates(offered: list[str], company: str) -> list[str]:
-    """Fallback P5 sentences, best first: an ad sentence's "you will <do X>" or "... is to <do X>" as "the chance to <do X>", else a clause of the ad
-    (no "we" / "our" / "you"), each 6-30 words, in the fixed frame "What draws me to this role is <phrase>."."""
+    """Fallback P5 sentences, best first: "<Company>'s focus on <a noun phrase of the ad> is why I applied." (v3.4); then an ad sentence's "...
+    is to <do X>" or a clause of the ad (no "we" / "our" / "you", no verb of its own: never "What draws me to this role is RightShip is ..."),
+    each 6-30 words, in the frame "What draws me to this role is <phrase>."."""
     from . import tailor as T
 
     vague = [*T.VAGUE_WORDS, *__import__("careerops.tailoring.company_letter", fromlist=["FILLER"]).FILLER]
-    out: list[str] = []
+    out: list[str] = [FALLBACK_NP.format(owner=possessive(company), phrase=p) for p in noun_phrases(offered, company)
+                      if not any(v.lower() in p.lower() for v in vague)]
     for s in offered:
         s = re.sub(r"\bour\b", "the", " ".join(s.split()).rstrip("."), flags=re.I)        # "the core mission of our team" -> "... of the team"
         picks = []
@@ -174,6 +314,10 @@ def p5_candidates(offered: list[str], company: str) -> list[str]:
             words = phrase.split()
             if not 6 <= len(words) <= 30 or _WE.search(phrase) or _YOU.search(phrase) or any(v.lower() in phrase.lower() for v in vague):
                 continue
+            if _FINITE.search(phrase.split(":", 1)[0]) or re.match(re.escape(company) + r"\b", phrase, re.I):
+                continue                                                      # "is RightShip is ..." / "is Northwind builds ..." (3 Nov 2026)
+            if words[0].lower() in BASE_VERBS:                                 # an ad bullet "Design and build X": "the chance to design and build X"
+                phrase = "the chance to " + phrase[0].lower() + phrase[1:]
             if phrase[:1].isupper() and not words[0].isupper() and words[0] != company.split()[0]:
                 phrase = phrase[0].lower() + phrase[1:]
             out.append(FALLBACK.format(phrase=phrase))
@@ -203,13 +347,17 @@ def p5_problems(p5: str, job: dict, fb: dict, kws, plan, team: str, ad_all: str,
     from . import letters as L
 
     company, title = job["company"], job["title"]
-    skip = frozenset(CL.stems(f"{company} {title} {team}"))
+    skip = frozenset(CL.stems(f"{company} {title} {team}")) | CL.P5_FRAME
     out = [f"P5: {p}" for p in CL.company_problems(p5, ad_all, skip)] + CL.one_sentence_problems(p5) + CL.extractive_problems(p5, offered, skip)
     allowed = " ".join([ad_all, company, title, team, *CL.bank_names(fb), *CL._labels(fb).values()])
     out += CL.name_problems([p5], allowed)
     out += L.claim_problems([p5], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))
     if re.search(r"\d", p5):
         out.append("P5 gives a number")
+    from .fluency import grammar_problems, opening_problems
+
+    out += opening_problems(p5, "P5: ")                                      # "I am excited to join ..." (RightShip, 8 Nov 2026)
+    out += grammar_problems({"P5": p5})                                      # "I look forward to rapidly prototype ..." (8 Nov 2026)
     if not _ad_run(p5, ad_all):
         out.append(f"P5 holds no run of {AD_RUN} words of the ad")
     return out
@@ -220,7 +368,10 @@ def write_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offere
     from ..llm.router import TaskUnavailable
     from . import tailor as T
 
+    from .fluency import _spent
+
     info: dict[str, Any] = {"source": "fallback", "tries": 0, "problems": [], "tokens": 0}
+    start = len(getattr(llm, "usage", []) or [])
     feedback = f"READER'S NOTE (wording only): {said}" if said else ""
     about = "\n".join(f"[{i}] {x}" for i, x in enumerate(offered, 1)) or "(the ad has no About / role section: use its opening lines)\n" + ad_all[:1200]
     for attempt in range(P5_TRIES):
@@ -241,18 +392,20 @@ def write_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offere
         text = " ".join(text.split())
         probs = p5_problems(text, job, fb, kws, plan, team, ad_all, offered) if text else ["P5: empty reply"]
         if not probs:
-            info.update(source="model", problems=[])
+            info.update(source="model", problems=[], tokens=_spent(llm, start, info["tokens"]))       # the router's own count when it has one
             return text, info
         info["problems"].append(probs)
         feedback = (f"READER'S NOTE (wording only): {said}\n" if said else "") + "Your last sentence was rejected: " + "; ".join(probs)[:400]
+    info["tokens"] = _spent(llm, start, info["tokens"])
     fb_text = p5_fallback(offered, job["company"], lambda t: p5_problems(t, job, fb, kws, plan, team, ad_all, offered))
     notes.append(f"cover_letter: P5 is the fallback sentence ({info['tries']} model tr{'y' if info['tries'] == 1 else 'ies'} rejected or failed)")
     return fb_text, info
 
 
 def body(plan, g3: list[dict], g4: list[dict], reqs: list[str], fb: dict, chosen: set[str] | None, st: Steer, settings,
-         code_parts: dict[str, str], p5: str = "") -> tuple[dict[str, str], set[str], list[str], list[dict]]:
-    """(P3 and P4 text, the sentences assembled from bullets, notes, P3's bullets) with the length rule applied to the whole letter (`p5` included)."""
+         code_parts: dict[str, str], p5: str = "", moved: set[str] | frozenset[str] = frozenset(), kws=None) -> tuple[dict[str, str], set[str], list[str], list[dict]]:
+    """(P3 and P4 text, the sentences assembled from bullets, notes, P3's bullets) with the length rule applied to the whole letter (`p5` included).
+    `moved`: ids of P3 bullets that P4 left out (split_shared): P3 tells them with their employer ("At <employer>, I ...")."""
     from . import company_letter as CL
 
     from .faithfulness import numbers
@@ -263,12 +416,15 @@ def body(plan, g3: list[dict], g4: list[dict], reqs: list[str], fb: dict, chosen
         g4 = numbered
     else:
         notes_pre = []
-    p3 = [first_person(e["text"]) for e in g3]
+    p3 = [at_role(e) if e["id"] in moved else first_person(e["text"]) for e in g3]
     p4 = [at_role(e) for e in g4]
     assembled = {s for s in p3 + p4}
     notes: list[str] = list(notes_pre)
+    from . import fluency as FL
+
     lo, _ = CL.word_range(settings)
     cap = CL.word_cap(settings)
+    goal = min(cap, lo + FL.GROW_MARGIN) if FL.enabled(settings) else lo        # room for the fluency rewrite to tighten the wording
     used = {e["id"] for e in g3 + g4} | ({plan.opening.bullet_id} if plan.opening is not None and plan.opening.bullet_id else set())
 
     def total(extra: list[str]) -> int:
@@ -276,15 +432,19 @@ def body(plan, g3: list[dict], g4: list[dict], reqs: list[str], fb: dict, chosen
         return CL.words([*code_parts.values(), " ".join(extra + ([terms] if terms else [])), " ".join(p4), p5])
 
     grown = 0
-    for b in _numbered_unused(fb, chosen, used, st.avoid):
-        if total(p3) >= lo or grown >= GROW_MAX:
+    from .letter_rules import term_dump_problems
+
+    for b in _numbered_unused(fb, chosen, used, st.avoid, kws):
+        if total(p3) >= goal or grown >= GROW_MAX:
             break
+        if term_dump_problems([first_person(b["text"])], fb):                 # a bullet the letter guard reads as a list of terms: never added
+            continue
         p3.append(first_person(b["text"]))
         assembled.add(p3[-1])
         g3 = g3 + [b]
         used.add(b["id"])
         grown += 1
-        notes.append(f"cover_letter: P3 grew by bullet {b['id']} (under {lo} words)")
+        notes.append(f"cover_letter: P3 grew by bullet {b['id']} (under {goal} words)")
     terms = _terms_sentence(g3, reqs, " ".join(p3))
     parts = {"P3": " ".join(p3 + ([terms] if terms else [])), "P4": " ".join(p4)}
     if total(p3) > cap or st.shorter:

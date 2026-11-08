@@ -23,6 +23,13 @@ CV bullet with a number. The job ad is required: under 150 words it is fetched o
 nothing drafted. The draft must name the company, hold a run of words of the ad, pass the claim guard, and not reuse an earlier motivation answer
 (5-word shingles, overlap under 0.30).
 
+v3.4, with a letter: the answer reuses no sentence of this job's letter (5-word shingles: Jaccard under 0.30 against the letter, and no sentence
+with half of its shingles in it). It is a FLUENCY rewrite first (one model call, two tries): the model gets the facts (the code-built answer below and
+nothing else) and the ad snippets, never the letter; the rewrite must pass tailoring/fluency.py's checks (every
+number, name and tool in the facts or the ad, no sentence over 35 words, no repeated sentence, no banned opening such as "I am applying") and every
+check below. Else the code-built answer: "The <role> role at <Company> stands out to me for its focus on <a noun phrase of the ad>.", the hook's
+proof bullet in first person (when the letter does not print it) and your `motivations`, 60-150 words. Else the model draft as before.
+
 A new draft is therefore never submitted without your `y` (or an edit you saved). Nothing here writes to answers.yaml, fact_bank.yaml
 or applicant.yaml: the library is runtime data. "Other" questions (hobbies, "anything else?") are never drafted: they are asked.
 
@@ -43,7 +50,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ..tailoring import faithfulness, letter_reuse, letters as letters_mod
+from ..tailoring import faithfulness, fluency as fluency_mod, letter_reuse, letters as letters_mod
 from ..tailoring.grounding import sentences as split_sentences
 from ..tailoring.letter_rules import term_dump_problems
 from ..tailoring.scorer import Keyword, _contains, gap_terms, keyword_hits, norm_literal
@@ -502,8 +509,8 @@ class Guard:
                 out.append(f"{n_words} words: a motivation answer is at most {hi} words")
             if self.company and answers_mod.norm(self.company) not in answers_mod.norm(t):
                 out.append(f"does not name the company ({self.company})")
-            if _GREETING.search(t):
-                out.append("opens with a greeting or 'I am writing': it starts with the reason")
+            if _GREETING.search(t) or fluency_mod.BANNED_OPENINGS.search(t):
+                out.append("opens with a greeting, 'I am writing' or 'I am applying': it starts with the reason")
         if plan.cls in ("why_company", "why_role"):
             if not _runs(t, self.ad):
                 out.append(f"claims nothing from the ad: a claim about the company or the role must be {AD_RUN_WORDS}+ words the ad contains")
@@ -527,6 +534,17 @@ SYSTEM = (
     "If PROBLEMS is given, your last draft was rejected for them: write it again without them. Return JSON only: {\"answer\": \"...\", \"ad_phrases\": [\"exact words you "
     "quoted from AD_SNIPPETS\"]}. If WORDS is given, write between those two numbers of words, name the company once, quote one phrase of the ad, "
     "start with the reason (no greeting, never 'I am writing').")
+
+
+FLUENCY_SYSTEM = (
+    "You write the applicant's answer to a job application question about why they want this role, in the first person, as natural, fluent "
+    "prose. FACTS are the only source of what the applicant did, used, built or measured; AD_SNIPPETS are the only source of what is said about "
+    "the company or the role (never a source for what the applicant did or knows). Rewrite the FACTS into a fluent answer, in your own words. "
+    "Rules, all checked by code: between WORDS[0] and WORDS[1] words; name the company once; copy a run of at "
+    "least 4 consecutive words from AD_SNIPPETS; no sentence over 35 words; say each point once; every number, name and tool must be in FACTS "
+    "(or, for the company, in AD_SNIPPETS); never 'we' or 'our'; start with the reason: never a greeting, 'I am writing', 'I am applying' or "
+    "'I am excited'; no word listed under style.avoid. If PROBLEMS is given, LAST_ANSWER was rejected for them: fix exactly those problems in "
+    "LAST_ANSWER and change nothing else. Return JSON only: {\"answer\": \"...\"}.")
 
 
 def _user_prompt(ctx: Mapping[str, Any]) -> str:
@@ -557,7 +575,7 @@ class Proposal:
 class FreeText:
     def __init__(self, llm, fb: Mapping[str, Any], library: Library, job: Mapping[str, Any], rep: Mapping[str, Any], book: answers_mod.AnswerBook,
                  ask: Callable[[str], str] = input, out: Callable[[str], None] = print, today: date | None = None,
-                 refetch_jd: Callable[[], str] | None = None):
+                 refetch_jd: Callable[[], str] | None = None, settings=None):
         job = dict(job)                                  # a database row has no .get
         self.llm, self.fb, self.lib, self.job, self.book = llm, fb, library, job, book
         self.ask, self.out, self.today = ask, out, today or date.today()
@@ -571,6 +589,10 @@ class FreeText:
         self.motivation_log: list[dict] = []            # every motivation draft: question, text, words, guard result, sources, overlap (the dry-run record)
         self.letter_parts: dict[str, str] = {}
         self.letter_text = ""
+        self.letter_body = ""                           # the whole letter as the reader sees it: the motivation answer may not copy it (v3.4)
+        self.letter_ids: set[str] = set()               # the bullets the letter prints
+        self._settings = settings                       # letter.fluency decides whether the motivation answer is rewritten for fluency
+        self.fluency_info: dict = {"source": "off"}
         self._rep, self._current_q = rep, ""
         self.use_letter(rep)
 
@@ -578,40 +600,53 @@ class FreeText:
         """This job's letter (also one written after the helper was made, v2.5: before the browser opens): the motivation answer draws on its P1, P5 and
         the first sentence of P4 (one role, one number)."""
         letter = rep.get("letter") or {}
-        parts = letter.get("parts") or {}
+        final = letter.get("parts") or {}
+        parts = letter.get("assembled_parts") or final                          # the fact source: the assembled draft (v3.4), else the letter
         if letter.get("status") == "ok":
+            self.letter_body = " ".join(str(final.get(n) or "") for n in ("P1", "P2", "P3", "P4", "P5", "P6", "P7") if final.get(n)).strip()
+            self.letter_ids = {str(e.get("id")) for e in letter.get("evidence") or [] if isinstance(e, dict)}
             p4 = split_sentences(str(parts.get("P4") or ""))
             self.letter_parts = {"P1": str(parts.get("P1") or "").strip(), "P5": str(parts.get("P5") or "").strip(), "P4": (p4[0].strip() if p4 else "")}
             self.letter_text = " ".join(v for v in (self.letter_parts["P1"], self.letter_parts["P5"], self.letter_parts["P4"]) if v).strip()
             self._rep = rep
 
+    def _proof(self) -> Source | None:
+        """The bullet the code-built answer tells: the hook's proof bullet, else a numbered bullet, that this job's letter does not print."""
+        proof = str(self.hook.get("proof_bullet_id") or "")
+        pool = [(e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"] if str(b["id"]) not in self.letter_ids]
+        order = sorted(pool, key=lambda eb: (str(eb[1]["id"]) != proof, not re.search(r"\d", eb[1]["text"])))
+        return bullet_source(*order[0]) if order and (str(order[0][1]["id"]) == proof or re.search(r"\d", order[0][1]["text"])) else None
+
     def assembled_motivations(self, limit: Limit) -> list[str]:
-        """Every assembled motivation answer that fits, best first: the framing sentence with P1 + P5 + P4, P1 + P5, P5 + P4, P1 + P4."""
+        """Every code-built motivation answer that fits, best first (v3.4: none takes a sentence from the letter): "The <role> role at <Company>
+        stands out to me for its focus on <a noun phrase of the ad>." (one per noun phrase, those the letter does not use first), the proof
+        bullet in first person, then your `motivations`, each added while the answer stays inside the limit; 60-150 words."""
         if not self.letter_parts:
             return []
-        lead = f"I am applying for the {self.title} role at {self.company}."
-        p = self.letter_parts
+        from ..tailoring import assembled_letter as AL
+        from ..tailoring.company_letter import about_sentences
+
         cap = min(MOTIVATION_WORDS[1], limit.words or MOTIVATION_WORDS[1])
+        said = norm_literal(self.letter_body)
+        phrases = AL.noun_phrases(about_sentences(self.ad, self.company, self.kws), self.company)
+        phrases = sorted(phrases, key=lambda p: norm_literal(p) in said)
+        proof = self._proof()
+        told = [AL.first_person(b["text"]) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]
+                if proof is not None and str(b["id"]) == proof.id][:1]
+        rest = told + list(self.book.motivations)
         out = []
-        for keys in (("P1", "P5", "P4"), ("P1", "P5"), ("P5", "P4"), ("P1", "P4")):
-            text = " ".join([lead, *(p.get(k, "") for k in keys if p.get(k))]).strip()
+        for phrase in phrases:
+            text = f"The {self.title} role at {self.company} stands out to me for its focus on {phrase}."
+            for bit in rest:
+                if len(f"{text} {bit}".split()) <= cap:
+                    text = f"{text} {bit}"
             if MOTIVATION_WORDS[0] <= len(text.split()) <= cap and text not in out:
                 out.append(text)
         return out
 
     def assembled_motivation(self, limit: Limit) -> str:
-        """F2, v2.5: the motivation answer ASSEMBLED from this job's letter, no model: one framing sentence (the role and the company, no claim), P1,
-        P5 and one P4 sentence, kept to MOTIVATION_WORDS (60-150, or the field's smaller limit). '' when there is no letter or it cannot fit."""
-        if not self.letter_parts:
-            return ""
-        lead = f"I am applying for the {self.title} role at {self.company}."
-        bits = [lead, self.letter_parts.get("P1", ""), self.letter_parts.get("P5", ""), self.letter_parts.get("P4", "")]
-        text = " ".join(b for b in bits if b).strip()
-        cap = min(MOTIVATION_WORDS[1], limit.words or MOTIVATION_WORDS[1])
-        if len(text.split()) > cap:
-            text = " ".join(b for b in bits[:3] if b).strip()
-        n = len(text.split())
-        return text if MOTIVATION_WORDS[0] <= n <= cap else ""
+        """The first code-built motivation answer (assembled_motivations), '' when there is no letter or none fits."""
+        return next(iter(self.assembled_motivations(limit)), "")
 
     def _current(self) -> dict[str, str]:
         """id -> digest of every fact-bank bullet (with the entry it sits in) and motivation of yours as they are now."""
@@ -647,9 +682,12 @@ class FreeText:
     def _plan_motivation(self, cls: str, ad_src: Source, snippets: list[str]) -> Plan:
         """The sources of a "why this role / company" answer, in this order: the letter's P1 (the company's problem plus the proof) and P5 (why this team)
         when this job has a letter; otherwise the job ad, your `motivations` and one CV bullet with a number."""
-        if self.letter_text:
-            return Plan(cls, [ad_src, Source("letter", self.letter_text)], "the job ad and this job's letter (P1 and P5)", snippets, motivation=True)
         mot = [Source(f"m{i}", m) for i, m in enumerate(self.book.motivations, 1)]
+        if self.letter_text:
+            proof = self._proof()
+            return Plan(cls, [ad_src, Source("letter", self.letter_text), *([proof] if proof else []), *mot[:MAX_PLAN + 1]],
+                        "the job ad, this job's letter (P1, P5, one P4 sentence)" + (f", bullet {proof.id}" if proof else "")
+                        + f" and {len(mot[:MAX_PLAN + 1])} motivation(s) of yours", snippets, motivation=True)
         bullet = self._numbered_bullet()
         hook_text = " ".join(str(self.hook.get(k) or "") for k in ("problem", "profile_line", "headline")).strip()      # what this job's CV says first
         why = f"the job ad, {len(mot)} motivation(s) of yours" + (f" and CV bullet {bullet.id}" if bullet else "")
@@ -754,17 +792,26 @@ class FreeText:
         plan = self.plan(cls, question)
         if not plan.sources:
             return Proposal(question, cls, limit, plan, why_not=f"free text [{cls}]: {plan.why}")
-        if cls in WHY and plan.motivation and self.letter_parts:                 # F2: assembled from the letter first; the guard as for any draft
-            text, probs = "", ["the letter's parts do not fit the motivation limit"]
-            for cand in self.assembled_motivations(limit):
-                probs = self.guard.problems(cand, plan, limit)
+        if cls in WHY and plan.motivation and self.letter_parts:                 # v3.4: the fluency rewrite, then the code-built answer
+            cands = self.assembled_motivations(limit)
+            if self._settings is not None and fluency_mod.enabled(self._settings):
+                text, probs, info = self._fluent_motivation(question, plan, limit, cands[0] if cands else "")
+                if text:
+                    text, probs = self._reuse_checked(question, plan, limit, [], text, [], 0)
+                    if text:
+                        self.motivation_log[-1]["fluency"] = info
+                        return Proposal(question, cls, limit, plan, text, "draft", [])
+                self.fluency_info = info
+            text, probs = "", ["no code-built answer fits the motivation limit"]
+            for cand in cands:
+                probs = self.guard.problems(cand, plan, limit) + self._text_problems(cand)
                 if not probs:
                     text = cand
                     break
-            if text and not probs:
-                text, probs = self._reuse_checked(question, plan, limit, [], text, [], 1)
+            if text:
+                text, probs = self._reuse_checked(question, plan, limit, [], text, [], 0)
                 if text:
-                    self.motivation_log[-1]["assembled"] = True
+                    self.motivation_log[-1].update(assembled=True, fluency=self.fluency_info)
                     return Proposal(question, cls, limit, plan, text, "draft", [])
         gaps = self.unsupported(question) if cls in ("project", "challenge") else []
         missing = [t for _, terms in gaps for t in terms]
@@ -796,6 +843,52 @@ class FreeText:
         return (f"no JD: the job ad has {len(self.ad.split())} words (a motivation answer needs {MIN_JD_WORDS}+), even after fetching it again; "
                 f"nothing is drafted from the title alone")
 
+    def _text_problems(self, text: str) -> list[str]:
+        """tailoring/fluency.py's (b) to (d) for a motivation answer, and its overlap with this job's letter."""
+        one = {"answer": text}
+        return (fluency_mod.length_problems(one) + fluency_mod.repeat_problems(one) + fluency_mod.opening_problems(text)
+                + fluency_mod.unfinished_problems(one) + fluency_mod.grammar_problems(one)
+                + fluency_mod.ad_paste_problems(one, self.ad) + fluency_mod.letter_overlap_problems(text, self.letter_body))
+
+    def _fluent_motivation(self, question: str, plan: Plan, limit: Limit, built: str) -> tuple[str, list[str], dict]:
+        """(text, problems, info): the model rewrites the facts (the code-built answer) into a motivation answer, fluency_mod.TRIES tries, each
+        checked by (a) every number, name and tool in the facts or the ad, (b) to (d), the letter overlap and the guard (e). The letter is not
+        sent (8 Nov 2026: the model took AstraZeneca and AWS Lambda from it); the overlap check reads it. info = {"source", "tries", "problems",
+        "tokens"}."""
+        facts = list(dict.fromkeys(f.strip() for f in split_sentences(built) if f.strip()))       # the code-built answer is the fact source
+        info: dict = {"source": "fallback", "tries": 0, "problems": [], "tokens": 0}
+        if not facts:
+            return "", ["no facts to write from"], info
+        lo, hi = MOTIVATION_WORDS[0], min(MOTIVATION_WORDS[1], limit.words or MOTIVATION_WORDS[1])
+        problems: list[str] = []
+        last = ""
+        start = len(getattr(self.llm, "usage", []) or [])
+        estimate = 0
+        for attempt in range(fluency_mod.TRIES):
+            ctx = {"mode": "fluency_motivation", "question": question, "company": self.company, "title": self.title, "facts": facts,
+                   "ad_snippets": plan.ad_snippets, "words": [min(lo, hi), hi], "draft": built,          # not the letter: it lent the model facts
+                   "style": {"avoid": list(self.style.get("avoid") or []), "voice": self.style.get("voice", "")}, "problems": problems,
+                   "last_answer": last, "temperature": 0.3 if attempt == 0 else 0.5}
+            user = json.dumps({k: ctx[k] for k in ("question", "company", "title", "facts", "ad_snippets", "words", "style", "last_answer",
+                                                   "problems") if ctx.get(k)}, ensure_ascii=False, indent=1)
+            info["tries"] = attempt + 1
+            try:
+                reply = normalise_json(self.llm.json(TASK, FLUENCY_SYSTEM, user, context=ctx))
+            except Exception as e:  # noqa: BLE001  (no budget, no network: the code-built answer)
+                info["problems"].append([f"the rewrite failed: {str(e)[:120]}"])
+                break
+            text = " ".join(str((reply or {}).get("answer") or "").split())
+            estimate += (len(FLUENCY_SYSTEM) + len(user) + len(text)) // 4
+            problems = (fluency_mod.fact_problems(text, "\n".join(facts), self.ad, self.guard.tools) + self._text_problems(text)
+                        + self.guard.problems(text, plan, limit)) if text else ["the answer is empty"]
+            if not problems:
+                info.update(source="model", tokens=fluency_mod._spent(self.llm, start, estimate))
+                return text, [], info
+            info["problems"].append(list(problems))
+            last = text
+        info["tokens"] = fluency_mod._spent(self.llm, start, estimate)
+        return "", problems, info
+
     def _earlier_motivations(self) -> list[tuple[str, str]]:
         """(label, text) of every earlier motivation answer: the approved ones in the library (other jobs) and this run's own earlier drafts."""
         mine = str(self.job.get("id") or "")
@@ -816,12 +909,15 @@ class FreeText:
         Every draft goes to `motivation_log` with its guard result."""
         self._current_q = question
         overlap, who = self._overlap(text) if text else (0.0, "")
-        if text and overlap >= REUSE_LIMIT:
-            again, probs2 = self._draft(question, plan, limit, missing, [f"it reuses {who}: overlap {overlap:.2f} of 5-word runs (limit {REUSE_LIMIT}); "
-                                                                       f"say it in new words"], tries)
+        mine = fluency_mod.letter_overlap_problems(text, self.letter_body) if text else []
+        if text and (overlap >= REUSE_LIMIT or mine):                           # another motivation answer, or this job's letter (v3.4)
+            asked = ([f"it reuses {who}: overlap {overlap:.2f} of 5-word runs (limit {REUSE_LIMIT}); say it in new words"] if overlap >= REUSE_LIMIT
+                     else []) + [f"{m}; say it in new words" for m in mine]
+            again, probs2 = self._draft(question, plan, limit, missing, asked, tries) if tries else ("", [])
             overlap2, who2 = self._overlap(again) if again else (1.0, who)
-            text, probs, overlap, who = (again, [], overlap2, who2) if again and overlap2 < REUSE_LIMIT else (
-                "", probs2 or [f"reuses {who}: overlap {overlap:.2f} (limit {REUSE_LIMIT})"], overlap2, who2)
+            mine2 = fluency_mod.letter_overlap_problems(again, self.letter_body) if again else mine
+            text, probs, overlap, who = (again, [], overlap2, who2) if again and overlap2 < REUSE_LIMIT and not mine2 else (
+                "", probs2 or mine2 or [f"reuses {who}: overlap {overlap:.2f} (limit {REUSE_LIMIT})"], overlap2, who2)
         self.motivation_log.append({"question": question, "text": text, "words": len(text.split()), "sources": plan.ids,
                                     "guard": "passed" if text else "FAILED: " + "; ".join(probs[:4]),
                                     "overlap": f"{overlap:.2f}" + (f" (closest: {who})" if who else " (no earlier motivation answer)")})
@@ -906,4 +1002,5 @@ def for_job(job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any
             refetch_jd: Callable[[], str] | None = None) -> FreeText:
     """The free-text helper of one job: its ad, its CV report (keywords, hook), the fact bank, the model and the answer library. `refetch_jd` fetches
     the ad once more (the board API) when a motivation answer finds it too short; none = the ad as the database has it."""
-    return FreeText(llm, fb, Library(settings.path("answers_library")), job, rep, book, ask=ask, out=out, today=today, refetch_jd=refetch_jd)
+    return FreeText(llm, fb, Library(settings.path("answers_library")), job, rep, book, ask=ask, out=out, today=today, refetch_jd=refetch_jd,
+                    settings=settings)
