@@ -5,9 +5,10 @@ what the user did and what came of it (STAR); technologies appear as keywords, n
 sum(w * hit) / sum(w) over the JD's keywords only, so dropping a term the JD does not name (HGNC, parquet, circuit breaker, Leiden) costs nothing,
 and dropping a JD keyword costs its weight: keep every JD keyword, drop the jargon the JD does not name.
 
-  * `careerops plain-draft` (review/plaindraft.py) asks the model for ONE candidate per bullet that has no `plain:` (and per hook entry with no
-    `plain_headline` / `plain_profile_line` / `plain_letter_line`), checks it here (`problems`), shows it, and saves it only on your `y` (or your
-    edit) through factbank_append.add_field, which writes a dated backup first. The bullet's own text is never changed.
+  * `careerops plain-draft` (review/plaindraft.py) asks the model for TWO candidates per bullet that has no `plain:` (and per hook entry with no
+    `plain_headline` / `plain_profile_line` / `plain_letter_line`), checks them here (`problems`), shows the ones that pass, and saves the one you
+    pick only on your `y` (or your edit) through factbank_append.add_field, which writes a dated backup first. The bullet's own text is never
+    changed.
   * `cv.style: plain` (the code default; `technical` keeps the old wording): tailoring reads each bullet's `plain:` (`plain_bank`), adds back at the
     end, in brackets, up to MAX_BRACKET JD keywords the original bullet says and the plain one does not ("..., checked by ~65 automated tests
     (Python, AWS)."), and uses the hook entries' plain fields. A bullet with no `plain:` keeps its text and is listed as "plain version missing".
@@ -15,11 +16,20 @@ and dropping a JD keyword costs its weight: keep every JD keyword, drop the jarg
 The checks on a candidate (all in code, before you see it):
   facts      every number is the bullet's own (text or `result:`); no tool, organisation or name the bullet (or its role) does not have; no outcome
              phrase ("in daily use", "placed", "reduced") the bullet does not state; no deny-listed term;
-  jargon     a technical term only when it is on the allow-list (ALLOW + settings cv.plain_allow); library and product names, file formats,
-             algorithm names, gene and data-standard names, internal component names are refused (`jargon`);
-  length     one sentence, at most MAX_WORDS (30) words and two CV lines (2 x CHARS_PER_LINE characters);
-  readable   Flesch reading ease >= cv.plain_min_flesch (50), the built-in formula (`flesch`; textstat is not a dependency);
+  jargon     at most MAX_JARGON (1) technical term off the allow-list (ALLOW + settings cv.plain_allow): library and product names, file
+             formats, algorithm names, gene and data-standard names, internal component names (`jargon`);
+  length     one sentence, at most MAX_WORDS (25) words and two CV lines (2 x CHARS_PER_LINE characters);
+  readable   Flesch reading ease >= cv.plain_min_flesch (30), the built-in formula (`flesch`; textstat is not a dependency);
   shape      a result clause: a number or a concrete outcome. A bullet that states no result is NEEDS RESULT and is not drafted.
+  ownership  (9 Nov 2026) a bullet that says contributed / helped / supported / assisted keeps that word, and never becomes built / led /
+             owned / designed ... (`ownership_problems`; the real dc2 "Contributed the MCP implementation" came back as "I built it");
+  credit     a rating or commendation keeps the subject the bullet gives it ("the engagement received a 5-star commendation"), never
+             "..., giving 5-star commendation" or "I received" (`credit_problems`);
+  result     the bullet's result clause (`result:`, else its clauses with a number or an outcome) is kept in meaning: every number, the word each
+             number counts (tests, files, seconds), and at least half of its other words (a long word counts when its first 5 letters match).
+             When the clause cannot be found, or the candidate does not keep it, no candidate is shown (`result_problems`).
+A saved `plain:` that breaks the ownership or credit rule is not used on the CV (its original wording is, `plain_bank` info["refused"]); the line
+stays in the fact bank until you delete it (code never deletes or rewords a fact-bank line).
 """
 from __future__ import annotations
 
@@ -34,12 +44,15 @@ from .grounding import _names, name_allowed, sentences
 from .scorer import Keyword, _contains, norm_literal
 
 TASK = "plain_bullet"
-MAX_WORDS = 30
+MAX_WORDS = 25                          # 9 Nov 2026 (was 30)
+MAX_JARGON = 1                          # technical terms off the allow-list a plain line may keep
 MAX_HEADLINE_WORDS = 12
 MAX_LINE_WORDS = 35
 CHARS_PER_LINE = 92                     # a bullet line of the two-page CV's 11pt body (tailor.CHARS_PER_LINE)
 MAX_LINES = 2
-MIN_FLESCH = 50.0
+MIN_FLESCH = 30.0                       # 9 Nov 2026 (was 50: a true 25-word bullet with its keywords rarely reached it)
+KEEP_RESULT = (0.5, 0.5)                # share of the result clause's other words kept: with numbers kept / with no number
+CANDIDATES = 2                          # candidates shown per line
 MAX_BRACKET = 3
 TRIES = 2
 STYLES = ("plain", "technical")
@@ -65,6 +78,17 @@ COMMON = frozenset("""uk us usa eu cv msc bsc ba ma phd ceo cto cfo hr it nhs ai
 # Outcome phrases: a candidate may state one only when its bullet does.
 OUTCOMES = ("in daily use", "in live use", "in production", "now used", "used by", "reused", "adopted", "placed", "place", "won", "award",
             "reduced", "cut", "saved", "faster", "fewer", "rating", "ranked", "selected", "shipped", "replacing", "replaced")
+# Ownership (9 Nov 2026): a bullet with a WEAK verb keeps it; a candidate may not claim a STRONG verb the bullet does not say.
+WEAK_OWNERSHIP = ("contributed", "contributing", "contribution", "helped", "helping", "supported", "supporting", "assisted", "assisting",
+                  "participated", "took part", "collaborated")
+STRONG_OWNERSHIP = ("built", "led", "owned", "designed", "created", "developed", "delivered", "architected", "drove", "launched",
+                    "implemented", "wrote", "ran", "managed", "shipped", "spearheaded", "founded", "engineered", "set up", "produced",
+                    "deployed", "made", "headed", "directed", "oversaw")
+CREDIT = r"(?:commendation|rating|award|prize|praise|recognition|accolade)"
+CREDIT_VERB = r"(?:received|earned|won|got|gained|was given|was awarded|was rated|was praised)"
+CREDIT_LINK = r"\b(giving|earning|which earned|that earned|resulting in|leading to|which led to|winning|bringing|getting)\b"
+STOP = frozenset("""the a an of in on for to from by with and or at as its it their his her my our your across into over under per each every than that
+which who whom this these those is was were be been being so now then also via about after before while when where not no more most""".split())
 _ORDINAL = re.compile(r"^\d+(?:st|nd|rd|th)$", re.I)
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9+#./:'’-]*[A-Za-z0-9+#]|[A-Za-z]")
 
@@ -247,6 +271,123 @@ def fact_problems(cand: str, source: str, terms: Sequence[str], owner: Mapping |
     return list(dict.fromkeys(out))
 
 
+def ownership_problems(cand: str, source: str) -> list[str]:
+    """A bullet that says contributed / helped / supported ... keeps a word of that kind, and the candidate claims no stronger verb (built, led,
+    owned ...) the bullet does not say."""
+    src, c = norm_literal(source), norm_literal(cand)
+    weak = [w for w in WEAK_OWNERSHIP if _contains(src, w)]
+    if not weak:
+        return []
+    out = []
+    up = [s for s in STRONG_OWNERSHIP if _contains(c, s) and not _contains(src, s)]
+    if up:
+        out.append(f"upgrades the ownership: the bullet says '{weak[0]}', the candidate says '{up[0]}'")
+    if not any(_contains(c, w) for w in WEAK_OWNERSHIP):
+        out.append(f"drops the ownership word '{weak[0]}' (contributed / helped / supported stay as the bullet says them)")
+    return out
+
+
+def credit_problems(cand: str, source: str) -> list[str]:
+    """A rating or commendation keeps the subject the bullet gives it ("the engagement received a 5-star commendation"): it is never tied to the
+    work with "giving / earning / leading to", and never given to "I" when the bullet gives it to something else."""
+    if not re.search(CREDIT, source, re.I):
+        return []
+    out = []
+    link = re.search(CREDIT_LINK + r"[^.;]*?" + CREDIT, cand, re.I)
+    if link:
+        out.append(f"ties the commendation to the work with '{link.group(1)}': it keeps its own subject (\"the engagement received ...\")")
+    subject = re.search(r"\b([A-Za-z]+)\s+" + CREDIT_VERB + r"\b[^.;]*?" + CREDIT, source, re.I)
+    if subject and subject.group(1).lower() != "i":
+        want = subject.group(1).lower()
+        got = re.search(r"\b([A-Za-z]+)\s+" + CREDIT_VERB + r"\b[^.;]*?" + CREDIT, cand, re.I)
+        if not got or got.group(1).lower() != want:
+            out.append(f"the commendation keeps its subject: '{want} ...', as the bullet says it")
+    return out
+
+
+def _stem(word: str) -> str:
+    w = re.sub(r"['’]s$", "", word.lower())
+    for suf, rep_ in (("ies", "y"), ("ing", ""), ("ed", ""), ("es", ""), ("s", "")):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            return w[: len(w) - len(suf)] + rep_
+    return w
+
+
+def _content(text: str) -> list[str]:
+    out = []
+    for t in re.findall(r"[A-Za-z][A-Za-z'’-]*", text):
+        for part in t.split("-"):
+            if len(part) >= 3 and part.lower() not in STOP:
+                out.append(_stem(part))
+    return list(dict.fromkeys(out))
+
+
+def result_clause(bullet: Mapping) -> str:
+    """The bullet's result: its `result:` field; else its "so ..." clause ("so answers stay reproducible during upstream outages"); else, in each
+    clause of its text (brackets left out), what follows the first number ("~65 tests across 8 files") or the outcome phrase ("replacing a manual
+    release process")."""
+    r = " ".join(str(bullet.get("result") or "").split())
+    if r:
+        return r
+    text = re.sub(r"\([^()]*\)", " ", " ".join(str(bullet.get("text") or "").split()))
+    parts = [p.strip() for p in re.split(r";\s*|:\s+|,\s+|\s+[–—-]\s+|\s+(?=so\s)", text) if p.strip()]
+    so = [re.sub(r"^so\s+(?:that\s+)?", "", p) for p in parts if re.match(r"so\s", p)]
+    if so:
+        return " ".join(so)
+    out = []
+    for p in parts:
+        m = re.search(r"[~£$€]?\d", p)
+        o = None if m else _outcome(p)
+        if o is not None:
+            m = re.search(r"(?<![\w-])" + re.escape(o), p, re.I)
+        if m or o is not None:
+            out.append(p[m.start():] if m else p)
+    return " ".join(out)
+
+
+def result_problems(cand: str, bullet: Mapping) -> list[str]:
+    """The original's result clause, kept in meaning: every number, the word each number counts, and KEEP_RESULT of its other words. Unsure (no
+    clause found) -> a problem, so no candidate is shown."""
+    clause = result_clause(bullet)
+    if not clause:
+        return ["cannot find the bullet's result clause, so cannot check the candidate keeps it"]
+    out = []
+    nums = numbers(clause)
+    lost = sorted(nums - numbers(cand))
+    if lost:
+        out.append(f"drops the result's number(s) {lost} ('{clause[:70]}')")
+    have = set(_content(cand))
+    have |= {w[:5] for w in have if len(w) >= 6}
+    counted: dict[str, str] = {}                                # stem -> the word as the bullet says it
+    for m in re.finditer(r"\d[\d,.]*\s*%?[-\s]*([A-Za-z]{3,})", clause):
+        if m.group(1).lower() not in STOP:
+            counted.setdefault(_stem(m.group(1)), m.group(1))
+    units = list(counted)
+    gone = [counted[u] for u in units if u not in have]
+    if gone:
+        out.append(f"drops what the result's number counts ({', '.join(gone)})")
+    words = [w for w in _content(clause) if w not in units]
+    need = KEEP_RESULT[0] if nums else KEEP_RESULT[1]
+    kept = sum(w in have or (len(w) >= 6 and w[:5] in have) for w in words)
+    if words and kept / len(words) < need:
+        out.append(f"does not keep the result: '{clause[:80]}' (kept {kept} of its {len(words)} words)")
+    elif not words and not nums:
+        out.append("cannot tell the result's meaning, so cannot check the candidate keeps it")
+    return out
+
+
+def saved_problems(plain: str, bullet: Mapping) -> list[str]:
+    """The rules a saved `plain:` line must still keep to be used (ownership and credit): [] = use it."""
+    src = _source(bullet)
+    return ownership_problems(plain, src) + credit_problems(plain, src)
+
+
+def usable_plain(bullet: Mapping) -> str:
+    """The bullet's saved `plain:`, or '' when there is none or it breaks the ownership or credit rule."""
+    plain = " ".join(str(bullet.get("plain") or "").split())
+    return plain if plain and not saved_problems(plain, bullet) else ""
+
+
 def problems(cand: str, bullet: Mapping, owner: Mapping | None, fb: Mapping, settings=None, kind: str = "bullet",
              source: str | None = None) -> list[str]:
     """Every check on one candidate. `kind`: bullet | headline | profile_line | letter_line (a hook entry's field: `source` is that field and
@@ -257,6 +398,7 @@ def problems(cand: str, bullet: Mapping, owner: Mapping | None, fb: Mapping, set
     allow = allow_list(settings)
     src = source if source is not None else _source(bullet)
     out = fact_problems(t, src, [str(x) for x in bullet.get("terms") or []], owner, fb, allow)
+    out += ownership_problems(t, src) + credit_problems(t, src)
     words = len(t.split())
     if kind == "bullet":
         if len(sentences(t)) != 1:
@@ -270,6 +412,7 @@ def problems(cand: str, bullet: Mapping, owner: Mapping | None, fb: Mapping, set
             out.append(f"Flesch reading ease {score} (at least {min_flesch(settings):g})")
         if not numbers(t) and _outcome(t) is None:
             out.append("no result clause: it needs a number or a concrete outcome")
+        out += result_problems(t, bullet)
     else:
         limit = MAX_HEADLINE_WORDS if kind == "headline" else MAX_LINE_WORDS
         if words > limit:
@@ -278,8 +421,8 @@ def problems(cand: str, bullet: Mapping, owner: Mapping | None, fb: Mapping, set
         if own and not (numbers(t) & own):
             out.append(f"drops the number ({', '.join(sorted(own))})")
     j = jargon(t, fb, owner, allow)
-    if j:
-        out.append(f"jargon not on the allow-list: {', '.join(j)}")
+    if len(j) > MAX_JARGON:
+        out.append(f"jargon not on the allow-list: {', '.join(j)} (at most {MAX_JARGON})")
     return list(dict.fromkeys(out))
 
 
@@ -325,12 +468,15 @@ Rules (checked by code; a line that breaks one is thrown away):
 - Use ONLY what the ORIGINAL says. Keep every number you use exactly as written there. Add no number, tool, organisation, name or outcome.
 - Plain everyday words. Remove library names, file formats, algorithm names, gene or data-standard names and internal component names.
 - A technical name may stay only if it is in ALLOWED and the ORIGINAL uses it.
+- Keep the bullet's ownership word: if it says contributed, helped or supported, say that, never built, led or owned.
+- Keep the bullet's result as the bullet states it. A rating or commendation keeps its subject ("the engagement received a 5-star
+  commendation"); never link it with "giving" or "earning".
 - British spelling, past tense for past work, no "we" or "our".
-Return JSON only: {{"plain": "<the line>"}}."""
+Return JSON only: {{"plain": ["<line 1>", "<line 2>"]}}: TWO different wordings, each following every rule."""
 SHAPES = {
-    "bullet": ("ONE sentence of at most 30 words, in this shape: <the situation or task in at most 12 plain words>, I <what I did, in plain words>"
-               "<, using KEYWORD1 and KEYWORD2>, <the result: a number or a concrete outcome>. Short, common words: it must score 50 or more on "
-               "Flesch reading ease."),
+    "bullet": ("ONE sentence of at most 25 words, in this shape: <the situation or task in at most 10 plain words>, I <what I did, in plain words>"
+               "<, using KEYWORD1 and KEYWORD2>, <the bullet's own result: a number or a concrete outcome>. Short, common words: it must score 30 "
+               "or more on Flesch reading ease."),
     "headline": "A CV headline of at most 12 words: what I am and one result with its number, plain words (for example \"AI assistant running on "
                 "AWS, checked by ~65 automated tests\").",
     "profile_line": "The first sentence of a CV profile, at most 35 words: my role, then one plain result with its number.",
@@ -339,38 +485,56 @@ SHAPES = {
 }
 
 
-def draft(llm, it: Item, fb: Mapping, settings=None) -> tuple[str, list[str], int]:
-    """(candidate, problems, tokens): TRIES model calls, the second told the first's problems; a candidate is returned only when it passes
-    every check ("" and the last problems otherwise). A NEEDS RESULT bullet is not drafted."""
+def _replies(out) -> list[str]:
+    raw = (out or {}).get("plain") if isinstance(out, Mapping) else out
+    items_ = raw if isinstance(raw, list) else [raw]
+    return [" ".join(str(x or "").split()) for x in items_ if str(x or "").strip()]
+
+
+def draft(llm, it: Item, fb: Mapping, settings=None) -> tuple[list[str], list[str], int]:
+    """(candidates, problems, tokens): up to CANDIDATES lines that pass every check, from at most TRIES model calls (each asks for two; the
+    second is told the problems of the ones that failed and asked only for what is still missing). [] and the last problems when none passes. A
+    NEEDS RESULT bullet is not drafted."""
     from ..llm.router import TaskUnavailable
     from . import tailor as T
 
     if it.needs_result:
-        return "", ["NEEDS RESULT: the bullet states no number or outcome, so a plain version would have no result"], 0
+        return [], ["NEEDS RESULT: the bullet states no number or outcome, so a plain version would have no result"], 0
     allow = [a for a in allow_list(settings) if _contains(norm_literal(it.source), norm_literal(a))]
     system = SYSTEM.format(shape=SHAPES[it.kind])
     probs: list[str] = []
+    good: list[str] = []
+    last: list[str] = []
     tokens = 0
     start = len(getattr(llm, "usage", []) or [])
     for attempt in range(TRIES):
-        user = json.dumps({"ORIGINAL": it.original, "RESULT": str(it.bullet.get("result") or "") if it.kind == "bullet" else "",
+        user = json.dumps({"ORIGINAL": it.original, "RESULT": (result_clause(it.bullet) or str(it.bullet.get("result") or "")) if it.kind == "bullet" else "",
                            "ROLE": " ".join(str(it.owner.get(k) or "") for k in ("title", "org", "name") if it.owner.get(k)) if it.kind == "bullet" else "",
-                           "ALLOWED": allow, "LAST": "" if not probs else last, "PROBLEMS": probs}, ensure_ascii=False, indent=1)
+                           "ALLOWED": allow, "LAST": last if probs else [], "PROBLEMS": probs, "KEEP": good,
+                           "WANTED": CANDIDATES - len(good)}, ensure_ascii=False, indent=1)
         try:
             out = T._llm_json(llm, TASK, system, user, {"mode": "plain", "kind": it.kind, "id": it.owner_id, "original": it.original,
                                                          "temperature": 0.2 if attempt == 0 else 0.5})
         except TaskUnavailable:
             raise
         except Exception as e:  # noqa: BLE001  (a bad reply, no network: nothing to show for this one)
-            return "", [f"the model could not draft it: {str(e)[:120]}"], tokens
-        last = " ".join(str((out or {}).get("plain") or "").split())
-        tokens += (len(system) + len(user) + len(last)) // 4
-        probs = problems(last, it.bullet, it.owner, fb, settings, it.kind, None if it.kind == "bullet" else it.source)
-        if not probs:
+            return good, ([] if good else [f"the model could not draft it: {str(e)[:120]}"]), tokens
+        last = _replies(out)
+        tokens += (len(system) + len(user) + sum(len(x) for x in last)) // 4
+        probs = []
+        for cand in last:
+            p = problems(cand, it.bullet, it.owner, fb, settings, it.kind, None if it.kind == "bullet" else it.source)
+            if not p and cand not in good:
+                good.append(cand)
+            probs += p
+        if not last:
+            probs = ["the model returned no line"]
+        probs = list(dict.fromkeys(probs))
+        if len(good) >= CANDIDATES:
             break
     rows = list(getattr(llm, "usage", []) or [])[start:]
     tokens = sum(int(r.get("total_tokens") or 0) for r in rows if isinstance(r, dict)) or tokens
-    return ("", probs, tokens) if probs else (last, [], tokens)
+    return (good[:CANDIDATES], [], tokens) if good else ([], probs, tokens)
 
 
 # ------------------------------------------------------------------ tailoring in plain style
@@ -405,16 +569,20 @@ def with_keywords(plain: str, terms: Sequence[str]) -> str:
 
 def plain_bank(fb: dict, kws: Sequence[Keyword], cap: int = MAX_BRACKET) -> tuple[dict, dict]:
     """(a copy of the fact bank whose bullets read their `plain:` with up to `cap` missing JD keywords in brackets, and whose hook entries read
-    their plain fields; info). info = {"plain": [ids], "missing": [ids with no plain], "added": {id: [terms]}, "readability": {id: score},
-    "technical": {id: original text}}. The fact bank itself is not changed."""
+    their plain fields; info). info = {"plain": [ids], "missing": [ids with no plain], "refused": {id: problems of a saved plain the CV does not
+    use}, "added": {id: [terms]}, "readability": {id: score}, "technical": {id: original text}}. The fact bank itself is not changed."""
     out = copy.deepcopy(fb)
-    info: dict = {"plain": [], "missing": [], "added": {}, "readability": {}, "technical": {}}
+    info: dict = {"plain": [], "missing": [], "refused": {}, "added": {}, "readability": {}, "technical": {}}
     for sec in ("experience", "projects"):
         for e in out.get(sec) or []:
             for b in e.get("bullets") or []:
                 plain = " ".join(str(b.get("plain") or "").split())
                 if not plain:
                     info["missing"].append(str(b["id"]))
+                    continue
+                broken = saved_problems(plain, b)
+                if broken:                                      # 9 Nov 2026: a saved line that upgrades ownership or moves the credit
+                    info["refused"][str(b["id"])] = broken
                     continue
                 original = " ".join(str(b["text"]).split())
                 add = missing_keywords(original, plain, kws)[:cap]

@@ -90,4 +90,4 @@ def test_a_blocking_row_is_printed_in_red_with_its_label():
 
 @pytest.mark.parametrize("status", RG.STATUSES)
 def test_the_five_statuses_exist(status):
-    assert status in ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER")
+    assert status in ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER", "COVERED")      # COVERED: 9 Nov 2026 (test_fields_v351.py)

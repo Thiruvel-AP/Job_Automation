@@ -50,6 +50,10 @@ def fields_md(rows: list[requiredgate.Row]) -> str:
         cell = lambda t: str(t).replace("|", "\\|").replace("\n", " ")        # noqa: E731
         out.append(f"| {i} | {cell(r.label[:120])} | {r.kind} | {'yes' if r.required else 'no'} | {cell(_short(r.value))} | {cell(r.source)} | "
                    f"{r.status}{(' — ' + cell(r.reason[:120])) if r.reason else ''} |")
+    choices = requiredgate.empty_choices(rows)
+    if choices:                                                     # 9 Nov 2026: what you can pick in each choice field left empty for you
+        out += ["", "## Options of the empty choice fields", ""]
+        out += [f"- #{i} {r.label[:120]}{' (required)' if r.required else ''}: " + " · ".join(o.strip() for o in r.options) for i, r in choices]
     return "\n".join(out) + "\n"
 
 
@@ -75,7 +79,9 @@ def record(folder: Path, page, job: Mapping[str, Any], rep: Mapping[str, Any], r
     if log:
         (folder / "motivation.txt").write_text("\n\n".join(
             f"QUESTION: {m['question']}\nWORDS: {m['words']}\nGUARD: {m['guard']}\nSOURCES: {', '.join(m.get('sources') or [])}\n"
-            f"REUSE OVERLAP (5-word shingles, limit 0.30): {m.get('overlap', 'n/a')}\n\n{m['text'] or '(no draft)'}" for m in log) + "\n", encoding="utf-8")
+            f"REUSE OVERLAP (5-word shingles, limit 0.30): {m.get('overlap', 'n/a')}\n"
+            f"MOTIVATIONS LEFT OUT: {'; '.join(m.get('motivations_left_out') or []) or 'none'}\n\n{m['text'] or '(no draft)'}" for m in log) + "\n",
+            encoding="utf-8")
     ats = rep.get("ats") or {}
     hook = rep.get("hook") or {}
     check = ats_check_of(rep)
@@ -115,6 +121,8 @@ def report_md(job: Mapping[str, Any], rep: Mapping[str, Any], rows: list[require
     detail = [l for l in (check.get("lines") or [])[1:]]
     if detail:
         out += ["```", *detail, "```", ""]
-    out += ["## Required fields still empty", ""] + ([f"- {r.label}" for r in blocking] or ["none"]) + [""]
+    out += ["## Required fields still empty", ""] + ([f"- {r.label}" + (f" — options: {' · '.join(o.strip() for o in r.options)}"
+                                                                         if r.options and not r.reason.startswith("attestation") else "")
+                                                         for r in blocking] or ["none"]) + [""]
     out += [f"Letter: {(rep.get('letter') or {}).get('status') or 'none'}", ""]
     return "\n".join(out)

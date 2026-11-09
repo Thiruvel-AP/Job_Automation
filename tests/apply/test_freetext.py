@@ -351,7 +351,7 @@ def test_a_why_company_answer_is_never_reused_across_companies(make):
 
 def test_why_role_draws_on_the_ad_and_the_hook(make):
     why_role = ("The role at Northwind Health AI asks me to build and evaluate LLM agents on top of a research data platform, "
-                "which is the problem I solved with an LLM agent at Northwind Research Lab. I built it for a multi-omics cancer research "
+                "which is the problem I solved with an LLM agent at Northwind Research Lab. There, at Northwind Research Lab, I built it for a multi-omics cancer research "
                 "platform, and I want to do the same kind of work where correctness matters, so this is the role I would like to take on and keep "
                 "improving as the product grows.")
     llm = llm_with(why_role, ad_phrases=["build and evaluate LLM agents"])

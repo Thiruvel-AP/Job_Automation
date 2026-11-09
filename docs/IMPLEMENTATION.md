@@ -2207,3 +2207,41 @@ dissertation line, the template, the first-bullet position, and (slow) the same 
 Adapted to the new order and block: `test_cv_v2.py`, `test_cv_typography.py`, `test_two_page.py` (its fixture bank `fact_bank_two_page.yaml` gained one
 fictional bullet, d5, so page 2 still fills), `test_cv_template.py` (its fill and linespread tests are calibrated on the older block, so its helper
 sets `cv.education_compact: false`), `test_sections_v35.py`.
+
+## 5bk. v3.5.1 — fixes after the 9 Nov RightShip dry run (9 Nov 2026) — **done offline** (fixtures, MockLLM, fake hooks); the next live dry run is yours
+
+1. **Stale outputs** (`apply/stale.py`). The dry run filled the form with a CV from 31 Oct and a letter from 3 Nov (no v3.3 / v3.4, no Education-first
+   order). Before any review or form, `live` compares the job's CV and letter PDFs (`report.json` `cv_pdf` / `letter_pdf`) with the time of the last
+   commit that touched `careerops/tailoring`, `careerops/hook.py` or `templates` (`git log -1 --format=%ct`). Older, or the CV missing: the job goes back
+   to `triaged`, is tailored and reviewed again (dry runs included; `apply.stale_outputs: retailor`, the default), or with `stop` the job ends
+   `stale outputs` with "outputs are older than the code: run with --retailor" and its JD stays in the inbox. `careerops apply` and the auto-apply refuse
+   such files before a browser opens (`StaleOutputs`, a `WrongFileError`). When git cannot tell (no git, not a repository) one line says the check did not
+   run. Tests never ask git: `tests/conftest.py` sets `CAREEROPS_CODE_TIME=off`; the stale tests set a time.
+2. **plain-draft** (`tailoring/plain.py`, `review/plaindraft.py`). Flesch >= 30 (`cv.plain_min_flesch`), <= 25 words, at most 1 jargon term off the
+   allow-list. Ownership: a bullet that says contributed / helped / supported / assisted keeps such a word and never becomes built / led / owned /
+   designed ... (`ownership_problems`; the real dc2 "Contributed the MCP implementation" had come back as "I built it"). Credit: a rating or
+   commendation keeps the bullet's subject ("the engagement received a 5-star commendation"), never "..., giving 5-star commendation" or "I received"
+   (`credit_problems`). Result: the bullet's result clause (`result:`; else its "so ..." clause; else what follows the first number or the outcome phrase
+   of each clause) must be kept: every number, the word each number counts, and half of its other words (a long word counts on its first 5 letters);
+   no clause found = no candidate (`result_problems`). Two candidates per line (one model call asks for two; a second call only for what is missing):
+   `[1]/[2]` picks, then `y` saves exactly that text. A saved `plain:` that breaks the ownership or credit rule is not used on the CV (`plain_bank`
+   `info["refused"]`, an analysis warning) and plain-draft lists it; the line stays in the fact bank until you delete it.
+3. **Motivation answer** (`apply/freetext.py`). A `motivations:` line that names an industry (domain.py's groups plus biomedical / life sciences /
+   maritime words; job-benefit phrases such as "Healthy Living Allowance", "private medical insurance", "health and safety" do not count) is used only
+   when the job ad, the stored company page or the company hook names it; a "longer term ... research" line only for a research role (title or employer).
+   What is left out is in `motivation.txt` (`MOTIVATIONS LEFT OUT`). Every sentence about past work ("I built / wrote / designed ...") names its employer
+   or project; no other sentence names an industry the company is not in; at most one sentence comes from a CV bullet (half of its 4-word runs in one
+   bullet, the employer lead-in left out) and it is in plain words. The code-built answer tells one bullet: its approved `plain:` (if it keeps the
+   ownership and credit rules), else its text without brackets when that has at most 1 jargon term, as "At <employer>, I ..." / "In my <project>
+   project, I ...". These checks apply to the code-built answer, the fluency rewrite and the model draft.
+4. **Form fields** (`apply/planfill.py`, `apply/requiredgate.py`, `apply/dryrun.py`). A schema field the page does not show is `COVERED` (does not block)
+   when a VERIFIED page field's label starts with its label ("Location" -> "Location (City)") or holds the same answer from the same source. `fields.md`
+   ends with "Options of the empty choice fields" (EMPTY, or NEEDS USER that is not an attestation: the two Inclusion & Diversity questions,
+   VeteranStatus), `report.md` shows the options next to an empty required choice, and `fields.json` carries them.
+
+Not verified here: the real git time on WSL (the check prints a line when git fails), the real model's two candidates, and the RightShip form itself.
+The real dc2 `plain:` saved on 8 Nov breaks the new ownership and credit rules: the CV uses dc2's original wording until you delete that line.
+
+Tests: `tests/apply/test_stale_v351.py`, `tests/tailoring/test_plain_v351.py` (dc2's real text in a tmp bank), `tests/apply/test_motivation_v351.py`,
+`tests/apply/test_fields_v351.py`. Adapted: `test_plain_v34.py` (new limits, pick then `y`), `test_motivation_v34.py` / `test_motivation.py` /
+`test_freetext.py` (the told bullet is az4 in plain words, past-work sentences name the employer), `test_requiredgate.py` (COVERED).

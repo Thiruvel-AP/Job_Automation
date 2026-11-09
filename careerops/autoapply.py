@@ -34,6 +34,7 @@ from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _n
                            is_required as _is_required, label_of as _label_of)
 from .apply.errors import ArchiveError
 from .apply.formfind import CAPTCHA_SELECTORS, CAPTCHA_TEXT, HandOff, captcha_reason   # noqa: F401  (the challenge checks live in formfind)
+from .apply import stale
 from .apply.guard import check_job_files
 from .discovery import discover
 
@@ -375,6 +376,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         (rep.get("letter") or {}).get("status") not in ("none", "off", "declined") else None
     plan = visa_mod.require_plan(job, applicant)                          # W unknown / no answers for it: nothing is opened
     check_job_files(job, cv, letter)                                      # before a browser even opens
+    stale.require_fresh(job, cv, letter)                                  # older than the tailoring code: run with --retailor
     url = job.get("apply_url") or job.get("url")
     if not url:
         raise ArchiveError(f"{job['id']} has no application URL")

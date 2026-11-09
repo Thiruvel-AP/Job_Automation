@@ -39,6 +39,7 @@ from . import ats_vendor, attest, dryrun, eo, failures as failures_mod, filler, 
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
 from .errors import BrowserClosed, is_closed_error
+from . import stale
 from .guard import check_job_files
 from .visa import VisaPlan, plan_for, require_plan, work_for
 
@@ -560,6 +561,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
     letter = rep.get("letter_pdf") if rep.get("letter_pdf") and Path(rep["letter_pdf"]).is_file() else None
     plan = require_plan(job, applicant)                    # W unknown / no answers for it: WorkCountryError, nothing is opened
     check_job_files(job, cv, letter)                       # refuse before a browser even opens
+    stale.require_fresh(job, cv, letter)                   # a CV or letter older than the tailoring code: run with --retailor (9 Nov 2026)
     print(plan.work.line() + f"\n{plan.describe()}")
     letter_text = "\n\n".join((rep.get("letter") or {}).get("paragraphs") or []) or None
     if freetext is not None:

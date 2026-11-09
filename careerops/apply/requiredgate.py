@@ -6,6 +6,8 @@
   EMPTY        nothing in it, and no reason recorded
   NEEDS USER   only the person can answer it: an attestation (never ticked), a visa type nobody wrote, a question answers.yaml cannot answer, a letter
                that failed its guards, no JD to draft from ...
+  COVERED      (9 Nov 2026) a field the form's schema lists that is not on the page, whose answer a VERIFIED page field already holds (RightShip's
+               schema "Location" and the page's "Location (City)"): it does not block
 
 LOST, EMPTY and NEEDS USER block an auto-submit (autoapply.py raises NeedsUser before any submit control is reached) and are printed in red with
 their label. A table is never an approval: it only reports what is on the page. Reads the page; clicks nothing.
@@ -15,13 +17,14 @@ from __future__ import annotations
 import os
 import re
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Mapping
 
 from . import answers as answers_mod
 from . import attest, formloop, shortfields
 
-STATUSES = ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER")
+STATUSES = ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER", "COVERED")
+CHOICE_KINDS = ("combobox", "select", "radio")
 BLOCKING = ("LOST", "EMPTY", "NEEDS USER")
 RED, RESET = "\033[31m", "\033[0m"
 
@@ -36,6 +39,7 @@ class Row:
     value: str = ""
     source: str = ""
     reason: str = ""
+    options: list[str] = field(default_factory=list)          # a choice field's options, listed for an empty one (fields.md, report.md)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -98,7 +102,8 @@ def build(fields: list[formloop.Field], *, verified: list[str], lost: list[str],
             status = "EMPTY"
         if status == "FILLED" and f.kind == "file":
             source = source or ("cv" if re.search(r"resume|cv|curriculum", f.question, re.I) else "letter" if "cover" in f.question.lower() else "")
-        rows.append(Row(f.question[:200], f.key, f.kind, f.required, status, value[:400], source, reason))
+        rows.append(Row(f.question[:200], f.key, f.kind, f.required, status, value[:400], source, reason,
+                        list(f.options or []) if f.kind in CHOICE_KINDS else []))
     return rows
 
 
@@ -112,6 +117,12 @@ def check(page, ctx, verified: list[str], lost: list[str], loop_status: Mapping[
 
 def blocking(rows: list[Row]) -> list[Row]:
     return [r for r in rows if r.blocks]
+
+
+def empty_choices(rows: list[Row]) -> list[tuple[int, Row]]:
+    """(row number, row) of every choice field left empty for the person (EMPTY, or NEEDS USER but not an attestation) that has options."""
+    return [(i, r) for i, r in enumerate(rows, 1) if r.kind in CHOICE_KINDS and r.options and not r.value
+            and (r.status == "EMPTY" or (r.status == "NEEDS USER" and not r.reason.startswith("attestation")))]
 
 
 def red(text: str, color: bool | None = None) -> str:

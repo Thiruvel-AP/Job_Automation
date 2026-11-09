@@ -1767,10 +1767,12 @@ def plain_style_report(ctx: dict, info: dict, kws: list[Keyword], claimable: lis
         topped = plain_mod.top_up(ctx, info, kws, plain_mod.ctx_text(ctx))
         plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
     plain_set = set(info.get("plain") or [])
+    refused = info.get("refused") or {}
     return {"style": "plain", "strict_plain": plain_s, "strict_technical": tech_s, "topped_up": topped,
+            "plain_refused": {b: refused[b] for b in on_cv if b in refused},
             "brackets": {b: t for b, t in (info.get("added") or {}).items() if b in on_cv},
             "readability": {b: s for b, s in (info.get("readability") or {}).items() if b in on_cv},
-            "plain_on_cv": [b for b in on_cv if b in plain_set], "plain_missing": [b for b in on_cv if b not in plain_set]}
+            "plain_on_cv": [b for b in on_cv if b in plain_set], "plain_missing": [b for b in on_cv if b not in plain_set and b not in refused]}
 
 
 def _keep_proof_number(ctx: dict, fb: dict, hk: hooks.Hook) -> None:
@@ -2051,6 +2053,9 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         if style_rep["plain_missing"]:
             report["analysis_warnings"].append(f"plain style: plain version missing for {', '.join(style_rep['plain_missing'])} (their original "
                                                "wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)")
+        for bid, why in (style_rep.get("plain_refused") or {}).items():
+            report["analysis_warnings"].append(f"plain style: the saved plain version of {bid} is not used ({'; '.join(why)}); its original wording "
+                                               "is on the CV. Delete its `plain:` line in fact_bank.yaml to draft a new one")
     style_rep.update(additional_experience=extra_roles, section_order=list(ctx.get("section_order") or []), section_order_reason=order_why)
     pdf = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)     # re-render the chosen attempt as the final file
     first_at = None if one_page else check_first_bullet(pdf)

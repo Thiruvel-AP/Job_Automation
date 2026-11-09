@@ -56,7 +56,8 @@ def test_a_candidate_that_adds_an_outcome_is_rejected():
 
 @pytest.mark.parametrize("term", ["HGNC", "parquet", "circuit breaker", "Leiden", "Pydantic"])
 def test_jargon_not_on_the_allow_list_is_rejected(term):
-    text = f"Researchers needed software they could trust, so I used {term} and wrote ~65 automated tests across 8 files."
+    other = "HGNC" if term != "HGNC" else "parquet"                # 9 Nov 2026: one term off the list is allowed, a second is not
+    text = f"Researchers needed software they could trust, so I used {term} and {other} and wrote ~65 automated tests across 8 files."
     assert any("jargon" in p and term.lower() in p.lower() for p in check(text)), check(text)
 
 
@@ -65,15 +66,15 @@ def test_allow_listed_names_and_the_roles_own_organisation_are_not_jargon():
                     {"org": "Northwind Research Lab, University of Northfield"}) == []
 
 
-def test_over_30_words_is_rejected():
+def test_over_25_words_is_rejected():
     long = ("Researchers needed software they could trust so I wrote ~65 automated tests across 8 files and then I checked every one of them "
-            "again and again with great care for the whole team.")
-    assert len(long.split()) > 30 and any("words (at most 30)" in p for p in check(long))
+            "again with care.")
+    assert len(long.split()) > 25 and any("words (at most 25)" in p for p in check(long))
 
 
-def test_a_flesch_score_under_50_is_rejected():
+def test_a_flesch_score_under_30_is_rejected():
     hard = "Researchers necessitated comprehensive verification infrastructure, so I engineered ~65 automated evaluations across 8 repositories."
-    assert P.flesch(hard) < 50 and any("Flesch" in p for p in check(hard))
+    assert P.flesch(hard) < 30 and any("Flesch" in p and "at least 30" in p for p in check(hard))
 
 
 def test_the_built_in_flesch_formula():
@@ -90,8 +91,8 @@ def test_a_bullet_that_states_no_result_is_needs_result_and_is_not_drafted():
     it = item(fb, "dc3")                                       # "Documented every data source ... without a handover meeting."
     assert it.needs_result
     llm = MockLLM({"plain_bullet": lambda ctx: pytest.fail("a NEEDS RESULT bullet is never drafted")})
-    text, probs, _ = P.draft(llm, it, fb)
-    assert text == "" and probs[0].startswith("NEEDS RESULT")
+    cands, probs, _ = P.draft(llm, it, fb)
+    assert cands == [] and probs[0].startswith("NEEDS RESULT")
 
 
 def test_a_hook_headline_candidate_must_keep_its_number():
@@ -109,8 +110,8 @@ def test_the_draft_retries_once_with_the_problems_then_gives_nothing():
     def handler(ctx):
         seen.append(ctx)
         return {"plain": GOOD_AZ4.replace("~65", "90")}
-    text, probs, _ = P.draft(MockLLM({"plain_bullet": handler}), item(fb, "az4"), fb)
-    assert text == "" and len(seen) == P.TRIES and any("adds number" in p for p in probs)
+    cands, probs, _ = P.draft(MockLLM({"plain_bullet": handler}), item(fb, "az4"), fb)
+    assert cands == [] and len(seen) == P.TRIES and any("adds number" in p for p in probs)
 
 
 # ------------------------------------------------------------------ the review flow and the one write
@@ -134,7 +135,7 @@ def good_model():
 def test_y_saves_plain_through_factbank_append_with_a_backup_and_keeps_the_original(bank_copy):
     before = bank_copy.read_bytes()
     out = []
-    stats = plaindraft.run(bank_copy, good_model(), None, ask=answers("y"), out=out.append, ids={"az4"})
+    stats = plaindraft.run(bank_copy, good_model(), None, ask=answers("1", "y"), out=out.append, ids={"az4"})
     assert stats["saved"] == [("az4", "plain")]
     after = yaml.safe_load(bank_copy.read_text(encoding="utf-8"))
     az4 = next(b for e in after["experience"] for b in e["bullets"] if b["id"] == "az4")
@@ -146,7 +147,7 @@ def test_y_saves_plain_through_factbank_append_with_a_backup_and_keeps_the_origi
     assert len(new_lines) == 1 and new_lines[0].strip().startswith("plain: ")          # one line added, nothing else touched
 
 
-@pytest.mark.parametrize("reply", ["n", "", "yes please", "q", "e"])
+@pytest.mark.parametrize("reply", ["n", "", "yes please", "q", "e", "y", "3"])
 def test_anything_but_y_saves_nothing(bank_copy, reply):
     before = bank_copy.read_bytes()
     plaindraft.run(bank_copy, good_model(), None, ask=answers(reply), out=lambda _: None, ids={"az4"})

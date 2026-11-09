@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Callable
 from .. import bands
 from ..db import DB
 from ..discovery import applykind, countries, freshness, gates, manual
-from . import autolog, decided, snapshot
+from . import autolog, decided, snapshot, stale
 from .errors import ArchiveError
 
 if TYPE_CHECKING:
@@ -69,6 +69,9 @@ NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error"
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
 AWAITING = ("needs_review", "approved")             # tailored: what pass 2 of the session (review, then apply) works on
 RETAILOR_FROM = ("needs_review", "approved", "skipped", "ready_not_submitted", "letter_pending", "error")
+# tailored statuses whose CV and letter are compared with the tailoring code before any review or form (apply/stale.py, 9 Nov 2026)
+STALE_FROM = ("needs_review", "approved", "ready_not_submitted")
+STALE = "stale outputs"           # apply.stale_outputs: stop and the CV or letter is older than the code: the JD stays in inbox/
 
 
 class StopSession(Exception):
@@ -785,6 +788,10 @@ class Live:
             self.out(f"  --retailor: '{db.job(jid)['status']}' -> 'triaged'; the earlier tailoring of this job is replaced.")
             db.update_job(jid, status="triaged")
             db.log(jid, "live", "retailor: sent back to triaged")
+        elif not r.pass1_done and db.job(jid)["status"] in STALE_FROM:
+            done = self._stale(jid, r)
+            if done:
+                return done
 
         for _ in range(12):                                                         # a status machine, never an endless loop
             job = db.job(jid)
@@ -870,6 +877,28 @@ class Live:
             else:                                                                   # applied, rejected, ready_not_submitted, ...
                 return st
         return db.job(jid)["status"]
+
+    def _stale(self, jid: str, r: JobResult) -> str | None:
+        """A tailored job whose CV or letter is older than the last commit to the tailoring code (or missing): tailored again (dry runs too),
+        or with apply.stale_outputs: stop, the job stops with stale.STOP_LINE. None = go on."""
+        db = self.db
+        found = stale.check(db.job(jid))
+        if found is None:
+            why = stale.unknown()
+            if why and not getattr(self, "_stale_said", False):
+                self._stale_said = True
+                self.out(f"  {why}")
+            return None
+        if stale.policy(self.s) == "stop":
+            r.note = stale.STOP_LINE
+            self.out(f"  STOPPED: {found.line()}. Nothing was filled or uploaded; this JD stays in inbox/.")
+            db.log(jid, "live", f"stale outputs: stopped ({found.line()})")
+            return STALE
+        st = db.job(jid)["status"]
+        self.out(f"  {found.line()}\n  -> tailored again ('{st}' -> 'triaged'); the new CV and letter go to review before any form.")
+        db.update_job(jid, status="triaged")
+        db.log(jid, "live", f"stale outputs: sent back to triaged ({found.line()})")
+        return None
 
     def _repost(self, job) -> str:
         """`possible repost of a job you skipped on <date> (<id>)` when only the fingerprint matches a decided job (apply/decided.py)."""

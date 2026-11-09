@@ -245,7 +245,7 @@ cv:
   # in brackets; technical = the fact bank's own wording, as before. The Skills section stays the keyword store either way.
   style: plain
   plain_allow: []             # technical names a plain bullet may keep, on top of the built-in list (careerops doctor shows it)
-  plain_min_flesch: 50        # Flesch reading ease a plain candidate must reach (built-in formula; one 30-word sentence needs short words)
+  plain_min_flesch: 30        # Flesch reading ease a plain candidate must reach (built-in formula; 9 Nov 2026: 30, with at most 25 words and 1 jargon term)
   # Layout options from the 2026 graduate template; all off, so the 23 Oct layout stands until you turn one on.
   additional_experience: false        # true: a role whose best bullet carries < additional_experience_below JD weight becomes one line
   additional_experience_below: 1.0    #   at the end of Experience ("Additional experience: <title>, <employer> (<place>, <dates>)")
@@ -497,6 +497,10 @@ apply:
   mode: assist          # off = review only, no form is opened | assist = you press Submit | auto = `live --auto` may submit (you set this; it is never the default)
   min_ats_strict: 70    # the strict CV score (the CV's own text, negation-aware), not the claimable ceiling
   max_auto_per_day: 5   # auto-submits per calendar day, counted from data/live/applied_auto.csv
+  # 9 Nov 2026: a tailored job whose CV or letter PDF is older than the last commit to the tailoring / letter / template code. retailor = `live`
+  # tailors it again (dry runs too) and you review it again; stop = the job stops with "outputs are older than the code: run with --retailor".
+  # `careerops apply` and the auto-apply always stop.
+  stale_outputs: retailor
   confirm_first_n: 3    # the first N auto-submits ever (rows in applied_auto.csv) ask `Submit? [y/N]` after showing the filled-form screenshot
   kinds: [greenhouse, ashby, lever]   # apply_kind values that may be auto-submitted; Workday and every other site stay manual
   # What happens after tailoring, on the STRICT CV score S and the honest (claimable) ceiling C. Only you edit these; code never lowers them.

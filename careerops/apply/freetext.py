@@ -50,7 +50,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from ..tailoring import faithfulness, fluency as fluency_mod, letter_reuse, letters as letters_mod, plain as plain_mod
+from ..tailoring import domain as domain_mod, faithfulness, fluency as fluency_mod, letter_reuse, letters as letters_mod, plain as plain_mod
 from ..tailoring.grounding import sentences as split_sentences
 from ..tailoring.letter_rules import term_dump_problems
 from ..tailoring.scorer import Keyword, _contains, gap_terms, keyword_hits, norm_literal
@@ -71,6 +71,65 @@ WHY = ("why_company", "why_role")
 MOTIVATION_WORDS = (60, 150)      # a motivation answer: at least / at most this many words (a smaller limit on the field wins at the top)
 MIN_JD_WORDS = 150                # the ad is a required input of a motivation answer
 REUSE_LIMIT = letter_reuse.LIMIT  # 5-word-shingle overlap with an earlier motivation answer must stay under this
+
+# The motivation answer, 9 Nov 2026 (RightShip, a maritime safety company, was told "healthcare and biomedical research" and "longer term ...
+# research-oriented work"): a `motivations:` line that names an industry is used only when the job ad or the company's page is about that industry,
+# a research-ambition line only for a research role, every sentence about past work names its employer (or project), and at most one sentence comes
+# from a CV bullet, in plain words (its approved `plain:`, else its text with the brackets left out and at most plain.MAX_JARGON jargon term).
+DOMAIN_EXTRA = {"health": ("biomedical", "biomedicine", "bioinformatics", "medicine", "life sciences", "life science", "drug discovery"),
+                "maritime": ("maritime", "vessel", "vessels", "seafarer", "seafarers", "fleet", "fleets", "ship", "ships", "shipowner", "shipowners")}
+NOT_INDUSTRY = ("customer",)       # domain.py's customer group (customers, churn) names no industry
+BENEFIT_PHRASES = re.compile(r"health(?:y)?\s+living(?:\s+allowance)?|health\s*(?:and|&)\s*safety|safety\s*(?:and|&)\s*health|occupational\s+health|"
+                             r"(?:private\s+)?(?:health|medical|dental)(?:care)?\s+(?:insurance|cover|care|plan|scheme|benefits?|cash\s+plan)|"
+                             r"health\s*(?:and|&)\s*well-?being|well-?being|life\s+(?:insurance|assurance)", re.I)
+LONG_TERM = re.compile(r"\b(?:long(?:er)?[- ]term|in the future|eventually|one day|over time|grow towards)\b", re.I)
+RESEARCH_ROLE = re.compile(r"\b(?:research(?:er)?|postdoc(?:toral)?|post-doc|ph\.?d|doctoral|fellow(?:ship)?|lecturer|academic)\b", re.I)
+RESEARCH_EMPLOYER = re.compile(r"universit|institut|college|laborator|research\s+(?:centre|center|council|lab)", re.I)
+_PAST_IRREGULAR = ("built|wrote|led|ran|made|drove|took|won|got|did|set up|sped up|cut|grew|brought|taught|found|kept|held|put|began|rebuilt|"
+                   "oversaw|sent|shipped|spoke|chose to build")
+EXPERIENCE = re.compile(r"\bI\s+(?:also\s+|then\s+|have\s+|had\s+|once\s+)?(?:(?!(?:applied|decided|noticed|wanted|hoped|liked|loved|enjoyed|"
+                        r"learned|learnt|needed|used to)\b)[a-z]+ed\b|(?:" + _PAST_IRREGULAR + r")\b)")
+FROM_BULLET = 0.5                 # a sentence with this share of its 4-word runs in one CV bullet was taken from that bullet
+MAX_BULLET_SENTENCES = 1
+
+
+def industries(text: str) -> set[str]:
+    """The industries `text` names (domain.py's groups plus DOMAIN_EXTRA, not the customer group), job-benefit phrases ("Healthy Living
+    Allowance", "private medical insurance", "health and safety") left out."""
+    t = BENEFIT_PHRASES.sub(" ", str(text or ""))
+    found = set(domain_mod.domain_groups(t))
+    low = " " + " ".join(re.findall(r"[a-z]+", t.lower())) + " "
+    for group, words in DOMAIN_EXTRA.items():
+        if any(f" {w} " in low for w in words):
+            found.add(group)
+    return found - set(NOT_INDUSTRY)
+
+
+def research_role(title: str, company: str) -> bool:
+    """A research job: the title says research / PhD / postdoc / fellow / lecturer, or the employer is a university or an institute."""
+    return bool(RESEARCH_ROLE.search(title or "") or RESEARCH_EMPLOYER.search(company or ""))
+
+
+def research_ambition(line: str) -> bool:
+    """"Longer term I want to grow towards research-oriented work": a long-term line about research."""
+    return bool(LONG_TERM.search(line or "") and re.search(r"\bresearch", line or "", re.I))
+
+
+def employer_names(fb: Mapping[str, Any]) -> list[str]:
+    """Every employer and project name of the fact bank, as a sentence would say it: an org up to its first comma (brackets left out) and in
+    full, a project's name up to its dash."""
+    out: list[str] = []
+    for e in fb.get("experience") or []:
+        org = " ".join(str(e.get("org") or "").split())
+        out += [re.sub(r"\s*\([^)]*\)", "", org.split(",")[0]).strip(), org]
+    for p in fb.get("projects") or []:
+        out.append(re.split(r"\s+[—–-]\s+", " ".join(str(p.get("name") or "").split()))[0].strip())
+    return [x for x in dict.fromkeys(out) if len(x) >= 3]
+
+
+def _shingles(text: str, n: int = 4) -> set[tuple[str, ...]]:
+    w = re.findall(r"[a-z0-9]+", str(text or "").lower())
+    return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
 _GREETING = re.compile(r"^\s*(?:hi|hello|dear|hey|greetings)\b|\bi(?:'m| am) writing\b|\bi(?: would|'d) like to apply\b", re.I)
 
 
@@ -610,10 +669,32 @@ class FreeText:
             self.letter_text = " ".join(v for v in (self.letter_parts["P1"], self.letter_parts["P5"], self.letter_parts["P4"]) if v).strip()
             self._rep = rep
 
+    def _plain_told(self, sec: str, e: Mapping[str, Any], b: Mapping[str, Any]) -> str:
+        """One bullet as a sentence of the answer (9 Nov 2026): its approved `plain:` (plain.usable_plain), else its text with the brackets left
+        out, in the first person and naming its employer ("At AstraZeneca, I ..." / "In my GTAI Cell Line Finder project, I ..."); '' when that
+        sentence would still hold more than plain.MAX_JARGON jargon term."""
+        from ..tailoring import assembled_letter as AL
+
+        text = plain_mod.usable_plain(b) or re.sub(r"\s*\([^()]*\)", "", str(b["text"]))
+        told = AL.first_person(" ".join(text.split()))
+        if not told or len(plain_mod.jargon(told, self.fb, e, plain_mod.allow_list(self._settings))) > plain_mod.MAX_JARGON:
+            return ""
+        if sec == "experience":
+            who = re.sub(r"\s*\([^)]*\)", "", str(e.get("org") or "").split(",")[0]).strip()
+            lead = f"At {who}, " if who else ""
+        else:
+            name = re.split(r"\s+[—–-]\s+", " ".join(str(e.get("name") or "").split()))[0].strip()
+            lead = f"In my {name} project, " if name else ""
+        if not lead or any(_contains(norm_literal(told), norm_literal(n)) for n in employer_names(self.fb)):
+            return told
+        return lead + (told[0].lower() + told[1:] if not told.startswith("I ") else told)
+
     def _proof(self) -> Source | None:
-        """The bullet the code-built answer tells: the hook's proof bullet, else a numbered bullet, that this job's letter does not print."""
+        """The bullet the code-built answer tells: the hook's proof bullet, else a numbered bullet, that this job's letter does not print, and that
+        can be told in plain words (_plain_told)."""
         proof = str(self.hook.get("proof_bullet_id") or "")
-        pool = [(e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"] if str(b["id"]) not in self.letter_ids]
+        pool = [(e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"] if str(b["id"]) not in self.letter_ids
+                and self._plain_told(sec, e, b)]
         order = sorted(pool, key=lambda eb: (str(eb[1]["id"]) != proof, not re.search(r"\d", eb[1]["text"])))
         return bullet_source(*order[0]) if order and (str(order[0][1]["id"]) == proof or re.search(r"\d", order[0][1]["text"])) else None
 
@@ -631,11 +712,9 @@ class FreeText:
         phrases = AL.noun_phrases(about_sentences(self.ad, self.company, self.kws), self.company)
         phrases = sorted(phrases, key=lambda p: norm_literal(p) in said)
         proof = self._proof()
-        use_plain = self._settings is not None and plain_mod.style(self._settings) == "plain"      # v3.4: the approved plain wording
-        told = [AL.first_person(str(b.get("plain") or "") if use_plain and str(b.get("plain") or "").strip() else b["text"])
-                for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]
-                if proof is not None and str(b["id"]) == proof.id][:1]
-        rest = told + list(self.book.motivations)
+        told = [self._plain_told(sec, e, b) for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]
+                if proof is not None and str(b["id"]) == proof.id][:1]                  # one bullet, plain words, its employer named
+        rest = told + self.motivation_lines()
         out = []
         for phrase in phrases:
             text = f"The {self.title} role at {self.company} stands out to me for its focus on {phrase}."
@@ -644,6 +723,55 @@ class FreeText:
                     text = f"{text} {bit}"
             if MOTIVATION_WORDS[0] <= len(text.split()) <= cap and text not in out:
                 out.append(text)
+        return out
+
+    def _domain_text(self) -> str:
+        """What says which industry the company is in: the job ad, the company's own page (stored with this job's outputs) and the CV's company hook."""
+        from ..tailoring import companypage
+
+        page = companypage.stored(Path(str(self._rep["out_dir"]))) if self._rep.get("out_dir") else ""
+        return "\n".join([self.ad, page, str(self._rep.get("company_hook") or "")])
+
+    def motivation_lines(self) -> list[str]:
+        """Your `motivations` this job may use (9 Nov 2026): a line that names an industry only when the ad or the company's page is about it; a
+        "longer term ... research" line only for a research role. What is left out, and why, goes to `motivations_dropped`."""
+        job = industries(self._domain_text())
+        keep, self.motivations_dropped = [], []
+        for m in self.book.motivations:
+            other = sorted(industries(m) - job)
+            if research_ambition(m) and not research_role(self.title, self.company):
+                self.motivations_dropped.append(f"{m[:60]} (research ambition, industry role)")
+            elif other:
+                self.motivations_dropped.append(f"{m[:60]} (names {', '.join(other)}; the company is not)")
+            else:
+                keep.append(m)
+        return keep
+
+    def _motivation_problems(self, text: str) -> list[str]:
+        """The 9 Nov 2026 rules on a motivation answer: no industry the company is not in (outside a sentence about past work), every sentence
+        about past work names its employer, at most MAX_BULLET_SENTENCES sentence taken from a CV bullet, and that one in plain words."""
+        job, names, out = industries(self._domain_text()), employer_names(self.fb), []
+        if not hasattr(self, "_bullet_runs"):                  # a bullet as written, without its brackets, and its plain version
+            self._bullet_runs = [(str(b["id"]), _shingles(f"{b['text']} | {re.sub(r'[(][^()]*[)]', ' ', str(b['text']))} | {b.get('plain') or ''}"), e)
+                                 for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]]
+        lead = re.compile("|".join(re.escape(n) for n in sorted(names, key=len, reverse=True)), re.I) if names else None
+        taken = []
+        for s in split_sentences(text):
+            past = EXPERIENCE.search(s) is not None
+            if past and not any(_contains(norm_literal(s), norm_literal(n)) for n in names):
+                out.append(f"a sentence about past work names no employer or project: '{s[:70]}'")
+            other = sorted(industries(s) - job)
+            if other and not past:
+                out.append(f"names an industry the company is not in ({', '.join(other)}): '{s[:70]}'")
+            runs = _shingles(lead.sub(" ", s) if lead else s)               # "At <employer>, I ..." is not what the bullet says
+            hit = next(((bid, e) for bid, b_runs, e in self._bullet_runs if runs and len(runs & b_runs) / len(runs) >= FROM_BULLET), None)
+            if hit:
+                taken.append(s)
+                terms = plain_mod.jargon(s, self.fb, hit[1], [*plain_mod.allow_list(self._settings), *(k.term for k in self.kws)])
+                if len(terms) > plain_mod.MAX_JARGON:
+                    out.append(f"the sentence from CV bullet {hit[0]} is not in plain words (jargon: {', '.join(terms)})")
+        if len(taken) > MAX_BULLET_SENTENCES:
+            out.append(f"{len(taken)} sentences are taken from CV bullets (at most {MAX_BULLET_SENTENCES})")
         return out
 
     def assembled_motivation(self, limit: Limit) -> str:
@@ -684,7 +812,8 @@ class FreeText:
     def _plan_motivation(self, cls: str, ad_src: Source, snippets: list[str]) -> Plan:
         """The sources of a "why this role / company" answer, in this order: the letter's P1 (the company's problem plus the proof) and P5 (why this team)
         when this job has a letter; otherwise the job ad, your `motivations` and one CV bullet with a number."""
-        mot = [Source(f"m{i}", m) for i, m in enumerate(self.book.motivations, 1)]
+        usable = set(self.motivation_lines())
+        mot = [Source(f"m{i}", m) for i, m in enumerate(self.book.motivations, 1) if m in usable]
         if self.letter_text:
             proof = self._proof()
             return Plan(cls, [ad_src, Source("letter", self.letter_text), *([proof] if proof else []), *mot[:MAX_PLAN + 1]],
@@ -726,7 +855,7 @@ class FreeText:
         return {"question": question, "class": plan.cls, "limit": limit.as_dict(), "company": self.company, "title": self.title,
                 "style": {"avoid": list(self.style.get("avoid") or []), "person": self.style.get("person", "first"), "voice": self.style.get("voice", "")},
                 "sources": [{"id": s.id, "text": s.text} for s in plan.sources], "ad_snippets": plan.ad_snippets,
-                "motivations": list(self.book.motivations) if plan.cls in WHY and not self.letter_text else [], "not_in_bank": list(missing),
+                "motivations": self.motivation_lines() if plan.cls in WHY and not self.letter_text else [], "not_in_bank": list(missing),
                 "problems": problems, "words": list(MOTIVATION_WORDS) if plan.motivation else []}
 
     def _draft(self, question: str, plan: Plan, limit: Limit, missing: Sequence[str] = (), problems: list[str] | None = None,
@@ -742,7 +871,7 @@ class FreeText:
                 self.out(f"  free-text draft unavailable: {e}")
                 return "", [f"the model could not draft it: {e}"]
             text = str((reply or {}).get("answer") or "").strip()
-            problems = self.guard.problems(text, plan, limit, missing)
+            problems = self.guard.problems(text, plan, limit, missing) + (self._motivation_problems(text) if plan.motivation and text else [])
             for ph in (reply or {}).get("ad_phrases") or []:
                 if plan.cls in ("why_company", "why_role") and norm_literal(str(ph)) not in " ".join(norm_literal(self.ad).split()):
                     problems.append(f"quotes '{str(ph)[:60]}' as a phrase of the ad, which the ad does not contain")
@@ -857,7 +986,8 @@ class FreeText:
         one = {"answer": text}
         return (fluency_mod.length_problems(one) + fluency_mod.repeat_problems(one) + fluency_mod.opening_problems(text)
                 + fluency_mod.unfinished_problems(one) + fluency_mod.grammar_problems(one)
-                + fluency_mod.ad_paste_problems(one, self.ad) + fluency_mod.letter_overlap_problems(text, self.letter_body))
+                + fluency_mod.ad_paste_problems(one, self.ad) + fluency_mod.letter_overlap_problems(text, self.letter_body)
+                + self._motivation_problems(text))
 
     def _fluent_motivation(self, question: str, plan: Plan, limit: Limit, built: str) -> tuple[str, list[str], dict]:
         """(text, problems, info): the model rewrites the facts (the code-built answer) into a motivation answer, fluency_mod.TRIES tries, each
@@ -928,6 +1058,7 @@ class FreeText:
             text, probs, overlap, who = (again, [], overlap2, who2) if again and overlap2 < REUSE_LIMIT and not mine2 else (
                 "", probs2 or mine2 or [f"reuses {who}: overlap {overlap:.2f} (limit {REUSE_LIMIT})"], overlap2, who2)
         self.motivation_log.append({"question": question, "text": text, "words": len(text.split()), "sources": plan.ids,
+                                    "motivations_left_out": list(getattr(self, "motivations_dropped", [])),
                                     "guard": "passed" if text else "FAILED: " + "; ".join(probs[:4]),
                                     "overlap": f"{overlap:.2f}" + (f" (closest: {who})" if who else " (no earlier motivation answer)")})
         return text, probs

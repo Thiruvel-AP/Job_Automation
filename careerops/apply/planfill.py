@@ -39,6 +39,7 @@ TYPE_DELAY_MS = 15
 MENU_WAIT_MS = 300
 MENU_TRIES = 8                      # a place list that loads its options from a server: read again every 300 ms, up to ~2.4 s
 VERIFIED, LOST, NOT_FOUND, NAVIGATED = "VERIFIED", "LOST", "NOT ON THE PAGE", "NAVIGATED"
+COVERED = "COVERED"                 # a schema field not on the page whose answer a VERIFIED page field holds (9 Nov 2026): it does not block
 
 ERRORS_JS = r"""() => {
   const out = [];
@@ -67,7 +68,7 @@ class Navigated(RuntimeError):
 class Done:
     row: AP.Row
     dom: DomField | None
-    status: str                     # VERIFIED | LOST | NEEDS USER | BLANK | NOT ON THE PAGE | DRAFT (filled, not approved)
+    status: str                     # VERIFIED | LOST | NEEDS USER | BLANK | NOT ON THE PAGE | COVERED | DRAFT (filled, not approved)
     value: str = ""
     why: str = ""
 
@@ -88,7 +89,8 @@ class Result:
             status = {VERIFIED: "VERIFIED", LOST: "LOST", AP.NEEDS_USER: "NEEDS USER", NOT_FOUND: "EMPTY", AP.BLANK: "EMPTY",
                       NAVIGATED: "LOST"}.get(d.status, d.status)
             source = d.row.source + (" (DRAFT, not approved)" if d.row.status == AP.DRAFT else "")
-            rows.append(requiredgate.Row(q.label, q.key, q.type, q.required, status, d.value, source, d.why or d.row.why))
+            options = list(q.options or (d.dom.options if d.dom is not None else []) or []) if q.type in requiredgate.CHOICE_KINDS else []
+            rows.append(requiredgate.Row(q.label, q.key, q.type, q.required, status, d.value, source, d.why or d.row.why, options))
         return rows
 
     def lines(self) -> list[str]:
@@ -101,6 +103,29 @@ class Result:
 
 def _norm(s: str) -> str:
     return " ".join((s or "").lower().split())
+
+
+def covered_by(done: Sequence[Done]) -> dict[int, str]:
+    """{plan row number: label of the VERIFIED page field that holds its answer} for each schema field that is not on the page (9 Nov 2026:
+    RightShip's schema lists "Location", the page shows only "Location (City)", VERIFIED "Bristol, England, United Kingdom"). The page field
+    covers it when its label starts with the schema label ("Location" -> "Location (City)"), or when both were answered from the same source and
+    the page field holds that answer."""
+    verified = [d for d in done if d.status == VERIFIED and d.dom is not None]
+    out: dict[int, str] = {}
+    for d in done:
+        q = d.row.q
+        if d.status != NOT_FOUND or q.origin != "schema" or q.type == "file":
+            continue
+        lab = _norm(q.label)
+        for v in verified:
+            vl = _norm(v.row.q.label)
+            prefix = bool(lab) and vl != lab and re.match(re.escape(lab) + r"(?![\w])", vl) is not None
+            same = (bool(d.row.source) and v.row.source == d.row.source and bool(_norm(d.row.answer))
+                    and _norm(d.row.answer) in _norm(v.value or v.row.answer))
+            if prefix or same:
+                out[d.row.n] = v.row.q.label
+                break
+    return out
 
 
 def match(rows: Sequence[AP.Row], fields: Sequence[DomField]) -> tuple[dict[int, DomField], list[DomField]]:
@@ -348,6 +373,12 @@ class Filler:
             res.done.append(Done(row, got.get(row.n), NAVIGATED, why=f"the page moved after this field: {e}"))      # the field that moved it
             self.out(f"\nPAGE NAVIGATED DURING FILL: check whether anything was submitted ({e})")
             return res
+        cover = covered_by(res.done)
+        for d in res.done:                                                     # a schema field the page does not show, held by a page field
+            label = cover.get(d.row.n)
+            if label:
+                d.status, d.why = COVERED, f"not on the page; '{label[:60]}' holds the answer (VERIFIED)"
+                self.out(f"  {d.row.q.label[:60]}: {d.why}")
         res.errors = list(self._do(lambda: self.frame.evaluate(ERRORS_JS), []) or [])
         for msg in res.errors:
             self.out(f"  the form shows: {msg}")

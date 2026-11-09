@@ -233,8 +233,11 @@ careerops judge-report             # the LLM judge vs your decisions: agreement,
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops plain-draft --id az10,dc1,p_ll1   # v3.4: a plain-language (STAR) version of these bullets / hook lines for a non-technical first reader;
-                                   # each candidate passes the checks before you see it; [y] save as plain / [e] edit then save / [n] skip / [q] quit.
+                                   # up to TWO candidates, each passing the checks before you see it (<= 25 words, Flesch >= 30, <= 1 jargon term,
+                                   # contributed/helped never become built/led, a commendation keeps its subject, the bullet's result kept);
+                                   # [1]/[2] pick, then [y] saves exactly that one / [e] write your own / [n] skip / [q] quit.
                                    # Saved as `plain:` under the bullet by factbank_append.py (dated backup first); the bullet's text never changes.
+                                   # A saved `plain:` that upgrades ownership or moves a commendation is listed and NOT used on the CV: delete it yourself to redraft.
                                    # --limit N, --no-hooks, --dry-run (show only). cv.style: plain (default) prints the plain versions, technical the old wording
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
@@ -256,7 +259,12 @@ careerops live --dry-run           # the same, stopping after tailor + review: n
 careerops live --auto --no-submit  # gated auto-apply, step 1: fill the forms of the jobs that pass every gate and screenshot them, never click Submit (see "Auto-apply")
 careerops live --auto              # step 2, needs `apply: mode: auto`: jobs that pass every gate are submitted; the rest go to your review as before (`--confirm`: ask before every submit)
 careerops live --dry-run --retailor   # a JD already started is tailored again (after a fix) instead of resumed; never an applied job. NOTE: --dry-run opens no form; to see a form filled use the assist (no flag) or --auto --no-submit
+                                   # 9 Nov 2026: without --retailor too, a tailored job whose CV or letter PDF is older than the last commit to the tailoring /
+                                   # letter / template code (or missing) is tailored again before any review or form, dry runs included (apply.stale_outputs:
+                                   # retailor); `stop` ends that job with "outputs are older than the code: run with --retailor". `careerops apply` always stops.
 careerops live --retailor --url URL --record   # v2.4.1: the assist fills the form (you press nothing), and data/dryruns/<date>_<company>_<role>_<id>/ keeps fields.md/json (value, source, status), form_full.png, cv.pdf, letter.pdf/txt, motivation.txt
+                                   # fields.md also lists the options of every choice field left empty for you; a schema-only field the page does not
+                                   # show is COVERED (not blocking) when a VERIFIED page field holds its answer ("Location" -> "Location (City)")
 careerops live --retailor --re-extract   # ... and the JD's keywords are extracted again (a job keeps its FIRST extraction otherwise, so --retailor gives the same keywords and ATS)
 careerops tailor --id JOB --re-extract   # the same flag on tailor / run
 careerops review                   # approve / edit (opens YAML of bullets) / reject

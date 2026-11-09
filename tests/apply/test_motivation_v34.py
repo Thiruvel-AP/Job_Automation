@@ -23,8 +23,7 @@ LETTER = {"status": "ok", "parts": LETTER_PARTS, "assembled_parts": LETTER_PARTS
 LETTER_BODY = " ".join(LETTER_PARTS[n] for n in ("P1", "P3", "P4", "P5", "P7"))
 GOOD = ("The work Northwind Health AI does, building tools that help oncology researchers, is the work I want to do next. "
         "I want AI systems that are trustworthy in production, not just demos, and safe when their dependencies fail. "
-        "In my own work I designed a deterministic guard architecture with a local 19,213-gene parquet fallback behind circuit breakers, "
-        "so answers stay reproducible during upstream outages. "
+        "At Northwind Research Lab I wrote ~65 automated tests across 8 files, so the team could trust the agent. "
         "I am drawn to applied AI in domains where correctness matters, such as healthcare and biomedical research.")
 COPY = " ".join([LETTER_PARTS["P5"], LETTER_PARTS["P1"], LETTER_PARTS["P4"]])
 OPENS_BADLY = "I am applying for the AI Engineer role at Northwind Health AI. " + GOOD
@@ -74,7 +73,9 @@ def test_fluency_off_gives_the_code_built_answer_which_copies_nothing_from_the_l
     assert p.origin == "draft" and p.text.startswith("The AI Engineer role at Northwind Health AI stands out to me for its focus on "), p.problems
     assert 60 <= len(p.text.split()) <= 150 and not FL.opening_problems(p.text)
     no_copy(p.text)
-    assert "I designed a deterministic guard architecture" in p.text                  # the hook's proof bullet: the letter does not print it
+    # 9 Nov 2026: one bullet, in plain words, naming its employer. The hook's proof az2 has 3 jargon terms, so az4 (brackets left out) is told
+    assert "At Northwind Research Lab, I wrote a three-tier test framework of ~65 tests across 8 files" in p.text, p.text
+    assert "deterministic guard architecture" not in p.text
     assert f.motivation_log[-1]["assembled"] is True and not any(c.get("mode") == "fluency_motivation" for c in llm.seen)
 
 
@@ -93,7 +94,7 @@ def test_a_fluent_rewrite_that_passes_every_check_is_the_answer(make, settings):
 
 
 @pytest.mark.parametrize("bad, why", [(COPY, "letter"), (OPENS_BADLY, "I am applying"), (TOO_LONG, "words (at most 35)"),
-                                      (GOOD.replace("19,213", "25,000"), "25000")])
+                                      (GOOD.replace("~65", "~95"), "95")])
 def test_a_rewrite_that_breaks_a_check_falls_back_to_the_code_built_answer(make, settings, bad, why):
     settings.raw["letter"]["fluency"] = True
     llm = model(bad)

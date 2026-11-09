@@ -64,7 +64,9 @@ def test_with_a_letter_the_sources_are_its_p1_and_p5(make):
     f = make(llm_with(WHY, ad_phrases=[AD_PHRASE]), "y", rep=rep)
     p = f.propose("What motivated you to apply for this position?")
     assert p.plan.ids[:2] == ["ad", "letter"] and "NOT USED" not in p.plan.sources[1].text and "hiring for" in p.plan.sources[1].text
-    assert "az2" in p.plan.ids and "m1" in p.plan.ids                  # v3.4: the proof bullet and the motivations a code-built answer may tell
+    # v3.4: the proof bullet and the motivations a code-built answer may tell. 9 Nov 2026: the hook's proof az2 cannot be told in plain words
+    # (deterministic, parquet, circuit breakers), so the next numbered bullet the letter does not print, az4, is told instead.
+    assert "az4" in p.plan.ids and "az2" not in p.plan.ids and "m1" in p.plan.ids
 
 
 def test_without_a_letter_the_sources_are_the_ad_the_motivations_and_one_numbered_bullet(make):

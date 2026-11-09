@@ -17,6 +17,9 @@ FIX = Path(__file__).parent / "fixtures"
 PROFILE_FIX = FIX / "profile"          # fictional fact_bank.yaml + applicant.yaml: what every test uses as "the profile"
 SETTINGS_FIX = FIX / "config" / "settings.yaml"     # a bare load_settings() reads this, never the real config/settings.yaml
 os.environ[SETTINGS_ENV] = str(SETTINGS_FIX)
+# apply/stale.py: no test asks git when the tailoring code last changed (fixture PDFs would look stale against today's commits);
+# the stale-output tests set CAREEROPS_CODE_TIME themselves.
+os.environ["CAREEROPS_CODE_TIME"] = "off"
 
 # ---- guard: no test may open anything under the real data/ folder (careerops.db, outputs/, exports/ ...) ----------
 # A 2026-10-03 `careerops run --mock` against the real data/ overwrote a real tailored job (see docs/status.md); tests
