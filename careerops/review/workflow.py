@@ -208,7 +208,17 @@ def company_letter_lines(letter: dict) -> list[str]:
     own with whether it is in the letter. [] for a letter of another mode."""
     if letter.get("mode") != "company" or letter.get("status") != "ok":
         return []
-    out = [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {'-'.join(str(n) for n in letter.get('accepted') or company_letter.DEFAULT_RANGE)}) | opening: {letter.get('hook_source')} | requirements named: "
+    head: list[str] = []
+    if letter.get("draft"):                                          # v3.5.3
+        head.append(f"!! LETTER DRAFT (needs [e]): {letter.get('draft_reason') or 'not checked'}")
+    if letter.get("compose") == "template":                          # v3.5.3: the user's template, three slots filled
+        src = letter.get("slot_source") or {}
+        head.append(f"Letter (template '{letter.get('template_family')}'): {letter.get('words', 0)} words | paragraphs: "
+                    + " ".join(letter.get("names") or []))
+        head += [f"  {{{k}}} ({src.get(k, '?')}): {v}" for k, v in (letter.get("slots") or {}).items()]
+        head += [f"  !! fact check: {p}" for p in letter.get("template_problems") or []]
+        return head
+    out = head + [f"Letter (company mode): {letter.get('words', 0)} words (asked for {letter.get('target_words')}; accepted {'-'.join(str(n) for n in letter.get('accepted') or company_letter.DEFAULT_RANGE)}) | opening: {letter.get('hook_source')} | requirements named: "
            + "; ".join(", ".join(r) for r in letter.get("requirements") or [])]
     out.append("  paragraphs: " + " ".join(letter.get("names") or []) + ("  (P2 left out: the fact bank has no limits or result for the hook)"
                                                                           if "P2" not in (letter.get("names") or []) else ""))
@@ -306,19 +316,30 @@ def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
     return doc_check(rep, settings, fb, job).text().splitlines()
 
 
-def hook_lines(rep: dict) -> list[str]:
+NO_HOOK_WARNING = "no hook: the headline has no number"
+RED, RESET = "\033[31m", "\033[0m"
+
+
+def hook_lines(rep: dict, color: bool | None = None) -> list[str]:
     """The hook (hook.py) as the review screen shows it: the problem, the proof bullet and its number, the headline, and anything
-    that did not land on the CV."""
+    that did not land on the CV. v3.5.3: with no hook the first line is the warning NO_HOOK_WARNING, in red on a terminal (`color` None: when
+    stdout is one)."""
     if "hook" not in rep:
         return []
     hk = rep["hook"]
     if not hk:
+        import sys
+
+        paint = sys.stdout.isatty() if color is None else color
+        warn = f"!! {NO_HOOK_WARNING}" + (f" (the CV headline is the role family's '{rep['hook_family_headline']}' alone)"
+                                         if rep.get("hook_family_headline") else "")
+        first = f"{RED}{warn}{RESET}" if paint else warn
         why = "; ".join(rep.get("hook_notes") or [])[:300]
         family = rep.get("hook_family_headline")
         if family:
-            return [f"Hook: none qualifies, so the CV headline is the role family's '{family}' with no number (no hook line, no hook letter)",
+            return [first, f"Hook: none qualifies, so the CV headline is the role family's '{family}' with no number (no hook line, no hook letter)",
                     *([f"  why: {why}"] if why else [])]
-        return ["Hook: none (hook.enabled is off): the CV and letter carry no hook", *([f"  !! why: {why}"] if why else [])]
+        return [first, "Hook: none (hook.enabled is off): the CV and letter carry no hook", *([f"  !! why: {why}"] if why else [])]
     out = [f"Hook {hk.get('hook_id') or '(code template)'}: {hk['problem']} | proof {hk['proof_bullet_id']} ({hk['org']}) | number "
            f"{hk['number'] or 'NONE'} [{hk['source']}]",
            *([f"  why it won: {hk['reason']}"] if hk.get("reason") else []),

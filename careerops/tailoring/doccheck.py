@@ -95,8 +95,11 @@ def hook_problems(rep: Mapping[str, Any]) -> list[str]:
     family, shown = rep.get("headline") or "", ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or ""
     if family and not _inside(shown, family):
         out.append(f"HOOK headline \"{shown}\" is not the role family's headline (\"{family}\")")
-    line = _norm(rep.get("family_line"))
-    if line and not profile.startswith(line):
+    opening = _norm(rep.get("family_opening"))                    # v3.5.3: no hook = the family's opening sentence first, then its profile line
+    line = _norm(" ".join(x for x in (rep.get("family_opening"), rep.get("family_line")) if x))
+    if opening and not profile.startswith(opening):
+        out.append("HOOK profile sentence 1 is not the role family's opening sentence (profile_opening)")
+    elif line and not profile.startswith(line):
         out.append("HOOK profile sentence 1 is not the role family's profile line")
     return out
 
@@ -248,6 +251,10 @@ def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb
         return []
     parts = dict(zip(names, paragraphs))
     ctx, out = rep["context"], []
+    if letter.get("draft"):                       # v3.5.3: no letter_template for the family, or the template letter failed its fact check
+        out.append(f"LETTER is a DRAFT ({letter.get('draft_reason') or 'not checked'}): edit it with [e] before it can be approved")
+    if letter.get("compose") == "template":       # v3.5.3: the user's own letter with three slots: the template checks, not P3 / P4 rules
+        return out + template_letter_problems(rep, letter, parts, settings, letter_tex, fb, texts)
     absent = [n for n in ("P1", "P3", "P4", "P5", "P7") if n not in parts]
     if absent:
         out.append(f"LETTER lacks paragraph(s) {', '.join(absent)}")
@@ -276,6 +283,36 @@ def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb
     score, who = RU.worst(reuse_body, earlier)
     if who is not None and score >= RU.LIMIT:
         out.append(f"reuse: the body is {score:.2f} like the letter '{who.name}' (limit {RU.LIMIT:.2f})")
+    return [p if p.startswith("LETTER") else f"LETTER {p}" for p in out]
+
+
+def template_letter_problems(rep: Mapping[str, Any], letter: Mapping[str, Any], parts: dict[str, str], settings, letter_tex: str | None,
+                             fb: Mapping[str, Any] | None, texts: Sequence[str]) -> list[str]:
+    """A template letter (tailoring/template_letter.py): 200 to 320 body words, the CV's headline and contact line in its header, no memory / GB figure
+    for an ad that is not about hardware, and the fact check on the whole letter run again on the letter as it now stands."""
+    from . import template_letter as TL
+
+    paragraphs = list(parts.values())
+    out: list[str] = []
+    lo, hi = CL.word_range(settings)
+    n = CL.words(paragraphs)
+    if not lo <= n <= hi:
+        out.append(f"LETTER {n} words: must be between {lo} and {hi}")
+    ctx = rep["context"]
+    if letter_tex is not None:
+        from . import tailor as T
+
+        head = T.letter_header(ctx, [Keyword(**k) for k in rep.get("keywords") or []])
+        if head["headline"] and render.hook_tex(head["headline"], head["number"], "num") not in letter_tex:
+            out.append("LETTER header: the CV's headline is not under the name")
+        if render.contact_line(ctx.get("id") or {}) not in letter_tex:
+            out.append("LETTER header: the CV's contact line is not under the name")
+    out += CL.hardware_problems(parts, " ".join(t for t in texts if t))
+    if fb is not None:
+        text = " ".join(paragraphs)
+        slots = {k: v for k, v in (letter.get("slots") or {}).items() if v and v in text}
+        out += TL.fact_problems(paragraphs, slots, dict(fb), [Keyword(**k) for k in rep.get("keywords") or []], " ".join(t for t in texts if t),
+                                str(rep.get("company") or ""), str(rep.get("title") or ""))
     return [p if p.startswith("LETTER") else f"LETTER {p}" for p in out]
 
 

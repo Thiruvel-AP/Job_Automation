@@ -86,13 +86,14 @@ def edit_letter(db, job, rep: dict, fb: dict, settings, ask: Callable[[str], str
         if paragraphs == {n: " ".join(p.split()) for n, p in start.items() if p}:
             out("  The letter is unchanged.")
             return rep
-        problems = CL.edit_problems(job, fb, rep, settings, paragraphs) if all(n in paragraphs for n in REQUIRED) else \
-            [f"missing paragraph(s): {', '.join(n for n in REQUIRED if n not in paragraphs)}"]
+        required = CL.required_names(rep.get("letter") or {})          # v3.5.3: a template letter keeps its own paragraphs
+        problems = CL.edit_problems(job, fb, rep, settings, paragraphs) if all(n in paragraphs for n in required) else \
+            [f"missing paragraph(s): {', '.join(n for n in required if n not in paragraphs)}"]
         if not problems:
             out("  The edited letter passed every guard.")
             return _install(db, job, rep, fb, settings, paragraphs, [], out)
         out("  The edited letter breaks these rules:" + "".join(f"\n    - {p}" for p in problems))
-        if not all(n in paragraphs for n in REQUIRED) or any(n not in CL.NAMES for n in paragraphs):
+        if not all(n in paragraphs for n in required) or any(n not in CL.NAMES for n in paragraphs):
             answer = ask("  Press Enter to edit again, or type 'discard' to keep the old letter: ").strip().lower()
         else:
             answer = ask(f"  Type '{CONFIRM_ANYWAY}' to use it as written, press Enter to edit again, or type 'discard' to keep the old letter: ").strip()

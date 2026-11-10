@@ -653,7 +653,8 @@ def test_review_shows_the_word_count_the_paragraphs_and_the_ad_sentences_p5_drew
     pdf, letter = run(world, MockLLM({"cover_letter": handler}))
     lines = workflow.company_letter_lines(letter)
     text = "\n".join(lines)
-    assert lines[0].startswith(f"Letter (company mode): {letter['words']} words (asked for 260; accepted 200-320)")
+    assert lines[0].startswith("!! LETTER DRAFT (needs [e]): no letter_template")          # v3.5.3: this bank has no template for the family
+    assert lines[1].startswith(f"Letter (company mode): {letter['words']} words (asked for 260; accepted 200-320)")
     assert "paragraphs: P1 P3 P4 P5 P7  (P2 left out: the fact bank has no limits or result for the hook)" in text
     assert "P5 (why this team) drew from the job ad:" in text and "integrate directly into Anaplan Applications" in text
     assert "P5 quotes or closely follows these About / role sentences of the ad:" in text

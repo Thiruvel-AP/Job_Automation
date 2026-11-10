@@ -75,8 +75,9 @@ def test_the_cv_of_an_ad_with_no_overlapping_hook_carries_the_family_headline_an
     assert rep["hook"] is None and rep["hook_family_headline"] == rep["headline"] and rep["headline"]
     assert "hook_headline" not in rep["context"] and rep["context"]["id"]["headline"] == rep["headline"]
     assert any(w.startswith("hook: no library hook qualifies") and rep["headline"] in w for w in rep["analysis_warnings"])
-    lines = review.hook_lines(rep)
-    assert lines[0].startswith("Hook: none qualifies") and f"'{rep['headline']}' with no number" in lines[0]
+    lines = review.hook_lines(rep, color=False)
+    assert lines[0].startswith("!! no hook: the headline has no number")                     # v3.5.3: the warning comes first
+    assert lines[1].startswith("Hook: none qualifies") and f"'{rep['headline']}' with no number" in lines[1]
     assert any("no hook_library entry hits at least 2" in ln for ln in lines)
 
 

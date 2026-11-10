@@ -10,6 +10,8 @@ is closer to what a parser gets. `ats.py` is the other half: keyword coverage, w
             Certifications 2 each, at most 5
       15    e-mail (10) and phone (5) in the extracted text, not only inside a link annotation
       20    reading order: one column; in `-raw` order every role's title, employer and dates come before its bullets; no two sections interleave
+            (v3.5.3: the roles are looked for inside the Experience section only, a title as whole words; employer -> title -> dates is the
+            order the template prints, and another order is a warning, `role-sequence`)
       10    no text baked into images (no image half the page wide or wider)
       10    fonts embedded and not Type 3 (Carlito, Latin Modern: fine); no ligature or mojibake glyphs (ﬁ ﬂ ﬀ, U+FFFD, â€) in the extraction
        5    UTF-8 clean: the non-ASCII characters of the source (£ – é) survive extraction
@@ -236,8 +238,9 @@ def _norm(s: str) -> str:
 
 
 def first_bullets(layout: str, roles: Sequence[Mapping[str, Any]]) -> dict[str, str]:
-    """org -> the first 40 characters of the first bullet under that role's header on the page (`-layout`)."""
-    lines = _lines(layout)
+    """org -> the first 40 characters of the first bullet under that role's header on the page (`-layout`), inside the Experience section (a
+    profile sentence that names the employer, "Freelance AI/ML engineering ...", is not its header)."""
+    lines = _lines(section(layout, "experience") or layout)
     out = {}
     for r in roles:
         org = _norm(r.get("org"))
@@ -250,25 +253,40 @@ def first_bullets(layout: str, roles: Sequence[Mapping[str, Any]]) -> dict[str, 
     return out
 
 
-def role_order_problems(raw: str, roles: Sequence[Mapping[str, Any]], layout: str = "") -> list[str]:
+TITLE_CHARS = 30                      # a title is matched on its first this many characters (a long title wraps in the text layer)
+
+
+def role_order_problems(raw: str, roles: Sequence[Mapping[str, Any]], layout: str = "", sequence: list[str] | None = None) -> list[str]:
     """Roles whose title, employer or dates come after a bullet of theirs in `-raw` order: a bullet between them, or the role's first bullet on the page
-    (from `layout`) read before them; a part missing from the text layer is a problem too. `roles`: dicts with title, org, dates."""
-    flat = " " + _norm(raw.replace("\n", " "))
+    (from `layout`) read before them; a part missing from the text layer is a problem too. `roles`: dicts with title, org, dates.
+    v3.5.3 (10 Nov 2026): every part is looked for inside the Experience section of `-raw` (the whole text when it has no such heading), each as
+    whole words, so that the profile's "Freelance AI/ML engineering" is neither the employer "Freelance" nor the title "AI/ML Engineer" (the false
+    CRITICAL of the 10 Nov RightShip CV). `sequence` (a list, when given) also gets one line per role whose parts are read in another order than
+    employer -> title -> dates (the order the CV templates print)."""
+    flat = " " + _norm((section(raw, "experience") or raw).replace("\n", " ")) + " "
     bpos = [m.start() for m in re.finditer(r"\s[•▪●◦∙]\s", flat)]
     bullets = first_bullets(layout, roles) if layout else {}
     out = []
 
-    def nearest(v: str, at: int) -> int:
-        """The occurrence of `v` nearest the employer's (a title also found in the profile is not this role's), -1 when there is none."""
-        hits = [m.start() for m in re.finditer(re.escape(v), flat)]
+    def find_all(v: str, cut: bool = False) -> list[int]:
+        """Where `v` stands in the text as whole words (`cut`: `v` was shortened, so its end may fall inside a word)."""
+        tail = "" if cut else r"(?![\w])"
+        return [m.start() for m in re.finditer(r"(?<![\w])" + re.escape(v) + tail, flat)]
+
+    def nearest(v: str, at: int, cut: bool = False) -> int:
+        """The occurrence of `v` nearest the employer's (a title also found elsewhere is not this role's), -1 when there is none."""
+        hits = find_all(v, cut)
         return min(hits, key=lambda p: abs(p - at)) if hits else -1
 
     for r in roles:
-        org, title, dates = _norm(r.get("org")), _norm(r.get("title"))[:30], _norm(r.get("dates"))
-        if not org or org not in flat:
+        org, full_title, dates = _norm(r.get("org")), _norm(r.get("title")), _norm(r.get("dates"))
+        title = full_title[:TITLE_CHARS]
+        found = find_all(org) if org else []
+        if not found:
             continue
-        at = flat.find(org)
-        parts = [(name, nearest(v, at)) for name, v in (("employer", org), ("title", title), ("dates", dates)) if v]
+        at = found[0]
+        parts = [(name, nearest(v, at, name == "title" and len(full_title) > TITLE_CHARS)) for name, v in (("employer", org), ("title", title),
+                                                                                                         ("dates", dates)) if v]
         lost = [n for n, p in parts if p < 0]
         if lost:
             out.append(f"{r.get('org')}: {', '.join(lost)} not found in the text layer")
@@ -278,8 +296,13 @@ def role_order_problems(raw: str, roles: Sequence[Mapping[str, Any]], layout: st
             out.append(f"{r.get('org')}: a bullet comes between its {', '.join(n for n, _ in parts)} in reading order")
             continue
         lead = bullets.get(org)
-        if lead and 0 <= nearest(lead, at) < first:
+        if lead and 0 <= nearest(lead, at, True) < first:
             out.append(f"{r.get('org')}: its first bullet (\"{lead[:30]}...\") is read before its {', '.join(n for n, _ in parts)}")
+            continue
+        read = [n for n, _ in sorted(parts, key=lambda x: x[1])]
+        want = [n for n in ("employer", "title", "dates") if n in read]
+        if sequence is not None and read != want:
+            sequence.append(f"{r.get('org')}: read as {' -> '.join(read)} (the template prints {' -> '.join(want)})")
     return out
 
 
@@ -391,9 +414,12 @@ def score(ex: Extract, *, kind: str = "cv", roles: Sequence[Mapping[str, Any]] =
         if (bad := interleave_problems(text, ex.raw)):
             pts -= 8
             add("sections-interleave", CRITICAL, "; ".join(bad))
-        if (bad := role_order_problems(ex.raw, roles, text)):
+        seq: list[str] = []
+        if (bad := role_order_problems(ex.raw, roles, text, seq)):
             pts -= 8
             add("role-order", CRITICAL, "; ".join(bad))
+        if seq:                                         # readable either way: a warning, no points (v3.5.3)
+            add("role-sequence", WARNING, "; ".join(seq))
         got["order"] = max(0, pts)
     # 5. images
     wide = wide_images(ex.images, ex.page_width)

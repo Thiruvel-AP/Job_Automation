@@ -245,6 +245,8 @@ careerops results                  # v3.5.2: the bullets under "Needs a result" 
 careerops hook-check               # v3.5.2: every hook_library entry against the bullets of its proof's role or project; a hook that claims more (a number,
                                    # a name, "production", "built" where the bullet says "contributed", a rating moved to another subject) is BLOCKED from
                                    # every CV and letter, with both quotes; read only (doctor warns too)
+                                   # v3.5.3: `proof: [az10, az11]` = exactly those bullets, a claim passes if ANY of them says it; a hook that passes is
+                                   # shown with the quote behind each number and name
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops shortlist --all         # v2.7: every undecided in-region ad again, not only the new ones (also the ones parked after three showings); a look, never a showing
@@ -829,6 +831,14 @@ and the archive keeps (`letters/A/<name> Cover Letter.pdf`). With the hook off o
 phrase is the ad's two heaviest keywords the bank can claim). No model writes any of it; the same checks apply. A family with no `profile_body` has no
 line to open with: the letters are **none**, as before. The apply assist uploads the letter PDF to a cover-letter **file** field (printed
 `Uploaded: ['Cover Letter ← letter', ...]`); a form with a cover-letter **text box** instead gets the letter text (and with both, the file only).
+
+**`company` with a letter template** (v3.5.3, `tailoring/template_letter.py`): when the fact bank has `letter_templates.<family>` (or
+`families[*].letter_template`) for the job's role family or the CV's bank family, the letter IS that template: the model fills only
+`{company_problem_sentence}` (one ad sentence, words only dropped), `{why_sentence}` and `{question}` (`{company}` is code), each checked, up to three
+tries, else filled in code; then the whole letter is fact-checked (your template's numbers and names against the bank, the slots against the ad,
+200-320 body words). A failed check, or a family with no template (the letter below), marks the letter **DRAFT**: review shows why and approval needs
+[e]. The headline under the name on the CV and the letter is `<family title> | <hook headline>` (the title alone, and a red "no hook" warning in
+review, when no hook passes).
 
 **`company`** writes ONE short letter of **200 to 320 body words** in up to seven paragraphs, no bullets (`tailoring/company_letter.py`, v2.3). Code writes P1, P2, P6
 and P7; the model (the existing `cover_letter` task, Groq `openai/gpt-oss-120b`) writes P3, P4 and P5 under two guards. The greeting, sign-off and name are not counted.

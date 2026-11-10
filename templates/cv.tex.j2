@@ -27,7 +27,8 @@
 
 % entry heading: org (left) dates (right) / role (left) location (right)
 \newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline
-\newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
+% v3.5.3: org, location / title, dates: `pdftotext -raw` reads employer -> title -> dates -> bullets (args: org, dates, title, location)
+\newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textit{#4}\\ \textit{#3}\hfill\textbf{#2}\par}
 
 \begin{document}
 \fontsize{10.5}{12.6}\selectfont
@@ -36,6 +37,7 @@
 \begin{center}
   {\LARGE\bfseries \VAR{id.name|e}}\\[3pt]
 \BLOCK{set headline = hook_headline|default('') or id.headline|default('')}
+\BLOCK{if hook_headline|default('') and headline_title|default('') and headline_title != hook_headline}\BLOCK{set headline = headline_title ~ ' | ' ~ hook_headline}\BLOCK{endif}
 \BLOCK{if headline}
   {\color{headernavy}\small\textbf{\VAR{headline|hook_tex(hook_number|default(''), 'num')}}}\\[2pt]
 \BLOCK{endif}

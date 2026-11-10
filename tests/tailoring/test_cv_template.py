@@ -67,10 +67,12 @@ REFERENCE_PREAMBLE = r"""
 ADDITIONS = (r"\usepackage{needspace}", r"\definecolor{muted}{RGB}{96, 102, 110}", r"\setlength{\parindent}{0pt}")
 MACROS = r"""
 % ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+% v3.5.3 (10 Nov 2026): employer (and place) on line 1, the title then the dates on line 2, so that `pdftotext -raw` reads every role as
+% employer -> title -> dates -> bullets (ats_structure.role_order_problems). The dates were on line 1 before, read before the title.
 \newcommand{\role}[4]{% org, location, dates, title
-  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
-  \textit{#4}\par}
-\newcommand{\roleNoLoc}[3]{\textbf{#1}\hfill{\color{muted}#2}\\ \textit{#3}\par}
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\\
+  \textit{#4}\hfill{\color{muted}#3}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\\ \textit{#3}\hfill{\color{muted}#2}\par}
 \newcommand{\project}[3]{% name, stack, right-hand tag
   \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
 \newcommand{\gh}[1]{\href{#1}{\small GitHub}}
@@ -104,6 +106,9 @@ def _bank() -> dict:
         for i in range(spare.get(e["id"], 0)):
             e["bullets"].append({"id": f"{e['id']}x{i}", "terms": [],
                                  "text": sentences[(i + len(e["id"])) % 4].format(t=topics[(i + len(e["id"])) % 5], e=e["id"])})
+    # v3.5.3: a situation opens only the bullet it belongs to (the first bank bullet unless named). The fill snapshots here were calibrated with
+    # the az situation on the hook bullet az4, which the CV shows first; this keeps it there.
+    next(e for e in fb["experience"] if e["id"] == "az")["situation_bullet"] = "az4"
     return fb
 
 
@@ -419,6 +424,7 @@ def test_snapshot_section_order_fonts_and_sizes_from_the_bounding_boxes(fixture_
     assert [t for _, _, t in by_size(17.3)] == ["Ada", "Lovelace"]                    # the name, and only the name
     small = [t for _, _, t in by_size(10)]
     headline = typography.typeset({"hook_headline": rep["hook"]["headline"]})["hook_headline"]
+    headline = f"{rep['context']['headline_title']} | {headline}"                    # v3.5.3: "<family title> | <hook headline>"
     assert " ".join(small[:len(headline.split())]) == " ".join(headline.split())      # the small bold line under the name is the hook headline
     assert small[len(headline.split()):][:2] == ["Bristol,", "UK"]                     # then the contact line is the next small text
     first = [(p, y) for p, y, t in by_size(10)][:len(headline.split())]
@@ -448,11 +454,10 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
     tex = _tex(rep)
     heads = [h for h in ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"] if h in text]
     assert heads == ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]
-    # employer bold left, its location after a middle dot, the dates right-aligned on the same line, the title on the next line
+    # employer bold left, its location after a middle dot; the title on the next line with the dates right-aligned (v3.5.3: employer -> title -> dates)
     lines = text.splitlines()
-    i = next(n for n, ln in enumerate(lines)
-             if re.match(r"^Northwind Research Lab, University of Northfield \u00b7 Bristol, UK\s+May 2026 \u2013 Sep 2026$", ln.strip()))
-    assert lines[i + 1].strip() == "Data Scientist (MSc dissertation)"
+    i = next(n for n, ln in enumerate(lines) if ln.strip() == "Northwind Research Lab, University of Northfield \u00b7 Bristol, UK")
+    assert re.match(r"^Data Scientist \(MSc dissertation\)\s+May 2026 \u2013 Sep 2026$", lines[i + 1].strip())
     assert "\\role{Northwind Research Lab, University of Northfield}{Bristol, UK}{May 2026 \u2013 Sep 2026}{Data Scientist (MSc dissertation)}" in tex
     # a project: bold name with its GitHub URL at the right (\url, 18 Oct), an italic stack line, then bullets
     assert r"\project{Customer churn prediction}{Python, scikit-learn, XGBoost}{\url{https://github.com/ada-lovelace-test/churn\#readme}}" in tex
@@ -482,7 +487,7 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
 def test_snapshot_freelance_entry(fixture_run):
     rep, fb = fixture_run
     text, tex = pdf_text(Path(rep["cv_pdf"])), _tex(rep)
-    assert re.search(r"^\f?Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M)
+    assert re.search(r"^\f?Freelance \u00b7 Chennai, India\n\s*ML Engineer\s+Jan 2025 \u2013 Aug 2025$", text, re.M)       # v3.5.3 order
     assert "Self-employed" not in text and "Self-employed" not in tex
     assert "\\role{Freelance}{Chennai, India}{Jan 2025 \u2013 Aug 2025}{ML Engineer}" in tex       # Freelance bold, its location italic
 
@@ -495,15 +500,15 @@ def test_an_explicit_employment_type_freelance_renders_freelance(tmp_path):
             e.update(org="Chennai Data Studio", employment_type="freelance", title="Freelance ML Engineer")
     rep = _tailor(tmp_path, fb)
     text = pdf_text(Path(rep["cv_pdf"]))
-    assert re.search(r"^\f?Freelance \u00b7 Chennai, India\s+Jan 2025 \u2013 Aug 2025$", text, re.M) and "Chennai Data Studio" not in text
-    assert re.search(r"^ML Engineer$", text, re.M)
+    assert re.search(r"^\f?Freelance \u00b7 Chennai, India$", text, re.M) and "Chennai Data Studio" not in text
+    assert re.search(r"^ML Engineer\s+Jan 2025 \u2013 Aug 2025$", text, re.M)
 
 
 @pytest.mark.slow
 def test_a_year_only_date_is_printed_as_given_not_given_a_month(fixture_run, tmp_path):
     fb = _bank()                                                                          # the MSc in the fixture is "2025 – 2026"
     rep = _tailor(tmp_path, fb)
-    assert re.search(r"^\s*University of Northfield\s+2025 \u2013 2026$", pdf_text(Path(rep["cv_pdf"])), re.M)
+    assert re.search(r"^\s*University of Northfield\n\s*MSc Data Science.*\s2025 \u2013 2026$", pdf_text(Path(rep["cv_pdf"])), re.M)
 
 
 def _bank_with(per_job: int, per_project: int, projects: int = 5) -> dict:

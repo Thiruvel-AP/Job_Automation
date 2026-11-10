@@ -93,7 +93,7 @@ def test_doctor_warns_per_blocked_hook_and_the_report_counts(tmp_path):
     rows = hook_claim_checks(p)
     assert len(rows) == 1 and rows[0][1] == "warn" and rows[0][0].startswith("hook 'h_tests' BLOCKED")
     report = H.report(bank)
-    assert "h_client: ok" in report and "h_tests: BLOCKED (1 claim" in report and "1 ok, 1 blocked of 2 hooks" in report
+    assert "h_client: ok (proof dc2)" in report and "h_tests: BLOCKED (proof az4; 1 claim" in report and "1 ok, 1 blocked of 2 hooks" in report
     p.write_text(yaml.safe_dump(BANK, allow_unicode=True), encoding="utf-8")
     assert hook_claim_checks(p)[0][1] is True
 

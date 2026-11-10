@@ -454,7 +454,8 @@ def items(fb: Mapping, hooks: bool = True) -> list[Item]:
                                 needs_result=not has_result(b)))
     if hooks:
         for h in fb.get("hook_library") or []:
-            proof = index.get(str(h.get("proof") or ""), {})
+            from ..hook import proof_ids                                   # v3.5.3: `proof` may be a list; the first one in the bank
+            proof = next((index[b] for b in proof_ids(h) if b in index), {})
             for src_key, key in HOOK_FIELDS:
                 text = " ".join(str(h.get(src_key) or "").split())
                 if text and not str(h.get(key) or "").strip():

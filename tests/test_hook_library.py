@@ -134,6 +134,7 @@ def test_the_hook_id_survives_the_report_round_trip(bank):
 @pytest.mark.slow
 def test_the_cv_carries_the_library_text_and_the_proof_bullet_first_with_its_situation(settings, bank):
     bank["experience"][0]["situation"] = "Needed an LLM agent a research team could trust before it shipped"
+    bank["experience"][0]["situation_bullet"] = "a4"            # v3.5.3: the situation opens only the bullet it belongs to
     llm = MockLLM()
     rep = tailor.tailor_job(anaplan_job(), bank, llm, settings, settings.path("outputs"))
     hk = H.Hook.from_dict(rep["hook"])

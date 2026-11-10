@@ -395,6 +395,19 @@ def find_bullet(fb: dict, bullet_id: str) -> tuple[str, dict, dict] | None:
     return next(((kind, e, b) for kind, e, b, _ in _entries(fb) if b["id"] == bullet_id), None)
 
 
+def proof_ids(entry: dict) -> list[str]:
+    """The proof bullet ids of a hook_library entry, in the user's order: `proof: az4` or (v3.5.3, 10 Nov 2026) `proof: [az4, az3, az12]`."""
+    raw = entry.get("proof")
+    items = raw if isinstance(raw, (list, tuple)) else [raw]
+    return list(dict.fromkeys(str(x).strip() for x in items if x is not None and str(x).strip()))
+
+
+def find_proof(fb: dict, entry: dict) -> tuple[str, dict, dict] | None:
+    """(kind, entry, bullet) of the entry's first listed proof bullet that is in the fact bank (the one the CV moves to the top of its role),
+    or None when none of them is."""
+    return next((found for bid in proof_ids(entry) if (found := find_bullet(fb, bid)) is not None), None)
+
+
 def top_keyword_overlap(entry: dict, kws: list[Keyword]) -> list[tuple[str, float]]:
     """[(keyword, weight)] for the ad's TOP_KEYWORDS heaviest keywords (weight, then list order) that the entry's `terms` hit, heaviest first."""
     top = sorted(range(len(kws)), key=lambda i: (-kws[i].weight, i))[:TOP_KEYWORDS]
@@ -448,10 +461,13 @@ def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
         score, eid = scores[str(e["id"])], str(e["id"])
         if len(overlaps[eid]) < MIN_OVERLAP:
             continue
-        found = find_bullet(fb, str(e.get("proof") or ""))
+        found = find_proof(fb, e)
         if found is None:
             notes.append(f"hook_library '{eid}': proof bullet {e.get('proof')!r} is not in the fact bank; entry skipped")
             continue
+        lost = [b for b in proof_ids(e) if find_bullet(fb, b) is None]
+        if lost:
+            notes.append(f"hook_library '{eid}': listed proof bullet(s) {', '.join(lost)} are not in the fact bank (the others are used)")
         missing = [k for k in LIBRARY_STRINGS if not _clean(e.get(k))]
         if missing:
             notes.append(f"hook_library '{eid}': no {', '.join(missing)}; entry skipped")

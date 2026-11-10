@@ -664,10 +664,11 @@ def result_paragraph(fb: dict, op: "OP.Opening") -> tuple[str, str]:
 
     entry = next((e for e in hook_mod.library(fb) if str(e.get("id")) == op.hook_id), None) if op.hook_id else None
     holders: list[tuple[str, dict]] = [(f"hook {op.hook_id}", entry)] if entry else []
-    bid = str((entry or {}).get("proof") or op.bullet_id or "")
-    found = hook_mod.find_bullet(fb, bid) if bid else None
-    if found:
-        holders.append((f"bullet {bid}", found[2]))
+    ids = ([op.bullet_id] if op.bullet_id else []) + (hook_mod.proof_ids(entry) if entry else [])     # v3.5.3: `proof` may be a list
+    for bid in dict.fromkeys(ids):
+        found = hook_mod.find_bullet(fb, bid)
+        if found:
+            holders.append((f"bullet {bid}", found[2]))
     for where, h in holders:
         text = clean(h.get("limits"))
         if text:
@@ -719,6 +720,13 @@ def ask_text(job: dict, problem: str, settings) -> str:
     generic = not problem or (problem.lower().startswith("the ") and problem.lower().endswith(" role"))
     template = (settings["letter"].get("ask_plain") or ASK_PLAIN) if generic else (settings["letter"].get("ask") or ASK)
     return template.format(problem=problem, role=role, assessment=tail)
+
+
+def _header(ctx: dict, kws: list[Keyword]) -> dict:
+    """The CV's headline line for the letter's header, as tailor.letter_header builds it (v3.5.3: "<family title> | <hook headline>")."""
+    from . import tailor as T
+
+    return T.letter_header(ctx, kws)
 
 
 def _letter_dict(status: str, **kw) -> dict:
@@ -802,7 +810,8 @@ def included(plan: Plan, settings, dropped: set[str], kept_gap: bool | None = No
 
 
 def write_letter(job: dict, kws: list[Keyword], parts: dict[str, str], team: str, fb: dict, settings, out_dir: Path, final_name: str,
-                 header: dict | None = None, gap: dict | None = None, **extra) -> tuple[Path, dict]:
+                 header: dict | None = None, gap: dict | None = None, greeting: str | None = None, signoff: str | None = None,
+                 **extra) -> tuple[Path, dict]:
     """Render the letter and return (pdf, the "ok" letter dict); `letter.txt` (the same words in plain text) is written beside the PDF. `header` =
     {"headline", "number"}: the CV's hook headline, printed under the name as the CV prints it (Document rules, B2). `extra` are more keys of the
     dict (notes, retry, evidence, ...)."""
@@ -812,12 +821,13 @@ def write_letter(job: dict, kws: list[Keyword], parts: dict[str, str], team: str
     jd = job.get("description") or ""
     paragraphs, names = assemble(parts)
     head = {"headline": (header or {}).get("headline") or "", "headline_number": (header or {}).get("number") or ""}
-    greeting, signoff = L.greeting(job, team, settings), settings["letter"]["signoff"]
+    greeting, signoff = greeting or L.greeting(job, team, settings), signoff or settings["letter"]["signoff"]
     pdf = render_letter({"id": fb["identity"], "company": job["company"], "paragraphs": paragraphs, "date": date.today().strftime("%d %B %Y"),
                          "greeting": greeting, "signoff": signoff, **head}, out_dir, final_name)
     write_text(out_dir, greeting, paragraphs, signoff, fb["identity"]["name"])
     p5 = parts.get("P5") or ""
-    return pdf, _letter_dict("ok", paragraphs=paragraphs, names=names, parts=dict(parts), words=words(paragraphs), score=ats.score(pdf_text(pdf), kws).literal,
+    return pdf, _letter_dict("ok", paragraphs=paragraphs, names=names, parts=dict(parts), words=words(paragraphs), greeting=greeting, signoff=signoff,
+                             score=ats.score(pdf_text(pdf), kws).literal,
                              pages=page_count(pdf), p5_sources=p5_sources(p5, jd, skip), p5_used=used_sentences(p5, about_sentences(jd, job["company"], kws), skip),
                              accepted=[word_range(settings)[0], word_cap(settings)], gap=dict(gap or {}), **extra)
 
@@ -845,11 +855,36 @@ def rebuild_plan(job: dict, fb: dict, rep: dict, settings) -> tuple[Plan, list[K
                    rep.get("possible_evidence")), kws
 
 
+def required_names(letter: dict) -> tuple[str, ...]:
+    """The paragraphs an edited letter must keep: a template letter's own (v3.5.3), else P1, P3, P4, P5 and P7."""
+    if (letter or {}).get("compose") == "template" and letter.get("names"):
+        return tuple(n for n in letter["names"] if n not in OPTIONAL)
+    return ("P1", "P3", "P4", "P5", "P7")
+
+
 def edit_problems(job: dict, fb: dict, rep: dict, settings, parts: dict[str, str]) -> list[str]:
-    """The company-letter guards on a letter the person edited by hand ({"P1": ..., ...}). [] = it passes every guard."""
+    """The company-letter guards on a letter the person edited by hand ({"P1": ..., ...}). [] = it passes every guard. A template letter (v3.5.3)
+    gets the template's checks: the fact check on the whole letter (a slot value that is still there word for word counts as the company's words,
+    everything else as yours) and the length."""
     unknown = [n for n in parts if n not in NAMES]
     if unknown:
         return [f"unknown paragraph name(s): {', '.join(unknown)} (use P1 to P7)"]
+    old = rep.get("letter") or {}
+    if old.get("compose") == "template":
+        from . import template_letter as TL
+
+        paragraphs = [parts[n] for n in NAMES if n in parts]
+        text = " ".join(paragraphs)
+        slots = {k: v for k, v in (old.get("slots") or {}).items() if v and v in text}
+        kws = [Keyword(**k) for k in rep["keywords"]]
+        page = CP.stored(Path(rep["out_dir"])) if rep.get("out_dir") else ""
+        jd = job.get("description") or ""
+        out = TL.fact_problems(paragraphs, slots, fb, kws, jd + ("\n" + page if page else ""), job["company"], job["title"])
+        out += hardware_problems(parts, jd)
+        n, lo, cap = words(paragraphs), word_range(settings)[0], word_cap(settings)
+        if not lo <= n <= cap:
+            out.append(f"{n} body words: the letter must be between {lo} and {cap}")
+        return out
     plan, kws = rebuild_plan(job, fb, rep, settings)
     if plan.error:
         return [f"the guards cannot be run on this job: {plan.error}"]
@@ -867,7 +902,13 @@ def install_edited(job: dict, fb: dict, rep: dict, settings, parts: dict[str, st
         stem = T._names(fb, settings)[1]
     old = rep.get("letter") or {}
     ctx = rep["context"]
-    header = {"headline": ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or "", "number": ctx.get("hook_number") or ""}
+    header = _header(ctx, kws)
+    if old.get("compose") == "template":                   # v3.5.3: an edited template letter stays one (its checks, its greeting)
+        keep = {k: old[k] for k in ("compose", "template_family", "slots", "slot_source", "hook_source", "target_words") if k in old}
+        return write_letter(job, kws, parts, rep.get("team") or "", fb, settings, Path(rep["out_dir"]), stem, header, None,
+                            greeting=old.get("greeting") or None, signoff=old.get("signoff") or None,
+                            notes=list(old.get("notes") or []) + ["letter edited by hand" + (" (guards overridden with 'use anyway')" if overridden else "")],
+                            edited=True, overridden=list(overridden), draft=False, draft_reason="", template_problems=list(overridden), **keep)
     gap = {**plan.gap, "included": "P6" in parts} if plan.gap else {}
     return write_letter(job, kws, parts, rep.get("team") or "", fb, settings, Path(rep["out_dir"]), stem, header, gap,
                         notes=list(old.get("notes") or []) + ["letter edited by hand" + (" (guards overridden with 'use anyway')" if overridden else "")],
@@ -894,7 +935,7 @@ def set_gap(job: dict, fb: dict, rep: dict, settings, keep: bool) -> tuple[Path 
         return None, old, [f"{n} words: the letter must be between {lo} and {cap}"]
     kws = [Keyword(**k) for k in rep["keywords"]]
     ctx = rep["context"]
-    header = {"headline": ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or "", "number": ctx.get("hook_number") or ""}
+    header = _header(ctx, kws)
     stem = Path(rep["letter_pdf"]).stem
     skip_keys = {"paragraphs", "names", "parts", "words", "score", "pages", "p5_sources", "p5_used", "accepted", "gap", "status", "mode", "problems", "dropped"}
     extra = {k: v for k, v in old.items() if k not in skip_keys}
@@ -907,13 +948,42 @@ def set_gap(job: dict, fb: dict, rep: dict, settings, keep: bool) -> tuple[Path 
 def make(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: str, evidence: list[dict], llm, settings, out_dir: Path,
          final_name: str, team: str, claimable: list[str], chosen_ids: set[str] | None = None,
          revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None,
-         possible: dict | None = None) -> tuple[Path | None, dict]:
+         possible: dict | None = None, families: list[str] | None = None) -> tuple[Path | None, dict]:
     """(letter pdf or None, the letter dict `report["letter"]` shows). Status "ok", "none" (every draft rejected, or nothing to build it from;
     `reason` and `retry.failures` say why) or "pending" (no provider may write it now: the job waits). `hk` is the hook (None: none qualifies or
     the hook is off), `family_line` the role family's profile line, `evidence` the letter's two best bullets of the CV. `revise`
     ({"previous": [P3, P4, P5], "problems": [...], "feedback": text, "dropped": [...], "gap_kept": bool|None}) is review's `l`: the draft, its
     rejections and the reader's words go to the model. `cv` (cv_from_ctx of the CV) adds the CV rules to the guards; `page(job, folder)` fetches the
-    company's careers page (once, only when the ad has no clause to quote); `header` = the CV's headline for the letter's header."""
+    company's careers page (once, only when the ad has no clause to quote); `header` = the CV's headline for the letter's header.
+    v3.5.3 (10 Nov 2026): `families` (the job's role family, then the bank family of the CV): when the fact bank has a `letter_template` for one of
+    them, the letter is that template with three slots filled (tailoring/template_letter.py) and nothing is free-written. Without one, the letter is
+    made as below and marked DRAFT: review shows it, and approval needs [e]."""
+    from . import tailor as T
+    from . import template_letter as TL
+
+    tpl = TL.find(fb, list(families or []))
+    if tpl is not None:
+        try:
+            problem = hk.problem.strip() if hk is not None and hk.problem.strip() else L.ad_problem(job, kws, fb, claimable)
+            return TL.make(tpl, job, fb, kws, llm, settings, out_dir, final_name, team, header, problem, CP.stored(out_dir),
+                           str((revise or {}).get("feedback") or ""))
+        except TaskUnavailable as e:
+            return None, _letter_dict("pending", reason=str(e)[:300], compose="template", template_family=tpl.family)
+    pdf, letter = _make_free(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, final_name, team, claimable, chosen_ids, revise, cv,
+                             page, header, possible)
+    if letter.get("status") == "ok":
+        fams = ", ".join(f for f in families or [] if f) or "(none)"
+        letter["draft"] = True
+        letter["draft_reason"] = (f"no letter_template for the family {fams} in fact_bank.yaml, so the letter was written the old way; read it and "
+                                  "edit it with [e]")
+    return pdf, letter
+
+
+def _make_free(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: str, evidence: list[dict], llm, settings, out_dir: Path,
+               final_name: str, team: str, claimable: list[str], chosen_ids: set[str] | None = None,
+               revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None,
+               possible: dict | None = None) -> tuple[Path | None, dict]:
+    """The letter of a family with no letter_template (before v3.5.3 the only way): see `make`."""
     from . import tailor as T
 
     jd = job.get("description") or ""

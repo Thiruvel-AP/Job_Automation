@@ -592,14 +592,14 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
     experience = []
     for e in fb["experience"]:
         ids = sorted(sel["experience"].get(e["id"]) or [e["bullets"][0]["id"]], key=pos.get)       # fact-bank order in the role
-        experience.append({**e, "bullet_ids": list(ids), "bullets": [text(i) for i in ids]})
+        experience.append({**e, "situation_owner": pdflayout.situation_owner(e), "bullet_ids": list(ids), "bullets": [text(i) for i in ids]})
     by_id = {p["id"]: p for p in fb["projects"]}
     chosen = sel.get("project_bullets") or {}
     projects = []
     for p in sel["projects"]:
         if p in by_id:
             ids = sorted(chosen.get(p) or [b["id"] for b in by_id[p]["bullets"]], key=pos.get)
-            projects.append({**by_id[p], "bullet_ids": ids, "bullets": [text(i) for i in ids]})
+            projects.append({**by_id[p], "situation_owner": pdflayout.situation_owner(by_id[p]), "bullet_ids": ids, "bullets": [text(i) for i in ids]})
     if skills is None:
         skills = cv_skills(fb, kws)[0]
     ctx = {"id": {**fb["identity"], "headline": headline or fb["identity"].get("headline", "")}, "profile": profile,
@@ -613,6 +613,7 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
         ctx["achievements"] = achievements
     if hk is not None:
         ctx["hook_headline"], ctx["hook_number"] = hk.headline, hk.number
+        ctx["headline_title"] = ctx["id"]["headline"]          # v3.5.3: "<family title> | <hook headline>" (shown_headline)
         hooks.proof_first(ctx, hk)
     if profile_head:
         ctx["profile_head"] = profile_head
@@ -751,10 +752,11 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
         stats["rounds"] += 1
         changed = False
         shown = ctx.get("hook_headline") or ctx["id"].get("headline") or ""          # the hook's headline, else the family's
+        full = shown_headline(ctx)                                                   # v3.5.3: with "<family title> | " before the hook's
         if m.headline_lines > 1 and shown:
             opts = pdflayout.headline_options(shown, ctx.get("hook_number") or "")
             if opts:                 # the first version short enough for one line (a line holds about len / (lines - 0.5) characters)
-                room = len(shown) / (m.headline_lines - 0.5) * 0.98
+                room = len(full) / (m.headline_lines - 0.5) * 0.98 - (len(full) - len(shown))
                 pick = next((o for o in opts if len(o) <= room), opts[-1])
                 if ctx.get("hook_headline"):
                     ctx["hook_headline"] = pick
@@ -801,13 +803,13 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
                     stats["split"].append(bid)
                     changed = True
                 else:                                        # nothing to cut at: straight on to a shorter wording
-                    lead = len(pdflayout.opener(e.get("situation")).split()) if i == 0 and e.get("situation") else 0
+                    lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), ctx.get("verbatim") or ())
                     tried.add("shorten")
                     wanted[bid] = (text, max(8, int((len(text.split()) + lead) * pdflayout.MAX_BULLET_LINES / lines * 0.92) - lead))
                     where[bid] = (sec, n, i)
             elif "shorten" not in tried:
                 tried.add("shorten")
-                lead = len(pdflayout.opener(e.get("situation")).split()) if i == 0 and e.get("situation") else 0
+                lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), ctx.get("verbatim") or ())
                 wanted[bid] = (text, max(8, int((len(text.split()) + lead) * pdflayout.MAX_BULLET_LINES / lines * 0.92) - lead))
                 where[bid] = (sec, n, i)
         if wanted:
@@ -879,7 +881,7 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
     def entry(bid: str) -> dict:
         found = next((e for sec in ("experience", "projects") for e in ctx[sec] if e.get("id") == owner[bid]), None)
         if found is None:                                 # a bullet of a project not on the CV yet brings its heading
-            found = {**projects_by_id[owner[bid]], "bullet_ids": [], "bullets": []}
+            found = {**projects_by_id[owner[bid]], "situation_owner": pdflayout.situation_owner(projects_by_id[owner[bid]]), "bullet_ids": [], "bullets": []}
             ctx["projects"].append(found)
         return found
 
@@ -1333,16 +1335,24 @@ def _final_path(p, out_dir: Path, final_dir: Path) -> str | None:
     return str(final_dir / Path(p).relative_to(out_dir)) if p else None
 
 
+def shown_headline(ctx: dict) -> str:
+    """The line under the name as the CV prints it (before typography): v3.5.3 "<family title> | <hook headline>" with a hook, else the role
+    family's headline alone (no number). The templates build the same string (templates/cv*.tex.j2)."""
+    hook, title = str(ctx.get("hook_headline") or ""), str(ctx.get("headline_title") or "")
+    if hook:
+        return f"{title} | {hook}" if title and title != hook else hook
+    return str((ctx.get("id") or {}).get("headline") or "")
+
+
 def letter_header(ctx: dict, kws: list[Keyword]) -> dict:
-    """The CV's hook headline as the CV prints it (typography applied), for the cover letter's header: {"headline", "number"}."""
-    shown = ctx.get("hook_headline") or (ctx.get("id") or {}).get("headline") or ""
-    return {"headline": typography.clean(shown, keep=hyphen_keywords(kws)), "number": ctx.get("hook_number") or ""}
+    """The CV's headline line as the CV prints it (typography applied), for the cover letter's header: {"headline", "number"}."""
+    return {"headline": typography.clean(shown_headline(ctx), keep=hyphen_keywords(kws)), "number": ctx.get("hook_number") or ""}
 
 
 def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_dir: Path, letter_name: str, team: str,
              gaps: list[str], chosen_ids: set[str], claimable: list[str], possible: dict | None, hook_failed: bool = False,
              family_line: str = "", revise: dict | None = None, cv: dict | None = None, page=None, header: dict | None = None,
-             force: bool = False):
+             force: bool = False, families: list[str] | None = None):
     """(letter pdf or None, the letter dict `report["letter"]` shows, the two variants or None). In letter.mode `if_field` nothing is written
     here (`force` False: tailoring time) and the letter dict says so; a form that asks for one writes it later (`force` True, regenerate_letter).
     In letter.mode `hook` with a hook:
@@ -1357,7 +1367,7 @@ def _letters(job, fb, kws, hook, hk, evidence: list[dict], llm, settings, out_di
         from . import company_letter as CL
 
         pdf, letter = CL.make(job, fb, kws, hk, family_line, evidence, llm, settings, out_dir, letter_name, team, claimable, chosen_ids,
-                              revise=revise, cv=cv, page=page, header=header, possible=possible)
+                              revise=revise, cv=cv, page=page, header=header, possible=possible, families=families)
         return pdf, letter, None
     if letter_mode(settings) == "hook" and hook_failed and hk is None:
         from . import letters as L
@@ -1572,7 +1582,8 @@ def regenerate_letter(job, fb: dict, llm, settings, rep: dict, feedback: str = "
                                     rep.get("team") or "", required_gaps(rep.get("genuine_gaps") or [], kws), ids,
                                     rep.get("claimable") or [], rep.get("possible_evidence"), hooks.enabled(settings) and hk is None,
                                     rep.get("family_line") or "", revision_for(settings, rep, feedback),
-                                    cv=_letter_cv(rep["context"]), header=letter_header(rep["context"], kws), force=True)
+                                    cv=_letter_cv(rep["context"]), header=letter_header(rep["context"], kws), force=True,
+                                    families=rep.get("letter_families") or [x for x in (rep.get("family"), (rep.get("skills") or {}).get("family")) if x])
     install_letter(job, fb, rep, pdf, letter, letters)
     new, old = usage_since(llm, usage_from), rep.get("llm_usage") or {}      # the re-draft adds to the job's total
     calls = (old.get("calls") or []) + new["calls"]
@@ -1875,7 +1886,13 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     # no hook: profile line 1 is the role family's profile body (the user's own words, fact bank `families[*].profile_body`), if the bank has one
     bank_family = fam or pick_family(fb, kws, family, from_family)
     family_body = " ".join(str((bank_family or {}).get("profile_body") or "").split())      # also the opening of a company-mode letter without a hook
-    head = family_body
+    # v3.5.3: with no hook the profile opens with the family's `profile_opening` (a first sentence that says who you are), then its body: never
+    # mid-paragraph. With a hook, the hook's profile_line is that first sentence.
+    family_opening = "" if hk is not None else " ".join(str((bank_family or {}).get("profile_opening") or "").split())
+    if hk is None and bank_family and family_body and not family_opening:
+        analysis_warnings.append(f"profile: there is no hook and the '{bank_family['id']}' family has no profile_opening, so the profile opens with "
+                                 "its profile_body (add a profile_opening sentence to that family in fact_bank.yaml)")
+    head = " ".join(x for x in (family_opening, family_body) if x)
     words = None if one_page else profile_mod.word_range(settings)
     profile = assemble_profile(fb, kws, jd, hk, head, words)     # the hook's profile line, the family's body, then profile sentences up to 100-150 words, in code
     profile_text = profile["text"]
@@ -1898,7 +1915,10 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback", "words", "shortfall")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
-                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body}
+                              "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body,
+                              "family_opening": family_opening,
+                              # v3.5.3: where the letter template is looked up: the role family, then the bank family of the CV
+                              "letter_families": list(dict.fromkeys(x for x in (family, (bank_family or {}).get("id")) if x))}
 
     jac = sc["bullet_dedupe_jaccard"]
     # the section order (graduate / junior / scheme ad or not) and the compact Education (tailoring/sections.py, 10 Nov 2026)
@@ -2078,7 +2098,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     if verdict.letter:
         letter_pdf, letter, letters = _letters(job, fb, kws, hook, hk, evidence, llm, settings, out_dir, letter_name, team,
                                                required_gaps(gaps, kws), chosen_ids, claimable, possible, hook_failed, family_body,
-                                               cv=_letter_cv(ctx), page=company_page, header=letter_header(ctx, kws))
+                                               cv=_letter_cv(ctx), page=company_page, header=letter_header(ctx, kws),
+                                               families=report["letter_families"])
     else:                                                       # skipped (ats): no model call, no PDF
         letter_pdf, letters = None, None
         letter = {"paragraphs": [], "problems": [], "score": None, "pages": 0, "status": "off",

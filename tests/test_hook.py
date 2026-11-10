@@ -167,7 +167,8 @@ def test_the_headline_is_one_line_under_the_name(settings, fb_fixture, job):
     rep = tailor.tailor_job(job, fb_fixture, MockLLM(), settings, settings.path("outputs"))
     hk = H.Hook.from_dict(rep["hook"])
     flat = [" ".join(ln.split()) for ln in pdf_text(Path(rep["cv_pdf"])).splitlines() if ln.strip()]
-    assert any(ln == " ".join(hk.headline.split()) for ln in flat[:4]), flat[:4]            # the whole headline sits on one line
+    shown = f"{rep['context']['headline_title']} | {hk.headline}"                          # v3.5.3: "<family title> | <hook headline>"
+    assert any(ln == " ".join(shown.split()) for ln in flat[:4]), flat[:4]                  # the whole headline sits on one line
 
 
 @pytest.mark.slow

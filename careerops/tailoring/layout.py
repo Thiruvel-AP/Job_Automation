@@ -5,8 +5,10 @@
                never cut mid-clause. A bullet that still does not fit is reported, not trimmed.
   * profile  — at most MAX_PROFILE_LINES lines, the hook sentence first; whole sentences after it are dropped until it fits.
   * headline — one line (the small bold line under the name); the tail is shortened a clause at a time, the trailing stack list first.
-  * STAR     — an experience or project entry with `situation:` in the fact bank opens its first bullet with "<situation>: ", unless that
-               bullet is `verbatim` (never touched) or the entry shows a `situation_included` bullet (it has its own opener: one per role).
+  * STAR     — an experience or project entry with `situation:` in the fact bank opens the bullet that situation BELONGS to with
+               "<situation>: " (v3.5.3: `situation_bullet:` when the entry names one, else the entry's first bullet in the fact bank, or a
+               bullet that `replaces:` it; never whichever bullet happens to be first on the CV), unless that bullet is `verbatim` (never
+               touched) or the entry shows a `situation_included` bullet (it has its own opener: one per role).
   * links    — a project's GitHub URL is printed in the right-hand tag, or on the stack line when the name leaves no room (the template
                decides with TeX's own box widths); `link_problems` checks the rendered PDF's word boxes: every URL is there, inside the
                margin, and touches no other word.
@@ -215,24 +217,58 @@ def opener(situation) -> str:
     return " ".join(str(situation or "").split()).rstrip(" .:;,")
 
 
+def situation_owner(entry: dict) -> list[str]:
+    """The ids of the fact-bank bullets an entry's `situation:` belongs to (v3.5.3, 10 Nov 2026): the entry's `situation_bullet:` when it names
+    one, else its first bullet in the fact bank; plus any bullet that `replaces:` that one (it tells the same work). [] without a situation."""
+    if not opener(entry.get("situation")):
+        return []
+    bullets = [b for b in entry.get("bullets") or [] if isinstance(b, dict) and b.get("id")]
+    own = str(entry.get("situation_bullet") or (bullets[0]["id"] if bullets else "")).strip()
+    if not own:
+        return []
+    return [own] + [str(b["id"]) for b in bullets if own in [str(x) for x in b.get("replaces") or []]]
+
+
+def opener_index(e: dict, situated=(), verbatim=()) -> int | None:
+    """Where the entry's situation opener goes in a render-context entry: the index of the first shown bullet the situation belongs to
+    (`e["situation_owner"]`, set by tailor._context from the fact bank), or None: no situation, the owner is not on the CV, the entry shows a
+    bullet with its own opener (`situated`), or the owner bullet is `verbatim`. A context entry without `situation_owner` (built without the
+    fact bank) takes the first bullet, as before v3.5.3."""
+    sit, ids = opener(e.get("situation")), list(e.get("bullet_ids") or [])
+    if not sit or not e.get("bullets") or set(situated) & set(ids):
+        return None
+    owners = e.get("situation_owner")
+    at = next((i for i, b in enumerate(ids) if b in set(owners)), None) if owners is not None else 0
+    if at is None or at >= len(e["bullets"]) or (ids and ids[at] in set(verbatim)):
+        return None
+    return at
+
+
 def with_openers(ctx: dict) -> dict:
-    """A copy of `ctx` in which the first bullet of every experience entry and project that has a `situation:` starts with
-    "<situation>: " and the (rephrased) action and result after it. Only the first bullet of an entry, once; the model never
+    """A copy of `ctx` in which the bullet each experience entry's and project's `situation:` belongs to (`opener_index`) starts with
+    "<situation>: " and the (rephrased) action and result after it. Once per entry (a split bullet: its first part); the model never
     writes a situation, it is the fact bank's own text. Not when the entry shows a bullet with its own opener (`ctx["situated"]`, the
-    ids of the `situation_included` bullets: one opener per role), and never on a `verbatim` bullet (`ctx["verbatim"]`)."""
+    ids of the `situation_included` bullets: one opener per role), and never on a `verbatim` bullet (`ctx["verbatim"]`). Any other bullet
+    of the entry, even the first one shown, never takes it (the 10 Nov Mining Insights bullet p_ia2 had p_ia1's situation glued on)."""
     out = dict(ctx)
     situated, verbatim = set(ctx.get("situated") or ()), set(ctx.get("verbatim") or ())
     for sec in ("experience", "projects"):
         entries = []
         for e in ctx.get(sec) or []:
             sit = opener(e.get("situation"))
-            ids = e.get("bullet_ids") or []
-            if (sit and e["bullets"] and not e["bullets"][0].startswith(sit) and not situated & set(ids)
-                    and not (ids and ids[0] in verbatim)):
-                e = {**e, "bullets": [f"{sit}: {_lower_first(e['bullets'][0])}", *e["bullets"][1:]]}
+            at = opener_index(e, situated, verbatim)
+            if at is not None and not e["bullets"][at].startswith(sit):
+                bullets = list(e["bullets"])
+                bullets[at] = f"{sit}: {_lower_first(bullets[at])}"
+                e = {**e, "bullets": bullets}
             entries.append(e)
         out[sec] = entries
     return out
+
+
+def opener_words(e: dict, i: int, situated=(), verbatim=()) -> int:
+    """How many words the situation opener adds to bullet i of a render-context entry (0 when it does not go there)."""
+    return len(opener(e.get("situation")).split()) if opener_index(e, situated, verbatim) == i else 0
 
 
 # --------------------------------------------------------------------------------------------------------- split points

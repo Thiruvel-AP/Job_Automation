@@ -2301,3 +2301,43 @@ Tests: `tests/tailoring/test_sections_v352.py`, `test_doccheck_context_v352.py`,
 `tests/review/test_results_v352.py`, `tests/review/test_review_ats_line_v352.py`. Adapted: `test_sections_v35.py` (the date rule is gone; the
 dissertation line is never dropped), `test_letter_assembled_v25.py` (one place per paragraph, P5 tied to a fact), `test_fluency_v34.py` (the fake rewrite
 shortens sentences over 35 words; growth notes), `test_plain_v34.py` (the plain draft holds no jargon itself).
+
+## 5bm. v3.5.3 — fixes from the 10 Nov RightShip run (10 Nov 2026) — **done offline** (fixtures, MockLLM, xelatex PDFs); the next live dry run is yours
+
+1. **Hook proofs may be lists** (`hook.proof_ids` / `find_proof`, `tailoring/hook_claims.py`). `proof: [az10, az11]`: a claim passes when ANY listed
+   bullet (its text, `result:` or `limits:`) supports it, and a list is exactly those bullets (a single id keeps the older whole-role scope). The CV
+   moves the first listed proof that is in the bank to the top of its role; a listed id that is not in the bank is noted, not fatal. A hyphenated
+   compound of the employer's own name ("AstraZeneca-affiliated") is the employer's, not an unknown name (it blocked three real hooks). `careerops
+   hook-check` prints `ok (proof a, b)` with the quote of the bullet behind each number, name and outcome of a passing hook. Real bank (10 Nov, read
+   only): 9 ok, 0 blocked.
+2. **Headline "<family title> | <hook headline>"** (`tailor.shown_headline`, `templates/cv*.tex.j2`, the letter header the same). The family title is
+   the role family's headline (settings roles.families, what the CV printed alone before). No hook: the title alone, a red `!! no hook: the headline
+   has no number` first on the review screen (`workflow.hook_lines`), and the profile opens with the bank family's `profile_opening` sentence, then its
+   `profile_body` (`report["family_opening"]`; doccheck HOOK checks it); a family without `profile_opening` gets a warning.
+3. **Situation openers belong to one bullet** (`layout.situation_owner` / `opener_index`). An entry's `situation:` opens the entry's
+   `situation_bullet:` when it names one, else its first bullet in the fact bank (or a bullet that `replaces:` it), wherever the CV shows it; never
+   whichever bullet happens to be first (Mining Insights: p_ia2 had p_ia1's situation).
+4. **Role reading order** (`templates/cv2.tex.j2` `\role` / `\roleNoLoc`, `cv.tex.j2` `\entry`; `ats_structure.role_order_problems`). Employer (and
+   place) on line 1, the title then the dates on line 2: `pdftotext -raw` reads employer -> title -> dates -> bullets. The check now looks for each role
+   inside the Experience section, each part as whole words: the 10 Nov CRITICAL was the profile's "Freelance AI/ML engineering" taken for the
+   Freelance role's employer and title. Another order is a `role-sequence` warning (no points). The 10 Nov PDF re-checked: no role-order issue; the
+   old template's employer -> dates -> title order is the only warning.
+5. **Letter templates** (`tailoring/template_letter.py`, `company_letter.make`). `letter_templates.<family>` (top level) or `families[*].letter_template`
+   (as written in the bank), looked up for the role family, then the CV's bank family. The model fills ONLY {company_problem_sentence} (an ad
+   sentence, words only dropped, >= 60 % kept, "we" may become the company), {why_sentence} (the P5 guards) and {question} (the ad's words, <= 20
+   words); {company} is code. Up to 3 tries, each told what failed; a slot that never passes is filled in code (an About sentence of the ad, the P5
+   fallback, "the first problem the <role> would own, around <problem>"). Then the whole letter is fact-checked (template text: numbers, names and JD
+   keywords in the bank; slots: numbers and names in the ad; no we / our, no "I help <Company>", no keyword dump, hardware rule, 200-320 words). A
+   failure writes the letter marked DRAFT. A family with no template gets the older letter, marked DRAFT. DRAFT is a doccheck failure: approval and
+   auto-submit need [e] (an edited template letter keeps its paragraphs and its checks). The fixed text is not held to the reuse rule.
+
+Stand-in (read only: the RightShip ad from the database opened read-only, your fact bank, MockLLM, output in a scratch folder): both templates parse
+(P1 P3 P5 P7) and pass the fact check, but the fixed text is 132 words (ai_engineer) and 127 (data_scientist): with the slots the letter is 164 / 159
+body words, under 200, so it is a DRAFT until the templates are about 40 words longer (or you edit it with [e]).
+
+Not verified here: the real model's three slots (the mock fills the problem slot with the ad's first About sentence, code fills the others), the real
+RightShip dry run (`careerops live --dry-run --url <RightShip> --record`), and the PDFs of the real bank.
+
+Tests: `tests/tailoring/test_hook_claims_v353.py`, `test_layout_v353.py`, `test_headline_v353.py`, `test_template_letter.py`,
+`tests/test_ats_structure_v353.py`. Adapted: `test_cv_template.py` (the new role macros; the snapshot bank gives the az situation to its hook bullet),
+`test_hook.py`, `test_golden_pipeline.py`, `test_hook_library.py`, `test_hook_selection.py`, `test_hook_claims_v352.py`, `test_company_letter.py`.

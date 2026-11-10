@@ -109,7 +109,8 @@ def test_headline_a_small_bold_line_under_the_name_with_the_number(run):
     m = re.search(r"\\color\{headernavy\}\\small\\textbf\{(.+?)\}\} \\\\", tex)
     assert m, "no small bold headernavy headline line in the generated CV"
     headline = _plain(m.group(1))
-    assert NUMBER in headline and len(headline) <= H.HEADLINE_MAX and headline == _flat(hk.headline)
+    shown = f"{rep['context']['headline_title']} | {hk.headline}"                              # v3.5.3: "<family title> | <hook headline>"
+    assert NUMBER in headline and len(headline) <= H.HEADLINE_MAX and headline == _flat(shown)
     lines = [_flat(x) for x in pdf_text(Path(rep["cv_pdf"])).splitlines() if x.strip()]
     assert lines[0].startswith("Ada") and lines[1] == headline, lines[:3]                     # the name, then the headline: one line
 
@@ -263,8 +264,9 @@ def test_when_no_hook_qualifies_the_run_says_so_and_makes_no_old_style_letter(tm
     assert rep["letter"]["status"] == "none"
     from careerops.review import workflow
 
-    lines = workflow.hook_lines(rep)
-    assert lines[0].startswith("Hook: none qualifies") and any(x.startswith("  why:") for x in lines), lines          # the review screen says why
+    lines = workflow.hook_lines(rep, color=False)
+    assert lines[0].startswith("!! no hook: the headline has no number")                     # v3.5.3: the warning comes first
+    assert lines[1].startswith("Hook: none qualifies") and any(x.startswith("  why:") for x in lines), lines          # the review screen says why
 
 
 def _family_bank(body: str) -> dict:

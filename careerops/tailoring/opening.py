@@ -16,6 +16,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Sequence
 
+from .. import hook as hook_mod
 from ..hook import Hook, iter_eligible
 from .faithfulness import deny_hits, numbers
 from .grounding import sentences
@@ -180,7 +181,9 @@ def _fact(job: dict, fb: dict, kws: Sequence[Keyword], hk: Hook | None, chosen: 
     for hit in (iter_eligible(fb, list(kws), []) if hk is not None else ()):          # no hook on the CV (off, or none qualified): no hook letter line
         entry = hit["entry"]
         if not (hk is not None and hk.hook_id == str(entry["id"])):
-            cands.append((" ".join(str(entry["letter_line"]).split()), str(entry["id"]), str(entry.get("proof") or ""), [str(t) for t in entry.get("terms") or []]))
+            ids = hook_mod.proof_ids(entry)                                   # v3.5.3: a list of proofs: the first one on this CV
+            proof = next((b for b in ids if on_cv(b)), ids[0] if ids else "")
+            cands.append((" ".join(str(entry["letter_line"]).split()), str(entry["id"]), proof, [str(t) for t in entry.get("terms") or []]))
     for text, hid, proof, terms in cands:
         text = " ".join(str(text).split())
         if BANNED.search(text):
