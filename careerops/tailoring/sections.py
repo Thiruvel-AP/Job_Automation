@@ -1,16 +1,17 @@
-"""The two-page CV's section order and its compact Education (user decision, 8 Nov 2026; replaces v3.4's graduate order).
+"""The two-page CV's section order and its compact Education (user rule, 10 Nov 2026; replaces the 8 Nov Education-first-until-a-date order).
 
-  Order      Profile, Education, Work Experience, Projects, Skills, Certifications & Achievements (EDUCATION_FIRST) until cv.education_first_until
-             (code default 2027-09-30); after it, Profile, Work Experience, Projects, Education, Skills, Certifications (EXPERIENCE_FIRST), and
-             `doctor` says so. An ad that asks for N+ years of experience with N >= 3 gets EXPERIENCE_FIRST for that job, and the review says why.
-             The optional fact-bank sections (research focus, publications, languages) follow at the end. The headings never change (the v3.3
-             ATS structure check reads them; the order of sections is not scored).
-  Education  at most EDUCATION_MAX_LINES (4) printed lines: one line per degree (degree, university, dates; a classification when it is not an
-             expected one), and under the degree that has a `dissertation:` (a plain one-line title the user wrote) the line "Dissertation with
-             <affiliation> affiliation: <title>". No module lists. The affiliation is the entry's `dissertation_affiliation:`, else the
-             "dissertation with X affiliation" its own `display_line` says.
-  Position   in Education-first order the first Work Experience bullet must start in the top FIRST_BULLET_MAX (55 %) of page 1, read from the
-             PDF's text layer (layout.pdf_lines); if it does not, the dissertation line is dropped, the CV rendered again, and a warning says so.
+  Order      a graduate / junior / scheme ad (GRADUATE_TITLE in its title, or GRADUATE_TEXT in its text: "graduate scheme", "entry-level",
+             "early careers", "2027 start" ...): Profile, Education, Skills, Work Experience, Projects, Certifications & Achievements (GRADUATE).
+             Every other ad: Profile, Skills, Work Experience, Projects, Education, Certifications & Achievements (STANDARD). The review says which
+             and why. The optional fact-bank sections (research focus, publications, languages) follow at the end. The headings never change (the
+             v3.3 ATS structure check reads them; the order of sections is not scored). cv.education_first_until is no longer read.
+  Education  one line per degree (degree, university, dates; a classification when it is not an expected one), and under the degree that has a
+             dissertation the line "Dissertation with <affiliation> affiliation: <title>" (its `dissertation:`, a plain one-line title the user
+             wrote), else the dissertation clause of its own `display_line` word for word ("Dissertation with AstraZeneca affiliation (GeneTraceAI)").
+             No module lists. The dissertation line is never left out to save space (honesty over lint, 10 Nov 2026): the EDUCATION_MAX_LINES (4)
+             cap takes the oldest degrees out first, never the dissertation line.
+  Position   when Education comes before Work Experience, the first Work Experience bullet should start in the top FIRST_BULLET_MAX (55 %) of page
+             1 (layout.pdf_lines); when it does not, the review warns. Nothing is taken out for it.
 """
 from __future__ import annotations
 
@@ -19,11 +20,17 @@ import re
 from datetime import date
 from typing import Mapping, Sequence
 
-EDUCATION_FIRST = ("profile", "education", "experience", "projects", "skills", "certifications")
-EXPERIENCE_FIRST = ("profile", "experience", "projects", "education", "skills", "certifications")
+GRADUATE = ("profile", "education", "skills", "experience", "projects", "certifications")
+STANDARD = ("profile", "skills", "experience", "projects", "education", "certifications")
+EDUCATION_FIRST, EXPERIENCE_FIRST = GRADUATE, STANDARD           # the 8 Nov names, kept for callers
 TAIL = ("research_focus", "publications", "languages")
 DEFAULT_UNTIL = date(2027, 9, 30)
-SENIOR_YEARS = 3
+# A graduate / junior / scheme ad (10 Nov 2026). The title decides most ads; the text only by phrases that cannot be about someone else
+# ("mentor junior engineers", "a graduate degree" and "pension scheme" are not graduate ads).
+GRADUATE_TITLE = re.compile(r"\b(?:graduate|grad|junior|jr|entry[- ]level|early[- ]careers?|scheme|new[- ]grad)\b", re.I)
+GRADUATE_TEXT = re.compile(r"\bgraduate\s+(?:scheme|programme|program|role|position|opportunit(?:y|ies)|intake|cohort|job)s?\b"
+                           r"|\b(?:training|development|early[- ]careers?)\s+(?:scheme|programme)s?\b|\bentry[- ]level\b|\bearly[- ]careers?\b"
+                           r"|\b20\d\d\s+(?:start|intake|cohort)\b|\brecent\s+graduates?\b|\bnew\s+grads?\b", re.I)
 EDUCATION_MAX_LINES = 4
 LINE_CHARS = 100                  # one full-width line of the 11pt body (Carlito, A4 less 0.6in margins)
 SMALL_LINE_CHARS = 112            # the same line in \small (the dissertation line)
@@ -71,26 +78,33 @@ def years_asked(jd: str) -> int:
     return max((n for skill, n in jd_years(jd or "", []) if skill is None), default=0)
 
 
-def order_for(job: Mapping, settings, today: date | None = None) -> tuple[list[str], str]:
-    """(the section keys in order, why: "" for the default order)."""
-    today = today or date.today()
-    until = education_first_until(settings)
-    if today > until:
-        return [*EXPERIENCE_FIRST, *TAIL], f"Experience first: cv.education_first_until ({until.isoformat()}) has passed"
-    n = years_asked(str(job.get("description") or ""))
-    if n >= SENIOR_YEARS:
-        return [*EXPERIENCE_FIRST, *TAIL], f"Experience first for this job: the ad asks for {n}+ years of experience"
-    return [*EDUCATION_FIRST, *TAIL], ""
+def _get(job: Mapping, key: str) -> str:
+    try:
+        return str(job[key] or "")
+    except (KeyError, IndexError, TypeError):
+        return ""
 
 
-def doctor_line(settings, today: date | None = None) -> tuple[str, object, str]:
-    today = today or date.today()
-    until = education_first_until(settings)
-    if today > until:
-        return (f"CV order: Experience first (cv.education_first_until {until.isoformat()} has passed; Education now comes after Projects)",
-                "warn", "set cv.education_first_until to a later date to keep Education first")
-    return (f"CV order: Education first until {until.isoformat()} (cv.education_first_until), then Experience first; an ad asking for "
-            f"{SENIOR_YEARS}+ years of experience gets Experience first", True, "")
+def graduate_reason(job: Mapping) -> str:
+    """Why this is a graduate / junior / scheme ad ("title says 'Graduate'", "the ad says 'graduate scheme'"), or "" when it is not."""
+    m = GRADUATE_TITLE.search(_get(job, "title"))
+    if m:
+        return f"the title says '{m.group(0)}'"
+    m = GRADUATE_TEXT.search(_get(job, "description"))
+    return f"the ad says '{m.group(0)}'" if m else ""
+
+
+def order_for(job: Mapping, settings=None, today: date | None = None) -> tuple[list[str], str]:
+    """(the section keys in order, why). GRADUATE for a graduate / junior / scheme ad, else STANDARD (`settings` and `today` are not read any more)."""
+    why = graduate_reason(job)
+    if why:
+        return [*GRADUATE, *TAIL], f"graduate order (Education, then Skills, before Work Experience): {why}"
+    return [*STANDARD, *TAIL], "standard order (Skills, Work Experience, Projects, then Education): not a graduate, junior or scheme ad"
+
+
+def doctor_line(settings=None, today: date | None = None) -> tuple[str, object, str]:
+    return ("CV order: graduate / junior / scheme ads get Profile, Education, Skills, Work Experience, Projects, Certifications; every other ad "
+            "Profile, Skills, Work Experience, Projects, Education, Certifications", True, "")
 
 
 def _lines(text: str, width: int = LINE_CHARS) -> int:
@@ -105,9 +119,23 @@ def degree_name(ed: Mapping) -> str:
     return shown if shown and degree and shown.split()[0] == degree.split()[0] and len(shown) <= len(degree) else degree
 
 
+_CLAUSE = re.compile(r"\bdissertation\b[^;]*", re.I)
+
+
+def dissertation_clause(ed: Mapping) -> str:
+    """The dissertation part of an education entry's `display_line`, word for word with a capital D ("Dissertation with AstraZeneca affiliation
+    (GeneTraceAI)"), or "" when it names none."""
+    m = _CLAUSE.search(" ".join(str(ed.get("display_line") or "").split()))
+    if not m:
+        return ""
+    text = m.group(0).strip().rstrip(",.")
+    return text[0].upper() + text[1:]
+
+
 def compact_education(education: Sequence[Mapping], dissertation: bool = True) -> tuple[list[dict], list[str]]:
     """(rows, notes). A row is {"kind": "degree", "head" (degree, italic), "school" (bold), "cls", "tail" (school and cls), "dates"} or
-    {"kind": "dissertation", "text"}; together at most EDUCATION_MAX_LINES printed lines (the dissertation line goes first, then the last degrees)."""
+    {"kind": "dissertation", "text"}; at most EDUCATION_MAX_LINES printed lines by taking the last degrees out, never the dissertation line
+    (10 Nov 2026: context is never dropped to fit a rule). `dissertation=False` is kept for old callers and ignored."""
     rows: list[dict] = []
     notes: list[str] = []
     for ed in education:
@@ -118,23 +146,24 @@ def compact_education(education: Sequence[Mapping], dissertation: bool = True) -
         rows.append({"kind": "degree", "head": degree, "school": school, "cls": cls, "tail": tail,
                      "dates": " ".join(str(ed.get("dates") or "").split())})
         title = " ".join(str(ed.get("dissertation") or "").split())
-        if title and dissertation:
+        if title:
             m = _AFFILIATION.search(str(ed.get("display_line") or ""))
             aff = " ".join(str(ed.get("dissertation_affiliation") or (m.group(1) if m else "")).split())
             rows.append({"kind": "dissertation", "text": f"Dissertation with {aff} affiliation: {title}" if aff else f"Dissertation: {title}"})
-        elif not title and _AFFILIATION.search(str(ed.get("display_line") or "")):
-            notes.append(f"education: {degree} mentions a dissertation but has no `dissertation:` (a plain one-line title) in the fact bank, so the "
-                         "CV prints no dissertation line")
+        elif dissertation_clause(ed):
+            rows.append({"kind": "dissertation", "text": dissertation_clause(ed)})
 
     def printed(rs: list[dict]) -> int:
         return sum(_lines(f"{r['head']}, {r['tail']}  {r['dates']}") if r["kind"] == "degree" else _lines(r["text"], SMALL_LINE_CHARS) for r in rs)
 
-    while printed(rows) > EDUCATION_MAX_LINES and any(r["kind"] == "dissertation" for r in rows):
-        rows = [r for r in rows if r["kind"] != "dissertation"]
-        notes.append(f"education: the dissertation line was left out to keep Education at {EDUCATION_MAX_LINES} lines")
-    while printed(rows) > EDUCATION_MAX_LINES and len(rows) > 1:
-        gone = rows.pop()
-        notes.append(f"education: {gone.get('head') or gone.get('text')} was left out to keep Education at {EDUCATION_MAX_LINES} lines")
+    def droppable() -> list[int]:                                            # a degree with no dissertation line under it
+        return [i for i, r in enumerate(rows) if r["kind"] == "degree" and not (i + 1 < len(rows) and rows[i + 1]["kind"] == "dissertation")]
+
+    while printed(rows) > EDUCATION_MAX_LINES and sum(r["kind"] == "degree" for r in rows) > 1 and droppable():
+        gone = rows.pop(droppable()[-1])
+        notes.append(f"education: {gone.get('head')} was left out to keep Education at {EDUCATION_MAX_LINES} lines")
+    if printed(rows) > EDUCATION_MAX_LINES:
+        notes.append(f"education: {printed(rows)} printed lines (more than {EDUCATION_MAX_LINES}); the dissertation line is kept")
     return rows, notes
 
 

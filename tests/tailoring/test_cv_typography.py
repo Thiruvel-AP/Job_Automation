@@ -147,7 +147,7 @@ def test_the_type_scale_is_the_users_current_cv(run):
     ratio = lambda w: next(h for t, h in words if t == w) / body                           # noqa: E731
     assert ratio("Ada") == pytest.approx(SCALE["name"], rel=0.03) and ratio("Lovelace") == pytest.approx(SCALE["name"], rel=0.03)
     assert ratio("PROFILE") == pytest.approx(SCALE["section headings"], rel=0.03)             # headings are the body's size (bold, with a rule)
-    assert ratio("EDUCATION") == pytest.approx(SCALE["section headings"], rel=0.03)              # page 1 (Education first since 8 Nov 2026)
+    assert ratio("SKILLS") == pytest.approx(SCALE["section headings"], rel=0.03)                 # page 1 (Skills second since 10 Nov 2026)
     assert ratio("Bristol,") == pytest.approx(SCALE["contact and stack lines"], rel=0.03)  # the contact line
     ratios = {round(h / body, 2) for _, h in words}
     assert all(any(abs(r - s) <= 0.03 for s in SCALE.values()) for r in ratios), ratios   # nothing at any other size

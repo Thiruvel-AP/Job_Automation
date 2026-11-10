@@ -1,5 +1,13 @@
 """The assembled company letter (v2.5, `letter.compose: assembled`, the code default): a letter that always exists.
 
+v3.5.2 (10 Nov 2026; `compose`, below, replaces the P3 / P4 rules described next): one paragraph per employer or project. P3 tells the bullets of the
+place whose CV bullets carry most of the ad's skills, P4 those of the next place (an employer first); at most MAX_CLAIMS (2) bullets a paragraph;
+every sentence opens with where the work was done, with the context the fact bank gives it ("On my AstraZeneca dissertation project, I ...",
+"On my CoverFit hackathon project, I ..."); in plain style a bullet is told with its approved `plain:`, else without its bracketed asides, and is
+left out when it still holds jargon the ad does not name (Ensembl, HGNC, parquet ...). P5 is the ad's own words about what the company does for its
+customers tied to ONE fact of this CV: "<ad clause> — the same aim as my work at <place>, where <the fact's first clause>." The model may write only
+the ad clause; the guards read the two halves apart (company guards on the ad half, the fact guards on the other).
+
 Free drafts failed because every sentence that makes a claim about you is a chance to fail a guard: with k ≈ 12 claim sentences and a pass rate of
 p ≈ 0.92 per sentence, P(pass) = p^k ≈ 0.37, and three retries near temperature 0 are almost the same draft. Here the sentences about you are
 ASSEMBLED from verified text and the model writes only the sentence about the company:
@@ -52,6 +60,10 @@ P5_SYSTEM = """You write ONE sentence (at most 40 words) for a cover letter: why
 It must contain, word for word, a run of at least 4 consecutive words copied from one of the AD SENTENCES. Make no claim about the candidate's
 experience or skills, give no number, never write "we", "our" or "us", invent no name, never open with "I am excited", "I am writing" or "I am
 applying". Return JSON only: {"p5": "<the sentence>"}."""
+P5_CLAUSE_SYSTEM = """You write ONE clause (at most 26 words) for a cover letter: what the company does for its customers, with the company's
+name as its subject, in the ad's own words. It must contain, word for word, a run of at least 4 consecutive words copied from one of the AD
+SENTENCES, preferably the one about what customers or clients can do. Say nothing about the candidate, never write "I", "we", "our" or "us", give
+no number the ad does not, invent no name. Return JSON only: {"p5": "<the clause>"}."""
 P5_USER = """COMPANY: {company}
 ROLE: {title}
 AD SENTENCES:
@@ -173,6 +185,7 @@ def _terms_sentence(group: list[dict], reqs: list[str], said: str) -> str:
     missing = [r for r in reqs if r.lower() in have and norm_literal(r) not in lit]
     named = [r for r in reqs if norm_literal(r) in lit]
     need = max(0, min(2, len(reqs)) - len(named))
+    missing = [r for r in missing if not (len(r.split()) == 1 and re.search(r"(?:ic|ive|al|ous)$", r.lower()))]     # "agentic" is no tool
     pick = [_spelling(r, group) for r in missing[:need]]
     if not pick:
         return ""
@@ -341,30 +354,43 @@ def _ad_run(p5: str, ad: str, n: int = AD_RUN) -> bool:
     return any(f" {' '.join(w[i:i + n])} " in a for i in range(0, max(0, len(w) - n + 1)))
 
 
-def p5_problems(p5: str, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offered: list[str]) -> list[str]:
-    """The letter's own P5 guards (company_letter), plus the run of ad words this mode asks for."""
+def p5_problems(p5: str, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offered: list[str], fact: dict | None = None) -> list[str]:
+    """The letter's own P5 guards (company_letter), plus the run of ad words this mode asks for. v3.5.2: a P5 tied to a fact (P5_TIE) is read in
+    two halves: the company guards, the ad run and "no number" on the ad half; `fact_problems` on the half about my work."""
     from . import company_letter as CL
     from . import letters as L
 
     company, title = job["company"], job["title"]
     skip = frozenset(CL.stems(f"{company} {title} {team}")) | CL.P5_FRAME
-    out = [f"P5: {p}" for p in CL.company_problems(p5, ad_all, skip)] + CL.one_sentence_problems(p5) + CL.extractive_problems(p5, offered, skip)
-    allowed = " ".join([ad_all, company, title, team, *CL.bank_names(fb), *CL._labels(fb).values()])
+    ad, mine = p5_split(p5)
+    out = [f"P5: {p}" for p in CL.company_problems(ad, ad_all, skip)] + CL.one_sentence_problems(p5) + CL.extractive_problems(ad, offered, skip)
+    allowed = " ".join([ad_all, company, title, team, *CL.bank_names(fb), *CL._labels(fb).values(),
+                        *((fact["text"], fact["source"].name) if fact is not None else ())])
     out += CL.name_problems([p5], allowed)
-    out += L.claim_problems([p5], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))
-    if re.search(r"\d", p5):
+    out += L.claim_problems([ad], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))
+    if re.search(r"\d", ad):
         out.append("P5 gives a number")
+    if mine and re.search(r"\bI\b", ad):
+        out.append("P5: the half in the ad's words speaks about you")
+    if mine:
+        out += fact_problems(mine, fact, fb) if fact is not None else ["P5: tied to a fact this letter does not hold"]
     from .fluency import grammar_problems, opening_problems
 
     out += opening_problems(p5, "P5: ")                                      # "I am excited to join ..." (RightShip, 8 Nov 2026)
     out += grammar_problems({"P5": p5})                                      # "I look forward to rapidly prototype ..." (8 Nov 2026)
-    if not _ad_run(p5, ad_all):
+    if not _ad_run(ad, ad_all):
         out.append(f"P5 holds no run of {AD_RUN} words of the ad")
     return out
 
 
-def write_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offered: list[str], said: str, notes: list[str]) -> tuple[str, dict]:
-    """P5 from the model (P5_TRIES tries), else the fallback; (text, info: source, tries, problems, tokens)."""
+def write_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offered: list[str], said: str, notes: list[str],
+             fact: dict | list[dict] | None = None) -> tuple[str, dict]:
+    """P5 from the model (P5_TRIES tries), else the fallback; (text, info: source, tries, problems, tokens). With `fact` (v3.5.2) the model writes
+    only the ad clause and the code ties it to the fact (tie_p5); the fallback ties the ad's own clauses (ad_clauses) the same way, and only when
+    none passes is P5 the untied sentence of before (a note says so)."""
+    facts = [f for f in (fact if isinstance(fact, list) else [fact]) if f is not None]
+    if facts:
+        return _write_tied_p5(llm, job, fb, kws, plan, team, ad_all, offered, said, notes, facts)
     from ..llm.router import TaskUnavailable
     from . import tailor as T
 
@@ -400,6 +426,61 @@ def write_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offere
     fb_text = p5_fallback(offered, job["company"], lambda t: p5_problems(t, job, fb, kws, plan, team, ad_all, offered))
     notes.append(f"cover_letter: P5 is the fallback sentence ({info['tries']} model tr{'y' if info['tries'] == 1 else 'ies'} rejected or failed)")
     return fb_text, info
+
+
+def _write_tied_p5(llm, job: dict, fb: dict, kws, plan, team: str, ad_all: str, offered: list[str], said: str, notes: list[str],
+                   facts: list[dict]) -> tuple[str, dict]:
+    """The model's ad clause tied to the first fact; else each of the ad's own clauses tied to each fact in turn; else the untied P5 of before.
+    info["fact"] = the bullet id P5 is tied to ("" when untied); info["fallback_problems"] = why the first tied candidate was refused."""
+    from ..llm.router import TaskUnavailable
+    from . import tailor as T
+
+    from .fluency import _spent
+
+    fact = facts[0]
+    clause = fact_clause(fact["text"])
+    info: dict[str, Any] = {"source": "fallback", "tries": 0, "problems": [], "tokens": 0, "fact": fact["id"]}
+    start = len(getattr(llm, "usage", []) or [])
+    feedback = f"READER'S NOTE (wording only): {said}" if said else ""
+    about = "\n".join(f"[{i}] {x}" for i, x in enumerate(offered, 1)) or "(the ad has no About / role section: use its opening lines)\n" + ad_all[:1200]
+
+    def problems_of(p5: str, fact: dict = fact) -> list[str]:
+        return p5_problems(p5, job, fb, kws, plan, team, ad_all, offered, fact)
+
+    for attempt in range(P5_TRIES):
+        user = P5_USER.format(company=job["company"], title=job["title"], about=about, feedback=feedback)
+        info["tries"] = attempt + 1
+        try:
+            out = T._llm_json(llm, TASK, P5_CLAUSE_SYSTEM, user, {"mode": "assembled_p5", "company": job["company"], "title": job["title"],
+                                                                   "about_sentences": offered, "temperature": 0.0 if attempt == 0 else 0.5})
+        except TaskUnavailable:
+            raise
+        except Exception as e:  # noqa: BLE001  (no provider, a bad reply: the fallback P5 still makes a letter)
+            info["problems"].append(f"P5 model call failed: {str(e)[:120]}")
+            break
+        text = " ".join(str((out or {}).get("p5") or "").split()).rstrip(".")
+        info["tokens"] += (len(P5_CLAUSE_SYSTEM) + len(user) + len(text)) // 4
+        p5 = tie_p5(text, fact["source"], clause) if text else ""
+        probs = problems_of(p5) if text else ["P5: empty reply"]
+        if not probs:
+            info.update(source="model", problems=[], tokens=_spent(llm, start, info["tokens"]))
+            return p5, info
+        info["problems"].append(probs)
+        feedback = (f"READER'S NOTE (wording only): {said}\n" if said else "") + "Your last clause was rejected: " + "; ".join(probs)[:400]
+    info["tokens"] = _spent(llm, start, info["tokens"])
+    for f in facts:
+        for ad in ad_clauses(offered, job["company"]):
+            p5 = tie_p5(ad, f["source"], fact_clause(f["text"]))
+            probs = problems_of(p5, f)
+            if not probs:
+                info["fact"] = f["id"]
+                notes.append(f"cover_letter: P5 is the ad's own clause tied to {f['id']} ({info['tries']} model tr{'y' if info['tries'] == 1 else 'ies'} "
+                             "rejected or failed)")
+                return p5, info
+            info.setdefault("fallback_problems", probs)
+    info["fact"] = ""
+    notes.append(f"cover_letter: P5 could not be tied to a fact of this CV (no ad clause passed its guards); it is the untied sentence")
+    return p5_fallback(offered, job["company"], lambda t: p5_problems(t, job, fb, kws, plan, team, ad_all, offered)), info
 
 
 def body(plan, g3: list[dict], g4: list[dict], reqs: list[str], fb: dict, chosen: set[str] | None, st: Steer, settings,
@@ -458,3 +539,391 @@ def body(plan, g3: list[dict], g4: list[dict], reqs: list[str], fb: dict, chosen
         parts["drop_p2"] = "1"
     parts["_g4"] = g4                                                           # type: ignore[assignment]  (the roles P4 kept)
     return parts, assembled, notes, g3[:len(p3)] if len(p3) < len(g3) else g3
+
+
+# ====================================================================================================================================
+# v3.5.2 (10 Nov 2026, after the 9 Nov RightShip letter): one paragraph per employer or project, every sentence names where the work was done,
+# at most MAX_CLAIMS bullets told per paragraph, the plain-language jargon rule on the bullets' wording, and P5 ties the ad's own sentence to one
+# evidence fact of this CV.
+# ====================================================================================================================================
+MAX_CLAIMS = 2                                   # bullets told in one paragraph (the "That work used X and Y." sentence counts as one)
+P5_TIE = " — the same aim as "                   # P5 = <the ad's own words> + P5_TIE + <my work at X>, where <one fact of this CV>.
+P5_FACT_MAX_WORDS = 16                           # the fact clause of P5
+P5_WORDS_GUESS = 38                              # P5's length while P3 and P4 are sized (it is written after them)
+# Names a letter reader never needs (gene and data standards, file formats, internal component names): a bullet that still says one after its
+# brackets are taken out is not told, unless the ad names it (10 Nov 2026: "no Ensembl, HGNC, parquet unless the JD names them").
+LETTER_NEVER = ("parquet", "hgnc", "ensembl", "leiden", "modularity", "identity-spine", "crosswalk", "crosswalks", "circuit breaker",
+                "circuit breakers", "float16", "barge-in", "full-duplex", "silhouette", "skip-gram", "websocket", "json", "yaml", "csv", "regex",
+                "cellosaurus", "lambda web adapter", "ecr", "iam", "least-privilege")
+_NOT_A_VERB = frozenset("to and or for with in on as at by from of is's that which who".split())
+_CUSTOMER = re.compile(r"\b(?:customers?|clients?|users?|act on|decisions?|patients?|researchers?|organi[sz]ations?)\b", re.I)
+
+
+@dataclasses.dataclass(frozen=True)
+class Source:
+    """Where a bullet's work was done: an experience entry or a project, its short name and the phrases a letter sentence names it with."""
+    id: str
+    kind: str                     # experience | project
+    name: str                     # "AstraZeneca", "CoverFit"
+    phrase: str                   # "At 180 Degrees Consulting", "On my AstraZeneca dissertation project", "On my CoverFit hackathon project"
+    mine: str                     # "my work at 180 Degrees Consulting", "my AstraZeneca dissertation project", "my CoverFit hackathon project"
+
+
+def short_name(name: str) -> str:
+    """'CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)' -> 'CoverFit'; 'AstraZeneca, United Kingdom' -> 'AstraZeneca'."""
+    n = " ".join(str(name or "").split())
+    return re.split(r"\s+[—–-]{1,2}\s+|\s*\(|\s*,\s*", n, maxsplit=1)[0].strip()
+
+
+def source_of(fb: dict, bullet_id: str) -> Source | None:
+    """The Source of a bullet. The context word the fact bank gives the entry (doccheck.marks: dissertation, coursework, volunteer, hackathon)
+    is said in the phrase: the letter never drops that context (10 Nov 2026)."""
+    from .doccheck import marks
+
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec) or []:
+            if any(str(b.get("id")) == bullet_id for b in e.get("bullets") or []):
+                word = (marks(e) or [("", "", "")])[0][0]
+                if sec == "experience":
+                    from .render import is_freelance
+
+                    name = short_name(e.get("org") or e.get("display_org") or e.get("id"))
+                    if is_freelance(e):                                     # "At Freelance, I ..." is not English
+                        return Source(str(e.get("id")), "experience", "freelance", "In my freelance work", "my freelance work")
+                    if word == "volunteer":
+                        phrase, mine = f"As a volunteer at {name}", f"my volunteer work at {name}"
+                    elif word:                                       # dissertation, hackathon, coursework: "On my AstraZeneca dissertation project"
+                        phrase, mine = f"On my {name} {word} project", f"my {name} {word} project"
+                    else:
+                        phrase, mine = f"At {name}", f"my work at {name}"
+                    return Source(str(e.get("id")), "experience", name, phrase, mine)
+                name = short_name(e.get("name") or e.get("display_name") or e.get("id"))
+                what = f"{name} {word} project" if word else f"{name} project"
+                return Source(str(e.get("id")), "project", name, f"On my {what}", f"my {what}")
+    return None
+
+
+def strip_brackets(text: str) -> str:
+    """The bullet without its bracketed asides ("(LangChain, Claude Haiku 4.5 on AWS Bedrock)"): words are only taken away, never added."""
+    t = " ".join(str(text or "").split())
+    while True:
+        new = re.sub(r"\s*\([^()]*\)", "", t)
+        if new == t:
+            break
+        t = new
+    return re.sub(r"\s+([,.;:])", r"\1", t).strip()
+
+
+def letter_text(bullet: dict, fb: dict, plain_rule: bool, allow: list[str]) -> tuple[str, list[str]]:
+    """(the wording the letter tells a bullet with, the jargon that keeps it out). Plain style: the bullet's approved `plain:` when it has a usable
+    one, else the bullet without its bracketed asides; it is left out when it still holds a LETTER_NEVER term (Ensembl, HGNC, parquet ...) or
+    more than plain.MAX_JARGON (1) technical names off the allow-list, as a plain CV bullet may (the allow-list holds the ad's own keywords, so a
+    term the ad names stays).
+    Technical style: the bullet word for word."""
+    from . import plain as PL
+
+    if not plain_rule:
+        return bullet["text"], []
+    approved = PL.usable_plain(bullet)
+    text = approved or strip_brackets(bullet["text"])
+    owner = next((e for sec in ("experience", "projects") for e in fb.get(sec) or []
+                  if any(str(b.get("id")) == bullet["id"] for b in e.get("bullets") or [])), None)
+    js = PL.jargon(text, fb, owner, allow)
+    never = {norm(x) for x in LETTER_NEVER}
+    if any(norm(j) in never for j in js) or len(js) > PL.MAX_JARGON:
+        return text, js
+    return text, []
+
+
+def norm(term: str) -> str:
+    from .scorer import norm_literal
+
+    return norm_literal(term)
+
+
+def told(text: str, src: Source, second: bool = False, proper: frozenset[str] = frozenset()) -> str:
+    """One letter sentence: the place, then the bullet in first person ("At AstraZeneca, I built ..."; the second of a paragraph "..., I also ...")."""
+    body = first_person(text)
+    if body.startswith("I "):
+        return f"{src.phrase}, I {'also ' if second else ''}{body[2:]}"
+    if body.startswith(("To deliver ", "For ")):
+        return f"{src.phrase}, {body[0].lower()}{body[1:]}"
+    first = body.split(" ", 1)[0].strip(",;:")
+    if first[:1].isupper() and first[1:] == first[1:].lower() and first.lower() not in proper:
+        return f"{src.phrase}, {body[0].lower()}{body[1:]}"
+    return f"{src.phrase}: {body}"
+
+
+def _proper(fb: dict) -> frozenset[str]:
+    from . import letters as L
+
+    words = {w for t in L._tools(fb) for w in t.split()}
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec) or []:
+            words |= {w.lower() for w in re.findall(r"[A-Za-z][\w'-]*", f"{e.get('org') or ''} {e.get('name') or ''}")}
+    return frozenset(words)
+
+
+def fact_clause(text: str) -> str:
+    """P5's fact: the bullet's first-person action, cut at its first clause boundary after five words ("I wrote a three-tier test framework of
+    ~65 tests across 8 files"); words are only cut away. "" when the wording has no "I <verb>" to start from or is longer than P5_FACT_MAX_WORDS."""
+    body = first_person(text).rstrip(".")
+    at = body.find("I ") if body.startswith("I ") else body.find(", I ")
+    if at < 0:
+        m = re.search(r"\bso I ", body)
+        at = m.start() + 3 if m else -1
+    elif not body.startswith("I "):
+        at += 2
+    if at < 0:
+        return ""
+    clause = body[at:]
+    words = clause.split()
+    for i in range(5, len(words)):
+        if re.search(r"[,;:—]$", words[i - 1]) or words[i] in ("and", "then", "while", "so"):
+            clause = " ".join(words[:i]).rstrip(",;:—")
+            break
+    return clause if 4 <= len(clause.split()) <= P5_FACT_MAX_WORDS else ""
+
+
+def p5_split(p5: str) -> tuple[str, str]:
+    """(the part in the ad's own words, the part about my work) of a v3.5.2 P5; ("whole P5", "") for an older one."""
+    if P5_TIE in p5:
+        ad, mine = p5.split(P5_TIE, 1)
+        return ad.strip(), mine.strip().rstrip(".")
+    return p5, ""
+
+
+def tie_p5(ad_part: str, src: Source, fact: str) -> str:
+    return f"{ad_part.strip().rstrip('.')}{P5_TIE}{src.mine}, where {fact}."
+
+
+def ad_clauses(offered: list[str], company: str) -> list[str]:
+    """The ad's own words for P5's first half, best first: a clause of an About sentence that starts with the company's name ("RightShip transforms
+    complex safety and operational risk into intelligence its customers can act on with confidence"; "our" -> "its"), those about what the
+    company's customers get first; then "<Company>'s focus on <a noun phrase of the ad>"."""
+    out: list[str] = []
+    for s in sorted(offered, key=lambda s: 0 if _CUSTOMER.search(s) else 1):
+        s = " ".join(s.split()).rstrip(".")
+        m = re.search(rf"\b{re.escape(company)}\b(?!['’]s)\s+(\w+)", s) if company.strip() else None
+        if not m or m.group(1).lower() in _NOT_A_VERB:                    # "rely on RightShip to strengthen ...": the company is not the subject
+            continue
+        clause = re.sub(r"\bour\b", "its", s[m.start():], flags=re.I)
+        clause = re.split(r"\s*;\s*|\.\s", clause, maxsplit=1)[0].strip().rstrip(",")
+        if 6 <= len(clause.split()) <= 26 and not _WE.search(clause) and not _YOU.search(clause):
+            out.append(clause)
+    out += [f"{possessive(company)} focus on {p}" for p in noun_phrases(offered, company)]
+    return list(dict.fromkeys(out))
+
+
+def fact_problems(fact: str, evidence: dict, fb: dict) -> list[str]:
+    """The P5 fact part says nothing its bullet (as the letter tells it) does not: numbers and tools from it only, and most of its words."""
+    from . import letters as L
+    from .faithfulness import numbers
+    from .scorer import norm_literal
+
+    out: list[str] = []
+    extra = numbers(fact) - numbers(evidence["text"])
+    if extra:
+        out.append(f"P5: number(s) about you not in its fact ({evidence['id']}): {sorted(extra)}")
+    lit, src = norm_literal(fact), norm_literal(evidence["text"])
+    for tool in L._tools(fb):
+        if len(tool) >= 3 and re.search(r"(?<![\w])" + re.escape(tool) + r"(?![\w])", lit) and not re.search(r"(?<![\w])" + re.escape(tool) + r"(?![\w])", src):
+            out.append(f"P5: names '{tool}', which its fact ({evidence['id']}) does not")
+    return out
+
+
+@dataclasses.dataclass
+class Built:
+    parts: dict[str, str]
+    g3: list[dict]
+    g4: list[dict]
+    reqs: list[str]
+    assembled: set[str]
+    notes: list[str]
+    fact: dict | None                      # P5's evidence fact (a letter evidence dict), None when no fact fits
+    left_out: dict[str, list[str]]         # bullet id -> the jargon that kept it out of the letter
+    g5: list[dict] = dataclasses.field(default_factory=list)      # P4b's bullets (a third place), [] when the letter needs none
+    facts: list[dict] = dataclasses.field(default_factory=list)   # P5's fact candidates, best first (`fact` is the first)
+
+
+def compose(plan, fb: dict, kws, chosen: set[str] | None, jd: str, hk, st: Steer, settings, code_parts: dict[str, str], p5_len: int,
+            plain_rule: bool, allow: list[str], avoid: set[str] = frozenset()) -> Built | None:
+    """P3 and P4, one paragraph per place: P3 the place whose bullets on this CV carry most of the ad's skills (company_letter.skill_group), P4 the
+    next place (an employer first, the hook's role first among them). Each paragraph tells one bullet, then grows to MAX_CLAIMS while the letter is
+    under its length goal; every sentence opens with where the work was done. Over the cap: P2 goes, then each paragraph keeps one bullet. None when
+    fewer than two places have a usable bullet."""
+    from . import company_letter as CL
+    from . import fluency as FL
+    from . import tailor as T
+    from .faithfulness import numbers
+    from .letter_rules import term_dump_problems
+    from .scorer import keyword_hits
+
+    skip = {x for x in (getattr(plan.opening, "bullet_id", "") if plan.opening is not None else "",
+                        getattr(hk, "proof_bullet_id", "") if hk is not None else "") if x} | {a.lower() for a in st.avoid} | set(avoid)
+    ranked = T._with_orgs(fb, T.ranked_letter_bullets(fb, kws, set(chosen) if chosen else None, jd))
+    ranked = [e for e in ranked if e["id"].lower() in st.prefer] + [e for e in ranked if e["id"].lower() not in st.prefer]
+    proper = _proper(fb)
+    usable: list[dict] = []
+    left_out: dict[str, list[str]] = {}
+    for e in ranked:
+        if e["id"] in skip or e["id"].lower() in skip:
+            continue
+        src = source_of(fb, e["id"])
+        if src is None:
+            continue
+        text, js = letter_text(e, fb, plain_rule, allow)
+        if js:
+            left_out[e["id"]] = js
+            continue
+        if term_dump_problems([told(text, src)], fb):                  # a bullet the letter guard reads as a list of terms is never told
+            left_out[e["id"]] = ["a list of terms, not a sentence"]
+            continue
+        usable.append({**e, "text": text, "orig": e["text"], "org": src.name, "where": src.name, "source": src})
+    places = list(dict.fromkeys(u["source"].id for u in usable))
+    if len(places) < 2:
+        return None
+    by_id = {u["id"]: u for u in usable}
+    skills, g = CL.skill_group(fb, kws, set(by_id), jd, set())
+    first = next((u for u in usable if u["id"].lower() in st.prefer), None) or (by_id.get(g[0]["id"]) if g else None) or usable[0]
+    a = first["source"]
+    def long(u: dict) -> bool:                                           # a letter sentence over the fluency pass's limit (35 words) goes last
+        return len(told(u["text"], u["source"]).split()) > FL.MAX_SENTENCE_WORDS
+
+    a_items = [first] + [by_id[x["id"]] for x in g if x["id"] in by_id and by_id[x["id"]]["source"] == a and x["id"] != first["id"]]
+    a_items = a_items[:1] + sorted(a_items[1:] + [u for u in usable if u["source"] == a and u not in a_items], key=lambda u: (long(u), usable.index(u)))
+    others = [u for u in usable if u["source"] != a]
+    role = getattr(hk, "relevant_role_id", "") if hk is not None else ""
+    order = sorted(others, key=lambda u: (u["source"].kind != "experience", long(u), u["source"].id != role, not numbers(u["text"]), others.index(u)))
+    b = order[0]["source"]
+    b_items = sorted([u for u in usable if u["source"] == b], key=lambda u: (long(u), not numbers(u["text"]), usable.index(u)))
+    notes: list[str] = []
+
+    def reqs_of(items: list[dict]) -> list[str]:
+        have: set[int] = set()
+        for u in items:
+            have |= set(keyword_hits(" ".join([u["text"], *u.get("terms", [])]), kws))
+        return [kws[i].term for i in sorted(have, key=lambda i: (-kws[i].weight, i))][:3]
+
+    def paragraph(items: list[dict], with_terms: bool) -> tuple[str, list[str], list[str]]:
+        sents = [told(u["text"], u["source"], i > 0, proper) for i, u in enumerate(items)]
+        reqs = reqs_of(items) if with_terms else []
+        if with_terms and len(items) < MAX_CLAIMS:
+            ts = _terms_sentence(items, reqs, " ".join(sents))
+            if ts:
+                sents.append(ts.replace("That work used", f"That {items[0]['source'].name} work used", 1))
+        return " ".join(sents), sents, reqs
+
+    lo, _ = CL.word_range(settings)
+    cap = CL.word_cap(settings)
+    goal = min(cap, lo + FL.GROW_MARGIN) if FL.enabled(settings) else lo
+    n3, n4 = 1, 1
+
+    def build(n3: int, n4: int) -> tuple[dict[str, str], set[str], list[str]]:
+        p3, s3, reqs = paragraph(a_items[:n3], True)
+        p4, s4, _ = paragraph(b_items[:n4], False)
+        return {"P3": p3, "P4": p4}, set(s3 + s4), reqs
+
+    def p3_names_its_skills(trial) -> bool:
+        need = min(2, len(trial[2]))
+        return len({r.lower() for r in trial[2]} & {kws[i].term.lower() for i in keyword_hits(trial[0]["P3"], kws)}) >= need
+
+    def total(parts: dict[str, str], parts_code: dict[str, str]) -> int:
+        return CL.words([*parts_code.values(), parts["P3"], parts["P4"], parts.get("P4b", "")]) + p5_len
+
+    parts_code = dict(code_parts)
+    parts, assembled, reqs = build(n3, n4)
+    for which in ("a", "b"):
+        if total(parts, parts_code) >= goal or st.shorter:
+            break
+        if which == "a" and len(a_items) > 1:
+            trial = build(2, n4)
+            if p3_names_its_skills(trial):                                   # the ad skills P3 must name are still named without the terms line
+                n3, (parts, assembled, reqs) = 2, trial
+                notes.append(f"cover_letter: P3 tells a second {a.name} bullet ({a_items[1]['id']}; under {goal} words)")
+        if which == "b" and len(b_items) > 1:
+            n4 = 2
+            parts, assembled, reqs = build(n3, n4)
+            notes.append(f"cover_letter: P4 tells a second {b.name} bullet ({b_items[1]['id']}; under {goal} words)")
+    c_items: list[dict] = []
+    if total(parts, parts_code) < goal and not st.shorter and not ("P2" in parts_code and "P6" in parts_code):
+        # one paragraph per place: a third place gets its own paragraph (P4b) rather than a third bullet in P3 or P4 (at most seven paragraphs)
+        third = [p for p in dict.fromkeys(u["source"].id for u in order) if p not in (a.id, b_items[0]["source"].id)]
+        if third:
+            c_items = sorted([u for u in usable if u["source"].id == third[0]], key=lambda u: (long(u), not numbers(u["text"]), usable.index(u)))[:MAX_CLAIMS]
+            while c_items and total({**parts, "P4b": paragraph(c_items, False)[0]}, parts_code) > cap:
+                c_items = c_items[:-1]
+            if c_items:
+                p4b, s5, _ = paragraph(c_items, False)
+                parts = {**parts, "P4b": p4b}
+                assembled = set(assembled) | set(s5)
+                notes.append(f"cover_letter: under {goal} words, so a third place has its own paragraph (P4b): {c_items[0]['source'].name} "
+                             f"({', '.join(u['id'] for u in c_items)})")
+    if total(parts, parts_code) < lo and not st.shorter:
+        # still under the floor: each paragraph's two longest bullets (their sentences may then pass 35 words), before the letter is given up
+        keep = (a_items, b_items, n3, n4, parts, assembled, reqs)
+        a_items, b_items = sorted(a_items, key=lambda u: -len(u["text"])), sorted(b_items, key=lambda u: -len(u["text"]))
+        n3, n4 = min(2, len(a_items)), min(2, len(b_items))
+        trial = build(n3, n4)
+        if n3 == 2 and not p3_names_its_skills(trial):
+            n3 = 1
+            trial = build(n3, n4)
+        trial_parts = {**trial[0], **({"P4b": parts["P4b"]} if parts.get("P4b") else {})}
+        if total(trial_parts, parts_code) >= lo:
+            parts, assembled, reqs = trial_parts, set(trial[1]) | (set(paragraph(c_items, False)[1]) if c_items else set()), trial[2]
+            notes.append(f"cover_letter: under {lo} words, so P3 tells {', '.join(u['id'] for u in a_items[:n3])} and P4 "
+                         f"{', '.join(u['id'] for u in b_items[:n4])}, the longest bullets of their places")
+        else:
+            a_items, b_items, n3, n4, parts, assembled, reqs = keep
+    drop_p2 = False
+    if total(parts, parts_code) > cap or st.shorter:
+        if "P2" in parts_code:
+            parts_code.pop("P2")
+            drop_p2 = True
+            notes.append("cover_letter: P2 left out (" + ("you asked for shorter" if st.shorter else f"over {cap} words") + ")")
+        if total(parts, parts_code) > cap or st.shorter:
+            n3, n4 = 1, 1
+            p4b_now = parts.get("P4b")
+            parts, assembled, reqs = build(n3, n4)
+            if p4b_now and total({**parts, "P4b": p4b_now}, parts_code) <= cap and not st.shorter:
+                parts = {**parts, "P4b": p4b_now}
+            else:
+                c_items = []
+            notes.append("cover_letter: P3 and P4 kept to one bullet each")
+    if left_out:
+        notes.append("cover_letter: left out of the letter for jargon (plain style): " + "; ".join(f"{k} ({', '.join(v)})" for k, v in left_out.items()))
+    used = {u["id"] for u in a_items[:n3] + b_items[:n4] + c_items}
+    facts = [u for u in [*a_items, *b_items] if u["id"] not in used and fact_clause(u["text"])] + \
+        [u for u in [*a_items[:n3], *b_items[:n4], *c_items] if fact_clause(u["text"])]
+    facts = list({u["id"]: u for u in reversed(facts)}.values())[::-1]                  # each once, in order
+    fact = facts[0] if facts else None
+    if drop_p2:
+        parts["drop_p2"] = "1"
+    return Built(parts, a_items[:n3], b_items[:n4], reqs, assembled, notes, fact, left_out, c_items, facts)
+
+
+def p5_with_fact(ad_candidates: list[str], fact: dict | None, check) -> tuple[str, str]:
+    """(P5, its source): the first ad clause that, tied to the fact (`tie_p5`), passes `check` (the P5 guards); "" when none does."""
+    if fact is None:
+        return "", ""
+    clause = fact_clause(fact["text"])
+    for ad in ad_candidates:
+        p5 = tie_p5(ad, fact["source"], clause)
+        if not check(p5):
+            return p5, fact["id"]
+    return "", ""
+
+
+def place_problems(parts: dict, g3: list[dict], g4: list[dict], g5: list[dict] | None = None) -> list[str]:
+    """Every sentence of P3 names P3's place and every sentence of P4 names P4's (the fluency rewrite may not lose it); a paragraph tells one place."""
+    from .grounding import sentences as _sentences
+
+    out: list[str] = []
+    for name, group in (("P3", g3), ("P4", g4), ("P4b", g5 or [])):
+        src = group[0].get("source") if group else None
+        if src is None:
+            continue
+        for s in _sentences(str(parts.get(name) or "")):
+            if src.name.lower() not in s.lower():
+                out.append(f"{name}: a sentence does not say where the work was done ({src.name}): '{s.strip()[:60]}'")
+    return out

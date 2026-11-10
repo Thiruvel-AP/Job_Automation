@@ -239,6 +239,12 @@ careerops plain-draft --id az10,dc1,p_ll1   # v3.4: a plain-language (STAR) vers
                                    # Saved as `plain:` under the bullet by factbank_append.py (dated backup first); the bullet's text never changes.
                                    # A saved `plain:` that upgrades ownership or moves a commendation is listed and NOT used on the CV: delete it yourself to redraft.
                                    # --limit N, --no-hooks, --dry-run (show only). cv.style: plain (default) prints the plain versions, technical the old wording
+careerops results                  # v3.5.2: the bullets under "Needs a result" (no `result:`), one at a time: you TYPE the result, [s] skips, [q] stops;
+                                   # nothing is drafted and no model is called; saved as `result:` only after your [y] (factbank_append.py, dated backup first).
+                                   # --id az1,dc3 / --limit N
+careerops hook-check               # v3.5.2: every hook_library entry against the bullets of its proof's role or project; a hook that claims more (a number,
+                                   # a name, "production", "built" where the bullet says "contributed", a rating moved to another subject) is BLOCKED from
+                                   # every CV and letter, with both quotes; read only (doctor warns too)
 careerops tailor --id JOB          # exactly this job (it must be 'triaged'; --limit is ignored)
 careerops shortlist               # score the inbox (T, zero tokens), file what a hard stop disqualifies, offer the best 8; [a] / [1 3 5] approve ([a] leaves out a `possible repost of a job you skipped`: type its number), [s n] skip for good, [x] skip the rest of the list (see "Fewer, better-matched applications")
 careerops shortlist --all         # v2.7: every undecided in-region ad again, not only the new ones (also the ones parked after three showings); a look, never a showing

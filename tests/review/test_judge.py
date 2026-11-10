@@ -297,7 +297,7 @@ def test_a_failed_judge_does_not_stop_the_review(settings, db, fb_fixture, job, 
     from careerops.review import workflow
     rep = make_rep(fb_fixture)
     monkeypatch.setattr(workflow, "load_report", lambda j: rep)
-    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None: "SUMMARY")
+    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None, **k: "SUMMARY")
     monkeypatch.setattr(workflow, "approve", lambda *a, **k: None)
     monkeypatch.setattr(judge, "run_judge", lambda *a, **k: Verdict(error="the judge call failed: refused", model="ollama/qwen2.5-7b-8k"))
     answers = iter(["a"])
@@ -400,7 +400,7 @@ def test_the_review_screen_shows_the_judge_input_line(settings, db, fb_fixture, 
     from careerops.review import workflow
     rep = make_rep(fb_fixture)
     monkeypatch.setattr(workflow, "load_report", lambda j: rep)
-    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None: "SUMMARY")
+    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None, **k: "SUMMARY")
     monkeypatch.setattr(judge, "run_judge", lambda *a, **k: Verdict(True, 4, [], "ollama/qwen2.5-7b-8k", tokens=3210, note="JD cut to 4,000 characters"))
     workflow.review_job(db, a_job(job), settings, fb_fixture, make_llm=lambda: object(), ask=lambda p: "s")
     assert "Judge input: 3,210 prompt tokens (JD cut to 4,000 characters)" in capsys.readouterr().out

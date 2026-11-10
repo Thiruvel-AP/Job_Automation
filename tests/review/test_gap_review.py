@@ -34,7 +34,7 @@ class World:
         db.update_job(self.job["id"], status="needs_review", out_dir=str(tmp_path / "out"))
         self.db, self.settings = db, settings
         monkeypatch.setattr(review, "load_report", lambda job: self.rep)
-        monkeypatch.setattr(review, "summary", lambda job, rep, settings=None, fb=None: "\n".join(["SUMMARY", *review.provisional_lines(rep)]))
+        monkeypatch.setattr(review, "summary", lambda job, rep, settings=None, fb=None, **k: "\n".join(["SUMMARY", *review.provisional_lines(rep)]))
         monkeypatch.setattr(review, "open_file", lambda p: self.opened.append(p))
         self.next_rep = None
 

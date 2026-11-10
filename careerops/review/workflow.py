@@ -363,9 +363,10 @@ def pdf_created(path) -> str:
         return ""
 
 
-def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
+def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | None = None) -> str:
     """The review screen. With `fb` (the fact bank, plus the job's provisional facts) a job in the review band gets the gap report in place of
-    the plain ATS header."""
+    the plain ATS header. `bank` (v3.5.2) is the fact bank for the v3.3 ATS structure line when `fb` is not given: that line (score, grade, lints,
+    title / years / degree) is on every review screen, not only in the review band (it was missing from the 9 Nov RightShip run)."""
     f = rep["final"]
     gap = (gaps.build(rep, fb, bands.config(settings), jd=_jd(job)) if settings is not None and fb is not None and rep.get("ats")
            and gaps.applies(rep, bands.config(settings)) else None)
@@ -392,7 +393,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None) -> str:
         f"| band: {f['band']} | pages {f['pages']}"
         + f" | attempts {len(rep['attempts'])}",
         *(gap_lines(rep, gap) if gap is not None else ats_lines(rep)),
-        *ats_check_lines(rep, settings, fb, job),
+        *ats_check_lines(rep, settings, fb if fb is not None else bank, job),
         *provisional_lines(rep),
         *hook_lines(rep),
         *letter_lines(rep),
@@ -745,7 +746,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         if rep.get("ats") and gaps.applies(rep, band):
             screen = summary(job, rep, settings, fb=view())
         else:
-            screen = summary(job, rep, settings)
+            screen = summary(job, rep, settings, bank=view())
         return "\n".join([screen, *doc_check_lines(rep, settings, view(), job)])          # the document check is on every review screen
 
     print(show())

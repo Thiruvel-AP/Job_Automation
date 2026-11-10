@@ -76,11 +76,11 @@ P5_MIN_USED = 1                           # P5 quotes or closely follows this ma
 P5_FOLLOWS = 0.6                          # share of a P5 sentence's content stems that one offered ad sentence must hold ...
 P5_MIN_SHARED = 3                         # ... and at least this many stems, for that ad sentence to count as followed
 P5_MAX_WORDS = 45                         # P5 is one sentence
-NAMES = ("P1", "P2", "P3", "P4", "P5", "P6", "P7")
+NAMES = ("P1", "P2", "P3", "P4", "P4b", "P5", "P6", "P7")   # P4b (v3.5.2): a third place's paragraph, only when the letter is short
 MODEL_NAMES = ("P3", "P4", "P5")
 OPTIONAL = ("P2", "P6")
-REUSE_NAMES = ("P2", "P3", "P4", "P5")     # the 5-word-shingle check (Document rules, B5)
-CITED_NAMES = ("P1", "P2", "P3", "P4")     # the sentences the 60 % evidence rule counts (Document rules, B3)
+REUSE_NAMES = ("P2", "P3", "P4", "P4b", "P5")     # the 5-word-shingle check (Document rules, B5)
+CITED_NAMES = ("P1", "P2", "P3", "P4", "P4b")     # the sentences the 60 % evidence rule counts (Document rules, B3)
 ASK = "Could we spend 20 minutes on the first problem the {role} would own, around {problem}{assessment}?"
 ASK_PLAIN = "Could we spend 20 minutes on the first problem the {role} would own{assessment}?"
 ASK_ASSESSMENT = ", and what the {assessment} covers"
@@ -171,9 +171,9 @@ def assemble(parts: dict[str, str]) -> tuple[list[str], list[str]]:
 def table(parts: dict[str, str]) -> str:
     """The paragraph table of the prompt (Document rules, B7): every paragraph by name, who writes it, and what it says now."""
     who = {"P1": "hook, written in code", "P2": "what it shows, written in code", "P3": "JD-matched skills, YOU write it",
-           "P4": "experience roll-up, YOU write it", "P5": "why this team, YOU write it", "P6": "one honest gap, written in code",
+           "P4": "experience roll-up, YOU write it", "P4b": "a third place, assembled in code", "P5": "why this team, YOU write it", "P6": "one honest gap, written in code",
            "P7": "the ask, written in code"}
-    return "\n".join(f"{n} ({who[n]}): {parts.get(n) or ('(none)' if n in OPTIONAL else '(to be written)')}" for n in NAMES)
+    return "\n".join(f"{n} ({who[n]}): {parts.get(n) or ('(none)' if n in OPTIONAL else '(to be written)')}" for n in NAMES if n != "P4b" or parts.get(n))
 
 
 def hardware_jd(jd: str) -> bool:
@@ -394,7 +394,7 @@ def user_problems(paragraphs: list[str], groups: list[list[dict]], opening: str,
     allowed_numbers = numbers(bullets) | numbers(opening)
     mine = {norm_literal(e.get("org") or L._owner(fb, e["id"])[0]) for e in evidence} | {norm_literal(e.get("where") or "") for e in evidence}
     for n, par in enumerate(paragraphs):
-        tag = f"P{n + 3}"
+        tag = ("P3", "P4", "P4b")[n] if n < 3 else f"P{n + 3}"
         extra = numbers(par) - allowed_numbers
         if extra:
             out.append(f"{tag}: number(s) about you not in the chosen bullets: {sorted(extra)}")
@@ -433,17 +433,17 @@ def employer(e: dict) -> str:
     return re.split(r"\s*,\s*", str(e.get("org") or ""))[0].strip()
 
 
-def rollup_problems(p4: str, roles: list[dict]) -> list[str]:
+def rollup_problems(p4: str, roles: list[dict], label: str = "P4") -> list[str]:
     """P4 names every role's employer and gives one number of that role's bullet (when the bullet has one)."""
     out: list[str] = []
     lit = norm_literal(p4)
     for e in roles:
         name = employer(e)
         if name and not re.search(r"(?<![\w])" + re.escape(norm_literal(name)) + r"(?![\w])", lit):
-            out.append(f"P4: does not name the employer {name}")
+            out.append(f"{label}: does not name the employer {name}")
         nums = numbers(e["text"])
         if nums and not (numbers(p4) & nums):
-            out.append(f"P4: gives no number from the {name or e['id']} bullet (one of: {', '.join(sorted(nums)[:4])})")
+            out.append(f"{label}: gives no number from the {name or e['id']} bullet (one of: {', '.join(sorted(nums)[:4])})")
     return out
 
 
@@ -536,25 +536,33 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
     if missing:
         return [f"missing paragraph(s): {', '.join(missing)}"], []
     body = [parts["P3"], parts["P4"], parts["P5"]]
+    third = [parts["P4b"]] if parts.get("P4b") and len(plan.groups) > 2 else []           # v3.5.2: a third place's paragraph
     n, (lo_words, _), cap = words(paragraphs), word_range(settings), word_cap(settings)
     if n < lo_words or n > cap:
         out.append(f"{n} words: the letter must be between {lo_words} and {cap}")
     page = plan.page_text
     ad_all = jd + ("\n" + page if page else "")
-    out += [f"P5: {p}" for p in company_problems(parts["P5"], ad_all, skip | P5_FRAME)]
+    from . import assembled_letter as AL
+
+    p5_ad, p5_mine = AL.p5_split(parts["P5"])                                  # v3.5.2: the ad's half is checked as the company sentence
+    out += [f"P5: {p}" for p in company_problems(p5_ad, ad_all, skip | P5_FRAME)]
     out += one_sentence_problems(parts["P5"])
-    out += extractive_problems(parts["P5"], about_sentences(ad_all, company, kws), skip | P5_FRAME)
+    out += extractive_problems(p5_ad, about_sentences(ad_all, company, kws), skip | P5_FRAME)
     opening = " ".join([parts["P1"], parts.get("P2") or ""])
-    out += user_problems(body[:2], plan.groups, opening, fb, kws, plan.reqs, company, title, jd=ad_all, cv_names=(cv or {}).get("names", ""),
-                         assembled=assembled)
+    out += user_problems(body[:2] + third, plan.groups[:2 + len(third)], opening, fb, kws, (list(plan.reqs) + [[]])[:2 + len(third)], company,
+                         title, jd=ad_all, cv_names=(cv or {}).get("names", ""), assembled=assembled)
     out += rollup_problems(parts["P4"], plan.groups[1])
+    if third:
+        out += rollup_problems(third[0], plan.groups[2], "P4b")
+    if parts.get("P4b") and not third:
+        out.append("P4b: a third paragraph with no evidence group")
     allowed = " ".join([ad_all, company, title, team, opening, *bank_names(fb), *_labels(fb).values(),
                         *(f"{e['text']} {e.get('where', '')} {e.get('org', '')}" for e in plan.evidence), (cv or {}).get("names", "")])
-    out += name_problems(body, allowed)
-    out += L.claim_problems(body[2:], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))      # P5: no "we" / "our", no "I help <Company>"
+    out += name_problems(body + third, allowed)
+    out += L.claim_problems([p5_ad], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", ad_all)))      # P5: no "we" / "our", no "I help <Company>"
     framing = " ".join([company, title, *(" ".join(e.get("terms", [])) for e in plan.evidence), *(t for r in plan.reqs for t in r)])
-    out += L.claim_problems(body[:2], company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", framing)))       # P3, P4: and no linked noun phrase
-    out += term_dump_problems(body, fb)
+    out += L.claim_problems(body[:2] + third, company, fb, set(re.findall(r"[A-Za-z][A-Za-z0-9+#]*", framing)))   # P3, P4: and no linked noun phrase
+    out += term_dump_problems(body + third, fb)
     out += balance_problems(citation_tags(parts, plan.cite_ids()))
     out += OP.problems(parts["P1"], fb, [t for t in (jd, page) if t])
     out += p2_problems(parts.get("P2") or "", fb)
@@ -563,7 +571,7 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
     out += hardware_problems(parts, ad_all)
     if cv is not None:
         out += [f"P3/P4 draw on bullet {e['id']}, which is not printed on this job's CV" for e in plan.evidence if e["id"] not in cv["ids"]]
-        out += skill_problems(body, fb, cv["text"])
+        out += skill_problems(body + third, fb, cv["text"])
     from . import fluency as FL
 
     for name in names:                                                         # v3.4: no paragraph opens "I am excited", "I am writing", a greeting ...
@@ -571,7 +579,7 @@ def check(parts: dict[str, str], job: dict, fb: dict, kws: list[Keyword], plan: 
     out += FL.grammar_problems({n: str(parts.get(n) or "") for n in names})
     text = " ".join(paragraphs)
     out += T._deny_problems(text, fb.get("deny_terms", []), [])
-    out += T._style_problems([*body, parts["P7"]], [e["text"] for e in plan.evidence])
+    out += T._style_problems([*body, *third, parts["P7"]], [e["text"] for e in plan.evidence])
     if T.BANNED_CLOSERS.search(text):
         out.append("banned closer")
     return list(dict.fromkeys(out)), p5_sources(parts["P5"], ad_all, skip)
@@ -739,7 +747,8 @@ class Plan:
         """The bullet ids each of P1 to P4 stands on."""
         hook_ids = [self.opening.bullet_id] if self.opening is not None and self.opening.bullet_id else []
         return {"P1": hook_ids, "P2": hook_ids, "P3": [e["id"] for e in (self.groups[0] if self.groups else [])],
-                "P4": [e["id"] for e in (self.groups[1] if len(self.groups) > 1 else [])]}
+                "P4": [e["id"] for e in (self.groups[1] if len(self.groups) > 1 else [])],
+                "P4b": [e["id"] for e in (self.groups[2] if len(self.groups) > 2 else [])]}
 
 
 def prepare(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_line: str, evidence: list[dict], settings, claimable: list[str],
@@ -1043,41 +1052,76 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
 
     plain_rule = PL.style(settings) == "plain"                                   # the jargon rule (v3.4): JD keywords stay, other jargon goes
     plain_allow = list(dict.fromkeys([*PL.allow_list(settings), *(k.term for k in kws)]))
+    if plain_rule and code_parts.get("P2"):                                     # v3.5.2: P2 (the hook fact's result, word for word) obeys it too
+        never = {AL.norm(x) for x in AL.LETTER_NEVER}
+        p2_jargon = [j for j in PL.jargon(code_parts["P2"], fb, None, plain_allow) if AL.norm(j) in never]
+        if p2_jargon:
+            code_parts = {k: v for k, v in code_parts.items() if k != "P2"}
+            notes.append(f"cover_letter: P2 left out: it says {', '.join(p2_jargon)}, which the ad does not name (plain style)")
 
     jd = job.get("description") or ""
     ad_all = jd + ("\n" + page_text if page_text else "")
     offered = about_sentences(ad_all, job["company"], kws)
     st = AL.steer(said)
-    p5, p5info = AL.write_p5(llm, job, fb, kws, plan, team, ad_all, offered, said, notes)
     earlier = RU.earlier_letters(settings, exclude=[out_dir.name])
-    retry: dict = {"mode": "assembled", "count": 0, "failures": [], "outcome": "", "temperatures": [], "p5": p5info, "tokens": p5info["tokens"],
-                   "variants": []}
+    p5, p5info, p5_fact = "", {"source": "", "tries": 0, "problems": [], "tokens": 0}, None
+    retry: dict = {"mode": "assembled", "count": 0, "failures": [], "outcome": "", "temperatures": [], "p5": p5info, "tokens": 0, "variants": []}
     problems: list[str] = []
     last_body: list[str] = []
+    tried: set[str] = set()
     for variant in range(AL.VARIANTS):
-        g3, g4, reqs = AL.groups_for(plan, fb, kws, chosen_ids, jd, hk, variant, st)
-        g3, g4, moved = AL.split_shared(g3, g4)                                  # a bullet in P3 and P4 is told once (v3.4)
+        # v3.5.2: one paragraph per employer or project, every sentence names the place, at most two bullets a paragraph, jargon-checked wording
+        built = AL.compose(plan, fb, kws, chosen_ids, jd, hk, st, settings, code_parts, AL.P5_WORDS_GUESS, plain_rule, plain_allow, tried)
+        if built is None:
+            problems = ["fewer than two places (employers or projects) of this CV have a bullet the letter can tell"
+                        + (" in plain words (plain style: the rest hold jargon the ad does not name)" if plain_rule else "")]
+            retry["failures"].append({"attempt": variant + 1, "problems": list(problems)})
+            break
+        g3, g4, g5, reqs = built.g3, built.g4, built.g5, built.reqs
         cparts = dict(code_parts)
-        b, assembled, bnotes, g3 = AL.body(plan, g3, g4, reqs, fb, chosen_ids, st, settings, cparts, p5, moved, kws)
-        g4 = b.pop("_g4", g4)                                                    # type: ignore[assignment]  (the roles P4 kept: each with a number)
+        b = dict(built.parts)
         if b.pop("drop_p2", None):
             cparts.pop("P2", None)
-        vplan = dataclasses.replace(plan, groups=[g3, g4], reqs=[reqs, []], evidence=[*g3, *g4])
-        parts = {**cparts, "P3": b["P3"], "P4": b["P4"], "P5": p5}
-        problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled))
+        if not p5:
+            p5, p5info = AL.write_p5(llm, job, fb, kws, plan, team, ad_all, offered, said, notes, fact=built.facts or None)
+            p5_fact = next((f for f in built.facts if f["id"] == p5info.get("fact")), None)
+            retry["p5"], retry["tokens"] = p5info, p5info["tokens"]
+        elif p5_fact is not None and built.fact is not None and p5_fact["id"] not in {f["id"] for f in built.facts}:
+            p5, p5_fact = AL.tie_p5(AL.p5_split(p5)[0], built.fact["source"], AL.fact_clause(built.fact["text"])), built.fact
+        if len(p5.split()) < AL.P5_WORDS_GUESS - 5 and words([*cparts.values(), b["P3"], b["P4"], b.get("P4b") or "", p5]) < word_range(settings)[0]:
+            again = AL.compose(plan, fb, kws, chosen_ids, jd, hk, st, settings, code_parts, len(p5.split()), plain_rule, plain_allow, tried)
+            if again is not None:                                                # P3 / P4 sized for the P5 that was written
+                built, (g3, g4, g5, reqs) = again, (again.g3, again.g4, again.g5, again.reqs)
+                cparts, b = dict(code_parts), dict(again.parts)
+                if b.pop("drop_p2", None):
+                    cparts.pop("P2", None)
+        told = [*g3, *g4, *g5]
+        vplan = dataclasses.replace(plan, groups=[g3, g4, g5] if g5 else [g3, g4], reqs=[reqs, [], []] if g5 else [reqs, []],
+                                    evidence=told + ([p5_fact] if p5_fact is not None and p5_fact["id"] not in {e["id"] for e in told} else []))
+        parts = {**cparts, "P3": b["P3"], "P4": b["P4"], **({"P4b": b["P4b"]} if b.get("P4b") else {}), "P5": p5}
+        assembled = frozenset(built.assembled)
+        problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=assembled)
+        problems += AL.p5_problems(p5, job, fb, kws, plan, team, ad_all, offered, p5_fact) if p5_fact is not None else []
+        problems = list(dict.fromkeys(problems))
         if any(p.startswith("P5") or "(a name)" in p and p5[:20] in p for p in problems) and p5info["source"] == "model":
-            p5 = AL.p5_fallback(offered, job["company"], lambda t: AL.p5_problems(t, job, fb, kws, plan, team, ad_all, offered))   # once
+            if p5_fact is not None:
+                p5 = next((t for t in (AL.tie_p5(ad, p5_fact["source"], AL.fact_clause(p5_fact["text"])) for ad in AL.ad_clauses(offered, job["company"]))
+                           if not AL.p5_problems(t, job, fb, kws, plan, team, ad_all, offered, p5_fact)), "")
+            if not p5:
+                p5, p5_fact = AL.p5_fallback(offered, job["company"], lambda t: AL.p5_problems(t, job, fb, kws, plan, team, ad_all, offered)), None
             p5info["source"] = "fallback (after the whole-letter check)"
             parts["P5"] = p5
-            problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled))
+            problems, _ = check(parts, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=assembled)
         last_body = [parts["P3"], parts["P4"], parts["P5"]]
-        retry["variants"].append({"variant": variant, "p3": [e["id"] for e in g3], "p4": [e["id"] for e in g4], "problems": list(problems)})
-        notes.extend(n for n in bnotes if n not in notes)
+        retry["variants"].append({"variant": variant, "p3": [e["id"] for e in g3], "p4": [e["id"] for e in g4], "p4b": [e["id"] for e in g5],
+                                  "p5_fact": p5_fact["id"] if p5_fact is not None else "", "left_out": built.left_out, "problems": list(problems)})
+        notes.extend(n for n in built.notes if n not in notes)
         if problems:
-            ids = ", ".join(e["id"] for e in [*g3, *g4])
+            tried |= {g3[0]["id"], g4[0]["id"]}                                  # the next variant starts each paragraph from another bullet
+            ids = ", ".join(e["id"] for e in [*g3, *g4, *g5])
             notes.append(f"cover_letter: assembled variant {variant + 1} (bullets {ids}) failed a guard: a fact-bank problem, the model is not asked "
                          f"again ({'; '.join(problems)[:200]})")
-            retry["failures"].append({"attempt": variant + 1, "problems": list(problems), "bullets": [e["id"] for e in [*g3, *g4]]})
+            retry["failures"].append({"attempt": variant + 1, "problems": list(problems), "bullets": [e["id"] for e in [*g3, *g4, *g5]]})
             continue
         reuse_body = [parts[n] for n in REUSE_NAMES if parts.get(n)]
         score, who = RU.worst(reuse_body, earlier)
@@ -1095,6 +1139,7 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
                 # (e) the guards the draft passed; a rewritten P3 / P4 sentence restates a verified bullet on purpose, so only the paste check skips it
                 own = frozenset(" ".join(s.split()) for n in ("P3", "P4") for s in sentences(new.get(n) or ""))
                 probs, _ = check(new, job, fb, kws, vplan, team, settings, cv=cv, claimable=claimable, assembled=frozenset(assembled) | own)
+                probs += AL.place_problems(new, g3, g4, g5)                     # v3.5.2: every P3 / P4 sentence still names its place
                 if plain_rule:                                                   # cv.style plain (v3.4): technical names only from the allow-list
                     probs += [f"{n}: jargon not on the allow-list: {', '.join(js)}" for n in FL.REWRITTEN
                               if (js := PL.jargon(re.sub(r'"[^"]*"', " ", new.get(n) or ""), fb, None, plain_allow))]
@@ -1106,9 +1151,11 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
             parts, fluency = FL.polish_letter(llm, draft, job, ad_all, [*L._tools(fb), *(k.term for k in kws)], judge, skills=reqs,
                                               employers=[employer(e) for e in g4], filler=FILLER, notes=notes,
                                               words=(word_range(settings)[0], word_cap(settings)),
-                                              extra_rules=("Plain style: the first reader is not technical. Technical names only from this list "
-                                                           f"(and the skills P3 must name): {', '.join(plain_allow)}; replace every other one "
-                                                           "with plain words.") if plain_rule else "")
+                                              extra_rules=(f"Every sentence of P3 names {g3[0]['source'].name} and every sentence of P4 names "
+                                                           f"{g4[0]['source'].name}: where the work was done. "
+                                                           + (("Plain style: the first reader is not technical. Technical names only from this list "
+                                                               f"(and the skills P3 must name): {', '.join(plain_allow)}; replace every other one "
+                                                               "with plain words.") if plain_rule else "")))
             retry["tokens"] += fluency["tokens"]
         if fluency["source"] != "model":                                         # the draft is the letter: say what the rewrite would have fixed
             body_parts = {n: draft[n] for n in FL.REWRITTEN if draft.get(n)}

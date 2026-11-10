@@ -2245,3 +2245,59 @@ The real dc2 `plain:` saved on 8 Nov breaks the new ownership and credit rules: 
 Tests: `tests/apply/test_stale_v351.py`, `tests/tailoring/test_plain_v351.py` (dc2's real text in a tmp bank), `tests/apply/test_motivation_v351.py`,
 `tests/apply/test_fields_v351.py`. Adapted: `test_plain_v34.py` (new limits, pick then `y`), `test_motivation_v34.py` / `test_motivation.py` /
 `test_freetext.py` (the told bullet is az4 in plain words, past-work sentences name the employer), `test_requiredgate.py` (COVERED).
+
+## 5bl. v3.5.2 — fixes after the 9 Nov 17:31 RightShip dry run (10 Nov 2026) — **done offline** (fixtures, MockLLM, xelatex PDFs); the next live dry run is yours
+
+1. **Honesty over lint** (`tailoring/doccheck.py` CONTEXT). A role or project the fact bank marks as a dissertation, coursework, volunteer or hackathon
+   piece of work (the word in its `title`, `employment_type`, `name`, `display_name`, `badge` or `kind`) shows that word in its own CV heading (title,
+   name, tag or stack line; a bullet that happens to say it does not count) or in its Additional experience line; a degree whose display_line names a
+   dissertation keeps a dissertation line in Education. A failure blocks approval and auto-submit like every document rule. The title prints as the
+   fact bank writes it ("Data Scientist, MSc Dissertation Project": you changed it on 9 Nov). The 9 Nov CV fails both checks (title "Data Scientist",
+   no dissertation line).
+2. **Section order** (`tailoring/sections.py`, replaces 5bj's date rule). A graduate / junior / scheme ad (the title says graduate, grad, junior, entry
+   level, early careers, scheme; or the text says "graduate scheme / programme / role", "entry-level", "early careers", "2027 start", "recent
+   graduates") gets Profile, Education, Skills, Work Experience, Projects, Certifications; every other ad Profile, Skills, Work Experience, Projects,
+   Education, Certifications. `cv.education_first_until` is no longer read. Compact Education: the MSc's dissertation line is its `dissertation:` title,
+   else the dissertation clause of its own `display_line` word for word ("Dissertation with AstraZeneca affiliation (GeneTraceAI)"); it is never taken
+   out to fit (older degrees go first) and never to lift the first Work Experience bullet (a warning only).
+3. **Letter** (`tailoring/assembled_letter.py` `compose`, `company_letter._make_assembled`). One paragraph per place: P3 the employer or project whose CV
+   bullets carry most of the ad's skills, P4 the next place (an employer first), and only when the letter is under its length goal a third place in its
+   own paragraph P4b (at most seven paragraphs). At most two bullets a paragraph (`MAX_CLAIMS`; "That X work used A and B." counts as one). Every
+   sentence opens with where the work was done, with the fact bank's context word: "On my AstraZeneca dissertation project, I ...", "On my CoverFit
+   hackathon project, I ...", "At 180 Degrees Consulting Bristol, I ...", "In my freelance work, I ..."; the fluency rewrite must keep the place in
+   every sentence (`place_problems`). When the P5 that was written is shorter than planned and the letter is under 200 words, P3 / P4 are sized again.
+   Plain style: a bullet is told with its approved `plain:`, else without its bracketed asides, and is left out when it still says a `LETTER_NEVER`
+   term (Ensembl, HGNC, parquet, Leiden, circuit breakers, ECR, IAM ...) or more than one technical name off the allow-list; the ad's own keywords are
+   allowed; P2 (the hook fact's result, word for word) is left out when it says such a term ("19,213-gene parquet fallback" on the RightShip ad).
+   A sentence over 35 words is chosen last. P5 = the ad's own clause about what the company does for its customers (the company is its subject, so
+   "rely on RightShip to ..." is not one), then " — the same aim as
+   <my work at X>, where <the first clause of one CV bullet>." (RightShip: "RightShip transforms complex safety and operational risk into intelligence
+   its customers can act on with confidence — ..."); the model may write only the ad clause; every fact candidate is tried before P5 is left
+   untied; the company guards read the ad half, `fact_problems` (numbers and tools of that bullet only) the other. "That X work used A and B."
+   never names an adjective ("agentic"). Greeting: "Hi <Company> team" unless the ad names a team that is not a function word
+   (`letters.named_team`: Product, Engineering, Data Science ... are not team names; "AI Accelerator" is).
+4. **ATS structure line** (`review/workflow.summary(..., bank=)`). The v3.3 line (score, grade, lints, title / years / degree) is on every review screen,
+   not only for a job in the review band, and on `careerops apply`'s screen; report.md already had it (`dryrun.report_md`).
+5. **`careerops results`** (`review/results.py`, `factbank_append.add_field(..., "result", ...)`). The bullets with no `result:`, one at a time; you type
+   the result or `s` / `q`; nothing is drafted and no model is called; `y` saves exactly that text as the bullet's `result:` (dated backup first,
+   validate or restore); a hook entry never gets one.
+6. **Hook consistency** (`tailoring/hook_claims.py`, `careerops hook-check`, doctor). A hook_library entry may claim nothing the bullets of its proof's
+   role or project do not: numbers, names, outcomes (production / live / in use / adopted; shipped = deployed = launched = released), ownership (when a
+   proof bullet says contributed / helped, no stronger verb, and a first-person field that claims that bullet's outcome keeps the weak word), credit
+   (a rating keeps the subject the bullet gives it). A blocked hook is skipped by `hook.iter_eligible` (no CV headline, profile sentence or letter
+   opening uses it; the note quotes both). On the real bank (10 Nov): 8 ok, `h_prod_tests` blocked ("prototype to production" in its profile and
+   letter lines; no AstraZeneca bullet says production).
+
+Stand-in (read only: the RightShip ad from the database opened read-only, a copy of your fact bank, MockLLM, every path in a scratch folder): the CV
+prints Profile, Skills, Work Experience, Projects, Education, Certifications; the AstraZeneca title "Data Scientist, MSc Dissertation Project"; the
+Education line "Dissertation with AstraZeneca affiliation (GeneTraceAI)"; DOC CHECK pass; the letter 206 words (P1 from h_agent_harness, since
+h_prod_tests is blocked; P2 left out for "parquet"; P3 180 Degrees, P4 AstraZeneca dissertation project; P5 tied to az4).
+
+Not verified here: the real model's P5 clause and fluency rewrite, the real RightShip run (your `careerops live --dry-run --url <RightShip> --record`),
+and the graduate-ad detection on real graduate ads. The fixture bank fact_bank_two_page.yaml now ends page 2 at 92 % (the 96 % target is reported as
+not reached; it reached it in the 8 Nov order).
+
+Tests: `tests/tailoring/test_sections_v352.py`, `test_doccheck_context_v352.py`, `test_letter_places_v352.py`, `test_hook_claims_v352.py`,
+`tests/review/test_results_v352.py`, `tests/review/test_review_ats_line_v352.py`. Adapted: `test_sections_v35.py` (the date rule is gone; the
+dissertation line is never dropped), `test_letter_assembled_v25.py` (one place per paragraph, P5 tied to a fact), `test_fluency_v34.py` (the fake rewrite
+shortens sentences over 35 words; growth notes), `test_plain_v34.py` (the plain draft holds no jargon itself).

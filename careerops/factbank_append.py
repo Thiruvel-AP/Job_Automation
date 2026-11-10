@@ -23,6 +23,10 @@ v3.4, `add_field`: a plain-language twin of an existing bullet (`plain:`) or of 
 shown, or the user's own edit of it). It is ONE new line, inserted after the last line of that bullet or entry, at its key indent; the entry's
 other lines (its `text:` included) stay byte-identical. The same backup-first, validate-or-restore rules apply, a field that is already there is
 never replaced, and the deny list is checked on the new text too.
+
+v3.5.2, `add_field(..., "result", ...)`: a bullet's `result:` the user TYPED at `careerops results` (review/results.py) for a bullet listed under
+"Needs a result", word for word, after a `y` for that exact text. Nothing is drafted for the user; the same one-line insert, backup first and
+validate-or-restore apply. A hook entry never gets a `result:` here.
 """
 from __future__ import annotations
 
@@ -41,6 +45,7 @@ from .tailoring.skills import core_deny_problems
 BACKUP_DIR = "backups"
 SECTIONS = ("experience", "projects")
 PLAIN_FIELDS = ("plain", "plain_headline", "plain_profile_line", "plain_letter_line")
+RESULT_FIELDS = ("result",)                     # v3.5.2: a bullet's result, typed by the user at `careerops results`
 _ID_LINE = re.compile(r"^(\s*)-\s+id:\s*[\"']?([^\s\"'#]+)[\"']?\s*(?:#.*)?$")
 _PLAIN_TERM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .+#/&_-]*$")
 
@@ -225,8 +230,8 @@ def add_field(path: Path, owner: str, key: str, text: str, *, confirmed: str | N
     without it (nothing touched); AppendError when the owner is unknown, already has the key, or the result does not validate (restored)."""
     if (confirmed or "").strip().lower() != "y" or confirmed != confirmed.strip():
         raise NotConfirmed("not saved: it needs a `y` for this text")
-    if key not in PLAIN_FIELDS:
-        raise AppendError(f"not saved: '{key}' is not a field this writer adds ({', '.join(PLAIN_FIELDS)})")
+    if key not in PLAIN_FIELDS + RESULT_FIELDS:
+        raise AppendError(f"not saved: '{key}' is not a field this writer adds ({', '.join(PLAIN_FIELDS + RESULT_FIELDS)})")
     path, now = Path(path), now or datetime.now()
     if not text.strip() or "\n" in text or "\r" in text:
         raise AppendError("not saved: the text must be one non-empty line")
@@ -237,6 +242,8 @@ def add_field(path: Path, owner: str, key: str, text: str, *, confirmed: str | N
     item = _find(before, owner)
     if item is None:
         raise AppendError(f"not saved: there is no bullet or hook entry '{owner}' in the fact bank")
+    if key in RESULT_FIELDS and owner not in bullet_ids(before):
+        raise AppendError(f"not saved: '{owner}' is not a bullet (a `{key}:` belongs to a bullet)")
     if str(item.get(key) or "").strip():
         raise AppendError(f"not saved: '{owner}' already has `{key}:` (it is never replaced; edit the file yourself to change it)")
     span = _item_span(lines, owner)

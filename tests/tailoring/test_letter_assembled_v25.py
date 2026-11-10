@@ -65,37 +65,56 @@ def test_the_assembled_letter_is_200_to_320_words_passes_every_guard_and_asks_th
     assert llm.calls == ["cover_letter"] and llm.seen[0]["mode"] == "assembled_p5"         # one call: P5 only
     assert letter["retry"]["tokens"] < 2000
     parts = world.written[0]
-    assert parts["P1"] == world.plan.p1 and parts["P7"] == world.plan.p7 and parts["P5"] == P5
+    assert parts["P1"] == world.plan.p1 and parts["P7"] == world.plan.p7
+    assert parts["P5"].startswith(P5.rstrip(".") + AL.P5_TIE) and letter["retry"]["p5"]["fact"]      # v3.5.2: the model's clause, tied to one fact
 
 
-def test_the_sentences_about_you_are_the_cvs_bullets_in_first_person(world):
-    make(world, p5_model(P5))
+def _told(world, letter):
+    """{paragraph: [bullet ids]} of the letter's last variant."""
+    v = letter["retry"]["variants"][-1]
+    return {"P3": v["p3"], "P4": v["p4"], "P4b": v.get("p4b") or []}
+
+
+def test_the_sentences_about_you_are_the_cvs_bullets_in_first_person_each_naming_its_place(world):
+    """v3.5.2 (10 Nov 2026): one paragraph per employer or project, at most two bullets each, every sentence opens with where the work was done."""
+    pdf, letter = make(world, p5_model(P5))
     parts = world.written[0]
-    for e in world.plan.groups[0][:1]:
-        assert AL.first_person(e["text"]) in parts["P3"]
-    told_in_p3 = {e["id"] for e in world.plan.groups[0]}                                # v3.4: a bullet in both is told once, in P3
-    for e in world.plan.groups[1]:
-        if e["id"] in told_in_p3:
-            assert AL.first_person(e["text"])[2:] not in parts["P4"]
-        elif numbers(e["text"]):                                                         # a role with no numbered bullet is left out of P4
-            assert AL.first_person(e["text"])[2:] in parts["P4"]
-        else:
-            assert AL.first_person(e["text"])[2:] not in parts["P4"]
+    places = []
+    for name, ids in _told(world, letter).items():
+        if not ids:
+            assert name == "P4b" and name not in parts
+            continue
+        assert 1 <= len(ids) <= AL.MAX_CLAIMS
+        srcs = {AL.source_of(world.fb, i) for i in ids}
+        assert len(srcs) == 1, srcs                                                       # one place a paragraph
+        src = srcs.pop()
+        places.append(src.id)
+        for s in sentences(parts[name]):
+            assert s.startswith(src.phrase) or s.startswith(f"That {src.name} work"), s
+        for i in ids:
+            bullet = next(b for e in world.fb["experience"] + world.fb["projects"] for b in e["bullets"] if b["id"] == i)
+            text, _ = AL.letter_text(bullet, world.fb, True, [])
+            assert AL.first_person(text)[2:].rstrip(".") in parts[name]
+    assert len(places) == len(set(places))                                               # a place is told in one paragraph only
 
 
-def test_every_p4_sentence_holds_a_number_and_names_its_employer(world):
-    make(world, p5_model(P5))
-    p4 = sentences(world.written[0]["P4"])
-    assert p4 and all(numbers(s) for s in p4), p4                                       # a figure or a number word ("three") the bullet holds
-    assert all(s.startswith("At ") for s in p4) and len(p4) == len([e for e in world.plan.groups[1] if numbers(e["text"])])
+def test_p4_is_another_place_an_employer_first_its_numbered_bullets_first(world):
+    pdf, letter = make(world, p5_model(P5))
+    told = _told(world, letter)
+    a, b = AL.source_of(world.fb, told["P3"][0]), AL.source_of(world.fb, told["P4"][0])
+    assert a.id != b.id and b.kind == "experience"
+    assert all(AL.source_of(world.fb, i) == b for i in told["P4"])
 
 
 @pytest.mark.parametrize("reply", [GARBAGE, "", RuntimeError("the provider is down")])
 def test_a_model_that_gives_garbage_for_p5_still_gives_a_letter_through_the_fallback(world, reply):
     pdf, letter = make(world, p5_model(reply, reply))
     assert letter["status"] == "ok", letter.get("reason")
-    p5 = world.written[0]["P5"]                                                          # v3.4: the noun-phrase frame, never "is ... is"
-    assert p5.startswith(f"{world.job['company']}'s focus on ") and p5.endswith(" is why I applied.") and letter["retry"]["p5"]["source"].startswith("fallback")
+    p5 = world.written[0]["P5"]                                                          # v3.5.2: the ad's own clause tied to one fact
+    ad, mine = AL.p5_split(p5)
+    offered = CL.about_sentences(world.job["description"], world.job["company"], world.kws)
+    assert ad in AL.ad_clauses(offered, world.job["company"]) and mine.startswith("my ") and ", where I " in mine
+    assert letter["retry"]["p5"]["source"].startswith("fallback")
     assert 200 <= letter["words"] <= 320
 
 

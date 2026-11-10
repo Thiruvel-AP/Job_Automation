@@ -264,11 +264,14 @@ def test_the_letter_rewrite_is_refused_when_it_keeps_jargon_in_plain_style(setti
         return Path(out_dir) / f"{final_name}.pdf", CL._letter_dict("ok", paragraphs=paragraphs, names=names, parts=dict(parts),
                                                                    words=CL.words(paragraphs), **extra)
     monkeypatch.setattr(CL, "write_letter", record)
-    llm = model(lambda d: dict(d))                       # the draft as it is: its bullets have no plain version, so their jargon stays
+    # v3.5.2: the plain-style draft itself tells no bullet with jargon the ad does not name, so the rewrite is what brings it in here
+    llm = model(lambda d: {**d, "P3": d["P3"] + " That work ran on AWS Lambda and ECR."})
     assert not any(k.term.lower() == "aws lambda" for k in w.kws)                       # a JD keyword would be allowed (the ATS reads it)
     pdf, letter = make(w, llm)
     flu = letter["retry"]["fluency"]
-    assert flu["source"] == "draft" and any("jargon" in p and "AWS Lambda" in p for p in flu["problems"][0]), flu["problems"]
+    assert flu["source"] == "draft" and any("ecr" in p.lower() for p in flu["problems"][0]), flu["problems"]
+    draft = letter["assembled_parts"]
+    assert all(not any(j in s.lower() for j in ("parquet", "hgnc", "ensembl", "ecr")) for n in ("P3", "P4", "P4b") for s in [draft.get(n) or ""])
 
 
 # ------------------------------------------------------------------ layout options

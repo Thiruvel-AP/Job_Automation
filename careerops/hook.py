@@ -437,8 +437,8 @@ def library_lint(fb: dict) -> list[tuple[str, str]]:
 def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
     """The eligible library entries for this ad, best first, as pick_library_entry's dicts (a generator: the first is the pick). Only an entry
     whose terms hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords is eligible. Highest score first, a tie to the earlier entry in
-    the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a string is missing, or when it
-    (or its proof bullet) names a deny-listed term. The cover letter walks the rest of the ranking when the CV's hook has no number (opening.py)."""
+    the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a string is missing, when it
+    (or its proof bullet) names a deny-listed term, or (v3.5.2) when it claims something its proof bullets do not (tailoring/hook_claims.py). The cover letter walks the rest of the ranking when the CV's hook has no number (opening.py)."""
     notes = notes if notes is not None else []
     deny = fb.get("deny_terms", [])
     scores = library_scores(fb, kws)
@@ -460,6 +460,12 @@ def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
         denied = deny_hits(" ".join([*(_clean(e[k]) for k in LIBRARY_STRINGS), bullet["text"], str(bullet.get("result") or "")]), deny)
         if denied:
             notes.append(f"hook_library '{eid}': names a deny-listed term ({', '.join(denied)}); entry skipped")
+            continue
+        from .tailoring import hook_claims                                # v3.5.2: a hook may claim nothing its proof bullets do not
+        clash = hook_claims.conflicts(fb, e)
+        if clash:
+            notes.append(f"hook_library '{eid}': BLOCKED, it claims what its proof bullets do not (careerops hook-check): "
+                         + "; ".join(c.line() for c in clash[:3]))
             continue
         yield {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet, "overlap": overlaps[eid],
                "reason": selection_reason(eid, overlaps[eid], score)}

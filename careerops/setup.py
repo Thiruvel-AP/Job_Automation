@@ -269,6 +269,22 @@ def hook_lint_checks(path: Path) -> list[tuple[str, object, str]]:
     return [(f"hook library headlines ({len(library(fb))}) pass the lint", True, "")]
 
 
+def hook_claim_checks(path: Path) -> list[tuple[str, object, str]]:
+    """v3.5.2: one warning per hook_library entry that claims what its proof bullets do not (tailoring/hook_claims.py; blocked from every CV and
+    letter until the user fixes it), or one passing line. Read only."""
+    from .config import load_yaml
+    from .tailoring import hook_claims
+
+    if not path.exists():
+        return [("hook claims", False, f"fact bank not found: {path}")]
+    results = hook_claims.check_all(load_yaml(path))
+    blocked = {h: c for h, c in results.items() if c}
+    if blocked:
+        return [(f"hook '{h}' BLOCKED: {c[0].line()}", WARN, "careerops hook-check shows both quotes; fix the hook or its proof in fact_bank.yaml "
+                 "(nothing is reworded for you)") for h, c in blocked.items()]
+    return [(f"hook claims ({len(results)} hooks) match their proof bullets", True, "")]
+
+
 PLACEHOLDER_DOMAINS = ("example.com", "example.org", "example.net")
 UK_POSTCODE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.I)
 
@@ -525,6 +541,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += judge_checks(settings)
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += hook_lint_checks(settings.path("fact_bank"))
+    checks += hook_claim_checks(settings.path("fact_bank"))
     checks += skill_repeat_checks(settings.path("fact_bank"))
     checks += profile_word_checks(settings.path("fact_bank"))
     checks += plain_allow_checks(settings)

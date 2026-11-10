@@ -35,7 +35,7 @@ TRIES = 2
 MAX_SENTENCE_WORDS = 35
 REPEAT = 0.5
 LETTER_REUSE = 0.30                     # the motivation answer against this job's letter (5-word shingles, Jaccard): must stay under this
-REWRITTEN = ("P1", "P2", "P3", "P4")    # the paragraphs about you; P5 (about the company) has its own guards and is not rewritten
+REWRITTEN = ("P1", "P2", "P3", "P4", "P4b")    # the paragraphs about you; P5 (about the company) has its own guards and is not rewritten
 ABOUT_COMPANY: tuple[str, ...] = ()     # paragraphs that may take words from the ad (P1's quoted phrase is checked by opening.problems)
 BANNED_OPENINGS = re.compile(
     r"^\s*(?:(?:hi|hello|dear|hey|greetings)\b|i(?:\s+am|'m)\s+(?:writing|applying|excited|thrilled|delighted)\b|"

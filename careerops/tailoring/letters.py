@@ -54,13 +54,27 @@ def contact_first_name(job: dict) -> str:
     return first if re.fullmatch(r"[^\W\d_][\w'’-]*", first) else ""
 
 
-def greeting(job: dict, team: str, settings) -> str:
-    """"Hi <first name>" when the contact's name is known, else "Hi <Company> team" (`letter.greeting_hook`; never "Dear Sir/Madam"); a recruitment
-    agency gets "Hi <agency> team". The comma is added by the template."""
+# A department or function word is not a team name (10 Nov 2026: RightShip's "Product team" gave "Hi RightShip Product team"; the user wants
+# "Hi RightShip team" unless the ad names a team, such as "AI Accelerator").
+GENERIC_TEAMS = frozenset("""product engineering data ai ml tech technology it software platform platforms analytics research design sales marketing
+operations ops finance people hr legal security infrastructure development r&d innovation digital science""".split()) | frozenset(
+    {"data science", "machine learning", "data and ai", "data & ai", "ai and data", "product and engineering", "product engineering",
+     "software engineering", "data engineering", "applied ai", "ai/ml", "customer success"})
+
+
+def named_team(team: str) -> str:
+    """The team for the greeting: the name the ad gives, never a function word on its own ("Product", "Engineering", "Data Science")."""
     from .tailor import strip_team_word
 
+    t = strip_team_word(team or "")
+    return "" if " ".join(t.lower().split()) in GENERIC_TEAMS else t
+
+
+def greeting(job: dict, team: str, settings) -> str:
+    """"Hi <first name>" when the contact's name is known, else "Hi <Company> team" (`letter.greeting_hook`; never "Dear Sir/Madam"); a recruitment
+    agency gets "Hi <agency> team". "Hi <Company> <Team> team" only when the ad names a team (`named_team`). The comma is added by the template."""
     cfg = settings["letter"]
-    team = strip_team_word(team)
+    team = named_team(team)
     if contact_first_name(job) and not job.get("agency"):
         return f"Hi {contact_first_name(job)}"
     if job.get("agency"):

@@ -12,6 +12,9 @@ CV (the render context, the .tex and the PDF text of the final files):
   SKILLS          no skill twice (profile.py / skills.row_repeats); a verbatim family line with a repeat is reported, never rewritten
   PROJECTS        at most 3, each 1 to 3 bullets; a URL only for a project the bank does not mark `public: false`
   CERTIFICATIONS  a bulleted list, one item per certification, no middle-dot join
+  CONTEXT         (v3.5.2, honesty over lint) an entry the fact bank marks as a dissertation, coursework, volunteer or hackathon piece of work (the
+                  word in its title, employment_type, name, display_name, badge or kind) shows that word in its own CV heading (title, name, tag or
+                  stack line; a bullet that happens to say it does not count); a degree whose display_line names a dissertation keeps a dissertation line in Education
 Cover letter (when there is one; see `letter_problems`): length, the CV's header, the CV's evidence, the opening, no reuse.
 
 A failure blocks review's `[a]pprove` (the user may type `override doc check` in full) and always blocks auto-submit (apply/autogate.py). The
@@ -160,6 +163,76 @@ def cert_problems(rep: Mapping[str, Any], tex: str | None) -> list[str]:
     return out
 
 
+MARKS = ("dissertation", "coursework", "volunteer", "hackathon")
+MARK_FIELDS = ("title", "employment_type", "name", "display_name", "badge", "kind", "type")
+_MARK = re.compile(r"\b(dissertation|coursework|volunteer(?:ing|ed|s)?|hackathon)s?\b", re.I)
+
+
+def marks(entry: Mapping[str, Any]) -> list[tuple[str, str, str]]:
+    """[(word, field, value)]: the context words (MARKS) a fact-bank entry carries in MARK_FIELDS, each word once."""
+    out: list[tuple[str, str, str]] = []
+    for key in MARK_FIELDS:
+        value = " ".join(str(entry.get(key) or "").split())
+        for m in _MARK.finditer(value):
+            word = next(w for w in MARKS if m.group(1).lower().startswith(w))
+            if word not in [o[0] for o in out]:
+                out.append((word, key, value))
+    return out
+
+
+def _shows(text: str, word: str) -> bool:
+    return re.search(rf"\b{word}", text, re.I) is not None
+
+
+def printed_entry(e: Mapping[str, Any], kind: str) -> str:
+    """The heading a CV entry prints (its bullets change from job to job, so they do not count): experience = employer, location and title;
+    project = name, tag and stack line."""
+    if kind == "experience":
+        return " ".join([*render.org_parts(dict(e)), render.role_line(dict(e))])
+    return " ".join([*render.project_parts(dict(e)), str(e.get("stack") or "")])
+
+
+def context_problems(rep: Mapping[str, Any], fb: Mapping[str, Any] | None) -> list[str]:
+    """CONTEXT (10 Nov 2026): the CV never drops the context the fact bank gives a piece of work. A role or project marked dissertation /
+    coursework / volunteer / hackathon (`marks`) shows that word in its own CV heading, or in its Additional experience line; a degree whose
+    display_line names a dissertation keeps a dissertation line in the compact Education."""
+    if fb is None:
+        return []
+    ctx, out = rep["context"], []
+    extra = " ".join(str(x) for x in ctx.get("additional_experience") or [])
+    for sec, kind in (("experience", "experience"), ("projects", "project")):
+        bank = {str(e.get("id")): e for e in fb.get(sec) or [] if isinstance(e, Mapping)}
+        for e in ctx.get(sec) or []:
+            entry = bank.get(str(e.get("id")))
+            if entry is None:
+                continue
+            shown = printed_entry(e, sec)
+            label = str(entry.get("org") or entry.get("name") or entry.get("id"))
+            for word, key, value in marks(entry):
+                if not _shows(shown, word):
+                    out.append(f"CONTEXT {kind} \"{label}\" is marked {word} in the fact bank ({key}: \"{value}\") but its CV entry never says "
+                               f"\"{word}\": put the word in its {'title' if sec == 'experience' else 'name'} (fact_bank.yaml {sec} id `{entry.get('id')}`)")
+        if sec == "experience" and extra:
+            on_cv = {str(e.get("id")) for e in ctx.get(sec) or []}
+            for eid, entry in bank.items():
+                org = str(entry.get("org") or "")
+                if eid in on_cv or not org or org.split(",")[0] not in extra:
+                    continue
+                for word, key, value in marks(entry):
+                    if not _shows(extra, word):
+                        out.append(f"CONTEXT experience \"{org}\" is marked {word} in the fact bank ({key}: \"{value}\") but its Additional "
+                                   f"experience line never says \"{word}\" (fact_bank.yaml experience id `{eid}`)")
+    rows = ctx.get("education_compact") or []
+    if rows and not rep.get("one_page"):
+        from . import sections as SEC
+        said = " ".join(str(r.get("text") or "") for r in rows if r.get("kind") == "dissertation")
+        for ed in fb.get("education") or []:
+            if isinstance(ed, Mapping) and (str(ed.get("dissertation") or "").strip() or SEC.dissertation_clause(ed)) and not _shows(said, "dissertation"):
+                out.append(f"CONTEXT education \"{ed.get('degree')}\" names a dissertation in the fact bank but the CV's Education has no "
+                           "dissertation line")
+    return out
+
+
 # --------------------------------------------------------------------------------------------------------------------- the cover letter
 def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb: Mapping[str, Any] | None, texts: Sequence[str],
                     earlier: Sequence[RU.Earlier]) -> list[str]:
@@ -190,7 +263,7 @@ def letter_problems(rep: Mapping[str, Any], settings, letter_tex: str | None, fb
             out.append("LETTER header: the CV's hook headline is not under the name")
         if render.contact_line(ctx.get("id") or {}) not in letter_tex:
             out.append("LETTER header: the CV's contact line is not under the name")
-    body = [parts[n] for n in ("P3", "P4", "P5") if n in parts]
+    body = [parts[n] for n in ("P3", "P4", "P4b", "P5") if n in parts]
     cv = CL.cv_from_ctx(ctx)
     out += [f"LETTER P3/P4 draw on bullet {e['id']}, which is not printed on this job's CV" for e in letter.get("evidence") or [] if e.get("id") not in cv["ids"]]
     tags = [t for t in letter.get("cites") or []]
@@ -218,6 +291,7 @@ def check(rep: Mapping[str, Any], settings, *, tex: str | None = None, cv_text: 
         failures += skill_problems(rep)
         failures += project_problems(rep, tex, settings)
         failures += cert_problems(rep, tex)
+    failures += context_problems(rep, fb)
     failures += letter_problems(rep, settings, letter_tex, fb, texts, earlier)
     return DocCheck(list(dict.fromkeys(failures)))
 

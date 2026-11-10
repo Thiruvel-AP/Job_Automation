@@ -662,7 +662,7 @@ class FreeText:
         final = letter.get("parts") or {}
         parts = letter.get("assembled_parts") or final                          # the fact source: the assembled draft (v3.4), else the letter
         if letter.get("status") == "ok":
-            self.letter_body = " ".join(str(final.get(n) or "") for n in ("P1", "P2", "P3", "P4", "P5", "P6", "P7") if final.get(n)).strip()
+            self.letter_body = " ".join(str(final.get(n) or "") for n in ("P1", "P2", "P3", "P4", "P4b", "P5", "P6", "P7") if final.get(n)).strip()
             self.letter_ids = {str(e.get("id")) for e in letter.get("evidence") or [] if isinstance(e, dict)}
             p4 = split_sentences(str(parts.get("P4") or ""))
             self.letter_parts = {"P1": str(parts.get("P1") or "").strip(), "P5": str(parts.get("P5") or "").strip(), "P4": (p4[0].strip() if p4 else "")}

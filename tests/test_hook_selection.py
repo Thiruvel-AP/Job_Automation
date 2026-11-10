@@ -20,7 +20,7 @@ JOB = {"id": "manual:sel1", "company": "Northwind Health AI", "title": "Data Sci
 OLD_HEADLINE = "Per gene models cutting RAM from 8.2 to 5.5 GB"        # the shape of the old library headline that wasted the line
 
 
-def entry(eid, proof, terms, headline="LLM agent behind ~65 tests"):
+def entry(eid, proof, terms, headline="LLM agent behind automated tests"):      # v3.5.2: no number its proof might not hold (hook_claims)
     return {"id": eid, "proof": proof, "terms": terms, "headline": headline, "profile_line": "Profile line.", "letter_line": "Letter line."}
 
 
@@ -139,6 +139,8 @@ def test_the_lint_rules(headline, fragment):
 def test_a_sixty_character_headline_passes_and_the_lint_never_rewrites(bank):
     assert H.headline_lint("x" * 60) == []
     bank["hook_library"] = [entry("old", "a4", ["alpha", "beta"], headline=OLD_HEADLINE)]
+    a4 = next(b for e in bank["experience"] for b in e["bullets"] if b["id"] == "a4")
+    a4["text"] += " Per-gene models cut RAM from 8.2 to 5.5 GB."                    # v3.5.2: a hook's numbers must be its proof's (hook_claims)
     hk = H.build_hook(JOB, ranked(("alpha", 3), ("beta", 3)), bank, role="Data Scientist")
     assert hk.headline == OLD_HEADLINE                                                 # used word for word, warned about elsewhere
     lines = review.hook_lines({"hook": hk.to_dict(), "hook_placed": {}})

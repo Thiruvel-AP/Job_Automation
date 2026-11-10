@@ -216,7 +216,7 @@ def test_the_judge_gate_approves_a_job_whose_only_flags_are_register_notes(setti
     settings.raw["review"]["judge"] = "gate"
     monkeypatch.setattr(judge, "require_gate", lambda s: None)
     monkeypatch.setattr(workflow, "load_report", lambda j: rep)
-    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None: "SUMMARY")
+    monkeypatch.setattr(workflow, "summary", lambda j, r, s=None, **k: "SUMMARY")
     monkeypatch.setattr(workflow, "approve", lambda *a, **k: None)
     monkeypatch.setattr(judge, "run_judge", lambda *a, **k: judge.Verdict(True, 5, [], "m"))
     row = {**job, "flags": json.dumps([gates.NOT_ON_REGISTER, "Sponsor match is fuzzy (0.93): 'X'"])}

@@ -1901,12 +1901,12 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                               "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body}
 
     jac = sc["bullet_dedupe_jaccard"]
-    # the section order and the compact Education (tailoring/sections.py, 8 Nov 2026)
+    # the section order (graduate / junior / scheme ad or not) and the compact Education (tailoring/sections.py, 10 Nov 2026)
     sec_order, order_why = sections_mod.order_for(job, settings)
     edu_rows, edu_notes = sections_mod.compact_education(fb.get("education") or []) if sections_mod.compact_on(settings) else ([], [])
     if not one_page:
         report["analysis_warnings"].extend(edu_notes)
-        if order_why:
+        if order_why and list(sec_order[:2]) == ["profile", "education"]:
             report["analysis_warnings"].append(f"section order: {order_why}")
     keep_ids = {b["id"] for b in provisional_bullets(fb)}               # typed facts: never shrunk away
     forced = {k.term for k in kws if k.term.lower() in {str(t).lower() for t in boost or ()}}      # the JD's own spelling of each named term
@@ -2059,16 +2059,12 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     style_rep.update(additional_experience=extra_roles, section_order=list(ctx.get("section_order") or []), section_order_reason=order_why)
     pdf = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)     # re-render the chosen attempt as the final file
     first_at = None if one_page else check_first_bullet(pdf)
-    if first_at is not None and first_at > sections_mod.FIRST_BULLET_MAX and ctx.get("section_order", [""])[1:2] == ["education"]:
-        if any(r["kind"] == "dissertation" for r in ctx.get("education_compact") or []):
-            ctx["education_compact"] = [r for r in ctx["education_compact"] if r["kind"] != "dissertation"]
-            pdf = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)
-            was, first_at = first_at, check_first_bullet(pdf)
-            report["analysis_warnings"].append(f"education: the dissertation line was left out: the first Work Experience bullet started at "
-                                               f"{was:.0%} of page 1 (at most {sections_mod.FIRST_BULLET_MAX:.0%})")
-        if first_at is not None and first_at > sections_mod.FIRST_BULLET_MAX:
-            report["analysis_warnings"].append(f"layout: the first Work Experience bullet starts at {first_at:.0%} of page 1 (at most "
-                                               f"{sections_mod.FIRST_BULLET_MAX:.0%}); Education cannot be shortened further")
+    order_now = list(ctx.get("section_order") or [])
+    edu_before = "education" in order_now and "experience" in order_now and order_now.index("education") < order_now.index("experience")
+    if first_at is not None and first_at > sections_mod.FIRST_BULLET_MAX and edu_before:
+        # 10 Nov 2026: honesty over layout: the dissertation line is never taken out to lift the first bullet
+        report["analysis_warnings"].append(f"layout: the first Work Experience bullet starts at {first_at:.0%} of page 1 (at most "
+                                           f"{sections_mod.FIRST_BULLET_MAX:.0%}); nothing is taken out of Education for it")
     style_rep["first_bullet_at"] = round(first_at, 3) if first_at is not None else None
     final_score = ats.score(pdf_text(pdf), kws)
     cv_pages = page_count(pdf)

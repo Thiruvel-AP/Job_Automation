@@ -1,6 +1,6 @@
-"""CV section order (user decision, 8 Nov 2026): Education first until cv.education_first_until, then Experience first; an ad asking for 3+ years of
-experience gets Experience first; a compact Education of at most 4 printed lines; the first Work Experience bullet in the top 55 % of page 1; the
-standard headings unchanged. Fixtures only (the slow tests render PDFs with xelatex)."""
+"""The compact Education of at most 4 printed lines, the first Work Experience bullet's position, the standard headings unchanged. The section
+ORDER rule of 8 Nov 2026 (Education first until a date) was replaced on 10 Nov 2026: tests/tailoring/test_sections_v352.py. Fixtures only (the slow
+tests render PDFs with xelatex)."""
 from datetime import date
 from pathlib import Path
 
@@ -20,41 +20,8 @@ SENIOR = "About the role\nWe need a data scientist.\n\nRequirements\n- 3+ years 
 JUNIOR = "About the role\nWe need a data scientist.\n\nRequirements\n- 1+ years of experience in a data role\n- Python\n"
 
 
-# ------------------------------------------------------------------ the order
-def test_education_first_by_default_until_the_date_then_experience_first(settings):
-    until = S.education_first_until(settings)
-    assert until == date(2027, 9, 30)
-    order, why = S.order_for({"description": JUNIOR}, settings, until)
-    assert order[:6] == ["profile", "education", "experience", "projects", "skills", "certifications"] and why == ""
-    order, why = S.order_for({"description": JUNIOR}, settings, date(2027, 10, 1))
-    assert order[:6] == ["profile", "experience", "projects", "education", "skills", "certifications"] and "has passed" in why
-
-
-def test_the_date_is_a_setting(settings):
-    settings.raw["cv"]["education_first_until"] = "2026-01-01"
-    assert S.order_for({"description": JUNIOR}, settings, date(2026, 11, 8))[0][1] == "experience"
-    settings.raw["cv"]["education_first_until"] = date(2030, 1, 1)                  # YAML gives a date object for an unquoted date
-    assert S.order_for({"description": JUNIOR}, settings, date(2026, 11, 8))[0][1] == "education"
-
-
-@pytest.mark.parametrize("jd, first", [(SENIOR, "experience"), (JUNIOR, "education"), (SENIOR.replace("3+", "5+"), "experience"),
-                                       (SENIOR.replace("3+", "2+"), "education"),
-                                       ("Requirements\n- 3+ years of hands-on AI/ML or software engineering experience.\n", "experience")])
-def test_an_ad_asking_for_three_or_more_years_gets_experience_first(settings, jd, first):
-    order, why = S.order_for({"description": jd}, settings, date(2026, 11, 8))
-    assert order[1] == first
-    assert (first == "experience") == ("years of experience" in why)
-
-
 def test_compact_education_is_on_by_default_and_a_setting(settings):
     assert S.compact_on(settings) and S.compact_on({}) and not S.compact_on({"cv": {"education_compact": False}})
-
-
-def test_doctor_says_when_the_date_has_passed(settings):
-    name, ok, hint = S.doctor_line(settings, date(2027, 10, 1))
-    assert ok == "warn" and "Experience first" in name and "has passed" in name and "education_first_until" in hint
-    name, ok, _ = S.doctor_line(settings, date(2026, 11, 8))
-    assert ok is True and "Education first until 2027-09-30" in name
 
 
 # ------------------------------------------------------------------ the compact Education
@@ -75,10 +42,10 @@ def test_education_is_one_line_per_degree_plus_the_dissertation_line_no_modules(
     assert _printed(rows) <= S.EDUCATION_MAX_LINES
 
 
-def test_the_line_cap_drops_the_dissertation_first_then_degrees():
+def test_the_line_cap_takes_out_old_degrees_never_the_dissertation_line():
     long = [dict(EDU[0], dissertation="A very long dissertation title " * 4), EDU[1]]
     rows, notes = S.compact_education(long)
-    assert [r["kind"] for r in rows] == ["degree", "degree"] and any("dissertation line was left out" in n for n in notes)
+    assert [r["kind"] for r in rows] == ["degree", "dissertation"] and any("B.E." in n and "left out" in n for n in notes)
     many = [dict(EDU[1], degree=f"B.Sc. Subject number {i} with a long name", org="A college with a long name in a long town") for i in range(5)]
     rows, notes = S.compact_education(many)
     assert _printed(rows) <= S.EDUCATION_MAX_LINES and len(rows) < 5 and notes
@@ -91,25 +58,26 @@ def test_only_a_short_degree_class_is_printed_as_the_classification():
     assert S.classification({"classification": "2:1", "note": "anything"}) == "2:1"
 
 
-def test_no_dissertation_field_means_no_dissertation_line_and_a_note():
+def test_no_dissertation_field_prints_the_display_line_dissertation_clause_word_for_word():
     rows, notes = S.compact_education([{k: v for k, v in EDU[0].items() if k != "dissertation"}])
-    assert [r["kind"] for r in rows] == ["degree"] and "no `dissertation:`" in notes[0]
+    assert [r["kind"] for r in rows] == ["degree", "dissertation"] and not notes
+    assert rows[1]["text"] == "Dissertation with AstraZeneca affiliation (GeneTraceAI)"
 
 
 def test_the_template_prints_the_compact_education_under_the_standard_headings():
     from test_cv_rules import CERTS, OPEN, ctx_with
     rows, _ = S.compact_education(EDU)
     ctx = render.with_public_links({**ctx_with([OPEN], CERTS), "education_compact": rows,
-                                    "section_order": [*S.EDUCATION_FIRST, *S.TAIL]})
+                                    "section_order": [*S.GRADUATE, *S.TAIL]})
     tex = render.env().get_template("cv2.tex.j2").render(**ctx)
-    block = tex[tex.index(r"\section{Education}"):tex.index(r"\section{Work Experience}")]
+    block = tex[tex.index(r"\section{Education}"):tex.index(r"\section{Skills}")]
     assert r"\textit{MSc Data Science}, \textbf{University of Bristol, UK}\unskip" in block and r"\mbox{Sep 2025 – Sep 2026}" in block
     assert r"\textbf{St. Joseph\textquotesingle{}s College of Engineering}, First Class with Distinction\unskip" in block
     assert "Dissertation with AstraZeneca affiliation: Finding cancer cell lines faster with patient data" in block
     assert "Large-Scale" not in block and block.count(r"\par") == 3
     for heading in ("Profile", "Education", "Work Experience", "Projects", "Skills", r"Certifications \& Achievements"):
         assert f"\\section{{{heading}}}" in tex
-    order = [tex.index("\\section{" + h) for h in ("Profile", "Education", "Work Experience", "Projects", "Skills", "Certifications")]
+    order = [tex.index("\\section{" + h) for h in ("Profile", "Education", "Skills", "Work Experience", "Projects", "Certifications")]
     assert order == sorted(order)
 
 

@@ -389,7 +389,7 @@ def test_the_pipeline_report_says_what_the_length_rules_did(base):
 
 # ------------------------------------------------------------------- the CV built from tests/fixtures/profile against the reference
 EXCEPTIONS = {"scikit-learn", "k-means", "tf-idf", "skip-gram", "cifar-10", "gpt-oss"}
-SECTIONS = ["PROFILE", "EDUCATION", "WORK EXPERIENCE", "PROJECTS", "SKILLS", "CERTIFICATIONS & ACHIEVEMENTS"]     # 8 Nov 2026: Education first
+SECTIONS = ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]     # 10 Nov 2026: the standard order for a non-graduate ad
 
 
 @pytest.mark.slow
@@ -420,7 +420,7 @@ def test_the_fixture_cv_follows_the_v2_reference(base):
     # two pages, the award project under Achievements, the STAR openers once each
     assert page_count(pdf) == 2
     assert rep["achievements"] == ["lloyds"] and "Banking datathon, 3rd place, national datathon" in text.split("CERTIFICATIONS")[1]
-    assert "Banking datathon" not in text.split("PROJECTS")[1].split("SKILLS")[0]          # Projects are followed by Skills since 8 Nov 2026
+    assert "Banking datathon" not in text.split("PROJECTS")[1].split("EDUCATION")[0]       # Projects are followed by Education since 10 Nov 2026
     flat = " ".join(text.split())
     assert flat.count("Needed an LLM agent a research team could trust before it shipped: ") == 1
     assert flat.count("Needed to know which customers would leave: ") == 1

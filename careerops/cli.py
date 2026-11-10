@@ -1453,7 +1453,7 @@ def cmd_apply(args):
             print(f"  REFUSED {job['id']}: {e}", file=sys.stderr)
             failures += 1
             continue
-        print(review.summary(job, rep, s))
+        print(review.summary(job, rep, s, bank=load_yaml(s.path("fact_bank"))))      # v3.5.2: the ATS structure line on every screen
         if input("Open application form? [y/N] ").strip().lower() != "y":
             continue
         r = assist(job, rep, applicant, s.path("browser_profile"), **_assist_answers(db, s))
@@ -1857,6 +1857,25 @@ def cmd_plain_draft(args):
     plaindraft.run(s.path("fact_bank"), _llm(args, s, db), s, limit=args.limit, ids=ids, hooks=not args.no_hooks, dry_run=dry)
 
 
+def cmd_results(args):
+    """v3.5.2: the "Needs a result" bullets one at a time; you type each result (s skips, q stops); saved on your `y` (review/results.py)."""
+    from .review import results
+
+    if not sys.stdin.isatty():
+        _fail("results asks you to type each result: run it in a terminal")
+    s = load_settings(args.config)
+    ids = {x.strip() for x in ",".join(args.id or []).split(",") if x.strip()} or None
+    results.run(s.path("fact_bank"), ids=ids, limit=args.limit)
+
+
+def cmd_hook_check(args):
+    """v3.5.2: every hook_library entry against its proof bullets (tailoring/hook_claims.py); a hook that claims more is blocked. Read only."""
+    from .tailoring import hook_claims
+
+    s = load_settings(args.config)
+    print(hook_claims.report(load_yaml(s.path("fact_bank"))))
+
+
 def cmd_learning(args):
     from .tailoring import learning
 
@@ -2044,6 +2063,13 @@ def main(argv=None):
     pd.add_argument("--dry-run", action="store_true", help="show the candidates, ask nothing, save nothing")
     pd.add_argument("--mock", action="store_true", help="MockLLM (plumbing only); implies --dry-run")
     pd.set_defaults(fn=cmd_plain_draft)
+    rs = sub.add_parser("results", help="v3.5.2: the fact-bank bullets with no `result:` (\"Needs a result\"), one at a time: you type the result "
+                        "or s to skip, q to stop; nothing is drafted; saved as `result:` only on your y (backup first)")
+    rs.add_argument("--id", action="append", help="only these bullet ids (comma-separated, repeatable)")
+    rs.add_argument("--limit", type=int, help="at most this many bullets")
+    rs.set_defaults(fn=cmd_results)
+    sub.add_parser("hook-check", help="v3.5.2: each hook_library entry against its proof bullets; a hook that claims more (a number, a name, "
+                   "'production', 'built' where the bullet says 'contributed') is BLOCKED, with both quotes; read only").set_defaults(fn=cmd_hook_check)
     dr = sub.add_parser("doctor")
     dr.add_argument("--no-ping", action="store_true", help="do not send the llm.models models a tiny request (the one "
                     "check that spends provider quota)")

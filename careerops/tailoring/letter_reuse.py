@@ -83,7 +83,7 @@ def _outputs(root: Path, skip: set[str]) -> Iterable[Earlier]:
             yield Earlier(folder.name, " ".join(body_of(letter)))
 
 
-REUSE_NAMES = ("P2", "P3", "P4", "P5")
+REUSE_NAMES = ("P2", "P3", "P4", "P4b", "P5")
 
 
 def body_of(letter: dict) -> list[str]:

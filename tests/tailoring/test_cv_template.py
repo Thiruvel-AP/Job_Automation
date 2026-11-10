@@ -388,7 +388,7 @@ def test_snapshot_the_only_font_is_carlito(fixture_run):
 
 
 URL_FONT = "LMMono10"                                                               # the default \url font: used for the project URLs and nothing else
-SECTIONS = ["PROFILE", "EDUCATION", "WORK EXPERIENCE", "PROJECTS", "SKILLS", "CERTIFICATIONS & ACHIEVEMENTS"]     # 8 Nov 2026: Education first (tailoring/sections.py)
+SECTIONS = ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]     # 10 Nov 2026: an AI Engineer ad gets the standard order (tailoring/sections.py)
 SIZES = (17.3, 11, 10)      # the user's current CV: the name (\LARGE), the body and the headings (11pt bold), the hook headline under the name, contact / stack / modules lines (\small)
 _WORD = re.compile(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">(.*?)</word>')
 
@@ -446,8 +446,8 @@ def test_snapshot_layout_follows_the_reference(fixture_run):
     rep, _ = fixture_run
     text = pdf_text(Path(rep["cv_pdf"]))
     tex = _tex(rep)
-    heads = [h for h in ["PROFILE", "EDUCATION", "WORK EXPERIENCE", "PROJECTS", "SKILLS", "CERTIFICATIONS & ACHIEVEMENTS"] if h in text]
-    assert heads == ["PROFILE", "EDUCATION", "WORK EXPERIENCE", "PROJECTS", "SKILLS", "CERTIFICATIONS & ACHIEVEMENTS"]
+    heads = [h for h in ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"] if h in text]
+    assert heads == ["PROFILE", "SKILLS", "WORK EXPERIENCE", "PROJECTS", "EDUCATION", "CERTIFICATIONS & ACHIEVEMENTS"]
     # employer bold left, its location after a middle dot, the dates right-aligned on the same line, the title on the next line
     lines = text.splitlines()
     i = next(n for n, ln in enumerate(lines)

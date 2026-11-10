@@ -58,20 +58,36 @@ def make(w, llm):
                    "Ada Lovelace Cover Letter", TEAM, w.claimable, w.chosen, possible=w.possible)
 
 
+def _cut_long(text: str) -> str:
+    """A sentence over 35 words cut at its last comma inside the first 35 words (words are only taken away; v3.5.2's place-first sentences are
+    longer than the old ones, and a real rewrite shortens them)."""
+    out = []
+    for s in sentences(text or ""):
+        words = s.split()
+        if len(words) > 35:
+            head = " ".join(words[:35])
+            s = head[:head.rfind(",")] + "." if "," in head else s
+        out.append(s.strip())
+    return " ".join(out)
+
+
 def shorter_quote(draft: dict) -> dict:
-    """A good rewrite: P1's quoted ad phrase cut from the end (still the ad's own words) until P1 is 35 words or fewer, the rest as it is."""
+    """A good rewrite: P1's quoted ad phrase cut from the end (still the ad's own words) until P1 is 35 words or fewer, P3 / P4 / P4b sentences
+    over 35 words cut at a comma, the rest as it is."""
     p1 = draft["P1"]
     q = p1.split('"')[1]
     words = q.split()
     while len(p1.replace(q, " ".join(words)).split()) > 35 and len(words) > 3:
         words = words[:-1]
-    return {**draft, "P1": p1.replace(q, " ".join(words))}
+    return {**draft, "P1": p1.replace(q, " ".join(words)), **{n: _cut_long(draft[n]) for n in ("P3", "P4", "P4b") if draft.get(n)}}
 
 
 def smooth(draft: dict) -> dict:
-    """A good rewrite that changes wording only: "At <employer>, I ..." -> "While at <employer>, I ..." (plus shorter_quote)."""
+    """A good rewrite that changes wording only: "At <employer>, I ..." -> "While at <employer>, I ..." (v3.5.2: "On my ..." -> "Working on my
+    ..."), plus shorter_quote."""
     d = shorter_quote(draft)
-    return {**d, "P4": d["P4"].replace("At ", "While at ", 1)}
+    p4 = d["P4"].replace("At ", "While at ", 1) if d["P4"].startswith("At ") else d["P4"].replace("On my ", "Working on my ", 1)
+    return {**d, "P4": p4}
 
 
 # ------------------------------------------------------------------ templates (item 2)
@@ -196,12 +212,12 @@ def test_a_rewrite_that_passes_every_check_is_the_letter_and_the_draft_is_kept(w
 
 
 @pytest.mark.parametrize("break_it, why", [
-    (lambda d: {**shorter_quote(d), "P3": d["P3"] + " I also cut costs by 93%."}, "93"),
-    (lambda d: {**shorter_quote(d), "P3": d["P3"] + " I used Kubernetes at Globex."}, "Globex"),
-    (lambda d: {**shorter_quote(d), "P4": d["P4"] + " " + " ".join(["and more"] * 20) + "."}, "words (at most 35)"),
-    (lambda d: {**shorter_quote(d), "P4": d["P4"] + " " + sentences(d["P3"])[0]}, "same sentence twice"),
+    (lambda d: {**shorter_quote(d), "P3": shorter_quote(d)["P3"] + " I also cut costs by 93%."}, "93"),
+    (lambda d: {**shorter_quote(d), "P3": shorter_quote(d)["P3"] + " I used Kubernetes at Globex."}, "Globex"),
+    (lambda d: {**shorter_quote(d), "P4": shorter_quote(d)["P4"] + " " + " ".join(["and more"] * 20) + "."}, "words (at most 35)"),
+    (lambda d: {**shorter_quote(d), "P4": shorter_quote(d)["P4"] + " " + sentences(shorter_quote(d)["P3"])[0]}, "same sentence twice"),
     (lambda d: {**shorter_quote(d), "P1": "I am writing to apply. " + shorter_quote(d)["P1"]}, "banned phrase"),
-    (lambda d: {**shorter_quote(d), "P3": d["P3"] + " We shipped it together as our team."}, "our"),
+    (lambda d: {**shorter_quote(d), "P3": shorter_quote(d)["P3"] + " We shipped it together as our team."}, "our"),
 ])
 def test_a_rewrite_that_breaks_a_check_is_thrown_away_and_the_draft_is_the_letter(world, break_it, why):
     world.settings.raw["letter"]["fluency"] = True
@@ -220,7 +236,7 @@ def test_a_rewrite_that_breaks_a_check_is_thrown_away_and_the_draft_is_the_lette
 def test_the_second_try_is_told_the_first_ones_rejections(world):
     world.settings.raw["letter"]["fluency"] = True
     prompts = []
-    tries = iter([lambda d: {**shorter_quote(d), "P3": d["P3"] + " I also cut costs by 93%."}, shorter_quote])
+    tries = iter([lambda d: {**shorter_quote(d), "P3": shorter_quote(d)["P3"] + " I also cut costs by 93%."}, shorter_quote])
 
     def rewrite(d):
         return next(tries)(d)
@@ -288,8 +304,8 @@ def test_growth_skips_a_bullet_the_guard_reads_as_a_list_of_terms(world, monkeyp
         return ["a list of terms, not a sentence"] if len(seen) == 1 else real(paragraphs, fb)
     monkeypatch.setattr(letter_rules, "term_dump_problems", flag_first)
     pdf, letter = make(world, model(shorter_quote))
-    assert letter["status"] == "ok" and seen and any("P3 grew by bullet" in n for n in letter["notes"])
-    assert seen[0][0] not in world.written[0]["P3"]                                       # the flagged bullet was passed over
+    assert letter["status"] == "ok" and seen and any("a list of terms, not a sentence" in n for n in letter["notes"])
+    assert all(seen[0][0] not in world.written[0][n] for n in ("P3", "P4", "P4b") if n in world.written[0])    # the flagged bullet was passed over
 
 
 def test_a_long_quoted_phrase_is_trimmed_from_its_ends_so_sentence_1_stays_35_words():
@@ -331,7 +347,7 @@ def test_with_the_pass_on_the_draft_grows_past_the_low_end(world):
     world.settings.raw["letter"]["fluency"] = True
     pdf, letter = make(world, model(lambda d: RuntimeError("down")))
     assert letter["status"] == "ok" and CL.words(CL.assemble(letter["assembled_parts"])[0]) >= 200
-    assert any(f"(under {200 + FL.GROW_MARGIN} words)" in n for n in letter["notes"])
+    assert any(f"under {200 + FL.GROW_MARGIN} words" in n for n in letter["notes"])
 
 
 def test_two_grammar_errors_the_letters_made_are_refused():

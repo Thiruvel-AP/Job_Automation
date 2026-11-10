@@ -39,7 +39,7 @@ experience:
         text: Designed a deterministic guard architecture with live API resolution and a local 19,213-gene parquet fallback behind circuit breakers, so answers stay reproducible during upstream outages.
         terms: [guardrails, reliability, apis, data quality, resilience]
       - id: a3
-        text: Deployed the agent as a Docker container on AWS Lambda with ECR image pipelines, IAM execution roles and least-privilege policies, replacing a manual copy-and-paste release process.
+        text: Deployed the agent to production as a Docker container on AWS Lambda with ECR image pipelines, IAM execution roles and least-privilege policies, replacing a manual copy-and-paste release process.
         terms: [docker, aws lambda, serverless, deployment, mlops, cloud, iam, production]
       - id: a4
         text: Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from one hosted model to AWS Bedrock.
