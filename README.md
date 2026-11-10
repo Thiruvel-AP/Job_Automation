@@ -230,6 +230,12 @@ careerops live --url URL           # the same fetch, then live works on that one
 careerops live --clipboard         # a site that blocks scripts: copy the job text, then this (asks Company / Title / URL; Windows clipboard via WSL)
 careerops live --id manual:ff68fffd015a   # work on one job the database already has: its JD file from the inbox or approved/, or written again from the stored ad (a skipped / applied job is refused)
 careerops judge-report             # the LLM judge vs your decisions: agreement, kappa, false approves (see "The LLM judge")
+careerops queue [--json] [--kind review|job] [--all]   # v3.5a: the decisions waiting for you (or Claude): one row per review screen version / digest line
+careerops show r-1a2b3c4d --json   # v3.5a: everything needed to decide one row (the ad as untrusted_jd, CV and letter text, ATS, hook-check, evaluation, fact-bank excerpt, guards); read only
+careerops decide r-1a2b3c4d park --by user --reason "not now"   # v3.5a: the only writing queue command; send / retailor / park (review), approve / marginal / skip (job);
+                                   # guards apply to everyone (strict < 50, ATS structure, faithfulness, document check, --unsupported claims: send becomes park)
+careerops judge-stats              # v3.5: Claude vs you per kind (shadow decisions), confusion counts, cost per day; suggests judge.mode: live, never sets it
+scripts/operate.sh [--max 3]       # v3.5a operate mode (WSL): Claude Code runs /careerops-review with .claude/operate-settings.json (queue/show/decide/why only)
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
 careerops tailor --one-page        # the old one-page CV (templates/cv.tex.j2) instead
 careerops plain-draft --id az10,dc1,p_ll1   # v3.4: a plain-language (STAR) version of these bullets / hook lines for a non-technical first reader;

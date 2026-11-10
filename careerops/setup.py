@@ -539,6 +539,8 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
             checks += ollama_checks(prov)
     checks += model_checks(settings, ping)
     checks += judge_checks(settings)
+    from . import judge as claude_judge
+    checks.append(claude_judge.Session(settings).doctor_line())      # v3.5: claude found / logged in / mode / model (no model call)
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += hook_lint_checks(settings.path("fact_bank"))
     checks += hook_claim_checks(settings.path("fact_bank"))

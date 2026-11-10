@@ -2341,3 +2341,57 @@ RightShip dry run (`careerops live --dry-run --url <RightShip> --record`), and t
 Tests: `tests/tailoring/test_hook_claims_v353.py`, `test_layout_v353.py`, `test_headline_v353.py`, `test_template_letter.py`,
 `tests/test_ats_structure_v353.py`. Adapted: `test_cv_template.py` (the new role macros; the snapshot bank gives the az situation to its hook bullet),
 `test_hook.py`, `test_golden_pipeline.py`, `test_hook_library.py`, `test_hook_selection.py`, `test_hook_claims_v352.py`, `test_company_letter.py`.
+
+## 5bn. v3.5a + v3.5 — the decision queue, operate mode, and Claude as the judge with you as the fallback (10 Nov 2026) — **done offline** (fake `claude` binary, fixtures, xelatex PDFs); the operate run and the shadow dry run are yours
+
+Reference: career-ops (ext/career-ops at 605a1e61): Claude Code is the orchestrator (the `career-ops` skill + AGENTS.md tell it which scripts to run);
+batch mode runs headless `claude -p` workers authenticated with `claude setup-token` exported as `CLAUDE_CODE_OAUTH_TOKEN` (README FAQ: `-p` workers do
+not use the interactive login). We copy the pattern, not the files: every gate stays in our code; Claude only reads and decides through narrow commands.
+Flags checked against Claude Code 2.1.322 (`claude --help`; `--max-turns` and `--system-prompt-file` are accepted though not listed).
+
+**v3.5a — the decision queue** (`careerops/review/decision_queue.py`). A row per decision that waits: `paths.queue/pending.jsonl` (new key, built-in
+default `data/queue`), `{qid, kind, job_id, created, options, allowed_deciders, version, company, title}`, append-only. Decisions: `paths.judge/decisions.jsonl`
+(`type: decision`), append-only; Claude's calls go to the same file (`type: call`).
+- `review`: one row per version of a tailored job (a hash of its CV PDF): send / retailor / park. Queued when the review screen opens, and by
+  `careerops queue` for every job in `needs_review`. A superseded version drops out; `decide` refuses it.
+- `job`: agent.decide `veto`: a row per line of the latest digest that waits for you (approved: veto or not; MARGINAL / WAITING: approve or not).
+  Your decision is carried out at once (veto / promote); **Claude's is advice only** (a veto is a permanent skip and a promotion skips the caps: both stay yours).
+- `hook`: the kind exists (schema: the hooks that pass hook-check, plus none), but no row is made: no hook decision waits for you today (code picks the
+  hook) and tailoring cannot yet be forced to one hook.
+- `USER_ONLY` (submit, attestation, eo, salary, legal, right_to_work, criminal_record, consent, fact_bank, answers, plain_draft, check): allowed_deciders
+  `["user"]`; `decide --by claude` and `judge.decide` refuse them.
+- Status of a decision: yours = final. Claude's: `shadow` (judge.mode shadow), `low` (low confidence), `parked` (a park, asked for or forced by a guard),
+  `final` (live, send / retailor at medium or high). Only `final` takes the row out of the queue.
+- Guards (`send_blockers`), whoever decides: ATS strict < 50, the ATS structure check not passing (a critical issue, a score under 80, or a check
+  that could not run), faithfulness (autogate's gate), a failed document check; plus every `--unsupported` claim, and at most 2 re-tailorings by
+  Claude per job. A blocked send is recorded as park with the guard's words.
+- Commands: `queue [--json] [--kind] [--all]` (writes only missing rows), `show <qid> --json` (read only; the ad as `untrusted_jd`), `decide <qid>
+  <option> --by claude|user --confidence low|medium|high --reason ... [--unsupported ...]`, `judge-stats`; `why` prints the judge lines of a job.
+- The review screen (`review_job`, both `live` and `review`): prints `decided by: claude (high) | send | reasons` (or `decided by: you (claude unavailable:
+  usage limit)`); your answer is recorded on the row (a = send, r / s = park, gap r / f = retailor). In `live` (`queue_apply`), a final decision is carried
+  out: yours from `decide --by user`, else Claude's in judge.mode live, unless it disagrees with review.judge (escalated) or a send needs a typed confirmation
+  (fallback letter, no letter, failed doc check). A park returns `parked`: the job stays needs_review, its JD in the inbox.
+- Operate mode: `.claude/skills/careerops-review/SKILL.md` (user-invoked), `.claude/operate-settings.json` (`defaultMode: dontAsk`; allow
+  `Bash(careerops queue|show|decide|why *)`, `Read(./data/outputs/**)`, `Read(./data/jds/**)`; deny Edit, Write, NotebookEdit, WebFetch, WebSearch,
+  `mcp__*`, `Bash(careerops live *)`, `Bash(python* *autoapply*)`, `Bash(*autoapply*)`, `Read(./.env)`, the answers file), `scripts/operate.sh`.
+  The task named `data/out/**` and `jds/**`; the real folders are `data/outputs` and `data/jds`. Rule syntax checked against the permissions docs:
+  `Bash(cmd *)`, gitignore-style paths relative to the working folder, a bare tool name in deny removes the tool, `mcp__*` in deny covers every MCP tool,
+  deny beats allow.
+
+**v3.5 — the Claude backend** (`careerops/judge.py`). `Session.available()`: `claude` on PATH, `claude auth status` exit 0 in 10 s (or
+`CLAUDE_CODE_OAUTH_TOKEN` in the environment, loaded from .env), judge.backend / judge.mode not `human`; cached per run. `Session.decide(kind, payload,
+schema)`: `claude -p --safe-mode|--bare --tools "" --disallowedTools "mcp__*" --model <judge.model> --max-turns 1 --no-session-persistence
+--system-prompt-file careerops/prompts/judge_<kind>.md --output-format json --json-schema <schema>`, payload on stdin (trusted JSON + fenced untrusted
+blocks), cwd `paths.judge/sandbox/`, 180 s then SIGINT then kill. Unavailable (falls back to you, reason logged): not available, non-zero exit, timeout,
+is_error, no structured_output, schema mismatch, rate / usage limit; after 2 in a run, no more calls. The call log keeps ts, kind, job, backend, model,
+version, decision, confidence, reasons, cost, duration and a SHA-256 of the input, never the text. `doctor` gets the `judge:` line and redacts every
+secret env value from its output. `--mock` runs never make a session. Settings: `judge: {backend: claude, mode: shadow, model: sonnet}` (the test
+copy: backend human); code never changes them; judge-stats suggests live at >= 85% over >= 20 decisions of a kind.
+
+Not verified here: Claude Code is **not installed inside WSL** (`claude` is on the Windows side only), so `doctor` says `judge: claude unavailable (claude
+not found on PATH)` and every decision waits for you. Install it in WSL, log in once (or put `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` in .env),
+then: `careerops live --dry-run --url <RightShip> --record` (shadow: Claude's verdict above your prompt, its cost in `careerops why <id>`), `scripts/operate.sh`
+on the RightShip row, and `careerops judge-stats`. The real `claude -p` output shape (`structured_output`, `total_cost_usd`) is taken from the docs; the
+fake binary follows it.
+
+Tests: `tests/test_judge_v35.py`, `tests/review/test_decision_queue_v35a.py`, `tests/review/test_review_queue_v35.py` (slow), helper `tests/judge_fakes.py`.

@@ -24,7 +24,8 @@ paths:
   # Append-only: code only ever creates new folders/files here. Only `careerops init` creates the root.
   applications: /mnt/d/Professional/UK/Companies   # READ only: history, company list, duplicate check (never written)
   applications_auto: data/applications_auto        # where the pipeline writes its archive (the only folder it writes to)
-  judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache)
+  judge: data/judge                       # review.judge: log.csv (the judge's verdict beside your decision) and verdicts/ (cache); v3.5: decisions.jsonl (the decision queue's decisions and the Claude judge's calls), sandbox/ (the empty folder `claude -p` runs in)
+  queue: data/queue                       # v3.5a the decision queue: pending.jsonl, one row per decision that waits (careerops queue / show / decide)
   jds: data/jds                           # `careerops live`: inbox/ (JD .txt files to do), done/ and rejected/ (+ .reason.txt)
   jds_done: data/jds_done                 # JD files of jobs you skipped or applied to: skipped/ and applied/ (every copy of the job goes with it; never deleted; `careerops unskip` brings a skip back)
   live: data/live                         # `careerops live`: state.json (resume) and one summary .md per session
@@ -368,6 +369,20 @@ review:
   # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge (local Ollama qwen2.5-7b-8k), and must be
   # another family than gpt-oss.
   judge: shadow               # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML)
+
+judge:
+  # v3.5: who takes the decisions of the decision queue (`careerops queue`): Claude Code in headless mode (`claude -p`, no tools), then you.
+  # backend: claude = ask Claude when it is installed and logged in (or CLAUDE_CODE_OAUTH_TOKEN is in .env), else the decision waits for you;
+  #          human = never ask Claude.
+  # mode: shadow = Claude decides, its answer is shown and logged, and you still decide (careerops judge-stats compares the two);
+  #       live = Claude's decision is carried out, you are asked only when Claude is unavailable, unsure, blocked by a guard or in
+  #       disagreement with review.judge; human = Claude is never called. judge-stats suggests live at >= 85% agreement over >= 20
+  #       decisions of a kind; code never changes this value.
+  # model: the `claude --model` alias or full name. Submit, attestations, salary, legal, equal-opportunities questions and fact-bank /
+  #        answers writes are never Claude's, whatever is set here.
+  backend: human              # the test copy: no test reaches a real `claude` (tests that want one set claude and a fake on PATH)
+  mode: shadow                # shadow | live | human (code default: shadow)
+  model: sonnet               # code default: sonnet
 
 llm:
   # Tried in order; on 429 / 5xx / quota exhausted the router falls through to the next.

@@ -233,6 +233,7 @@ def settings(tmp_path) -> Settings:
     raw["paths"]["state"] = str(tmp_path / "state")                                  # targeting.json (the last region / size): never data/state/
     raw["paths"]["search"] = str(tmp_path / "search")                                # v3.1 agent search plans, CSVs and yield: never data/search/
     raw["paths"]["evals"] = str(tmp_path / "evals")                                  # v3.2 the agent's evaluations and decisions: never data/evals/
+    raw["paths"]["queue"] = str(tmp_path / "queue")                                  # v3.5a the decision queue: never data/queue/
     raw["paths"]["company_size"] = str(tmp_path / "company_size.jsonl")              # the 90-day size cache and the user's overrides: never data/
     raw["paths"]["company_size_overrides"] = str(tmp_path / "company_size_overrides.yaml")
     raw["paths"]["frozen_keywords"] = str(tmp_path / "frozen_keywords")      # never the tracked config/calibration/keywords

@@ -19,7 +19,8 @@ DEFAULT_PATHS = {"applications_auto": "data/applications_auto", "jds_done": "dat
                  "facts_proposed": "data/facts/proposed.yaml",     # where the pipeline writes its archive; paths.applications is read-only
                  "state": "data/state", "company_size": "data/company_size.jsonl", "company_size_overrides": "data/company_size_overrides.yaml",
                  "search": "data/search",         # v3.1 agent search: plan-<date>.json, <date>.csv (query_id,url), yield.jsonl, ingest.jsonl
-                 "evals": "data/evals"}           # v3.2 the agent's evaluations (<job id>.json, evals.jsonl), decisions.jsonl, digest-<date>.json
+                 "evals": "data/evals",           # v3.2 the agent's evaluations (<job id>.json, evals.jsonl), decisions.jsonl, digest-<date>.json
+                 "queue": "data/queue"}           # v3.5a the decision queue: pending.jsonl (decisions go to paths.judge/decisions.jsonl)
 
 
 @dataclass

@@ -860,6 +860,9 @@ class Live:
                 choice = self.h.review(jid)                                         # 4. review exactly this id
                 if choice == "quit":
                     raise StopSession("you chose quit at the review prompt; the job stays 'needs_review'", 0)
+                if choice == "parked":                                              # v3.5a: parked in the decision queue
+                    r.note = "parked in the decision queue: `careerops queue` / `careerops decide` or `careerops review`"
+                    return "parked"
                 if choice in ("skipped", SKIPPED_USER):
                     db.update_job(jid, status="skipped", reason=SKIPPED_USER if choice == SKIPPED_USER else "skipped in live review")
                     db.log(jid, "live", "skipped in review")

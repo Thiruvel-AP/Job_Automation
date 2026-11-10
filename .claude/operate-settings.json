@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Bash(careerops queue *)",
+      "Bash(careerops show *)",
+      "Bash(careerops decide *)",
+      "Bash(careerops why *)",
+      "Read(./data/outputs/**)",
+      "Read(./data/jds/**)"
+    ],
+    "deny": [
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "mcp__*",
+      "Bash(careerops live *)",
+      "Bash(python* *autoapply*)",
+      "Bash(*autoapply*)",
+      "Read(./.env)",
+      "Read(./config/profile/answers.yaml)"
+    ]
+  }
+}

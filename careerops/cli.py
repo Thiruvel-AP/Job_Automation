@@ -124,6 +124,8 @@ from .discovery import gates, manual, sources
 from .discovery.blocklog import FILE as BLOCKLOG_FILE, BlockLog
 from .discovery import register as sponsors
 from .review import judge
+from . import judge as claude_judge
+from .review import decision_queue as dq
 from .review import workflow as review
 from .review import factsave
 from . import mockroot
@@ -217,6 +219,13 @@ def _llm(args, s, db):
         return Router(s, db, only=getattr(args, "provider", None))
     except ValueError as e:
         _fail(str(e))
+
+
+def _claude_session(s, args):
+    """v3.5: the run's Claude judge (careerops/judge.py), or None in a --mock run (a mock run calls no model and no network)."""
+    if getattr(args, "mock", False):
+        return None
+    return claude_judge.session(s)
 
 
 _status = gates.verdict_status
@@ -819,6 +828,15 @@ def cmd_why(args):
         print(f"  {rec['ts']}  {rec['decision']:<13} {rec.get('job_id') or '-'}  ({rec.get('reason') or '-'})  matched by: {kinds}")
     if not found:
         print("  no decision recorded for it in " + str(decisions_mod.path(s)))
+    ids = {r["id"] for r in t.rows} | ({t.job_id} if t.job_id else set())
+    for rec in dq.log_lines(s):                                    # v3.5: the decision queue and the Claude judge's calls
+        if rec.get("job_id") in ids:
+            if rec.get("type") == "call":
+                print(f"  judge: {rec.get('ts')}  call {rec.get('kind')} {rec.get('outcome')}"
+                      + (f" {rec.get('decision')} ({rec.get('confidence')})" if rec.get("decision") else f" ({rec.get('reason')})")
+                      + (f"  ${rec['total_cost_usd']}" if rec.get("total_cost_usd") is not None else ""))
+            else:
+                print(f"  judge: {rec.get('ts')}  {rec.get('qid')}  {dq.line_of(rec)}")
     d = decided.load(s, db)
     ads = [(r["company"], r["title"], r["url"], r["location"], r["apply_url"], r["id"]) for r in t.rows] or \
           ([(t.company, t.title, t.url or t.keys.url, t.location, t.apply_url, t.job_id or None)] if (t.company and t.title) or t.keys.strong() else [])
@@ -1043,7 +1061,8 @@ def retailor_hook(db: DB, s, args):
 
 def cmd_review(args):
     s, db = _ctx(args)
-    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db), retailor=retailor_hook(db, s, args))
+    review.run(db, s, load_yaml(s.path("fact_bank")), args.limit, make_llm=lambda: _llm(args, s, db), retailor=retailor_hook(db, s, args),
+               claude=_claude_session(s, args))
 
 
 def _fail(msg: str) -> None:
@@ -1309,10 +1328,13 @@ def cmd_live(args):
         else:
             tailor_jobs(db, s, fb, llm, [job], mock=args.mock, re_extract=getattr(args, "re_extract", False))
 
+    claude_session = _claude_session(s, args)
+
     def review_it(jid: str) -> str:
         return review.review_job(db, db.job(jid), s, fb, make_llm=lambda: _llm(args, s, db), allow="aelgnowsq",
                                  skip_means_no=True,           # live has no reject key: a skipped job is a "no" for the judge log
-                                 retailor=lambda j, bank, boost: tailor_jobs(db, s, bank, llm, [db.job(j)], mock=args.mock, boost=boost))
+                                 retailor=lambda j, bank, boost: tailor_jobs(db, s, bank, llm, [db.job(j)], mock=args.mock, boost=boost),
+                                 claude=claude_session, queue_apply=True)       # v3.5a: a final queue decision is carried out here
 
     def save_facts_it(jid: str, sent: bool, why: str) -> None:
         job = db.job(jid)
@@ -1742,7 +1764,7 @@ def cmd_doctor(args):
     checks = doctor(s, ping=not getattr(args, "no_ping", False))
     for name, ok, hint in checks:
         tag = "ok" if ok is True else "warn" if ok == "warn" else "!!"
-        print(f"  [{tag}] {name}" + ("" if ok is True else f"  → {hint}"))
+        print(claude_judge.redact(f"  [{tag}] {name}" + ("" if ok is True else f"  → {hint}")))     # no secret value is ever printed
     sys.exit(0 if all(ok for _, ok, _ in checks) else 1)           # a warning ("warn") does not fail the run
 
 
@@ -2007,6 +2029,104 @@ def cmd_judge_report(args):
     print(judge.format_report(judge.read_log(path), path))
 
 
+# ------------------------------------------------------------------ v3.5a decision queue (operate mode reads and decides through these)
+def _queue_states(s, db, kind: str | None = None, everything: bool = False) -> list:
+    dq.sync(s, db)                                        # rows for jobs waiting for review / digest lines waiting for you (append-only)
+    sts = dq.current(s, db)
+    return [st for st in sts if (kind is None or st.row.kind == kind) and (everything or st.pending)]
+
+
+def cmd_queue(args):
+    """`careerops queue [--json] [--kind K] [--all]`: the decisions waiting for you (or Claude). Writes nothing but missing rows of the queue."""
+    s, db = _ctx(args)
+    sts = _queue_states(s, db, args.kind, args.all)
+    print(json.dumps(dq.json_rows(sts), indent=1, ensure_ascii=False) if args.json else dq.table(sts))
+
+
+def _row_job(s, db, row):
+    """(job, report) of a review row that still waits, else exits with why."""
+    job = db.job(row.job_id)
+    if job is None:
+        _fail(f"{row.qid}: job {row.job_id} is not in the database")
+    if job["status"] != "needs_review" or not job["out_dir"]:
+        _fail(f"{row.qid}: job {row.job_id} is '{job['status']}', not waiting for review: nothing to decide")
+    rep = review.load_report(job)
+    if dq.version_of(rep) != row.version:
+        _fail(f"{row.qid} is about an earlier version of {row.job_id} (re-tailored since): run `careerops queue` for its current row")
+    return job, rep
+
+
+def cmd_show(args):
+    """`careerops show <qid> --json`: everything needed to decide one row (the ad as untrusted_jd). Read only."""
+    s, db = _ctx(args)
+    try:
+        row = dq.get(s, args.qid)
+    except dq.QueueError as e:
+        _fail(str(e))
+    st = dq.state(s, row)
+    if row.kind == dq.REVIEW:
+        job, rep = _row_job(s, db, row)
+        ctx = dq.review_context(s, job, rep, load_yaml(s.path("fact_bank")), row)
+    elif row.kind == dq.JOB:
+        ctx = dq.job_context(s, db, row)
+    else:
+        _fail(f"{row.qid}: nothing to show for kind {row.kind}")
+    ctx["decisions"] = [{k: d.get(k) for k in ("ts", "by", "option", "confidence", "status", "reasons", "blocked_by")} for d in st.decisions]
+    ctx["pending"] = st.pending
+    print(json.dumps(ctx, indent=1, ensure_ascii=False, default=str))
+
+
+def cmd_decide(args):
+    """`careerops decide <qid> <option> --by claude|user --confidence low|medium|high --reason TEXT`: the only command that writes a decision.
+    The code guards apply whoever decides; a low confidence (and any Claude decision in shadow mode) leaves the row waiting for you."""
+    from .discovery import decide as decide_mod
+
+    s, db = _ctx(args)
+    try:
+        row = dq.get(s, args.qid)
+    except dq.QueueError as e:
+        _fail(str(e))
+    if args.by == "claude" and dq.mode(s) == "human":
+        _fail("judge.mode is human: Claude does not decide (set judge.mode: shadow or live in config/settings.yaml)")
+    blockers: list[str] = []
+    if row.kind == dq.REVIEW:
+        job, rep = _row_job(s, db, row)
+        if args.option == "send":
+            blockers = dq.send_blockers(s, job, rep, load_yaml(s.path("fact_bank")))
+    elif not dq.state(s, row).pending and args.by == "claude":
+        _fail(f"{row.qid} is decided already")
+    try:
+        rec = dq.decide(s, row, args.option, by=args.by, confidence=args.confidence, reasons=args.reason or [], blockers=blockers,
+                        unsupported=args.unsupported or [], source="cli")
+    except dq.QueueError as e:
+        _fail(str(e))
+    print(json.dumps(rec, ensure_ascii=False))
+    print(dq.line_of(rec), file=sys.stderr)
+    if row.kind == dq.JOB and args.by == "user":                  # your word on a digest line is carried out now, as veto / promote would
+        line = next((ln for ln in decide_mod.last_digest(s) if str(ln.get("job_id") or ln.get("key") or "") == row.job_id), None)
+        try:
+            if line and rec["option"] == "skip" and line.get("decision") in decide_mod.APPROVING:
+                for x in decide_mod.veto(s, db, row.job_id):
+                    print("  " + x, file=sys.stderr)
+            elif line and rec["option"] == "approve" and line.get("decision") not in decide_mod.APPROVING:
+                for x in decide_mod.promote(s, db, row.job_id):
+                    print("  " + x, file=sys.stderr)
+        except decide_mod.DecideError as e:
+            print(f"  recorded, not carried out: {e}", file=sys.stderr)
+    elif row.kind == dq.JOB:
+        print("  a job decision by Claude is advice: veto / promote stay yours", file=sys.stderr)
+    elif rec["status"] in (dq.FINAL,):
+        print("  the next `careerops live` carries it out (a send that needs a typed confirmation still asks you)", file=sys.stderr)
+    else:
+        print(f"  ({rec['status']}) the row stays waiting for you", file=sys.stderr)
+
+
+def cmd_judge_stats(args):
+    """Claude vs you per kind (shadow decisions), the confusion counts and the cost per day. Suggests judge.mode: live; never changes it."""
+    s, _ = _ctx(args)
+    print(dq.stats_text(s))
+
+
 def priority_lines(db: DB, s, n: int = 10) -> list[str]:
     """The n first jobs still open (not applied, rejected or skipped): freshness tier and age, then P = F x S. An order, not a filter:
     every job is ranked, none is left out."""
@@ -2138,6 +2258,29 @@ def main(argv=None):
     jr = sub.add_parser("judge-report", help="LLM judge vs your review decisions: agreement, kappa, false approves")
     jr.add_argument("--mock", action="store_true", help="read the isolated data/mock judge log")
     jr.set_defaults(fn=cmd_judge_report)
+    qu = sub.add_parser("queue", help="v3.5a: the decisions waiting in the decision queue (review screens, digest lines); JSON with --json")
+    qu.add_argument("--json", action="store_true")
+    qu.add_argument("--kind", choices=[dq.REVIEW, dq.JOB, dq.HOOK])
+    qu.add_argument("--all", action="store_true", help="also the rows already decided")
+    qu.add_argument("--mock", action="store_true", help="the isolated data/mock queue")
+    qu.set_defaults(fn=cmd_queue)
+    sh = sub.add_parser("show", help="v3.5a: everything needed to decide one queue row, as JSON (the ad is wrapped as untrusted_jd); read only")
+    sh.add_argument("qid")
+    sh.add_argument("--json", action="store_true", help="JSON output (the only format)")
+    sh.add_argument("--mock", action="store_true")
+    sh.set_defaults(fn=cmd_show)
+    de = sub.add_parser("decide", help="v3.5a: decide one queue row (the only writing queue command); code guards apply to everyone")
+    de.add_argument("qid")
+    de.add_argument("option")
+    de.add_argument("--by", required=True, choices=list(dq.DECIDERS))
+    de.add_argument("--confidence", default="high", choices=list(dq.CONFIDENCE))
+    de.add_argument("--reason", action="append", help="up to 3; repeat the flag")
+    de.add_argument("--unsupported", action="append", help="a CV or letter claim the fact-bank excerpt does not support (any one blocks send)")
+    de.add_argument("--mock", action="store_true")
+    de.set_defaults(fn=cmd_decide)
+    js = sub.add_parser("judge-stats", help="v3.5: Claude vs your decisions per kind (shadow mode), confusion counts, cost per day")
+    js.add_argument("--mock", action="store_true")
+    js.set_defaults(fn=cmd_judge_stats)
     dc = sub.add_parser("discover", help="find open jobs and write them to data/jds/inbox/ (--ats --reed --adzuna --gmail-alerts); "
                                          "with none of these: pull the boards in sources: into the database and triage")
     dc.add_argument("--ats", action="store_true", help="Greenhouse / Lever / Ashby boards of the companies in your archive "

@@ -40,7 +40,8 @@ from ..tailoring import letters as letters_mod
 from ..tailoring import tailor as tailor_mod
 from ..tailoring.tailor import FALLBACK_MARK, refresh_ats, regenerate_letter as _regenerate_letter, typography_report
 from ..tailoring import provisional as prov
-from . import addfacts, gaps, judge, letter_edit
+from . import addfacts, claude_review, gaps, judge, letter_edit
+from . import decision_queue as dq
 
 CONFIRM_FALLBACK = "send fallback"
 CONFIRM_NO_LETTER = "no letter"
@@ -711,6 +712,7 @@ GAP_MENU = ("[a] apply as is   [s] skip   [r] re-tailor with the claimable point
             "[f] add facts     [o] open PDF   [q] quit")      # the choices for a job in the review band (the gap report); `r` is not reject here
 GAP_ALSO = "elngw"                                          # the other keys still work in that prompt; listed on a line of their own
 SKIPPED_USER = "skipped (user)"                             # review_job's answer to `s` at the gap report; live files the JD under jds_done/skipped/
+PARKED = "parked"                                           # v3.5a: a park decided in the queue (live): the job stays 'needs_review', its JD in the inbox
 
 
 def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge.Verdict | None:
@@ -736,7 +738,7 @@ def _ask_judge(settings, job, rep: dict, fb: dict, make_llm, mode: str) -> judge
 
 
 def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: str = "aerlgnowsq",
-               skip_means_no: bool = False, retailor=None) -> str:
+               skip_means_no: bool = False, retailor=None, claude=None, queue_apply: bool = False) -> str:
     """Review ONE job at the prompt. Returns 'approved' | 'rejected' | 'skipped' | 'skipped (user)' | 'quit'. `allow` names the choices
     offered (a approve, e edit, r reject, l regenerate the letter, o open the PDFs, w open the apply page in the browser, s skip, q quit); `ask` answers the
     prompts (default: input). This function changes nothing in the database on a skip: the caller stores it (`careerops review`: skip_user,
@@ -749,7 +751,13 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
     A job in the review band (50 <= strict S < 70, or the "CV under-uses the fact bank" rescue) gets the gap report (review/gaps.py) and its own
     choices (GAP_MENU): `r` re-tailors once with the claimable keywords ranked first, `f` asks about the top gap keywords, keeps what the user
     types as provisional facts (data/facts/proposed.yaml, never the fact bank) and re-tailors with them, `s` answers 'skipped (user)'. Both
-    re-tailorings go through `retailor(job id, fact bank for this job, keywords to rank first)`, which tailors and records the job (cli.py)."""
+    re-tailorings go through `retailor(job id, fact bank for this job, keywords to rank first)`, which tailors and records the job (cli.py).
+
+    v3.5a / v3.5 (decision_queue.py, claude_review.py): every version on screen is a review row of the decision queue. `claude` (a judge.Session)
+    is asked once per row unless judge.mode is human; the screen says who decided. Your answer at the prompt is recorded on the row (approve =
+    send, reject / skip = park, r / f = retailor). With `queue_apply` (live), a final decision is carried out without the prompt: yours from
+    `careerops decide --by user`, or Claude's in judge.mode live, unless it must come to you (claude_review.escalation, a send that needs a typed
+    confirmation). A park returns PARKED."""
     ask = ask or input
     prefs = settings.path("preferences")
     mode = judge.judge_mode(settings)
@@ -817,6 +825,62 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the CV changed: judge this version
         return True
 
+    qrow: list[dq.Row] = []                                                  # the queue row of the version on screen
+
+    def queue_step(apply: bool) -> str | None:
+        """Queue this version's row, ask Claude about it once, print who decided; with `apply`, carry out a final decision. Returns review_job's
+        answer when the job is done here, None to go on to the prompt."""
+        nonlocal job, rep
+        for _ in range(dq.RETAILOR_MAX + 1):
+            row = dq.review_row(settings, job, rep)
+            qrow[:] = [row]
+            why_none = ""
+            if dq.state(settings, row).latest("claude") is None and dq.mode(settings) != "human" and claude is not None:
+                _, why_none = claude_review.ask(settings, claude, job, rep, fb, row)
+            st =dq.state(settings, row)
+            for line in claude_review.screen_lines(st, why_none):
+                print(line)
+            d = st.final
+            if not apply or d is None:
+                return None
+            why = claude_review.escalation(d, verdict)
+            if why:
+                print(f"  escalated to you: {why}")
+                return None
+            who = "you (careerops decide)" if d["by"] == "user" else f"claude ({d['confidence']})"
+            if d["option"] == "park":
+                print(f"  parked by {who}: the job stays waiting for review; its JD stays in the inbox")
+                db.log(job["id"], "review", {"queue": row.qid, "parked_by": d["by"]})
+                return PARKED
+            if d["option"] == "send":
+                if letter_status(rep) in ("ok", "off", "declined") and doc_check(rep, settings, view(), job).ok:
+                    approve(db, job, rep, prefs)
+                    judge.log_decision(settings, job, rep, verdict, "approve" if d["by"] == "user" else "auto", f"queue {row.qid}: {who}")
+                    db.log(job["id"], "review", {"queue": row.qid, "approved_by": d["by"], "confidence": d.get("confidence")})
+                    print(f"  approved by {who}. Whether a form is submitted is still decided by the apply gates and by you.")
+                    contacts_step(db, job, settings, ask)
+                    return "approved"
+                print(f"  {who} said send, but this letter or document check needs your typed confirmation: the prompt follows")
+                return None
+            if d["option"] == "retailor":
+                gap_now = gaps.build(rep, view(), band, jd=_jd(job)) if rep.get("ats") and gaps.applies(rep, band) else None
+                print(f"  re-tailoring, as {who} decided")
+                done = re_tailor(gap_now.claimable_terms() if gap_now is not None else [])
+                if done is None:
+                    return "quit"
+                if not done:
+                    return None
+                continue                                                     # a new version: its own row, its own decision
+        return None
+
+    def record(choice: str, reason: str = "") -> None:
+        if qrow:
+            dq.record_user(settings, qrow[0], choice, reason)
+
+    done = queue_step(queue_apply)
+    if done is not None:
+        return done
+
     while True:
         hook_mode = bool(rep.get("letters"))
         gap_keys = "kd" if ((rep.get("letter") or {}).get("gap") or {}).get("paragraph") and (rep.get("letter") or {}).get("status") == "ok" else ""
@@ -857,6 +921,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
                 print(f"  NOT approved: {e}")
                 continue
             judge.log_decision(settings, job, rep, verdict, "approve")
+            record("approve")
             contacts_step(db, job, settings, ask)
             return "approved"
         elif c == "w":
@@ -912,8 +977,10 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
             verdict = _ask_judge(settings, job, rep, fb, make_llm, mode)       # the letter changed: judge this version
         elif c == "r" and gap is not None:
             if gap.claimable_terms():
+                record("retailor")
                 if re_tailor(gap.claimable_terms()) is None:
                     return "quit"
+                queue_step(False)                                            # the new version's row: what Claude says about it
             else:
                 print("  nothing claimable is missing: only a new fact (f) can add points")
         elif c == "f" and gap is not None:
@@ -921,12 +988,15 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
             if not facts:
                 print("  nothing typed: nothing changed")
                 continue
+            record("facts")
             if re_tailor(gap.claimable_terms() + [f.keyword for f in facts]) is None:
                 return "quit"
+            queue_step(False)
         elif c == "r":
             reason = ask("reason: ").strip() or "unspecified"
             reject(db, job, rep, prefs, reason)
             judge.log_decision(settings, job, rep, verdict, "reject", reason)
+            record("reject", reason)
             return "rejected"
         elif c == "e" and (rep.get("letter") or {}).get("mode") == "company" and \
                 ask("Edit the [c]v or the [l]etter? (enter = cv) ").strip().lower() in ("l", "letter"):
@@ -951,6 +1021,7 @@ def review_job(db: DB, job, settings, fb: dict, make_llm=None, ask=None, allow: 
         elif c == "s":
             if skip_means_no:
                 judge.log_decision(settings, job, rep, verdict, "reject", "skipped in live review")
+            record("skip")
             return SKIPPED_USER if gap is not None else "skipped"
         elif c == "q":
             return "quit"
@@ -969,11 +1040,11 @@ def skip_user(db: DB, settings, job_id: str, where: str = "review") -> None:
         print(f"  JD files not moved: {e}")
 
 
-def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None, retailor=None) -> None:
+def run(db: DB, settings, fb: dict, limit: int | None = None, make_llm=None, retailor=None, claude=None) -> None:
     queue = order(db.jobs("needs_review"), settings, tailored=True)[:limit]
     print(f"{len(queue)} job(s) waiting for review.")
     for job in queue:
-        result = review_job(db, job, settings, fb, make_llm, retailor=retailor)
+        result = review_job(db, job, settings, fb, make_llm, retailor=retailor, claude=claude)
         if result in (SKIPPED_USER, "skipped"):
             skip_user(db, settings, job["id"])
         if result == "quit":
