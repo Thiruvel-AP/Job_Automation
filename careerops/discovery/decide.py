@@ -44,10 +44,11 @@ APPROVE_FROM, PRIORITY_FROM, MARGINAL_FROM = 4.0, 4.5, 3.5
 AUTO_PRIORITY, AUTO, READY = "auto_approved_priority", "auto_approved", "ready"
 MARGINAL, SKIP, CONFIRM, WAITING = "marginal", "skipped_agent", "needs_confirmation", "waiting"
 VETOED, PROMOTED, RESET = "vetoed", "promoted", "reset"
+ESTIMATE_SKIP = "skipped_estimate"            # v3.5.5: live did not tailor an approved ad whose estimate F is under priority.min_estimate (apply/estimate_skip.py)
 APPROVING = (AUTO_PRIORITY, AUTO, READY)
-HELD = (MARGINAL, SKIP, CONFIRM)                 # a logged decision that keeps the ad out of the agent's pool until `unskip`
+HELD = (MARGINAL, SKIP, CONFIRM, ESTIMATE_SKIP)  # a logged decision that keeps the ad out of the agent's pool until `unskip`
 LABEL = {AUTO_PRIORITY: "AUTO-APPROVED", AUTO: "AUTO-APPROVED", READY: "READY FOR YOU", MARGINAL: "MARGINAL", SKIP: "AGENT-SKIP",
-         CONFIRM: "NEEDS CONFIRMATION", WAITING: "WAITING"}
+         CONFIRM: "NEEDS CONFIRMATION", WAITING: "WAITING", ESTIMATE_SKIP: "ESTIMATE-SKIP"}
 ORDER = (AUTO_PRIORITY, AUTO, READY, WAITING, MARGINAL, CONFIRM, SKIP)
 RESUME = {"blacklist": "`careerops promote N` to evaluate it anyway", "posting_closed": "share a live posting (`careerops live --url LINK`)",
           "jd_unavailable": "paste the ad (`careerops live --clipboard`)", "agency": "`careerops promote N` once you know the employer"}
@@ -713,10 +714,13 @@ def reset(settings, *, match: str | None = None, now: datetime | None = None) ->
                            "was": e.get("decision")})
             out.append(f"back in the agent's pool: {name} (was {LABEL.get(e['decision'], e['decision'])})")
     log(settings, events, now)
-    from ..apply import hardstop
+    from ..apply import estimate_skip, hardstop
 
-    for src, dst in hardstop.restore(settings, {e["key"] for e in events}):        # v3.5.4: a file the hard stop filed away comes back to the inbox
+    keys = {e["key"] for e in events}
+    for src, dst in hardstop.restore(settings, keys):        # v3.5.4: a file the hard stop filed away comes back to the inbox
         out.append(f"  moved {hardstop.FOLDER}/{src.name} -> inbox/{dst.name}")
+    for src, dst in estimate_skip.restore(settings, keys):   # v3.5.5: so does one the estimate stop held back (and it is not estimate-skipped again)
+        out.append(f"  moved {estimate_skip.FOLDER}/{src.name} -> inbox/{dst.name}")
     return out
 
 

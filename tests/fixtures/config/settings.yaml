@@ -150,6 +150,7 @@ roles:
     # Junior and mid only. `\bintern(ship)?\b` (not `intern`) so "International" / "Internal" still pass.
     exclude: ['\bsenior\b', '\bsr\.?\b', '\bstaff\b', '\bprincipal\b', '\blead\b', '\bhead of\b', '\bdirector\b',
               '\bmanager\b', '\bvp\b', '\b(iii|iv)\b', '\bintern(ship)?\b']
+    skip_senior_before_tailoring: false       # live also stops an approved "Senior" title before tailoring when true (apply/hardstop.py)
   floor: 0.70                 # same as scoring.band[0]; jobs whose honest ceiling can't reach it queue last
   tier3_max_share: 0.20       # tier 3 gets at most 20 % of a run's tailoring slots unless tiers 1–2 run out
 
@@ -237,6 +238,22 @@ priority:
     lead: 0.4              # lead | principal | staff | architect
     senior: 0.6            # senior | sr
     other: 1.0             # no level word
+  # W, the freshness weight (v3.5.5): the order is P x W, highest first, no longer the tier first. t0 = posted at most 24 h ago, t1 = at most 72 h,
+  # t2 = at most 7 days, t3 = older or undated. A week-old job with a much better fit now goes ahead of a day-old one with a poor fit; t0 is never below t1.
+  freshness_weight:
+    t0: 1.00
+    t1: 1.00
+    t2: 0.95
+    t3: 0.85
+  # live does not tailor an approved ad whose estimate F (the zero-token ceiling) is under this: it moves to jds_done/skipped_estimate/ with its reason, logged
+  # `skipped_estimate`; `careerops unskip --shortlist --match ...` reverses it for good. 0 here: the fixture keeps every live test off the stop; tests of the stop set it themselves.
+  min_estimate: 0
+  # The calibration of the zero-token ceiling estimate (discovery/ceiling_estimate.py): the final keyword list is expected to hold this many terms, the fact bank
+  # backing this share of the ones the model adds beyond the ad's taxonomy terms. Fitted on the 46 tailored jobs of 11 Nov 2026 (mean absolute error 12.9 points);
+  # `careerops calibrate --scores` prints the error and suggests new values. Yours to change.
+  estimate:
+    expected_terms: 34
+    other_coverage: 0.30
 
 cv:
   # What stands between the two dates of a range on the CV: " – " (an en dash, the default) or " to ". One space is kept each side.

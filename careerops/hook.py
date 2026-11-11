@@ -58,6 +58,8 @@ _LINT_NUMBER = re.compile(r"(?<![A-Za-z0-9])\d+(?:[.,:]\d+)*")                  
 _LINT_MODEL_NAMES = ("llama", "gpt", "claude", "gemma", "gemini", "mistral", "mixtral", "qwen", "phi", "bert", "roberta", "distilbert", "t5", "yolo",
                      "resnet", "python", "deepseek", "falcon", "whisper", "sdxl", "stable diffusion", "sonnet", "opus", "haiku", "vit", "clip", "llava")
 _LINT_MODEL = re.compile(r"(?i)\b(?:" + "|".join(re.escape(n) for n in _LINT_MODEL_NAMES) + r")(?![a-z])(?:[ \t-]?v?\d+(?:\.\d+)*[a-z]{0,2}\b)+")
+# "16.2% -> 27.3%", "32% → 52%", "8.2 => 5.5 GB": the first number of a before-to-after pair stands for the pair (the second is not a second result)
+_LINT_PAIR = re.compile(r"(?P<first>(?<![A-Za-z0-9])\d+(?:[.,:]\d+)*\s*%?)\s*(?:->|=>|-->|→|⇒|⟶|➔|➜|➝|–>|—>)\s*\d+(?:[.,:]\d+)*\s*%?")
 _LINT_PARAMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?[bB]\b")                                           # 8B, 70B, 1.5B: a model's parameter count
 _LINT_UNIT = re.compile(r"(?<![A-Za-z])(?:(?i:gb|mb|ram|gpu|cpu)|ms)(?![A-Za-z])")             # a hardware or resource unit
 _STOP = frozenset("""with that this from have been into their over using used which what when where while also about than then
@@ -433,8 +435,9 @@ def selection_reason(entry_id: str, overlap, score: float) -> str:
 
 def result_numbers(text: str) -> list[str]:
     """The numbers of a headline that state a result: model names with their version and size ("Llama 3.1 8B", "GPT-4o") and bare parameter counts
-    ("70B") are left out first."""
-    return _LINT_NUMBER.findall(_LINT_PARAMS.sub(" ", _LINT_MODEL.sub(" ", text)))
+    ("70B") are left out first, and a before-to-after pair written with an arrow ("16.2% -> 27.3%", "32% → 52%") counts once, as one result (the
+    pair is the result; v3.5.5). "from 12 to 3" is not an arrow pair: it still counts twice."""
+    return _LINT_NUMBER.findall(_LINT_PAIR.sub(r"\g<first>", _LINT_PARAMS.sub(" ", _LINT_MODEL.sub(" ", text))))
 
 
 def headline_lint(headline: str) -> list[str]:

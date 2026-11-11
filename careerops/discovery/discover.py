@@ -1374,7 +1374,7 @@ class Discover:
                    "open_listing": c.open_listing, "ceiling_pre": pre, "country": c.country if c.listed_only else None,
                    "work_country": work.country}
             out.append((priority.priority(job, self.s, tailored=False, today=self.today), c, path))
-        return sorted(out, key=lambda t: (t[0].tier, -t[0].p, -t[0].s, t[1].company, t[1].title))
+        return sorted(out, key=lambda t: (*priority.rank_key(t[0]), t[1].company, t[1].title))
 
     def listing(self, n: int = 10) -> list[str]:
         lines = []

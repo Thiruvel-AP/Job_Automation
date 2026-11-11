@@ -1787,9 +1787,13 @@ def cmd_calibrate(args):
     if getattr(args, "scores", False):
         from .discovery import decide
 
+        from .apply import estimate_skip
         from .discovery import ceiling_estimate
 
-        print("\n".join(decide.calibrate(s, db) + ceiling_estimate.report(s)))
+        # v3.5.5: the table of the estimate F against the final ceiling of every tailored job in the database (read only), then the log of each tailoring
+        jobs = db.conn.execute("SELECT id, company, title, description, ceiling FROM jobs WHERE ceiling IS NOT NULL AND description IS NOT NULL").fetchall()
+        table = ceiling_estimate.calibration(s, jobs, load_yaml(s.path("fact_bank")), threshold=estimate_skip.threshold(s))
+        print("\n".join(decide.calibrate(s, db) + table + [""] + ceiling_estimate.report(s)))
         return
     # --mock moves every generated-data path (reports included) under data/mock; the manifest stays where the user keeps it
     manifest = Path(args.manifest) if args.manifest else load_settings(args.config).path("calibration") / "manifest.yaml"
@@ -2132,7 +2136,7 @@ def cmd_judge_stats(args):
 
 
 def priority_lines(db: DB, s, n: int = 10) -> list[str]:
-    """The n first jobs still open (not applied, rejected or skipped): freshness tier and age, then P = F x S. An order, not a filter:
+    """The n first jobs still open (not applied, rejected or skipped), best P x W first (W = the freshness weight of the tier). An order, not a filter:
     every job is ranked, none is left out."""
     from .discovery import priority as prio
 
@@ -2141,7 +2145,7 @@ def priority_lines(db: DB, s, n: int = 10) -> list[str]:
     out = []
     for j in ranked:
         p = prio.priority(j, s, tailored=bool(j["out_dir"]))
-        out.append(f"  T{p.tier} {p.age():>7}  {p.p:.2f} = {p.f:.2f} x {p.s:.2f}{' ' + p.role_text() if p.r is not None else ''}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
+        out.append(f"  T{p.tier} {p.age():>7}  {p.p:.2f} = {p.f:.2f} x {p.s:.2f}{' ' + p.role_text() if p.r is not None else ''} x W {p.w:.2f}  {j['company']} | {j['title']}  [{j['status']}; {p.s_reason}]")
     return out
 
 
@@ -2162,7 +2166,7 @@ def cmd_status(args):
         print(f"{t:5s} " + " ".join(f"{cell.get((t, s), 0):12d}" for s in statuses))
     top = priority_lines(db, s)
     if top:
-        print("\nTop jobs, freshest tier first, then P = F x S x R (not yet applied):")
+        print("\nTop jobs by P x W (freshness-weighted), P = F x S x R (not yet applied):")
         print("\n".join(top))
     archived = list(db.conn.execute(
         "SELECT c.folder, COUNT(*) AS n FROM archive_index r JOIN archive_index c ON c.kind='company' "

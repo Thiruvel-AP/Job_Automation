@@ -49,7 +49,7 @@ career-ops/
 │   │   ├── countries.py · jobbank.py country names/codes/places (the `listed_only` rule) · Canada's Job Bank open-data CSV
 │   │   ├── reed.py · gmail.py    the Reed Jobseeker API · read-only Gmail API (OAuth by hand) and the alert-email parsers
 │   │   ├── gates.py              rule triage (title, seniority, location, SRE, line mgmt…); sponsorship is never a rule
-│   │   ├── priority.py           freshness tier, then P = F x S x L x R (L = level fit, R = role fit from the title's family): orders the live inbox, discover's listing and status
+│   │   ├── priority.py           P x W, P = F x S x L x R (L = level fit, R = role fit from the title's family), W = freshness weight of the tier: orders the live inbox, discover's listing and status
 │   │   ├── freshness.py          posted_at from the source (Greenhouse first_published, Lever createdAt ...), age in hours, tiers 0-3
 │   │   └── manual.py             hand-added jobs: read_jd (validation), add_jd, triage_job
 │   ├── hook.py                   the hook: the `hook_library` entry that fits the ad, used word for word (headline, profile line 1, its proof bullet first, letter sentence 1); no model
@@ -264,13 +264,16 @@ careerops promote 5               # v3.2: a MARGINAL / AGENT-SKIP / WAITING / NE
 careerops shortlist --ask         # v3.2: this run only, the old manual list and [a] prompt (agent.decide: ask makes it the default)
 careerops calibrate --scores      # v3.2: reply rate per agent score band once 20+ scored applications have an outcome; suggests a higher approval line, never changes one
                                   # v3.5.4: also the mean absolute error of the zero-token ceiling estimate vs the final ceiling of every tailored job
+                                  # v3.5.5: the table of the estimate F vs the final ceiling of EVERY tailored job in the database (n, mean absolute error, bias, worst five, what the F < 0.45 stop would have held back, the best-fit calibration); read only
 careerops recheck [--apply]       # v3.2.1: the latest agent digest under today's rules, zero tokens: quick-score moves, new hard stops (--apply records WAITING / MARGINAL ones as AGENT-SKIP)
                                   # v3.5.4: first the approved files live would now stop (training scheme, excluded level, blacklist); --apply moves them to jds_done/skipped_agent/
+                                  # v3.5.5: and, with roles.levels.skip_senior_before_tailoring: true, a "Senior" title
 careerops ats-check [PDF | --id JOB]   # v3.3: can an ATS parser READ the CV? structural score 0-100 + grade on the PDF text layer, the content lints (never applied), with a job the screener signals
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
 careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
+                                   # v3.5.5: before tailoring, an approved ad whose estimate F is under priority.min_estimate (0.45) moves to jds_done/skipped_estimate/ (logged `skipped_estimate`, zero tokens); `careerops unskip --shortlist --match ...` brings it back for good
 careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
 careerops live --dry-run           # the same, stopping after tailor + review: no apply step
 careerops live --auto --no-submit  # gated auto-apply, step 1: fill the forms of the jobs that pass every gate and screenshot them, never click Submit (see "Auto-apply")
@@ -586,11 +589,11 @@ file is rejected).
 Put one job description per `.txt` file in `data/jds/inbox/` (created on first use, with `done/` and `rejected/` beside it), or fetch
 one with `careerops add-url`. The
 first lines may name the job: `Company: …`, `Title: …`, `URL: …`, `Location: …` (anything missing is asked for). Then
-`careerops live` takes the files best first (freshness tier, then the **estimate** of P = F x S x L x R; it prints the order), up to `--max`
-(default 5). It works in two passes. **Pass 1** tailors the selected jobs, nothing else is asked but the rule-skip question. The
-estimate (F is only the triage-time ceiling) cannot tell which tailoring will be good (an estimate of 0.86 became 0.25), so **pass 2**
-sorts the tailored jobs by freshness tier, then the **final P**, prints the table (company, role, age, tier, `LEVEL:` flag, ATS ceiling,
-P, and an `Apply:` line each) and only then reviews them. Nothing is dropped; a spent LLM budget in pass 1 still lets you review what was
+`careerops live` takes the files best first (the **estimate** of P x W, P = F x S x L x R, W the freshness weight of the tier; it prints the order), up to `--max`
+(default 5). In approved mode it first files away, with no model call, the ads whose estimate F is under `priority.min_estimate` (`apply/estimate_skip.py`; reversible with `careerops unskip --shortlist`). It works in two passes. **Pass 1** tailors the selected jobs, nothing else is asked but the rule-skip question. The
+estimate (F is only the zero-token ceiling) cannot tell which tailoring will be good (an estimate of 0.86 became 0.25), so **pass 2**
+sorts the tailored jobs by the **final P x W**, prints the table (company, role, age, tier, `LEVEL:` flag, ATS ceiling,
+P, order, and an `Apply:` line each) and only then reviews them. Nothing is dropped; a spent LLM budget in pass 1 still lets you review what was
 tailored. For each job:
 
 1. checks the file (missing, under 500 bytes, not UTF-8 → moved to `rejected/` with a `.reason.txt` beside it, loop continues);
@@ -1230,7 +1233,10 @@ clearance, IR35, travel, the posting age, and anything the pipeline flagged) and
 
 I hold the UK Graduate visa, so no job is dropped for sponsorship: not an employer missing from the register, not a recruitment agency,
 not a JD that says "right to work without sponsorship" or "we do not offer sponsorship". And no job is dropped for being old.
-`priority.py` ranks, lexicographically: **the freshness tier first, then P = F x S x L x R inside it**.
+`priority.py` ranks by **P x W** (v3.5.5; before, the freshness tier came first and P only inside it), P = F x S x L x R, W the weight of the tier:
+`priority.freshness_weight` in settings.yaml, `t0` 1.00 (at most 24 h), `t1` 1.00 (72 h), `t2` 0.95 (7 days), `t3` 0.85 (older or undated). A week-old ad whose
+fit is much better now goes before a day-old one with a poor fit; a tier-3 ad has to be about 18% better than a tier-0 one to go ahead. Ties go to the surer
+employer S, then to the name. `--fresh` still selects on the tier.
 
     tier 0  posted at most 24 h ago      tier 1  at most 72 h      tier 2  at most 7 days      tier 3  older (or undated)
     P = F x S x L x R      F = honest ATS ceiling (0-1)

@@ -2420,3 +2420,30 @@ Data Science Trainee, Junior AI Developer, 3 x Trainee AI Engineer). The 10 Nov 
 
 Tests: `tests/apply/test_hardstop.py`, `tests/discovery/test_ceiling_estimate.py`, new cases in `tests/test_hook_selection.py`.
 
+## 5bp. v3.5.5 — fixes from the 11 Nov 17:41 run (11 Nov 2026) — **done offline** (fixtures, fake hooks); the calibration table was read from the real database, read only
+
+1. **Live order is P x W** (`discovery/priority.py`): the freshness tier no longer comes first. W = `priority.freshness_weight` (t0 1.00, t1 1.00, t2 0.95, t3 0.85; the
+   pasted note named T1 1.00, T2 0.95, T3 0.85 and left the freshest tier out, which cannot weigh less than T1). The key is `rank_key(pr, tie)` = (-P x W, -S, name);
+   it orders live's inbox and its review queue, discover's listing and `status`. The listing prints `x W 0.85 (T3) = order 0.51` and the review table an `order (P x W)` column.
+2. **Estimate stop before tailoring** (`apply/estimate_skip.py`): in approved mode `live` moves an approved ad whose estimate F is under `priority.min_estimate` (0.45; 0 = off)
+   to `paths.jds_done/skipped_estimate/` with `<name>.reason.txt`, and logs `skipped_estimate` (in `decide.HELD`, label ESTIMATE-SKIP). Reversible: `unskip --shortlist --match`
+   moves the file back to the inbox and the ad is never stopped again (the log holds a reset of a `skipped_estimate`); a `promote`d job is never stopped. An ad with fewer than
+   3 readable terms (`Estimate.reliable`) is neither stopped nor read as F 0. A dry run only names the stops. Not in `--include-unapproved` / `--url` / a named file.
+3. **Estimate calibration** (`discovery/ceiling_estimate.py`). Table of F vs the final ceiling of the 47 tailored jobs in `data/careerops.db`: the v3.5.4 estimate had MAE 40.2 points
+   and bias +36.5 (Scale AI 1.00 vs 0.42, Iwoca 0.57 vs 0.39, Anthropic Enterprise 1.00 vs 0.07). Cause: the final keyword list is the taxonomy terms plus ~15 phrases the model writes
+   (the fact bank backs 92% of the first and 18% of the second), and the estimate saw only the first. F now = (backed known weight + `other_coverage` x other weight) / (known weight
+   + other weight), other = max(0, `expected_terms` - known) terms at the required weight; known terms are read as `tailor.analyse` reads them (benefits cut, headings closed, near-duplicates
+   merged), claimable as `ats.py` counts them (deny list, CV-able bank `tailor.cv_bank`). `priority.estimate` = 34 terms at 0.30, fitted: MAE 12.9 points, bias +0.6 on the 46 real jobs
+   (13.9 / -0.7 with the one test entry "o" in the database). **The 10-point target is not reached**: the rest is the model's own choice of list (7 terms for one ad, 38 for another; its
+   phrases backed 0% to 100%), and a noun-phrase scan of the ad correlated 0.04 with it. At F < 0.45 the stop would have held 24 of the 47 jobs, 19 of which ended under a 50% ceiling anyway;
+   2 real ones (Graphcore 68%, Ekimetrics 70%) would have been held wrongly; 11 jobs that passed F still ended under 50%.
+   **Trainline's F 0.00** (Senior Data Scientist): the ad was read, but `scorer.taxonomy_keywords` never leaves a "skip" section until a heading with a colon or a known opening phrase, and
+   "INTRODUCING DATA SCIENCE & ANALYTICS AT TRAINLINE" / "WE'D LOVE TO HEAR FROM YOU IF YOU HAVE... " (all caps, an emoji) never closed "About us": every term sat in company blurb and only the perks words
+   were left (then dropped as inferred) and the label "Tech Stack". `ceiling_estimate.close_sections` now rewrites such headings first; `scorer.py` itself is untouched (it has your uncommitted edits).
+   **Triage's E does not move**: it keeps the stated / structural share (`Estimate.stated_share`) so the T thresholds keep their scale; F is the calibrated number (the v3.5.4 note that E = F is superseded).
+   `calibrate --scores` prints the whole table's summary and the best-fit pair (never writes a setting).
+4. **Hook lint**: an "A -> B" before-to-after pair counts as one result (`hook.result_numbers`; h_finetune "16.2% → 27.3%" no longer warns). This was already in the working tree, uncommitted, as v3.5.5.
+5. **`roles.levels.skip_senior_before_tailoring`** (default false): with it on, `hardstop` also stops an approved "Senior" / "Sr" title before tailoring (to `skipped_agent/`, AGENT-SKIP, `unskip --shortlist` reverses it).
+   Placed under `roles.levels` beside `exclude`, not at a top-level `levels:` (there is none).
+
+Tests: `tests/apply/test_estimate_skip.py` (new), `tests/discovery/test_ceiling_estimate.py`, `test_priority.py`, `test_freshness.py`, `tests/apply/test_live_order.py`, `tests/test_hook_selection.py`.

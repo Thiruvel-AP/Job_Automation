@@ -148,12 +148,17 @@ def level_excluded(title: str, settings) -> str | None:
     return _any(settings["roles"]["levels"]["exclude"], t) or _any(list(ALWAYS_EXCLUDED), t)
 
 
-def pre_ceiling(jd: str, fb: dict, settings) -> float:
-    """The zero-token estimate of the honest ceiling (discovery/ceiling_estimate.py, v3.5.4: the ad's stated and structural terms, taxonomy terms and its
-    own bullet labels, against the fact bank). No LLM, cheap enough to run at triage to order the queue."""
+def pre_estimate(jd: str, fb: dict, settings):
+    """The zero-token estimate of the honest ceiling with its parts (discovery/ceiling_estimate.Estimate)."""
     from . import ceiling_estimate
 
-    return ceiling_estimate.estimate(jd, fb, settings).ceiling
+    return ceiling_estimate.estimate(jd, fb, settings)
+
+
+def pre_ceiling(jd: str, fb: dict, settings) -> float:
+    """The zero-token estimate of the honest ceiling (discovery/ceiling_estimate.py: the terms the ad states, taxonomy terms and its own bullet labels, against the
+    CV-able fact bank, plus the terms the model is expected to add; v3.5.5). No LLM, cheap enough to run at triage to order the queue."""
+    return pre_estimate(jd, fb, settings).ceiling
 
 
 def visa_countries(settings) -> tuple[str, ...]:

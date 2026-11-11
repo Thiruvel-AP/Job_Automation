@@ -1,6 +1,10 @@
-"""Priority = what to look at first. Fresh jobs first, then fit; sponsorship is a weight on the order, never a filter.
+"""Priority = what to look at first. Fit weighted by freshness; sponsorship is a weight on the order, never a filter.
 
-  order  =  ( freshness tier,  then  P = F x S x L x R  highest first )          lexicographic: a tier-0 job always comes before a tier-1 job
+  order  =  P x W, highest first      (ties: the surer employer S, then the id)       v3.5.5: no longer tier first
+
+  P = F x S x L x R, below. W is the freshness weight of the job's tier, `priority.freshness_weight` in settings.yaml (t0 1.00, t1 1.00, t2 0.95, t3 0.85 by
+  default): a week-old job with a much better fit now beats a day-old one with a poor fit (before, a tier-0 job always came first, whatever its P), while a
+  tier-3 job still has to be about 18% better than a tier-0 one to go ahead of it. The tier is still shown, and still what `--fresh` selects on.
 
   tier  0 posted at most 24 h ago, 1 at most 72 h, 2 at most 7 days, 3 older or undated (discovery/freshness.py). The posting time is the
         source's own (Greenhouse first_published, Lever createdAt, Ashby publishedAt, Reed date, Adzuna created; a Gmail alert's arrival
@@ -36,6 +40,7 @@ from . import countries, freshness, workcountry
 
 DEFAULT_WEIGHTS = {"exact": 1.00, "fuzzy": 0.90, "unknown": 0.75, "no_sponsorship": 0.65, "non_home": 0.50}
 DEFAULT_LEVELS = {"manager": 0.3, "lead": 0.4, "senior": 0.6, "other": 1.0}
+DEFAULT_FRESHNESS = {0: 1.00, 1: 1.00, 2: 0.95, 3: 0.85}     # W by freshness tier: T1 1.00, T2 0.95, T3 0.85 (11 Nov 2026); T0, fresher still, is not below T1
 DEFAULT_ROLE_STEP = 0.03
 ROLE_FLOOR = 0.5
 # Title words per level, highest level first: "Senior Manager" is a manager, "Manager, Applied AI Architects" too. Whole words only.
@@ -119,6 +124,17 @@ class Priority:
     r: float | None = None  # role fit from the family's priority (role_factor); None = no family matched, no R
     family: str | None = None
     rank: int | None = None  # the family's priority (1-15)
+    w: float = 1.0         # freshness weight of the tier (freshness_weights)
+    f_known: bool = True   # False = F is the triage-time estimate of an ad too thin to read (ceiling_estimate.Estimate.reliable): it is neither skipped on F nor read as zero
+
+    @property
+    def order(self) -> float:
+        """The number the order is made on: P x W."""
+        return self.p * self.w
+
+    def order_text(self) -> str:
+        """'x W 0.95 (T2) = order 0.60' for the inbox listing and the final table."""
+        return f"x W {self.w:.2f} (T{self.tier}) = order {self.order:.2f}"
 
     def role_text(self) -> str:
         """'x R 0.88 (forward_deployed_engineer, #5)' for the inbox, the final table and the review screen; '' without an R."""
@@ -135,12 +151,18 @@ class Priority:
         return (f"Priority P={self.p:.2f} = F {self.f:.2f} (ATS ceiling) x S {self.s:.2f} ({self.s_reason}) x L {self.l:.2f} ({self.level})"
                 + (f" {self.role_text()}" if self.r is not None else "") + " | "
                 f"age {self.age()} (tier {self.tier}, {freshness.TIER_NAMES[self.tier]}"
-                + (f", {self.posted_via}" if self.posted_via else "") + ")")
+                + (f", {self.posted_via}" if self.posted_via else "") + f") | order {self.order:.2f} = P x W {self.w:.2f}")
 
 
 def weights(settings) -> dict[str, float]:
     given = ((settings.raw.get("priority") or {}).get("sponsor_weights") or {}) if settings is not None else {}
     return {k: float(given.get(k, given.get("non_uk", v) if k == "non_home" else v)) for k, v in DEFAULT_WEIGHTS.items()}   # non_uk: its old name
+
+
+def freshness_weights(settings=None) -> dict[int, float]:
+    """{tier: W} from `priority.freshness_weight` (keys t0 to t3); a key that is missing uses DEFAULT_FRESHNESS."""
+    given = ((settings.raw.get("priority") or {}).get("freshness_weight") or {}) if settings is not None else {}
+    return {t: float(given.get(f"t{t}", v)) for t, v in DEFAULT_FRESHNESS.items()}
 
 
 def level_of(title: str) -> str:
@@ -236,16 +258,22 @@ def priority(job: Mapping[str, Any], settings=None, tailored: bool = True, today
     role = role_factor(str(_get(job, "title") or ""), settings)
     when, via = freshness.posted(job)
     hours = freshness.age_hours(job, today)
-    return Priority(f * s * l * (role.r if role else 1.0), f, s, why, hours, freshness.tier_of(hours),
+    tier = freshness.tier_of(hours)
+    return Priority(f * s * l * (role.r if role else 1.0), f, s, why, hours, tier,
                     freshness.SOURCES.get(via, "first seen" if via else ""), l, level,
-                    role.r if role else None, role.family if role else None, role.rank if role else None)
+                    role.r if role else None, role.family if role else None, role.rank if role else None,
+                    freshness_weights(settings)[tier], _get(job, "ceiling_known") is not False)
+
+
+def rank_key(pr: Priority, tie: str = "") -> tuple:
+    """Ascending key for a Priority: highest P x W first, ties to the surer employer S (so jobs with no ceiling yet still order by how sure they are), then to `tie`
+    (the id or the file name) for a stable order."""
+    return (-round(pr.order, 9), -pr.s, tie)
 
 
 def sort_key(job: Mapping[str, Any], settings=None, tailored: bool = True, today: datetime | None = None) -> tuple:
-    """Ascending key, lexicographic: the freshness tier first (0 before 1 before 2 before 3), then highest P; ties go to the surer
-    employer S (so jobs with no ceiling yet still order by how sure they are), then to the id for a stable order."""
-    pr = priority(job, settings, tailored, today)
-    return (pr.tier, -pr.p, -pr.s, str(_get(job, "id") or ""))
+    """Ascending key: highest P x W first (rank_key)."""
+    return rank_key(priority(job, settings, tailored, today), str(_get(job, "id") or ""))
 
 
 # ------------------------------------------------------------------ jobs that are not in the database yet
@@ -261,9 +289,10 @@ def file_job(path, settings, fb: dict, idx) -> dict | None:
     hdr = manual.header_fields(text)
     match = idx.lookup(hdr.get("company", ""), settings["sponsors"].get("fuzzy_threshold", 0.92)).label if idx is not None and hdr.get("company") else None
     try:
-        ceiling_pre = gates.pre_ceiling(text, fb, settings)
+        est = gates.pre_estimate(text, fb, settings)
+        ceiling_pre, known = gates.pre_ceiling(text, fb, settings), est.reliable      # pre_ceiling is the number; the estimate says whether an ad had terms to read
     except Exception:  # noqa: BLE001 — a file the taxonomy cannot read is ranked last, not refused
-        ceiling_pre = None
+        ceiling_pre, known = None, False
     work = workcountry.resolve(location=hdr.get("location", ""), description=text, title=hdr.get("title", ""),
                                override=hdr.get("country", ""), rules=workcountry.rules_from(workcountry.applicant_visa(settings)))
     try:
@@ -274,12 +303,12 @@ def file_job(path, settings, fb: dict, idx) -> dict | None:
             "work_country": work.country, "seen_on": hdr.get("first_seen"), "first_seen": written,
             "open_listing": (hdr.get("listed") or "").lower() in ("yes", "true", "1"),
             "sponsor_match": match, "agency": (hdr.get("agency") or "").lower() in ("yes", "true", "1"),
-            "posted_at": hdr.get("posted"), "posted_at_source": hdr.get("posted_source"), "ceiling_pre": ceiling_pre,
+            "posted_at": hdr.get("posted"), "posted_at_source": hdr.get("posted_source"), "ceiling_pre": ceiling_pre, "ceiling_known": known,
             "country": hdr.get("country")}
 
 
 def order_files(files, settings, db, fb: dict, today: datetime | None = None) -> list[tuple[Any, Priority | None]]:
-    """[(path, Priority or None)] best first: freshness tier, then highest P, ties to the surer S, then by file name. A file that
+    """[(path, Priority or None)] best first: highest P x W, ties to the surer S, then by file name. A file that
     cannot be read as a JD has no priority and goes last (live then rejects it with its reason). Nothing is dropped."""
     from . import register as sponsors
 
@@ -288,5 +317,4 @@ def order_files(files, settings, db, fb: dict, today: datetime | None = None) ->
     for f in files:
         job = file_job(f, settings, fb, idx)
         ranked.append((f, priority(job, settings, tailored=False, today=today) if job else None))
-    return sorted(ranked, key=lambda fp: (fp[1] is None, fp[1].tier if fp[1] else 3, -(fp[1].p if fp[1] else 0),
-                                          -(fp[1].s if fp[1] else 0), fp[0].name))
+    return sorted(ranked, key=lambda fp: (fp[1] is None, *(rank_key(fp[1], fp[0].name) if fp[1] else (0, 0, fp[0].name))))

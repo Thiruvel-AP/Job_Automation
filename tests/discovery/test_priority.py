@@ -1,5 +1,5 @@
-"""Priority (discovery/priority.py): the freshness tier first, then P = F x S; sponsorship is a weight, never a filter. The review
-screen shows P, its two factors and the posting age in hours, plus the JD's sponsorship wording as an information line; live's
+"""Priority (discovery/priority.py): the order is P x W (W = the freshness weight of the tier, v3.5.5), P = F x S x L x R; sponsorship is a weight, never a
+filter. The review screen shows P, its factors and the posting age in hours, plus the JD's sponsorship wording as an information line; live's
 inbox, `status` and the gate follow the same rule. The tiers themselves are tested in test_freshness.py."""
 import json
 from datetime import datetime, timedelta, timezone
@@ -46,7 +46,7 @@ def test_the_shipped_weights_are_the_agreed_ones(settings):
     assert not {"recency_days", "open_listing_floor"} & set(settings["priority"])          # no recency factor any more: the tiers do it
 
 
-# ------------------------------------------------------------------ the order: tier first, then P
+# ------------------------------------------------------------------ the order: P x W (v3.5.5; it was the tier first, then P)
 def test_there_is_no_recency_factor_in_p(settings):
     """R = exp(-days / 14) took a 64-day-old posting that was still open to 0.01. P is F x S x L x R whatever the age (R is the ROLE factor of
     test_role_factor.py, nothing to do with the posting's age)."""
@@ -57,16 +57,39 @@ def test_there_is_no_recency_factor_in_p(settings):
     assert (a.tier, b.tier) == (3, 0)
 
 
-def test_the_order_is_lexicographic_a_fresher_tier_beats_a_better_p(settings):
+def test_a_much_better_fit_beats_a_fresher_tier_the_order_is_p_times_w(settings):
     weak_fresh = job_(id="fresh", ceiling_pre=0.10, sponsor_match="none", posted_at="2026-10-10T06:00:00Z",
-                      posted_at_source="lever.createdAt")                                   # 6 h old: tier 0, P = 0.075
+                      posted_at_source="lever.createdAt")                                   # 6 h old: tier 0, W 1.00, P = 0.075
     strong_old = job_(id="old", ceiling_pre=0.99, sponsor_match="exact", posted_at="2026-10-01T00:00:00Z",
-                      posted_at_source="lever.createdAt")                                   # 9.5 d old: tier 3, P = 0.99
+                      posted_at_source="lever.createdAt")                                   # 9.5 d old: tier 3, W 0.85, P = 0.99 -> 0.84
     mid = job_(id="mid", ceiling_pre=0.50, sponsor_match="exact", posted_at="2026-10-08T12:00:00Z",
-               posted_at_source="lever.createdAt")                                          # 48 h old: tier 1
+               posted_at_source="lever.createdAt")                                          # 48 h old: tier 1, W 1.00 -> 0.50
     order = sorted([strong_old, mid, weak_fresh], key=lambda j: prio.sort_key(j, settings, tailored=False, today=NOW))
-    assert [j["id"] for j in order] == ["fresh", "mid", "old"]
+    assert [j["id"] for j in order] == ["old", "mid", "fresh"]          # before v3.5.5 the tier came first: fresh, mid, old
     assert len(order) == 3                                                                    # nothing is dropped for being old
+    pr = prio.priority(strong_old, settings, tailored=False, today=NOW)
+    assert (pr.tier, pr.w) == (3, 0.85) and pr.order == pytest.approx(0.99 * 0.85) and "order 0.84 = P x W 0.85" in pr.line()
+
+
+def test_alike_fits_go_fresher_first_by_the_weights(settings):
+    def at(jid, hours):
+        when = (NOW - timedelta(hours=hours)).isoformat(timespec="seconds")
+        return job_(id=jid, ceiling_pre=0.80, sponsor_match="exact", posted_at=when, posted_at_source="lever.createdAt")
+
+    jobs = [at("3_week", 120), at("4_old", 400), at("2_day", 30), at("1_hours", 5)]          # tiers 2, 3, 1, 0; t0 and t1 weigh the same, so the id breaks that tie
+    order = sorted(jobs, key=lambda j: prio.sort_key(j, settings, tailored=False, today=NOW))
+    assert [j["id"] for j in order] == ["1_hours", "2_day", "3_week", "4_old"]
+    w = {j["id"]: prio.priority(j, settings, tailored=False, today=NOW).w for j in jobs}
+    assert w == {"1_hours": 1.00, "2_day": 1.00, "3_week": 0.95, "4_old": 0.85}
+
+
+def test_the_freshness_weights_are_t1_100_t2_095_t3_085_and_settings_override_them(settings):
+    assert prio.freshness_weights(settings) == {0: 1.00, 1: 1.00, 2: 0.95, 3: 0.85} == prio.DEFAULT_FRESHNESS
+    settings.raw["priority"]["freshness_weight"] = {"t3": 0.5}                    # a key that is missing keeps its default
+    assert prio.freshness_weights(settings) == {0: 1.00, 1: 1.00, 2: 0.95, 3: 0.5}
+    assert prio.freshness_weights(None) == prio.DEFAULT_FRESHNESS                    # no settings at all: the code default
+    old = job_(posted_at="2026-08-01T00:00:00Z", posted_at_source="greenhouse.first_published")
+    assert prio.priority(old, settings, today=NOW).order == pytest.approx(0.80 * 0.5)
 
 
 def test_inside_a_tier_the_order_is_p_then_s(settings):
@@ -275,7 +298,8 @@ def test_posted_headers_put_a_file_in_its_tier_and_the_agency_header_lowers_s(se
     ranked = prio.order_files([old, agency, fresh, page], settings, db, fb, today=NOW)
     pr = {f.name: p for f, p in ranked}
     assert [pr[n].tier for n in ("z_fresh.txt", "b_agency.txt", "m_page.txt", "a_old.txt")] == [0, 0, 3, 3]      # a page's own Posted: is not trusted
-    assert [f.name for f, _ in ranked][:2] == ["z_fresh.txt", "b_agency.txt"]            # same tier, same F: the surer employer first
+    # same F: P x W is 1.00 x 1.00 (fresh), 1.00 x 0.85 (two old ones), 0.75 x 1.00 (the agency): a 69-day-old ad of a sure sponsor now outranks a fresh agency ad
+    assert [f.name for f, _ in ranked] == ["z_fresh.txt", "a_old.txt", "m_page.txt", "b_agency.txt"]
     assert pr["b_agency.txt"].s == 0.75 and pr["z_fresh.txt"].s > 0.75 and pr["a_old.txt"].hours > 1500
     assert len(ranked) == 4                                                                # the 69-day-old ad is still there
 
@@ -287,8 +311,8 @@ def test_live_goes_through_the_inbox_in_priority_order_and_says_so(settings, db,
                 out=lines.append)
     ordered = live._by_priority(list(inbox_files.values()))
     assert [f.name for f in ordered][0] == "c.txt" and len(ordered) == 4
-    assert lines[0].startswith("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L")
-    assert any("c.txt" in ln and "estimate P" in ln and "=" in ln and "T0" in ln for ln in lines[1:])
+    assert lines[0].startswith("Inbox order by the ESTIMATE of P x W = F x S x L x R x freshness weight")
+    assert any("c.txt" in ln and "estimate P" in ln and "=" in ln and "T0" in ln and "x W 1.00 (T0) = order" in ln for ln in lines[1:])
     assert any("d.txt (unreadable)" in ln for ln in lines)
 
 
@@ -312,7 +336,7 @@ def test_status_lists_the_open_jobs_by_priority_with_their_factors(settings, db,
         db.update_job(jid, status="applied" if jid == "m:3" else "triaged", ceiling_pre=ceiling, sponsor_match=match, tier=1)
     cli.main(["status"])
     out = capsys.readouterr().out
-    section = out.split("Top jobs, freshest tier first, then P = F x S x R (not yet applied):\n", 1)[1]
+    section = out.split("Top jobs by P x W (freshness-weighted), P = F x S x R (not yet applied):\n", 1)[1]
     lines = [ln for ln in section.splitlines() if ln.startswith("  ")][:3]
     assert "Strong Non Sponsor" in lines[0] and "0.58 = 0.80 x 0.75 x R 0.97 (ai_engineer, #2)" in lines[0] and "not on the register" in lines[0] and "T0" in lines[0]
     assert "Weak Sponsor" in lines[1] and "0.44 = 0.45 x 1.00 x R 0.97" in lines[1]

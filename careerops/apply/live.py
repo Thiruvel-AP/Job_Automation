@@ -451,25 +451,30 @@ class Live:
         return volume.company_block(self.db, self.s, job["company"], volume.today())
 
     def _by_priority(self, files: list[Path]) -> list[Path]:
-        """The inbox files best first: freshness tier, then priority P = F x S (discovery/priority.py), ties by name. Sponsorship only
-        weights the order; no file is left out (`--fresh` leaves the files older than 24 h in the inbox, untouched). If the ranking
-        itself fails the files go by name, as before (and `--fresh` then cannot tell the fresh ones: it says so and takes none)."""
+        """The inbox files best first: P x W (discovery/priority.py: P = F x S x L x R, W the weight of the freshness tier), ties to the surer employer, then by name.
+        Sponsorship only weights the order; no file is left out of it (`--fresh` leaves the files older than 24 h in the inbox, untouched), but in approved mode an
+        ad whose estimate F is under the line is not tailored (apply/estimate_skip.py). If the ranking itself fails the files go by name, as before (and `--fresh`
+        then cannot tell the fresh ones: it says so and takes none)."""
         from ..config import load_yaml
         from ..discovery import priority as prio
 
         files = sorted(files, key=lambda p: p.name)
-        if len(files) < 2 and not self.fresh:
+        if len(files) < 2 and not self.fresh and not self.require_approval:
             return files
         try:
             ranked = prio.order_files(files, self.s, self.db, load_yaml(self.s.path("fact_bank")))
         except Exception as e:  # noqa: BLE001
             self.out(f"(inbox order by priority not available: {e}; going by file name)")
             return [] if self.fresh else files
-        self.out("Inbox order by freshness tier, then the ESTIMATE of P = F x S x L x R (before tailoring; the review order uses the final P):")
+        held = self._estimate_stops(ranked)
+        ranked = [(f, pr) for f, pr in ranked if f not in held]
+        if not ranked:
+            return []
+        self.out("Inbox order by the ESTIMATE of P x W = F x S x L x R x freshness weight (before tailoring; the review order uses the final P x W):")
         triage_text = self._triage_texts([f for f, _ in ranked])
         for f, pr in ranked:
             self.out(f"  T{pr.tier} {pr.age():>7}  estimate P {pr.p:.2f} = F {pr.f:.2f} x S {pr.s:.2f} x L {pr.l:.2f}"
-                     f"{' ' + pr.role_text() if pr.r is not None else ''}"
+                     f"{' ' + pr.role_text() if pr.r is not None else ''} {pr.order_text()}"
                      f"{'  ' + pr.flag() if pr.flag() else ''}  {f.name}" + (f"  | {triage_text[f.name]}" if triage_text.get(f.name) else "")
                      if pr else f"     -     {f.name} (unreadable)")
         if self.fresh:
@@ -478,8 +483,28 @@ class Live:
             return keep
         return [f for f, _ in ranked]
 
+    def _estimate_stops(self, ranked: list) -> set[Path]:
+        """v3.5.5: before any model call, the approved files whose estimate F is under `priority.min_estimate` (apply/estimate_skip.py) are not worked on: each moves to
+        jds_done/skipped_estimate/ with its reason and is logged `skipped_estimate` (`careerops unskip --shortlist` reverses it); a dry run only names them. Only in approved
+        mode, like the hard stops: a file you named or `--include-unapproved` keeps your own choice. Returns the files left out of this session."""
+        if not self.require_approval:
+            return set()
+        from . import estimate_skip
+
+        stops = estimate_skip.find(ranked, self.s)
+        if not stops:
+            return set()
+        if self.dry_run:
+            for line in estimate_skip.lines(stops, applied=False):
+                self.out(line + " (dry run: left where it is, not worked on)")
+        else:
+            estimate_skip.file_away(self.s, stops)
+            for line in estimate_skip.lines(stops, applied=True):
+                self.out(line)
+        return {st.path for st in stops}
+
     def _review_order(self, pending: list[tuple[Path, JobResult]]) -> list[tuple[Path, JobResult]]:
-        """Pass 2's order: the tailored jobs by freshness tier, then the FINAL P = F x S x L (F is the ceiling tailoring found), ties to the
+        """Pass 2's order: the tailored jobs by the FINAL P x W (P = F x S x L x R, F the ceiling tailoring found, W the freshness weight), ties to the
         surer employer. Prints the table before the first prompt. Nothing is dropped: the same jobs come back, in another order."""
         from ..discovery import priority as prio
 
@@ -489,12 +514,12 @@ class Live:
         for f, r in pending:
             job = self.db.job(r.job_id)
             rows.append((prio.sort_key(job, self.s, tailored=True), f, r, job, prio.priority(job, self.s, tailored=True)))
-        rows.sort(key=lambda t: t[0][:3])                       # tier, -P, -S; a tie keeps the order of pass 1 (tier, estimate, name)
-        self.out("Review queue by freshness tier, then final P (P = F x S x L x R; F is the ATS ceiling after tailoring, not the estimate):")
-        self.out("     company | role | age | tier | level | ATS ceiling | P | role factor")
+        rows.sort(key=lambda t: t[0][:2])                       # -P x W, -S; a tie keeps the order of pass 1 (estimate, name)
+        self.out("Review queue by final P x W (P = F x S x L x R; F is the ATS ceiling after tailoring, not the estimate):")
+        self.out("     company | role | age | tier | level | ATS ceiling | P | role factor | order (P x W)")
         for n, (_, f, r, job, pr) in enumerate(rows, 1):
             self.out(f"  {n}. {job['company']} | {job['title']} | {pr.age()} | T{pr.tier} | {pr.flag() or '-'} | "
-                     f"ATS ceiling {pr.f:.2f} | P {pr.p:.2f} | {pr.role_text() or 'no role factor'}")
+                     f"ATS ceiling {pr.f:.2f} | P {pr.p:.2f} | {pr.role_text() or 'no role factor'} | {pr.order_text()}")
             self.out("     " + applykind.line(job["apply_url"] or job["url"], job["apply_kind"]))
         return [(f, r) for _, f, r, _, _ in rows]
 

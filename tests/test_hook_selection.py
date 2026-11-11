@@ -136,6 +136,13 @@ def test_the_old_ram_headline_triggers_the_lint():
     ("Qwen2.5 7B and Python 3.12 served 11,459 users", None),
     ("A 70B model saved 30%", None),
     ("Llama 3.1 8B cut errors from 12 to 3", "more than one number (12, 3)"),   # two result numbers still count
+    # v3.5.5: "A -> B" is one result (a before-to-after pair), whatever the arrow
+    ("QLoRA on Llama 3.1 8B: held-out accuracy 16.2% → 27.3%", None),            # h_finetune, 11 Nov 2026
+    ("Held-out accuracy 16.2% -> 27.3%", None),
+    ("Completion 32% => 52%", None),
+    ("Accuracy 16.2%→27.3%", None),
+    ("Accuracy 16.2% → 27.3% and 5x faster", "more than one number (16.2, 5)"),    # a second result next to the pair still counts
+    ("Accuracy 16.2% → 27.3%, recall 40% → 55%", "more than one number (16.2, 40)"),   # two pairs are two results
 ])
 def test_the_lint_rules(headline, fragment):
     got = H.headline_lint(headline)

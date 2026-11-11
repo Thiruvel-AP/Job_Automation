@@ -1,5 +1,5 @@
-"""`careerops live`, order after tailoring: the selected jobs are tailored first (freshness tier, then the pre-tailoring ESTIMATE of P,
-limited by --max); the review queue is then sorted by tier and the FINAL P, and a table is printed before the first prompt.
+"""`careerops live`, order after tailoring: the selected jobs are tailored first (P x W with the pre-tailoring ESTIMATE of P, limited by --max); the review
+queue is then sorted by the FINAL P x W (W = the freshness weight of the tier, v3.5.5), and a table is printed before the first prompt.
 Nothing is dropped. Fakes for everything that costs money; archive, inbox and database are under tmp_path."""
 import re
 
@@ -68,9 +68,9 @@ def test_the_final_table_is_printed_before_the_first_prompt_with_every_column(db
     live = Live(db, settings, fake.hooks(), out=lines.append, resume_cmd="careerops live --max 5")
     live.run()
     before = seen[0]
-    head = next(i for i, l in enumerate(before) if l.startswith("Review queue by freshness tier, then final P"))
+    head = next(i for i, l in enumerate(before) if l.startswith("Review queue by final P x W"))
     table = before[head:]
-    assert table[1].split("|")[0].split()[-1] == "company" and all(c in table[1] for c in ("role", "age", "tier", "level", "ATS ceiling", "P"))
+    assert table[1].split("|")[0].split()[-1] == "company" and all(c in table[1] for c in ("role", "age", "tier", "level", "ATS ceiling", "P", "order"))
     rows = [l for l in table if re.match(r"\s+\d+\. ", l)]
     assert [re.match(r"\s+\d+\. (\w+)", r).group(1) for r in rows] == ["Beta", "Alpha", "Gamma"]      # 0.90 x 0.6 (senior), 0.25, 0.60 x 0.3 (manager)
     assert "LEVEL: senior" in rows[0] and "LEVEL: manager" in rows[2] and "ATS ceiling 0.90" in rows[0] and "ATS ceiling 0.25" in rows[1] and "LEVEL" not in rows[1]

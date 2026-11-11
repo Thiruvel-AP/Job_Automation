@@ -5,7 +5,8 @@ checked once more against the rules that need nothing but the file itself:
 
   * a fee-charging training scheme sold as a job (discovery/blacklist.training_scheme),
   * an excluded level in the title (gates.level_excluded: roles.levels.exclude plus chief / head of / vp / director / principal / staff),
-  * your blacklist (config/profile/blacklist.yaml).
+  * your blacklist (config/profile/blacklist.yaml),
+  * a "Senior" title, only when you turn `roles.levels.skip_senior_before_tailoring` on (off by default: a senior role stays yours to judge).
 
 A file that fails moves to `paths.jds_done/skipped_agent/` with a `<name>.reason.txt` beside it, and the agent's decision log
 (data/evals/decisions.jsonl) records AGENT-SKIP with the reason, so the shortlist holds it. `careerops unskip --shortlist --match ...` brings it
@@ -20,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from ..discovery import blacklist, gates, manual
+from ..discovery import blacklist, gates, manual, priority
 from . import decided
 
 FOLDER = "skipped_agent"
@@ -44,6 +45,11 @@ def folder(settings) -> Path:
     return decided.decision_dir(settings, FOLDER)
 
 
+def skip_senior(settings) -> bool:
+    """`roles.levels.skip_senior_before_tailoring` of settings.yaml; false when the key is missing."""
+    return bool(((settings.raw.get("roles") or {}).get("levels") or {}).get("skip_senior_before_tailoring", False))
+
+
 def reason_of(path: Path, settings) -> Stop | None:
     """The first hard stop the file states, else None. A file that cannot be read as a JD is not stopped here (live rejects it with its own reason)."""
     try:
@@ -56,6 +62,8 @@ def reason_of(path: Path, settings) -> Stop | None:
         return Stop(path, company, title, f"{blacklist.TRAINING_SCHEME_LABEL}: {scheme}")
     if (lvl := gates.level_excluded(title, settings)):
         return Stop(path, company, title, f"level excluded ({lvl})")
+    if skip_senior(settings) and priority.level_of(title) == "senior":
+        return Stop(path, company, title, "senior level (roles.levels.skip_senior_before_tailoring is on)")
     try:
         hit = blacklist.load(blacklist.path_for(settings)).hit(company, hdr.get("url") or "", hdr.get("apply_url") or "")
     except blacklist.BlacklistError:

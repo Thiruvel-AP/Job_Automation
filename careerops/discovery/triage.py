@@ -3,9 +3,10 @@
     T = 0.30 A + 0.25 E + 0.15 V + 0.10 L + 0.10 Fr + 0.10 P          printed as  `T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3`
 
     A  role           the family's priority: 1-3 -> 5, 4-7 -> 4, 8-11 -> 3, 12-15 -> 2, no family -> 1
-    E  evidence       1 + 4c, c = the zero-token estimate of the honest ceiling (ceiling_estimate.py, v3.5.4): the ad's stated and structural terms
-                      (taxonomy terms and the labels of its requirement bullets) against the fact bank, weighted as the ceiling weighs them. The same c
-                      is the estimate F that orders live's inbox, so E and F agree. No term at all: 3.
+    E  evidence       1 + 4c, c = the share of the weight of the terms the ad states that the fact bank backs (ceiling_estimate.Estimate.stated_share: the taxonomy
+                      terms and the labels of its requirement bullets, weighted as the ceiling weighs them). It is NOT the estimate F that orders live's inbox
+                      (v3.5.5): F adds the terms the model is expected to write on top of the ad's own, which is what puts it near the final ceiling, and which
+                      moves almost every ad down by 0.3-0.5; E stays on the scale the T thresholds (approve 4.0, marginal 3.5) were set on. No term at all: 3.
     V  visa           exact register match 5 · fuzzy 4.5 · not on the register or unchecked 3.5 (an agency counts as unchecked) · the ad says no sponsorship 1.5
                       · the work is not in your home country 1; the lowest that applies
     L  level          no level word 5 · senior 2 · lead or manager 1
@@ -93,14 +94,14 @@ def role_score(title: str, settings) -> float:
 
 
 def evidence(jd: str, fb: Mapping[str, Any], settings) -> tuple[float, list[str], list[str]]:
-    """(E, the required terms the fact bank has, those it lacks). v3.5.4: E = 1 + 4 x the zero-token ceiling estimate (ceiling_estimate.py), the same
-    number as the estimate F, so E and F can no longer disagree. No term in the ad: 3."""
+    """(E, the required terms the fact bank has, those it lacks). E = 1 + 4 x the share of the stated terms' weight the fact bank backs (ceiling_estimate.py,
+    v3.5.4: taxonomy terms plus requirement-bullet labels; v3.5.5: not the calibrated estimate F, see the module text). No term in the ad: 3."""
     from . import ceiling_estimate
 
     est = ceiling_estimate.estimate(jd or "", fb, settings)
     if not est.keywords:
         return NO_REQUIRED, [], []
-    return 1 + 4 * est.ceiling, est.have, est.lack
+    return 1 + 4 * est.stated_share, est.have, est.lack
 
 
 def visa_score(job: Mapping[str, Any], settings) -> tuple[float, str]:
