@@ -625,13 +625,21 @@ def veto(settings, db: DB, what: str, *, now: datetime | None = None) -> list[st
 def recheck(settings, db: DB, fb: dict, *, now: datetime | None = None, apply: bool = False) -> list[str]:
     """The latest digest's lines under today's rules, zero tokens: no evaluation is run again. Reports how the quick-score verdicts move, and the WAITING /
     MARGINAL / approved lines a hard disqualifier now stops. With `apply`, a WAITING or MARGINAL line that is now hard-disqualified becomes AGENT-SKIP (held,
-    logged; `unskip --shortlist` reverses it) and the digest line says so; an approved line is only named (a veto is yours). Nothing else is written."""
+    logged; `unskip --shortlist` reverses it) and the digest line says so; an approved line is only named (a veto is yours). v3.5.4: first, the approved
+    files are checked against the hard stops `live` now runs before tailoring (apply/hardstop.py); with `apply` they move to jds_done/skipped_agent/."""
     from . import register as sponsors
 
+    from ..apply import hardstop
+
     now = now or datetime.now(timezone.utc)
+    stops = hardstop.find(shortlist.approved_files(settings, db), settings)       # v3.5.4: what `live` would now stop before tailoring
+    head = [f"Approved files (live's source) under today's hard stops: {len(stops)} stopped" + ("" if apply or not stops else " (dry run: --apply moves them)"),
+            *hardstop.lines(stops, applied=apply)]
+    if apply and stops:
+        hardstop.file_away(settings, stops, now=now)
     got = _digests(settings)
     if not got:
-        return ["recheck: no agent digest yet: run `careerops shortlist` (or `daily`) first"]
+        return ["recheck: no agent digest yet: run `careerops shortlist` (or `daily`) first", *head]
     day, rows = got[-1]
     idx = sponsors.load_index(db)
     floor = triage.salary_floor(settings)
@@ -670,7 +678,7 @@ def recheck(settings, db: DB, fb: dict, *, now: datetime | None = None, apply: b
     if apply and events:
         log(settings, events, now)
         write_digest(settings, day, rows)
-    return out
+    return out + head
 
 
 def promote(settings, db: DB, what: str, *, now: datetime | None = None) -> list[str]:
@@ -705,6 +713,10 @@ def reset(settings, *, match: str | None = None, now: datetime | None = None) ->
                            "was": e.get("decision")})
             out.append(f"back in the agent's pool: {name} (was {LABEL.get(e['decision'], e['decision'])})")
     log(settings, events, now)
+    from ..apply import hardstop
+
+    for src, dst in hardstop.restore(settings, {e["key"] for e in events}):        # v3.5.4: a file the hard stop filed away comes back to the inbox
+        out.append(f"  moved {hardstop.FOLDER}/{src.name} -> inbox/{dst.name}")
     return out
 
 

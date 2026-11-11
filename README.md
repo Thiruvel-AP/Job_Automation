@@ -19,6 +19,7 @@ careerops llm-check             # one tiny request per LLM provider: reachable, 
 pytest -q                       # no network or model needed; tests read tests/fixtures/profile/, never your config/profile/
 pytest -q -m "not slow"         # skips every test that runs xelatex or Chromium (light on RAM, < ~2 GB)
 pytest -q -m slow               # the other chunk: the tests that render PDFs
+pytest -q -n auto               # the same suite in parallel (pytest-xdist, `pip install -e ".[dev]"`): one worker per core; the full run takes ~78 min serially
 ```
 
 ## Project structure
@@ -262,7 +263,9 @@ careerops veto 2                  # v3.2: line 2 of the latest agent digest (or 
 careerops promote 5               # v3.2: a MARGINAL / AGENT-SKIP / WAITING / NEEDS CONFIRMATION line becomes approved, logged as your override
 careerops shortlist --ask         # v3.2: this run only, the old manual list and [a] prompt (agent.decide: ask makes it the default)
 careerops calibrate --scores      # v3.2: reply rate per agent score band once 20+ scored applications have an outcome; suggests a higher approval line, never changes one
+                                  # v3.5.4: also the mean absolute error of the zero-token ceiling estimate vs the final ceiling of every tailored job
 careerops recheck [--apply]       # v3.2.1: the latest agent digest under today's rules, zero tokens: quick-score moves, new hard stops (--apply records WAITING / MARGINAL ones as AGENT-SKIP)
+                                  # v3.5.4: first the approved files live would now stop (training scheme, excluded level, blacklist); --apply moves them to jds_done/skipped_agent/
 careerops ats-check [PDF | --id JOB]   # v3.3: can an ATS parser READ the CV? structural score 0-100 + grade on the PDF text layer, the content lints (never applied), with a job the screener signals
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`

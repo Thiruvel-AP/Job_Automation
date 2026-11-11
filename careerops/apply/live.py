@@ -385,6 +385,27 @@ class Live:
                 keep.append(f)
         return keep
 
+    def _hard_stops(self, files: list[Path]) -> list[Path]:
+        """v3.5.4: the approved files are checked once more against the hard stops that need only the file (training scheme, excluded level, blacklist;
+        apply/hardstop.py), before any model call. A file that fails moves to jds_done/skipped_agent/ with its reason (a dry run only names it and leaves
+        it out of this session). `--include-unapproved` keeps its own rule triage (with rules.ask_on_excluded), so it is not checked here."""
+        if not self.require_approval:
+            return files
+        from . import hardstop
+
+        stops = hardstop.find(files, self.s)
+        if not stops:
+            return files
+        if self.dry_run:
+            for line in hardstop.lines(stops, applied=False):
+                self.out(line + " (dry run: left where it is, not worked on)")
+        else:
+            hardstop.file_away(self.s, stops)
+            for line in hardstop.lines(stops, applied=True):
+                self.out(line)
+        gone = {st.path for st in stops}
+        return [f for f in files if f not in gone]
+
     def _locate(self, name: str) -> Path:
         """Where the JD file called `name` is now: the inbox, else the approved folders."""
         here = self.dirs.inbox / name
@@ -517,7 +538,7 @@ class Live:
         self._ask_unconfirmed()
         if not self.dry_run and self.only is None and (why := self._daily_block()):
             raise StopSession(why, 0)                           # at the cap nothing more is tailored or applied to today
-        files = ([self.only] if self.only is not None else self._by_priority(self._gated(self._source_files())))
+        files = ([self.only] if self.only is not None else self._by_priority(self._hard_stops(self._gated(self._source_files()))))
         if self.fresh and not files and self.only is None:
             self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
         if not files and self.require_approval:

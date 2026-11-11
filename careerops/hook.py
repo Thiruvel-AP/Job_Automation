@@ -54,6 +54,11 @@ TOP_KEYWORDS = 10              # a library hook is judged against the ad's heavi
 MIN_OVERLAP = 2                # ... and is eligible only when its terms hit at least this many of them
 LINT_HEADLINE_MAX = 60         # characters; a longer library headline gets a lint warning (the CV limit is HEADLINE_MAX)
 _LINT_NUMBER = re.compile(r"(?<![A-Za-z0-9])\d+(?:[.,:]\d+)*")                                  # "65", "11,459", "8.2", "200:1"; not the 4 of "T4"
+# v3.5.4: model and version tokens are not result numbers: "Llama 3.1 8B", "GPT-4o", "Python 3.12", "Qwen 2.5 7B", a bare parameter count "70B".
+_LINT_MODEL_NAMES = ("llama", "gpt", "claude", "gemma", "gemini", "mistral", "mixtral", "qwen", "phi", "bert", "roberta", "distilbert", "t5", "yolo",
+                     "resnet", "python", "deepseek", "falcon", "whisper", "sdxl", "stable diffusion", "sonnet", "opus", "haiku", "vit", "clip", "llava")
+_LINT_MODEL = re.compile(r"(?i)\b(?:" + "|".join(re.escape(n) for n in _LINT_MODEL_NAMES) + r")(?![a-z])(?:[ \t-]?v?\d+(?:\.\d+)*[a-z]{0,2}\b)+")
+_LINT_PARAMS = re.compile(r"(?<![\w.])\d+(?:\.\d+)?[bB]\b")                                           # 8B, 70B, 1.5B: a model's parameter count
 _LINT_UNIT = re.compile(r"(?<![A-Za-z])(?:(?i:gb|mb|ram|gpu|cpu)|ms)(?![A-Za-z])")             # a hardware or resource unit
 _STOP = frozenset("""with that this from have been into their over using used which what when where while also about than then
     them they were will would could should your more most such each some team work works working role roles help helps
@@ -426,14 +431,21 @@ def selection_reason(entry_id: str, overlap, score: float) -> str:
             f"(top-keyword weight {total:g}; all-keyword score {score:g})")
 
 
+def result_numbers(text: str) -> list[str]:
+    """The numbers of a headline that state a result: model names with their version and size ("Llama 3.1 8B", "GPT-4o") and bare parameter counts
+    ("70B") are left out first."""
+    return _LINT_NUMBER.findall(_LINT_PARAMS.sub(" ", _LINT_MODEL.sub(" ", text)))
+
+
 def headline_lint(headline: str) -> list[str]:
-    """Warnings about a hook headline; it is never rewritten. Over LINT_HEADLINE_MAX characters, more than one number, or a hardware or
+    """Warnings about a hook headline; it is never rewritten. Over LINT_HEADLINE_MAX characters, more than one RESULT number (a model name, version or
+    size such as "Llama 3.1 8B" is not one: result_numbers), or a hardware or
     resource unit (GB, MB, RAM, GPU, ms, CPU)."""
     text = _clean(headline)
     out = []
     if len(text) > LINT_HEADLINE_MAX:
         out.append(f"{len(text)} characters > {LINT_HEADLINE_MAX}")
-    nums = _LINT_NUMBER.findall(text)
+    nums = result_numbers(text)
     if len(nums) > 1:
         out.append(f"more than one number ({', '.join(nums)})")
     units = list(dict.fromkeys(_LINT_UNIT.findall(text)))

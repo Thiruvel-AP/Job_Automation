@@ -3,17 +3,16 @@
     T = 0.30 A + 0.25 E + 0.15 V + 0.10 L + 0.10 Fr + 0.10 P          printed as  `T 4.1 = A5 E3.8 V3.5 L5 Fr4 P3`
 
     A  role           the family's priority: 1-3 -> 5, 4-7 -> 4, 8-11 -> 3, 12-15 -> 2, no family -> 1
-    E  evidence       1 + 4c, c = the share of the ad's REQUIRED keywords (the taxonomy scan the pre-tailoring ceiling uses: those under its Requirements
-                      heading, or, in an ad without one, every keyword outside a "nice to have") that appear anywhere in the fact
-                      bank, found as the scorer finds them (literal or stemmed, the term or the ad's own alternatives; keyword-group synonyms do not count).
-                      A required keyword the bank lacks stays in the denominator, so repeating a term in the ad cannot raise E. No required keyword: 3.
+    E  evidence       1 + 4c, c = the zero-token estimate of the honest ceiling (ceiling_estimate.py, v3.5.4): the ad's stated and structural terms
+                      (taxonomy terms and the labels of its requirement bullets) against the fact bank, weighted as the ceiling weighs them. The same c
+                      is the estimate F that orders live's inbox, so E and F agree. No term at all: 3.
     V  visa           exact register match 5 · fuzzy 4.5 · not on the register or unchecked 3.5 (an agency counts as unchecked) · the ad says no sponsorship 1.5
                       · the work is not in your home country 1; the lowest that applies
     L  level          no level word 5 · senior 2 · lead or manager 1
     Fr freshness      at most 3 days old 5 · 7 days 4 · 30 days 3 · 120 days 2 · older 1 · no date known 3
     P  pay            the top of the ad's salary band at or above the floor in answers.yaml 5 · no band, or no floor on file 3 · the top below the floor 1
 
-E replaces the pre-tailoring "estimate F" in this role: it counts only terms the fact bank really has, so the ad alone cannot inflate it. Information and
+A term the ad states that the bank lacks stays in the denominator, so a few generic terms cannot make E 5 by themselves. Information and
 ordering only: T decides what `careerops shortlist` OFFERS; a human still approves.
 
 `disqualify` runs the hard stops in order: liveness (when a check is passed in), the blacklist, a fee-charging training scheme (v3.1, blacklist reason
@@ -94,22 +93,14 @@ def role_score(title: str, settings) -> float:
 
 
 def evidence(jd: str, fb: Mapping[str, Any], settings) -> tuple[float, list[str], list[str]]:
-    """(E, the required keywords the fact bank has, those it lacks)."""
-    from ..tailoring.tailor import fact_text           # lazy: tailor imports the discovery package
+    """(E, the required terms the fact bank has, those it lacks). v3.5.4: E = 1 + 4 x the zero-token ceiling estimate (ceiling_estimate.py), the same
+    number as the estimate F, so E and F can no longer disagree. No term in the ad: 3."""
+    from . import ceiling_estimate
 
-    sc = settings["scoring"]
-    found = taxonomy_keywords(jd or "", sc["required_weight"], sc["preferred_weight"])
-    # the keywords under the ad's own requirements heading; an ad without one is read as the scorer reads it (a keyword outside a "nice to have" is required)
-    required = [k for k in found if k.weight >= sc["required_weight"]] or [k for k in found if k.required]
-    if not required:
+    est = ceiling_estimate.estimate(jd or "", fb, settings)
+    if not est.keywords:
         return NO_REQUIRED, [], []
-    text = fact_text(dict(fb))
-    lit, stem = norm_literal(text), norm_stem(text)
-    have, lack = [], []
-    for k in sorted(required, key=lambda k: -k.weight):                  # a stable sort: the ad's order within a weight
-        found = any(has_literal(lit, norm_literal(w)) or _contains(stem, norm_stem(w)) for w in k.members())
-        (have if found else lack).append(k.term)
-    return 1 + 4 * len(have) / len(required), have, lack
+    return 1 + 4 * est.ceiling, est.have, est.lack
 
 
 def visa_score(job: Mapping[str, Any], settings) -> tuple[float, str]:

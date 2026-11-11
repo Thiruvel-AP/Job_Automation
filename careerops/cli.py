@@ -636,6 +636,8 @@ def record_tailoring(db: DB, s, job, rep: dict) -> str:
                   page2_fill=rep["page2_fill"], flags=flags, **extra)
     db.log(job["id"], "tailor", {"score": f["score"], "ceiling": rep["ceiling"], "band": f["band"], "letter": rep["letter"]["status"],
                                  **({"ats_band": verdict.outcome} if verdict is not None else {})})
+    from .discovery import ceiling_estimate              # v3.5.4: estimate vs final, for `careerops calibrate --scores`
+    ceiling_estimate.log(s, job, load_yaml(s.path("fact_bank")), rep["ceiling"], f["score"])
     return status
 
 
@@ -1785,7 +1787,9 @@ def cmd_calibrate(args):
     if getattr(args, "scores", False):
         from .discovery import decide
 
-        print("\n".join(decide.calibrate(s, db)))
+        from .discovery import ceiling_estimate
+
+        print("\n".join(decide.calibrate(s, db) + ceiling_estimate.report(s)))
         return
     # --mock moves every generated-data path (reports included) under data/mock; the manifest stays where the user keeps it
     manifest = Path(args.manifest) if args.manifest else load_settings(args.config).path("calibration") / "manifest.yaml"
@@ -2198,7 +2202,8 @@ def main(argv=None):
                    ).set_defaults(fn=cmd_llm_check)
     ca = sub.add_parser("calibrate", help="tailor the calibration JDs with the real model and measure the result")
     ca.add_argument("--scores", action="store_true", help="v3.2: the reply rate per agent score band once 20+ scored applications have an outcome; suggests a "
-                    "higher approval line when 4.0-4.4 does no better than 3.5-3.9 (zero tokens, changes no setting)")
+                    "higher approval line when 4.0-4.4 does no better than 3.5-3.9; and the mean absolute error of the zero-token ceiling estimate against the "
+                    "final ceiling of every tailored job (zero tokens, changes no setting)")
     ca.add_argument("--manifest", help="default: <paths.calibration>/manifest.yaml")
     ca.add_argument("--out", help="folder for report-<stamp>.md/.json, rubric.csv and runs/ (default: paths.calibration)")
     ca.add_argument("--only", nargs="+", metavar="ID", help="just these manifest ids")
@@ -2446,7 +2451,8 @@ def main(argv=None):
     pm.add_argument("--mock", action="store_true", help="the isolated data/mock root")
     pm.set_defaults(fn=cmd_promote)
     rk = sub.add_parser("recheck", help="v3.2.1: the latest agent digest under today's rules (zero tokens, no evaluation run again): how the quick-score verdicts "
-                                         "move and which waiting / marginal / approved lines a hard disqualifier now stops; --apply records the stops as AGENT-SKIP")
+                                         "move and which waiting / marginal / approved lines a hard disqualifier now stops, and which approved files live would now stop before tailoring "
+                                         "(training scheme, excluded level, blacklist); --apply records the stops as AGENT-SKIP and moves those files to jds_done/skipped_agent/")
     rk.add_argument("--apply", action="store_true", help="record the new hard stops of WAITING / MARGINAL lines (held; `unskip --shortlist` reverses it)")
     rk.add_argument("--mock", action="store_true", help="the isolated data/mock root")
     rk.set_defaults(fn=cmd_recheck)

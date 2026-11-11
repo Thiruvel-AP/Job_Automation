@@ -131,6 +131,11 @@ def test_the_old_ram_headline_triggers_the_lint():
     ("Cut CPU use by 5GB", "unit (CPU, GB)"),
     ("Runs on T4 and S3", None),                       # a digit inside a name is not a number
     ("Warmsley programme", None),                      # "ms" inside a word is not a unit
+    ("Fine-tuned Llama 3.1 8B to 92% accuracy", None),  # v3.5.4: a model name, version and size are not result numbers
+    ("GPT-4o agent cut triage time 40%", None),
+    ("Qwen2.5 7B and Python 3.12 served 11,459 users", None),
+    ("A 70B model saved 30%", None),
+    ("Llama 3.1 8B cut errors from 12 to 3", "more than one number (12, 3)"),   # two result numbers still count
 ])
 def test_the_lint_rules(headline, fragment):
     got = H.headline_lint(headline)

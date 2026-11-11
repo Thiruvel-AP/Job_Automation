@@ -2395,3 +2395,28 @@ on the RightShip row, and `careerops judge-stats`. The real `claude -p` output s
 fake binary follows it.
 
 Tests: `tests/test_judge_v35.py`, `tests/review/test_decision_queue_v35a.py`, `tests/review/test_review_queue_v35.py` (slow), helper `tests/judge_fakes.py`.
+
+## 5bo. v3.5.4 — fixes from the 10 Nov 20:18 run (10 Nov 2026) — **done offline** (fixtures, fake hooks); `recheck --apply` run once on the real approved folders
+
+1. **Hard stops again before tailoring** (`careerops/apply/hardstop.py`). `live` checks every approved file once more, with no model call, against the stops
+   that need only the file: a fee-charging training scheme, an excluded level (roles.levels.exclude + chief / head of / vp / director / principal / staff)
+   and the blacklist. A file that fails moves to `paths.jds_done/skipped_agent/` with `<name>.reason.txt`, and decisions.jsonl gets AGENT-SKIP with the
+   reason (so the shortlist holds it). A dry run names the stops and moves nothing. A job you `promote`d is never stopped. The region is not one of these
+   stops: an out-of-region ad is still left alone (parked), never skipped. `--include-unapproved` keeps its own rule triage (rules.ask_on_excluded).
+   `recheck` lists the approved files it would stop first; `--apply` moves them; `unskip --shortlist --match ...` brings them back to the inbox.
+2. **Ceiling estimate** (`careerops/discovery/ceiling_estimate.py`). The ad's taxonomy terms plus the labels of its requirement / nice-to-have bullets
+   ("- Applied statistics. ..."), only the stated or structural ones (review/tiers.py), scored with the honest-ceiling rule against the fact bank.
+   `gates.pre_ceiling` (estimate F, ceiling_pre) and triage E (= 1 + 4 x estimate) both use it. Iwoca: 100% -> 56.5% (final 38.7%).
+   `record_tailoring` appends estimate / final / strict per job to `<evals>/ceiling_estimates.jsonl`; `calibrate --scores` prints the mean absolute error,
+   the bias and the worst misses.
+3. **Hook lint**: "more than one number" counts only result numbers (`hook.result_numbers`): model names with their version and size ("Llama 3.1 8B",
+   "GPT-4o", "Qwen2.5 7B") and bare parameter counts ("70B") are left out.
+4. **pytest-xdist** in the `dev` extras: `pytest -q -n auto` runs the suite in parallel.
+
+**Real run (11 Nov 2026):** `careerops recheck` listed 6 approved files, then `recheck --apply` moved them to `data/jds_done/skipped_agent/` (each with its
+`.reason.txt`) and logged AGENT-SKIP: Chambers and Partners "Chief AI Engineer" (level `\bchief\b`) and five ITOL Recruit ads (training scheme, fees:
+Data Science Trainee, Junior AI Developer, 3 x Trainee AI Engineer). The 10 Nov note named four ITOL ads; the approved folder held five.
+`unskip --shortlist --match ITOL` brings them back (the three "Trainee AI Engineer" ads share one key, so they come back together).
+
+Tests: `tests/apply/test_hardstop.py`, `tests/discovery/test_ceiling_estimate.py`, new cases in `tests/test_hook_selection.py`.
+

@@ -149,11 +149,11 @@ def level_excluded(title: str, settings) -> str | None:
 
 
 def pre_ceiling(jd: str, fb: dict, settings) -> float:
-    """Honest ceiling from taxonomy keywords only — no LLM, cheap enough to run at triage to order the queue."""
-    from ..tailoring.tailor import fact_text   # lazy: tailor imports this module
+    """The zero-token estimate of the honest ceiling (discovery/ceiling_estimate.py, v3.5.4: the ad's stated and structural terms, taxonomy terms and its
+    own bullet labels, against the fact bank). No LLM, cheap enough to run at triage to order the queue."""
+    from . import ceiling_estimate
 
-    sc = settings["scoring"]
-    return ceiling(fact_text(fb), taxonomy_keywords(jd, sc["required_weight"], sc["preferred_weight"]))[0]
+    return ceiling_estimate.estimate(jd, fb, settings).ceiling
 
 
 def visa_countries(settings) -> tuple[str, ...]:
