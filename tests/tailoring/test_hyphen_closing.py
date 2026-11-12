@@ -1,91 +1,64 @@
-"""Fix round 2, item 5: at render time (after every claim check) a hyphenated word-word becomes word word, except the protected forms.
+"""12 Nov 2026 (RightShip dry run): an intra-word hyphen is never removed from the rendered CV or letter.
 
-The failing dry run's CV still had 15 hyphenated words: class-imbalance, cross-validation, scoring-methodology, 19,213-gene, MCP-based,
-5-star, production-ready, bank-account, sign-on, e-commerce, bank-customer, financial-services, comparable-company, cell-line, per-gene.
-Root cause: typography.clean() closed up only the forms listed one by one in config/typography.yaml, so every new compound stayed
-hyphenated. It is now the general rule, with the exceptions below (typography.yaml `protected`, the JD's own hyphenated keywords, URLs,
-handles, number ranges and names like CIFAR-10).
+Before: typography.clean() closed every word-word up at render time ("tool calling", "five person", "end to end", "real time") while the report
+text kept the hyphens, so the PDFs and the report disagreed and the ATS keywords spelt with a hyphen could not be matched. The step was
+typography.close_hyphens plus the `rewrite` table of config/typography.yaml, called by typography.typeset (the CV) and hook.py (the hook sentences
+the letter quotes). Both are out of the render path now; em dashes are still replaced. "~65" prints the same in the CV and the letter.
 """
+import re
 from pathlib import Path
 
 import pytest
 
 from careerops.tailoring import typography as T
 
-FOUND = ["class-imbalance", "cross-validation", "scoring-methodology", "19,213-gene", "MCP-based", "5-star", "production-ready",
-         "bank-account", "sign-on", "e-commerce", "bank-customer", "financial-services", "comparable-company", "cell-line", "per-gene"]
-WANT = {"19,213-gene": "19,213 gene", "5-star": "five star", "sign-on": "sign on", "e-commerce": "ecommerce"}
+WORDS = ["tool-calling", "five-person", "end-to-end", "real-time", "class-imbalance", "cross-validation", "19,213-gene", "MCP-based", "5-star",
+         "production-ready", "e-commerce", "sign-on", "start-up", "multi-agent", "scikit-learn", "CIFAR-10", "t-SNE", "2025-2026"]
 
 
-@pytest.mark.parametrize("word", FOUND)
-def test_each_hyphenated_word_of_the_dry_run_is_closed_up(word):
-    want = WANT.get(word, word.replace("-", " "))
-    assert T.clean(f"Built a {word} pipeline.") == f"Built a {want} pipeline."
+@pytest.mark.parametrize("word", WORDS)
+def test_clean_keeps_every_hyphenated_word(word):
+    assert T.clean(f"Built a {word} pipeline.") == f"Built a {word} pipeline."
 
 
-@pytest.mark.parametrize("kept", ["scikit-learn", "k-means", "gpt-oss", "faster-whisper", "CIFAR-10", "TF-IDF", "Skip-gram", "GPT-4o",
-                                  "3.9–3.11", "3.9-3.11", "https://github.com/Thiruvel-AP/Repo-Name", "thiruvel-a-p", "Thiruvel-AP",
-                                  "github.com/Thiruvel-AP", "linkedin.com/in/thiruvel-a-p"])
-def test_the_exceptions_stay_as_they_are(kept):
-    assert T.clean(f"See {kept} for details.") == f"See {kept} for details."
+def test_the_em_dash_is_still_replaced_but_the_hyphens_around_it_stay():
+    assert T.clean("A real-time agent — built end-to-end") == "A real-time agent, built end-to-end"
 
 
-def test_a_jd_keyword_spelt_with_a_hyphen_is_left_alone():
-    assert T.clean("Handles the cold-start problem.", keep=["cold-start"]) == "Handles the cold-start problem."
-    assert T.clean("Handles the cold-start problem.") == "Handles the cold start problem."
-
-
-def test_a_hyphen_between_numbers_is_a_range_not_a_word():
-    assert T.clean("From 2025-2026 and 10-12 weeks.") == "From 2025-2026 and 10-12 weeks."
-
-
-def test_several_hyphens_in_one_word_are_all_closed():
-    assert T.clean("A state-of-the-art, hands-on, end-to-end review.") == "A state of the art, hands on, end to end review."
-
-
-def test_the_audit_has_nothing_left_to_report_after_typeset():
-    ctx = {"profile": "A cross-validation and class-imbalance specialist with scikit-learn.",
+def test_typeset_keeps_the_hyphens_of_every_piece_of_prose():
+    ctx = {"profile": "A cross-validation and class-imbalance specialist.", "skills": {"ML": ["scikit-learn", "multi-agent systems"]},
            "experience": [{"id": "e", "org": "Acme", "title": "Data Scientist", "dates": "Jan 2025 – Sep 2025",
-                           "bullets": [f"Used {w} here." for w in FOUND], "bullet_ids": [f"b{i}" for i in range(len(FOUND))]}],
-           "projects": [], "skills": {"ML": ["scikit-learn", "k-means", "CIFAR-10"]}, "id": {"name": "Ada", "email": "a@b.org"}}
+                           "bullets": [f"Used {w} here." for w in WORDS], "bullet_ids": [f"b{i}" for i in range(len(WORDS))]}],
+           "projects": [], "id": {"name": "Ada", "email": "a@b.org"}}
     out = T.typeset(ctx)
-    text = " ".join([out["profile"], *out["experience"][0]["bullets"], *out["skills"]["ML"]])
-    assert T.audit(text)["hyphens"] == {}
-    assert "scikit-learn" in text and "k-means" in text and "CIFAR-10" in text and "five star" in text and "ecommerce" in text
+    assert out["profile"] == ctx["profile"] and out["skills"] == ctx["skills"] and out["experience"][0]["bullets"] == ctx["experience"][0]["bullets"]
+
+
+def test_the_audit_no_longer_calls_a_hyphen_a_defect_but_still_counts_em_dashes():
+    assert T.audit("tool-calling and end-to-end")["hyphens"] == {} and T.audit("a -- b")["em_dashes"] == 1
+
+
+def _flat(text: str) -> str:
+    return re.sub(r"-\s+", "-", " ".join(text.split()))          # a wrapped line may end at a hyphen: "tool-" / "calling"
 
 
 @pytest.mark.slow
-def test_a_rendered_fixture_cv_has_no_hyphen_outside_the_exception_list(settings, fb_fixture, job, tmp_path):
+def test_every_hyphenated_word_of_the_source_is_hyphenated_in_the_pdftotext_of_the_cv_and_the_letter(settings, fb_fixture, job, tmp_path):
     from careerops.llm import MockLLM
     from careerops.tailoring import tailor
-    from careerops.tailoring.render import pdf_text
+    from careerops.tailoring.render import pdf_text, render_letter
 
+    words = ["tool-calling", "five-person", "end-to-end", "real-time"]
+    sentence = "Built a tool-calling, five-person, end-to-end real-time pipeline"
     fb = {**fb_fixture, "experience": [dict(e) for e in fb_fixture["experience"]]}
     first = dict(fb["experience"][0])
-    first["bullets"] = [dict(first["bullets"][0], text="Resolved a class-imbalance and e-commerce sign-on issue across a 5-star, cross-validation "
-                                                      "heavy, production-ready pipeline for the bank-customer team."),
-                        *first["bullets"][1:]]
+    first["bullets"] = [dict(first["bullets"][0], text=f"{sentence} with ~65 tests."), *first["bullets"][1:]]
     fb["experience"][0] = first
     rep = tailor.tailor_job(job, fb, MockLLM(), settings, settings.path("outputs"))
-    text = pdf_text(Path(rep["cv_pdf"]))
-    assert "five star" in " ".join(text.split()) and "ecommerce" in text            # the bullet is on the CV, and it was typeset
-    left =T.audit(text, keep=tailor.hyphen_keywords([tailor.Keyword(**k) for k in rep["keywords"]]))["hyphens"]
-    assert left == {}, left
-    assert rep["typography"]["hyphens"] == {}
-
-
-def test_the_handles_of_the_cvs_own_links_are_never_closed_up_but_a_repository_name_is():
-    ctx = {"id": {"name": "A", "links": {"linkedin": "https://www.linkedin.com/in/thiruvel-a-p/", "github": "https://github.com/Thiruvel-AP",
-                                         "portfolio": "https://thiruvel-ap.github.io/Personal-Portfolio/"}},
-           "profile": "See linkedin and Thiruvel-AP or thiruvel-a-p; a cross-validation expert.", "skills": {}, "experience": [], "projects": []}
-    assert T.handles(ctx) == ("thiruvel-a-p", "Thiruvel-AP")
-    assert T.typeset(ctx)["profile"] == "See linkedin and Thiruvel-AP or thiruvel-a-p; a cross validation expert."
-
-
-def test_a_hyphenated_word_inside_a_longer_jd_keyword_is_kept_so_the_ats_still_finds_it():
-    """The ad says "time-series forecasting": the literal ATS view looks for that spelling, so the hyphen of its token stays on the CV."""
-    from careerops.tailoring import tailor
-
-    keep = tailor.hyphen_keywords([tailor.Keyword("time-series forecasting", 2, True, ["time series"]), tailor.Keyword("Python", 2, True)])
-    assert "time-series forecasting" in keep and "time-series" in keep and "Python" not in keep
-    assert T.clean("Built time-series forecasting and class-imbalance fixes.", keep=keep) == "Built time-series forecasting and class imbalance fixes."
+    cv = _flat(pdf_text(Path(rep["cv_pdf"])))
+    assert all(w in cv for w in words), [w for w in words if w not in cv]
+    letter_pdf = render_letter({"id": fb["identity"], "company": "Acme", "paragraphs": [f"{sentence} with ~65 tests."], "date": "12 November 2026",
+                                "greeting": "Hi Acme team", "signoff": "Regards"}, tmp_path, "letter")
+    letter = _flat(pdf_text(letter_pdf))
+    assert all(w in letter for w in words), [w for w in words if w not in letter]
+    assert "~65" in cv and "~65" in letter and "∼" not in cv + letter          # the same tilde in both documents

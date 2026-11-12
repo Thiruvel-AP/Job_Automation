@@ -1,61 +1,12 @@
-# CV typography, applied when the PDF is rendered (careerops/tailoring/typography.py). Never to the fact bank, and never before the
+# CV / letter typography, applied when the PDF is rendered (careerops/tailoring/typography.py). Never to the fact bank, and never before the
 # faithfulness / claim checks: those run on the original wording; only the text that reaches the page is tidied.
 #
 # Em dashes (and "--", and a spaced " - ") never reach the PDF: each becomes a comma, a colon or parentheses (code decides by grammar).
-# Hyphens: every word-word becomes word word at render time (typography.close_hyphens), except `protected` below, number ranges,
-# names like CIFAR-10 / GPT-4o, one-letter prefixes (t-SNE), proper-noun pairs (Rolls-Royce) and the JD's own hyphenated keywords.
-# `rewrite` holds the special spellings (e-commerce -> ecommerce, 5-star -> five star).
+# Hyphens: an intra-word hyphen is never removed (tool-calling, end-to-end, five-person stay as written). The old rule that closed every
+# word-word up was a bug (12 Nov 2026 dry run): the PDFs lost "tool calling" etc. that the report and the ATS keywords spell with a hyphen.
+# `rewrite` holds special spellings only, "hyphenated form": "what the page shows"; empty on purpose.
 
-# "hyphenated form": "what the page shows". Matched case-insensitively as a whole word; a plural "s" after it is kept
-# (AI-agents -> AI agents). The value's own casing is used, with a capital first letter when the match had one.
-rewrite:
-  AI-agent: AI agent
-  AI-driven: AI driven
-  test-case: test case
-  rate-limit: rate limit
-  rate-limited: rate limited
-  rate-limiting: rate limiting
-  tool-calling: tool calling
-  function-calling: function calling
-  Madrid-based: Madrid based
-  London-based: London based
-  Bristol-based: Bristol based
-  start-up: startup
-  day-to-day: daily
-  end-to-end: end to end
-  multi-omics: multiomics
-  multi-agent: multi agent
-  multi-step: multi step
-  three-tier: three tier
-  two-stage: two stage
-  hallucination-guard: hallucination guard
-  fail-safe: fail safe
-  full-duplex: full duplex
-  speech-to-text: speech to text
-  text-to-speech: text to speech
-  copy-and-paste: copy and paste
-  least-privilege: least privilege
-  time-series: time series
-  real-time: real time
-  open-source: open source
-  data-driven: data driven
-  tool-level: tool level
-  front-end: front end
-  back-end: back end
-  low-latency: low latency
-  hands-on: hands on
-  cross-functional: cross functional
-  non-technical: non technical
-  well-defined: well defined
-  high-level: high level
-  large-scale: large scale
-  fine-tune: fine tune
-  fine-tuned: fine tuned
-  fine-tuning: fine tuning
-  # special spellings the general rule (every word-word becomes word word) would get wrong or not as wanted
-  e-commerce: ecommerce
-  5-star: five star
-  sign-on: sign on
+rewrite: {}
 
 # Never touched, whatever the table or any other rule says (matched case-insensitively as a whole word). URLs and e-mail addresses
 # are always protected, and so are number ranges such as 3.9-3.11 (those keep their en dash).

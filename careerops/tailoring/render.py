@@ -28,9 +28,9 @@ _UNIT_AFTER_NUMBER = re.compile(r"(\d)\s+(pp|GB|MB|TB|ms)\b")
 
 
 def letter_escape(s) -> str:
-    """latex_escape for the generated text of a cover letter (Document rules, B6): % & $ # _ { } are escaped, ~ becomes $\\sim$, a straight double quote stays one (TeX would print it as a closing quote), and a number is
+    """latex_escape for the generated text of a cover letter (Document rules, B6): % & $ # _ { } are escaped, ~ is printed as on the CV (\\textasciitilde{}, so "~65" reads the same in both), a straight double quote stays one (TeX would print it as a closing quote), and a number is
     kept with its unit by a thin space ("+5 pp" is +5\\,pp, "5.5 GB" is 5.5\\,GB)."""
-    out = "".join({"~": "$\\sim$", '"': "\\textquotedbl{}"}.get(ch) or _ESC.get(ch, ch) for ch in str(s))
+    out = "".join({'"': "\\textquotedbl{}"}.get(ch) or _ESC.get(ch, ch) for ch in str(s))
     return _UNIT_AFTER_NUMBER.sub(lambda m: m.group(1) + "\\," + m.group(2), out)
 
 

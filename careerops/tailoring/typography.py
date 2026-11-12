@@ -4,12 +4,10 @@ context kept in report.json stays as the checks left it.
 
   * dashes     — an em dash (or "--", or a spaced hyphen used as a dash) becomes a comma, a colon or parentheses; a number
                  range written with one (3.9—3.11) becomes an en dash. None survives into the PDF.
-  * hyphens    — every word-word becomes word word (class-imbalance -> class imbalance, 19,213-gene -> 19,213 gene), the special
-                 spellings of config/typography.yaml `rewrite` first (e-commerce -> ecommerce, 5-star -> five star). Never touched:
-                 the `protected` list (scikit-learn, k-means, gpt-oss, faster-whisper, CIFAR-10, TF-IDF, Skip-gram ...), the links'
-                 handles (thiruvel-a-p), URLs and e-mail addresses, number ranges (3.9-3.11, 2025-2026), names such as CIFAR-10 /
-                 GPT-4o (letters-digits), a one-letter prefix (t-SNE, U-Net), proper-noun pairs (Rolls-Royce), and a hyphenated form
-                 that a JD keyword spells with the hyphen (the ATS matches the JD's own spelling, so closing it up could lose a hit).
+  * hyphens    — an intra-word hyphen (tool-calling, end-to-end, five-person) is NEVER removed: the PDFs must read the way the report
+                 and the fact bank do (v3.5.6; the old "close every compound" rule is gone). `close_hyphens` stays as a helper that
+                 nothing in the render path calls. Only the special spellings of config/typography.yaml `rewrite` (empty by default)
+                 are applied, and `protected` terms, URLs and e-mail addresses are never touched.
   * awards     — a project's award is in its heading; a bullet (or its result) that repeats it has the repeat taken out
   * `audit`    — what a rendered PDF still contains: em dashes (must be none), en dashes in prose, hyphenated words
 """
@@ -85,7 +83,8 @@ def _is_label(phrase: str) -> bool:
     words = phrase.split()
     if not words or len(words) > LABEL_WORDS or re.search(r"[,;:.!?]", phrase):
         return False
-    return all(w[0].isupper() or w[0].isdigit() for w in words if w.lower() not in _SMALL_WORDS and w[0].isalnum())
+    # a hyphenated word counts part by part ("AI-agent" is a lower-case word, now that hyphens are kept: not a title)
+    return all(p[0].isupper() or p[0].isdigit() for w in words if w.lower() not in _SMALL_WORDS and w[0].isalnum() for p in w.split("-") if p)
 
 
 def _join(before: str, after: str, colon: bool = False) -> str:
@@ -145,7 +144,7 @@ def exempt(word: str) -> bool:
 
 
 def close_hyphens(text: str, keep: Iterable[str] = ()) -> str:
-    """Every hyphenated word of `text` closed up (word-word -> word word) except the exempt ones and `keep` (compared in lower case)."""
+    """Not used by `clean` any more (hyphens stay). Every hyphenated word of `text` closed up (word-word -> word word) except the exempt ones and `keep` (compared in lower case)."""
     kept = {k.casefold() for k in keep}
     return _COMPOUND.sub(lambda m: m.group(0) if m.group(0).casefold() in kept or exempt(m.group(0)) else m.group(0).replace("-", " "), text)
 
@@ -179,7 +178,7 @@ def clean(text: Any, rules: Rules | None = None, keep: Iterable[str] = (), colon
     rules = rules or load_rules()
     masked, held = _mask(s, rules.protected)
     kept = {k.casefold() for k in keep}
-    masked = close_hyphens(_rewrite(masked, rules.rewrite, kept), kept)                      # hyphens first: "AI-agent" is not a name
+    masked = _rewrite(masked, rules.rewrite, kept)          # special spellings only; a hyphenated word keeps its hyphen (see module doc)
     masked = dashes(masked, colon)
     return _unmask(masked, held)
 
@@ -317,5 +316,5 @@ def audit(text: str, rules: Rules | None = None, keep: Iterable[str] = ()) -> di
         found[m.group(0)] = found.get(m.group(0), 0) + 1
     keep_cf = {k.casefold() for k in keep}
     kept = sorted(w for w in found if w.casefold() in keep_cf)
-    hyphens = dict(sorted(((w, n) for w, n in found.items() if w.casefold() not in keep_cf), key=lambda kv: (-kv[1], kv[0].casefold())))
+    hyphens: dict[str, int] = {}                      # hyphenated words are intended on the page now: nothing to report
     return {"em_dashes": em, "prose_en_dashes": prose, "hyphens": hyphens, "kept": kept}

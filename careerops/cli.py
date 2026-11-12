@@ -2135,6 +2135,16 @@ def cmd_judge_stats(args):
     print(dq.stats_text(s))
 
 
+def cmd_judge_flag(args):
+    """Mark a decision-queue row's Claude decision 'judge input incomplete': judge-stats leaves it out. Appends one line to decisions.jsonl."""
+    s, _ = _ctx(args)
+    try:
+        rec = dq.flag_row(s, args.qid, reason=args.reason or "")
+    except ValueError as e:
+        _fail(str(e))
+    print(f"{rec['qid']}: flagged '{rec['flag']}'; judge-stats leaves it out")
+
+
 def priority_lines(db: DB, s, n: int = 10) -> list[str]:
     """The n first jobs still open (not applied, rejected or skipped), best P x W first (W = the freshness weight of the tier). An order, not a filter:
     every job is ranked, none is left out."""
@@ -2290,6 +2300,10 @@ def main(argv=None):
     js = sub.add_parser("judge-stats", help="v3.5: Claude vs your decisions per kind (shadow mode), confusion counts, cost per day")
     js.add_argument("--mock", action="store_true")
     js.set_defaults(fn=cmd_judge_stats)
+    jf = sub.add_parser("judge-flag", help="mark a queue row's Claude decision 'judge input incomplete' (judge-stats leaves it out)")
+    jf.add_argument("qid")
+    jf.add_argument("--reason", default="")
+    jf.set_defaults(fn=cmd_judge_flag)
     dc = sub.add_parser("discover", help="find open jobs and write them to data/jds/inbox/ (--ats --reed --adzuna --gmail-alerts); "
                                          "with none of these: pull the boards in sources: into the database and triage")
     dc.add_argument("--ats", action="store_true", help="Greenhouse / Lever / Ashby boards of the companies in your archive "

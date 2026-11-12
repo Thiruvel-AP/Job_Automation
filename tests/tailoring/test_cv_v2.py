@@ -412,11 +412,8 @@ def test_the_fixture_cv_follows_the_v2_reference(base):
     assert re.search(r"^\s*Customer churn prediction\s+https://github\.com/ada-lovelace-test/churn#readme$", text, re.M)
     # a one-line headline, and the full portfolio URL
     assert rep["hook"]["headline"] and layout.measure(pdf).headline_lines == 1 and "ada-lovelace-test.example.org/portfolio#top" in text
-    # no hyphenated compound outside the exception list (and the URL / e-mail handles)
-    prose = re.sub(r"\S*[/@]\S*", " ", text)
-    allowed = EXCEPTIONS | {p.casefold() for p in typography.load_rules().protected}
-    compounds = {w for w in re.findall(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+", prose) if w.casefold() not in allowed}
-    assert compounds == set(), compounds
+    # hyphenated compounds are kept as written (12 Nov 2026), so a source compound is on the page with its hyphen
+    assert "cross-validation" in " ".join(text.split())
     # two pages, the award project under Achievements, the STAR openers once each
     assert page_count(pdf) == 2
     assert rep["achievements"] == ["lloyds"] and "Banking datathon, 3rd place, national datathon" in text.split("CERTIFICATIONS")[1]

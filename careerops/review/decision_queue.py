@@ -500,13 +500,32 @@ def _pdftotext(p: Path) -> str:
 
 
 # ------------------------------------------------------------------ judge-stats
+FLAG_INCOMPLETE = "judge input incomplete"
+
+
+def flag_row(settings, qid: str, flag: str = FLAG_INCOMPLETE, reason: str = "") -> dict:
+    """Mark a row's Claude decision as not comparable (the judge was shown too little, e.g. a fact-bank source it needed was left out): an
+    appended {"type": "flag"} line, nothing in the log is edited. `stats` leaves a flagged row out. ValueError for a qid the log does not know."""
+    if not any(d.get("qid") == qid and d.get("type") == "decision" for d in log_lines(settings)):
+        raise ValueError(f"no decision for qid {qid!r} in {decisions_path(settings)}")
+    rec = {"ts": _now(), "type": "flag", "qid": qid, "flag": flag, "reason": reason}
+    _append(decisions_path(settings), rec)
+    return rec
+
+
+def flagged(settings) -> dict[str, str]:
+    """{qid: flag} of the rows `flag_row` marked."""
+    return {d["qid"]: d.get("flag") or FLAG_INCOMPLETE for d in log_lines(settings, "flag") if d.get("qid")}
+
+
 def stats(settings) -> dict:
     """Claude vs you, per kind, on the rows where both decided (Claude's shadow or live answer, your answer); the confusion counts; the cost
     per day of the Claude calls."""
     lines = log_lines(settings)
+    skip = flagged(settings)
     by_qid: dict[str, dict[str, dict]] = {}
     for d in lines:
-        if d.get("type") != "decision":
+        if d.get("type") != "decision" or d.get("qid") in skip:      # a flagged row (judge input incomplete) is not compared
             continue
         slot = by_qid.setdefault(d["qid"], {})
         if d.get("by") == "claude" and "claude" not in slot:
@@ -530,7 +549,7 @@ def stats(settings) -> dict:
             day = str(d.get("ts", ""))[:10]
             calls[day] = calls.get(day, 0) + 1
             cost[day] = round(cost.get(day, 0.0) + float(d.get("total_cost_usd") or 0.0), 4)
-    return {"kinds": kinds, "cost_per_day": cost, "calls_per_day": calls}
+    return {"kinds": kinds, "cost_per_day": cost, "calls_per_day": calls, "excluded": skip}
 
 
 SUGGEST_AGREEMENT, SUGGEST_MIN = 0.85, 20
@@ -551,6 +570,8 @@ def stats_text(settings) -> str:
                        "in config/settings.yaml (nothing is changed for you)")
         else:
             out.append(f"  stay in shadow: live is suggested at >= {SUGGEST_AGREEMENT:.0%} agreement over >= {SUGGEST_MIN} decisions")
+    for qid, why in sorted(st["excluded"].items()):
+        out.append(f"excluded from the comparison: {qid} ({why})")
     for day in sorted(st["cost_per_day"]):
         out.append(f"cost {day}: ${st['cost_per_day'][day]:.4f} over {st['calls_per_day'][day]} call(s)")
     return "\n".join(out)

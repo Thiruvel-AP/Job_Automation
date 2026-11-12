@@ -185,13 +185,12 @@ def test_the_letter_is_a_file_under_letters_a_and_none_is_written_for_b(run):
 
 # ------------------------------------------------------------------------------------------------------------------- the CV text
 @pytest.mark.slow
-def test_the_cv_has_no_hyphen_outside_the_exception_list(run):
+def test_the_cv_keeps_the_hyphens_of_its_source(run):
     rep, fb, job, kws = run
     text = pdf_text(Path(rep["cv_pdf"]))
-    keep = tailor.hyphen_keywords(kws)
-    assert typography.audit(text, keep=keep)["hyphens"] == {}
-    for word in ("class-imbalance", "cross-validation", "19,213-gene", "5-star", "e-commerce", "per-gene", "comparable-company"):
-        assert word not in text
+    flat = " ".join(text.split())
+    for word in ("cross-validation", "19,213-gene"):          # hyphens are kept as written (12 Nov 2026)
+        assert word in flat, word
 
 
 @pytest.mark.slow

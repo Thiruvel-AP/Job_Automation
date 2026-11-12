@@ -80,7 +80,7 @@ def test_the_bitcoin_project_is_selected_even_though_the_skills_line_already_say
     kws = [Keyword("time series forecasting", 3, True, ["time series", "forecasting"]), *KWS[1:]]
     layout = S.Layout((2, 2), (1, 2), 3, None)
     sel = S.select_cv(fb, kws, None, skills=fb["skills"], layout=layout, jd=JD)
-    assert sel["projects"][:2] == ["churn", "torch"] and "bitcoin" in sel["projects"], sel["projects"]
+    assert sel["projects"][0] == "churn" and "bitcoin" in sel["projects"][:2], sel["projects"]
     assert "swift" not in sel["projects"]
 
 

@@ -500,8 +500,8 @@ def test_a_letter_with_percent_and_tilde_compiles_and_letter_txt_matches_the_pdf
     parts = {**letter_parts(world), **SPECIAL}
     pdf, letter = CL.write_letter(JOB, world.kws, parts, TEAM, world.fb, world.settings, tmp_path, "Ada Lovelace Cover Letter", {"headline": "", "number": ""})
     tex = pdf.with_suffix(".tex").read_text(encoding="utf-8")
-    assert r"$\sim$5\,pp at 100\% recall for \$5 \& \#1 of 5.5\,GB\_total \{x\} in file\_name." in tex      # B6: the escapes, ~ as $\sim$, a number kept with its unit
-    assert r"12\_months of 3 $\sim$ 4 work." in tex and letter["status"] == "ok" and pdf.is_file()
+    assert r"\textasciitilde{}5\,pp at 100\% recall for \$5 \& \#1 of 5.5\,GB\_total \{x\} in file\_name." in tex      # B6: the escapes, ~ as $\sim$, a number kept with its unit
+    assert r"12\_months of 3 \textasciitilde{} 4 work." in tex and letter["status"] == "ok" and pdf.is_file()
     norm = lambda s: " ".join(s.replace("\u223c", "~").replace("\u2009", " ").replace("\u00a0", " ").split())     # noqa: E731  (the math tilde, thin spaces)
     txt = (tmp_path / "letter.txt").read_text(encoding="utf-8")
     assert "~5 pp at 100% recall for $5 & #1 of 5.5 GB_total {x} in file_name." in txt and "$\\sim$" not in txt          # plain text: the words as written

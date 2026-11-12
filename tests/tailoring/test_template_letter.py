@@ -1,5 +1,5 @@
 """v3.5.3 (10 Nov 2026, fix 5): the letter is the user's `letter_template` for the family, written once in the fact bank; the model fills only
-{company_problem_sentence}, {why_sentence} and {question} ({company} is code), each slot checked, and the whole letter goes through the fact check.
+{company_problem_sentence}, {ad_requirement} and {question} ({company} is code), each slot checked, and the whole letter goes through the fact check.
 A family with no template gets the older letter, marked DRAFT (approval needs [e]). Fictional bank (tests/fixtures/tailoring/fact_bank_fixture.yaml)."""
 import copy
 from pathlib import Path
@@ -27,7 +27,7 @@ TEMPLATE = f"""Hi {{company}} team,
 
 {FIXED_P3}
 
-{{why_sentence}}
+Your ad asks for {{ad_requirement}}, which is the work I want to do next.
 
 Could we spend 20 minutes on {{question}}?
 
@@ -62,7 +62,7 @@ def test_a_template_parses_into_greeting_named_paragraphs_and_sign_off():
 
 @pytest.mark.parametrize("change,error", [
     (("{question}", "the next step"), "{question} must appear exactly once"),
-    (("{why_sentence}", "{why_sentence} {mood}"), "unknown slot(s) {mood}"),
+    (("{ad_requirement}", "{ad_requirement} {mood}"), "unknown slot(s) {mood}"),
     (("Hi {company} team,\n", "Hi {company} team,\n\nThank you for reading.\n"), "{company_problem_sentence} must be in the first body paragraph"),
     (("Hi {company} team,\n", "Thank you for reading.\n"), "no greeting line"),
     (("Regards,\nAda Lovelace", "Ada"), "no sign-off"),
@@ -82,41 +82,64 @@ def test_the_template_is_found_for_the_role_family_first_then_the_cvs_bank_famil
 
 
 # ------------------------------------------------------------------ the slot checks
-SENT = "Northwind Health AI builds clinical decision-support tools that help oncology researchers find the right cancer cell-line models faster, using large language models over multi-omics data."
+SENT = ("Northwind Health AI needs an AI Engineer to build and evaluate LLM agents on top of its research data platform, "
+        "from prototyping to production deployment on AWS.")
+REQ = "LLM agents with tool calling using LangChain or LangGraph"
+QUESTION = "what evaluation suites the AI Engineer would write for LLM agents in production"
+CO = "Northwind Health AI"
 
 
-def test_the_company_problem_sentence_is_an_ad_sentence_lightly_shortened():
+def test_the_company_problem_sentence_says_what_the_team_must_achieve_in_at_most_30_words():
     ad = CL.ad_sentences(AD)
-    assert TL.problem_sentence_problems(SENT, ad, "Northwind Health AI") == []
-    short = "Northwind Health AI builds clinical decision-support tools that help oncology researchers find the right cancer cell-line models faster."
-    assert TL.problem_sentence_problems(short, ad, "Northwind Health AI") == []                 # words dropped from the end
-    we = "Northwind Health AI are hiring an AI Engineer to build and evaluate LLM agents that sit on top of Northwind Health AI's research data platform."
-    assert TL.problem_sentence_problems(we, ad, "Northwind Health AI") == []                    # "we" / "our" as the company's name
-    added = SENT.replace("faster", "much faster and more safely")
-    assert any("not a sentence of the ad" in p for p in TL.problem_sentence_problems(added, ad, "Northwind Health AI"))
-    cut = "Northwind Health AI builds tools for oncology researchers."                              # too little of the sentence kept
-    assert any("not a sentence of the ad" in p for p in TL.problem_sentence_problems(cut, ad, "Northwind Health AI"))
-    you = "You will work end-to-end, from prototyping to production deployment on AWS, alongside scientists and product stakeholders."
-    assert any("'You'" in p for p in TL.problem_sentence_problems(you, ad, "Northwind Health AI"))
+    chk = lambda s: TL.problem_sentence_problems(s, ad, CO, AD, "AI Engineer")      # noqa: E731
+    assert chk(SENT) == [] and len(SENT.split()) <= 30
+    assert chk("Your team must build and evaluate LLM agents that sit on top of the research data platform.") == []
+    assert any("must start" in p for p in chk("Building LLM agents on the research data platform is the job."))
+    assert any("describes the company" in p for p in chk("Northwind Health AI needs a leading team of oncology researchers."))
+    assert any("describes the company" in p for p in chk(f"{CO} is a company that builds clinical decision-support tools."))   # also not a "needs" start
+    assert any("words" in p and "(between" in p for p in chk("Your team " + "must build LLM agents " * 8 + "."))             # over 30 words
+    assert any("'me'" in p for p in chk("Your team needs me to build LLM agents."))
+    assert any("'we'" in p for p in chk("Your team knows we build LLM agents."))
+    assert any("words the ad does not" in p for p in chk("Your team must build quantum blockchain agents."))
+    assert any("full stop" in p for p in chk("Your team must build and evaluate LLM agents"))
 
 
-def test_the_question_uses_the_ads_words_only():
-    assert TL.question_problems("the first evaluation suites the AI Engineer would write for LLM agents", AD, "Northwind Health AI", "AI Engineer") == []
-    assert any("names 'Snowflake'" in p for p in TL.question_problems("moving the agents to Snowflake", AD, "Northwind Health AI", "AI Engineer"))
-    assert any("number" in p for p in TL.question_problems("the 40 agents in production", AD, "Northwind Health AI", "AI Engineer"))
-    assert any("speaks about you" in p for p in TL.question_problems("what I built on AWS", AD, "Northwind Health AI", "AI Engineer"))
+def test_the_ad_requirement_is_a_noun_phrase_that_reads_inside_your_ad_asks_for():
+    chk = lambda s: TL.requirement_problems(s, AD, CO, "AI Engineer")               # noqa: E731
+    assert chk(REQ) == [] and chk("strong Python and SQL") == [] and chk("building REST APIs with FastAPI") == []
+    assert any("starts with 'Build'" in p for p in chk("Build retrieval (RAG) pipelines and guardrails that reduce hallucination"))   # copied imperative
+    assert any("starts with 'Design'" in p for p in chk("Design and build LLM agents with tool calling"))
+    assert any("starts with 'to'" in p for p in chk("to build and evaluate LLM agents"))
+    assert any("punctuation" in p or "one phrase" in p for p in chk("LLM agents with tool calling."))
+    assert any("ends with 'and'" in p for p in chk("LLM agents with tool calling and"))
+    assert any("at most 15" in p for p in chk(" ".join(["LLM agents"] * 9)))
+    assert any("names 'Snowflake'" in p for p in chk("LLM agents on Snowflake"))
+    assert any("number" in p for p in chk("40 LLM agents"))
+    assert any("first person" in p for p in chk("my LLM agents"))
+
+
+def test_the_question_is_a_how_what_which_phrase_of_at_most_15_words_from_the_ads_words():
+    chk = lambda s: TL.question_problems(s, AD, CO, "AI Engineer")                  # noqa: E731
+    assert chk(QUESTION) == [] and chk("how the AI Engineer would monitor quality in production") == []
+    assert any("must start with how, what or which" in p for p in chk("the first evaluation suites the AI Engineer would write"))
+    assert any("names 'Snowflake'" in p for p in chk("how the agents move to Snowflake"))
+    assert any("number" in p for p in chk("how the 40 agents in production work"))
+    assert any("speaks about you" in p for p in chk("what I built on AWS"))
+    assert any("at most 15" in p for p in chk("how " + " ".join(["LLM agents"] * 8)))
+    assert any("punctuation" in p for p in chk("how the agents work in production,"))
+    assert any("ends with 'the'" in p for p in chk("how agents are the"))
 
 
 def test_the_fact_check_reads_the_template_text_against_the_bank_and_the_slots_against_the_ad(fb_fixture):
     t = TL.parse("ai_engineer", TEMPLATE)
-    values = {"company_problem_sentence": SENT, "why_sentence": "I want to build LLM agents with tool calling using LangChain or LangGraph.",
-              "question": "the first evaluation suites the AI Engineer would write"}
+    values = {"company_problem_sentence": SENT, "ad_requirement": REQ,
+              "question": "what evaluation suites the AI Engineer would write"}
     paragraphs = TL.fill(t, "Northwind Health AI", values)
     assert TL.fact_problems(paragraphs, values, fb_fixture, KWS, AD, "Northwind Health AI", "AI Engineer") == []   # "Could we spend 20 minutes": the ask
     wrong = TL.fill(TL.parse("x", TEMPLATE.replace("~65 tests", "~90 tests").replace("Harbour Pay I", "Snowflake I")), "Northwind Health AI", values)
     found = TL.fact_problems(wrong, values, fb_fixture, KWS, AD, "Northwind Health AI", "AI Engineer")
     assert any("new numbers ['90']" in p for p in found) and any("names 'Snowflake'" in p for p in found)
-    bad = {**values, "question": "the 40 agents the AI Engineer would own"}
+    bad = {**values, "question": "what the 40 agents the AI Engineer would own are"}
     found = TL.fact_problems(TL.fill(t, "Northwind Health AI", bad), bad, fb_fixture, KWS, AD, "Northwind Health AI", "AI Engineer")
     assert any(p.startswith("question gives the number(s) 40") for p in found)
 
@@ -130,19 +153,17 @@ def make(fb, settings, tmp_path, llm):
 
 @pytest.mark.slow
 def test_the_model_fills_only_the_slots_and_the_template_text_is_kept_word_for_word(fb_fixture, settings, tmp_path):
-    why = "Building and evaluating LLM agents that sit on top of the research data platform is why I applied."
-    question = "the first evaluation suites the AI Engineer would write for LLM agents in production"
-
     def answer(ctx):
         assert ctx["mode"] == "template_slots" and set(ctx["slots"]) <= set(TL.SLOTS)
-        return {"company_problem_sentence": SENT, "why_sentence": why, "question": question}
+        return {"company_problem_sentence": SENT, "ad_requirement": REQ, "question": QUESTION}
 
     llm = MockLLM({"cover_letter": answer})
     pdf, letter = make(bank(fb_fixture), settings, tmp_path, llm)
     assert letter["status"] == "ok" and letter["compose"] == "template" and letter["template_family"] == "ai_engineer"
     assert llm.calls.count("cover_letter") == 1 and letter["slot_source"] == {k: "model" for k in TL.SLOTS}
     assert letter["names"] == ["P1", "P3", "P5", "P7"]
-    assert letter["paragraphs"] == [f"{SENT} {FIXED_P1}", FIXED_P3, why, f"Could we spend 20 minutes on {question}?"]
+    assert letter["paragraphs"] == [f"{SENT} {FIXED_P1}", FIXED_P3, f"Your ad asks for {REQ}, which is the work I want to do next.",
+                                    f"Could we spend 20 minutes on {QUESTION}?"]
     assert letter["draft"] is False and letter["template_problems"] == [] and 200 <= letter["words"] <= 320, letter["template_problems"]
     text = (tmp_path / "letter.txt").read_text(encoding="utf-8")
     assert text.startswith("Hi Northwind Health AI team,") and text.rstrip().endswith("Regards,\n\nAda Lovelace")
@@ -150,26 +171,26 @@ def test_the_model_fills_only_the_slots_and_the_template_text_is_kept_word_for_w
 
 
 @pytest.mark.slow
-def test_a_slot_the_model_gets_wrong_three_times_is_filled_in_code_never_with_the_models_words(fb_fixture, settings, tmp_path):
+def test_a_slot_that_does_not_fit_its_frame_gets_the_fixed_fallback_and_the_letter_is_a_draft(fb_fixture, settings, tmp_path):
     def answer(ctx):
         return {"company_problem_sentence": "Northwind Health AI is the best employer in the world.",
-                "why_sentence": "I led 12 agent teams at Northwind Health AI, which is why I applied.", "question": "what I shipped at Snowflake"}
+                "ad_requirement": "Build LLM agents with tool calling.", "question": "what I shipped at Snowflake"}
 
     llm = MockLLM({"cover_letter": answer})
     _, letter = make(bank(fb_fixture), settings, tmp_path, llm)
-    assert llm.calls.count("cover_letter") == TL.TRIES and letter["slot_source"] == {k: "code" for k in TL.SLOTS}
+    assert llm.calls.count("cover_letter") == TL.TRIES and letter["slot_source"] == {k: "fallback" for k in TL.SLOTS}
     body = " ".join(letter["paragraphs"])
-    assert "best employer" not in body and "12 agent teams" not in body and "Snowflake" not in body
-    assert letter["slots"]["company_problem_sentence"] == SENT                    # the ad's own About sentence
-    assert letter["slots"]["question"] == "the first problem the AI Engineer would own, around LLM agents and AWS"
+    assert "best employer" not in body and "Build LLM" not in body and "Snowflake" not in body
+    assert letter["slots"] == {"company_problem_sentence": "Northwind Health AI needs the AI Engineer to deliver the work described in this ad.",
+                               "ad_requirement": "the work this role would own", "question": "what the first problem in this role would be"}
+    assert letter["draft"] is True and all(any(f"slot {k}:" in p for p in letter["template_problems"]) for k in TL.SLOTS)
     assert any("filled in code after 3 rejected" in n for n in letter["notes"])
 
 
 @pytest.mark.slow
-def test_the_mock_run_fills_the_problem_slot_from_the_ad(fb_fixture, settings, tmp_path):
+def test_the_mock_run_cannot_fill_the_new_slots_so_the_letter_is_a_draft_with_fixed_fallbacks(fb_fixture, settings, tmp_path):
     _, letter = make(bank(fb_fixture), settings, tmp_path, MockLLM())
-    assert letter["status"] == "ok" and letter["slot_source"]["company_problem_sentence"] == "model"
-    assert letter["slots"]["company_problem_sentence"] == SENT
+    assert letter["status"] == "ok" and letter["draft"] is True and letter["slot_source"]["ad_requirement"] == "fallback"
 
 
 @pytest.mark.slow
@@ -182,7 +203,7 @@ def test_a_template_claim_the_bank_cannot_back_makes_the_letter_a_draft(fb_fixtu
     assert problems[0].startswith("LETTER is a DRAFT (the fact check failed") and any("90" in p for p in problems[1:])
     lines = workflow.company_letter_lines(letter)
     assert lines[0].startswith("!! LETTER DRAFT (needs [e])") and lines[1].startswith("Letter (template 'ai_engineer')")
-    assert any(l.startswith("  {company_problem_sentence} (model): ") for l in lines)
+    assert any(l.startswith("  {company_problem_sentence} (fallback): ") for l in lines)
 
 
 # ------------------------------------------------------------------ no template: the older letter, marked DRAFT
@@ -207,4 +228,4 @@ def test_an_edited_template_letter_keeps_its_own_paragraphs():
 
 def test_the_mock_answers_the_slot_task_with_an_ad_sentence():
     out = MockLLM().json("cover_letter", "", "", {"mode": "template_slots", "about_sentences": ["About sentence."], "ad_sentences": ["Ad."]})
-    assert out == {"company_problem_sentence": "About sentence.", "why_sentence": "", "question": ""}
+    assert out == {"company_problem_sentence": "About sentence.", "ad_requirement": "", "question": ""}

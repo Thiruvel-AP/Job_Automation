@@ -48,7 +48,7 @@ class MockLLM:
             return dict(ctx.get("draft") or {})
         if task == "cover_letter" and ctx.get("mode") == "template_slots":  # v3.5.3: plumbing only: an ad sentence as it stands, the rest to code
             about = ctx.get("about_sentences") or ctx.get("ad_sentences") or []
-            return {"company_problem_sentence": about[0] if about else "", "why_sentence": "", "question": ""}
+            return {"company_problem_sentence": about[0] if about else "", "ad_requirement": "", "question": ""}
         if task == "free_text_answer" and ctx.get("mode") == "fluency_motivation":
             return {"answer": ctx.get("draft") or ""}
         if task == "cover_letter":

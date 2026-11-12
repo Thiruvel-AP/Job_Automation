@@ -39,8 +39,8 @@ def test_an_em_dash_becomes_a_comma_a_colon_or_parentheses(raw, clean):
 
 
 def test_a_dash_in_a_name_is_always_a_colon():
-    assert T.clean("Price forecasting \u2014 LSTM time-series service", colon=True) == "Price forecasting: LSTM time series service"
-    assert T.clean("Price forecasting \u2014 LSTM time-series service") == "Price forecasting, LSTM time series service"
+    assert T.clean("Price forecasting \u2014 LSTM time-series service", colon=True) == "Price forecasting: LSTM time-series service"
+    assert T.clean("Price forecasting \u2014 LSTM time-series service") == "Price forecasting, LSTM time-series service"
     assert T.typeset({"projects": [{"name": "Price forecasting \u2014 LSTM service", "bullets": [], "bullet_ids": []}]}
                      )["projects"][0]["name"] == "Price forecasting: LSTM service"
 
@@ -51,17 +51,19 @@ def test_a_spaced_hyphen_between_numbers_or_months_is_not_a_dash():
 
 
 # ------------------------------------------------------------------------------------------------------- hyphen rewriting
-@pytest.mark.parametrize("raw,clean", [
-    ("AI-agent", "AI agent"), ("test-case", "test case"), ("rate-limit", "rate limit"), ("tool-calling", "tool calling"),
-    ("Madrid-based", "Madrid based"), ("start-up", "startup"), ("day-to-day", "daily"), ("end-to-end", "end to end"),
-    ("multi-omics", "multiomics"), ("three-tier", "three tier"), ("hallucination-guard", "hallucination guard"),
-    ("A tool-calling AI-agent with day-to-day use", "A tool calling AI agent with daily use"),
-    ("Three AI-agents and two test-cases", "Three AI agents and two test cases"),               # a plural s stays
-    ("Start-up founders", "Startup founders"), ("TOOL-CALLING", "TOOL CALLING"),                  # the match was capitalised
-    ("a non-listed-word goes", "a non listed word goes"),                                         # fix round 2: every compound closes
-])
-def test_the_rewrite_table_closes_up_ordinary_compounds(raw, clean):
-    assert T.clean(raw) == clean
+@pytest.mark.parametrize("raw", [
+    "AI-agent", "test-case", "rate-limit", "tool-calling", "Madrid-based", "start-up", "day-to-day", "end-to-end", "multi-omics", "three-tier",
+    "hallucination-guard", "A tool-calling AI-agent with day-to-day use", "Three AI-agents and two test-cases", "Start-up founders",
+    "TOOL-CALLING", "a non-listed-word goes"])
+def test_hyphenated_words_are_kept_as_written(raw):
+    """12 Nov 2026: the old rule closed every compound up ("tool calling"); the PDFs now read like the report."""
+    assert T.clean(raw) == raw
+
+
+def test_a_rewrite_table_entry_is_still_applied_when_the_user_adds_one(tmp_path):
+    rules = tmp_path / "typography.yaml"
+    rules.write_text("rewrite: {e-commerce: ecommerce}\nprotected: []\n", encoding="utf-8")
+    assert T.clean("an e-commerce and tool-calling site", T.load_rules(rules)) == "an ecommerce and tool-calling site"
 
 
 @pytest.mark.parametrize("text", [
@@ -79,14 +81,13 @@ def test_a_protected_term_beats_the_table_even_inside_a_table_phrase(tmp_path):
 
 
 def test_a_hyphenated_jd_keyword_keeps_its_hyphen_so_the_ats_still_matches_it():
-    assert T.clean("an end-to-end tool-calling pipeline", keep=["end-to-end"]) == "an end-to-end tool calling pipeline"
+    assert T.clean("an end-to-end tool-calling pipeline", keep=["end-to-end"]) == "an end-to-end tool-calling pipeline"
     assert T.clean("an end-to-end pipeline", keep=["End-To-End"]) == "an end-to-end pipeline"       # case does not matter
 
 
 def test_the_rules_come_from_config_typography_yaml():
     rules = T.load_rules()
-    table = dict(rules.rewrite)
-    assert table["AI-agent"] == "AI agent" and table["day-to-day"] == "daily" and table["multi-omics"] == "multiomics"
+    assert rules.rewrite == ()                                      # no hyphen is rewritten by default (12 Nov 2026)
     assert {"scikit-learn", "k-means", "TF-IDF", "gpt-oss", "faster-whisper", "Skip-gram"} <= set(rules.protected)
 
 
@@ -140,12 +141,12 @@ def test_typeset_cleans_a_copy_and_leaves_the_original_for_the_checks():
     before = copy.deepcopy(ctx)
     out = T.typeset(ctx)
     assert ctx == before                                                       # the context kept in report.json is untouched
-    assert out["profile"] == "Data Scientist: AI agent work."
-    assert out["experience"][0]["bullets"] == ["Built an AI agent, fast, with scikit-learn."]
-    assert out["experience"][0]["title"] == "Daily engineer" and out["id"]["status_line"] == ["Startup friendly"]
+    assert out["profile"] == "Data Scientist: AI-agent work."
+    assert out["experience"][0]["bullets"] == ["Built an AI-agent, fast, with scikit-learn."]
+    assert out["experience"][0]["title"] == "Day-to-day engineer" and out["id"]["status_line"] == ["Start-up friendly"]
     assert out["id"]["location"] == "Bristol: UK"
-    assert out["skills"]["Core"] == ["Python", "tool calling"]
-    assert out["projects"][0]["stack"] == "scikit-learn, multiomics" and out["projects"][0]["name"] == "Datathon: 3rd place"
+    assert out["skills"]["Core"] == ["Python", "tool-calling"]
+    assert out["projects"][0]["stack"] == "scikit-learn, multi-omics" and out["projects"][0]["name"] == "Datathon: 3rd place"
     assert out["certifications"] == [{"name": "Course", "issuer": "Anthropic", "rest": ", Jun 2026"}]
 
 
@@ -160,7 +161,7 @@ def test_typeset_leaves_links_email_dates_ids_and_numbers_alone():
 def test_typeset_takes_the_award_out_of_a_project_bullet_and_its_result():
     out = T.typeset(_ctx())
     assert out["projects"][0]["bullets"] == ["Detected outliers under 200:1 imbalance"]
-    assert out["results"]["ll1"] == "200:1 imbalance" and out["results"]["az1"] == "AI agent"
+    assert out["results"]["ll1"] == "200:1 imbalance" and out["results"]["az1"] == "AI-agent"
 
 
 def test_the_audit_reports_what_the_pdf_text_still_has():
@@ -169,7 +170,7 @@ def test_the_audit_reports_what_the_pdf_text_still_has():
     a = T.audit(text, keep=["end-to-end"])
     assert a["em_dashes"] == 1
     assert len(a["prose_en_dashes"]) == 1 and "prose – dash" in a["prose_en_dashes"][0]       # a date range is not one
-    assert a["hyphens"] == {"pre-trained": 2} and a["kept"] == ["end-to-end"]                    # protected / URL / e-mail not listed
+    assert a["hyphens"] == {}                                                                  # a hyphen is no defect any more
     assert T.audit("Nothing here.")["hyphens"] == {} and T.audit("a -- b")["em_dashes"] == 1
 
 

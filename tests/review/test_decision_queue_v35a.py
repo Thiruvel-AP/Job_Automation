@@ -139,6 +139,23 @@ def test_judge_stats_compares_shadow_and_user_decisions(cfg, settings, db, job, 
     assert yaml.safe_load(Path(cfg()).read_text())["judge"]["mode"] == "shadow"      # suggested, never changed
 
 
+def test_a_flagged_row_is_left_out_of_judge_stats_and_the_log_is_only_appended_to(cfg, settings, db, job, capsys):
+    rows = []
+    for i in range(3):
+        r = dq.add(settings, dq.REVIEW, f"manual:f{i}", dq.OPTIONS[dq.REVIEW], version="v")
+        dq.decide(settings, r, "retailor" if i == 2 else "send", by="claude", judge_mode="shadow")
+        dq.decide(settings, r, "send", by="user")
+        rows.append(r)
+    before = dq.decisions_path(settings).read_text(encoding="utf-8")
+    rec = dq.flag_row(settings, rows[2].qid, reason="source text of the profile and hook was not sent")
+    assert rec["flag"] == "judge input incomplete" and dq.decisions_path(settings).read_text(encoding="utf-8").startswith(before)
+    st = dq.stats(settings)
+    assert st["kinds"]["review"]["pairs"] == 2 and st["kinds"]["review"]["agree"] == 2 and st["excluded"] == {rows[2].qid: "judge input incomplete"}
+    assert f"excluded from the comparison: {rows[2].qid} (judge input incomplete)" in run(capsys, "--config", cfg(), "judge-stats").out
+    with pytest.raises(ValueError):
+        dq.flag_row(settings, "r-00000000")
+
+
 def test_why_shows_the_judge_log_lines(cfg, settings, db, job, waiting, capsys):
     dq.decide(settings, waiting, "park", by="user", reasons=["not now"])
     out = run(capsys, "--config", cfg(), "why", job["id"]).out

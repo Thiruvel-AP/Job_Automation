@@ -2323,10 +2323,11 @@ shortens sentences over 35 words; growth notes), `test_plain_v34.py` (the plain 
    Freelance role's employer and title. Another order is a `role-sequence` warning (no points). The 10 Nov PDF re-checked: no role-order issue; the
    old template's employer -> dates -> title order is the only warning.
 5. **Letter templates** (`tailoring/template_letter.py`, `company_letter.make`). `letter_templates.<family>` (top level) or `families[*].letter_template`
-   (as written in the bank), looked up for the role family, then the CV's bank family. The model fills ONLY {company_problem_sentence} (an ad
-   sentence, words only dropped, >= 60 % kept, "we" may become the company), {why_sentence} (the P5 guards) and {question} (the ad's words, <= 20
-   words); {company} is code. Up to 3 tries, each told what failed; a slot that never passes is filled in code (an About sentence of the ad, the P5
-   fallback, "the first problem the <role> would own, around <problem>"). Then the whole letter is fact-checked (template text: numbers, names and JD
+   (as written in the bank), looked up for the role family, then the CV's bank family. The model fills ONLY {company_problem_sentence} (v3.5.6: one
+   sentence, <= 30 words, "Your team ..." / "<Company> needs ...", what the team must achieve, no company description, the ad's words),
+   {ad_requirement} (a noun phrase of the ad, <= 15 words, reads inside "Your ad asks for {ad_requirement}, which ...": no leading verb, no "to",
+   no end punctuation) and {question} (a how / what / which noun phrase, <= 15 words); {company} is code. Up to 3 tries, each told what failed; a slot
+   that never passes gets a FIXED fallback (template_letter.FALLBACKS) and the letter is marked DRAFT with the slot named. Then the whole letter is fact-checked (template text: numbers, names and JD
    keywords in the bank; slots: numbers and names in the ad; no we / our, no "I help <Company>", no keyword dump, hardware rule, 200-320 words). A
    failure writes the letter marked DRAFT. A family with no template gets the older letter, marked DRAFT. DRAFT is a doccheck failure: approval and
    auto-submit need [e] (an edited template letter keeps its paragraphs and its checks). The fixed text is not held to the reuse rule.
@@ -2447,3 +2448,19 @@ Tests: `tests/apply/test_hardstop.py`, `tests/discovery/test_ceiling_estimate.py
    Placed under `roles.levels` beside `exclude`, not at a top-level `levels:` (there is none).
 
 Tests: `tests/apply/test_estimate_skip.py` (new), `tests/discovery/test_ceiling_estimate.py`, `test_priority.py`, `test_freshness.py`, `tests/apply/test_live_order.py`, `tests/test_hook_selection.py`.
+
+
+### v3.5.6 (12 Nov 2026, RightShip dry run)
+1. Hyphens: `typography.clean` no longer closes word-word up and `config/typography.yaml rewrite` is empty; "tool-calling", "end-to-end", "five-person"
+   reach both PDFs as written (test: every hyphenated word of the source is hyphenated in the pdftotext of CV and letter). The letter's `~` is
+   printed like the CV's (`\textasciitilde{}`), so "~65" reads the same in both.
+2. Letter slots: {why_sentence} is now {ad_requirement}; the three slots are checked in code (frame, ending, no copied imperative) and a failing slot
+   gets a fixed fallback and a DRAFT mark (see the letter-template item above).
+3. Claude judge input: `review/judge.source_lines` sends the source text of every claim: bullets on the CV, the letter's evidence, the hook's proof
+   bullets, the bank bullets the letter's sentences rest on (word overlap), the family's profile_opening / profile_body, every profile_fact and the
+   hook's profile_line / letter_line. `careerops judge-flag <qid>` appends a `flag` line ("judge input incomplete") to decisions.jsonl; `judge-stats`
+   leaves a flagged row out (the 12 Nov RightShip shadow row r-75a04fbd).
+4. Projects: `_Picker.project_value` = marginal gain + PROJECT_RELEVANCE x best-bullet relevance (gain alone chose AgenticFriend, rank 8, whose only
+   new keyword was "packaging" from "packaged in a Docker image", over mcp_searchagent, rank 1, whose keywords the experience already covered). A
+   replacer of several bullets (p_af3 replaces p_af1 + p_af2) is held to 80 % of the AVERAGE of them, not the best one, so the user's verbatim bullet is no
+   longer passed over for the bullets it replaces.

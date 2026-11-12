@@ -175,24 +175,80 @@ def cv_text(ctx: dict) -> str:
     return "\n".join(lines).strip()
 
 
-def build_input(job, rep: dict, fb: dict) -> dict:
-    """Everything the judge is shown: {title, company, jd, cv, letter, facts}. `facts` are the fact-bank bullets on the CV
-    plus the letter's evidence bullets (with the result, when the bank has one)."""
+_SRC_STOP = frozenset("""that this with from were have been into over under than then them they their there which while would could should about
+    after before also each such more most only other some what when where will your just like very using used use""".split())
+SOURCE_MIN_SHARED = 4              # content words a letter sentence and a bank bullet must share for the bullet to count as behind that sentence
+SOURCE_MAX_EXTRA = 12              # most bank bullets added because the letter's own sentences rest on them
+
+
+def _cwords(text: str) -> set[str]:
+    """Content words of `text` for the overlap test: lower case, 4+ letters or any number, a plural / -ing / -ed ending folded."""
+    out = set()
+    for w in re.findall(r"[a-z]+|\d[\d,.]*", str(text).lower()):
+        if w[0].isdigit():
+            out.add(w.strip(",."))
+        elif len(w) >= 4 and w not in _SRC_STOP:
+            out.add(re.sub(r"(?:ing|ed|es|s)$", "", w) if len(w) > 5 else w.rstrip("s"))
+    return out
+
+
+def letter_source_ids(fb: dict, paragraphs: list[str]) -> list[str]:
+    """Ids of the bank bullets the letter's sentences rest on (a template letter is the user's own prose; its claims come from bullets such as
+    dc6 or p_ll1 that need not be on this job's CV): a bullet shares at least SOURCE_MIN_SHARED content words (numbers count) with one sentence,
+    strongest first, at most SOURCE_MAX_EXTRA."""
+    from ..tailoring.grounding import sentences
+
+    best: dict[str, int] = {}
+    sents = [_cwords(x) for para in paragraphs for x in sentences(para)]
+    for bid, b in bullet_index(fb).items():
+        have = _cwords(f"{b.get('text') or ''} {b.get('result') or ''}")
+        n = max((len(have & sw) for sw in sents), default=0)
+        if n >= SOURCE_MIN_SHARED:
+            best[bid] = n
+    return [i for i, _ in sorted(best.items(), key=lambda kv: -kv[1])[:SOURCE_MAX_EXTRA]]
+
+
+def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
+    """Every source text a claim in the CV or the letter can rest on, one line each: the bullets on the CV, the letter's evidence, the hook's proof
+    bullets and the bullets behind the letter's sentences (`[id] text Result: ...`), then the family's profile_body / profile_opening, every
+    profile_fact and the hook's profile_line / letter_line (`[profile_body ai_engineer] ...`). Nothing the documents say about the applicant is
+    left without its source text in the judge's input (12 Nov 2026: the judge flagged six supported claims because only the CV's bullets were sent)."""
     ctx, letter = rep["context"], rep.get("letter") or {}
     bidx = bullet_index(fb)
-    ids = [i for sec in ("experience", "projects") for e in ctx[sec] for i in e.get("bullet_ids", [])]
-    ids += [e["id"] for e in letter.get("evidence") or [] if e["id"] not in ids]
-    facts = []
+    hk = rep.get("hook") or {}
+    lib = next((h for h in fb.get("hook_library") or [] if isinstance(h, dict) and h.get("id") == hk.get("hook_id")), {})
+    ids = [i for sec in ("experience", "projects") for e in ctx.get(sec) or [] for i in e.get("bullet_ids", [])]
+    proofs = lib.get("proof") or []
+    ids += [*(e["id"] for e in letter.get("evidence") or []), hk.get("proof_bullet_id"), *([proofs] if isinstance(proofs, str) else proofs)]
+    ids += letter_source_ids(fb, [*(letter.get("paragraphs") or []), str(ctx.get("profile") or "")])
+    out, seen = [], set()
     for i in ids:
-        b = bidx.get(i)
-        if b:
-            facts.append(f"[{i}] {b['text']}" + (f" Result: {b['result']}" if str(b.get("result") or "").strip() else ""))
+        b = bidx.get(i) if i else None
+        if b and i not in seen:
+            seen.add(i)
+            out.append(f"[{i}] {b['text']}" + (f" Result: {b['result']}" if str(b.get("result") or "").strip() else ""))
+    fams = {str(f.get("id")): f for f in fb.get("families") or [] if isinstance(f, dict)}
+    wanted = [x for x in (*(rep.get("letter_families") or []), rep.get("family"), (rep.get("skills") or {}).get("family"),
+                          letter.get("template_family")) if x]
+    for fid in dict.fromkeys(wanted):
+        for key in ("profile_opening", "profile_body"):
+            if fams.get(fid, {}).get(key):
+                out.append(f"[{key} {fid}] {' '.join(str(fams[fid][key]).split())}")
+    out += [f"[profile_fact {n}] {' '.join(str(f).split())}" for n, f in enumerate(fb.get("profile_facts") or [], 1)]
+    out += [f"[hook {lib['id']} {k}] {' '.join(str(lib[k]).split())}" for k in ("profile_line", "letter_line", "headline") if lib.get(k)]
+    return out
+
+
+def build_input(job, rep: dict, fb: dict) -> dict:
+    """Everything the judge is shown: {title, company, jd, cv, letter, facts}. `facts` = `source_lines`: the source text of every claim in the
+    profile, hook and letter, not only of the bullets on the CV."""
+    ctx, letter = rep["context"], rep.get("letter") or {}
     paragraphs = letter.get("paragraphs") or [] if letter.get("status") in ("ok", "fallback") else []
     jd = str(job["description"] or "")
     return {"title": job["title"], "company": job["company"],
             "jd": jd if len(jd) <= JD_CHARS else jd[:JD_CHARS] + JD_CUT,
             "cv": cv_text(ctx), "letter": "\n\n".join(paragraphs) if paragraphs else "(no cover letter)",
-            "facts": "\n".join(facts) or "(none)"}
+            "facts": "\n".join(source_lines(fb, rep, paragraphs)) or "(none)"}
 
 
 def judge_limits(settings) -> tuple[int | None, int]:

@@ -218,3 +218,40 @@ def test_later_attempts_reuse_rephrase_answers_and_no_model_writes_the_profile(s
     assert all(a["rephrase"]["asked"] == 0 and a["rephrase"]["cached"] == a["rephrase"]["eligible"] for a in later)
     wording_calls = sum((a.get("wording") or {}).get("calls", 0) for a in rep["attempts"])   # the wording pass shares the task name
     assert tasks.count("rephrase_bullets") == first["calls"] + wording_calls                # nothing was asked twice
+
+
+# ---------------------------------------------------------------- 12 Nov 2026 (RightShip): project choice and replacers
+def _rightship_bank():
+    """mcp_searchagent says only what the experience already shows (rank 1); AgenticFriend has one spurious keyword hit ("packaged" for
+    "packaging") and a verbatim bullet af3 that replaces af1 + af2."""
+    def bullet(i, text, terms, **extra):
+        return {"id": i, "text": text, "terms": terms, **extra}
+    return {
+        "skills": {},
+        "experience": [{"id": "e1", "org": "Org", "title": "Engineer", "dates": "2025 - 2026",
+                        "bullets": [bullet("e1a", "Built an MCP server in Python for search.", ["mcp", "python"])]}],
+        "projects": [
+            {"id": "af", "name": "AgenticFriend", "bullets": [
+                bullet("af1", "Voice agent with streaming speech.", ["voice"]),
+                bullet("af2", "Speech models packaged in a Docker image.", ["packaging"]),
+                bullet("af3", "Built a real time voice assistant end to end with Docker.", ["voice"], replaces=["af1", "af2"])]},
+            {"id": "ms", "name": "mcp_searchagent", "bullets": [bullet("ms1", "MCP server in Python with a search tool.", ["mcp", "python", "search"])]},
+            {"id": "zz", "name": "Filler", "bullets": [bullet("zz1", "Something unrelated.", ["knitting"])]},
+        ]}
+
+
+def test_a_project_the_experience_already_covers_still_beats_a_weak_one_with_one_spurious_hit():
+    fb, kws = _rightship_bank(), _kws("mcp", "python", "packaging", "search")
+    lay = selection.Layout((1, 1), (1, 1), 1, (1, 2))
+    assert budget.rank_projects(fb, kws)[0] == "ms"                    # rank 1 ...
+    assert select_cv(fb, kws, layout=lay)["projects"] == ["ms"]        # ... and chosen (gain alone gave "af": its "packaging" hit was the only new keyword)
+    two = select_cv(fb, kws, layout=selection.Layout((1, 1), (1, 1), 2, (1, 2)))["projects"]
+    assert two[0] == "ms" and len(two) == 2
+
+
+def test_a_verbatim_replacer_is_judged_against_the_average_of_what_it_replaces_not_its_best_bullet():
+    fb, kws = _rightship_bank(), [Keyword("voice", 1.5, True), Keyword("packaging", 2.0, True)]
+    pk = selection._Picker(fb, kws, {}, selection.JACCARD, "")
+    assert (pk.sc["af1"], pk.sc["af2"], pk.sc["af3"]) == (1.5, 2.0, 1.5)
+    assert pk.sc["af3"] < selection.REPLACE_RATIO * max(pk.sc["af1"], pk.sc["af2"])      # the old rule rejected it ...
+    assert "af3" not in pk.passed_over and pk.qualifying == {"af1": ["af3"], "af2": ["af3"]}   # ... the new one takes both slots

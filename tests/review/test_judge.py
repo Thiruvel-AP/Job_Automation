@@ -121,6 +121,26 @@ def test_the_judge_is_shown_the_jd_cv_letter_and_the_source_facts_but_not_the_co
         assert private not in blob
 
 
+def test_every_claim_in_the_profile_hook_and_letter_has_its_source_text_in_the_judges_input(fb_fixture, job):
+    """12 Nov 2026: the judge flagged six supported claims because only the bullets on the CV were sent."""
+    fb = {**fb_fixture, "families": [{"id": "ai_engineer", "profile_opening": "AI engineer who ships agents.",
+                                      "profile_body": "Led a five-person team that built a working agent prototype."}]}
+    rep = make_rep(fb)
+    rep["family"], rep["hook"] = "ai_engineer", {"hook_id": "h_fixture", "proof_bullet_id": "a4"}
+    # a4 is not on the CV; b2 (not on the CV, not in the evidence) is what the letter's second sentence says
+    rep["letter"]["paragraphs"] = ["Hi Northwind team.", "I presented segmentation findings to non-technical stakeholders and agreed three follow-up actions.",
+                                   "Could we talk?"]
+    bidx = bullet_index(fb)
+    assert "a4" not in [i for e in rep["context"]["experience"] for i in e["bullet_ids"]]
+    facts = judge.build_input(job, rep, fb)["facts"]
+    assert f"[a4] {bidx['a4']['text']}" in facts                                  # the hook's proof bullet
+    assert f"[b2] {bidx['b2']['text']}" in facts                                  # the bullet behind a letter sentence
+    assert "[profile_body ai_engineer] Led a five-person team" in facts and "[profile_opening ai_engineer] AI engineer who ships agents." in facts
+    assert all(f"[profile_fact {n}]" in facts for n in range(1, len(fb["profile_facts"]) + 1))
+    assert "[hook h_fixture letter_line] At Northwind I took an LLM agent" in facts and "[hook h_fixture profile_line]" in facts
+    assert facts.count("[a4]") == 1                                               # each source once
+
+
 def test_a_letter_that_is_off_none_or_pending_is_shown_as_no_letter(fb_fixture, job):
     for status in ("off", "none", "pending"):
         assert judge.build_input(job, make_rep(fb_fixture, status), fb_fixture)["letter"] == "(no cover letter)"

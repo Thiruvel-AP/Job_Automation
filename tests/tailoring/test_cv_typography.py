@@ -94,9 +94,9 @@ def _render_chosen(tmp_path, projects: dict[str, list[str]], **bank_edits):
     return ctx, pdf_text(pdf), " ".join(pdf_text(pdf).split())
 
 
-def test_a_project_name_with_a_dash_prints_a_colon_and_the_hyphen_closed(tmp_path):
+def test_a_project_name_with_a_dash_prints_a_colon_and_keeps_its_hyphen(tmp_path):
     ctx, text, flat = _render_chosen(tmp_path, {"bitcoin": ["bitcoin1"]})
-    assert "Price forecasting: LSTM time series service" in flat and "—" not in text
+    assert "Price forecasting: LSTM time-series service" in flat and "—" not in text
 
 
 def test_the_checks_saw_the_original_wording_and_the_report_keeps_it(run):
@@ -106,21 +106,15 @@ def test_the_checks_saw_the_original_wording_and_the_report_keeps_it(run):
     assert any("\u2014" in p["name"] for p in rep["context"]["projects"])
 
 
-def test_hyphens_are_closed_up_by_the_table_and_protected_terms_stay(run):
+def test_hyphens_are_kept_and_protected_terms_and_urls_stay(run):
     rep, text, _ = run
     flat = " ".join(text.split()).casefold()
-    kept = {k.casefold() for k in rep["typography"]["keep"]}
-    for hyphenated, closed in [("start-up", "startup"), ("multi-omics", "multiomics"), ("tool-calling", "tool calling"),
-                               ("time-series", "time series")]:
-        if hyphenated in kept:
-            continue                                       # a JD keyword spelt with the hyphen is left alone, and listed
-        assert hyphenated not in flat and closed in flat, hyphenated
+    assert "scikit-learn" in flat
     urls = re.findall(r"https://\S+", text)                                              # the project URLs (18 Oct) and the header's full URLs (v2.3)
-    assert "scikit-learn" in flat and "https://github.com/ada-lovelace-test/churn#readme" in urls
+    assert "https://github.com/ada-lovelace-test/churn#readme" in urls
     assert all(u.startswith(("https://github.com/ada-lovelace-test", "https://www.linkedin.com/", "https://ada-lovelace-test.example.org")) for u in urls)
     assert "linkedin.com/in/ada-lovelace-test" in flat                              # a URL is never touched
-    left = {w.casefold() for w in rep["typography"]["hyphens"]}
-    assert "scikit-learn" not in left and "start-up" not in left or "start-up" in kept     # protected terms are not "left over"
+    assert rep["typography"]["hyphens"] == {}                                        # nothing is reported: a hyphen is no defect (12 Nov 2026)
 
 
 def test_the_date_separator_is_a_setting(tmp_path):
@@ -252,7 +246,7 @@ def test_the_bullets_results_are_in_num_and_nothing_else_in_a_bullet_is(run):
     items = re.findall(r"\\item (.*)", tex.split(r"\begin{document}")[1])
     nums = [[b for b, in _macro(i, "num", 1)] for i in items]                               # (a result may hold \textasciitilde{})
     got = {b for bs in nums for b in bs}
-    assert "19,213 gene parquet fallback" in got                                           # the az2 result, in its bullet (fix round 2: its hyphen is closed up)
+    assert "19,213-gene parquet fallback" in got                                           # the az2 result, in its bullet (hyphens are kept)
     assert "14 heterogeneous source datasets" in got                                        # az5: found through one extra word
     assert all(len(bs) <= 1 for bs in nums)                                                 # at most one result run per bullet
     assert rep["typography"]["results_bold"] == sum(len(bs) for bs in nums) >= 2

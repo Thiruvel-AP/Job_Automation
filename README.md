@@ -84,7 +84,7 @@ career-ops/
 │   └── training/rewards.py       Phase 2 GRPO reward functions
 ├── config/
 │   ├── settings.yaml             paths, sources, gates, sectors, scoring band, LLM providers
-│   ├── typography.yaml           CV typography: special hyphen spellings, the protected terms (every other hyphen is closed up when the PDF is rendered)
+│   ├── typography.yaml           CV typography: special spellings (empty), the protected terms (an intra-word hyphen is never removed from the PDFs)
 │   ├── taxonomy.txt              ATS keyword vocabulary
 │   └── profile/                  fact_bank.yaml (the only truth the tailor may use) · applicant.yaml · answers.yaml (your answers to form questions, for `live --auto`) · blacklist.yaml (yours, read only)
 ├── templates/                    cv.tex.j2 · cover_letter.tex.j2
@@ -235,6 +235,7 @@ careerops queue [--json] [--kind review|job] [--all]   # v3.5a: the decisions wa
 careerops show r-1a2b3c4d --json   # v3.5a: everything needed to decide one row (the ad as untrusted_jd, CV and letter text, ATS, hook-check, evaluation, fact-bank excerpt, guards); read only
 careerops decide r-1a2b3c4d park --by user --reason "not now"   # v3.5a: the only writing queue command; send / retailor / park (review), approve / marginal / skip (job);
                                    # guards apply to everyone (strict < 50, ATS structure, faithfulness, document check, --unsupported claims: send becomes park)
+careerops judge-flag <qid>         # mark a queue row's Claude decision 'judge input incomplete'; judge-stats leaves it out
 careerops judge-stats              # v3.5: Claude vs you per kind (shadow decisions), confusion counts, cost per day; suggests judge.mode: live, never sets it
 scripts/operate.sh [--max 3]       # v3.5a operate mode (WSL): Claude Code runs /careerops-review with .claude/operate-settings.json (queue/show/decide/why only)
 careerops tailor --limit 15        # CV (two full pages) + note.md per job (letter.mode: `off` by default = no letter; `hook` = an assembled letter, `draft` = a model-drafted one, `company` = a 200-320 word letter in up to seven paragraphs, v2.3), in queue order → data/outputs/<job>/ (+ report.json)
@@ -846,8 +847,8 @@ line to open with: the letters are **none**, as before. The apply assist uploads
 
 **`company` with a letter template** (v3.5.3, `tailoring/template_letter.py`): when the fact bank has `letter_templates.<family>` (or
 `families[*].letter_template`) for the job's role family or the CV's bank family, the letter IS that template: the model fills only
-`{company_problem_sentence}` (one ad sentence, words only dropped), `{why_sentence}` and `{question}` (`{company}` is code), each checked, up to three
-tries, else filled in code; then the whole letter is fact-checked (your template's numbers and names against the bank, the slots against the ad,
+`{company_problem_sentence}` (one sentence of at most 30 words, "Your team ..." / "<Company> needs ...", from the ad), `{ad_requirement}` (a noun phrase of at most 15 words that reads inside "Your ad asks for ..., which ...") and `{question}` (a how / what / which phrase of at most 15 words) (`{company}` is code), each checked in code (frame, ending, no copied imperative), up to three
+tries, else a FIXED fallback and the letter is **DRAFT**; then the whole letter is fact-checked (your template's numbers and names against the bank, the slots against the ad,
 200-320 body words). A failed check, or a family with no template (the letter below), marks the letter **DRAFT**: review shows why and approval needs
 [e]. The headline under the name on the CV and the letter is `<family title> | <hook headline>` (the title alone, and a red "no hook" warning in
 review, when no hook passes).
@@ -1114,11 +1115,7 @@ preamble test fails until `templates/cv2.tex.j2` and the pinned copy in `tests/t
 - **Typography, applied at render time only** — after every faithfulness and claim check has run on the original wording, the text
   that reaches the PDF is tidied (`tailoring/typography.py`; `report.json` keeps the checked text). No em dash survives: `—`, `--`
   and a spaced hyphen used as a dash become a comma, a colon (after a name or title, and always in a project name) or parentheses
-  (a pair around an aside with its own comma). Every hyphenated word is closed up (`class-imbalance → class imbalance`, `19,213-gene → 19,213 gene`), with
-  the special spellings of `config/typography.yaml → rewrite` first (`e-commerce → ecommerce`, `5-star → five star`, `start-up → startup`, `multi-omics → multiomics` ...); its `protected` list
-  (`scikit-learn`, `k-means`, `TF-IDF`, `gpt-oss`, `faster-whisper`, `Skip-gram`, `CIFAR-10`), the handles in your own profile links, number ranges (`3.9–3.11`), names with a
-  number (`GPT-4o`), URLs and e-mail addresses are never touched, and
-  neither is a hyphenated form that a JD keyword spells with the hyphen (the ATS looks for the JD's own spelling). The review screen
+  (a pair around an aside with its own comma). An intra-word hyphen is never removed (`tool-calling`, `end-to-end`, `five-person`, `19,213-gene` print as written; the old close-every-compound rule was a bug, 12 Nov 2026). `config/typography.yaml → rewrite` (empty) holds special spellings only. The review screen
   has a `Typography:` line (em dashes left: must be none; en dashes used as prose dashes; results in bold) and lists the hyphenated
   words still in the PDF (none, unless a JD keyword spells it so). A project's award is printed in its heading only: it is
   taken out of that project's bullets and results, and a model rewording that adds it to a bullet is refused.

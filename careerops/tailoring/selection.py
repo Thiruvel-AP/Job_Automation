@@ -8,8 +8,9 @@ selection is made here and the model is only asked to reword (rephrase batches) 
   * how many bullets an entry gets is a `Layout`: TWO_PAGE (newest entry 4-5, the others 3-4, 5 projects with 2-3 bullets
     each) or ONE_PAGE (newest 2-4, the others 1-2, exactly 2 projects with all their bullets). An entry stops early when
     nothing is left to gain, but never drops below its minimum (an entry with fewer bullets shows them all)
-  * projects are picked the same way (a project's gain is the union of its bullets); the role family's preferred
-    projects only break exact ties. A keyword that only the skills line covers still earns a project SKILL_ONLY_CREDIT of its
+  * projects are picked by `_Picker.project_value`: the marginal gain of the union of its bullets PLUS PROJECT_RELEVANCE x its best bullet's
+    relevance score (v3.5.6: gain alone put AgenticFriend, rank 8, over mcp_searchagent, rank 1, whose keywords the experience had already
+    covered); the role family's preferred projects only break exact ties. A keyword that only the skills line covers still earns a project SKILL_ONLY_CREDIT of its
     weight: "Time series forecasting" in the skills is a claim, the forecasting project is the proof
   * with the JD text, the company domain and topics it names (customer, consumer, behaviour, segmentation, validation,
     statistics, bank ...; domain.py) count like keywords: a bullet (or a project, through its name) that names one nobody on
@@ -18,8 +19,8 @@ selection is made here and the model is only asked to reword (rephrase batches) 
     projects (up to 6) first, then more bullets of the shown projects, then more experience bullets
   * the shrink loop in tailor.py drops the least relevant bullets when the CV is over the page limit
   * `replaces:` — a bullet that stands in for older ones (az10 replaces az1, az2): when it is chosen the ones it replaces are never
-    on the CV, and where one of them would have been chosen it is chosen instead if it scores at least REPLACE_RATIO (0.8) of the best
-    bullet it replaces; a replacer below that is left out and the originals compete as before
+    on the CV, and where one of them would have been chosen it is chosen instead if it scores at least REPLACE_RATIO (0.8) of the bullet it replaces
+    (the average of them when it replaces several); a replacer below that is left out and the originals compete as before
   * `situation_included: true` — a bullet that opens with its own situation: at most one per entry (the entry's `situation:` text is not
     added next to it, layout.with_openers)
   * `verbatim: true` — a bullet that is used word for word (tailor.py never sends it to the model); selection treats it like any bullet
@@ -42,6 +43,7 @@ MOST_RECENT_BULLETS = (2, 4)        # (min, max) bullets of the first (most rece
 OTHER_BULLETS = (1, 2)              # (min, max) bullets of every other experience entry, one-page layout
 PROJECTS = 2
 JACCARD = 0.6
+PROJECT_RELEVANCE = 1.0     # a project's best-bullet relevance score (keywords + domain) counts this much next to its marginal gain when projects are picked
 SKILL_ONLY_CREDIT = 0.5     # share of a keyword's weight a PROJECT earns for showing a keyword that only the skills line covers so far
 T = TypeVar("T")
 
@@ -206,13 +208,32 @@ class _Picker:
         self.qualifying: dict[str, list[str]] = {}                       # replaced id -> the replacers preferred over it
         self.passed_over: set[str] = set()                               # replacers under REPLACE_RATIO of the best bullet they replace
         for r, olds in self.replaces.items():
-            if self.sc.get(r, 0.0) >= REPLACE_RATIO * max((self.sc.get(o, 0.0) for o in olds), default=0.0):
+            if self.sc.get(r, 0.0) >= REPLACE_RATIO * self._replaced_score(olds):
                 for o in olds:
                     self.qualifying.setdefault(o, []).append(r)
             else:
                 self.passed_over.add(r)
         self.excluded: set[str] = set(self.passed_over)                  # never chosen: passed over, or replaced by a chosen bullet
         self.situation_in: set[str] = set()                              # entries with a `situation_included` bullet chosen
+
+    def _replaced_score(self, olds: Sequence[str]) -> float:
+        """What a replacer has to match: the score of the one bullet it replaces, or the AVERAGE of the bullets when it replaces several (it takes
+        the place of all of them, one slot for the lot, so a single inflated hit in one of them, e.g. "packaged" for the keyword "packaging", must not
+        decide; 12 Nov 2026: p_af3 lost to p_af1 + p_af2 at 1.5 against 2.0)."""
+        sc = [self.sc.get(o, 0.0) for o in olds]
+        return sum(sc) / len(sc) if sc else 0.0
+
+    def relevance(self, ids: Sequence[str]) -> float:
+        """The best relevance score (keywords + domain, whether or not already covered) of these bullets."""
+        return max((self.sc[i] for i in ids), default=0.0)
+
+    def project_value(self, ids: Sequence[str], covered: set[int] | None = None, dcovered: set[str] | None = None) -> float:
+        """What a project is worth when projects are picked: its marginal gain (keyword weight nobody shows yet, the skills-only credit) plus
+        PROJECT_RELEVANCE x its best bullet's relevance. Gain alone chose AgenticFriend (rank 8, score 2.0: one spurious "packaging" hit) over
+        mcp_searchagent (rank 1, score 6.0) because the experience bullets had already covered everything mcp_searchagent says."""
+        gain = self.gain(ids) if covered is None else self.gain_over(ids, covered, dcovered or set())
+        credit = SKILL_ONLY_CREDIT * self.skill_only_gain(ids) if covered is None else 0.0
+        return gain + credit + PROJECT_RELEVANCE * self.relevance(ids)
 
     def gain_over(self, ids: Sequence[str], covered: set[int], dcovered: set[str]) -> float:
         new = set().union(*(self.hits[i] for i in ids)) - covered if ids else set()
@@ -326,7 +347,7 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
     projects: list[str] = []
     while len(projects) < min(layout.projects, len(own)):
         pid = min((p for p in own if p not in projects),
-                  key=lambda p: (-(pk.gain(own[p]) + SKILL_ONLY_CREDIT * pk.skill_only_gain(own[p])), rank[p]))
+                  key=lambda p: (-pk.project_value(own[p]), rank[p]))
         projects.append(pid)
         pk.cover(own[pid])
     # bullets of each project: the whole project (one page), or 2-3 of them by marginal gain (two pages)
@@ -384,8 +405,8 @@ def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = No
         left = [p for p in own if p not in shown and p not in extra and any(b not in used for b in own[p])]
         if not left:
             break
-        gain = lambda p: pk.gain_over(own[p], covered, dcovered)   # noqa: E731
-        best = min(left, key=lambda p: (-gain(p), rank.get(p, len(rank))))
+        value = lambda p: pk.project_value(own[p], covered, dcovered)   # noqa: E731
+        best = min(left, key=lambda p: (-value(p), rank.get(p, len(rank))))
         extra.append(best)
         covered |= set().union(*(pk.hits[b] for b in own[best]))
         dcovered |= set().union(*(pk.dgroups[b] for b in own[best]))
