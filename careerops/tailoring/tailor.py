@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from .. import ats, bands
+from .. import pathstore
 from .. import hook as hooks
 from .. import note as note_mod
 from ..apply.naming import file_stem
@@ -1562,7 +1563,7 @@ def install_letter(job, fb: dict, rep: dict, pdf, letter: dict, letters: dict | 
 
 
 def save_report(rep: dict) -> None:
-    (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    pathstore.write_report(Path(rep["out_dir"]) / "report.json", rep)
 
 
 def regenerate_letter(job, fb: dict, llm, settings, rep: dict, feedback: str = "") -> dict:
@@ -2144,5 +2145,5 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     if report["letters"]:
         report["letter"] = {**letter, "pdf": report["letter_pdf"], "tex": _final_path(letter.get("tex"), out_dir, final_dir)}
     note_mod.write(job, report, fb, out_dir)                       # note.md: hook, ATS, learn list, contact, question, flags, gap
-    (out_dir / "report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    pathstore.write_report(out_dir / "report.json", report)
     return report

@@ -18,6 +18,8 @@ challenge check -> click -> wait up to 30 s for the confirmation page -> screens
 """
 from __future__ import annotations
 
+from . import pathstore
+
 import re
 import time
 from dataclasses import dataclass, field
@@ -393,7 +395,7 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
     ask_to_confirm = confirm or autolog.clicked_total(log) < cfg.confirm_first_n
     throttle = throttle or Throttle()
     stamp = f"{now():%Y%m%d-%H%M%S}"
-    folder = Path(job["out_dir"])
+    folder = Path(pathstore.resolve(job["out_dir"]))
     result = ctx.result
     used_up = failures.gate(job["id"]) if failures is not None else None
     known = (handoff.why(url) if handoff is not None else "") or used_up   # a host that turned the automated browser away, or a job out of attempts

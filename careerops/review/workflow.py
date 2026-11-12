@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 import yaml
 
 from .. import ats, bands
+from .. import pathstore
 from .. import note as note_mod
 from ..apply import decided
 from ..db import DB, now
@@ -92,7 +93,7 @@ def _log(path: Path, row: dict) -> None:
 
 
 def load_report(job) -> dict:
-    return json.loads((Path(job["out_dir"]) / "report.json").read_text(encoding="utf-8"))
+    return pathstore.read_report(Path(pathstore.resolve(job["out_dir"])) / "report.json")
 
 
 def usage_lines(rep: dict) -> list[str]:
@@ -615,7 +616,7 @@ def cycle_letter(db: DB, job, rep: dict) -> dict:
     cv = Path(rep["cv_pdf"])
     if cv.exists():
         refresh_ats(rep, pdf_text(cv))
-    (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    pathstore.write_report(Path(rep["out_dir"]) / "report.json", rep)
     db.update_job(job["id"], letter_score=rep["letter"].get("score"))
     db.log(job["id"], "review", {"letter_choice": choice})
     return rep
@@ -698,7 +699,7 @@ def apply_edits(db: DB, job, rep: dict, edited: dict, fb: dict, prefs: Path) -> 
     rep["final"].update({"score": s.literal, "score_stemmed": s.stemmed, "pages": pages,
                          "page2_fill": page2_fill(pdf, pages), "edited": True})
     rep["cv_pages"], rep["page2_fill"] = pages, rep["final"]["page2_fill"]
-    (Path(rep["out_dir"]) / "report.json").write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    pathstore.write_report(Path(rep["out_dir"]) / "report.json", rep)
     db.update_job(job["id"], score=s.literal, score_stemmed=s.stemmed)
     return warnings
 

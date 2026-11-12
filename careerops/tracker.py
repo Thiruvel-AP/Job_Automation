@@ -23,6 +23,7 @@ from typing import Any, Mapping, Protocol
 from urllib.parse import quote
 
 from . import contacts as contacts_mod
+from . import pathstore
 from . import outreach
 from .config import load_yaml
 from .db import DB
@@ -146,7 +147,7 @@ def _job(row: Any) -> dict:
 
 def _load_report(job: Mapping[str, Any]) -> dict:
     try:
-        return json.loads((Path(job["out_dir"]) / "report.json").read_text(encoding="utf-8"))
+        return pathstore.read_report(Path(pathstore.resolve(job["out_dir"])) / "report.json")
     except (OSError, ValueError, TypeError, KeyError):
         return {}
 

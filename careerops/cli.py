@@ -112,7 +112,7 @@ import traceback
 from datetime import date
 from pathlib import Path
 
-from . import ats, bands
+from . import ats, bands, pathstore
 from .apply import autogate
 from .apply import visa as visa_mod
 from .apply.archive import mark_applied_unarchived, preflight, record_application
@@ -1195,7 +1195,7 @@ def newest_report(s) -> dict | None:
         return None
     for p in reversed(found):
         try:
-            return json.loads(p.read_text(encoding="utf-8"))
+            return pathstore.read_report(p)
         except (OSError, ValueError):
             continue
     return None
@@ -1498,7 +1498,7 @@ def cmd_mark_applied(args):
     job = db.job(args.id)
     if job is None:
         _fail(f"no such job: {args.id}")
-    if not job["out_dir"] or not (Path(job["out_dir"]) / "report.json").exists():
+    if not job["out_dir"] or not (Path(pathstore.resolve(job["out_dir"])) / "report.json").exists():
         _fail(f"{args.id} has no tailored CV/letter (run `careerops tailor` first)")
     rep = review.load_report(job)
     try:

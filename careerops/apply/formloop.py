@@ -26,6 +26,8 @@ fact_bank.yaml or applicant.yaml.
 """
 from __future__ import annotations
 
+from .. import pathstore
+
 import json
 import re
 from dataclasses import dataclass
@@ -183,7 +185,7 @@ def table(fields: list[Field], status: dict[str, str] | None = None) -> list[str
 def output_folder(job: dict, cv_pdf: str | None) -> Path | None:
     """Where formloop.jsonl goes: the job's output folder (`out_dir`, else the folder of its CV)."""
     if job.get("out_dir"):
-        return Path(str(job["out_dir"]))
+        return Path(pathstore.resolve(str(job["out_dir"])))
     return Path(cv_pdf).parent if cv_pdf else None
 
 

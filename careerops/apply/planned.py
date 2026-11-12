@@ -10,6 +10,8 @@ not approved, never stored), writes the record (apply/dryrun.py + plan.json / pl
 """
 from __future__ import annotations
 
+from .. import pathstore
+
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +25,7 @@ CONFIRM_PROMPT = "After submitting, paste confirmation/reference (blank = submit
 
 
 def _folder(job: dict, cv: str | None) -> Path | None:
-    return Path(job["out_dir"]) if job.get("out_dir") else (Path(cv).parent if cv else None)
+    return Path(pathstore.resolve(job["out_dir"])) if job.get("out_dir") else (Path(cv).parent if cv else None)
 
 
 def _report(r: dict, plan: AP.Plan, res: planfill.Result) -> None:

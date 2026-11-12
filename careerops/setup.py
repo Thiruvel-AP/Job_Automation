@@ -214,7 +214,9 @@ def ats_structure_checks(settings) -> list[tuple[str, object, str]]:
     if not found:
         return [("ATS structure: no tailored CV yet", "warn", "run `careerops live` (or `careerops run --mock --limit 1`) first")]
     try:
-        rep = json_mod.loads(found[-1].read_text(encoding="utf-8"))
+        from .pathstore import read_report
+
+        rep = read_report(found[-1])
         fb = load_yaml(settings.path("fact_bank"))
     except (OSError, ValueError) as e:
         return [(f"ATS structure: {found[-1]} could not be read", "warn", str(e)[:80])]

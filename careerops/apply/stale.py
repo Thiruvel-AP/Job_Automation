@@ -14,6 +14,8 @@ The environment variable CAREEROPS_CODE_TIME overrides git: "off" (tests: nothin
 """
 from __future__ import annotations
 
+from .. import pathstore
+
 import json
 import os
 import subprocess
@@ -101,7 +103,7 @@ def outputs(job: Mapping[str, Any], rep: Mapping[str, Any] | None = None) -> lis
     if rep is None:
         out_dir = str(job["out_dir"] or "") if "out_dir" in job.keys() else ""
         try:
-            rep = json.loads((Path(out_dir) / "report.json").read_text(encoding="utf-8")) if out_dir else {}
+            rep = pathstore.read_report(Path(pathstore.resolve(out_dir)) / "report.json") if out_dir else {}
         except (OSError, ValueError):
             rep = {}
     found = []

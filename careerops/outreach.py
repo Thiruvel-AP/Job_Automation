@@ -29,6 +29,7 @@ from typing import Any, Mapping
 import yaml
 
 from . import contacts as contacts_mod
+from . import pathstore
 from .config import load_yaml
 from .db import DB
 from .googleapi import GoogleAPI
@@ -244,9 +245,9 @@ def draft_for_job(db: DB, settings, job_row: Any, *, api: GoogleAPI | None = Non
     OutreachError / GoogleError / GmailAuthError when nothing could be made at all; a contact that gets no draft is in `skipped`."""
     job = {k: job_row[k] for k in job_row.keys()} if not isinstance(job_row, dict) else job_row
     jid = job["id"]
-    if not job.get("out_dir") or not (Path(job["out_dir"]) / "report.json").is_file():
+    if not job.get("out_dir") or not (Path(pathstore.resolve(job["out_dir"])) / "report.json").is_file():
         raise OutreachError(f"{jid} has no tailored CV (no report.json)")
-    rep = json.loads((Path(job["out_dir"]) / "report.json").read_text(encoding="utf-8"))
+    rep = pathstore.read_report(Path(pathstore.resolve(job["out_dir"])) / "report.json")
     fb = fb if fb is not None else load_yaml(settings.path("fact_bank"))
     applicant = load_yaml(settings.path("applicant"))
     if not hook_line(rep):

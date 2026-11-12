@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from .. import bands as bands_mod
+from .. import pathstore
 from .. import note as note_mod
 from ..apply.safe_io import safe_write_text
 from ..config import load_yaml
@@ -223,7 +224,7 @@ def _report(job: Mapping[str, Any], folder: Path) -> dict:
         if not base:
             continue
         try:
-            return json.loads((Path(base) / "report.json").read_text(encoding="utf-8"))
+            return pathstore.read_report(Path(pathstore.resolve(str(base))) / "report.json")
         except (OSError, ValueError):
             continue
     raise PrepError("the job has no report.json (neither in its output folder nor in its archive folder)")

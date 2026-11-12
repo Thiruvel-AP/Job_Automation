@@ -10,6 +10,8 @@ half-made folder where it is, flags the job, and never cleans up inside the arch
 """
 from __future__ import annotations
 
+from .. import pathstore
+
 import json
 import shutil
 import tempfile
@@ -113,7 +115,7 @@ def _role_name(title: str, taken: set[str], day: str, job_id: str, cap: int) -> 
 
 
 def _sources(job: dict, rep: dict, no_letter: bool) -> tuple[list[Path], bool]:
-    out_dir = Path(job["out_dir"] or "")
+    out_dir = Path(pathstore.resolve(job["out_dir"] or ""))
     cv = Path(rep.get("cv_pdf") or "")
     letter = Path(rep["letter_pdf"]) if rep.get("letter_pdf") else None
     has_letter = letter is not None and letter.is_file()
