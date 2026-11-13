@@ -211,7 +211,7 @@ def letter_source_ids(fb: dict, paragraphs: list[str]) -> list[str]:
 def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
     """Every source text a claim in the CV or the letter can rest on, one line each: the bullets on the CV, the letter's evidence, the hook's proof
     bullets and the bullets behind the letter's sentences (`[id] text Result: ...`), then the family's profile_body / profile_opening, every
-    profile_fact and the hook's profile_line / letter_line (`[profile_body ai_engineer] ...`). Nothing the documents say about the applicant is
+    profile_fact, every `skills:` row of the fact bank (`[skills Databases] ...`) and the hook's profile_line / letter_line (`[profile_body ai_engineer] ...`). Nothing the documents say about the applicant is
     left without its source text in the judge's input (12 Nov 2026: the judge flagged six supported claims because only the CV's bullets were sent)."""
     ctx, letter = rep["context"], rep.get("letter") or {}
     bidx = bullet_index(fb)
@@ -234,6 +234,7 @@ def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
         for key in ("profile_opening", "profile_body"):
             if fams.get(fid, {}).get(key):
                 out.append(f"[{key} {fid}] {' '.join(str(fams[fid][key]).split())}")
+    out += [f"[skills {g}] " + ", ".join(str(x) for x in v) for g, v in (fb.get("skills") or {}).items() if isinstance(v, (list, tuple)) and v]
     out += [f"[profile_fact {n}] {' '.join(str(f).split())}" for n, f in enumerate(fb.get("profile_facts") or [], 1)]
     out += [f"[hook {lib['id']} {k}] {' '.join(str(lib[k]).split())}" for k in ("profile_line", "letter_line", "headline") if lib.get(k)]
     return out

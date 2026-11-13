@@ -413,6 +413,37 @@ def untrusted(text: str) -> dict:
     return {"label": UNTRUSTED_LABEL, "text": str(text or "")}
 
 
+def warning_kind(w: str) -> str:
+    """A label for one claim-guard warning of the chosen attempt, so the judge sees what kind it is (a cosmetic length note is not a claim)."""
+    t = w.strip()
+    if t.startswith("length:") and "verbatim" in t:
+        return "verbatim-length (layout only: the user's own bullet prints long and is kept word for word; no claim involved)"
+    if t.startswith("length:"):
+        return "length (layout only: a bullet prints longer than the line limit; no claim involved)"
+    if "stuff" in t.lower():
+        return "keyword-stuffing (a bullet or line repeats JD keywords)"
+    if t.startswith("profile:"):
+        return "profile (a fact was left out of the profile as a restatement; layout only)"
+    if t.startswith("replaces:"):
+        return "replaces (a replacement bullet was left off; the original stays)"
+    if NO_REGRESSION_MARK in t:
+        return "no-regression (a rewrite was refused; the fact-bank wording is kept)"
+    return "other"
+
+
+NO_REGRESSION_MARK = "no-regression"
+
+
+def chosen_warnings(rep: Mapping[str, Any]) -> list[dict]:
+    """The claim-guard warnings of the chosen attempt (the ones the faithfulness gate counts), each as {kind, text}."""
+    attempts = rep.get("attempts") or []
+    chosen = (rep.get("final") or {}).get("chosen_attempt")
+    rec = next((a for a in attempts if a.get("attempt") == chosen), None)
+    if rec is None and chosen and 0 < chosen <= len(attempts):
+        rec = attempts[chosen - 1]
+    return [{"kind": warning_kind(str(w)), "text": str(w)} for w in (rec or {}).get("warnings") or []]
+
+
 def review_context(settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], row: Row,
                    blockers: Sequence[str] | None = None, pdf_text=None) -> dict:
     """Everything needed to decide a review row: the ad (as untrusted_jd), the CV and letter text (pdftotext), ATS strict / ceiling / structure and
@@ -469,6 +500,7 @@ def review_context(settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb:
             "cv_text": text_of("cv_pdf", base["cv"]), "letter_text": text_of("letter_pdf", base["letter"]),
             "ats": {"strict": ats.get("strict"), "ceiling": ats.get("ceiling"), "structure": structure, "lints": lints},
             "hook": hook, "evaluation": ev, "fact_bank_excerpt": base["facts"],
+            "claim_guard_warnings": chosen_warnings(rep),
             "guards": {"send_blocked_by": list(blockers), "retailors_by_claude": retailors_by_claude(settings, row.job_id),
                        "retailor_max": RETAILOR_MAX}}
 

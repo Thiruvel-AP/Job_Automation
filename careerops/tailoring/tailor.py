@@ -718,7 +718,9 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
                     if e["bullet_ids"][i] in protected:
                         continue
                     s = relevance(b)
-                    if worst is None or s < worst[0]:
+                    # on a tie the LATER bullet goes: the first bullet of a project / role is the one that carries its substance
+                    # (13 Nov RightShip: p_ia1, the NLP bullet, went and the Git/Trello bullet p_ia2 stayed)
+                    if worst is None or s < worst[0] or (s == worst[0] and worst[1] is e):
                         worst = (s, e, i)
         if worst:
             _, e, i = worst
