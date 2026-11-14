@@ -462,19 +462,30 @@ def library_lint(fb: dict) -> list[tuple[str, str]]:
     return [(str(e["id"]), w) for e in library(fb) for w in headline_lint(str(e.get("headline") or ""))]
 
 
-def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
+def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None, rm=None):
     """The eligible library entries for this ad, best first, as pick_library_entry's dicts (a generator: the first is the pick). Only an entry
     whose terms hit at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest keywords is eligible. Highest score first, a tie to the earlier entry in
     the library. An entry is skipped (and `notes` says why) when its proof bullet is not in the fact bank, when a string is missing, when it
-    (or its proof bullet) names a deny-listed term, or (v3.5.2) when it claims something its proof bullets do not (tailoring/hook_claims.py). The cover letter walks the rest of the ranking when the CV's hook has no number (opening.py)."""
+    (or its proof bullet) names a deny-listed term, or (v3.5.2) when it claims something its proof bullets do not (tailoring/hook_claims.py). The cover letter walks the rest of the ranking when the CV's hook has no number (opening.py).
+    v3.6: with `rm` (tailoring/reqmap.ReqMap) the ad's requirements decide instead of the entry's `terms`: the entry whose proof bullets are
+    evidence of the most weight of `existing` requirements wins, and it is eligible only when they cover at least reqmap.MIN_HOOK_REQS of them."""
     notes = notes if notes is not None else []
     deny = fb.get("deny_terms", [])
-    scores = library_scores(fb, kws)
     entries = library(fb)
-    overlaps = {str(e["id"]): top_keyword_overlap(e, kws) for e in entries}
+    if rm is not None:
+        from .tailoring import reqmap as RM
+
+        found_rm = RM.hook_scores(rm, fb)
+        scores = {eid: sw for eid, (sw, _) in found_rm.items()}
+        overlaps = {str(e["id"]): [(r.term, r.weight) for r in RM.hook_cover(rm, e)] for e in entries}
+        eligible = {eid: n >= RM.MIN_HOOK_REQS for eid, (_, n) in found_rm.items()}
+    else:
+        scores = library_scores(fb, kws)
+        overlaps = {str(e["id"]): top_keyword_overlap(e, kws) for e in entries}
+        eligible = {eid: len(o) >= MIN_OVERLAP for eid, o in overlaps.items()}
     for e in sorted(entries, key=lambda e: (-scores[str(e["id"])], entries.index(e))):
         score, eid = scores[str(e["id"])], str(e["id"])
-        if len(overlaps[eid]) < MIN_OVERLAP:
+        if not eligible[eid]:
             continue
         found = find_proof(fb, e)
         if found is None:
@@ -499,17 +510,26 @@ def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None):
                          + "; ".join(c.line() for c in clash[:3]))
             continue
         yield {"entry": e, "score": score, "kind": kind, "bullet_entry": owner, "bullet": bullet, "overlap": overlaps[eid],
-               "reason": selection_reason(eid, overlaps[eid], score)}
+               "reason": (f"{eid} won: its proof bullets are evidence of {len(overlaps[eid])} existing requirements of the ad, {_weights(overlaps[eid])} "
+                                                f"(weight {score:g})") if rm is not None else selection_reason(eid, overlaps[eid], score)}
 
 
-def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = None) -> dict | None:
+def pick_library_entry(fb: dict, kws: list[Keyword], notes: list[str] | None = None, rm=None) -> dict | None:
     """The library entry to use for this ad: {"entry", "score", "kind", "bullet_entry", "bullet", "overlap", "reason"}, or None (the first of
     `iter_eligible`; its rules decide). None adds a note naming the closest entry."""
     notes = notes if notes is not None else []
-    found = next(iter_eligible(fb, kws, notes), None)
+    found = next(iter_eligible(fb, kws, notes, rm), None)
     if found is not None:
         return found
     entries = library(fb)
+    if rm is not None and entries:
+        from .tailoring import reqmap as RM
+
+        sc = RM.hook_scores(rm, fb)
+        best = max(entries, key=lambda e: (sc[str(e["id"])][1], -entries.index(e)))
+        notes.append(f"no hook_library entry has proof bullets that cover at least {RM.MIN_HOOK_REQS} existing requirements of the ad (closest: "
+                     f"'{best['id']}' with {sc[str(best['id'])][1]})")
+        return None
     overlaps = {str(e["id"]): top_keyword_overlap(e, kws) for e in entries}
     if entries:
         best = max(entries, key=lambda e: (len(overlaps[str(e["id"])]), -entries.index(e)))
@@ -547,13 +567,14 @@ def library_hook(picked: dict, fb: dict, kws: list[Keyword], jd: str, notes: lis
 
 
 def build_hook(job: dict, kws: list[Keyword], fb: dict, llm=None, role: str = "", team: str = "", company_hook: str = "",
-               notes: list[str] | None = None) -> Hook | None:
+               notes: list[str] | None = None, rm=None) -> Hook | None:
     """The hook for this job: the fact bank's `hook_library` entry that hits at least MIN_OVERLAP of the ad's TOP_KEYWORDS heaviest
     keywords (see the module docstring), its strings word for word, no model. None when no entry qualifies (or there is no library):
     nothing is written instead, the CV keeps the role family's headline with no number, and `notes` says why so that the run can
-    report it. `llm`, `role`, `team` and `company_hook` are accepted for the old signature and never used."""
+    report it. `llm`, `role`, `team` and `company_hook` are accepted for the old signature and never used. `rm`: the requirement map (v3.6), see
+    `iter_eligible`."""
     notes = notes if notes is not None else []
-    picked = pick_library_entry(fb, kws, notes)
+    picked = pick_library_entry(fb, kws, notes, rm)
     if picked:
         return library_hook(picked, fb, kws, job.get("description") or "", notes)
     if not library(fb):

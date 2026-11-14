@@ -127,7 +127,8 @@ def fill_lines(rep: dict, settings=None) -> list[str]:
     if ls and float(ls) > base + 1e-9:
         bits.append(f"linespread {float(ls):.2f}")
     short = target is not None and f["page2_fill"] < target
-    return ["Fill: " + " | ".join(bits) + ("  !! below target: the fact bank has no more content to add" if short else "")]
+    from ..tailoring.tailor import left_out_text
+    return ["Fill: " + " | ".join(bits) + ("  !! below target: " + (left_out_text(rep.get("left_out") or []) or "the fact bank has no more content to add") if short else "")]
 
 
 SHOWN_HYPHENS = 20                  # hyphenated words the review screen lists
@@ -318,6 +319,22 @@ def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
     return doc_check(rep, settings, fb, job).text().splitlines()
 
 
+def requirement_lines(rep: dict, fb: dict | None = None) -> list[str]:
+    """v3.6: the REQUIREMENTS block (one line per requirement: existing <id> "<bullet start>" | supported <where> "<words>" | GAP <term>), the alias
+    suggestions (marked as suggestions: the user adds them to `jd_aliases` only if true) and the recruiter risk map. [] for a report without a map."""
+    from ..tailoring import reqmap as RM
+
+    if not rep.get("requirements"):
+        return []
+    rm = RM.ReqMap.from_dict(rep["requirements"])
+    ctx = rep.get("context") or {}
+    sections = {"profile": ctx.get("profile") or "", "skills": " ".join(f"{k} {v if isinstance(v, str) else ', '.join(map(str, v))}" for k, v in (ctx.get("skills") or {}).items()),
+                "experience": " ".join(b for e in ctx.get("experience") or [] for b in e.get("bullets") or []),
+                "projects": " ".join(b for e in ctx.get("projects") or [] for b in e.get("bullets") or [])}
+    return RM.review_block(rm, RM.risk_map(rm, rep.get("title") or "", sections=sections),
+                           RM.alias_suggestions(rm, fb or {}, None) if fb else [])
+
+
 NO_HOOK_WARNING = "no hook: the headline has no number"
 RED, RESET = "\033[31m", "\033[0m"
 
@@ -419,6 +436,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | 
         *ats_check_lines(rep, settings, fb if fb is not None else bank, job),
         *provisional_lines(rep),
         *hook_lines(rep),
+        *requirement_lines(rep, fb if fb is not None else bank),
         *letter_lines(rep),
         *fill_lines(rep, settings),
         *typography_lines(rep),

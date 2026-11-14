@@ -1054,7 +1054,7 @@ Each item had a failing test first. Evidence: the user's first live run.
    (the "only autoapply.py clicks" test still holds). `assist(book=, history=)`; `cli._assist_answers` passes answers.yaml. `tests/apply/test_assist_filler.py`
    (Ashby fixture `ashby_form.html`).
 3. **Output folder names.** `tailor.folder_name`: `<Company>_<Role, cut>_<job id>`, the id never cut (company + role take `60 - len(id) - 1`, at least 24).
-   `tailor.swap_in`: a folder rename that raises PermissionError is retried 3 times, 1 s apart, then the files are copied into the folder and the `.partial` deleted;
+   `tailor.place_attempt` (was `swap_in`, which moved the earlier output aside and deleted it): a folder rename that raises PermissionError is retried 3 times, 1 s apart, then the files are copied into the folder and the `.partial` deleted;
    the file Windows holds is printed; an earlier output is only given up once the new one is complete. `tests/tailoring/test_output_folder.py`.
 4. **Cross-board duplicates.** `candidate.family_key` (strips a trailing Early Careers / Careers / UK / Ltd / ...) is the company part of `dedupe_key`;
    `Known.where` also matches the same family + title under another board's spelling whatever the place says. Discovery keeps the NEWER copy (`posted`): the older
@@ -2464,3 +2464,49 @@ Tests: `tests/apply/test_estimate_skip.py` (new), `tests/discovery/test_ceiling_
    new keyword was "packaging" from "packaged in a Docker image", over mcp_searchagent, rank 1, whose keywords the experience already covered). A
    replacer of several bullets (p_af3 replaces p_af1 + p_af2) is held to 80 % of the AVERAGE of them, not the best one, so the user's verbatim bullet is no
    longer passed over for the bullets it replaces.
+
+### v3.5.7 (13 Nov 2026, RightShip applied; Norton Rose Fulbright via Reed) — **done offline** (fakes; no network, no model)
+1. Sign-in pages are a hard stop (`apply/route.py`). Before any plan or fill: a URL whose host starts `secure.` / is a login host, whose path has a
+   login / signin / auth / oauth / account segment, or that carries OAuth parameters, or a page with any `input[type=password]`, raises
+   `errors.AccountRequired` (checked in `formfind.wait_for_form`, `formscan.reach`, and on the apply address itself in `assist()` / `autoapply.run`, before a
+   browser opens). Nothing is typed, the browser is closed, the job gets status `manual_apply_account_required` (`autolog.ACCOUNT`, `live._account_required`)
+   and the listing URL is printed.
+2. `aggregator_only` routes (Reed, CV-Library, Indeed, LinkedIn ...) never enter form fill. `route.employer_url` first looks for the employer's own address
+   already on the job (non-board `apply_url` / `url`, or a `greenhouse:<token>:<id>` board posting); else the apply pack (CV, letter, answers_to_paste.txt)
+   is built by the hand-off with `remember=False` (no host is recorded) and the listing is opened. Not built: resolving a board from the board cache or the
+   public dataset by company name (needs requests; `route.employer_url` makes none).
+3. `requiredgate`: a page with no CV upload field and fewer than 3 fields is `NO FORM` (blocking); `render` prints "NO APPLICATION FORM FOUND ... auto-submit
+   is BLOCKED" and never "nothing here blocks an auto-submit".
+4. `freetext.dissertation_problems`: an experience whose `employment_type` mentions dissertation is never "At <org>"; the code-built lead is "For my
+   AstraZeneca-affiliated MSc dissertation, ...". Guarded in `Guard.problems` and `_motivation_problems`.
+5. `tailoring/attempts.py`: a re-tailoring (`[r]` / `[f]`, `tailor --id`) never replaces, moves or deletes an earlier output. The first tailoring is `<job>/` (attempt 0), every
+   later one `<job>/attempts/<n>/` (n only increases). Each report.json has `attempt` and `current_attempt` (highest strict ATS, a tie keeps the earlier); `jobs.out_dir`
+   points at the current attempt, so review, `[o]`, form upload, archive and judge read it. `record_tailoring` leaves the row alone for a lower attempt. Bullet selection
+   no longer depends on the hash seed (`_Picker.gain_over` sums in sorted order; a float sum over a set of strings changed in its last digits).
+6. Judge payload: `source_lines` starts with `[identity status_line]`, every `[certification n]`, every role's and degree's dates and every `[project id]` name.
+   The review context splits warnings into `claim_guard_warnings` and `style_warnings` (length, verbatim-length, keyword-stuffing, profile = style).
+7. `browser.start_playwright` / `shutdown`: Ctrl+C closes every browser and stops every Playwright before exit (live first, then `cli.main`'s `finally`);
+   asyncio's "Future exception was never retrieved ... Connection closed while reading from the driver" record is filtered.
+
+### v3.6 (14 Nov 2026) — JD-first assembly — **done offline** (fixtures, no model, no network); the live dry runs (EDITED Ashby, RightShip) are yours
+Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` commit 605a1e61 (logic ported, not text).
+- `careerops/tailoring/reqmap.py` (zero tokens): each extracted keyword is a requirement, looked up in the whole fact bank (bullet text/result/terms,
+  `skills:`, `profile_facts`, `profile_fragments`, education `modules`, certifications) by its term, alts and the user's `jd_aliases:`. Buckets
+  `existing` (a bullet), `supported` (only skills/facts/fragments/modules/certs), `gap` (nothing; a deny-listed term is always a gap). Coverage =
+  (Σw existing + 0.5·Σw supported) / Σw. Written to `reqmap.json` in the job folder and `report["requirements"]`; gaps are printed before tailoring.
+- Hook: `hook.iter_eligible/build_hook(..., rm=)` ranks `hook_library` by the weight of `existing` requirements the entry's proof bullets are evidence of,
+  eligible at ≥ 2 requirements; hook-check, deny list and faithfulness are unchanged. No qualifying hook: the highest-coverage proof bullet is profile
+  line 1 and the no-hook warning stays.
+- Profile: the 2–3 `profile_fragments` with the most requirement weight (none repeated, none repeating the hook line) after the opening;
+  `profile_body` only when no fragment covers anything.
+- Skills: up to 3 rows named with the ad's own requirement phrase, listing the evidence words; the family's `skill_lines` fill the rest (items already
+  shown are dropped) and are the fallback when no row can be built.
+- Bullets: the map's coverage is added to the selection's keyword hits (`select_cv/fill_order(extra_hits=)`), to the relevance that orders the first
+  bullet and the shrink (a 0-coverage bullet goes before any project; ≥ 3 projects kept as before).
+- Family: `skills.pick_family(..., title=)`: the ad's TITLE names the bank family (`reqmap.title_family`); body words only when the title names none.
+  The ad's own title is never copied. Letter: `letter_families` is ordered by the weight each family's `letter_template` claims (`reqmap.template_order`);
+  `careerops tailor` already logs the template id and the first 60 characters (`letter_template_line`), now with a regression test.
+- Review: `REQUIREMENTS (coverage x)` block, alias suggestions (marked; never written) and a 3-doubt recruiter risk map. Doctor: dead `jd_aliases`,
+  fragments sharing 4+ words.
+- Not done: the model-proposed alias suggestions (a deterministic hint is shown instead); the free-text answers do not yet draw on the map; letter
+  `opening.py` still walks hooks by `terms`.

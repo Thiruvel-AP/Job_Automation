@@ -199,6 +199,63 @@ def profile_word_checks(path: Path) -> list[tuple[str, object, str]]:
     return out
 
 
+REPEAT_WORDS = 4          # a phrase of this many words in both profile_opening and profile_body is a repeat
+
+
+def _words(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9][a-z0-9'+#.-]*", str(text or "").lower())
+
+
+def profile_repeat_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor lines, read only: warn for each role family whose `profile_opening` and `profile_body` share a phrase of 4 or more words (the CV
+    profile prints the opening, then the body, so a shared phrase reads twice). One line per family that has both."""
+    from .config import load_yaml
+
+    if not path.exists():
+        return []
+    out: list[tuple[str, object, str]] = []
+    for f in load_yaml(path).get("families") or []:
+        if not isinstance(f, dict) or not f.get("id") or not f.get("profile_opening") or not f.get("profile_body"):
+            continue
+        a, b = _words(f["profile_opening"]), _words(f["profile_body"])
+        grams = {tuple(b[i:i + REPEAT_WORDS]) for i in range(len(b) - REPEAT_WORDS + 1)}
+        longest = ""
+        for i in range(len(a) - REPEAT_WORDS + 1):
+            n = REPEAT_WORDS
+            if tuple(a[i:i + n]) in grams:
+                while i + n < len(a) and any(b[j:j + n + 1] == a[i:i + n + 1] for j in range(len(b) - n)):
+                    n += 1
+                if n > len(longest.split()):
+                    longest = " ".join(a[i:i + n])
+        label = f"profile of family {f['id']}: opening and body repeat" + (f' "{longest}"' if longest else " no phrase")
+        out.append((label, not longest, "" if not longest else f"profile_opening and profile_body of '{f['id']}' share {REPEAT_WORDS}+ words; reword one in fact_bank.yaml (the pipeline never edits it)"))
+    return out
+
+
+def letter_template_checks(path: Path) -> list[tuple[str, object, str]]:
+    """Doctor lines, read only: warn when two role families have the same `letter_template` text (their letters would open and read alike).
+    Looks in `letter_templates.<family>` first, then `families[*].letter_template`, as tailoring/template_letter.raw_template does."""
+    from .config import load_yaml
+    from .tailoring.template_letter import raw_template
+
+    if not path.exists():
+        return []
+    fb = load_yaml(path)
+    ids = [str(f["id"]) for f in fb.get("families") or [] if isinstance(f, dict) and f.get("id")]
+    seen: dict[str, str] = {}
+    out: list[tuple[str, object, str]] = []
+    for fam in ids:
+        text = " ".join(raw_template(fb, [fam])[1].split())
+        if not text:
+            continue
+        if text in seen:
+            out.append((f"letter template of family {fam} is the same text as {seen[text]}'s", False,
+                        f"give '{fam}' its own letter_template in fact_bank.yaml (the pipeline never edits it)"))
+        else:
+            seen[text] = fam
+    return out or [("letter templates: no two families share a text", True, "")]
+
+
 def ats_structure_checks(settings) -> list[tuple[str, object, str]]:
     """v3.3: the structural ATS check of the newest tailored CV under paths.outputs (read only): its score, grade and lints. A critical issue fails,
     lints or a score under 80 warn, no tailored CV yet says so."""
@@ -269,6 +326,21 @@ def hook_lint_checks(path: Path) -> list[tuple[str, object, str]]:
         return [(f"hook '{eid}' headline: {msg}", WARN, "the lint never rewrites; edit the headline in fact_bank.yaml if you agree")
                 for eid, msg in found]
     return [(f"hook library headlines ({len(library(fb))}) pass the lint", True, "")]
+
+
+def reqmap_checks(path: Path) -> list[tuple[str, object, str]]:
+    """v3.6 doctor lines for the fact bank's `jd_aliases` and `profile_fragments` (read only, never edited): a warning for each alias none of whose
+    evidence words is in the fact bank (dead), and for each pair of fragments that share 4 or more consecutive words; else one passing line."""
+    from .config import load_yaml
+    from .tailoring import reqmap as RM
+
+    if not path.exists():
+        return [("jd_aliases / profile_fragments", False, f"fact bank not found: {path}")]
+    fb = load_yaml(path)
+    found = RM.dead_aliases(fb) + RM.fragment_repeats(fb)
+    if found:
+        return [(msg, WARN, "edit fact_bank.yaml yourself; the pipeline never writes aliases or fragments") for msg in found]
+    return [(f"jd_aliases ({len(fb.get('jd_aliases') or {})}) all have evidence; profile_fragments ({len(RM.fragments(fb))}) do not repeat each other", True, "")]
 
 
 def hook_claim_checks(path: Path) -> list[tuple[str, object, str]]:
@@ -546,8 +618,11 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += core_skill_checks(settings.path("fact_bank"))
     checks += hook_lint_checks(settings.path("fact_bank"))
     checks += hook_claim_checks(settings.path("fact_bank"))
+    checks += reqmap_checks(settings.path("fact_bank"))
     checks += skill_repeat_checks(settings.path("fact_bank"))
     checks += profile_word_checks(settings.path("fact_bank"))
+    checks += profile_repeat_checks(settings.path("fact_bank"))
+    checks += letter_template_checks(settings.path("fact_bank"))
     checks += plain_allow_checks(settings)
     from .tailoring import sections as sections_mod
     checks.append(sections_mod.doctor_line(settings))

@@ -78,7 +78,7 @@ def test_the_cv_of_an_ad_with_no_overlapping_hook_carries_the_family_headline_an
     lines = review.hook_lines(rep, color=False)
     assert lines[0].startswith("!! no hook: the headline has no number")                     # v3.5.3: the warning comes first
     assert lines[1].startswith("Hook: none qualifies") and f"'{rep['headline']}' with no number" in lines[1]
-    assert any("no hook_library entry hits at least 2" in ln for ln in lines)
+    assert any("at least 2" in ln for ln in lines)          # v3.6: "no hook_library entry has proof bullets that cover at least 2 existing requirements"
 
 
 FAMILY_HEADLINE = "Data Scientist, forecasting and demand planning"

@@ -20,6 +20,7 @@ from ..apply.naming import file_stem
 from ..config import load_yaml
 from ..discovery import gates
 from ..llm.router import TaskUnavailable
+from . import attempts as attempts_mod
 from . import evidence_fields
 from . import prompts as P
 from . import layout as pdflayout
@@ -35,6 +36,7 @@ from . import letters as letters_mod
 from . import plain as plain_mod
 from . import sections as sections_mod
 from . import profile as profile_mod
+from . import reqmap as reqmap_mod
 from . import typography
 from .jdtext import strip_benefits
 from .rawlog import RawRecorder
@@ -621,6 +623,27 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
     return ctx
 
 
+def lead_best(ctx: dict, scores: dict[str, float], hk: hooks.Hook | None = None) -> str | None:
+    """Put the highest-ranked bullet (`scores`: relevance to this ad) first in the most relevant role (the role whose best chosen bullet scores
+    highest; the newest on a tie). The hook's proof bullet stays first in its own entry: the hook is the first bullet by rule. Returns the id
+    that leads, or None when nothing moved. Bullets keep their text; only the order inside that one role changes."""
+    best = None
+    for n, e in enumerate(ctx["experience"]):
+        top = max((scores.get(i, 0.0) for i in e["bullet_ids"]), default=0.0)
+        if e["bullet_ids"] and (best is None or top > best[0]):
+            best = (top, n, e)
+    if best is None:
+        return None
+    e = best[2]
+    if hk is not None and hk.entry_kind == "experience" and e.get("id") == hk.entry_id and hk.proof_bullet_id in e["bullet_ids"]:
+        return hk.proof_bullet_id
+    i = max(range(len(e["bullet_ids"])), key=lambda k: (scores.get(e["bullet_ids"][k], 0.0), -k))     # earlier wins a tie
+    if i:
+        e["bullet_ids"].insert(0, e["bullet_ids"].pop(i))
+        e["bullets"].insert(0, e["bullets"].pop(i))
+    return e["bullet_ids"][0]
+
+
 def reconcile_proof(fb: dict, sel: dict, hk: hooks.Hook, kws: list[Keyword] | None = None, jd: str = "") -> tuple[dict, hooks.Hook, list[str]]:
     """`sel` with the hook's proof bullet on it and no chosen bullet next to the one it replaces (`replaces:`), the hook (a copy), and notes.
     A bullet that replaces the proof bullet and says the hook's number, in the same entry, and scores at least REPLACE_RATIO of it (the
@@ -644,6 +667,16 @@ def reconcile_proof(fb: dict, sel: dict, hk: hooks.Hook, kws: list[Keyword] | No
     return out, hk, notes
 
 
+def letter_template_line(letter: dict) -> str:
+    """Which template the letter was built from and the first 60 characters of the body actually used: `letter template: data_scientist | "Could ..."`.
+    A letter with no template (written the old way, off, pending) says so."""
+    paragraphs = [p for p in letter.get("paragraphs") or [] if str(p).strip()]
+    body = " ".join(" ".join(paragraphs).split())[:60]
+    fam = letter.get("template_family") if letter.get("compose") == "template" else None
+    head = f"letter template: {fam}" if fam else "letter template: none (not written from a template)"
+    return head + (f' | body starts "{body}"' if body else " | no body")
+
+
 def letter_summary(letter: dict) -> str:
     """"ok", "fallback (<first rejection reason>)" for a letter that fell back to the deterministic text, or
     "NO LETTER (<why>)" when letter.on_failure is none and every draft was rejected: the why is the guards' own words (letter_reason.py)."""
@@ -660,22 +693,34 @@ def letter_summary(letter: dict) -> str:
     return f"{letter.get('status')} ({why[0] if why else 'no reason recorded'})"
 
 
-MIN_PROJECTS_KEPT = 2           # the shrink loop leaves whole projects alone down to this many until the roles have given up their extra bullets
+MIN_PROJECTS_KEPT = 3           # the shrink loop leaves whole projects alone down to this many until the roles have given up their zero-score and extra bullets
 
 
-def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: str | set[str] | None = None) -> bool:
+class ZeroScore:
+    """A shrink step that may drop only bullets scoring 0 for the ad; wraps the step's floor function."""
+    def __init__(self, floor: Callable[[str, dict], int]):
+        self.floor = floor
+
+    def __call__(self, sec: str, e: dict) -> int:
+        return self.floor(sec, e)
+
+
+def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: str | set[str] | None = None,
+            scores: dict[str, float] | None = None) -> bool:
     """Drop the least keyword-relevant bullet (or, at step 3, a whole project), in this order, each step only once the one before has
     nothing left to give:
       1. the layout's floors: the newest experience entry keeps `layout.first[0]` bullets, the other entries `layout.other[0]`, a project
          `layout.project_bullets[0]` (one page: 2 / 1 / 1), and a role dated within the last `layout.recent_years` years never fewer than
          `layout.recent_min` (two)
       2. the projects fall to one bullet each, the roles untouched
-      3. whole projects go, the least relevant first, down to MIN_PROJECTS_KEPT
+      2b. (with `scores`) a bullet that scores 0 for this ad goes, down to a role's recent minimum (one bullet), BEFORE any whole project
+      3. whole projects go, the least relevant first, down to MIN_PROJECTS_KEPT (three)
       4. the least relevant bullet anywhere, but a recent role keeps its two
       5. whole projects go down to the last one, then every entry may fall to its last bullet
     So a role that is recent is trimmed to two bullets only after the projects have given up theirs. `protect` (the hook's proof bullet)
     is never dropped, nor the project that holds it; nor is a provisional bullet (a fact the user typed for this job): `protect` is one id or
-    several. False if nothing is left to drop."""
+    several. `scores` ({bullet id: relevance to this ad}, budget.relevance_scores) ranks the bullets when given, else the keyword hits of the
+    bullet's text; on a tie a bullet with a measured `result` stays over one without. False if nothing is left to drop."""
     protected = {protect} if isinstance(protect, str) else set(protect or ())
     terms = [[norm_literal(w) for w in k.members()] for k in kws]
     first = ctx["experience"][0] if ctx["experience"] else None
@@ -683,15 +728,21 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
     ref = _selection.today()
     recent = {id(e) for e in ctx["experience"] if layout.recent_min and is_recent(e, layout.recent_years, ref)}
 
+    results = ctx.get("results") or {}
+
     def relevance(b: str) -> int:
         return sum(any(t in norm_literal(b) for t in group) for group in terms)
+
+    def rank(bid: str, text: str) -> tuple[float, int]:
+        """What a bullet is worth to this ad (lower goes first): its relevance score, then whether it carries a measured result."""
+        return (scores.get(bid, 0.0) if scores is not None else relevance(text), 1 if bid in results else 0)
 
     def strict(sec: str, e: dict) -> int:
         floor = floor_proj if sec == "projects" else layout.first[0] if e is first else layout.other[0]
         return max(floor, layout.recent_min if id(e) in recent else 0)
 
     def drop_project(keep: int) -> bool:
-        gone = [(sum(relevance(b) for b in p["bullets"]), -i, p) for i, p in enumerate(ctx["projects"]) if not protected & set(p["bullet_ids"])]
+        gone = [(sum(rank(i, b)[0] for i, b in zip(p["bullet_ids"], p["bullets"])), -i, p) for i, p in enumerate(ctx["projects"]) if not protected & set(p["bullet_ids"])]
         if len(ctx["projects"]) <= keep or not gone:
             return False
         worst = min(gone, key=lambda g: g[:2])[2]
@@ -700,6 +751,7 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
 
     steps = (strict,                                                            # a function: the floor of an entry for this step
              lambda sec, e: 1 if sec == "projects" else strict(sec, e),
+             *((ZeroScore(lambda sec, e: layout.recent_min if id(e) in recent else 1),) if scores is not None else ()),
              MIN_PROJECTS_KEPT,                                                 # a number: drop a whole project while more than this many remain
              lambda sec, e: layout.recent_min if id(e) in recent else 1,
              1,
@@ -709,6 +761,7 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
             if drop_project(step):
                 return True
             continue
+        only_zero = isinstance(step, ZeroScore)
         worst = None
         for sec in ("projects", "experience"):
             for e in ctx[sec]:
@@ -717,7 +770,9 @@ def _shrink(ctx: dict, kws: list[Keyword], layout: Layout = ONE_PAGE, protect: s
                 for i, b in enumerate(e["bullets"]):
                     if e["bullet_ids"][i] in protected:
                         continue
-                    s = relevance(b)
+                    s = rank(e["bullet_ids"][i], b)
+                    if only_zero and s[0] > 0:
+                        continue
                     # on a tie the LATER bullet goes: the first bullet of a project / role is the one that carries its substance
                     # (13 Nov RightShip: p_ia1, the NLP bullet, went and the Git/Trello bullet p_ia2 stayed)
                     if worst is None or s < worst[0] or (s == worst[0] and worst[1] is e):
@@ -929,11 +984,29 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
     return stats
 
 
-def fill_shortfall(fill: dict, page2: float, min_fill: float) -> str:
+def left_out_bullets(fb: dict, kws: list[Keyword], jd: str, chosen: set[str]) -> list[dict]:
+    """The fact-bank bullets that score above 0 for this ad and are not on the CV, best first: [{"id", "score"}]. When page 2 is full these
+    are what the page had no room for (a bullet scoring 0 is not counted: it would not help this ad)."""
+    sc = relevance_scores(fb, kws, jd)
+    order = {b: n for n, b in enumerate(sc)}
+    return [{"id": b, "score": round(v, 2)} for b, v in sorted(sc.items(), key=lambda kv: (-kv[1], order[kv[0]])) if v > 0 and b not in chosen]
+
+
+def left_out_text(left_out: list[dict]) -> str:
+    """"page full: 3 ranked bullets left out (p_ql2 3.0, az4 2.0, ...)", or "" when none were."""
+    if not left_out:
+        return ""
+    n = len(left_out)
+    return f"page full: {n} ranked bullet{'s' if n != 1 else ''} left out (" + ", ".join(f"{x['id']} {x['score']:g}" for x in left_out) + ")"
+
+
+def fill_shortfall(fill: dict, page2: float, min_fill: float, left_out: list[dict] | None = None) -> str:
     """What the report says when page 2 stayed short after every fill step: the fact bank has no more experience bullets to add (every role is at
     its maximum or has used all its bullets); nothing is invented to fill the page. "" when page 2 was filled."""
     if fill.get("reached") is not False:                    # filled, or the fill was not run (a shrunk CV, one page)
         return ""
+    if left_out:                                            # ranked bullets exist that the CV has no room for: the page is full, not the bank empty
+        return f"page 2 is {page2:.0%} full (target {min_fill:.0%}): " + left_out_text(left_out)
     return (f"page 2 is {page2:.0%} full (target {min_fill:.0%}): fact bank has no more experience bullets to add (every role is at its maximum or "
             "out of bullets, projects stop at three); nothing is invented to fill the page")
 
@@ -1649,33 +1722,22 @@ def _copy_over(src: Path, dst: Path) -> None:
         shutil.copy2(f, target)
 
 
-def swap_in(work: Path, final: Path, root: Path, out: Callable[[str], None] = print) -> None:
-    """Put the finished staging folder `work` in place of `final` (an earlier output, moved aside to <final>.old first). A rename that
-    Windows refuses is retried; if it still fails the files are copied into `final` and the staging folder is deleted, and the file
-    Windows holds is printed. An earlier output that was moved aside is only deleted once the new one is complete."""
-    old = final.with_name(final.name + ".old")
-    _discard(old, root)
-    aside = final.exists() and _rename(final, old)
-    if final.exists() and not aside:
-        out(f"  Windows will not move {final.name} aside (locked: {', '.join(_locked(final)) or 'a file in it'}); "
-            "the new files are copied over it instead.")
-    elif not _rename(work, final):
-        held = _locked(work)
-        out(f"  Windows will not rename {work.name} (locked: {', '.join(held) or 'a file in it'}); its files are copied into {final.name} instead.")
-    else:
-        _discard(old, root)
+def place_attempt(work: Path, dest: Path, root: Path, out: Callable[[str], None] = print) -> None:
+    """Put the finished staging folder `work` at `dest`, a folder that does not exist yet (the job folder for a first tailoring, else
+    `<job>/attempts/<n>`). It refuses an existing `dest`: an earlier output is never moved aside, replaced or deleted. A rename that Windows
+    refuses is retried; if it still fails the files are copied into the new `dest`, and the staging folder is then discarded."""
+    if dest.exists() or dest.is_symlink():
+        raise FileExistsError(f"{dest} already exists: an attempt is never overwritten")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if _rename(work, dest):
         return
-    try:
-        _copy_over(work, final)
-    except Exception:
-        if aside:                                               # the earlier output is still there, whole, as <job>.old
-            out(f"  The copy failed; the earlier output is kept as {old.name}.")
-        raise
+    held = _locked(work)
+    out(f"  Windows will not rename {work.name} (locked: {', '.join(held) or 'a file in it'}); its files are copied into {dest} instead.")
+    _copy_over(work, dest)
     _discard(work, root)
     if work.exists():
         out(f"  Windows has locked {', '.join(p.relative_to(work).as_posix() for p in _files(work))} in {work.name}: the new folder "
-            f"{final.name} is complete; delete {work.name} by hand when the file is free.")
-    _discard(old, root)
+            f"{dest.name} is complete; delete {work.name} by hand when the file is free.")
 
 
 def _letter_cv(ctx: dict) -> dict:
@@ -1696,27 +1758,33 @@ def cv_bank(fb: dict, sc) -> dict:
 def tailor_job(job: dict, fb: dict, llm, settings, out_root: Path, frozen: dict | None = None,
                one_page: bool = False, on_extracted: Callable[[dict], None] | None = None,
                boost: Iterable[str] | None = None, company_page: Callable[[dict, Path], str] | None = None) -> dict[str, Any]:
-    """Tailor one job into out_root/<company_title_id>/. Everything is built in a '.partial' sibling folder and swapped
-    in only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error) leaves an
-    earlier successful output folder exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
+    """Tailor one job into out_root/<company_title_id>/ (the first tailoring) or out_root/<company_title_id>/attempts/<n>/ (every later one: see
+    tailoring/attempts.py; an earlier output is never replaced, moved or deleted, and report.json names the current attempt). Everything is built
+    in a '.partial' sibling folder and placed only once the whole job has succeeded, so a run that fails part-way (LLM down, xelatex error)
+    leaves every earlier output exactly as it was. `on_extracted(record)` is called with the job's fresh keyword
     analysis (freeze.record) as soon as the model has given it, before anything else can fail, unless `frozen` was used
     or the model call failed (a taxonomy-only list is never frozen). `boost` = JD keywords (terms) the first attempt ranks first: review's `r`
     asks for the ones the fact bank evidences (FORCE_FACTOR); it moves the selection only, never the score. `company_page(job, folder)` returns the
     text of the employer's own careers page (companypage.provider) for a company-mode letter whose ad has no clause to quote; None = never fetched."""
-    final = out_root / folder_name(job)
-    work = final.with_name(final.name + ".partial")
+    job_dir = out_root / folder_name(job)
+    work = job_dir.with_name(job_dir.name + ".partial")
     _discard(work, out_root)                                    # a leftover of a run that was killed
+    n = 0 if not job_dir.exists() else attempts_mod.next_number(job_dir)
+    final = attempts_mod.folder_of(job_dir, n)                  # a first tailoring is the job folder; every later one is attempts/<n>, never in place of another
     try:
         report = _tailor(job, fb, llm, settings, work, final, frozen, one_page, on_extracted, boost, company_page)
-        swap_in(work, final, out_root)                          # the earlier output goes (.old), or is copied over when Windows holds it
-        _discard(final.with_name(final.name + ".failed"), out_root)    # superseded by this success
+        report["attempt"] = n
+        report["current_attempt"] = attempts_mod.current_after(job_dir, n, attempts_mod.strict_of_report(report))
+        pathstore.write_report(work / "report.json", report)    # this run's own staging copy, before it is placed
+        place_attempt(work, final, out_root)
+        _discard(job_dir.with_name(job_dir.name + ".failed"), out_root)    # superseded by this success
         return report
     except BaseException as exc:
         # The staging folder goes, the earlier successful folder stays. But the model's raw answers are what you need
         # to see why a job failed, so they are kept in <job>.failed/llm_raw and the error says where.
         raw = work / "llm_raw"
         if raw.is_dir():
-            failed = final.with_name(final.name + ".failed")
+            failed = job_dir.with_name(job_dir.name + ".failed")
             _discard(failed, out_root)
             shutil.copytree(raw, failed / "llm_raw")
             if isinstance(exc, Exception) and exc.args and isinstance(exc.args[0], str):
@@ -1859,11 +1927,22 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     if plain_mod.style(settings) == "plain":            # v3.4: each bullet's approved `plain:` (+ the JD keywords it lost, in brackets)
         fb, plain_info = plain_mod.plain_bank(fb, kws)
     jd = job["description"] or ""
+    # v3.6: the ad's requirements against the whole fact bank (tailoring/reqmap.py; no model). Gaps are printed now and nothing is written for one.
+    rm = reqmap_mod.build(kws, fb, job.get("title") or "")
+    reqmap_mod.write(rm, out_dir)
+    for line in reqmap_mod.gap_lines(rm):
+        print("  " + line)
     groups_cfg = {} if one_page else skill_group_config(settings)
     from_family = gates.skills_from(settings, family)       # the bank family a role family without skill_lines of its own prints
-    fam = None if one_page else pick_family(fb, kws, family, from_family)   # the bank family whose `match` terms carry the most weight for the ad
+    # v3.6: the bank family is named by the ad's TITLE words (skills.pick_family); only a title that names none falls back to the `match` terms
+    fam = None if one_page else pick_family(fb, kws, family, from_family, job.get("title") or "")
+    skills_source = "family"
     if fam:                     # its skill_lines, word for word (the bank's own labels and items; nothing regrouped or reordered)
-        skills, dropped_groups = family_skill_lines(fb, kws, family, from_family) or {}, []
+        skills, dropped_groups = family_skill_lines(fb, kws, family, from_family, job.get("title") or "") or {}, []
+        jd_rows = reqmap_mod.skill_rows(rm, fb, skills)      # v3.6: rows named with the ad's own words, from evidence only; the family's lines are the fallback
+        if jd_rows:
+            skills, skills_source = jd_rows, "requirements"
+            analysis_warnings.append("skills: rows named with the ad's own requirement words (" + "; ".join(list(jd_rows)[:3]) + "), built from the fact bank's evidence")
         left = family_basics_missing(skills, fb, list((groups_cfg or {}).get("skills_always") or []))
         if left:
             analysis_warnings.append(f"skills: the '{fam['id']}' family's skill_lines do not mention {', '.join(left)}, which the fact bank "
@@ -1881,13 +1960,13 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     # the hook (hook.py): the fact bank's hook_library entry for this ad, word for word: in the headline, profile line 1, the first
     # bullet of its role and sentence 1 of the letter. No model and no template writes any of it; no qualifying entry = the family headline.
     hook_notes: list[str] = []
-    hk = hooks.build_hook(job, kws, fb, llm, headline, team, hook, notes=hook_notes) if hooks.enabled(settings) else None
+    hk = hooks.build_hook(job, kws, fb, llm, headline, team, hook, notes=hook_notes, rm=rm) if hooks.enabled(settings) else None
     hook_failed = hooks.enabled(settings) and hk is None          # on, but no entry qualified: say so, never drop it silently
     if hook_failed:
         analysis_warnings.append(f"hook: no library hook qualifies, so the CV headline is the role family's '{headline}' with no number, "
                                  "and there is no hook line, no proof bullet first and no hook letter (" + "; ".join(hook_notes)[:400] + ")")
     # no hook: profile line 1 is the role family's profile body (the user's own words, fact bank `families[*].profile_body`), if the bank has one
-    bank_family = fam or pick_family(fb, kws, family, from_family)
+    bank_family = fam or pick_family(fb, kws, family, from_family, job.get("title") or "")
     family_body = " ".join(str((bank_family or {}).get("profile_body") or "").split())      # also the opening of a company-mode letter without a hook
     # v3.5.3: with no hook the profile opens with the family's `profile_opening` (a first sentence that says who you are), then its body: never
     # mid-paragraph. With a hook, the hook's profile_line is that first sentence.
@@ -1895,7 +1974,17 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     if hk is None and bank_family and family_body and not family_opening:
         analysis_warnings.append(f"profile: there is no hook and the '{bank_family['id']}' family has no profile_opening, so the profile opens with "
                                  "its profile_body (add a profile_opening sentence to that family in fact_bank.yaml)")
-    head = " ".join(x for x in (family_opening, family_body) if x)
+    # v3.6: the profile is the opening plus the 2-3 profile_fragments that cover the most requirement weight (none that repeats the hook's line); the
+    # family's profile_body only when no fragment covers anything. With no hook, the best-covering proof bullet is line 1 (and the no-hook warning stays).
+    frags = reqmap_mod.pick_fragments(rm, fb, avoid=hk.profile_line if hk else "")
+    profile_body = " ".join(" ".join(str(f["text"]).split()) for f in frags) if frags else family_body
+    proof_line = ""
+    if hk is None and frags:
+        best_bullet = reqmap_mod.best_proof_bullet(rm, fb)
+        if best_bullet:
+            proof_line = best_bullet["text"].rstrip(" .") + "."
+            family_opening = ""
+    head = " ".join(x for x in (proof_line, family_opening, profile_body) if x)
     words = None if one_page else profile_mod.word_range(settings)
     profile = assemble_profile(fb, kws, jd, hk, head, words)     # the hook's profile line, the family's body, then profile sentences up to 100-150 words, in code
     profile_text = profile["text"]
@@ -1909,19 +1998,22 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     achievements = achievement_entries(fb, moved, kws)
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
+                              "requirements": rm.to_dict(), "profile_fragments": [str(f["id"]) for f in frags], "profile_proof_line": proof_line,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
                               "ceiling": ceil, "genuine_gaps": gaps, "possible_evidence": possible,
                               "context_terms": context_terms, "attempts": [], "out_dir": str(final_dir),
                               "analysis_warnings": analysis_warnings, "one_page": one_page,
                               "skills": {"core": core_skills(fb), "rows": list(skills), "dropped_groups": dropped_groups,
-                                         "family": fam["id"] if fam else None},
+                                         "family": fam["id"] if fam else None, "source": skills_source},
                               "achievements": [a["id"] for a in achievements],
                               "profile": {k: profile[k] for k in ("facts", "retried", "fallback", "words", "shortfall")},
                               "hook": hk.to_dict() if hk else None, "hook_notes": hook_notes,
                               "hook_family_headline": headline if hook_failed else "", "hook_family_profile": bool(head), "family_line": family_body,
                               "family_opening": family_opening,
                               # v3.5.3: where the letter template is looked up: the role family, then the bank family of the CV
-                              "letter_families": list(dict.fromkeys(x for x in (family, (bank_family or {}).get("id")) if x))}
+                              # v3.6: the family whose letter_template claims the most requirement weight first; a tie goes to the family the
+                              # ad's title chose, then the role family (reqmap.template_order)
+                              "letter_families": reqmap_mod.template_order(rm, fb, [x for x in ((bank_family or {}).get("id"), family) if x])}
 
     jac = sc["bullet_dedupe_jaccard"]
     # the section order (graduate / junior / scheme ad or not) and the compact Education (tailoring/sections.py, 10 Nov 2026)
@@ -1934,9 +2026,10 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     keep_ids = {b["id"] for b in provisional_bullets(fb)}               # typed facts: never shrunk away
     forced = {k.term for k in kws if k.term.lower() in {str(t).lower() for t in boost or ()}}      # the JD's own spelling of each named term
     ranking, best, cache = (_keyword_boost(kws, forced, FORCE_FACTOR) if forced else kws), None, {}
+    req_hits = reqmap_mod.bullet_coverage(rm)       # {bullet id: the existing requirements (keyword indexes) it is evidence of}
     for attempt in range(1, sc["max_attempts"] + 1):
         llm.attempt = attempt                                    # names this attempt's raw replies (tailor_profile-2.json)
-        picked = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd))
+        picked = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd, extra_hits=req_hits))
         rephrase_notes: list[str] = []
         if hk:           # the proof bullet is always on the CV (or the bullet that replaces it); no bullet next to the one it replaces
             sel, hk, proof_notes = reconcile_proof(fb, picked, hk, kws, jd)
@@ -1955,6 +2048,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         rstats.update(proposed=len(proposed), accepted=len(accepted), blocked=len(proposed) - len(accepted),
                       regressed=sum(f": {NO_REGRESSION}: " in w for w in warn))
         ctx = _context(fb, sel, accepted, profile_text, kws, headline, skills, hk, achievements, profile_head)
+        rel = reqmap_mod.blend(relevance_scores(fb, ranking, jd), rm)          # what each bullet is worth to this ad (keywords + the requirements it is evidence of): leads the first role, ranks the shrink
+        lead_best(ctx, rel, hk)
         if not one_page:
             ctx["section_order"] = list(sec_order)
             ctx["education_compact"] = list(edu_rows)
@@ -1963,6 +2058,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         fit_state: dict = {}
 
         def render_once() -> tuple[Path, int]:
+            lead_best(ctx, rel, hk)                      # a bullet added by the fill never displaces the best one from the first place
             out = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)
             return out, page_count(out)
 
@@ -1974,7 +2070,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
 
         pdf, pages = rerender()
         shrinks = 0
-        while pages > max_pages and _shrink(ctx, kws, layout, {*([hk.proof_bullet_id] if hk else []), *keep_ids}):
+        while pages > max_pages and _shrink(ctx, kws, layout, {*([hk.proof_bullet_id] if hk else []), *keep_ids}, rel):
             pdf, pages = rerender()
             shrinks += 1
         fill: dict = {"added": [], "rejected_overflow": [], "renders": 0, "reached": None, "sections": [],
@@ -1983,7 +2079,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         # further projects, more experience bullets, optional fact-bank sections, then linespread (fill_tail)
         fill_on = not one_page and max_pages == 2 and shrinks == 0
         cap = project_cap(settings)
-        order = (fill_order(fb_sel, ranking, sel, skills, jac, cap, jd, layout) if fill_on else [])
+        order = (fill_order(fb_sel, ranking, sel, skills, jac, cap, jd, layout, extra_hits=req_hits) if fill_on else [])
 
         def fill_up(skip: set[str] | None = None) -> dict:
             more = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"], skip=skip,
@@ -2060,7 +2156,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         # attempt picks the bullets that carry them. Selection is deterministic; an unchanged one would be wasted quota.
         fixable = {m for m in s.wording_misses + s.misses if m not in all_gaps}
         ranking = _keyword_boost(ranking, fixable)
-        again = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd))
+        again = force_provisional(fb_sel, select_cv(fb_sel, ranking, preferred, skills=skills, layout=layout, jaccard_limit=jac, jd=jd, extra_hits=req_hits))
         if (reconcile_proof(fb, again, hk, kws, jd)[0] if hk else settle_selection(fb, again)[0]) == sel:   # the same selection (proof bullet included) is not asked again
             break
 
@@ -2109,7 +2205,11 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "reason": f"{verdict.reason}: no letter was drafted", "notes": [],
                   "evidence": [{"id": e["id"], "text": e["text"]} for e in evidence]}
     fm = None if one_page else pdflayout.measure(pdf)
-    short = fill_shortfall(rec["fill"], fill_final, sc["min_fill_page2"])
+    # "page full" only when the page really was: the CV was shrunk to fit, or a bullet of the fill overflowed onto a third page. Ranked bullets
+    # skipped for other reasons (role maximums, near-duplicates) are not a full page, so those runs keep the "no more content" wording
+    full = bool(rec.get("shrinks")) or bool((rec["fill"] or {}).get("rejected_overflow"))
+    left_out = left_out_bullets(fb, kws, jd, chosen_ids) if full and not one_page else []
+    short = fill_shortfall(rec["fill"], fill_final, sc["min_fill_page2"], left_out)
     if short:
         report["analysis_warnings"].append("fill: " + short)
     urls = [] if one_page else [url_shown(p) for p in ctx["projects"] if url_shown(p) and not project_parts(p)[1]]
@@ -2126,7 +2226,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                   "band": in_band(final_score.literal, band), "pages": cv_pages, "page2_fill": fill_final,
                   "hits": final_score.hits, "wording_misses": final_score.wording_misses,
                   "misses": final_score.misses, "chosen_attempt": rec["attempt"]},
-        "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"], "fill_shortfall": short,
+        "cv_pages": cv_pages, "page2_fill": fill_final, "fill": rec["fill"], "fill_shortfall": short, "left_out": left_out,
         "hook": hk.to_dict() if hk else None,                                  # the hook as the PDF prints it (the length fit may have shortened its headline)
         "needs_result": needs_result(fb, ctx),
         "boosted": sorted(forced),

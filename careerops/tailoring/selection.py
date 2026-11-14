@@ -186,10 +186,14 @@ def skills_text(skills: dict | None) -> str:
 class _Picker:
     """The state shared by selection and fill: what the keywords, skills, domain groups and chosen bullets already cover."""
 
-    def __init__(self, fb: dict, kws: list[Keyword], skills: dict | None, jaccard_limit: float, jd: str = ""):
+    def __init__(self, fb: dict, kws: list[Keyword], skills: dict | None, jaccard_limit: float, jd: str = "",
+                 extra_hits: dict[str, frozenset[int]] | None = None):
         self.fb, self.kws, self.limit = fb, kws, jaccard_limit
         self.sc = relevance_scores(fb, kws, jd)                          # keyword overlap + domain overlap
         self.hits = bullet_hits(fb, kws)
+        for bid, ix in (extra_hits or {}).items():                       # v3.6: the requirements a bullet is evidence of (reqmap), aliases included
+            if bid in self.hits:
+                self.hits[bid] = self.hits[bid] | ix
         self.weight = [k.weight for k in kws]
         self.dweight = jd_rank_weights(jd)                                # {domain / topic group: weight} the JD names
         self.dgroups = {b["id"]: frozenset(rank_groups(" ".join([b["text"], *b.get("terms", []), entry_where(e)])) & set(self.dweight))
@@ -238,7 +242,9 @@ class _Picker:
     def gain_over(self, ids: Sequence[str], covered: set[int], dcovered: set[str]) -> float:
         new = set().union(*(self.hits[i] for i in ids)) - covered if ids else set()
         dnew = set().union(*(self.dgroups[i] for i in ids)) - dcovered if ids else set()
-        return sum(self.weight[i] for i in new) + DOMAIN_WEIGHT * sum(self.dweight[g] for g in dnew)
+        # summed in a fixed order: a float sum over a set of strings changes in its last digits with the hash seed, and a tie then breaks differently
+        # from one run to the next (13 Nov 2026: [r] went 59.1 -> 63.4 -> 59.1 on the same job)
+        return sum(self.weight[i] for i in sorted(new)) + DOMAIN_WEIGHT * sum(self.dweight[g] for g in sorted(dnew))
 
     def gain(self, ids: Sequence[str]) -> float:
         return self.gain_over(ids, self.covered, self.dcovered)
@@ -246,7 +252,7 @@ class _Picker:
     def skill_only_gain(self, ids: Sequence[str]) -> float:
         """The weight of the keywords these bullets carry that the skills line covers and no chosen bullet shows yet."""
         new = (set().union(*(self.hits[i] for i in ids)) - self.shown) & self.skill_hits if ids else set()
-        return sum(self.weight[i] for i in new)
+        return sum(self.weight[i] for i in sorted(new))
 
     def cover(self, ids: Sequence[str]) -> None:
         """Count these bullets' keywords and domain groups as covered, without listing them as chosen."""
@@ -296,13 +302,14 @@ class _Picker:
 
 
 def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, skills: dict | None = None,
-              layout: Layout = ONE_PAGE, jaccard_limit: float = JACCARD, jd: str = "") -> dict:
+              layout: Layout = ONE_PAGE, jaccard_limit: float = JACCARD, jd: str = "",
+              extra_hits: dict[str, frozenset[int]] | None = None) -> dict:
     """{"experience": {entry id: [bullet ids, in the order picked]}, "projects": [project ids, in the order picked],
     "project_bullets": {project id: [bullet ids]}}. Every experience entry is listed (a CV shows the whole work
     history); `fb["experience"]` is newest first. `skills` is the skills section the CV will show (default: the fact
     bank's own): its keywords need no bullet. `jd` = the job description's text, for the domain and topics it names."""
     skills = fb.get("skills") if skills is None else skills
-    pk = _Picker(fb, kws, skills, jaccard_limit, jd)
+    pk = _Picker(fb, kws, skills, jaccard_limit, jd, extra_hits)
     entries = [(n, e["id"], [b["id"] for b in e["bullets"]]) for n, e in enumerate(fb["experience"])]
     picked: dict[str, list[str]] = {eid: [] for _, eid, _ in entries}
     bounds = {eid: (layout.first if n == 0 else layout.other) for n, eid, _ in entries}
@@ -352,7 +359,7 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
         pk.cover(own[pid])
     # bullets of each project: the whole project (one page), or 2-3 of them by marginal gain (two pages)
     project_bullets: dict[str, list[str]] = {}
-    pk2 = _Picker(fb, kws, skills, jaccard_limit, jd)
+    pk2 = _Picker(fb, kws, skills, jaccard_limit, jd, extra_hits)
     pk2.chosen = [b for ids in picked.values() for b in ids]
     pk2.cover(pk2.chosen)
     for pid in projects:
@@ -382,7 +389,8 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
 
 
 def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = None,
-               jaccard_limit: float = JACCARD, max_projects: int | None = None, jd: str = "", layout: Layout | None = None) -> list[str]:
+               jaccard_limit: float = JACCARD, max_projects: int | None = None, jd: str = "", layout: Layout | None = None,
+               extra_hits: dict[str, frozenset[int]] | None = None) -> list[str]:
     """The bullets a selection has not used, in the order the two-page loop should add them while page 2 is not full (Document rules, A5):
       1. experience bullets of any entry: every role is raised to its maximum first (with a `layout`, no role goes past its maximum);
       2. the bullets of further projects, up to `max_projects` projects on the CV in all (scoring.cv_projects_max; None =
@@ -392,7 +400,7 @@ def fill_order(fb: dict, kws: list[Keyword], sel: dict, skills: dict | None = No
     weighted overlap, fact-bank order. A bullet that nearly repeats a chosen one (or an earlier fill) is left out for
     good. Optional fact-bank sections and linespread come after this list is used up (tailor.fill_tail)."""
     skills = fb.get("skills") if skills is None else skills
-    pk = _Picker(fb, kws, skills, jaccard_limit, jd)
+    pk = _Picker(fb, kws, skills, jaccard_limit, jd, extra_hits)
     used = selected_ids(fb, sel)
     for b in used:
         pk.take(b)

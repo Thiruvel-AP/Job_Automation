@@ -27,7 +27,7 @@ from careerops.tailoring.tailor import tailor_job
 
 OLD = 1_700_000_000_000_000_000                       # a fixed, old mtime (ns) for hand-made fixture files
 SEVEN = {"Ada Fixture CV.pdf", "Ada Fixture CV.tex", "Ada Fixture Cover Letter.pdf", "Ada Fixture Cover Letter.tex",
-         "JD.txt", "job.json", "report.json"}
+         "JD.txt", "job.json", "report.json"}   # (reqmap.json is not uploaded or archived)
 
 
 # ------------------------------------------------------------------ fixtures and helpers
@@ -723,7 +723,7 @@ def test_real_pdfs_full_style_names_upload_equals_archive_in_name_and_bytes(sett
     assert Path(rep["letter_pdf"]).name == "Ada Quincy Lovelace Cover Letter.pdf"
     assert sorted(p.name for p in out.iterdir() if p.name != "llm_raw") == sorted(      # llm_raw: the model's raw replies
         ["Ada Quincy Lovelace CV.pdf", "Ada Quincy Lovelace CV.tex", "Ada Quincy Lovelace Cover Letter.pdf",
-         "Ada Quincy Lovelace Cover Letter.tex", "report.json", "note.md"])  # note.md: the post-CV note (never uploaded, see above); no cv.pdf / letter.pdf left behind
+         "Ada Quincy Lovelace Cover Letter.tex", "report.json", "note.md", "reqmap.json"])  # reqmap.json: the v3.6 requirement map; note.md: the post-CV note (never uploaded, see above); no cv.pdf / letter.pdf left behind
     page = FakePage(("input", "file", "Resume / CV"), ("input", "file", "Cover letter"))
     fill_page(page, APPLICANT, rep["cv_pdf"], rep["letter_pdf"], job=db.job(job["id"]))     # real pdftotext guard
     res = record_application(db, settings, db.job(job["id"]), rep)
