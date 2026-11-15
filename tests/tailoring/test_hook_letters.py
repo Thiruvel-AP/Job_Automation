@@ -237,6 +237,7 @@ def test_choosing_no_letter_needs_no_extra_words_to_approve_and_the_archive_goes
     assert letter_missing and not any("Cover Letter" in str(p) for p in sources)
 
 
+@pytest.mark.usefixtures("number_gate_off")      # a test about the band's prompt, not the v3.7 number gate (a mock letter has no numbers)
 @pytest.mark.slow
 def test_the_review_screen_lists_the_letter_and_says_why_there_is_no_b_and_the_menu_has_l_and_n(hook_settings, db, fb_fixture, job):
     rep = run(hook_settings, fb_fixture, job)

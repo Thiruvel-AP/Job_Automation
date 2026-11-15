@@ -23,7 +23,7 @@ from typing import Any, Callable
 from urllib.parse import urlparse
 
 from ..discovery import applykind
-from . import ats_vendor
+from . import ats_vendor, route
 from .filler import NeedsUser
 
 FORM_WAIT_S = 15
@@ -170,6 +170,7 @@ def wait_for_form(page, seconds: float | None = None, follow: Callable[[Any], No
     clicked = False
     seconds = FORM_WAIT_S if seconds is None else seconds
     for i in range(int(seconds * 1000 / POLL_MS) + 1):
+        route.require_no_auth(page)                  # a sign-in page: AccountRequired, nothing is typed
         stop = blocker(page)
         if stop:
             raise HandOff(stop)

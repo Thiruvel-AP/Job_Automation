@@ -7,8 +7,8 @@ Free-text form answers are drafted from the fact bank by `careerops/apply/freete
 What & why: `docs/PLAN.md` · milestone specs: `docs/IMPLEMENTATION.md` · current task: `docs/tasks/`.
 
 ## Commands
-- Activate: `. .venv/bin/activate` (Python 3.12, WSL2 Ubuntu, repo on /mnt/d/VS_Codes/DataScience/Projects/career-ops; git core.fileMode=false because NTFS reports every file as executable)
-- Tests: `pytest -q` — must stay green; run before every commit
+- Activate: `. .venv/bin/activate` (Python 3.12, WSL2 Ubuntu, repo on /mnt/d/VS_Code/DataScience/Projects/career-ops; git core.fileMode=false because NTFS reports every file as executable)
+- Tests: `pytest` — must stay green; run before every commit
 - One area: `pytest -q tests/discovery`
 - Toolchain check: `careerops doctor` · data folders: `careerops init`
 - Whole pipeline without a model or network: `careerops run --mock --limit 3` (isolated: `data/mock/`, one seeded fixture job; real data untouched)

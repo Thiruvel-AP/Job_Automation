@@ -3,6 +3,7 @@ exist BEFORE the visible browser is launched; then the form is filled from the p
 nothing submitted` and no confirmation prompt. Pages are served by a Playwright route (no network); MockLLM; nothing is submitted."""
 import pytest
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 from test_freetext import AD_PHRASE, FB, REP, WHY, llm_with
 from test_greenhouse_form import APPLICANT, JOB_ROW, PAGE, book, plan_for
 
@@ -20,7 +21,7 @@ URL = "https://forms.test/northwind/apply"
 @pytest.fixture
 def browser():
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(args=CHROMIUM_ARGS)
         yield b
         b.close()
 

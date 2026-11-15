@@ -327,8 +327,29 @@ def with_results(fb: dict) -> dict:
     return fb
 
 
-def _fabricating_llm():
-    """A model that tries to lie: rewordings with an invented number and a deny-listed tool, and a keyword that is not in the JD."""
+NUMBER_HOOK = "Northwind builds clinical decision-support tools used by 40 oncology researchers at 12 sites in 3 countries."
+
+
+def numbers_letter(ctx):
+    """A `cover_letter` handler: the mock's own draft plus one sentence quoting the three numbers of NUMBER_HOOK (a claim about the company, which the guard allows)."""
+    paras = MockLLM()._answer("cover_letter", "", "", ctx)["paragraphs"]
+    return {"paragraphs": [*paras[:-1], "Tools used by 40 researchers at 12 sites in 3 countries are the kind of work I want to do.", paras[-1]]}
+
+
+@pytest.fixture
+def number_gate_off(monkeypatch):
+    """For a test about what a band does (prompt, menu, letter calls), not about the v3.7 number gate: a mock letter has no numbers, which would move an
+    auto-band job into review. The gate itself is tested in tests/test_plain_default.py."""
+    from careerops.tailoring import numberlint
+    monkeypatch.setattr(numberlint, "MIN_LETTER_NUMBERS", 0)
+
+
+def _fabricating_llm(numbers: bool = False):
+    """A model that tries to lie: rewordings with an invented number and a deny-listed tool, and a keyword that is not in the JD.
+
+    `numbers=True` (the `tailored` fixture): the company hook carries three numbers and the letter quotes them, so the letter clears the v3.7 number gate
+    (fewer than 3 distinct numbers moves an auto-band job into the review band, and the tests that read the `tailored` job expect the auto band). The numbers
+    come from the hook, which the letter guard accepts for claims about the company; nothing about the user is invented."""
     def rephrase(ctx):
         out = {}
         for i, b in enumerate(ctx["bullets"]):
@@ -340,9 +361,9 @@ def _fabricating_llm():
 
     def keywords(ctx):
         return {"required": ["Python", "LLM agents", "made-up keyword not in JD", "Kubernetes"], "preferred": [],
-                "company_hook": "Northwind builds clinical decision-support tools for oncology researchers."}
+                "company_hook": NUMBER_HOOK if numbers else "Northwind builds clinical decision-support tools for oncology researchers."}
 
-    return MockLLM({"rephrase_bullets": rephrase, "extract_keywords": keywords})
+    return MockLLM({"rephrase_bullets": rephrase, "extract_keywords": keywords, **({"cover_letter": numbers_letter} if numbers else {})})
 
 
 BROAD_JD_TERMS = ["Python", "SQL", "pandas", "scikit-learn", "XGBoost", "PyTorch", "LangChain", "Docker", "MLflow",
@@ -380,7 +401,7 @@ def one_page_run(settings, fb_fixture, broad_job, broad_llm, monkeypatch):
 def tailored(settings, db, job, tmp_path):
     fb = load_yaml(settings.path("fact_bank"))
     db.upsert_job(job)
-    llm = _fabricating_llm()
+    llm = _fabricating_llm(numbers=True)
     rep = tailor_job(job, fb, llm, settings, settings.path("outputs"))
     f = rep["final"]
     db.update_job(job["id"], status="needs_review", keywords=rep["keywords"], ceiling=rep["ceiling"],

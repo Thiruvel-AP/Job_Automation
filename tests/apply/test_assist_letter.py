@@ -5,6 +5,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops.apply.assist import fill_page
 
@@ -23,7 +24,7 @@ def applicant():
 @pytest.fixture
 def page():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         pg = browser.new_page()
         yield pg
         browser.close()

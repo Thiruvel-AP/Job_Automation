@@ -99,7 +99,7 @@ def test_discard_refuses_everything_else(tmp_path, rel):
 
 
 @pytest.mark.slow
-def test_a_tailoring_run_leaves_every_other_folder_in_the_outputs_alone_and_replaces_only_its_own(settings, fb_fixture,
+def test_a_tailoring_run_leaves_every_other_folder_in_the_outputs_alone_and_adds_only_a_new_attempt_to_its_own(settings, fb_fixture,
                                                                                                    job, spy_llm):
     out = settings.path("outputs")
     out.mkdir(parents=True, exist_ok=True)
@@ -108,8 +108,9 @@ def test_a_tailoring_run_leaves_every_other_folder_in_the_outputs_alone_and_repl
     (out / "Other_Job_1").mkdir()
     (out / "Other_Job_1" / "CV.pdf").write_bytes(b"another job")
     first = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, out)
-    second = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, out)           # re-tailoring the same job replaces it
-    assert first["out_dir"] == second["out_dir"] and Path(second["cv_pdf"]).is_file()
+    second = tailor.tailor_job(job, fb_fixture, spy_llm(), settings, out)           # re-tailoring the same job adds attempts/1 beside it
+    assert Path(second["out_dir"]) == Path(first["out_dir"]) / "attempts" / "1" and Path(second["cv_pdf"]).is_file()
+    assert Path(first["cv_pdf"]).is_file()                                           # the first CV is still there, untouched
     assert (out / "keywords" / "cal-x.yaml").read_text() == "curated: true\n"
     assert (out / "Other_Job_1" / "CV.pdf").read_bytes() == b"another job"
     assert not [p for p in out.iterdir() if p.suffix in tailor.STAGING_SUFFIXES]    # and no staging folder is left

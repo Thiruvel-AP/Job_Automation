@@ -19,7 +19,7 @@ task as failed and you notice. A missing Reed or Adzuna key is only a note in th
 The task runs a WSL command at **07:45** and **17:45** every day:
 
 ```
-wsl.exe -e bash -lc "cd /mnt/d/VS_Codes/DataScience/Projects/career-ops && scripts/discover.sh"
+wsl.exe -e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"
 ```
 
 In the Task Scheduler app (`taskschd.msc`):
@@ -29,7 +29,7 @@ In the Task Scheduler app (`taskschd.msc`):
 3. **Triggers:** New, Daily, start 07:45, repeat every 1 day; add a second trigger, Daily, 17:45.
 4. **Actions:** New, Start a program.
    - Program/script: `wsl.exe`
-   - Add arguments: `-e bash -lc "cd /mnt/d/VS_Codes/DataScience/Projects/career-ops && scripts/discover.sh"`
+   - Add arguments: `-e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"`
 5. **Conditions:** untick "Start the task only if the computer is on AC power" if the laptop is often on battery.
 6. **Settings:** tick "Run task as soon as possible after a scheduled start is missed" (a laptop asleep at 07:45 then runs it when
    it wakes) and "If the task fails, restart every 10 minutes, up to 2 times".
@@ -37,14 +37,14 @@ In the Task Scheduler app (`taskschd.msc`):
 The same thing from a PowerShell prompt, if you prefer a command (run it yourself, once):
 
 ```powershell
-$action = New-ScheduledTaskAction -Execute "wsl.exe" -Argument '-e bash -lc "cd /mnt/d/VS_Codes/DataScience/Projects/career-ops && scripts/discover.sh"'
+$action = New-ScheduledTaskAction -Execute "wsl.exe" -Argument '-e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"'
 $times  = @("07:45", "17:45") | ForEach-Object { New-ScheduledTaskTrigger -Daily -At $_ }
 $set    = New-ScheduledTaskSettingsSet -StartWhenAvailable -RestartCount 2 -RestartInterval (New-TimeSpan -Minutes 10)
 Register-ScheduledTask -TaskName "career-ops discover" -Action $action -Trigger $times -Settings $set
 ```
 
 Test it once by hand before trusting it: right-click the task, **Run**, then open `data/logs/discover_<today>.log`; or run
-`wsl.exe -e bash -lc "cd /mnt/d/VS_Codes/DataScience/Projects/career-ops && scripts/discover.sh"` in a terminal and read the exit code
+`wsl.exe -e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"` in a terminal and read the exit code
 (`$LASTEXITCODE`).
 
 ## What you do with the result

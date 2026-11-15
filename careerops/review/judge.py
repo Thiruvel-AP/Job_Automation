@@ -208,6 +208,27 @@ def letter_source_ids(fb: dict, paragraphs: list[str]) -> list[str]:
     return [i for i, _ in sorted(best.items(), key=lambda kv: -kv[1])[:SOURCE_MAX_EXTRA]]
 
 
+def identity_lines(fb: dict) -> list[str]:
+    """What the CV states about the applicant that is not a bullet (13 Nov 2026: the judge flagged right to work, the certifications and the
+    "Bristol x UWE AI Hackathon" project name as unsupported because none was sent): the identity status line, every certification, every role's
+    and degree's dates and every project's name, one line each."""
+    out = []
+    ident = fb.get("identity") or {}
+    status = ident.get("status_line")
+    if status:
+        out.append("[identity status_line] " + ("; ".join(str(x) for x in status) if isinstance(status, (list, tuple)) else str(status)))
+    for key in ("headline", "location"):
+        if ident.get(key):
+            out.append(f"[identity {key}] {ident[key]}")
+    out += [f"[certification {n}] {' '.join(str(c).split())}" for n, c in enumerate(fb.get("certifications") or [], 1)]
+    for e in fb.get("experience") or []:
+        out.append(f"[dates {e.get('id')}] " + " | ".join(str(e[k]) for k in ("title", "org", "location", "employment_type", "dates") if e.get(k)))
+    for e in fb.get("education") or []:
+        out.append("[education] " + " | ".join(str(e[k]) for k in ("degree", "org", "dates", "note", "display_line") if e.get(k)))
+    out += [f"[project {p.get('id')}] {' '.join(str(p['name']).split())}" + (f" ({p['dates']})" if p.get("dates") else "") for p in fb.get("projects") or [] if p.get("name")]
+    return out
+
+
 def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
     """Every source text a claim in the CV or the letter can rest on, one line each: the bullets on the CV, the letter's evidence, the hook's proof
     bullets and the bullets behind the letter's sentences (`[id] text Result: ...`), then the family's profile_body / profile_opening, every
@@ -221,7 +242,7 @@ def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
     proofs = lib.get("proof") or []
     ids += [*(e["id"] for e in letter.get("evidence") or []), hk.get("proof_bullet_id"), *([proofs] if isinstance(proofs, str) else proofs)]
     ids += letter_source_ids(fb, [*(letter.get("paragraphs") or []), str(ctx.get("profile") or "")])
-    out, seen = [], set()
+    out, seen = identity_lines(fb), set()
     for i in ids:
         b = bidx.get(i) if i else None
         if b and i not in seen:

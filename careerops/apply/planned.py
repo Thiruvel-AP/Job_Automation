@@ -18,7 +18,7 @@ from typing import Any
 from . import answerplan as AP
 from . import answers as answers_mod
 from . import attest, browser as browser_mod, dryrun, failures as failures_mod, formfind, formscan, knockout, letter_demand, planfill, planfirst, verify
-from .errors import BrowserClosed
+from .errors import AccountRequired, BrowserClosed
 from .guard import check_job_files
 
 CONFIRM_PROMPT = "After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): "
@@ -171,6 +171,11 @@ def run(job: dict, rep: dict, applicant: dict, profile_dir: Path, *, plan, cv: s
 
         r["browser_closed"] = str(e) or "the browser was closed"
         closed_browser(job, rep, applicant, book, plan, url, r["filled"], paste=Path(r["paste_file"]) if r.get("paste_file") else None)
+        conf = "x"
+    except AccountRequired as e:                                   # a sign-in page: nothing typed; the browser is closed below
+        from .assist import account_required
+
+        account_required(r, e.reason, e.url or url, ask)
         conf = "x"
     except formfind.HandOff as e:
         if failures is not None and failures_mod.kind_of(str(e)) == failures_mod.VERIFICATION_ERROR:

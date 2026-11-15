@@ -1,4 +1,4 @@
-"""The output folder of a tailored job: `<Company>_<Role, truncated>_<job id>` with the id never cut, and a swap that survives a
+"""The output folder of a tailored job: `<Company>_<Role, truncated>_<job id>` with the id never cut, and a placement that survives a
 Windows lock (the drive is NTFS, reached from WSL, where a rename of a folder can fail with PermissionError)."""
 import os
 from pathlib import Path
@@ -58,7 +58,7 @@ def locked_rename(monkeypatch, waits):
 
 def test_a_rename_that_works_is_a_plain_rename(tmp_path):
     work, final = make_work(tmp_path)
-    tailor_mod.swap_in(work, final, tmp_path, out=lambda m: None)
+    tailor_mod.place_attempt(work, final, tmp_path, out=lambda m: None)
     assert (final / "CV.pdf").read_bytes() == b"cv" and not work.exists()
 
 
@@ -66,7 +66,7 @@ def test_a_locked_rename_is_retried_three_times_a_second_apart_then_the_files_ar
     work, final = make_work(tmp_path)
     waits, said = [], []
     locked_rename(monkeypatch, waits)
-    tailor_mod.swap_in(work, final, tmp_path, out=said.append)
+    tailor_mod.place_attempt(work, final, tmp_path, out=said.append)
     assert waits == [1.0, 1.0, 1.0]
     assert sorted(p.relative_to(final).as_posix() for p in final.rglob("*") if p.is_file()) == ["CV.pdf", "llm_raw/a.json", "report.json"]
     assert (final / "CV.pdf").read_bytes() == b"cv" and not work.exists()
@@ -87,21 +87,18 @@ def test_the_file_windows_still_holds_is_named(tmp_path, monkeypatch):
             if p.is_dir() and not any(p.iterdir()):
                 p.rmdir()
     monkeypatch.setattr(tailor_mod.shutil, "rmtree", rmtree)
-    tailor_mod.swap_in(work, final, tmp_path, out=said.append)
+    tailor_mod.place_attempt(work, final, tmp_path, out=said.append)
     assert (final / "CV.pdf").is_file()
     assert any("CV.pdf" in m and "locked" in m for m in said)
 
 
-def test_an_earlier_folder_is_replaced_even_when_windows_will_not_move_it_aside(tmp_path, monkeypatch):
+def test_an_existing_folder_is_never_replaced(tmp_path):
     work, final = make_work(tmp_path)
     final.mkdir()
     (final / "CV.pdf").write_bytes(b"old")
-    real = os.replace
-    monkeypatch.setattr(tailor_mod.os, "replace", lambda s, d, *a, **k: (_ for _ in ()).throw(PermissionError(13, "Permission denied", str(s)))
-                        if str(s) in (str(final), str(work)) else real(s, d, *a, **k))
-    monkeypatch.setattr(tailor_mod.time, "sleep", lambda s: None)
-    tailor_mod.swap_in(work, final, tmp_path, out=lambda m: None)
-    assert (final / "CV.pdf").read_bytes() == b"cv" and (final / "report.json").is_file() and not work.exists()
+    with pytest.raises(FileExistsError):
+        tailor_mod.place_attempt(work, final, tmp_path, out=lambda m: None)
+    assert (final / "CV.pdf").read_bytes() == b"old" and work.exists()
 
 
 @pytest.mark.slow

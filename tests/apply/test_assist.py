@@ -20,7 +20,7 @@ def test_fill_page_never_submits(tmp_path):
     cl = tmp_path / "CL.pdf"; cl.write_bytes(b"%PDF-1.4\n%%EOF")
     try:
         with pw.sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(args=__import__("careerops.apply.browser", fromlist=["x"]).CHROMIUM_ARGS)
             page = browser.new_page()
             page.goto((FIX / "form.html").resolve().as_uri())
             r = fill_page(page, applicant, str(cv), str(cl))

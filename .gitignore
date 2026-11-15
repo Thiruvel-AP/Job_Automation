@@ -17,3 +17,16 @@ config/profile/fact_bank.proposed.yaml
 
 # the reference repo (career-ops-hq/career-ops, MIT), cloned read-only to port ideas from; never committed here
 ext/
+
+# v1.0.0: personal profile files, backups and run leftovers are never tracked (the fact bank stays tracked)
+config/profile/applicant.yaml
+config/profile/answers.yaml
+config/profile/answer.yaml
+config/profile/backups/
+config/sources.yaml.bak
+attempts/
+.venv*/
+*.log
+queue_before.json
+queue_after.json
+scripts/debug/

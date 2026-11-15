@@ -127,6 +127,42 @@ def employer_names(fb: Mapping[str, Any]) -> list[str]:
     return [x for x in dict.fromkeys(out) if len(x) >= 3]
 
 
+def _plain_org(e: Mapping[str, Any]) -> str:
+    return re.sub(r"\s*\([^)]*\)", "", " ".join(str(e.get("org") or "").split()).split(",")[0]).strip()
+
+
+def is_dissertation(e: Mapping[str, Any]) -> bool:
+    """Is this fact-bank experience an academic dissertation (its employment_type says dissertation)? It was not a job."""
+    return re.search(r"dissertation", str(e.get("employment_type") or ""), re.I) is not None
+
+
+def dissertation_lead(e: Mapping[str, Any]) -> str:
+    """`For my AstraZeneca-affiliated MSc dissertation, ` for a dissertation entry (never "At AstraZeneca, "); '' when the entry has no org."""
+    who = _plain_org(e)
+    if not who:
+        return ""
+    etype = str(e.get("employment_type") or "")
+    degree = "MSc " if re.search(r"\bMSc\b", etype + " " + str(e.get("title") or ""), re.I) else ""
+    return f"For my {who}-affiliated {degree}dissertation, "
+
+
+def dissertation_problems(text: str, fb: Mapping[str, Any]) -> list[str]:
+    """13 Nov 2026: work done as a dissertation is never said as if it were a job. "At AstraZeneca" / "worked at AstraZeneca" / "with AstraZeneca" for an
+    experience whose employment_type mentions dissertation is a problem: it is "for my AstraZeneca-affiliated MSc dissertation"."""
+    out: list[str] = []
+    for e in fb.get("experience") or []:
+        who = _plain_org(e)
+        if not who or not is_dissertation(e):
+            continue
+        pat = re.compile(r"\b(?:at|with|for|joined|worked (?:at|for|with)|interned at|employed (?:at|by))\s+" + re.escape(who) + r"(?![\w-])", re.I)
+        m = pat.search(text or "")
+        if m:
+            lead = dissertation_lead(e).strip(" ,")
+            out.append(f"says '{m.group(0)}', but that was a dissertation, not a job: write '{lead[0].lower() + lead[1:]}' "
+                       f"(the fact bank's employment_type is '{e.get('employment_type')}')")
+    return out
+
+
 def _shingles(text: str, n: int = 4) -> set[tuple[str, ...]]:
     w = re.findall(r"[a-z0-9]+", str(text or "").lower())
     return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
@@ -577,6 +613,7 @@ class Guard:
                 for sent in split_sentences(t):
                     if answers_mod.norm(self.company) in answers_mod.norm(sent) and not _runs(sent, self.ad):
                         out.append(f"says something about {self.company} that is not a phrase of the ad: '{sent[:70]}'")
+        out += dissertation_problems(t, self.fb)                                   # "At AstraZeneca" for a dissertation (13 Nov 2026)
         out += letters_mod.claim_problems([t], self.company, self.fb)             # no "we" / "our", no "I help <company>"
         out += term_dump_problems([t], self.fb)                                    # no pasted list of terms
         return list(dict.fromkeys(out))
@@ -681,7 +718,7 @@ class FreeText:
             return ""
         if sec == "experience":
             who = re.sub(r"\s*\([^)]*\)", "", str(e.get("org") or "").split(",")[0]).strip()
-            lead = f"At {who}, " if who else ""
+            lead = dissertation_lead(e) if is_dissertation(e) else (f"At {who}, " if who else "")
         else:
             name = re.split(r"\s+[—–-]\s+", " ".join(str(e.get("name") or "").split()))[0].strip()
             lead = f"In my {name} project, " if name else ""
@@ -750,7 +787,7 @@ class FreeText:
     def _motivation_problems(self, text: str) -> list[str]:
         """The 9 Nov 2026 rules on a motivation answer: no industry the company is not in (outside a sentence about past work), every sentence
         about past work names its employer, at most MAX_BULLET_SENTENCES sentence taken from a CV bullet, and that one in plain words."""
-        job, names, out = industries(self._domain_text()), employer_names(self.fb), []
+        job, names, out = industries(self._domain_text()), employer_names(self.fb), dissertation_problems(text, self.fb)
         if not hasattr(self, "_bullet_runs"):                  # a bullet as written, without its brackets, and its plain version
             self._bullet_runs = [(str(b["id"]), _shingles(f"{b['text']} | {re.sub(r'[(][^()]*[)]', ' ', str(b['text']))} | {b.get('plain') or ''}"), e)
                                  for sec in ("experience", "projects") for e in self.fb.get(sec, []) for b in e["bullets"]]

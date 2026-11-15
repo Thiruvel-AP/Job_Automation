@@ -23,9 +23,11 @@ from typing import Any, Callable, Mapping
 from . import answers as answers_mod
 from . import attest, formloop, shortfields
 
-STATUSES = ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER", "COVERED")
+STATUSES = ("FILLED", "VERIFIED", "LOST", "EMPTY", "NEEDS USER", "COVERED", "NO FORM")
 CHOICE_KINDS = ("combobox", "select", "radio")
-BLOCKING = ("LOST", "EMPTY", "NEEDS USER")
+BLOCKING = ("LOST", "EMPTY", "NEEDS USER", "NO FORM")
+MIN_FORM_FIELDS = 3                                       # a page with no CV upload field and fewer fields than this is not an application form
+NO_FORM_LABEL = "no application form found"
 RED, RESET = "\033[31m", "\033[0m"
 
 
@@ -107,10 +109,22 @@ def build(fields: list[formloop.Field], *, verified: list[str], lost: list[str],
     return rows
 
 
+def form_recognised(kinds: list[str]) -> bool:
+    """Is a page with fields of these kinds an application form? It has a CV upload (a file field) or at least MIN_FORM_FIELDS fields."""
+    return "file" in kinds or len(kinds) >= MIN_FORM_FIELDS
+
+
+def no_form_rows() -> list[Row]:
+    """The table for a page where no application form is recognised: one blocking row, so nothing can be reported as clear to submit."""
+    return [Row(NO_FORM_LABEL, "", "page", True, "NO FORM", "", "", "no CV upload field and fewer than 3 fields on the page")]
+
+
 def check(page, ctx, verified: list[str], lost: list[str], loop_status: Mapping[str, str] | None = None, letter_note: str = "",
           required_only: bool = True) -> list[Row]:
     """The table for the page as it is now (scans it again). `required_only` False: every field, for the dry-run record."""
     fields = formloop.scan(page)
+    if not form_recognised([f.kind for f in fields]):
+        return no_form_rows()
     return build(fields, verified=verified, lost=lost, needs_user=getattr(ctx, "needs_user", {}), attestations=list(getattr(ctx, "attestations", []) or []),
                  sources=getattr(ctx, "sources", {}), loop_status=loop_status, letter_note=letter_note, required_only=required_only)
 
@@ -133,6 +147,8 @@ def red(text: str, color: bool | None = None) -> str:
 
 def render(rows: list[Row], color: bool | None = None) -> list[str]:
     """The table as lines: one per required field, a blocking one in red with its reason, and a closing line that says whether submitting is blocked."""
+    if any(r.status == "NO FORM" for r in rows):
+        return [red("  NO APPLICATION FORM FOUND on this page (no CV upload field, fewer than 3 fields): nothing was filled and auto-submit is BLOCKED.", color)]
     lines = ["  REQUIRED FIELDS (status of each before the submit gate)"]
     for r in rows:
         line = f"  {r.status:<10}  {r.label[:90]}" + (f"  [{r.value[:50]}]" if r.value and r.status != "VERIFIED" else "") + (f"  -> {r.reason}" if r.reason else "")

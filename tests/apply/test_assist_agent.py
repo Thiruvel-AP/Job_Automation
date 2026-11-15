@@ -7,6 +7,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops.apply import answers as answers_mod
 from careerops.apply import assist as assist_mod
@@ -121,7 +122,7 @@ def test_no_warning_without_an_earlier_application_and_none_for_other_vendors(mo
 @pytest.fixture(scope="module")
 def chromium():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         yield browser
         browser.close()
 

@@ -186,7 +186,7 @@ for (const id of Object.keys(DATA)) {
 def page():
     pw = pytest.importorskip("playwright.sync_api")
     with pw.sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=__import__("careerops.apply.browser", fromlist=["x"]).CHROMIUM_ARGS)
         pg = browser.new_page()
         pg.set_content(SELECT_PAGE)
         yield pg

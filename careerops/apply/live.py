@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Callable
 from .. import bands
 from ..db import DB
 from ..discovery import applykind, countries, freshness, gates, manual
-from . import autolog, decided, snapshot, stale
+from . import autolog, decided, route, snapshot, stale
 from .errors import ArchiveError
 
 if TYPE_CHECKING:
@@ -56,14 +56,15 @@ EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 HANDED_OFF = "handed_off"       # the form went to the person's own browser (apply/handoff.py); mark-applied records it once they submit
 SKIPPED_USER = "skipped (user)"   # `s` at the review prompt of a job in the review band (the gap report): the job is skipped, its JD filed in jds_done/skipped/
 FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", SKIPPED_USER, bands.ATS_SKIP, "rejected",
-            "submit_unconfirmed", HANDED_OFF)
+            "submit_unconfirmed", HANDED_OFF, route.ACCOUNT_STATUS)
 SENT = ("applied", "applied (archive incomplete)")
 # the ends of a job after which the facts the user typed for it (review's `f`) are offered for the fact bank, and how each end is put when
 # the CV was NOT sent (review/factsave.py says so in so many words)
 UNSENT_WHY = {"ready_not_submitted": "you did not submit the form", HANDED_OFF: "the form went to your own browser, to submit by hand",
               SKIPPED_USER: "you skipped this job", "skipped": "you skipped this job", "approved (dry run)": "dry run: no form was opened",
               "auto_ready (dry run)": "dry run: no form was opened", "auto_filled (not submitted)": "the form was filled but not submitted",
-              "submit_unconfirmed": "the submit was clicked but never confirmed"}
+              "submit_unconfirmed": "the submit was clicked but never confirmed",
+              route.ACCOUNT_STATUS: "the application page is a sign-in page: apply by hand on the listing"}
 NOT_FINISHED = ("approved (dry run)", "letter_pending", "apply_refused", "error", "needs_user", "auto_filled (not submitted)",
                 "auto_ready (dry run)")
 # statuses --retailor sends back to 'triaged': the earlier tailoring is replaced. Never an applied job.
@@ -282,6 +283,9 @@ class Live:
         data/live/archive_pending.json and the next `live` compares against them before anything else."""
         code, stop = EXIT_INTERRUPTED, "stopped by you; state saved"
         try:
+            from . import browser as browser_mod
+
+            browser_mod.shutdown()                                         # the browser first, cleanly: no "Connection closed while reading from the driver"
             self.out("\nstopped by you; state saved")
             self._where_stopped(check=False)
             report = self._write_summary(stop)
@@ -1011,6 +1015,8 @@ class Live:
             self.out(f"  SUBMIT CLICKED, NOT CONFIRMED: {res.reason}\n  Look at the screenshots and your e-mail; if it went through, run: "
                      f"careerops mark-applied --id {jid}")
             return "submit_unconfirmed"
+        if res.status == autolog.ACCOUNT:
+            return self._account_required(jid, res.reason, r)
         if res.status == autolog.NEEDS_USER and res.handed_off:
             return self._handed_off(jid, res.reason, r)
         if res.status == autolog.NEEDS_USER:
@@ -1051,6 +1057,12 @@ class Live:
             res = {"confirmation": "", "visa": []}
         for line in r.visa or ["(no visa question was found on the form)"]:
             self.out("  " + line)
+        if res.get("account_required"):                                             # a sign-in page: nothing typed, browser closed, the listing printed
+            self._opened(False)
+            return self._account_required(jid, res["account_required"], r, res.get("listing_url"))
+        if res.get("aggregator"):                                                   # a job board: the apply pack was built and the listing opened
+            self._opened(False)
+            return self._handed_off(jid, "HAND-OFF: aggregator listing (apply pack built, listing opened)", r)
         if res.get("browser_closed"):                                               # v2.5: the window went away; code submitted nothing
             self._opened(False)
             r.note = "BROWSER CLOSED: nothing submitted"
@@ -1074,6 +1086,16 @@ class Live:
         r.note = why
         self.out(f"  HANDED OFF: {why}\n  Submit it in your own browser; once you have: careerops mark-applied --id {jid}")
         return HANDED_OFF
+
+    def _account_required(self, jid: str, why: str, r: JobResult, listing: str | None = None) -> str:
+        """A sign-in page: status `manual_apply_account_required`, nothing was typed, the listing URL is printed for the person."""
+        job = self.db.job(jid)
+        listing = listing or job["apply_url"] or job["url"] or ""
+        self.db.update_job(jid, status=route.ACCOUNT_STATUS, reason=why)
+        self.db.log(jid, "live", {route.ACCOUNT_STATUS: why, "listing": listing})
+        r.note = route.account_line(why, listing)
+        self.out(f"  {r.note}\n  Apply by hand; once submitted: careerops mark-applied --id {jid}")
+        return route.ACCOUNT_STATUS
 
     def _not_submitted(self, jid: str, why: str) -> str:
         self.db.update_job(jid, status="ready_not_submitted")

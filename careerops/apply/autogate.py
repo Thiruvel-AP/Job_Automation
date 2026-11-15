@@ -16,6 +16,7 @@
   ats structure  v3.3 (ats_structure.py): the CV's PDF text layer parses: no critical issue (no text layer, no Experience heading, no e-mail in the
                  text, scrambled reading order) and a structural score of at least 80; a letter PDF with a critical issue blocks too. A check that
                  cannot run (poppler missing, no PDF) blocks. The keyword band (strict >= min_ats_strict) is unchanged; lints are advisory.
+  number lints   v3.7: a letter with fewer than 3 distinct numbers (tailoring/numberlint.py) blocks; bullet-no-number is information only.
 
 Nothing here opens a browser or clicks anything. A failed gate sends the job to the normal review prompt, with `Gates.line()` printed first.
 """
@@ -345,6 +346,14 @@ def _doc_check(rep: Mapping[str, Any], settings, fb: Mapping[str, Any], job: Map
     return Gate("doc check", False, f"doc check: {len(found.failures)} failure(s), first: {found.failures[0][:70]}", found.text())
 
 
+def _number_lints(rep: Mapping[str, Any]) -> Gate:
+    """v3.7: a warn number lint (the letter has fewer than 3 distinct numbers) sends the job to review; the fix is a number in the fact bank."""
+    warn = [x for x in rep.get("lints") or [] if x.get("severity") == "warn"]
+    if not warn:
+        return Gate("number lints", True, "", "")
+    return Gate("number lints", False, f"number lint: {warn[0].get('message', warn[0].get('code'))}", "NUMBER LINT: add a number to the fact bank")
+
+
 def _ats_structure(rep: Mapping[str, Any], fb: Mapping[str, Any]) -> Gate:
     """v3.3: the structural ATS check of the CV (and the letter) PDF. A check that cannot run is a failure."""
     try:
@@ -364,4 +373,4 @@ def evaluate(db, settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: M
     log = autolog.rows(settings)
     return Gates([_ats(rep, cfg), _format(rep, fb), _faithfulness(rep), _level(job, settings), _sponsorship(job), _kind(job, cfg),
                   _duplicates(db, settings, job, log, tracker, submitting), _cap(cfg, log, today or date.today()),
-                  _doc_check(rep, settings, fb, job), _ats_structure(rep, fb)])
+                  _doc_check(rep, settings, fb, job), _ats_structure(rep, fb), _number_lints(rep)])

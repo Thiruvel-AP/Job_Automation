@@ -9,6 +9,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops import autoapply
 from careerops.apply import answers as answers_mod
@@ -53,7 +54,7 @@ def form(page, *parts, script=UPLOADS_ONLY):
 @pytest.fixture(scope="module")
 def chromium():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         yield browser
         browser.close()
 
@@ -181,7 +182,8 @@ def test_wait_quiet_returns_once_the_page_has_stopped_changing(page):
 
 def test_wait_quiet_gives_up_on_a_page_that_never_settles(page):
     form(page, "", script="let n = 0; setInterval(() => { document.getElementById('status').textContent = ++n; }, 50);")
-    assert verify.wait_quiet(page, quiet_ms=500, limit_ms=1200) is False
+    for _ in range(20):                                                           # under load a single run once said True
+        assert verify.wait_quiet(page, quiet_ms=500, limit_ms=1200) is False
 
 
 # ------------------------------------------------------------------ the auto-apply fills in the same order

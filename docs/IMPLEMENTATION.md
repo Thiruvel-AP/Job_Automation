@@ -2510,3 +2510,19 @@ Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` 
   fragments sharing 4+ words.
 - Not done: the model-proposed alias suggestions (a deterministic hint is shown instead); the free-text answers do not yet draw on the map; letter
   `opening.py` still walks hooks by `terms`.
+
+### v3.7 (15 Nov 2026) — plain wording by default, ATS fallback, number gate — **done offline** (fixture banks, no model, no network)
+- `cv.style: plain|full` (settings.yaml; `plain` when the key is missing). A bullet with `plain:` prints it under `plain`, else its `text`; `verbatim: true` does not
+  block `plain`. Selection (reqmap / set-cover) still scores `text` + `result` + `terms`; only the printed string changes. `careerops live --style full`: one run.
+- ATS guard (`tailoring/plain.py: style_fallback`): the CV is scored all-plain and all-full (`report.ats.strict_plain`, `strict_full`). A gap of 5 points or less keeps
+  plain; else bullets go back to `text` one at a time, the one recovering the most strict weight first (a tie: the smaller bullet id), until the gap is 5 or less.
+  Only adds words, so it cannot oscillate; Skills are never touched. The switched ids are in `report.style_fallback`.
+- Number gate (`tailoring/numberlint.py`, lint only, never writes a number): `bullet-no-number` (info; a printed bullet with no digit and no `result`) and
+  `letter-few-numbers` (warn; fewer than 3 distinct numbers, "20 minutes" and "180 Degrees" not counted). In `report.lints`, on the `[r]` screen, and a warn moves an
+  auto-band job into the review band (`bands.demote`; also the `number lints` gate of `apply/autogate.py`). Fix text: "add a number to the fact bank".
+- Doctor (read only, `[!!]` lines, exit 0): per `plain:` bullet at most 30 words, every number in `text` + `result` ("859,494" = "859494", "~65" = "about 65"),
+  at most 2 items in the closing brackets; hook headlines at most 60 characters with one number (an `A → B` pair counts as one); `profile_line` at most 35 words;
+  each `letter_template` renders to 200 words or more.
+- Tests: `tests/test_plain_default.py`. A letter with fewer than 3 numbers is demoted to the review band, so the `tailored` fixture (tests/conftest.py) now uses a company hook
+  with three numbers and a letter that quotes them (`_fabricating_llm(numbers=True)`); the guard accepts them as claims about the company. No fact bank was touched.
+- Deferred to v1.1: a "transferable" reqmap bucket (weight 0.25, never printed as a skill); the judge's 3 reject / 3 shortlist reasons; a `deep-dive` command.

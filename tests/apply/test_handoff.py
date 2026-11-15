@@ -10,6 +10,7 @@ import yaml
 from challenge_fakes import ChallengeEl, ChallengePage
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops.apply import answers, assist as assist_mod, formfind, handoff as handoff_mod
 from careerops.apply.handoff import Handoff, paste_text
@@ -370,7 +371,7 @@ CAPTCHA_PAGE = Path(__file__).resolve().parents[1] / "fixtures" / "apply" / "aut
 @pytest.fixture(scope="module")
 def chromium():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         yield browser
         browser.close()
 

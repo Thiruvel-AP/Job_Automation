@@ -118,3 +118,10 @@ def classify(strict: float, ceiling: float, b: Bands) -> Verdict:
     else:
         outcome = "skip"
     return Verdict(outcome, strict, ceiling, b.auto, b.review, b.rescue_ceiling)
+
+
+def demote(v: Verdict, warn: bool) -> Verdict:
+    """v3.7: a warn lint (tailoring/numberlint.py) moves a job in the auto band into the review band; every other outcome is unchanged."""
+    if warn and v.outcome == "auto":
+        return Verdict("review", v.strict, v.ceiling, v.auto, v.review, v.rescue_ceiling)
+    return v

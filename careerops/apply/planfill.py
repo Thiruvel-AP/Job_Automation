@@ -81,6 +81,8 @@ class Result:
 
     def required_rows(self, required_only: bool = True) -> list[requiredgate.Row]:
         """The F4 table rows: VERIFIED / LOST / NEEDS USER / EMPTY for each (required) field."""
+        if not requiredgate.form_recognised([d.row.q.type for d in self.done]):
+            return requiredgate.no_form_rows()
         rows = []
         for d in self.done:
             q = d.row.q

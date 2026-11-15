@@ -417,13 +417,13 @@ def warning_kind(w: str) -> str:
     """A label for one claim-guard warning of the chosen attempt, so the judge sees what kind it is (a cosmetic length note is not a claim)."""
     t = w.strip()
     if t.startswith("length:") and "verbatim" in t:
-        return "verbatim-length (layout only: the user's own bullet prints long and is kept word for word; no claim involved)"
+        return "verbatim-length (style only: the user's own bullet prints long and is kept word for word; no claim involved)"
     if t.startswith("length:"):
-        return "length (layout only: a bullet prints longer than the line limit; no claim involved)"
+        return "length (style only: a bullet prints longer than the line limit; no claim involved)"
     if "stuff" in t.lower():
-        return "keyword-stuffing (a bullet or line repeats JD keywords)"
+        return "keyword-stuffing (style only: a bullet or line repeats JD keywords)"
     if t.startswith("profile:"):
-        return "profile (a fact was left out of the profile as a restatement; layout only)"
+        return "profile (style only: a fact was left out of the profile as a restatement)"
     if t.startswith("replaces:"):
         return "replaces (a replacement bullet was left off; the original stays)"
     if NO_REGRESSION_MARK in t:
@@ -432,6 +432,12 @@ def warning_kind(w: str) -> str:
 
 
 NO_REGRESSION_MARK = "no-regression"
+STYLE_KINDS = ("verbatim-length", "length", "keyword-stuffing", "profile")      # warnings about layout and wording style, never about a claim
+
+
+def warning_category(kind: str) -> str:
+    """`style` for a layout or wording note (STYLE_KINDS), else `claim-guard`: the verbatim-length note of a bullet kept word for word is not a claim-guard finding."""
+    return "style" if kind.split(" ")[0] in STYLE_KINDS else "claim-guard"
 
 
 def chosen_warnings(rep: Mapping[str, Any]) -> list[dict]:
@@ -441,7 +447,11 @@ def chosen_warnings(rep: Mapping[str, Any]) -> list[dict]:
     rec = next((a for a in attempts if a.get("attempt") == chosen), None)
     if rec is None and chosen and 0 < chosen <= len(attempts):
         rec = attempts[chosen - 1]
-    return [{"kind": warning_kind(str(w)), "text": str(w)} for w in (rec or {}).get("warnings") or []]
+    out = []
+    for w in (rec or {}).get("warnings") or []:
+        kind = warning_kind(str(w))
+        out.append({"kind": kind, "category": warning_category(kind), "text": str(w)})
+    return out
 
 
 def review_context(settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb: Mapping[str, Any], row: Row,
@@ -494,13 +504,15 @@ def review_context(settings, job: Mapping[str, Any], rep: Mapping[str, Any], fb:
         ev = None
     if blockers is None:
         blockers = send_blockers(settings, job, rep, fb)
+    warnings = chosen_warnings(rep)
     return {"qid": row.qid, "kind": row.kind, "job_id": row.job_id, "company": job["company"], "title": job["title"],
             "options": row.options, "allowed_deciders": row.allowed_deciders,
             "untrusted_jd": untrusted(str(job["description"] or "")),
             "cv_text": text_of("cv_pdf", base["cv"]), "letter_text": text_of("letter_pdf", base["letter"]),
             "ats": {"strict": ats.get("strict"), "ceiling": ats.get("ceiling"), "structure": structure, "lints": lints},
             "hook": hook, "evaluation": ev, "fact_bank_excerpt": base["facts"],
-            "claim_guard_warnings": chosen_warnings(rep),
+            "claim_guard_warnings": [w for w in warnings if w["category"] == "claim-guard"],
+            "style_warnings": [w for w in warnings if w["category"] == "style"],
             "guards": {"send_blocked_by": list(blockers), "retailors_by_claude": retailors_by_claude(settings, row.job_id),
                        "retailor_max": RETAILOR_MAX}}
 

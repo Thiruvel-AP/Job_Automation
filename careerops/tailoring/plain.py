@@ -55,7 +55,8 @@ KEEP_RESULT = (0.5, 0.5)                # share of the result clause's other wor
 CANDIDATES = 2                          # candidates shown per line
 MAX_BRACKET = 3
 TRIES = 2
-STYLES = ("plain", "technical")
+STYLES = ("plain", "full", "technical")      # v3.7: `full` (the fact bank's own `text`) is the name in settings; `technical` is its older alias
+MAX_STYLE_GAP = 5.0                     # v3.7: strict ATS points the plain CV may lose to the full-wording CV before bullets go back to `text`
 HOOK_FIELDS = (("headline", "plain_headline"), ("profile_line", "plain_profile_line"), ("letter_line", "plain_letter_line"))
 
 # The keyword allow-list: names a recruiter recognises. Languages and platforms, areas, widely known tools (the task's list, 8 Nov 2026).
@@ -95,9 +96,11 @@ _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9+#./:'’-]*[A-Za-z0-9+#]|[A-Za-z]")
 
 # ------------------------------------------------------------------ settings
 def style(settings) -> str:
-    """cv.style: "plain" (the code default) or "technical"."""
+    """cv.style: "plain" (the code default and the value when the key is missing or unknown) or "technical" (`full` is the same thing, v3.7)."""
     raw = getattr(settings, "raw", settings) or {}
     v = str(((raw.get("cv") or {}) if isinstance(raw, dict) else {}).get("style") or "plain").strip().lower()
+    if v == "full":
+        return "technical"
     return v if v in STYLES else "plain"
 
 
@@ -654,3 +657,77 @@ def strict_both(ctx: Mapping, info: Mapping, kws: Sequence[Keyword], claimable: 
     plain_t = ctx_text(ctx)
     tech_t = ctx_text(ctx, info.get("technical") or {})
     return ats.scores(plain_t, list(kws), list(claimable), None, (0, 100)).strict, ats.scores(tech_t, list(kws), list(claimable), None, (0, 100)).strict
+
+
+def style_fallback(ctx: dict, info: Mapping, kws: Sequence[Keyword], claimable: Iterable[str], max_gap: float = MAX_STYLE_GAP) -> list[str]:
+    """v3.7: when the all-plain CV scores more than `max_gap` strict points under the same CV in the full wording, put bullets back to their `text`
+    one at a time: each step takes the bullet that lifts the strict score most (a tie goes to the smaller bullet id) and stops as soon as the gap is
+    `max_gap` or less. Each step only adds words, so it never oscillates; Skills are never touched. `ctx` is changed in place. Returns the ids
+    switched, in order."""
+    from .. import ats
+
+    claim = list(claimable)
+    full = info.get("technical") or {}
+
+    def strict(c: Mapping) -> float:
+        return ats.scores(ctx_text(c), list(kws), claim, None, (0, 100)).strict
+
+    target = ats.scores(ctx_text(ctx, full), list(kws), claim, None, (0, 100)).strict
+    current = strict(ctx)
+    switched: list[str] = []
+    while target - current > max_gap + 1e-9:
+        best: tuple[float, str, tuple[str, int]] | None = None
+        for sec in ("experience", "projects"):
+            for ei, e in enumerate(ctx.get(sec) or []):
+                for i, bid in enumerate(e.get("bullet_ids") or []):
+                    if bid in switched or bid not in full or e["bullets"][i] == full[bid]:
+                        continue
+                    trial = copy.deepcopy(ctx)
+                    trial[sec][ei]["bullets"][i] = full[bid]
+                    gain = strict(trial) - current
+                    if best is None or gain > best[0] + 1e-9 or (abs(gain - best[0]) <= 1e-9 and bid < best[1]):
+                        best = (gain, bid, (sec, ei * 10000 + i))
+        if best is None or best[0] <= 1e-9:
+            break
+        sec, code = best[2]
+        ei, i = divmod(code, 10000)
+        ctx[sec][ei]["bullets"][i] = full[best[1]]
+        switched.append(best[1])
+        current = strict(ctx)
+    return switched
+
+
+# ------------------------------------------------------------------ the fact bank's own plain lines (doctor, read only)
+_NUM = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")
+MAX_PLAIN_WORDS_BANK = 30
+MAX_BRACKET_ITEMS = 2
+MAX_HOOK_PROFILE_WORDS = 35
+MIN_LETTER_WORDS = 200
+SLOT_WORDS = 30
+
+
+def numbers_of(text: str) -> set[str]:
+    """The numbers a line says, commas closed up ("859,494" = "859494"); "~65" and "about 65" are 65."""
+    return {n.replace(",", "") for n in _NUM.findall(str(text or ""))}
+
+
+def bank_plain_problems(fb: Mapping) -> list[tuple[str, str]]:
+    """[(bullet id, problem)] for every bullet that has a `plain:` line: over 30 words, a number its `text` + `result` do not carry, more than two
+    comma-separated items in its closing brackets. Read only."""
+    out: list[tuple[str, str]] = []
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec) or []:
+            for b in e.get("bullets") or []:
+                plain = " ".join(str(b.get("plain") or "").split())
+                if not plain:
+                    continue
+                bid = str(b.get("id"))
+                if len(plain.split()) > MAX_PLAIN_WORDS_BANK:
+                    out.append((bid, f"plain is {len(plain.split())} words (at most {MAX_PLAIN_WORDS_BANK})"))
+                extra = sorted(numbers_of(plain) - numbers_of(f"{b.get('text') or ''} {b.get('result') or ''}"))
+                if extra:
+                    out.append((bid, f"plain has number(s) not in text or result: {', '.join(extra)}"))
+                m = re.search(r"\(([^()]*)\)\s*[.!?]?\s*$", plain)
+                if m and len([x for x in m.group(1).split(",") if x.strip()]) > MAX_BRACKET_ITEMS:
+                    out.append((bid, f"plain has more than {MAX_BRACKET_ITEMS} items in its closing brackets"))
+    return out

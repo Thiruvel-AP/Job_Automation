@@ -8,6 +8,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops import autoapply
 from careerops.apply import answers as answers_mod
@@ -26,7 +27,7 @@ pytestmark = pytest.mark.slow          # these tests drive Chromium
 @pytest.fixture(scope="module")
 def chromium():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         yield browser
         browser.close()
 

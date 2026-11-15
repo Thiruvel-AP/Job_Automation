@@ -230,16 +230,16 @@ def test_the_plain_bank_uses_the_hooks_plain_fields():
     assert out["hook_library"][0]["headline"] == "AI assistant running on AWS, checked by ~65 automated tests"
 
 
-def test_strict_of_the_plain_cv_is_not_below_the_technical_one_after_the_top_up():
+def test_strict_of_the_plain_cv_is_within_5_points_of_the_full_one_after_the_fallback():
     fb = with_plain(bank(), {"az1": "Researchers needed answers, so I built an AI assistant used by the whole research team."})
     out, info = P.plain_bank(fb, KWS, cap=0)                   # no brackets: the plain CV lost AWS and LangChain
     az1 = next(b for e in out["experience"] for b in e["bullets"] if b["id"] == "az1")
     ctx = {"profile": "", "skills": {}, "experience": [{"title": "", "org": "", "bullet_ids": ["az1"], "bullets": [az1["text"]]}], "projects": []}
     plain_s, tech_s = P.strict_both(ctx, info, KWS, [])
-    assert plain_s < tech_s
+    assert tech_s - plain_s > P.MAX_STYLE_GAP
     rep = T.plain_style_report(ctx, info, KWS, [])
-    assert rep["strict_plain"] >= rep["strict_technical"] and set(rep["topped_up"]) == {"AWS", "LangChain"}
-    assert ctx["experience"][0]["bullets"][0].endswith("(AWS, LangChain).")
+    assert rep["strict_full"] - rep["strict_plain"] <= P.MAX_STYLE_GAP and rep["style_fallback"] == ["az1"]
+    assert ctx["experience"][0]["bullets"][0] == info["technical"]["az1"]
 
 
 def test_style_setting():

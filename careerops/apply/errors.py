@@ -53,3 +53,12 @@ def raise_if_closed(e: BaseException, page=None) -> None:
     """Re-raise `e` as BrowserClosed when it says the browser is gone; return otherwise (the caller handles any other error its own way)."""
     if is_closed_error(e, page):
         raise BrowserClosed(str(e).splitlines()[0][:200] if str(e) else "the browser was closed") from e
+
+
+class AccountRequired(RuntimeError):
+    """The page is a sign-in / account page (apply/route.py). Nothing was typed or clicked; the browser is closed and the person applies by hand
+    (status `manual_apply_account_required`). Never handled as a hand-off to retry: no credentials are ever entered by this program."""
+
+    def __init__(self, reason: str, url: str = ""):
+        super().__init__(reason)
+        self.reason, self.url = reason, url

@@ -33,7 +33,7 @@ from .families import possible_evidence
 from . import freeze
 from .provisional import provisional_bullets
 from . import letters as letters_mod
-from . import plain as plain_mod
+from . import numberlint, plain as plain_mod
 from . import sections as sections_mod
 from . import profile as profile_mod
 from . import reqmap as reqmap_mod
@@ -1632,8 +1632,9 @@ def install_letter(job, fb: dict, rep: dict, pdf, letter: dict, letters: dict | 
     if rep.get("ats") is not None:
         cv_text = pdf_text(Path(rep["cv_pdf"]))
         band = tuple(rep.get("band_pct") or (70.0, 85.0))
+        kept = {k: rep["ats"][k] for k in ("strict_plain", "strict_full") if k in rep["ats"]}          # v3.7: the style comparison is of the tailoring
         rep["ats"] = {**ats.scores(cv_text, kws, rep.get("claimable") or [], pdf_text(pdf) if pdf else None, band).to_dict(),
-                      "variants": ats_by_variant(cv_text, kws, rep.get("claimable") or [], letters, band)}
+                      "variants": ats_by_variant(cv_text, kws, rep.get("claimable") or [], letters, band), **kept}
     note_mod.write(dict(job), rep, fb, out_dir)                               # the note names letter B's gap
 
 
@@ -1839,18 +1840,19 @@ def _restore_plain(ctx: dict, fb: dict, info: dict) -> None:
 
 
 def plain_style_report(ctx: dict, info: dict, kws: list[Keyword], claimable: list[str]) -> dict:
-    """The strict ATS of the plain CV and of the same CV in the technical wording (both on the CV's words, plain.ctx_text); when plain is lower,
-    the missing JD keywords go into the brackets of a plain bullet whose original says them (plain.top_up). Readability per plain bullet on the CV,
-    and the CV's bullets that have no plain version."""
+    """The strict ATS of the plain CV and of the same CV in the full wording (both on the CV's words, plain.ctx_text). v3.7: when plain is more than
+    5 points lower, bullets go back to their `text` one at a time, the one that recovers most first, until the gap is 5 or less
+    (plain.style_fallback; `style_fallback` lists the ids). Readability per plain bullet on the CV, and the CV's bullets that have no plain version."""
     on_cv = [b for sec in ("experience", "projects") for e in ctx.get(sec) or [] for b in e.get("bullet_ids") or []]
     plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
-    topped: list[str] = []
-    if plain_s < tech_s:
-        topped = plain_mod.top_up(ctx, info, kws, plain_mod.ctx_text(ctx))
+    fallback: list[str] = []
+    if tech_s - plain_s > plain_mod.MAX_STYLE_GAP:
+        fallback = plain_mod.style_fallback(ctx, info, kws, claimable)
         plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
     plain_set = set(info.get("plain") or [])
     refused = info.get("refused") or {}
-    return {"style": "plain", "strict_plain": plain_s, "strict_technical": tech_s, "topped_up": topped,
+    return {"style": "plain", "strict_plain": plain_s, "strict_technical": tech_s, "strict_full": tech_s,
+            "style_fallback": fallback, "topped_up": [],
             "plain_refused": {b: refused[b] for b in on_cv if b in refused},
             "brackets": {b: t for b, t in (info.get("added") or {}).items() if b in on_cv},
             "readability": {b: s for b, s in (info.get("readability") or {}).items() if b in on_cv},
@@ -1874,7 +1876,8 @@ def refresh_ats(rep: dict, cv_text: str, letter_text: str | None = None) -> dict
     if letter_text is None and rep.get("letter_pdf") and Path(rep["letter_pdf"]).exists():
         letter_text = pdf_text(Path(rep["letter_pdf"]))
     band = tuple(rep.get("band_pct") or (70.0, 85.0))
-    rep["ats"] = ats.scores(cv_text, kws, rep.get("claimable") or [], letter_text, band).to_dict()
+    kept = {k: (rep.get("ats") or {})[k] for k in ("strict_plain", "strict_full") if k in (rep.get("ats") or {})}
+    rep["ats"] = {**ats.scores(cv_text, kws, rep.get("claimable") or [], letter_text, band).to_dict(), **kept}
     if rep.get("letters"):
         rep["ats"]["variants"] = ats_by_variant(cv_text, kws, rep.get("claimable") or [], rep["letters"], band)
     rep["stretch"] = rep["ats"]["gate"] == "stretch"
@@ -1925,7 +1928,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     gaps = [g for g in all_gaps if g not in possible]
     plain_info: dict | None = None
     if plain_mod.style(settings) == "plain":            # v3.4: each bullet's approved `plain:` (+ the JD keywords it lost, in brackets)
-        fb, plain_info = plain_mod.plain_bank(fb, kws)
+        fb, plain_info = plain_mod.plain_bank(fb, kws, cap=0)       # v3.7: the bullet prints its `plain:` as written; the ATS fallback below puts `text` back where keywords are lost
     jd = job["description"] or ""
     # v3.6: the ad's requirements against the whole fact bank (tailoring/reqmap.py; no model). Gaps are printed now and nothing is written for one.
     rm = reqmap_mod.build(kws, fb, job.get("title") or "")
@@ -2167,8 +2170,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     style_rep: dict = {"style": "technical"}
     if plain_info is not None:
         style_rep = plain_style_report(ctx, plain_info, kws, claimable)
-        print(f"  plain style: strict {style_rep['strict_plain']:.1f}% (technical {style_rep['strict_technical']:.1f}%), on the CV's words"
-              + (f"; added {', '.join(style_rep['topped_up'])} in brackets" if style_rep["topped_up"] else ""))
+        print(f"  plain style: strict {style_rep['strict_plain']:.1f}% (full {style_rep['strict_full']:.1f}%), on the CV's words"
+              + (f"; wording put back to the full text for {', '.join(style_rep['style_fallback'])}" if style_rep["style_fallback"] else ""))
         if style_rep["plain_missing"]:
             report["analysis_warnings"].append(f"plain style: plain version missing for {', '.join(style_rep['plain_missing'])} (their original "
                                                "wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)")
@@ -2216,8 +2219,13 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     link_issues = pdflayout.link_problems(pdf, urls) if urls else []            # checked on the PDF's word boxes
     report["analysis_warnings"].extend(f"layout: project link {x}" for x in link_issues)
     ats_now = ats.scores(cv_text, kws, claimable, pdf_text(letter_pdf) if letter_pdf else None, (lo * 100, hi * 100))
+    # v3.7 number gate (lint only): never adds a number; a warn moves an auto-band job into review
+    number_lints = numberlint.lints(ctx, fb, "\n\n".join(str(p) for p in letter.get("paragraphs") or []) if verdict.letter else None)
+    verdict = bands.demote(verdict, numberlint.has_warn(number_lints))
     report.update({
-        "ats": {**ats_now.to_dict(), "variants": ats_by_variant(cv_text, kws, claimable, letters, (lo * 100, hi * 100))},
+        "ats": {**ats_now.to_dict(), "variants": ats_by_variant(cv_text, kws, claimable, letters, (lo * 100, hi * 100)),
+                **({"strict_plain": style_rep["strict_plain"], "strict_full": style_rep["strict_full"]} if "strict_plain" in style_rep else {})},
+        "lints": number_lints, "style_fallback": list(style_rep.get("style_fallback") or []),
         "stretch": ats_now.gate == "stretch",                                # a ceiling under the band is labelled, never dropped
         "band": verdict.to_dict(),
         "letters": _publish_letters(letters, out_dir, final_dir), "letter_choice": letters["choice"] if letters else None,

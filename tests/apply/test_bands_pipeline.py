@@ -31,6 +31,7 @@ def test_a_job_under_the_band_makes_no_letter_call_and_no_letter_file(settings, 
     assert letter_summary(rep["letter"]).startswith("off (ATS S < 100")
 
 
+@pytest.mark.usefixtures("number_gate_off")      # a test about the band's prompt, not the v3.7 number gate (a mock letter has no numbers)
 @pytest.mark.parametrize("auto, review, rescue, outcome", [(0, 0, 0, "auto"), (100, 0, 0, "review"), (100, 100, 0, "rescue")])
 def test_a_job_in_auto_review_or_rescue_gets_its_letter(settings, fb_fixture, job, spy_llm, auto, review, rescue, outcome):
     force(settings, auto, review, rescue)

@@ -111,6 +111,7 @@ def _answers(monkeypatch, *answers):
     return seen
 
 
+@pytest.mark.usefixtures("number_gate_off")      # a test about the band's prompt, not the v3.7 number gate (a mock letter has no numbers)
 def test_live_mock_takes_a_jd_through_add_jd_tailor_and_review_and_never_touches_real_data(world, jd, monkeypatch, capsys):
     cfg, real, mock = world
     f = _inbox(mock, jd)

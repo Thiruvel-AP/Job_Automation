@@ -83,6 +83,7 @@ def test_mode_auto_lets_auto_through(world, monkeypatch):
     assert seen == [True]
 
 
+@pytest.mark.usefixtures("number_gate_off")      # a test about the band's prompt, not the v3.7 number gate (a mock letter has no numbers)
 def test_auto_on_the_mock_root_prints_why_the_job_is_blocked_and_opens_no_browser(world, jd, monkeypatch, capsys):
     cfg, real, mock = world
     _inbox(mock, jd)

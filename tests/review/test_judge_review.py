@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+from conftest import numbers_letter
 
 from careerops.llm.router import LLMError
 from careerops.review import judge
@@ -127,7 +128,7 @@ def test_a_misconfigured_judge_is_shown_as_no_verdict(tailored, settings, db, jo
 
 
 def test_regenerating_the_letter_shows_the_verdict_again_for_the_new_version(tailored, settings, db, job, spy_llm, capsys):
-    llm = judge_llm(spy_llm, YES)
+    llm = spy_llm({"judge": lambda ctx: YES, "cover_letter": numbers_letter})                  # the same letter again, so the verdict is the cached one
     out, ask = run(tailored, settings, db, job, llm, "l", "a")
     shown = capsys.readouterr().out
     assert out == "approved" and shown.count("Judge (mock): WOULD SEND 5/5") == 2          # before and after the new letter

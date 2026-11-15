@@ -34,11 +34,11 @@ import re
 from pathlib import Path
 
 from ..discovery import countries
-from . import answers as answers_mod
+from . import route, answers as answers_mod
 from . import ats_vendor, attest, dryrun, eo, failures as failures_mod, filler, formfind, formloop, handoff as handoff_mod, knockout, letter_demand, requiredgate, shortfields, verify
 from .filler import LABEL_JS, QUESTION_JS, _matches, _norm
 from ..discovery.workcountry import Work, rules_from
-from .errors import BrowserClosed, is_closed_error
+from .errors import AccountRequired, BrowserClosed, is_closed_error
 from . import stale
 from .guard import check_job_files
 from .visa import VisaPlan, plan_for, require_plan, work_for
@@ -458,17 +458,20 @@ def fill_page(page, applicant: dict, cv_pdf: str | None, letter_pdf: str | None,
     print()
     for line in requiredgate.render(rows):
         print(line)
-    report["required_empty"].extend(r.label[:60] for r in requiredgate.blocking(rows) if r.label[:60] not in report["required_empty"])
+    report["required_empty"].extend(r.label[:60] for r in requiredgate.blocking(rows)
+                                    if r.status != "NO FORM" and r.label[:60] not in report["required_empty"])      # "no application form found" is printed, not a field
     return report
 
 
 def playwright_launch(profile_dir: Path):
     """(page, close) of a headed Chromium with a persistent profile. `close` never raises a Playwright error: a window the person has
     already closed (they submitted and closed it) is not a failure."""
-    from playwright.sync_api import Error as PlaywrightError, sync_playwright
+    from playwright.sync_api import Error as PlaywrightError
 
-    pw = sync_playwright().start()
-    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
+    from .browser import CHROMIUM_ARGS, start_playwright
+
+    pw = start_playwright()
+    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False, args=CHROMIUM_ARGS)
     page = ctx.pages[0] if ctx.pages else ctx.new_page()
 
     def close() -> None:
@@ -540,6 +543,13 @@ def closed_browser(job: dict, rep: dict, applicant: dict, book, plan, url: str, 
     return paste
 
 
+def account_required(r: dict, why: str, url: str, ask=input, announce_only: bool = False) -> dict:
+    """A sign-in page (apply/route.py): nothing typed, status `manual_apply_account_required`, the listing URL printed. Returns the result `r`."""
+    print("\n  " + route.account_line(why, url))
+    r["account_required"], r["listing_url"], r["confirmation"] = why, url, "x"
+    return r
+
+
 def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, ask=input, book=None, history=None, freetext=None,
            handoff=None, failures=None, fact_bank=None, tokens=(), letter_maker=None, record=False, planner=None) -> dict:
     """Open the apply page, fill what we safely can and ask for the confirmation. The browser teardown cannot raise a Playwright error. A browser
@@ -575,6 +585,23 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
         else:
             print(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
 
+    why = route.auth_url_reason(url)
+    if why:                                                 # the address itself is a sign-in page: no browser is opened at all
+        return account_required(r, why, url, ask)
+    if route.is_aggregator(job):                            # a job board (Reed, CV-Library, Indeed, LinkedIn ...): its form is never entered
+        employer = route.employer_url(job)
+        if employer:
+            print(f"  {route.listing_url(job)} is a job board; the employer's own application address was found: {employer}")
+            url = job["apply_url"] = employer
+        else:
+            why = "aggregator listing: no employer application page was found; the apply pack is ready and the listing is opened for you"
+            r["aggregator"] = True
+            hand_off(why, remember=False)                   # CV, letter, answers_to_paste.txt, the listing opened; no form is opened by code
+            r["confirmation"] = "x"
+            return r
+    why = route.auth_url_reason(url)                        # the employer's address may itself be a sign-in page
+    if why:
+        return account_required(r, why, url, ask)
     used_up = failures.gate(job["id"]) if failures is not None else None
     known = (handoff.why(url) if handoff is not None else "") or used_up
     if known:                                               # a host that turned the automated browser away, or a job out of attempts: no browser is opened
@@ -671,6 +698,8 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                     saved = write_unpasted(job, rep, applicant, book, plan, url, r["pasted"], r["filled"])
                     print(f"The form would not take {len(r['pasted'])} answer(s), typed or pasted: " + (f"they are in {saved}" if saved else "paste them yourself"))
                 print("\nReview everything in the browser and press Submit yourself.")
+        except AccountRequired as e:                        # a sign-in page: nothing typed, the browser is closed below, the person applies by hand
+            account_required(r, e.reason, e.url or url, ask, announce_only=True)
         except knockout.SkipJob as e:                       # the person chose [s]kip at a knock-out: nothing was filled and nothing is submitted
             print(f"\n  Skipped at a knock-out: {e}")
             r["skipped"] = str(e)
@@ -690,7 +719,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
             else:
                 r["browser_closed"] = str(e).splitlines()[0][:200] if str(e) else "the browser was closed"
                 r["paste_file"] = str(closed_browser(job, rep, applicant, book, plan, url, r.get("filled") or [], r.get("drafts")) or "")
-        conf = "x" if (r.get("skipped") or r.get("browser_closed")) else ask(
+        conf = "x" if (r.get("skipped") or r.get("browser_closed") or r.get("account_required")) else ask(
             "After submitting, paste confirmation/reference (blank = submitted, no ref; 'x' = did not submit): ").strip()
     finally:
         if not closed:

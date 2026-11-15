@@ -312,6 +312,13 @@ def ats_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
         return [f"{screeners.RED}ATS structure: the check could not run ({type(e).__name__}: {str(e)[:80]}){screeners.RESET}"]
 
 
+def number_lint_lines(rep: dict) -> list[str]:
+    """v3.7: the number lints of the report on the review screen (information and warnings; the fix is always a number in the fact bank)."""
+    from ..tailoring import numberlint
+
+    return numberlint.lines(rep.get("lints"))
+
+
 def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
     """`DOC CHECK: pass`, or the list of failures, on the review screen. Nothing without settings (a bare summary)."""
     if settings is None or fb is None:
@@ -434,6 +441,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | 
         + f" | attempts {len(rep['attempts'])}",
         *(gap_lines(rep, gap) if gap is not None else ats_lines(rep)),
         *ats_check_lines(rep, settings, fb if fb is not None else bank, job),
+        *number_lint_lines(rep),
         *provisional_lines(rep),
         *hook_lines(rep),
         *requirement_lines(rep, fb if fb is not None else bank),

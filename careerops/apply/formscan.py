@@ -23,7 +23,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable
 from urllib.parse import urljoin, urlparse
 
-from . import shortfields
+from . import route, shortfields
 from .errors import BrowserClosed, raise_if_closed
 
 FORM_SEL = "form input, form textarea, input[type=file], [role=combobox], [class*=application-form i], #application_form"
@@ -334,10 +334,12 @@ def reach(page, url: str, *, navigate: bool = True, agent: Callable[[Any], bool]
     notes: list[str] = []
     if navigate:
         goto(page, url, sleep)
+    route.require_no_auth(page)                                  # a sign-in page: nothing is typed (errors.AccountRequired)
     note = dismiss_consent(page)
     if note:
         notes.append(note)
     wait_for_form(page, wait_ms)
+    route.require_no_auth(page)                                  # redirected to a sign-in page while waiting
     frame, fields = richest(page)
     if not looks_like_application(fields):
         nudge_scroll(page)
@@ -349,6 +351,7 @@ def reach(page, url: str, *, navigate: bool = True, agent: Callable[[Any], bool]
             goto(page, link, sleep)
             dismiss_consent(page)
             wait_for_form(page, min(wait_ms, 6_000))
+            route.require_no_auth(page)
             frame, fields = richest(page)
     if not looks_like_application(fields) and agent is not None:
         if agent(page):

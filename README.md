@@ -246,7 +246,8 @@ careerops plain-draft --id az10,dc1,p_ll1   # v3.4: a plain-language (STAR) vers
                                    # [1]/[2] pick, then [y] saves exactly that one / [e] write your own / [n] skip / [q] quit.
                                    # Saved as `plain:` under the bullet by factbank_append.py (dated backup first); the bullet's text never changes.
                                    # A saved `plain:` that upgrades ownership or moves a commendation is listed and NOT used on the CV: delete it yourself to redraft.
-                                   # --limit N, --no-hooks, --dry-run (show only). cv.style: plain (default) prints the plain versions, technical the old wording
+                                   # --limit N, --no-hooks, --dry-run (show only). cv.style: plain (default, also when the key is missing) prints a bullet's `plain:` when it has one,
+                                   # full prints the fact bank's `text`; `careerops live --style full` does that for one run (settings.yaml is not changed)
 careerops results                  # v3.5.2: the bullets under "Needs a result" (no `result:`), one at a time: you TYPE the result, [s] skips, [q] stops;
                                    # nothing is drafted and no model is called; saved as `result:` only after your [y] (factbank_append.py, dated backup first).
                                    # --id az1,dc3 / --limit N
@@ -273,6 +274,7 @@ careerops ats-check [PDF | --id JOB]   # v3.3: can an ATS parser READ the CV? st
 careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and the company size (asked once a day at a terminal, else remembered; see "Region and company size")
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
+careerops live --style full       # v3.7: this run's CV prints each bullet's `text` instead of its `plain:` (cv.style is the default: plain)
 careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
                                    # v3.5.5: before tailoring, an approved ad whose estimate F is under priority.min_estimate (0.45) moves to jds_done/skipped_estimate/ (logged `skipped_estimate`, zero tokens); `careerops unskip --shortlist --match ...` brings it back for good
 careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
@@ -639,6 +641,8 @@ The letter is drafted only AFTER this check, so a skipped job costs no letter to
 Valarian | MLOps Engineer`, and `Skipped by the ATS band: N` at the end. Only you edit the bands; no code lowers them. After the fact bank grows,
 `careerops retriage --ats` tailors the `skipped (ats)` jobs again (a dry run into a scratch folder by default: it reports `ATS 32 -> 55 ... would come back
 to review`); `--apply` keeps the new tailoring and moves every job that now reaches 50 (or the rescue line) back to `needs_review` and its JD back to the inbox.
+
+**Sign-in pages and job boards (13 Nov 2026).** A page that is a sign-in (login / signin / auth / oauth / account / `secure.` host, OAuth parameters, any password field) is never filled: nothing is typed, the browser closes, the job is `manual_apply_account_required` and the listing URL is printed. A Reed / CV-Library / Indeed / LinkedIn listing never enters form fill: the employer's own address is used when the job has one, else the apply pack (CV, letter, `answers_to_paste.txt`) is built and the listing opened.
 
 **Hand-off.** A job whose form cannot be submitted ends `handed_off` (see "Submit failures and the hand-off" under Auto-apply); once you have submitted it
 in your own browser, `careerops mark-applied --id JOB` records it as always.

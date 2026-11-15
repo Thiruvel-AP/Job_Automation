@@ -614,9 +614,15 @@ def cmd_set_country(args):
         print("Triage:", manual.triage_job(db, s, args.id))
 
 
+TAILORED_STATES = ("needs_review", "letter_pending", bands.ATS_SKIP)     # a job already holding a tailored CV: a lower attempt must not replace it
+
+
 def record_tailoring(db: DB, s, job, rep: dict) -> str:
     """Store a finished tailoring on the job and return its new status: `skipped (ats)` when the CV is under the ATS bands (bands.py), else
     `letter_pending` or `needs_review`. A rescued job (strict under the review band, ceiling high) gets the flag "CV under-uses the fact bank"."""
+    if rep.get("current_attempt") is not None and rep.get("attempt") != rep["current_attempt"] and job["out_dir"] and job["status"] in TAILORED_STATES:
+        db.log(job["id"], "tailor", {"attempt": rep["attempt"], "kept_attempt": rep["current_attempt"], "note": "lower strict ATS: the earlier attempt stays current"})
+        return job["status"]                  # a lower attempt is kept on disk but never becomes the job's CV (tailoring/attempts.py)
     f = rep["final"]
     verdict = bands.Verdict.from_dict(rep["band"]) if rep.get("band") else None
     skip = verdict is not None and verdict.outcome == "skip"
@@ -956,7 +962,7 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
     from .discovery import pretailor
     from .tailoring import companypage
     from .tailoring.freeze import frozen_for
-    from .tailoring.tailor import letter_summary, tailor_job
+    from .tailoring.tailor import left_out_text, letter_summary, letter_template_line, tailor_job
 
     print(f"Tailoring {len(jobs)} job(s){' with MockLLM' if mock else ''}.")
     # the company's own careers page, for a letter whose ad has no clause to quote (one polite fetch, only then; never in a --mock run)
@@ -991,6 +997,9 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             no_letter = rep["letter"]["status"] == "none"       # letter.on_failure: none and every draft was rejected
             off = rep["letter"]["status"] == "off"              # letter.mode: off, no letter was asked for
             record_tailoring(db, s, job, rep)
+            if rep.get("current_attempt") not in (None, rep.get("attempt")) and job["out_dir"] and job["status"] in TAILORED_STATES:
+                print(f"  attempt {rep['attempt']} scored a lower ATS strict than attempt {rep['current_attempt']}: both are kept in the job folder, "
+                      f"attempt {rep['current_attempt']} stays the CV.")
             cv_pages, letter_pages = f["pages"], rep["letter"]["pages"]
             max_pages = 1 if rep["one_page"] else s["scoring"]["max_pages"]
             short = (not rep["one_page"] and max_pages == 2
@@ -998,13 +1007,14 @@ def tailor_jobs(db: DB, s, fb: dict, llm, jobs: list, *, one_page: bool = False,
             over = cv_pages > max_pages or (letter_pages != 1 and not pending and not no_letter and not off)
             if rep["letter"]["status"] in ("fallback", "none"):
                 print(f"  letter {letter_summary(rep['letter'])}")
+            print("  " + letter_template_line(rep["letter"]))
             if rep.get("ats"):
                 print("  " + ats.AtsScores(**{k: v for k, v in rep["ats"].items() if k in ats.AtsScores.__dataclass_fields__}).line())
             if rep.get("band"):
                 print("  " + bands.Verdict.from_dict(rep["band"]).line())
             print(f"  ATS {f['score']:.0%} (stemmed {f['score_stemmed']:.0%}, ceiling {rep['ceiling']:.0%}) "
                   f"→ {f['band']} band | CV {cv_pages} page(s)"
-                  + (f", page 2 {rep['page2_fill']:.0%} full" + (" (the fact bank has no more content to add)" if short else "")
+                  + (f", page 2 {rep['page2_fill']:.0%} full" + ((" (" + (left_out_text(rep.get("left_out") or []) or "the fact bank has no more content to add") + ")") if short else "")
                      if not rep["one_page"] else "") + ", "
                   + (f"letter {letter_summary(rep['letter'])}: the job waits as letter_pending" if pending
                      else f"{letter_summary(rep['letter'])}: review asks for 'no letter' to approve" if no_letter
@@ -1057,7 +1067,7 @@ def retailor_hook(db: DB, s, args):
 
     def retailor(jid: str, bank: dict, boost: list[str]) -> None:
         llm = holder.setdefault("llm", _llm(args, s, db))
-        tailor_jobs(db, s, bank, llm, [db.job(jid)], mock=getattr(args, "mock", False), boost=boost)
+        tailor_jobs(db, s, bank, llm, [db.job(jid)], mock=getattr(args, "mock", False), boost=boost)   # a new attempts/<n>; a lower strict never becomes current
     return retailor
 
 
@@ -1233,6 +1243,8 @@ def cmd_live(args):
     if args.id and (args.url or args.clipboard):
         _fail("--id works on a job the database already has; --url and --clipboard bring a new ad in: use one of them")
     s, db = _ctx(args)
+    if getattr(args, "style", None):                                  # v3.7: this run only; settings.yaml is not written
+        s.raw.setdefault("cv", {})["style"] = args.style
     from . import choices
     from .discovery import region as region_mod
     from .discovery import size as size_mod
@@ -2404,6 +2416,8 @@ def main(argv=None):
     lv = sub.add_parser("live", help="interactive batch: JD files in data/jds/inbox through add-jd, tailor, review, apply "
                                      "assist, with an archive check after every job")
     lv.add_argument("--max", type=int, default=5, help="at most N JD files this session (default 5)")
+    lv.add_argument("--style", choices=("plain", "full"), help="CV wording for this run only: plain (each bullet's `plain:`) or full (the fact bank's `text`); "
+                    "overrides settings.yaml cv.style, which is not changed")
     lv.add_argument("--fresh", action="store_true", help="tier 0 only: the inbox files posted at most 24 hours ago (older files stay "
                                                          "in the inbox, untouched); the order is still P = F x S")
     lv.add_argument("--dry-run", action="store_true", help="stop after tailor + review: no apply step")
@@ -2521,12 +2535,22 @@ def main(argv=None):
     args = ap.parse_args(argv)
     try:
         args.fn(args)
+    except KeyboardInterrupt:                                  # Ctrl+C outside live's own handler: the browser is closed first, no traceback
+        from .apply import browser as browser_mod
+
+        browser_mod.shutdown()
+        print("\nstopped by you.", file=sys.stderr)
+        sys.exit(130)
     except NotImplementedError as e:
         print(f"Not built yet: {e}. See docs/IMPLEMENTATION.md.")
         sys.exit(2)
     except judge.GateRefused as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
+    finally:
+        from .apply import browser as browser_mod
+
+        browser_mod.shutdown()                                 # every Playwright this run started, stopped before the interpreter exits
 
 
 if __name__ == "__main__":

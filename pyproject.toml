@@ -26,6 +26,7 @@ build-backend = "setuptools.build_meta"
 packages = ["careerops"]
 
 [tool.pytest.ini_options]
+addopts = "-n auto"   # the suite in parallel (tests use tmp_path only)
 markers = [
   "slow: runs xelatex or drives Chromium (PDF rendering); deselect with -m 'not slow' for a light run (< ~2 GB RAM)",
 ]

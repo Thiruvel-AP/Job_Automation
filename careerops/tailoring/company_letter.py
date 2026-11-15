@@ -50,6 +50,7 @@ from .. import hook as hook_mod
 from ..hook import Hook, org_short
 from ..llm.router import TaskUnavailable
 from . import companypage as CP
+from .attempts import job_name as attempts_job_name
 from . import evidence_fields
 from . import letter_feedback as LF
 from . import letter_reuse as RU
@@ -1043,7 +1044,7 @@ def _make_free(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, family_
     previous = list((revise or {}).get("previous") or [])
     feedback = (LF.revision_block(previous, LF.instructions(list((revise or {}).get("problems") or []), previous, plan), said) if revise else "")
     problems, body = [], []
-    earlier = RU.earlier_letters(settings, exclude=[out_dir.name])
+    earlier = RU.earlier_letters(settings, exclude=[attempts_job_name(out_dir)])
     reuse = {"score": 0.0, "against": "", "redrafted": False}
     reused = 0                                                        # drafts rejected for copying an earlier letter: one redraft, then no letter
     for attempt in range(ATTEMPTS):
@@ -1133,7 +1134,7 @@ def _make_assembled(job: dict, fb: dict, kws: list[Keyword], hk: Hook | None, pl
     ad_all = jd + ("\n" + page_text if page_text else "")
     offered = about_sentences(ad_all, job["company"], kws)
     st = AL.steer(said)
-    earlier = RU.earlier_letters(settings, exclude=[out_dir.name])
+    earlier = RU.earlier_letters(settings, exclude=[attempts_job_name(out_dir)])
     p5, p5info, p5_fact = "", {"source": "", "tries": 0, "problems": [], "tokens": 0}, None
     retry: dict = {"mode": "assembled", "count": 0, "failures": [], "outcome": "", "temperatures": [], "p5": p5info, "tokens": 0, "variants": []}
     problems: list[str] = []

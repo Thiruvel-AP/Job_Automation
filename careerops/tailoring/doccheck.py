@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from . import company_letter as CL
+from .attempts import job_name as attempts_job_name
 from . import letter_reuse as RU
 from . import opening as OP
 from . import profile as profile_mod
@@ -352,5 +353,5 @@ def for_report(rep: Mapping[str, Any], settings, fb: Mapping[str, Any] | None = 
     folder = Path(rep["out_dir"]) if rep.get("out_dir") else None
     page = companypage.stored(folder) if folder is not None else ""
     letter_ok = (rep.get("letter") or {}).get("status") == "ok"
-    earlier = RU.earlier_letters(settings, exclude=[folder.name]) if letter_ok and folder is not None else []
+    earlier = RU.earlier_letters(settings, exclude=[attempts_job_name(folder)]) if letter_ok and folder is not None else []
     return check(rep, settings, tex=tex_beside("cv_pdf"), letter_tex=tex_beside("letter_pdf"), fb=fb, texts=(jd, page), earlier=earlier)

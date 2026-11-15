@@ -256,6 +256,46 @@ def letter_template_checks(path: Path) -> list[tuple[str, object, str]]:
     return out or [("letter templates: no two families share a text", True, "")]
 
 
+def plain_fact_checks(path: Path) -> list[tuple[str, object, str]]:
+    """v3.7 doctor lines for the fact bank's wording fields (read only, never edited). A failure is a `[!!]` line that names the id and, unlike a
+    failed tool, does not fail the run (exit code 0): a plain line over 30 words, with a number its bullet does not have, or with more than two items
+    in its closing brackets; a hook headline over 60 characters or with two numbers; a hook's profile_line over 35 words; a letter_template that
+    renders (its slots filled with about 30 words each) to under 200 words."""
+    from .config import load_yaml
+    from .hook import headline_lint, library
+    from .tailoring import plain as P
+    from .tailoring.template_letter import raw_template
+
+    if not path.exists():
+        return []
+    fb = load_yaml(path)
+    bad = "!!"
+    out: list[tuple[str, object, str]] = []
+    for bid, why in P.bank_plain_problems(fb):
+        out.append((f"fact bank bullet {bid}: {why}", bad, "fix it in fact_bank.yaml (nothing is rewritten by code)"))
+    for e in library(fb):
+        eid = str(e.get("id"))
+        for w in headline_lint(str(e.get("headline") or "")):
+            if "characters" in w or "more than one number" in w:
+                out.append((f"hook {eid} headline: {w}", bad, "at most 60 characters and one number; an A → B pair counts as one"))
+        words = len(str(e.get("profile_line") or "").split())
+        if words > P.MAX_HOOK_PROFILE_WORDS:
+            out.append((f"hook {eid} profile_line is {words} words (at most {P.MAX_HOOK_PROFILE_WORDS})", bad, "shorten it in fact_bank.yaml"))
+    sign = re.compile(r"^(regards|kind regards|best regards|best|thanks|sincerely)\b", re.I)
+    for fam in [str(f["id"]) for f in fb.get("families") or [] if isinstance(f, dict) and f.get("id")]:
+        text = raw_template(fb, [fam])[1]
+        if not text.strip():
+            continue
+        filled = text.replace("{company}", "Acme")
+        filled = re.sub(r"\{[A-Za-z_]+\}", " ".join(["word"] * P.SLOT_WORDS), filled)
+        body = [ln for ln in filled.splitlines() if ln.strip() and not re.match(r"^(hi|hello|dear)\b", ln.strip(), re.I)]
+        cut = next((i for i, ln in enumerate(body) if sign.match(ln.strip())), len(body))
+        n = len(" ".join(body[:cut]).split())
+        if n < P.MIN_LETTER_WORDS:
+            out.append((f"letter_template of family {fam} renders to {n} words (at least {P.MIN_LETTER_WORDS})", bad, "lengthen it in fact_bank.yaml"))
+    return out or [("fact bank wording: plain lines, hook headlines, profile lines and letter templates pass", True, "")]
+
+
 def ats_structure_checks(settings) -> list[tuple[str, object, str]]:
     """v3.3: the structural ATS check of the newest tailored CV under paths.outputs (read only): its score, grade and lints. A critical issue fails,
     lints or a score under 80 warn, no tailored CV yet says so."""
@@ -624,6 +664,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += profile_repeat_checks(settings.path("fact_bank"))
     checks += letter_template_checks(settings.path("fact_bank"))
     checks += plain_allow_checks(settings)
+    checks += plain_fact_checks(settings.path("fact_bank"))
     from .tailoring import sections as sections_mod
     checks.append(sections_mod.doctor_line(settings))
     checks += project_public_checks(settings.path("fact_bank"))

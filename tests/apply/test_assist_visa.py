@@ -7,6 +7,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 
 from careerops.apply import visa
 from careerops.apply.assist import about_another_country, classify_visa, fill_page, visa_value
@@ -31,7 +32,7 @@ def applicant():
 @pytest.fixture
 def page():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         pg = browser.new_page()
         pg.goto((FIX / "visa_form.html").resolve().as_uri())
         yield pg

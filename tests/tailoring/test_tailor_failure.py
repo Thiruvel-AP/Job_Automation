@@ -56,11 +56,12 @@ def test_a_failure_in_a_later_render_also_leaves_it_untouched(settings, fb_fixtu
     assert sorted(p.name for p in out.parent.iterdir()) == [out.name, out.name + ".failed"]
 
 
-def test_a_successful_rerun_replaces_the_folder_and_reports_its_final_paths(settings, fb_fixture, job, spy_llm):
+def test_a_successful_rerun_is_a_new_attempt_beside_the_first_and_reports_its_final_paths(settings, fb_fixture, job, spy_llm):
     rep = _run(settings, fb_fixture, job, spy_llm())
     out = Path(rep["out_dir"])
     (out / "stale.txt").write_text("from the earlier run", encoding="utf-8")
     rep2 = _run(settings, fb_fixture, job, spy_llm())
-    assert rep2["out_dir"] == rep["out_dir"] and not (out / "stale.txt").exists()
-    assert Path(rep2["cv_pdf"]).exists() and Path(rep2["letter_pdf"]).exists() and (out / "report.json").exists()
-    assert Path(rep2["cv_pdf"]).parent == out and ".partial" not in rep2["cv_pdf"]
+    new = Path(rep2["out_dir"])
+    assert new == out / "attempts" / "1" and (out / "stale.txt").exists() and Path(rep["cv_pdf"]).exists()     # the first output is untouched
+    assert Path(rep2["cv_pdf"]).exists() and Path(rep2["letter_pdf"]).exists() and (new / "report.json").exists()
+    assert Path(rep2["cv_pdf"]).parent == new and ".partial" not in rep2["cv_pdf"]

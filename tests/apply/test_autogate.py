@@ -58,7 +58,7 @@ def test_a_clean_job_passes_every_gate(settings, db):
     g = run(settings, db)
     assert g.ok and g.failed == [] and g.line() == ""
     assert [x.name for x in g.items] == ["ATS", "format", "faithfulness", "level", "sponsorship", "kind", "duplicates", "daily cap", "doc check",
-                                         "ats structure"]
+                                         "ats structure", "number lints"]
 
 
 def test_every_failed_gate_is_named_in_one_line_in_table_order(settings, db):

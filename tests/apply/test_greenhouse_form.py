@@ -8,6 +8,7 @@ import pytest
 import yaml
 from conftest import PROFILE_FIX
 from playwright.sync_api import sync_playwright
+from careerops.apply.browser import CHROMIUM_ARGS
 from test_freetext import AD_PHRASE, BOOK, FB, JD, REP, WHY, llm_with
 
 from careerops.apply import answers as answers_mod
@@ -108,7 +109,7 @@ def book(visa_type: str = "") -> answers_mod.AnswerBook:
 @pytest.fixture
 def page():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=CHROMIUM_ARGS)
         pg = browser.new_page()
         pg.set_content(PAGE)
         yield pg

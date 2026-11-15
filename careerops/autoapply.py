@@ -34,7 +34,7 @@ from .apply import visa as visa_mod
 from .apply.assist import APPLY_BUTTON, VISA_FIELD, _answer_eo, _answer_visa, about_another_country, classify_visa, is_visa_question, rights_pick, sponsorship_answer, visa_value
 from .apply.filler import (LABEL_JS, QUESTION_JS, TEXT_TYPES, Ctx, NeedsUser, _norm, decide as _decide, group_of as _group,
                            is_required as _is_required, label_of as _label_of)
-from .apply.errors import ArchiveError
+from .apply.errors import AccountRequired, ArchiveError
 from .apply.formfind import CAPTCHA_SELECTORS, CAPTCHA_TEXT, HandOff, captcha_reason   # noqa: F401  (the challenge checks live in formfind)
 from .apply import stale
 from .apply.guard import check_job_files
@@ -75,11 +75,11 @@ def fresh_launch(settings) -> Callable[[Path], Session]:
 
 def playwright_launch(profile_dir: Path) -> Session:
     """A headed Chromium with a persistent profile under data/secrets/browser/ (never committed): `apply.browser: profile` only."""
-    from playwright.sync_api import sync_playwright
+    from .apply.browser import CHROMIUM_ARGS, start_playwright
 
     profile_dir.mkdir(parents=True, exist_ok=True)
-    pw = sync_playwright().start()
-    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
+    pw = start_playwright()
+    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False, args=CHROMIUM_ARGS)
     page = ctx.pages[0] if ctx.pages else ctx.new_page()
 
     def close() -> None:
@@ -408,6 +408,35 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
         result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + known
         autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
         return result
+    from .apply import route
+
+    pre = route.auth_url_reason(url)
+    if pre:                                               # the address itself is a sign-in page: no browser is opened
+        out("\n  " + route.account_line(pre, url))
+        result.status, result.reason = autolog.ACCOUNT, pre
+        autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
+        return result
+    if route.is_aggregator(job):                          # a job board: its form is never entered (apply/route.py)
+        employer = route.employer_url(job)
+        if employer:
+            out(f"  {url} is a job board; the employer's own application address was found: {employer}")
+            url = job["apply_url"] = employer
+        else:
+            why = "aggregator listing: no employer application page was found; the apply pack is ready and the listing is opened for you"
+            if handoff is not None:
+                handoff.run(job, rep, applicant, ctx.book, plan, url, why, remember=False)
+                result.handed_off = True
+            else:
+                out(f"\n  HAND-OFF: {why}\n  Open this in your own browser: {url}\n  CV: {cv}")
+            result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + why
+            autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
+            return result
+        pre = route.auth_url_reason(url)                  # the employer's own address may itself be a sign-in page
+        if pre:
+            out("\n  " + route.account_line(pre, url))
+            result.status, result.reason = autolog.ACCOUNT, pre
+            autolog.append(settings, job=job, ats_strict=ats_strict, screenshots=[], result=result.status, when=now())
+            return result
     letter_why = ""
     if ctx.letter_pdf is None and letter_maker is not None:               # v2.5: the letter is written BEFORE the browser opens, never inside it
         from .apply import planfirst
@@ -501,6 +530,10 @@ def run(job: Mapping[str, Any], rep: Mapping[str, Any], applicant: Mapping[str, 
             result.status = autolog.UNCONFIRMED
             result.reason = f"no confirmation page within {CONFIRM_SECONDS} s: check the form (or your e-mail) yourself"
         _shot(page, folder, "confirmation", stamp, result)
+        return result
+    except AccountRequired as e:                          # a sign-in page: nothing typed; the browser is closed in `finally`
+        result.status, result.reason = autolog.ACCOUNT, e.reason
+        out("\n  " + route.account_line(e.reason, e.url or url))
         return result
     except HandOff as e:                                  # a bot check or a sign-in wall: never touched, never worked around
         result.status, result.reason = autolog.NEEDS_USER, "HAND-OFF: " + str(e)

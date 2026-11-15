@@ -18,9 +18,61 @@
 from __future__ import annotations
 
 import atexit
+import logging
 import time
 from pathlib import Path
 from typing import Any, Callable
+
+DRIVER_NOISE = ("Connection closed while reading from the driver", "TargetClosedError", "Target page, context or browser has been closed")
+
+
+class _DriverNoise(logging.Filter):
+    """Drops asyncio's `Future exception was never retrieved` record that Playwright's own pending calls leave behind when Ctrl+C (or a closed
+    window) takes the driver away mid-call. Anything else asyncio logs passes."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            text = record.getMessage()
+        except Exception:  # noqa: BLE001
+            return True
+        return not ("never retrieved" in text and any(m in text for m in DRIVER_NOISE))
+
+
+_filter = _DriverNoise()
+
+
+def quiet_driver_noise() -> None:
+    """Install the filter once (idempotent)."""
+    log = logging.getLogger("asyncio")
+    if _filter not in log.filters:
+        log.addFilter(_filter)
+
+
+_started: list = []         # every Playwright this process started (here, assist.py, autoapply.py): shutdown() stops them all
+
+
+def start_playwright():
+    """`sync_playwright().start()`, remembered so `shutdown()` can stop it, with the driver-noise filter installed."""
+    from playwright.sync_api import sync_playwright
+
+    quiet_driver_noise()
+    pw = sync_playwright().start()
+    _started.append(pw)
+    return pw
+
+
+def shutdown() -> None:
+    """Ctrl+C or the end of the run: close every shared browser, then stop every Playwright, quietly. Never raises (a driver that is already gone
+    is not an error)."""
+    quiet_driver_noise()
+    close_all()
+    while _started:
+        pw = _started.pop()
+        try:
+            pw.stop()
+        except BaseException:  # noqa: BLE001  (Error, a second Ctrl+C, a driver that exited with the first)
+            pass
+
 
 FRESH, PROFILE = "fresh", "profile"
 MODES = (FRESH, PROFILE)
@@ -28,6 +80,8 @@ IDLE_S = 5 * 60
 VIEWPORT = {"width": 1280, "height": 900}
 DEFAULT_TIMEOUT_MS = 8_000
 OFFSCREEN = "--window-position=-2400,0"
+# Keep timers and rendering at full speed in a window that is hidden, off screen or behind another (wait_quiet and the fill timing rely on it).
+CHROMIUM_ARGS = ["--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows"]
 ONSCREEN = {"left": 80, "top": 60, "width": 1280, "height": 920, "windowState": "normal"}
 LOCK_FILES = ("SingletonLock", "SingletonSocket", "SingletonCookie")
 LOCK_MESSAGE = "A Chrome window from an earlier run is still open, close it and press Enter"
@@ -62,8 +116,6 @@ def wait_for_lock(profile_dir: Path | str, ask: Callable[[str], str] = input, ou
 
 def _browser(headless: bool, offscreen: bool, clock: Callable[[], float] = time.monotonic):
     """The shared browser for this run (launched on first use, relaunched after IDLE_S idle or when it went away)."""
-    from playwright.sync_api import sync_playwright
-
     key = "headless" if headless else "headed"
     cur = _shared.get(key)
     if cur is not None:
@@ -83,9 +135,9 @@ def _browser(headless: bool, offscreen: bool, clock: Callable[[], float] = time.
         _shared.pop(key, None)
     pw = _shared.get("pw")
     if pw is None:
-        pw = _shared["pw"] = sync_playwright().start()
-        atexit.register(close_all)
-    args = [] if headless or not offscreen else [OFFSCREEN]
+        pw = _shared["pw"] = start_playwright()
+        atexit.register(shutdown)
+    args = list(CHROMIUM_ARGS) + ([] if headless or not offscreen else [OFFSCREEN])
     try:
         b = pw.chromium.launch(channel="chrome", headless=headless, args=args)
     except Exception:  # noqa: BLE001  (no Google Chrome installed: the bundled Chromium)
@@ -131,12 +183,10 @@ def fresh_page(headless: bool = False, offscreen: bool = True):
 
 def profile_page(profile_dir: Path, ask: Callable[[str], str] = input, out: Callable[[str], None] = print):
     """(page, close) of a headed Chromium with the persistent profile (apply.browser: profile), after waiting for a lock to go."""
-    from playwright.sync_api import sync_playwright
-
     if not wait_for_lock(profile_dir, ask, out):
         raise RuntimeError(f"{profile_dir} is still locked by another Chrome window; nothing was opened")
-    pw = sync_playwright().start()
-    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False)
+    pw = start_playwright()
+    ctx = pw.chromium.launch_persistent_context(str(profile_dir), headless=False, args=CHROMIUM_ARGS)
     page = ctx.pages[0] if ctx.pages else ctx.new_page()
 
     def close() -> None:

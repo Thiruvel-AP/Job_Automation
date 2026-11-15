@@ -56,11 +56,14 @@ AUTOFILL_JS = """el => {
 
 # Resolves true once `quiet` ms have passed with no DOM mutation, false when `limit` ms ran out first.
 QUIET_JS = """([quiet, limit]) => new Promise(resolve => {
-  const start = Date.now(); let last = start;
-  const seen = new MutationObserver(() => { last = Date.now(); });
+  // Quiet is measured on the page's own clock: the time of the last mutation (performance.now() inside the observer) against now.
+  // Python-side polling or a throttled timer cannot make a busy page look quiet.
+  const start = performance.now(); let last = start;
+  const seen = new MutationObserver(() => { last = performance.now(); });
   seen.observe(document.documentElement, {subtree: true, childList: true, attributes: true, characterData: true});
   const tick = () => {
-    const now = Date.now();
+    seen.takeRecords().length && (last = performance.now());   // mutations queued but not yet delivered count as changes
+    const now = performance.now();
     if (now - last >= quiet) { seen.disconnect(); resolve(true); }
     else if (now - start >= limit) { seen.disconnect(); resolve(false); }
     else setTimeout(tick, 50);

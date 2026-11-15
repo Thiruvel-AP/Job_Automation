@@ -143,7 +143,7 @@ In `careerops doctor`, warn when:
 - Add `docs/scheduler.md` explaining a Windows Task Scheduler task that runs at 07:45 and 17:45:
 
   ```
-  wsl.exe -e bash -lc "cd /mnt/d/VS_Codes/DataScience/Projects/career-ops && scripts/discover.sh"
+  wsl.exe -e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"
   ```
 
 - Do not create the task yourself.

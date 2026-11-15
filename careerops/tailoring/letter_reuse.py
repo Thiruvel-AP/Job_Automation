@@ -9,6 +9,7 @@ it copies. The greeting, the sign-off, P1 (the hook), P6 (the honest gap) and P7
 from __future__ import annotations
 
 from .. import pathstore
+from . import attempts
 
 import json
 import re
@@ -78,7 +79,7 @@ def _outputs(root: Path, skip: set[str]) -> Iterable[Earlier]:
         if not folder.is_dir() or folder.name.endswith(STAGING_SUFFIXES) or folder.name in skip:
             continue
         try:
-            letter = pathstore.read_report(folder / "report.json").get("letter") or {}
+            letter = pathstore.read_report(attempts.current_dir(folder) / "report.json").get("letter") or {}
         except (OSError, ValueError, AttributeError):
             continue
         if letter.get("status") == "ok" and body_of(letter):

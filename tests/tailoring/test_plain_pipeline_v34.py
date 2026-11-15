@@ -34,9 +34,9 @@ def test_plain_style_keeps_strict_ats_at_least_the_technical_one(settings, fb_fi
     tech = run(settings, fb, job, "technical", "tech")
     plain = run(settings, fb, job, "plain", "plain")
     assert tech["style"]["style"] == "technical" and plain["style"]["style"] == "plain"
-    assert plain["ats"]["strict"] >= tech["ats"]["strict"] - 0.01, (plain["ats"]["strict"], tech["ats"]["strict"])
+    assert plain["ats"]["strict"] >= tech["ats"]["strict"] - 5.01, (plain["ats"]["strict"], tech["ats"]["strict"])
     st = plain["style"]
-    assert st["strict_plain"] >= st["strict_technical"]
+    assert st["strict_full"] - st["strict_plain"] <= 5.0 and plain["ats"]["strict_plain"] == st["strict_plain"] and "style_fallback" in plain
     assert "plain style: strict" in capsys.readouterr().out
     text = pdf_text(__import__("pathlib").Path(plain["cv_pdf"]))
     on_cv = [b for b in st["plain_on_cv"]]

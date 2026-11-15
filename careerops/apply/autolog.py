@@ -20,6 +20,7 @@ UNCONFIRMED = "submit_unconfirmed"       # clicked, no confirmation within 30 s:
 NOT_SUBMITTED = "not_submitted"          # --no-submit: filled and photographed, never clicked
 NEEDS_USER = "needs_user"                # a CAPTCHA, or a question with no answer: the user takes over
 DECLINED = "declined"                    # the user answered N at `Submit? [y/N]`
+ACCOUNT = "manual_apply_account_required"   # a sign-in page: nothing typed, browser closed, the person applies by hand (apply/route.py)
 ERROR = "error"                          # the page could not be driven
 CLICKED = (SUBMITTED, UNCONFIRMED)
 
