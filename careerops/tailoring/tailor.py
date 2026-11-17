@@ -654,6 +654,92 @@ def lead_best(ctx: dict, scores: dict[str, float], hk: hooks.Hook | None = None)
     return e["bullet_ids"][0]
 
 
+def _has_number(ctx: dict, bid: str, text: str) -> bool:
+    """v3.9.1: does the bullet carry a number or a measured `result`? (what the order inside a role and the page drop go by)"""
+    return bool(re.search(r"\d", text)) or bid in (ctx.get("results") or {})
+
+
+def order_in_role(ctx: dict, scores: dict[str, float], hk: hooks.Hook | None = None) -> None:
+    """v3.9.1: inside each entry the order is: the hook's proof bullet (when it is in that entry), then the bullets with a number or a `result` by
+    rank, then the bullets with none by rank. Ties keep their order. Only the order changes."""
+    for sec in ("experience", "projects"):
+        for e in ctx.get(sec) or []:
+            ids, texts = e["bullet_ids"], e["bullets"]
+            if len(ids) < 2:
+                continue
+
+            def key(k: int) -> tuple[int, float, int]:
+                bid = ids[k]
+                if hk is not None and bid == hk.proof_bullet_id:
+                    return (0, 0.0, k)
+                return (1 if _has_number(ctx, bid, texts[k]) else 2, -scores.get(bid, 0.0), k)
+
+            order = sorted(range(len(ids)), key=key)
+            e["bullet_ids"][:] = [ids[k] for k in order]
+            e["bullets"][:] = [texts[k] for k in order]
+
+
+def prune_zero_score(ctx: dict, scores: dict[str, float], protected: set[str]) -> list[str]:
+    """v3.9.1: a bullet that scores 0 for this ad is printed only when its entry would otherwise have fewer than two scoring bullets (then they stay as selected). The hook's proof bullet and `protected` ones stay. Experience only. Returns the ids taken off."""
+    gone: list[str] = []
+    for e in ctx.get("experience") or []:
+        ids = e["bullet_ids"]
+        zero = [i for i in ids if scores.get(i, 0.0) <= 0 and i not in protected]
+        drop = set(zero) if len(ids) - len(zero) >= 2 else set()       # fewer than two scored bullets: the zero ones stay, as selected
+        if drop:
+            gone.extend(i for i in ids if i in drop)
+            keep = [k for k, i in enumerate(ids) if i not in drop]
+            e["bullet_ids"][:] = [ids[k] for k in keep]
+            e["bullets"][:] = [e["bullets"][k] for k in keep]
+    return gone
+
+
+def zero_score_skip(ctx: dict, fb: dict, scores: dict[str, float]) -> set[str]:
+    """v3.9.1: the zero-score bullets the page fill must not add back: those of a role that already shows two bullets that score."""
+    out: set[str] = set()
+    shown = {e["id"]: e["bullet_ids"] for e in ctx.get("experience") or []}
+    for e in fb.get("experience") or []:
+        if sum(scores.get(i, 0.0) > 0 for i in shown.get(e["id"], [])) >= 2:
+            out |= {b["id"] for b in e["bullets"] if scores.get(b["id"], 0.0) <= 0}
+    return out
+
+
+def drop_for_pages(ctx: dict, scores: dict[str, float], protected: set[str]) -> str | None:
+    """v3.9.1: take one bullet off to win back a page: first the lowest-ranked bullet with no number and no `result`, then the lowest-ranked one
+    overall. Never a protected one (the hook's proof bullet) and never the last bullet of an entry. Returns the id, None when nothing may go."""
+    best = None
+    for sec in ("projects", "experience"):
+        for e in ctx.get(sec) or []:
+            if len(e["bullet_ids"]) < 2:
+                continue
+            for k, bid in enumerate(e["bullet_ids"]):
+                if bid in protected:
+                    continue
+                key = (1 if _has_number(ctx, bid, e["bullets"][k]) else 0, scores.get(bid, 0.0), -k)
+                if best is None or key < best[0]:
+                    best = (key, e, k)
+    if best is None:
+        return None
+    _, e, k = best
+    bid = e["bullet_ids"].pop(k)
+    e["bullets"].pop(k)
+    return bid
+
+
+def refit_pages(ctx: dict, scores: dict[str, float], protected: set[str], render: Callable[[], tuple[Path, int]], max_pages: int) -> tuple[Path, int, list[str]]:
+    """v3.9.1: render, and while the CV is over `max_pages` drop bullets (`drop_for_pages`) one at a time. Run after the ATS style fallback, which can
+    put a longer wording back after the page fit had finished. (pdf, pages, dropped ids); pages > max_pages when nothing more may go."""
+    pdf, pages = render()
+    dropped: list[str] = []
+    while pages > max_pages:
+        bid = drop_for_pages(ctx, scores, protected)
+        if bid is None:
+            break
+        dropped.append(bid)
+        pdf, pages = render()
+    return pdf, pages, dropped
+
+
 def reconcile_proof(fb: dict, sel: dict, hk: hooks.Hook, kws: list[Keyword] | None = None, jd: str = "") -> tuple[dict, hooks.Hook, list[str]]:
     """`sel` with the hook's proof bullet on it and no chosen bullet next to the one it replaces (`replaces:`), the hook (a copy), and notes.
     A bullet that replaces the proof bullet and says the hook's number, in the same entry, takes over as the proof (the one already chosen first, else
@@ -2087,6 +2173,10 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         rel = reqmap_mod.blend(relevance_scores(fb, ranking, jd), rm)          # what each bullet is worth to this ad (keywords + the requirements it is evidence of): leads the first role, ranks the shrink
         lead_best(ctx, rel, hk)
         if not one_page:
+            pruned0 = [] if not sc.get("skip_zero_score_bullets", True) else prune_zero_score(ctx, rel, {*([hk.proof_bullet_id] if hk else []), *keep_ids})
+            if pruned0:
+                rephrase_notes.append("selection: left off, they match nothing in the ad: " + ", ".join(pruned0))
+        if not one_page:
             ctx["section_order"] = list(sec_order)
             ctx["education_compact"] = list(edu_rows)
         ctx["linespread"] = sc["cv_linespread"]
@@ -2095,6 +2185,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
 
         def render_once() -> tuple[Path, int]:
             lead_best(ctx, rel, hk)                      # a bullet added by the fill never displaces the best one from the first place
+            order_in_role(ctx, rel, hk)                  # v3.9.1: proof bullet, then numbers / results, then the rest, inside every entry
             out = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)
             return out, page_count(out)
 
@@ -2118,7 +2209,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         order = (fill_order(fb_sel, ranking, sel, skills, jac, cap, jd, layout, extra_hits=req_hits) if fill_on else [])
 
         def fill_up(skip: set[str] | None = None) -> dict:
-            more = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"], skip=skip,
+            more = fill_page2(ctx, fb, order, accepted, rerender, sc["min_fill_page2"], skip=(skip or set()) | (zero_score_skip(ctx, fb, rel) if sc.get("skip_zero_score_bullets", True) else set()),
                               first=hk.proof_bullet_id if hk else None, max_projects=cap)
             if not more["reached"]:
                 tail = fill_tail(ctx, fb, rerender, sc["min_fill_page2"], sc["cv_linespread_max"])
@@ -2212,7 +2303,17 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
             report["analysis_warnings"].append(f"plain style: the saved plain version of {bid} is not used ({'; '.join(why)}); its original wording "
                                                "is on the CV. Delete its `plain:` line in fact_bank.yaml to draft a new one")
     style_rep.update(additional_experience=extra_roles, section_order=list(ctx.get("section_order") or []), section_order_reason=order_why)
-    pdf = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)     # re-render the chosen attempt as the final file
+    # re-render the chosen attempt as the final file. v3.9.1: the ATS style fallback may have put a longer wording back after the page fit ran, so
+    # the fit runs again here (lowest-ranked bullets with no number first, never the proof bullet nor an entry's last bullet)
+    def final_render() -> tuple[Path, int]:
+        order_in_role(ctx, rel, hk)
+        out = render_cv(ctx, out_dir, cv_name, one_page, sep, keep)
+        return out, page_count(out)
+
+    pdf, _pages_now, refit_dropped = refit_pages(ctx, rel, {*([hk.proof_bullet_id] if hk else []), *keep_ids}, final_render, 1 if one_page else max_pages)
+    if refit_dropped:
+        report["analysis_warnings"].append("layout: over the page limit after the ATS style fallback; left off to fit: " + ", ".join(refit_dropped))
+    report["pages_over"] = page_count(pdf) > (1 if one_page else max_pages)
     first_at = None if one_page else check_first_bullet(pdf)
     order_now = list(ctx.get("section_order") or [])
     edu_before = "education" in order_now and "experience" in order_now and order_now.index("education") < order_now.index("experience")

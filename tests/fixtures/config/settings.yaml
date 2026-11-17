@@ -328,6 +328,7 @@ scoring:
   preferred_weight: 1.0
   max_pages: 2                # two full pages by default (recruiters respond to a 2-page CV); the shrink loop runs only above this. `--one-page` forces 1 with the old template
   min_fill_page2: 0.96        # page 2 must be at least this full: its last text line within 2 lines (2 x 14pt of a 770pt text area) of the bottom margin (y of that line / text-area height, measured from the PDF). Fill order (Document rules): each role up to its maximum bullets, then projects (never more than 3), then the optional fact-bank sections (publications, languages, research_focus), then linespread (cv_linespread_max); nothing is invented, so a bank that runs out of experience bullets ends short and says so
+  skip_zero_score_bullets: false   # the fixture bank is a small synthetic one whose bullets mostly score 0: the fill tests need them (the rule has its own tests)
   cv_bullets:                 # bullets per experience entry on the two-page CV: [min, max] by greedy keyword gain, then more only to fill page 2
     most_recent: [4, 6]       # the first (newest) entry
     other: [3, 5]             # every other entry; an entry with fewer bullets in the fact bank just shows them all

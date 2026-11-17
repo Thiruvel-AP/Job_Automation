@@ -2563,3 +2563,10 @@ Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` 
 - **Not done**: the applied-through-LinkedIn record is local (SQLite); it is not pushed to the tracker Sheet (`tracker sync` reads `jobs` rows, and an application email creates none). Unverified until a live run: the real
   layout of LinkedIn's emails (the parser is written from the usual layout and the existing alert fixture, like `--gmail-alerts`); `data/samples/linkedin/` is where the real shapes will show.
 - Tests: `tests/discovery/test_gmail_label_v38.py` (40).
+
+## v3.9.1 — page re-fit, bullet order, zero-score bullets, skills label echo
+- After the ATS style fallback the final render runs the page fit again (`tailor.refit_pages`): over `scoring.max_pages`, bullets go one at a time — lowest-ranked with no number and no `result` first, then lowest rank overall; never the hook's proof bullet, never an entry's last bullet. Still over → `DOC CHECK: FAILED (PAGES ...)` (`doccheck.page_problems`), which blocks `[a]`.
+- Inside an entry (`tailor.order_in_role`): the hook's proof bullet, then bullets with a number or `result` by rank, then the rest by rank. Replaces the old fact-bank order.
+- A bullet scoring 0 for the ad is left off a role that already has two scoring bullets (`prune_zero_score`, and the page fill does not add it back). `scoring.skip_zero_score_bullets` (true; the tests' settings copy sets false for the small synthetic fixture bank).
+- Skills rows named with the ad's wording never list the label itself or its singular/plural (`reqmap.echoes_label`).
+Status: done. Tests: `tests/tailoring/test_v391_pages_order.py`.

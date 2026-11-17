@@ -8,6 +8,7 @@
 CV (the render context, the .tex and the PDF text of the final files):
   HOOK            the headline, profile sentence 1 and the first bullet of the hook's role are the same hook entry's, or, with no hook, the
                   role family's headline and profile line
+  PAGES           (v3.9.1) the CV fits scoring.max_pages
   PROFILE         100 to 150 words
   SKILLS          no skill twice (profile.py / skills.row_repeats); a verbatim family line with a repeat is reported, never rewritten
   PROJECTS        at most 3, each 1 to 3 bullets; a URL only for a project the bank does not mark `public: false`
@@ -108,6 +109,16 @@ def hook_problems(rep: Mapping[str, Any]) -> list[str]:
 def profile_problems(rep: Mapping[str, Any], settings) -> list[str]:
     """A2: 100 to 150 words (scoring.profile_words)."""
     return profile_mod.word_problems(str(rep["context"].get("profile") or ""), profile_mod.word_range(settings))
+
+
+def page_problems(rep: Mapping[str, Any], settings) -> list[str]:
+    """v3.9.1: the CV is over its page limit (the re-fit after the ATS style fallback had nothing left it may drop). Blocks `[a]`."""
+    pages = rep.get("cv_pages")
+    try:
+        limit = int(settings["scoring"]["max_pages"])
+    except (KeyError, TypeError, ValueError):
+        limit = 2
+    return [f"PAGES the CV prints on {pages} pages, the limit is {limit}"] if isinstance(pages, int) and pages > limit else []
 
 
 def skill_problems(rep: Mapping[str, Any]) -> list[str]:
@@ -325,6 +336,7 @@ def check(rep: Mapping[str, Any], settings, *, tex: str | None = None, cv_text: 
     the earlier letters (letter_reuse.earlier_letters) the body must not copy."""
     failures: list[str] = hook_problems(rep)
     if not rep.get("one_page"):
+        failures += page_problems(rep, settings)
         failures += profile_problems(rep, settings)
         failures += skill_problems(rep)
         failures += project_problems(rep, tex, settings)

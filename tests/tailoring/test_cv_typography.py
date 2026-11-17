@@ -273,16 +273,16 @@ def test_the_italic_list(run):
 
 
 # ---------------------------------------------------------------------------------------------------------------- selection
-def test_the_chosen_bullets_of_a_role_are_printed_in_fact_bank_order(run):
+def test_the_chosen_bullets_of_a_role_print_proof_first_then_numbers_then_the_rest(run):
+    """v3.9.1 (replaces the fact-bank order): the hook's proof bullet, then bullets with a number or a result, then the others."""
     rep, _, _ = run
-    fb = _bank()
-    pos = {b["id"]: n for sec in ("experience", "projects") for e in fb[sec] for n, b in enumerate(e["bullets"])}
-    proof = (rep["hook"] or {}).get("proof_bullet_id")                                      # the hook's proof bullet goes first in its role
-    for e in rep["context"]["experience"] + rep["context"]["projects"]:
-        ids = [i for i in e["bullet_ids"] if i != proof]
-        order = [pos[i] for i in ids]
-        assert order == sorted(order), (e.get("org") or e.get("name"), e["bullet_ids"])
+    ctx = rep["context"]
+    proof = (rep["hook"] or {}).get("proof_bullet_id")
+    for e in ctx["experience"] + ctx["projects"]:
         assert proof not in e["bullet_ids"] or e["bullet_ids"][0] == proof
+        rest = [(i, t) for i, t in zip(e["bullet_ids"], e["bullets"]) if i != proof]
+        has = [any(c.isdigit() for c in t) or i in (ctx.get("results") or {}) for i, t in rest]
+        assert has == sorted(has, reverse=True), (e.get("org") or e.get("name"), e["bullet_ids"])
 
 
 def test_the_report_has_the_top_ten_ranking_with_scores(run):

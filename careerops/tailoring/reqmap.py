@@ -420,6 +420,24 @@ def _skill_for(word: str, pool: list[tuple[str, set[str]]]) -> str | None:
     return next((item for item, ks in pool if keys & ks), None) if keys else None
 
 
+def _singular(word: str) -> str:
+    w = word.casefold()
+    if w.endswith("yses"):
+        return w[:-4] + "ysis"
+    if w.endswith("ies") and len(w) > 4:
+        return w[:-3] + "y"
+    return w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith(("ss", "sis")) else w
+
+
+def echoes_label(item: str, label: str) -> bool:
+    """v3.9.1: is `item` the row's own label (or its singular / plural form, any case, hyphens as spaces)? "machine learning concepts" under the
+    label "Machine learning concepts", "statistical analysis" under "Statistical analyses". Such an item says nothing the label does not."""
+    def norm(t: str) -> list[str]:
+        return [_singular(w) for w in re.findall(r"[a-z0-9+#]+", str(t).casefold())]
+
+    return bool(norm(item)) and norm(item) == norm(label)
+
+
 def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None, jd_rows: int = JD_ROWS, max_rows: int = MAX_SKILL_ROWS) -> dict[str, str] | None:
     """The CV's Skills rows built from the ad's requirements: up to `jd_rows` rows NAMED with a requirement's own words (the JD phrase, verbatim),
     each listing the SKILLS that back it (v3.7.1: the term, its alts and its aliases that the bank lists as a skill in `skills:` or the family's
@@ -436,9 +454,10 @@ def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None,
             continue
         # a row's items are skills the bank lists: the term itself and its aliases (not the alts of another requirement), each only when it IS one
         found = []
+        label = _phrase_label(r.term)
         for w in _members(r.term, r.alts, aliases):
             inb, elsewhere = find_evidence([w], bullets, others)
-            if (inb or elsewhere) and (item := _skill_for(w, pool)):
+            if (inb or elsewhere) and (item := _skill_for(w, pool)) and not echoes_label(item, label):
                 found.append(item)
         items: list[str] = []
         for it in dict.fromkeys(found):
@@ -447,7 +466,7 @@ def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None,
                 items.append(it)
                 seen |= keys
         if len(items) >= MIN_ROW_ITEMS:
-            rows[_phrase_label(r.term)] = items
+            rows[label] = items
         else:                                                   # not a row: the words stay free for a later requirement
             for it in items:
                 seen -= covers(it)
