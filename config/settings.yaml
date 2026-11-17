@@ -30,6 +30,7 @@ paths:
   discover: data/discover                 # `careerops discover`: boards/ (posting lists, 6 h), boards.json, first_seen.json, filtered_<date>.csv, manual_queue_overflow.csv, gmail_seen.json, runs.jsonl, health/<date>.csv, listed_only.csv
   aiapply_applied: data/aiapply_applied.csv   # optional export of the jobs AIApply applied to (company + title columns): read only, used to skip duplicates
   robots: data/robots                     # robots.txt rules per host, <host>.json, kept 24 h before a page is fetched (discovery/robots.py)
+  samples: data/samples                   # v3.8: sanitised sample emails per type (samples/linkedin/<type>.txt) for debugging the label parser; under data/, so git-ignored
   secrets: data/secrets                   # gitignored (data/): the Gmail OAuth client file and token (`discover --gmail-alerts`); never in git
   tmp: data/tmp                           # staging for archive copies; safe to delete while no command is running
   linkedin_diff: data/linkedin_diff.md    # `careerops import-linkedin`: every mismatch between the LinkedIn export and the fact bank
@@ -196,6 +197,13 @@ discover:
     senders: []                    # [] = the alert emails of every source in config/sources.yaml that lists sender domains; or restrict to the older built-in kinds, e.g. [linkedin, reed]
     query_days: 14
     max_messages: 60
+    # v3.8 (`discover --gmail-label`): Gmail labels read as a job source, by NAME (looked up with labels.list; a nested 'Jobs/LinkedIn' works). The emails carry
+    # only title, company, location and a LinkedIn link (never requested); the full ad comes from the employer's own board or is pasted with `add-jd`.
+    labels: ["LinkedIn"]
+    label_since: 30d               # how far back a label is read (the window of the first run; later runs only fetch messages not read before)
+    label_max_messages: 300        # most messages listed from one label in one run
+    label_title_match: 0.85        # token-set ratio at which a card's title is taken for a posting's title on the employer's board (same city or remote UK also needed)
+    label_dedupe_days: 14          # the same company + title seen again within this many days is one job
 
   # A job outside the UK is not dropped: it is written to the inbox with `Country:` and `Status: listed_only` headers so you can see the
   # market. `careerops live` will not tailor or apply to it unless applicant.yaml has a `visa.by_country.<country>` block for that country.

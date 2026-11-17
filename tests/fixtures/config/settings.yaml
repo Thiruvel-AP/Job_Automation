@@ -202,6 +202,13 @@ discover:
     senders: []                    # [] = the alert emails of every source in config/sources.yaml that lists sender domains; or restrict to the older built-in kinds, e.g. [linkedin, reed]
     query_days: 14
     max_messages: 60
+    # v3.8 (`discover --gmail-label`): Gmail labels read as a job source, by NAME (looked up with labels.list; a nested 'Jobs/LinkedIn' works). The emails carry
+    # only title, company, location and a LinkedIn link (never requested); the full ad comes from the employer's own board or is pasted with `add-jd`.
+    labels: ["LinkedIn"]
+    label_since: 30d               # how far back a label is read (the window of the first run; later runs only fetch messages not read before)
+    label_max_messages: 300        # most messages listed from one label in one run
+    label_title_match: 0.85        # token-set ratio at which a card's title is taken for a posting's title on the employer's board (same city or remote UK also needed)
+    label_dedupe_days: 14          # the same company + title seen again within this many days is one job
 
   # A job outside the UK is not dropped: it is written to the inbox with `Country:` and `Status: listed_only` headers so you can see the
   # market. `careerops live` will not tailor or apply to it unless applicant.yaml has a `visa.by_country.<country>` block for that country.

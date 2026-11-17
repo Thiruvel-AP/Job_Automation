@@ -14,6 +14,8 @@
   careerops sources check | list [--mock]
                                 health of every source in config/sources.yaml (method reachable, robots.txt, credentials, alerts
                                 in the last 7 days, postings) -> table + data/discover/health/<date>.csv; `list` prints the registry
+  careerops discover --gmail-label [NAME] [--since 7d]   v3.8: the emails of a Gmail label (LinkedIn), resolved via the employer's board; read only
+  careerops queue --source linkedin_email   the label cards that need their ad pasted (needs_jd), with their LinkedIn links
   careerops discover --gmail-auth | --report
                                 sign in to Google once (read mail, create drafts, edit the tracker Sheet; never sends) · counts per
                                 source, resolved vs the manual queue
@@ -295,7 +297,7 @@ def cmd_discover(args):
     --gmail-auth signs in to Google once (Gmail read, Gmail drafts, Sheets; never sends). With none of them it keeps its older job: the boards in sources: into the
     database, then triage (what `run` and cron call)."""
     # Alerts first: they are the fresh jobs, and a run takes at most discover.max_new_per_run new files; the boards (older ads) fill what is left.
-    sources_asked = [n for n in ("gmail_alerts", "reed", "adzuna", "ats", "jobbank") if getattr(args, n, False)]
+    sources_asked = [n for n in ("gmail_alerts", "gmail_label", "reed", "adzuna", "ats", "jobbank") if getattr(args, n, False)]
     if getattr(args, "report", False) or getattr(args, "gmail_auth", False) or sources_asked:
         return _discover_inbox(args, sources_asked)
     from .discovery import discover as disc
@@ -405,7 +407,8 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     d = disc.Discover(s, db, fetcher, fb=load_yaml(s.path("fact_bank")), dry_run=getattr(args, "dry_run", False),
                       limit=getattr(args, "limit", None), regions=sel)
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
-             "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank)}
+             "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank),
+             "gmail_label": ("gmail_label", lambda: d.from_gmail_label(None if args.gmail_label == "*" else [args.gmail_label], getattr(args, "since", None)))}
     d.run.asked = list(sources_asked)                                           # `shortlist` says when the alerts were last read from this
     for name in sources_asked:
         label, fn = steps[name]
@@ -424,6 +427,8 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     for n in d.run.notes:
         print(f"  note: {n}")
     d.finish()
+    if "gmail_label" in sources_asked:
+        print("\n" + "\n".join(_label_report(d)))
     if any(c.get("resolved") or c.get("unresolved") for c in d.run.by_source.values()):
         print("\n".join(disc.resolution_lines(d.run.by_source, "Alerts resolved to the employer's page (per source):")))
         print("\n".join(disc.step_lines(d.run.sources, "Alerts resolved by step:")))
@@ -465,6 +470,18 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
     if d.run.failures:                                  # a scheduled run (scripts/discover.sh) must show as failed
         print("\nFAILED: " + "; ".join(d.run.failures[:5]), file=sys.stderr)
         sys.exit(1)
+
+
+def _label_report(d) -> list[str]:
+    """The Gmail label table (v3.8): received | title | company | location | sponsor | result, newest first, then the counts per type, result and age tier."""
+    from .discovery import freshness
+    from .discovery import linkedin_label as ll
+
+    tiers = [0, 0, 0, 0]
+    for r in d.label_rows:
+        tiers[freshness.tier({"posted_at": r["received"] or None, "posted_at_source": freshness.GMAIL_LABEL if r["received"] else None}, d.today)] += 1
+    return ["Gmail label cards (the emails carry title, company, location and a LinkedIn link only; the ad comes from the employer's board or `add-jd`):",
+            *ll.format_report(d.label_rows, dict(d.label_kinds), d.label_unparsed, tiers)]
 
 
 def _print_health(s, reg, *, run=None, fetcher=None, cache=None, save: bool = True) -> list:
@@ -2059,8 +2076,32 @@ def _queue_states(s, db, kind: str | None = None, everything: bool = False) -> l
 def cmd_queue(args):
     """`careerops queue [--json] [--kind K] [--all]`: the decisions waiting for you (or Claude). Writes nothing but missing rows of the queue."""
     s, db = _ctx(args)
+    if getattr(args, "source", None):
+        return _queue_source(s, db, args)
     sts = _queue_states(s, db, args.kind, args.all)
     print(json.dumps(dq.json_rows(sts), indent=1, ensure_ascii=False) if args.json else dq.table(sts))
+
+
+def _queue_source(s, db, args) -> None:
+    """`queue --source linkedin_email`: the Gmail label cards that wait for their ad (needs_jd), newest first, each with the LinkedIn link to open in YOUR
+    browser and the add-jd line to paste the ad with. A card whose job is known since (added by hand, in the inbox) is not listed."""
+    from .discovery import discover as disc
+    from .discovery import linkedin_label as ll
+
+    known = disc.load_known(s, db)
+    rows = [r for r in ll.needs_jd_cards(db) if not known.where(r["company"], r["title"], r["location"] or "")]
+    if args.json:
+        print(json.dumps([{k: r[k] for k in ("received_at", "company", "title", "location", "link", "linkedin_job_id", "easy_apply")} for r in rows],
+                         indent=1, ensure_ascii=False))
+        return
+    if not rows:
+        print("no Gmail label cards waiting for their ad")
+        return
+    print(f"{len(rows)} card(s) from {ll.SOURCE} waiting for their ad (open the link in your own browser, copy the ad, then paste it with add-jd):")
+    for r in rows:
+        print(f"\n{(r['received_at'] or '')[:10]}  {r['title']} | {r['company']} | {r['location'] or '-'}" + ("  [Easy Apply]" if r["easy_apply"] else ""))
+        print(f"  {r['link']}")
+        print(f"  careerops add-jd --company {json.dumps(r['company'])} --title {json.dumps(r['title'])} --url {json.dumps(r['link'])} --file AD.txt")
 
 
 def _row_job(s, db, row):
@@ -2293,6 +2334,7 @@ def main(argv=None):
     qu.add_argument("--json", action="store_true")
     qu.add_argument("--kind", choices=[dq.REVIEW, dq.JOB, dq.HOOK])
     qu.add_argument("--all", action="store_true", help="also the rows already decided")
+    qu.add_argument("--source", choices=["linkedin_email"], help="v3.8: list the Gmail label cards that need their ad pasted (needs_jd) instead of the decision queue")
     qu.add_argument("--mock", action="store_true", help="the isolated data/mock queue")
     qu.set_defaults(fn=cmd_queue)
     sh = sub.add_parser("show", help="v3.5a: everything needed to decide one queue row, as JSON (the ad is wrapped as untrusted_jd); read only")
@@ -2324,6 +2366,10 @@ def main(argv=None):
     dc.add_argument("--adzuna", action="store_true", help="the Adzuna API (snippets only: resolved via the employer's board)")
     dc.add_argument("--gmail-alerts", dest="gmail_alerts", action="store_true", help="LinkedIn / CV-Library / Indeed / Reed alert "
                     "emails through the read-only Gmail API; unresolved ones go to data/jds/manual_queue.csv")
+    dc.add_argument("--gmail-label", dest="gmail_label", nargs="?", const="*", metavar="NAME",
+                    help="v3.8: the emails of a Gmail label (every label of discover.gmail.labels without NAME; LinkedIn by default), read by label id, read only: "
+                         "job cards -> the employer's own board (resolved) or the manual queue (needs_jd); 'application sent' emails -> applied through LinkedIn")
+    dc.add_argument("--since", metavar="AGE", help="with --gmail-label: how far back to read, e.g. 7d, 12h, 2w (default discover.gmail.label_since, 30d)")
     dc.add_argument("--jobbank", action="store_true", help="Canada's Job Bank open-data CSV: matching rows are listed in "
                     "data/discover/listed_only.csv (the file has no employer or ad text)")
     dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Google once: read mail, create drafts, edit the tracker Sheet; never sends (opens your browser)")

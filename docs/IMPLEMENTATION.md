@@ -2545,3 +2545,21 @@ Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` 
   changes): `security_clearance_residency`, `years_experience_min_5`. A match moves the ad to `jds_done/skipped_knockout/` (reason note, decision log SKIP) before any model call and prints
   the quoted sentence; a dry run only names it; `unskip --shortlist` brings it back. Also checks a file named with `--url`.
 - Tests: `tests/tailoring/test_fixes_v371.py`, `tests/apply/test_jd_knockout.py`; `test_oct18_round.py` no longer expects the 80 % rule.
+
+### v3.8 (17 Nov 2026) — the Gmail label "LinkedIn" as a job source — **done offline** (hand-made emails, fake Gmail, no real mail or settings); the live `discover --gmail-label` run is yours
+- **What was already there** (checked first): `discovery/gmail.py` already parsed LinkedIn alert emails, found by SENDER domain through a Gmail `q=` search (`discover --gmail-alerts`, one parser
+  `gmail.parse_alert`, `Discover.from_gmail`, message ids kept in `data/discover/gmail_seen.json`). It was extended, not duplicated: `parse_alert` now also returns job id, work type, salary and the Easy
+  Apply marker, and `job_link` reads `currentJobId=<id>`. New: reading by LABEL, the email types, the applied-through-LinkedIn memory, the report.
+- **Limit**: the emails carry the title, company, location and a LinkedIn link only, never the ad. The ad comes from the employer's own board or from you (`add-jd`). No linkedin.com address is ever requested
+  (a test patches every HTTP entry point and runs the whole path).
+- `settings.yaml discover.gmail.labels` (list), `label_since` 30d, `label_max_messages`, `label_title_match` 0.85, `label_dedupe_days` 14; `paths.samples` (default `data/samples`). The label is looked up by name with
+  `users.labels.list` and its messages listed with `labelIds=[id]` (+ `after:` for the window). **Scope: unchanged** (`gmail.readonly`; the existing token works, no `--gmail-auth` re-run).
+- `discovery/linkedin_label.py` (new): `classify` (job_alert | job_recommendation | application_sent | application_update | other, by sender and subject), `parse_application`, `token_set_ratio`, `Store`,
+  `sanitise` / `save_sample`, `format_report`. `Discover.from_gmail_label` / `label_card` (discover.py): application emails first, then cards oldest first; order per card: applied, duplicate, role / place /
+  knock-out (title and place only: a knock-out needs a quoted sentence of an ad, so it bites on the full ad later), Easy Apply -> `needs_jd`, board resolution (`resolve_link(title_floor=0.85)`).
+- DB (additive): `gmail_label_messages`, `linkedin_cards` (source `linkedin_email`, `linkedin_job_id`, result), `linkedin_applied`. `Known` loads the latter as "already applied (LinkedIn)". `freshness.GMAIL_LABEL`
+  = `gmail_label` (trusted like `gmail.received`: an upper bound). Inbox ads found this way carry `Found via: linkedin_email` and `LinkedIn job id:`.
+- CLI: `discover --gmail-label [NAME] [--since 7d]`, `queue --source linkedin_email [--json]`; `scripts/discover.sh` and `docs/scheduler.md` include `--gmail-label`; `doctor` checks each label exists (only when signed in).
+- **Not done**: the applied-through-LinkedIn record is local (SQLite); it is not pushed to the tracker Sheet (`tracker sync` reads `jobs` rows, and an application email creates none). Unverified until a live run: the real
+  layout of LinkedIn's emails (the parser is written from the usual layout and the existing alert fixture, like `--gmail-alerts`); `data/samples/linkedin/` is where the real shapes will show.
+- Tests: `tests/discovery/test_gmail_label_v38.py` (40).

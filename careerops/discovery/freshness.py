@@ -31,6 +31,7 @@ TIER_LIMITS_H = (24.0, 72.0, 168.0)           # upper bounds in hours of tiers 0
 TIER_NAMES = ("<= 24 h", "<= 72 h", "<= 7 d", "older")
 FIRST_SEEN = "first_seen"
 GMAIL = "gmail.received"
+GMAIL_LABEL = "gmail_label"            # v3.8: the arrival of an email of a watched Gmail label (discover --gmail-label); an upper bound like GMAIL
 # the source label stored in `posted_at_source` -> where in the source's answer the time is
 SOURCES = {"greenhouse.first_published": "Greenhouse first_published", "lever.createdAt": "Lever createdAt",
            "ashby.publishedAt": "Ashby publishedAt", "reed.date": "Reed date", "adzuna.created": "Adzuna created",
@@ -38,7 +39,7 @@ SOURCES = {"greenhouse.first_published": "Greenhouse first_published", "lever.cr
            "workable.published_on": "Workable published_on", "smartrecruiters.releasedDate": "SmartRecruiters releasedDate",
            "teamtailor.pubDate": "Teamtailor pubDate", "recruitee.published_at": "Recruitee published_at",
            "personio.createdAt": "Personio createdAt", "eploy.datePosted": "Eploy datePosted (JSON-LD)",
-           GMAIL: "alert email received (an upper bound)"}
+           GMAIL: "alert email received (an upper bound)", GMAIL_LABEL: "labelled email received (an upper bound)"}
 TRUSTED = frozenset(SOURCES)
 _ISO = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$")
 

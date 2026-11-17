@@ -2,7 +2,7 @@
 # Twice-daily discovery (Windows Task Scheduler at 07:45 and 17:45, see docs/scheduler.md). It only FINDS jobs: it writes JD files to
 # data/jds/inbox/ and the tier counts to its log. It never tailors, never opens a form and never applies: you run `careerops live` yourself.
 #
-#   careerops discover --ats --reed --adzuna --gmail-alerts --report
+#   careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report
 #
 # Everything it prints goes to data/logs/discover_<YYYY-MM-DD>.log (appended: both runs of a day share one file) and to the terminal.
 # The exit code is the command's: non-zero when a source failed (a Gmail sign-in that has lapsed, a board that errored) or the command
@@ -21,7 +21,7 @@ LOG="$LOG_DIR/discover_$(date +%F).log"
 
 {
   echo "== $(date -Is) discover.sh start"
-  careerops discover --ats --reed --adzuna --gmail-alerts --report
+  careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report
 } 2>&1 | tee -a "$LOG"
 status=${PIPESTATUS[0]}
 

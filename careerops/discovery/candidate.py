@@ -40,6 +40,7 @@ class Candidate:
     open_listing: bool = False         # still listed on the employer's own board (Greenhouse / Lever / Ashby) when it was read
     apply_url: str = ""                # where to apply: the employer's page for a posting read off its board ("" = the url)
     apply_kind: str = ""               # greenhouse | lever | ashby | workday | employer_other | aggregator_only (applykind.py)
+    linkedin_job_id: str = ""          # v3.8: the LinkedIn job number of the email card this job was found through (written as a `LinkedIn job id:` header)
 
     def ad_id(self) -> str:
         return self.ext_id or hashlib.sha1(self.url.encode()).hexdigest()[:10]
@@ -53,7 +54,8 @@ class Candidate:
                   source=self.source, ad_id=self.ad_id(), salary=self.salary, agency=self.agency,
                   posted=posted if freshness.is_iso(posted) else "", posted_source=self.posted_source if freshness.is_iso(posted) else "",
                   country=self.country if self.listed_only else "", listed_only=self.listed_only,
-                  first_seen=self.first_seen, open_listing=self.open_listing, apply_url=self.apply_url, apply_kind=self.apply_kind)
+                  first_seen=self.first_seen, open_listing=self.open_listing, apply_url=self.apply_url, apply_kind=self.apply_kind,
+                  linkedin_job_id=self.linkedin_job_id)
 
 
 def norm_title(title: str) -> str:

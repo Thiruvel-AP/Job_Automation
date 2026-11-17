@@ -206,10 +206,12 @@ careerops sponsors                 # gov.uk register: download only if its link 
 careerops discover                 # pull + triage; skipped jobs keep their reason
 careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
 careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
+careerops discover --gmail-label [NAME] [--since 7d]   # v3.8: the emails of a Gmail label (default: every label of discover.gmail.labels, "LinkedIn"), read only; prints one table (received | title | company | location | sponsor | result)
+careerops queue --source linkedin_email   # v3.8: the label cards that need their ad pasted (needs_jd), each with its LinkedIn link to open in your own browser, then `add-jd`
 careerops discover --jobbank       # Canada's Job Bank open-data CSV: matching rows are listed in data/discover/listed_only.csv
 careerops discover --report        # counts per source, resolved vs the manual queue, the freshness tiers; then the inbox's liveness (open / closed / uncertain: one request a second per host, answers kept 6 h) and its repost and evergreen? counts
 careerops discover --report --no-liveness   # the same without fetching any ad
-scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
+scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --gmail-label --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
 careerops search-plan              # v3.1 agent search: the queries to run (at most 20; offline), saved to data/search/plan-<date>.json, with the yield table
@@ -401,6 +403,21 @@ finds and ranks without writing, and every run is listed best priority first.
   result is a **link**: it is looked for on the employer's own board (a known board, else the company's name is turned into up to four
   board tokens, each asked of Greenhouse, Lever and Ashby, answers cached 30 days); anything else goes to the manual queue. Adzuna's own
   redirect links are never followed.
+- **`--gmail-label [NAME] [--since 7d]`** (v3.8) reads the emails of a Gmail label instead of searching by sender: a filter of yours puts every LinkedIn job email into the
+  label `LinkedIn` (`discover.gmail.labels` in `settings.yaml`, a list; a nested `Jobs/LinkedIn` works). The label is looked up **by name** (`labels.list`) and its messages are
+  listed **by label id** (never a `q="label:..."` string). It needs only the existing `gmail.readonly` scope (no re-run of `--gmail-auth`); nothing is labelled, archived,
+  marked read or deleted. Each message is read once (SQLite `gmail_label_messages`); `--since` (default 30d) is the window. Each email is sorted by sender and subject:
+  `job_alert` and `job_recommendation` have their cards parsed (title, company, location, work type, salary, Easy Apply, LinkedIn job id); `application_sent` ("Your application
+  was sent to X") is recorded as **applied through LinkedIn** (table `linkedin_applied`: company, title, date; no job is created) so the pipeline never applies to it again and a
+  later card for it says `already applied (LinkedIn)`; `application_update` ("X viewed your application", "... was not selected") only updates that status; anything else
+  (messages, InMail, newsletters) is counted and logged, never parsed as jobs. **The emails carry only the title, company, location and a LinkedIn link, not the job ad, and the
+  link is stored as text and never requested.** Per new card: duplicate (job id, then company + title within 14 days, then any job already known) -> role / place / knock-out
+  filters on the title and place alone -> **Easy Apply cards are always `needs_jd`** (that route cannot be automated) -> the employer's own Greenhouse / Lever / Ashby /
+  Workable board (the company from the companies table, else the slug probe with verification; a posting whose title matches at a token-set ratio of 0.85 or more,
+  same city or remote UK; `discover.gmail.label_title_match`) -> the full ad from that board goes to the inbox as `resolved: greenhouse/<slug>` with `Found via: linkedin_email` and
+  `LinkedIn job id:` headers and `posted_at_source = gmail_label`; no match -> `needs_jd`: `careerops queue --source linkedin_email` lists them with their links, you open one in
+  your own browser and paste the ad with `careerops add-jd`. `careerops doctor` prints `[!!] Gmail label 'LinkedIn' not found` (and the labels that exist) when the label is missing.
+  A sanitised sample of each email type (your name, addresses and phone replaced, link tokens cut) is kept in `data/samples/linkedin/` (git-ignored) for debugging the parser.
 - **`--gmail-alerts`** reads LinkedIn, CV-Library, Indeed and Reed job-alert emails with the read-only Gmail API. Per job it extracts
   title, company and link. **linkedin.com, Indeed, CV-Library and Workday pages (`*.myworkdayjobs.com`, `*.myworkday.com`) are never
   fetched**, to resolve an alert or for anything else in discover (only the `/wday/cxs/` list of a Workday site, from `sources.workday` or an alert's link, is read): a link that

@@ -1,4 +1,4 @@
-"""The twice-daily discovery (scripts/discover.sh, docs/scheduler.md): `careerops discover --ats --reed --adzuna --gmail-alerts --report`
+"""The twice-daily discovery (scripts/discover.sh, docs/scheduler.md): `careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report`
 runs the sources and THEN prints the report (tier counts included); the command exits 1 when a source failed (a lapsed Gmail sign-in);
 the script logs to data/logs/discover_<date>.log and passes the exit code on. It only discovers: nothing is tailored or applied."""
 import os
@@ -18,7 +18,7 @@ from netfake import Net
 from test_discover import ACME, cfg, cmd, gh_net, inbox_files  # noqa: F401  (fixtures)
 
 SCRIPT = ROOT / "scripts" / "discover.sh"
-COMMAND = "careerops discover --ats --reed --adzuna --gmail-alerts --report"
+COMMAND = "careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report"
 
 
 def test_report_with_a_source_flag_runs_the_source_first_and_then_prints_the_report(cmd, cfg, capsys):
@@ -91,7 +91,7 @@ def test_the_script_runs_exactly_the_discovery_command_and_nothing_else():
 def test_the_script_logs_to_a_dated_file_and_exits_zero_on_success(repo):
     env = fake_careerops(repo.parent / "bin", 'echo "args: $@"; echo "found 3"; exit 0')
     r = run_script(repo, env)
-    assert r.returncode == 0 and "args: discover --ats --reed --adzuna --gmail-alerts --report" in r.stdout
+    assert r.returncode == 0 and "args: discover --ats --reed --adzuna --gmail-alerts --gmail-label --report" in r.stdout
     (log,) = (repo / "data" / "logs").glob("discover_*.log")
     import re
     assert re.fullmatch(r"discover_\d{4}-\d{2}-\d{2}\.log", log.name)

@@ -3,7 +3,7 @@
 `scripts/discover.sh` finds jobs; it does nothing else. It runs
 
 ```
-careerops discover --ats --reed --adzuna --gmail-alerts --report
+careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report
 ```
 
 which reads the Greenhouse / Lever / Ashby boards, Reed, Adzuna and your Gmail job alerts, writes each new ad that passes the role and

@@ -558,6 +558,32 @@ def reminder_checks(settings, today: date | None = None, now: datetime | None = 
     return out
 
 
+def gmail_label_checks(settings, ping: bool = True, fetcher=None) -> list[tuple[str, object, str]]:
+    """v3.8: every label of discover.gmail.labels exists in the mailbox. One read-only call (labels.list), made only when you are signed in to Gmail
+    and `ping` is on; a mailbox that cannot be reached is a warning, a missing label is `[!!] Gmail label 'X' not found` with the labels that exist."""
+    from .discovery import gmail
+    from .discovery.http import Blocked, FetchError, Fetcher
+    from .discovery.robots import RobotsCache
+
+    names = [str(n) for n in ((settings["discover"].get("gmail") or {}).get("labels") or []) if str(n).strip()]
+    if not names or not ping or gmail._read_token(settings) is None:
+        return []
+    try:
+        token = gmail.access_token(settings)
+        existing = gmail.list_labels(fetcher or Fetcher(RobotsCache(settings.path("robots"))), token)
+    except (gmail.GmailAuthError, FetchError, Blocked) as e:
+        return [("Gmail labels could not be checked", WARN, str(e))]
+    out: list[tuple[str, object, str]] = []
+    for n in names:
+        if gmail.find_label(existing, n) is None:
+            out.append((f"Gmail label '{n}' not found", False,
+                        "existing labels: " + (", ".join(sorted(x["name"] for x in existing)) or "none")
+                        + "; fix discover.gmail.labels in config/settings.yaml (a nested label is written 'Jobs/LinkedIn')"))
+        else:
+            out.append((f"Gmail label '{n}'", True, ""))
+    return out
+
+
 def provider_checks(settings) -> list[tuple[str, object, str]]:
     """The v2.6 employer boards (discovery/more_ats.py). Offline; warnings only: the settings these providers read, the sources.yaml entries not there yet (the lines
     to paste are printed; this tool never edits that file) and any enabled VC board that this tool refuses by rule (robots.txt, a session cookie)."""
@@ -671,6 +697,7 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += ats_structure_checks(settings)
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
+    checks += gmail_label_checks(settings, ping)
     checks += region_size_checks(settings)
     checks += provider_checks(settings)
     checks += careers_checks(settings)

@@ -104,6 +104,7 @@ class Ad:
     open_listing: bool = False         # written as `Listed: yes`: the job is on the employer's own board (R never falls under the floor)
     apply_url: str = ""                # written as `Apply URL:` when it is not the `URL:` itself
     apply_kind: str = ""               # written as `Apply kind:` (discovery/applykind.py)
+    linkedin_job_id: str = ""          # v3.8: written as `LinkedIn job id:` (with `Found via: linkedin_email`) for a job found through a Gmail label card
 
 
 # ------------------------------------------------------------------ network (tests replace _get / _sleep / _clock)
@@ -568,6 +569,8 @@ def render(ad: Ad) -> str:
         head.append("Listed: yes")
     if ad.agency:
         head.append("Agency: yes")
+    if ad.linkedin_job_id:
+        head += ["Found via: linkedin_email", f"LinkedIn job id: {one_line(ad.linkedin_job_id)}"]
     return "\n".join(head) + "\n\n" + ad.text.strip() + "\n"
 
 

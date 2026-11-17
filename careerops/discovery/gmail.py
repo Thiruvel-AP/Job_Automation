@@ -244,6 +244,38 @@ def list_message_ids(fetcher: Fetcher, token: str, query: str, limit: int) -> li
     return ids[:limit]
 
 
+def list_labels(fetcher: Fetcher, token: str) -> list[dict]:
+    """Every label of the mailbox ({id, name, type}): `users.labels.list`, read-only (gmail.readonly covers it)."""
+    data = fetcher.json(f"{API}/labels", headers={"Authorization": f"Bearer {token}"}, robots=False, what="Gmail label list") or {}
+    return [x for x in data.get("labels", []) if isinstance(x, dict) and x.get("id") and x.get("name")]
+
+
+def find_label(labels: list[dict], name: str) -> dict | None:
+    """The label called `name`: the whole name as Gmail stores it ('Jobs/LinkedIn' is one nested label's name), compared without case and
+    without stray spaces around the '/' parts. None when there is none."""
+    def norm(n: str) -> str:
+        return "/".join(part.strip() for part in str(n).split("/")).casefold()
+    want = norm(name)
+    return next((x for x in labels if norm(x["name"]) == want), None)
+
+
+def list_label_message_ids(fetcher: Fetcher, token: str, label_id: str, limit: int, after: int | None = None) -> list[str]:
+    """Message ids carrying one label, newest first: `labelIds=<id>` (never a `q="label:..."` string: names with spaces or slashes break it).
+    `after` (epoch seconds) limits the window with Gmail's own `after:` time term; ids only, nothing is read or changed."""
+    ids: list[str] = []
+    page = None
+    while len(ids) < limit:
+        params = {"labelIds": [label_id], "maxResults": min(100, limit - len(ids)), **({"q": f"after:{int(after)}"} if after else {}),
+                  **({"pageToken": page} if page else {})}
+        data = fetcher.json(f"{API}/messages", params=params, headers={"Authorization": f"Bearer {token}"}, robots=False,
+                            what="Gmail label message list") or {}
+        ids += [m["id"] for m in data.get("messages", [])]
+        page = data.get("nextPageToken")
+        if not page:
+            break
+    return ids[:limit]
+
+
 def get_message(fetcher: Fetcher, token: str, mid: str) -> dict:
     return fetcher.json(f"{API}/messages/{mid}", params={"format": "full"}, headers={"Authorization": f"Bearer {token}"},
                         robots=False, what="Gmail message") or {}
@@ -310,6 +342,10 @@ class AlertItem:
     location: str
     link: str                  # canonical link; for linkedin / indeed a pointer only, never fetched
     message_id: str = ""
+    job_id: str = ""           # linkedin: the number of /jobs/view/<id> (or currentJobId=<id>) in the link
+    work_type: str = ""        # remote | hybrid | on-site, when the card shows it
+    salary: str = ""           # the card's salary line, when it shows one
+    easy_apply: bool = False   # the card carries LinkedIn's "Easy Apply" marker
 
 
 JOB_LINK = {
@@ -340,6 +376,10 @@ def job_link(kind: str, href: str) -> str | None:
     m = re.search(path_rx, u.path)
     if m:
         return template.format(next(g for g in m.groups() if g))
+    if kind == "linkedin":
+        cj = (parse_qs(u.query).get("currentJobId") or [""])[0]
+        if re.fullmatch(r"\d{6,}", cj):
+            return template.format(cj)
     if kind == "cvlibrary" and (u.hostname or "").lower() == CV_TRACKING_HOST and u.path.startswith(CV_TRACKING_PATH):
         return f"{u.scheme}://{u.netloc}{u.path}"
     return None
@@ -450,5 +490,23 @@ def parse_alert(kind: str, html: str, text: str = "", message_id: str = "", link
         if kind == "cvlibrary" and is_cv_tracking(link) and not (company and place):
             continue                       # every link of the mail is a tracker link: only one followed by a company and a place is a job
         seen.add(link)
-        out.append(AlertItem(kind, title, company, place, link, message_id))
+        extra_end = next((jobs[m][0] for m in range(n + 1, len(jobs)) if jobs[m][1] != link), len(items))
+        out.append(AlertItem(kind, title, company, place, link, message_id, **_card_extras(kind, link, place, items, i, extra_end, jobs)))
     return out
+
+
+WORK_TYPE = re.compile(r"\b(remote|hybrid|on[- ]?site)\b", re.I)
+EASY_APPLY = re.compile(r"\beasy apply\b", re.I)
+
+
+def _card_extras(kind: str, link: str, place: str, items: list[tuple], i: int, end: int, jobs: list[tuple]) -> dict:
+    """What a card shows besides title, company and place: its job id (linkedin), work type, salary line and the Easy Apply marker. Read from the
+    pieces between this card's title and the next card of ANOTHER link (a card's own 'View job' / 'Easy Apply' anchors repeat its link)."""
+    texts = [it[1] if it[0] == "t" else it[2] for it in items[i + 1:end]]
+    same_link = [items[j][2] for j, lk in jobs if lk == link and j != i]            # the card's own other anchors: "Easy Apply", "View job"
+    pool = [*texts, *same_link]
+    wt = next((WORK_TYPE.search(x) for x in [place, *pool] if WORK_TYPE.search(x or "")), None)
+    work = re.sub(r"on[- ]?site", "on-site", wt.group(1).lower()) if wt else ""
+    salary = next((x for x in texts if SALARY.search(x) and len(x) <= 80), "")
+    job_id = (re.search(r"(\d{6,})$", urlparse(link).path) or re.search(r"(\d{6,})", link) or [None, ""])[1] if kind == "linkedin" else ""
+    return {"job_id": job_id or "", "work_type": work, "salary": salary, "easy_apply": any(EASY_APPLY.search(x) for x in pool)}

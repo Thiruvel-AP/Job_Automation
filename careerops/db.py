@@ -129,6 +129,35 @@ CREATE TABLE IF NOT EXISTS triage_scores (
     factors TEXT,                     -- JSON {"A":..,"E":..,"V":..,"L":..,"Fr":..,"P":..}
     scored_on TEXT
 );
+
+-- v3.8: the Gmail label source (discovery/linkedin_label.py). Read-only on Gmail: these tables are the only thing recorded.
+-- Every message of a watched label that was read: its id is never fetched again.
+CREATE TABLE IF NOT EXISTS gmail_label_messages (
+    message_id TEXT PRIMARY KEY,
+    label TEXT, kind TEXT,            -- job_alert | job_recommendation | application_sent | application_update | other
+    received_at TEXT, subject TEXT, processed_at TEXT
+);
+-- One row per job card read from such an email (source is always linkedin_email); `result` is what became of it:
+-- resolved:<ats>/<slug> | needs_jd | duplicate of <id> | filtered:<reason> | already applied (LinkedIn)
+CREATE TABLE IF NOT EXISTS linkedin_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT NOT NULL DEFAULT 'linkedin_email',
+    linkedin_job_id TEXT,
+    company TEXT, title TEXT, location TEXT, work_type TEXT, salary TEXT, easy_apply INTEGER DEFAULT 0,
+    link TEXT,                        -- text only: never requested
+    key TEXT,                         -- normalised company|title
+    message_id TEXT, received_at TEXT, result TEXT, job_file TEXT, created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_linkedin_cards_job ON linkedin_cards(linkedin_job_id);
+CREATE INDEX IF NOT EXISTS ix_linkedin_cards_key ON linkedin_cards(key);
+-- Jobs applied to through LinkedIn ("Your application was sent to ..."): no job row, only what stops the pipeline applying again.
+CREATE TABLE IF NOT EXISTS linkedin_applied (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company TEXT NOT NULL, title TEXT, key TEXT, linkedin_job_id TEXT,
+    applied_at TEXT, status TEXT DEFAULT 'applied',     -- applied | viewed | rejected | other
+    channel TEXT DEFAULT 'LinkedIn', message_id TEXT, updated_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_linkedin_applied_key ON linkedin_applied(key);
 """
 
 # Additive columns for databases created before they existed: (table, column, type). Never drop or rename.

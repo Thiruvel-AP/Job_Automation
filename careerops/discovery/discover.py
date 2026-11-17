@@ -68,7 +68,7 @@ from . import candidate as cand
 from ..apply import decided as decided_mod
 from ..apply import listing_keys as LK
 from . import boards as boards_mod
-from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, manual, more_ats, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
+from . import countries, firstseen, freshness, gates, gmail, intake, jobbank, linkedin_label as ll, manual, more_ats, priority, reed, registry as registry_mod, seeds as seeds_mod, workcountry
 from . import region as region_mod
 from . import workday as workday_mod
 from . import careers as careers_mod
@@ -300,6 +300,8 @@ def load_known(settings, db: DB) -> Known:
     for company, role in archive_pairs(settings.archive_roots()):
         k.add(company, role, "", "already applied (application archive)")
     add_aiapply(settings, k)
+    for company, title in ll.applied_pairs(db):                      # v3.8: "Your application was sent to ..." emails of the LinkedIn label
+        k.add(company, title, "", ll.APPLIED)
     return k
 
 
@@ -600,11 +602,13 @@ class BoardLookup:
                     return False
         return True
 
-    def find(self, company: str, title: str, location: str = "") -> tuple[ats_mod.Board, ats_mod.Posting] | None:
+    def find(self, company: str, title: str, location: str = "", token_set: float | None = None
+             ) -> tuple[ats_mod.Board, ats_mod.Posting] | None:
         """The open posting on the company's board whose title is the title (same normalised title, or >= discover.title_match similar
         with the same level words: "Data Scientist" is not "Senior Data Scientist") and whose place agrees with the alert's (cand.places_agree:
         a posting in another town is another job), preferring the one in the same place. None when the company has no known board or the
-        board has no such posting."""
+        board has no such posting. `token_set` (v3.8, the Gmail label cards): a token-set ratio (word order and repeated words do not count) of at
+        least this replaces the 0.9 similarity; the level words and the place must still agree."""
         want = cand.norm_title(title)
         for board in self.boards_for(company):
             try:
@@ -615,8 +619,8 @@ class BoardLookup:
             for p in posts:
                 if not p.listed:
                     continue
-                s = SequenceMatcher(None, want, cand.norm_title(p.title)).ratio()
-                if (s >= self.title_match and cand.level_words(title) == cand.level_words(p.title)
+                s = SequenceMatcher(None, want, cand.norm_title(p.title)).ratio() if token_set is None else ll.token_set_ratio(title, p.title)
+                if (s >= (self.title_match if token_set is None else token_set) and cand.level_words(title) == cand.level_words(p.title)
                         and cand.places_agree(location, p.location) and self.plausible(board, company, location, p)):
                     here = bool(location) and cand.norm_place(location) != "" and cand.norm_place(location) == cand.norm_place(p.location)
                     scored.append((s, here, p))
@@ -690,6 +694,10 @@ class Discover:
         self.listed_cap = int(lo.get("max_per_run", 20))
         self.parked_keys = parked_keys(settings)                     # the ads already parked (an ad outside the region is parked once, not every run)
         self.findings: list[boards_mod.Finding] = []
+        self.last_board = ""                                         # resolve_link: the board of the ad it just found
+        self.label_rows: list[dict] = []                             # v3.8 `discover --gmail-label`: one row per card, for the report
+        self.label_kinds: Counter = Counter()                        # emails read, by type
+        self.label_unparsed = 0                                      # cards dropped for want of a title or a company
 
     # ---- filters, in the order that spends least first
     def wanted(self, c: Candidate, label: str) -> bool:
@@ -1120,13 +1128,17 @@ class Discover:
 
     # ---- a link or a (company, title): look for the whole ad
     def resolve_link(self, label: str, kind: str, company: str, title: str, location: str, link: str, origin: str,
-                     counted: bool = False, default_country: str = "", source_id: str = "", seen: str = "", seen_at: str = "") -> str:
+                     counted: bool = False, default_country: str = "", source_id: str = "", seen: str = "", seen_at: str = "",
+                     title_floor: float | None = None, linkedin_job_id: str = "", seen_source: str = "") -> str:
         """Find the full ad for something that is only a pointer. Order: a Reed job link (with a key: the Reed API), then the employer's own
         Greenhouse / Lever / Ashby board (found from the company's name). Nothing is requested from the link itself: linkedin.com, indeed,
         cv-library and Workday hosts are never fetched (applykind.NEVER_FETCH), and a job board's page is not a source for the ad. Anything
         not found goes to the manual queue, with the reason and its apply_kind. `source_id` is who gets the credit in the resolved-% report
         (default: `kind`); `seen` is the day the alert about it arrived (YYYY-MM-DD) and `seen_at` the same moment as an ISO datetime: a
-        job whose own source gave no trusted posting time is dated by it (freshness.GMAIL, an upper bound)."""
+        job whose own source gave no trusted posting time is dated by it (freshness.GMAIL, an upper bound; `seen_source` names another label, the Gmail
+        label source uses freshness.GMAIL_LABEL). `title_floor`: match the board's titles by token-set ratio at this floor (v3.8). `linkedin_job_id` is
+        written on the ad. After the call `self.last_board` is the board ("greenhouse:acme") the ad came from, '' when none."""
+        self.last_board = ""
         host = applykind.host_of(link)
         c: Candidate | None = None
         why = ""
@@ -1153,7 +1165,7 @@ class Discover:
         elif c is None:
             tried.append("board_link: the alert has no link")
         if c is None and company:
-            found = self.lookup.find(company, title, location)
+            found = self.lookup.find(company, title, location, token_set=title_floor)
             if found:
                 c = posting_candidate(found[0], found[1], origin)
                 step = "board_guessed" if found[0].origin == "alert" else "board_known"
@@ -1198,7 +1210,10 @@ class Discover:
         if seen_at:
             c.seen_at = seen_at
             if not c.posted_source:                            # no trusted time from the ad itself: the email's arrival
-                c.posted, c.posted_source = seen_at, freshness.GMAIL
+                c.posted, c.posted_source = seen_at, seen_source or freshness.GMAIL
+        if linkedin_job_id:
+            c.linkedin_job_id = linkedin_job_id
+        self.last_board = c.board
         if default_country and not c.country:               # an alert from a one-country source: that country unless the place says another
             c.country = countries.detect(c.location) or default_country
         result = self.accept(c, label, counted=counted)
@@ -1313,6 +1328,167 @@ class Discover:
                 seen_path.write_text(json.dumps(sorted(seen | set(done_now))[-2000:]), encoding="utf-8")
             except OSError:
                 pass
+
+    # ---- v3.8: the Gmail label source (`discover --gmail-label`)
+    def sponsor_label(self, company: str) -> str:
+        """yes (exact register match) | near (fuzzy) | no | ? (no register loaded), for the report's sponsor column."""
+        if self._sponsor_index is False:
+            self._sponsor_index = sponsors.load_index(self.db)
+        idx = self._sponsor_index
+        if idx is None or not company:
+            return "?"
+        label = str(idx.lookup(company, self.s["sponsors"].get("fuzzy_threshold", 0.92)).label or "none")
+        return "yes" if label.startswith("exact") else "near" if label.startswith("fuzzy") else "no"
+
+    @_finishing
+    def from_gmail_label(self, labels: Sequence[str] | None = None, since: str | None = None) -> None:
+        """Read the emails of the Gmail labels named in discover.gmail.labels (or `labels`), newest window `since` (default discover.gmail.label_since).
+        Read only: labels.list, messages.list (by label id) and messages.get; nothing is labelled, archived, marked read or deleted, and no
+        linkedin.com address is ever requested. Each message is read once (gmail_label_messages). Application emails first (they say which jobs
+        are already applied to), then the job cards oldest first (the first sighting of a job is the original, later ones are its duplicates)."""
+        label = "gmail_label"
+        g = self.s["discover"].get("gmail") or {}
+        names = [str(n) for n in (labels or g.get("labels") or []) if str(n).strip()]
+
+        def fail(msg: str) -> None:
+            self.run.notes.append(msg)
+            self.run.failures.append(msg)
+            self.say(msg)
+
+        if not names:
+            fail("gmail label: no label named (set discover.gmail.labels in settings.yaml or pass --gmail-label NAME)")
+            return
+        try:
+            window = ll.parse_since(since or str(g.get("label_since") or "30d"))
+        except ValueError as e:
+            fail(f"gmail label: {e}")
+            return
+        try:
+            token = gmail.access_token(self.s)
+        except gmail.GmailAuthError as e:
+            fail(f"gmail: {e}")
+            return
+        try:
+            existing = gmail.list_labels(self.f, token)
+        except (FetchError, Blocked) as e:
+            fail(f"gmail: {e}")
+            return
+        store = ll.Store(self.db, persist=not self.dry_run)
+        after = int((self.today - window).timestamp())
+        cap = int(g.get("label_max_messages", 300))
+        fetched: list[tuple[str, str, str, str, str, str, str]] = []       # (label, id, received, kind, from, subject, html + text)
+        for name in names:
+            lab = gmail.find_label(existing, name)
+            if lab is None:
+                fail(f"Gmail label '{name}' not found; existing labels: " + (", ".join(sorted(x["name"] for x in existing)) or "none"))
+                continue
+            try:
+                ids = gmail.list_label_message_ids(self.f, token, lab["id"], cap, after)
+            except (FetchError, Blocked) as e:
+                fail(f"gmail label {name}: {e}")
+                continue
+            for mid in ids:
+                if store.has_message(mid):
+                    self.run.count(label, "message_already_read")
+                    continue
+                try:
+                    msg = gmail.get_message(self.f, token, mid)
+                    frm, subject, html, text = gmail.message_text(msg)
+                except (FetchError, Blocked) as e:
+                    self.run.notes.append(f"gmail message {mid}: {e}")
+                    break
+                fetched.append((name, mid, gmail.message_time(msg), ll.classify(frm, subject), frm, subject, (html, text)))
+        names_to_hide = ll.user_names(self.s)
+        for name, mid, received, kind, frm, subject, (html, text) in sorted(fetched, key=lambda m: (m[3] not in (ll.APPLICATION_SENT, ll.APPLICATION_UPDATE), m[2])):
+            self.label_kinds[kind] += 1
+            self.run.count(label, f"mail_{kind}")
+            if kind in ll.CARD_KINDS:
+                cards = gmail.parse_alert("linkedin", html, text, mid)
+                for item in cards:
+                    self.label_card(item, received, mid, store)
+                if not cards:
+                    self.run.count(label, "mails_without_cards")
+                    self.run.no_job_subjects.setdefault("linkedin", " ".join(subject.split())[:120] or "(no subject)")
+            elif kind == ll.APPLICATION_SENT:
+                app = ll.parse_application(kind, subject, html, text)
+                if app.company:
+                    store.add_applied(app, received, mid)
+                    if app.title:
+                        self.known.add(app.company, app.title, "", ll.APPLIED)          # a card of this job later in the run is 'already applied'
+                    self.run.count(label, "applied_recorded")
+                else:
+                    self.run.count(label, "application_unparsed")
+            elif kind == ll.APPLICATION_UPDATE:
+                app = ll.parse_application(kind, subject, html, text)
+                self.run.count(label, "status_updated" if store.update_applied(app) else "status_update_unmatched")
+            elif len(self.run.notes) < 30:
+                self.run.notes.append(f"gmail label {name}: email of another type, not parsed (subject {' '.join(subject.split())[:70]!r})")
+            if not self.dry_run:                                                  # the latest email of each type, sanitised, for debugging the parser
+                ll.save_sample(self.s, kind, frm, subject, html, text, names_to_hide)
+            store.add_message(mid, name, kind, received, subject)
+
+    def label_card(self, item: gmail.AlertItem, received: str, mid: str, store: "ll.Store") -> None:
+        """One job card of a label email: what became of it is its `result` (resolved:<ats>/<slug> | needs_jd | duplicate of <id> | filtered:<reason> |
+        already applied (LinkedIn)). Order, cheapest first: applied, duplicate (job id, then company + title within label_dedupe_days, then any job
+        already known), role / place / knock-out on the title and place alone, Easy Apply (never automated: needs_jd), then the employer's own board."""
+        label = "gmail_label"
+        g = self.s["discover"].get("gmail") or {}
+        if not item.title or not item.company:
+            self.label_unparsed += 1
+            self.run.count(label, "unparsed")
+            return
+        self.run.count(label, "cards")
+        key = ll.key_of(item.company, item.title)
+        row = {"received": received or self.today.isoformat(timespec="seconds"), "title": item.title, "company": item.company, "location": item.location,
+               "sponsor": self.sponsor_label(item.company), "job_id": item.job_id, "link": item.link, "work_type": item.work_type, "salary": item.salary,
+               "easy_apply": item.easy_apply, "message_id": mid, "key": key, "result": "", "job_file": ""}
+
+        def done(result: str) -> None:
+            row["result"] = result
+            self.run.count(label, "result_" + ll.result_group(result).split(" ")[0])
+            self.label_rows.append(row)
+            store.add_card(row)
+
+        if store.applied_hit(item.job_id, key):
+            return done(ll.APPLIED)
+        earlier = store.card_before(item.job_id, key, row["received"], int(g.get("label_dedupe_days", 14)))
+        if earlier:
+            return done(f"duplicate of {earlier}")
+        where = self.known.where(item.company, item.title, item.location)
+        if where == ll.APPLIED:
+            return done(ll.APPLIED)
+        if where:
+            return done(f"duplicate of {where}")
+        if self.already_decided(item.company, item.title, None, label):
+            return done("filtered: already decided (skipped or applied before)")
+        probe = Candidate(source="linkedin", company=item.company, title=item.title, location=item.location, url=item.link, description="")
+        before = len(self.pending_filtered)
+        if not self.wanted(probe, label):
+            why = self.pending_filtered[-1] if len(self.pending_filtered) > before else {}
+            return done(f"filtered: {why.get('filter', 'role')} ({why.get('reason', 'title or place not wanted')})")
+        from ..apply import jd_knockout
+        hit = jd_knockout.match(f"{item.title}. {item.location}", jd_knockout.enabled(self.s))
+        if hit:
+            return done(f"filtered: knock-out ({getattr(hit[0], 'kind', 'stated in the title')})")
+        if item.easy_apply:
+            self.to_queue(label, ll.SOURCE, item.company, item.title, item.location, item.link,
+                          "Easy Apply on LinkedIn (cannot be automated): open the link in your own browser and paste the ad with `careerops add-jd`",
+                          seen_at=received, apply_kind="aggregator_only")
+            return done(ll.NEEDS_JD)
+        floor = float(g.get("label_title_match", 0.85))
+        written = len(self.run.written)
+        result = self.resolve_link(label, ll.SOURCE, item.company, item.title, item.location, item.link, "gmail_label:linkedin", source_id="linkedin",
+                                   seen=received[:10], seen_at=received, title_floor=floor, linkedin_job_id=item.job_id, seen_source=freshness.GMAIL_LABEL)
+        if len(self.run.written) > written:
+            row["job_file"] = self.run.written[-1][1].name
+        ats, _, slug = self.last_board.partition(":")
+        if result in ("written", "exists") and ats:
+            return done(f"resolved: {ats}/{slug}")
+        if result == "parked":
+            return done("filtered: outside the selected region (parked, not skipped)")
+        if result == "dropped":
+            return done("filtered: the posting was dropped (duplicate, closed or listed elsewhere)")
+        return done(ll.NEEDS_JD)                  # unresolved (resolve_link queued it with the reason), or found but the run's file limit was reached
 
     @_finishing
     def from_jobbank(self) -> None:
