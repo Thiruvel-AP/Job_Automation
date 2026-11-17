@@ -28,7 +28,7 @@ skills:
   LLMs & Agents: [ReAct agent loops, agent memory, "AI-assisted development (Claude Code, Cursor, OpenAI Codex)", LangChain, LangGraph, Google ADK, "MCP (FastMCP, MCP SDK)", AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, ChromaDB, tool calling, LoRA fine-tuning, "QLoRA (4-bit, Unsloth, PEFT, TRL)", LLM evaluation, prompt design]   # 21 Oct: QLoRA added from llama3-8b-qlora-math-t4
   Data & Visualisation: [pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, ggplot2, Tableau, Streamlit, tidyverse, tidymodels, NLTK, networkx, Leiden clustering, Databricks/PySpark (coursework)]
   Databases: [PostgreSQL, MongoDB, DynamoDB, ChromaDB]
-  Cloud & MLOps: ["MLOps (experiment tracking, CI/CD, containerised deployment)", AWS Lambda, ECR, IAM, EC2, S3, SQS, Google OAuth sign-in (GCP), Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)"]
+  Cloud & MLOps: ["MLOps (experiment tracking, CI/CD, containerised deployment)", AWS Lambda, ECR, IAM, EC2, S3, SQS, Google OAuth sign-in, Docker, GitHub Actions, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, Git, AWS ECS, "Kubernetes (AWS EKS)"]
   Mobile & Web: [React, Node.js, SwiftUI, UIKit, Core Data, Flutter]
   # Removed as padding (restore if you disagree): Jupyter, Google Colab, Google AI Studio, Kaggle
 
@@ -81,7 +81,7 @@ experience:
         text: "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
         plain: "Built an AI assistant researchers could trust: it checks gene names against official databases and falls back to a local list of 19,213 genes if they go down (LangChain, AWS)."
         result: "19,213-gene parquet fallback"
-        terms: [llm, agent, agentic, tool calling, langchain, bedrock, aws, guardrails, hallucination, reliability, fault tolerance, failure recovery, apis, prompt engineering]
+        terms: [llm, llms, python, research, agent, agentic, tool calling, langchain, bedrock, aws, guardrails, hallucination, reliability, fault tolerance, failure recovery, apis, prompt engineering]
       - id: az11                           # NEW 17 Oct: your daily CV, verbatim
         verbatim: true
         replaces: [az4]
@@ -168,9 +168,9 @@ experience:
         text: "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on the client's own server."   # 14 Nov: GCP Cloud Run removed (you used GCP only for OAuth). CHECK: Claude API vs the self-hosted Llama in fl8?
         terms: [rag, retrieval, claude, anthropic, chromadb, rest api, fastapi, docker, self-hosted, production]
       - id: fl8                            # NEW 14 Nov: your answer. The client-reported outcome is kept OFF the CV (see comment)
-        text: "For one private client, built a web app with an AI chat assistant that reads his income, spending, loans and investments to suggest financial decisions, plus a separate general health-information service built on his family's own records; self-hosted open-source Llama models with Ollama on the client's own server, with Google sign-in (OAuth via GCP) and scaling, logging and monitoring (Firebase) to keep running costs down."
+        text: "For one private client, built a web app with an AI chat assistant that reads his income, spending, loans and investments to suggest financial decisions, plus a separate general health-information service built on his family's own records; self-hosted open-source Llama models with Ollama on the client's own server, with Google sign-in (OAuth) and scaling, logging and monitoring (Firebase) to keep running costs down."
         result: "self-hosted on the client's own server to keep running costs down"
-        plain: "Built a private client an AI finance assistant that reads his income, spending, loans and investments and suggests next steps, self-hosted on his own server to keep costs down (Llama, Ollama)."
+        plain: "Built a private client an AI finance assistant that reads his income, spending, loans and investments and suggests next steps, self-hosted to keep costs low (Llama, Ollama)."
         terms: [rag, llm, chatbot, ai assistant, open-weight, local llm, ollama, llama, self-hosted, model serving, scaling, monitoring, logging, firebase, oauth, google oauth, authentication, cost, fintech, personal finance, client]
         # Client-reported, not verified, so not printed: paid extra on his loan first, then saved; "20% overall profit" (his timeframe counts from your informal start, so never print it with the CV dates).
       - id: fl5                            # NEW from LinkedIn
@@ -314,7 +314,7 @@ projects:
       - id: p_ll1
         text: "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow."
         plain: "Placed 3rd at Lloyd's Banking Group's datathon by spotting rare suspicious transactions (about 1 in 200) and comparing two ways of detecting them (scikit-learn, MLflow)."
-        result: "3rd place; 200:1 class imbalance"
+        result: "3rd place; 200:1 class imbalance (about 1 in 200 transactions)"
         terms: [anomaly detection, imbalanced data, classification, mlflow, experiment tracking, financial services, banking]
   - id: bitcoin
     display_name: "Bitcoin Forecasting -- LSTM Time Series"   # 17 Oct: heading exactly as on your daily CV
@@ -449,7 +449,7 @@ projects:
       - id: p_sc1
         situation_included: true
         text: "Needed to choose the best of 6 algorithm configurations with statistical confidence: sized the experiment with a Bonferroni-corrected power analysis, then ran one-way and blocked ANOVA with Tukey and Dunnett post-hoc tests in R, finding a large effect between the top two (Cohen's d = 3.78)."
-        plain: "Picked the best of 6 algorithm settings with proper statistics: planned the sample size first, then used ANOVA tests and found a large gap between the top two (d = 3.78) (R)."
+        plain: "Picked the best of 6 algorithm settings with proper statistics: planned the sample size, then ran ANOVA tests, finding a large gap between the top two (R)."
         result: "Cohen's d = 3.78 between the best and second-best configuration"
         terms: [statistical analysis, statistical analyses, statistics, hypothesis testing, anova, post-hoc tests, tukey, dunnett, power analysis, experimental design, experimentation, effect size, r, statistical significance]
       - id: p_sc2
@@ -512,7 +512,7 @@ families:
       - label: "Software Engineering & Integrations"
         items: "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, version control with Git (pull requests, code review), debugging and root-cause analysis, stakeholder communication (live client demos, pull-request reviews with a client CTO)"   # 14 Nov: + version control, communication (dc6, dc8)
       - label: "Cloud & Deployment"
-        items: "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), Google OAuth sign-in (GCP), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+        items: "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), Google OAuth sign-in, Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
     # 14 Nov: plain English, numbers first. Sources: az10, az11, az12, dc6, dc8, dc9, p_cf2, fl8.
     letter_template: |
       Hi {company} team,
@@ -550,7 +550,7 @@ families:
 
       {company_problem_sentence} That is the kind of problem I have been working on. I check the data before I trust a model: I audited 859,494 training examples and found 44,369 duplicates, and for my AstraZeneca-affiliated MSc dissertation I combined 14 research datasets so the results rested on trusted data. When my gene models scored 0.807 on training data but only 0.545 on new data, I reported it plainly instead of hiding it.
 
-      I placed 3rd at Lloyd's Banking Group's datathon by spotting rare suspicious transactions, about 1 in 200, and in my MSc I used proper statistics, planning the sample size first and then running ANOVA tests, to pick the best of 6 algorithm settings. At 180 Degrees Consulting I helped turn a startup's vague idea into a working tool that the client now uses every day; the client's founder called it "stable, production-ready". I also built a model that predicts which bank customers are likely to leave, and I have presented results live to client stakeholders who were not technical.
+      I placed 3rd at Lloyd's Banking Group's datathon by spotting rare suspicious transactions, about 1 in 200, and in my MSc I used proper statistics, planning the sample size first and then running ANOVA tests, to pick the best of 6 algorithm settings. At 180 Degrees Consulting I helped turn a startup's vague idea into a working tool that is now in live, day-to-day use; the client's founder called it "stable, production-ready". I also built a model that predicts which bank customers are likely to leave, and I have presented results live to client stakeholders who were not technical.
 
       Your ad asks for {ad_requirement}, which is the work I want to do next.
 
@@ -604,7 +604,7 @@ hook_library:
     proof: [dc6, dc8, dc2, dc1]             # 10 Nov: dc1 added, it is the one that says "prototyped"
     terms: [client, clients, stakeholder, stakeholders, consulting, consultant, customer, delivery, requirements, communication, forward deployed]
     headline: "Client MCP server in live use; engagement rated five stars"
-    profile_line: "Data scientist who turns vague client ideas into working tools: at 180 Degrees Consulting I helped build an AI tool the client now uses every day; senior leadership rated the work five stars."   # 14 Nov: plain English
+    profile_line: "Data scientist who turns vague client ideas into working tools: at 180 Degrees Consulting I helped build an AI tool now in live, day-to-day use, in an engagement senior leadership rated five stars."   # 14 Nov: plain English
     letter_line: "At 180 Degrees Consulting I prototyped an agentic tool for a loosely defined client brief and contributed to the client's production MCP server, now in live use; senior leadership rated the engagement five stars."
 
   - id: h_cost_latency
@@ -656,8 +656,8 @@ jd_aliases:
   statistical analyses: [statistical analysis, statistics, descriptive statistics, correlation analysis, hypothesis testing, anova, post-hoc tests, power analysis, bootstrap, stouffer]
   machine learning concepts: [machine learning concepts, machine learning, classification, regression, clustering, cross-validation, model validation]
   data science models: [predictive modelling, classification, regression, xgboost, random forest, propensity, forecasting]
-  data analysis: [eda, exploratory data analysis, data audit, data quality, explored]
-  exploration: [eda, exploratory data analysis, explored]
+  data analysis: [eda, exploratory data analysis, data audit, data quality]
+  exploration: [eda, exploratory data analysis]
   problem-solving: [root cause analysis, root-cause analysis, debugging]
   llm-based applications: [llm, agent, rag, tool calling]
   tool use: [tool calling, function calling]
@@ -677,7 +677,7 @@ profile_fragments:
     text: "Checks the data before the model: audited 859,494 training examples for gaps and duplicates, and combined 14 research datasets for an AstraZeneca-affiliated MSc dissertation."   # 14 Nov: plain English
   - id: pf_agents
     terms: [llm, agent, agentic, llm-based applications, tool use, rag, evaluation, testing]
-    text: "Built an AI assistant for an AstraZeneca-affiliated MSc dissertation that checks its answers against official databases, runs on AWS and is checked by about 65 automated tests."   # 14 Nov: plain English
+    text: "Built an AI assistant on AWS for an MSc dissertation with an AstraZeneca affiliation; it checks its answers against official databases and is tested by about 65 automated checks."   # 14 Nov: plain English
   - id: pf_client
     terms: [client, stakeholder, communication, consulting, requirements, delivery, collaboration]
     text: "At 180 Degrees Consulting, led the design in a five-person team that turned a startup's vague idea into a working AI prototype in three months (rated 5 stars); it is now in live use."   # 14 Nov: plain English
