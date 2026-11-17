@@ -32,8 +32,9 @@ FILE = "blacklist.yaml"
 SCOPES = ("company", "domain")
 TRAINING_SCHEME = "training_scheme"                       # the blacklist reason code of a fee-charging training course (v3.1)
 TRAINING_SCHEME_LABEL = "training scheme (fees)"
-TRAINING_SCHEME_COMPANIES = ("ITOL Recruit",)             # sells AI / data "traineeships" with fees as jobs (seen 5 Nov 2026: 5 of 8 shortlist rows)
-TRAINING_SCHEME_PHRASES = ("training course and fees apply", "fees apply", "course fee", "job guarantee", "job guaranteed", "money back")
+TRAINING_SCHEME_COMPANIES = ("ITOL Recruit", "AI Jobs at ITOL Recruit", "Itonlinelearning")             # sells AI / data "traineeships" with fees as jobs (seen 5 Nov 2026: 5 of 8 shortlist rows)
+TRAINING_SCHEME_PHRASES = ("training course and fees apply", "fees apply", "course fee", "job guarantee", "job guaranteed", "money back",
+                           "this is a training course and fees apply", "course fees")
 TRAINING_SCHEME_PAIRS = (("funded training", "fee"), ("traineeship", "fee"))
 
 
