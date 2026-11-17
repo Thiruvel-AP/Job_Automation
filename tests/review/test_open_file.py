@@ -28,8 +28,8 @@ class Spy:
 
 def test_in_wsl_the_pdf_is_opened_by_explorer_with_the_windows_path(monkeypatch):
     spy = Spy(monkeypatch)
-    review.open_file("/mnt/d/VS_Codes/out/CV.pdf")
-    assert spy.run == [["wslpath", "-w", "/mnt/d/VS_Codes/out/CV.pdf"]]
+    review.open_file("/mnt/d/VS_Code/out/CV.pdf")
+    assert spy.run == [["wslpath", "-w", "/mnt/d/VS_Code/out/CV.pdf"]]
     assert spy.popen == [["/usr/bin/explorer.exe", "D:\\x\\CV.pdf"]]               # not wslview, not xdg-open
 
 

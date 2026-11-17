@@ -320,7 +320,7 @@ def test_no_request_to_linkedin_is_ever_made_over_the_whole_discover_path(signed
 # ------------------------------------------------------------------ 8. messages are read once
 def test_a_message_already_processed_is_not_fetched_again(signed_in, db):
     html = email_html(card("3912345678", "Data Scientist", "Orbit Labs", "London, UK"))
-    net = label_net({"m1": (ALERT_FROM, "1 new job", html, NEWER), "m2": (ALERT_FROM, "1 new job", email_html(), NEWER)})
+    net = label_net({"m1": (ALERT_FROM, "1 new job", html, NEWER), "m2": ("Newsletter <news@example.com>", "Your week in AI", email_html(), NEWER)})   # another type: read once, never parsed
     run(signed_in, db, net)
     first = [u for u in net.urls() if "/messages/m" in u]
     assert sorted(first) == [u for u in sorted(first)] and len(first) == 2

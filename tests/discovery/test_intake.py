@@ -577,7 +577,7 @@ def test_under_2000_characters_is_refused_after_enter_before_any_question(clip, 
 
 @pytest.mark.parametrize("start", ["careerops live --clipboard", "careerops live", "powershell.exe -NoProfile -Command Get-Clipboard",
                                    "PowerShell Get-Clipboard", "explorer.exe .", "Explorer ."])
-@pytest.mark.parametrize("prefix", ["", "$ ", "> ", "PS D:\\VS_Codes> "])
+@pytest.mark.parametrize("prefix", ["", "$ ", "> ", "PS D:\\VS_Code> "])
 def test_text_that_starts_like_a_shell_command_is_refused(clip, settings, monkeypatch, start, prefix):
     clip.set(prefix + start + "\n" + "x" * 2100)
     _answers(monkeypatch, "")
@@ -585,7 +585,7 @@ def test_text_that_starts_like_a_shell_command_is_refused(clip, settings, monkey
         intake.add_clipboard(settings, input)
 
 
-@pytest.mark.parametrize("start", ["cd /mnt/d/VS_Codes", "git status", "source .venv/bin/activate", "cd ..", "git"])
+@pytest.mark.parametrize("start", ["cd /mnt/d/VS_Code", "git status", "source .venv/bin/activate", "cd ..", "git"])
 def test_cd_git_and_source_in_lowercase_are_refused_too(clip, start):
     clip.set(start + "\n" + "x" * 2100)
     with pytest.raises(intake.IntakeError, match=f"starts with '{start.split()[0]}'"):

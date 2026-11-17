@@ -194,6 +194,8 @@ COLUMNS = [
     ("triage_scores", "size", "TEXT"),
     ("triage_scores", "size_label", "TEXT"),
     ("triage_scores", "size_evidence", "TEXT"),
+    ("gmail_label_messages", "cards_parsed", "INTEGER"),   # v3.9: job cards read out of the email (NULL = recorded before v3.9); a card email with 0 stays unread
+    ("gmail_label_messages", "parsed_at", "TEXT"),         # v3.9: when the email was classified and parsed
 ]
 
 

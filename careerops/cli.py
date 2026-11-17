@@ -161,7 +161,21 @@ def _ctx(args):
                 raise SystemExit(f"mock seed job is '{status}' after triage ({reason}); "
                                  "today's rules reject the fixture JD")
         return s, db
-    return s, DB(s.path("db"))
+    db = DB(s.path("db"))
+    _save_rerooted(s, db)
+    return s, db
+
+
+def _save_rerooted(s, db) -> None:
+    """v3.9: stored paths from the old folder name (the old folder name) are written back once, with a backup of every file changed; the one summary
+    line appears only on the run that did the work (the next run finds nothing to change and prints nothing)."""
+    try:
+        n = pathstore.save_rerooted(db, s.path("outputs"), root=s.root)
+    except Exception as e:  # noqa: BLE001 — a failed save leaves the in-memory re-rooting in place; it must not stop the command
+        print(f"could not save re-rooted paths: {e}", file=sys.stderr)
+        return
+    if n:
+        print(f"re-rooted {n} stored paths (saved)")
 
 
 def _region_choice(args, s, *, auto: bool = False):
@@ -408,7 +422,8 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
                       limit=getattr(args, "limit", None), regions=sel)
     steps = {"ats": ("ats", d.from_boards), "reed": ("reed", d.from_reed), "adzuna": ("adzuna", d.from_adzuna),
              "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank),
-             "gmail_label": ("gmail_label", lambda: d.from_gmail_label(None if args.gmail_label == "*" else [args.gmail_label], getattr(args, "since", None)))}
+             "gmail_label": ("gmail_label", lambda: d.from_gmail_label(None if args.gmail_label == "*" else [args.gmail_label], getattr(args, "since", None),
+                                                                       reread=getattr(args, "reread", False)))}
     d.run.asked = list(sources_asked)                                           # `shortlist` says when the alerts were last read from this
     for name in sources_asked:
         label, fn = steps[name]
@@ -481,7 +496,8 @@ def _label_report(d) -> list[str]:
     for r in d.label_rows:
         tiers[freshness.tier({"posted_at": r["received"] or None, "posted_at_source": freshness.GMAIL_LABEL if r["received"] else None}, d.today)] += 1
     return ["Gmail label cards (the emails carry title, company, location and a LinkedIn link only; the ad comes from the employer's board or `add-jd`):",
-            *ll.format_report(d.label_rows, dict(d.label_kinds), d.label_unparsed, tiers)]
+            *ll.format_report(d.label_rows, dict(d.label_kinds), d.label_unparsed, tiers, unparsed_mails=d.label_unparsed_mails,
+                              examples=d.label_examples, already_read=d.run.sources.get("gmail_label", {}).get("message_already_read", 0))]
 
 
 def _print_health(s, reg, *, run=None, fetcher=None, cache=None, save: bool = True) -> list:
@@ -2370,6 +2386,7 @@ def main(argv=None):
                     help="v3.8: the emails of a Gmail label (every label of discover.gmail.labels without NAME; LinkedIn by default), read by label id, read only: "
                          "job cards -> the employer's own board (resolved) or the manual queue (needs_jd); 'application sent' emails -> applied through LinkedIn")
     dc.add_argument("--since", metavar="AGE", help="with --gmail-label: how far back to read, e.g. 7d, 12h, 2w (default discover.gmail.label_since, 30d)")
+    dc.add_argument("--reread", action="store_true", help="with --gmail-label: ignore the read marks of the window (--since) and read its emails again")
     dc.add_argument("--jobbank", action="store_true", help="Canada's Job Bank open-data CSV: matching rows are listed in "
                     "data/discover/listed_only.csv (the file has no employer or ad text)")
     dc.add_argument("--gmail-auth", dest="gmail_auth", action="store_true", help="sign in to Google once: read mail, create drafts, edit the tracker Sheet; never sends (opens your browser)")

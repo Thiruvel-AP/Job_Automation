@@ -1,4 +1,4 @@
-"""The twice-daily discovery (scripts/discover.sh, docs/scheduler.md): `careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report`
+"""The twice-daily discovery (scripts/discover.sh, docs/scheduler.md): `careerops discover --ats --reed --gmail-alerts --gmail-label --report`
 runs the sources and THEN prints the report (tier counts included); the command exits 1 when a source failed (a lapsed Gmail sign-in);
 the script logs to data/logs/discover_<date>.log and passes the exit code on. It only discovers: nothing is tailored or applied."""
 import os
@@ -18,7 +18,7 @@ from netfake import Net
 from test_discover import ACME, cfg, cmd, gh_net, inbox_files  # noqa: F401  (fixtures)
 
 SCRIPT = ROOT / "scripts" / "discover.sh"
-COMMAND = "careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report"
+COMMAND = "careerops discover --ats --reed --gmail-alerts --gmail-label --report"
 
 
 def test_report_with_a_source_flag_runs_the_source_first_and_then_prints_the_report(cmd, cfg, capsys):
@@ -70,11 +70,14 @@ def fake_careerops(folder: Path, body: str) -> dict:
 def repo(tmp_path):
     """A copy of the script in a repo-shaped folder of its own: the script cds to its parent, so nothing real is touched."""
     (tmp_path / "repo" / "scripts").mkdir(parents=True)
+    (tmp_path / "repo" / ".venv" / "bin").mkdir(parents=True)
+    (tmp_path / "repo" / ".venv" / "bin" / "activate").write_text("export CAREEROPS_VENV_ACTIVATED=1\n", encoding="utf-8")
     shutil.copy(SCRIPT, tmp_path / "repo" / "scripts" / "discover.sh")
     return tmp_path / "repo"
 
 
 def run_script(repo, env):
+    env = {**env, "CAREEROPS_REPO": str(repo)}                                   # the script cds to this absolute path (its default is the real repo)
     return subprocess.run(["bash", str(repo / "scripts" / "discover.sh")], capture_output=True, text=True, env=env, cwd=repo.parent)
 
 
@@ -91,7 +94,7 @@ def test_the_script_runs_exactly_the_discovery_command_and_nothing_else():
 def test_the_script_logs_to_a_dated_file_and_exits_zero_on_success(repo):
     env = fake_careerops(repo.parent / "bin", 'echo "args: $@"; echo "found 3"; exit 0')
     r = run_script(repo, env)
-    assert r.returncode == 0 and "args: discover --ats --reed --adzuna --gmail-alerts --gmail-label --report" in r.stdout
+    assert r.returncode == 0 and "args: discover --ats --reed --gmail-alerts --gmail-label --report" in r.stdout
     (log,) = (repo / "data" / "logs").glob("discover_*.log")
     import re
     assert re.fullmatch(r"discover_\d{4}-\d{2}-\d{2}\.log", log.name)
@@ -107,3 +110,19 @@ def test_the_script_exits_non_zero_when_the_command_fails_and_appends_to_the_sam
     assert again.returncode == 3
     (log,) = (repo / "data" / "logs").glob("discover_*.log")
     assert log.read_text(encoding="utf-8").count("discover.sh start") == 2 and "exit 3" in log.read_text(encoding="utf-8")
+
+
+def test_the_script_has_an_absolute_repo_path_activates_the_venv_and_fails_without_it(repo):
+    text = SCRIPT.read_text(encoding="utf-8")
+    assert "/mnt/d/VS_Code/DataScience/Projects/career-ops" in text and ".venv/bin/activate" in text
+    env = fake_careerops(repo.parent / "bin", 'echo "venv: $CAREEROPS_VENV_ACTIVATED"; exit 0')
+    assert "venv: 1" in run_script(repo, env).stdout
+    (repo / ".venv" / "bin" / "activate").unlink()
+    assert run_script(repo, env).returncode == 2
+
+
+def test_the_windows_task_scripts_register_two_daily_triggers_that_run_discover_sh():
+    install = (ROOT / "scripts" / "scheduler_install.ps1").read_text(encoding="utf-8")
+    assert "Register-ScheduledTask" in install and '"07:45"' in install and '"17:45"' in install and "New-ScheduledTaskTrigger -Daily" in install
+    assert "wsl.exe" in install and "bash -lc" in install and "/mnt/d/VS_Code/DataScience/Projects/career-ops/scripts/discover.sh" in install
+    assert "Unregister-ScheduledTask" in (ROOT / "scripts" / "scheduler_uninstall.ps1").read_text(encoding="utf-8")

@@ -698,6 +698,9 @@ class Discover:
         self.label_rows: list[dict] = []                             # v3.8 `discover --gmail-label`: one row per card, for the report
         self.label_kinds: Counter = Counter()                        # emails read, by type
         self.label_unparsed = 0                                      # cards dropped for want of a title or a company
+        self.label_unparsed_mails: list[tuple[str, str]] = []        # v3.9 (sender, subject) of emails left unread: a parse that raised, or a job email with 0 cards
+        self.label_examples: list[tuple[str, str]] = []              # v3.9 (sender, subject) of the first emails fetched, shown when no card was found
+        self.label_repaired = 0                                      # v3.9 read marks cleared by the one-time repair
 
     # ---- filters, in the order that spends least first
     def wanted(self, c: Candidate, label: str) -> bool:
@@ -1341,10 +1344,12 @@ class Discover:
         return "yes" if label.startswith("exact") else "near" if label.startswith("fuzzy") else "no"
 
     @_finishing
-    def from_gmail_label(self, labels: Sequence[str] | None = None, since: str | None = None) -> None:
+    def from_gmail_label(self, labels: Sequence[str] | None = None, since: str | None = None, reread: bool = False) -> None:
         """Read the emails of the Gmail labels named in discover.gmail.labels (or `labels`), newest window `since` (default discover.gmail.label_since).
         Read only: labels.list, messages.list (by label id) and messages.get; nothing is labelled, archived, marked read or deleted, and no
-        linkedin.com address is ever requested. Each message is read once (gmail_label_messages). Application emails first (they say which jobs
+        linkedin.com address is ever requested. A message is marked read (gmail_label_messages: id, label, type, cards_parsed, parsed_at) only AFTER it
+        was classified and parsed: one whose parse raised, or a job email that gave 0 cards, stays unread (logged as `unparsed`) and is fetched again
+        next run; `reread` ignores every read mark. Application emails first (they say which jobs
         are already applied to), then the job cards oldest first (the first sighting of a job is the original, later ones are its duplicates)."""
         label = "gmail_label"
         g = self.s["discover"].get("gmail") or {}
@@ -1373,7 +1378,10 @@ class Discover:
         except (FetchError, Blocked) as e:
             fail(f"gmail: {e}")
             return
-        store = ll.Store(self.db, persist=not self.dry_run)
+        store = ll.Store(self.db, persist=not self.dry_run, reread=reread)
+        self.label_repaired = store.repair()
+        if self.label_repaired:
+            self.say(f"gmail label: cleared {self.label_repaired} read mark(s) that had no stored type or no cards (they are read again now)")
         after = int((self.today - window).timestamp())
         cap = int(g.get("label_max_messages", 300))
         fetched: list[tuple[str, str, str, str, str, str, str]] = []       # (label, id, received, kind, from, subject, html + text)
@@ -1391,6 +1399,8 @@ class Discover:
                 if store.has_message(mid):
                     self.run.count(label, "message_already_read")
                     continue
+                if reread and mid in store.messages:
+                    self.run.count(label, "message_reread")
                 try:
                     msg = gmail.get_message(self.f, token, mid)
                     frm, subject, html, text = gmail.message_text(msg)
@@ -1398,34 +1408,47 @@ class Discover:
                     self.run.notes.append(f"gmail message {mid}: {e}")
                     break
                 fetched.append((name, mid, gmail.message_time(msg), ll.classify(frm, subject), frm, subject, (html, text)))
+                if len(self.label_examples) < 5:
+                    self.label_examples.append((frm, " ".join(subject.split())[:100]))
         names_to_hide = ll.user_names(self.s)
         for name, mid, received, kind, frm, subject, (html, text) in sorted(fetched, key=lambda m: (m[3] not in (ll.APPLICATION_SENT, ll.APPLICATION_UPDATE), m[2])):
             self.label_kinds[kind] += 1
             self.run.count(label, f"mail_{kind}")
-            if kind in ll.CARD_KINDS:
-                cards = gmail.parse_alert("linkedin", html, text, mid)
-                for item in cards:
-                    self.label_card(item, received, mid, store)
-                if not cards:
-                    self.run.count(label, "mails_without_cards")
-                    self.run.no_job_subjects.setdefault("linkedin", " ".join(subject.split())[:120] or "(no subject)")
-            elif kind == ll.APPLICATION_SENT:
-                app = ll.parse_application(kind, subject, html, text)
-                if app.company:
-                    store.add_applied(app, received, mid)
-                    if app.title:
-                        self.known.add(app.company, app.title, "", ll.APPLIED)          # a card of this job later in the run is 'already applied'
-                    self.run.count(label, "applied_recorded")
-                else:
-                    self.run.count(label, "application_unparsed")
-            elif kind == ll.APPLICATION_UPDATE:
-                app = ll.parse_application(kind, subject, html, text)
-                self.run.count(label, "status_updated" if store.update_applied(app) else "status_update_unmatched")
-            elif len(self.run.notes) < 30:
-                self.run.notes.append(f"gmail label {name}: email of another type, not parsed (subject {' '.join(subject.split())[:70]!r})")
+            cards: list = []
+            try:
+                if kind in ll.CARD_KINDS:
+                    cards = gmail.parse_alert("linkedin", html, text, mid)
+                    for item in cards:
+                        self.label_card(item, received, mid, store)
+                    if not cards:
+                        self.run.count(label, "mails_without_cards")
+                        self.run.no_job_subjects.setdefault("linkedin", " ".join(subject.split())[:120] or "(no subject)")
+                elif kind == ll.APPLICATION_SENT:
+                    app = ll.parse_application(kind, subject, html, text)
+                    if app.company:
+                        store.add_applied(app, received, mid)
+                        if app.title:
+                            self.known.add(app.company, app.title, "", ll.APPLIED)          # a card of this job later in the run is 'already applied'
+                        self.run.count(label, "applied_recorded")
+                    else:
+                        self.run.count(label, "application_unparsed")
+                elif kind == ll.APPLICATION_UPDATE:
+                    app = ll.parse_application(kind, subject, html, text)
+                    self.run.count(label, "status_updated" if store.update_applied(app) else "status_update_unmatched")
+                elif len(self.run.notes) < 30:
+                    self.run.notes.append(f"gmail label {name}: email of another type, not parsed (subject {' '.join(subject.split())[:70]!r})")
+            except Exception as e:  # noqa: BLE001 — one bad email must not lose the others, and it must not be marked read
+                self.run.count(label, "unparsed_mails")
+                self.label_unparsed_mails.append((frm, " ".join(subject.split())[:100]))
+                self.run.notes.append(f"gmail label {name}: unparsed, will be retried ({type(e).__name__}: {e}; subject {' '.join(subject.split())[:60]!r})")
+                continue
             if not self.dry_run:                                                  # the latest email of each type, sanitised, for debugging the parser
                 ll.save_sample(self.s, kind, frm, subject, html, text, names_to_hide)
-            store.add_message(mid, name, kind, received, subject)
+            if not store.add_message(mid, name, kind, received, subject, len(cards)):
+                self.run.count(label, "unparsed_mails")                           # a job email with 0 cards: unread, retried next run
+                self.label_unparsed_mails.append((frm, " ".join(subject.split())[:100]))
+                if not self.dry_run:
+                    ll.save_sample(self.s, f"{kind}_unparsed", frm, subject, html, text, names_to_hide)
 
     def label_card(self, item: gmail.AlertItem, received: str, mid: str, store: "ll.Store") -> None:
         """One job card of a label email: what became of it is its `result` (resolved:<ats>/<slug> | needs_jd | duplicate of <id> | filtered:<reason> |
@@ -1451,7 +1474,7 @@ class Discover:
 
         if store.applied_hit(item.job_id, key):
             return done(ll.APPLIED)
-        earlier = store.card_before(item.job_id, key, row["received"], int(g.get("label_dedupe_days", 14)))
+        earlier = store.card_before(item.job_id, key, row["received"], int(g.get("label_dedupe_days", 14)), mid)
         if earlier:
             return done(f"duplicate of {earlier}")
         where = self.known.where(item.company, item.title, item.location)

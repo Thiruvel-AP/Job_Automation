@@ -199,6 +199,18 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
    `answer`) are read as well, after the ones in `applicant.yaml`: with `options: [Man, Male]` a "Man / Woman / ..." list gets "Man". An invalid
    entry is never used to fill anything.
 
+## Daily routine
+
+- **Morning:** discovery has run at 07:45. Then `careerops live --fresh --max 3`: approve, edit or skip each one, and contact one person per approved job.
+- **Evening:** `careerops tracker sync` and `careerops judge-stats`.
+- **Weekly:** `careerops doctor`, `pytest -n auto`, and push a snapshot.
+
+## Known limits
+
+- LinkedIn job pages are never fetched, so Easy Apply jobs and cards that match no employer board go to the `needs_jd` list (`careerops queue --source linkedin_email`).
+- The full ad comes from the employer's job board or from `careerops add-jd`.
+- The first 10 live applications are reviewed by hand.
+
 ## Daily use
 
 ```bash
@@ -206,12 +218,12 @@ careerops sponsors                 # gov.uk register: download only if its link 
 careerops discover                 # pull + triage; skipped jobs keep their reason
 careerops discover --ats --reed    # find open jobs and write them to data/jds/inbox/ (see "Finding jobs: careerops discover")
 careerops discover --adzuna --gmail-alerts   # Adzuna results and LinkedIn / CV-Library / Indeed / Reed alert emails, resolved to full ads
-careerops discover --gmail-label [NAME] [--since 7d]   # v3.8: the emails of a Gmail label (default: every label of discover.gmail.labels, "LinkedIn"), read only; prints one table (received | title | company | location | sponsor | result)
+careerops discover --gmail-label [NAME] [--since 7d] [--reread]   # v3.8 (v3.9: --reread ignores the read marks; an email is marked read only once it gave cards): the emails of a Gmail label (default: every label of discover.gmail.labels, "LinkedIn"), read only; prints one table (received | title | company | location | sponsor | result)
 careerops queue --source linkedin_email   # v3.8: the label cards that need their ad pasted (needs_jd), each with its LinkedIn link to open in your own browser, then `add-jd`
 careerops discover --jobbank       # Canada's Job Bank open-data CSV: matching rows are listed in data/discover/listed_only.csv
 careerops discover --report        # counts per source, resolved vs the manual queue, the freshness tiers; then the inbox's liveness (open / closed / uncertain: one request a second per host, answers kept 6 h) and its repost and evergreen? counts
 careerops discover --report --no-liveness   # the same without fetching any ad
-scripts/discover.sh                # what the scheduler runs twice a day: discover --ats --reed --adzuna --gmail-alerts --gmail-label --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
+scripts/discover.sh                # what the scheduler runs twice a day (set up once with scripts/scheduler_install.ps1): discover --ats --reed --gmail-alerts --gmail-label --report, logged to data/logs/discover_<date>.log (docs/scheduler.md)
 careerops sources check            # health of every source in config/sources.yaml -> table + data/discover/health/<date>.csv (also ends every discover run)
 careerops sources list             # the registry, no network
 careerops search-plan              # v3.1 agent search: the queries to run (at most 20; offline), saved to data/search/plan-<date>.json, with the yield table

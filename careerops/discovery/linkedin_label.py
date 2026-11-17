@@ -140,37 +140,68 @@ class Store:
     every write goes to memory and, unless `persist` is False (a dry run), to the database."""
     db: object
     persist: bool = True
+    reread: bool = False                       # --reread: ignore every read mark (the marks are still written)
     messages: set[str] = field(default_factory=set)
     cards: list[dict] = field(default_factory=list)
     applied: list[dict] = field(default_factory=list)
 
     def __post_init__(self):
         c = self.db.conn
-        self.messages = {r[0] for r in c.execute("SELECT message_id FROM gmail_label_messages")}
-        self.cards = [dict(r) for r in c.execute("SELECT linkedin_job_id, key, received_at, id FROM linkedin_cards")]
+        self.messages = {r[0] for r in c.execute(
+            "SELECT m.message_id, m.kind, COALESCE(m.cards_parsed, (SELECT COUNT(*) FROM linkedin_cards k WHERE k.message_id = m.message_id)) "
+            "FROM gmail_label_messages m") if counts_as_read(r[1], r[2])}
+        self.cards = [dict(r) for r in c.execute("SELECT linkedin_job_id, key, received_at, id, message_id FROM linkedin_cards")]
         self.applied = [dict(r) for r in c.execute("SELECT id, company, title, key, linkedin_job_id, status FROM linkedin_applied")]
 
-    # ---- messages
+    # ---- messages (v3.9: a message is READ only once it was classified and parsed; see `counts_as_read`)
     def has_message(self, mid: str) -> bool:
-        return mid in self.messages
+        """True when the message was read before and this run does not re-read it (`--reread` ignores every read mark)."""
+        return not self.reread and mid in self.messages
 
-    def add_message(self, mid: str, label: str, kind: str, received: str, subject: str) -> None:
-        self.messages.add(mid)
+    def add_message(self, mid: str, label: str, kind: str, received: str, subject: str, cards_parsed: int = 0) -> bool:
+        """Record (message_id, source, type, cards_parsed, parsed_at). Returns True when the message now counts as read; a card email (job_alert /
+        job_recommendation) with 0 cards is stored but stays unread, so the next run fetches it again."""
+        read = counts_as_read(kind, cards_parsed)
+        if read:
+            self.messages.add(mid)
+        else:
+            self.messages.discard(mid)
         if self.persist:
             with self.db.conn:
-                self.db.conn.execute("INSERT OR IGNORE INTO gmail_label_messages (message_id, label, kind, received_at, subject, processed_at) "
-                                     "VALUES (?,?,?,?,?,?)", (mid, label, kind, received, subject[:200], _now()))
+                self.db.conn.execute("INSERT OR REPLACE INTO gmail_label_messages (message_id, label, kind, received_at, subject, processed_at, cards_parsed, parsed_at) "
+                                     "VALUES (?,?,?,?,?,?,?,?)", (mid, label, kind, received, subject[:200], _now(), int(cards_parsed), _now()))
+        return read
+
+    def repair(self) -> int:
+        """One-time repair of marks written before v3.9 (they were set whatever the parse gave): a mark with no stored type is cleared, and a card
+        email whose stored cards are none is cleared too (it is fetched and parsed again). Marks that hold cards get their `cards_parsed` filled in.
+        Returns the number of marks cleared; the database is copied first when any is."""
+        c = self.db.conn
+        bad = [r[0] for r in c.execute(
+            "SELECT m.message_id FROM gmail_label_messages m WHERE (m.kind IS NULL OR m.kind = '') "
+            "OR (m.cards_parsed IS NULL AND m.kind IN (?,?) AND NOT EXISTS (SELECT 1 FROM linkedin_cards k WHERE k.message_id = m.message_id))", CARD_KINDS)]
+        if bad and self.persist:
+            from .. import pathstore
+            pathstore.backup_db(self.db, "pre-label-repair")
+        if self.persist:
+            with c:
+                c.executemany("DELETE FROM gmail_label_messages WHERE message_id = ?", [(m,) for m in bad])
+                c.execute("UPDATE gmail_label_messages SET cards_parsed = (SELECT COUNT(*) FROM linkedin_cards k WHERE k.message_id = gmail_label_messages.message_id), "
+                          "parsed_at = COALESCE(parsed_at, processed_at) WHERE cards_parsed IS NULL")
+        self.messages -= set(bad)
+        return len(bad)
 
     # ---- cards
-    def card_before(self, job_id: str, key: str, received: str, days: int) -> str | None:
+    def card_before(self, job_id: str, key: str, received: str, days: int, message_id: str = "") -> str | None:
         """The earlier card this one repeats: the same LinkedIn job id (any age), else the same company + title seen within `days` days of this one.
         Returns that card's job id (or `card <n>` when it has none)."""
+        cards = [c for c in self.cards if not (message_id and c.get("message_id") == message_id)]       # a re-read email is not a duplicate of itself
         if job_id:
-            hit = next((c for c in self.cards if c.get("linkedin_job_id") == job_id), None)
+            hit = next((c for c in cards if c.get("linkedin_job_id") == job_id), None)
             if hit:
                 return job_id
         when = _parse(received)
-        for c in self.cards:
+        for c in cards:
             if c.get("key") == key and key != "|":
                 then = _parse(c.get("received_at"))
                 if when is None or then is None or abs((when - then).total_seconds()) <= days * 86400:
@@ -178,7 +209,18 @@ class Store:
         return None
 
     def add_card(self, row: dict) -> None:
-        mem = {"linkedin_job_id": row.get("job_id", ""), "key": row["key"], "received_at": row["received"], "id": len(self.cards) + 1}
+        mem = {"linkedin_job_id": row.get("job_id", ""), "key": row["key"], "received_at": row["received"], "id": len(self.cards) + 1,
+               "message_id": row.get("message_id", "")}
+        same = next((c for c in self.cards if c.get("message_id") and c.get("message_id") == mem["message_id"]
+                     and c.get("key") == row["key"] and (c.get("linkedin_job_id") or "") == (row.get("job_id") or "")), None)
+        if same is not None:                               # a re-read email: its card is updated, not added twice
+            same["received_at"] = row["received"]
+            if self.persist:
+                with self.db.conn:
+                    self.db.conn.execute("UPDATE linkedin_cards SET result=?, job_file=?, location=?, work_type=?, salary=?, easy_apply=? WHERE id=?",
+                                         (row["result"], row.get("job_file", ""), row.get("location", ""), row.get("work_type", ""), row.get("salary", ""),
+                                          1 if row.get("easy_apply") else 0, same["id"]))
+            return
         self.cards.append(mem)
         if self.persist:
             with self.db.conn:
@@ -229,6 +271,16 @@ class Store:
             with self.db.conn:
                 self.db.conn.execute("UPDATE linkedin_applied SET status=?, updated_at=? WHERE id=?", (app.status, _now(), match["id"]))
         return True
+
+
+def counts_as_read(kind: str | None, cards_parsed: int | None) -> bool:
+    """A message is read once it was classified (it has a type) and, if it is a job email, at least one card came out of it. NULL cards_parsed
+    (a mark from before v3.9) counts as read for a type that carries no cards; `Store.repair` settles the card emails."""
+    if not kind:
+        return False
+    if kind in CARD_KINDS:
+        return bool(cards_parsed)
+    return True
 
 
 def _now() -> str:
@@ -316,7 +368,8 @@ def result_group(result: str) -> str:
     return result
 
 
-def format_report(rows: list[dict], kinds: dict[str, int], unparsed: int, tiers: list[int]) -> list[str]:
+def format_report(rows: list[dict], kinds: dict[str, int], unparsed: int, tiers: list[int], *, unparsed_mails: list[tuple[str, str]] = (),
+                  examples: list[tuple[str, str]] = (), already_read: int = 0) -> list[str]:
     """The one table, newest first (received | title | company | location | sponsor | result), then the counts per email type, per result and per age tier."""
     from . import freshness
 
@@ -330,10 +383,18 @@ def format_report(rows: list[dict], kinds: dict[str, int], unparsed: int, tiers:
         out += [fmt(cols), "-+-".join("-" * w for w in width), *(fmt(x) for x in cells)]
     else:
         out.append("no new job cards")
+        if examples:                                  # what the label actually holds, so the cause of "0 cards" can be seen
+            out.append("the first emails of the label (sender | subject):")
+            out += [f"  {frm[:60]} | {subj}" for frm, subj in examples[:5]]
+        elif already_read:
+            out.append(f"{already_read} email(s) of the window are already read: `--reread` reads them again")
     by_result: dict[str, int] = {}
     for r in rows:
         by_result[result_group(r["result"])] = by_result.get(result_group(r["result"]), 0) + 1
     out += ["", "emails by type: " + (", ".join(f"{k} {kinds.get(k, 0)}" for k in KINDS) if any(kinds.values()) else "none new"),
             "cards by result: " + (", ".join(f"{k} {v}" for k, v in sorted(by_result.items())) or "none") + (f", unparsed {unparsed}" if unparsed else ""),
             "cards by age: " + ", ".join(f"{n} {tiers[i]}" for i, n in enumerate(freshness.TIER_NAMES))]
+    if unparsed_mails:
+        out.append(f"unparsed mails (left unread, retried next run): {len(unparsed_mails)}")
+        out += [f"  {frm[:60]} | {subj}" for frm, subj in unparsed_mails[:5]]
     return out

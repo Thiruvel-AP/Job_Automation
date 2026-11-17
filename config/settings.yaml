@@ -390,7 +390,7 @@ review:
   # the job without the prompt; refused in code until the log holds 60 human-labelled reviews and not one false approve (judge
   # yes, you no). A judge "no" always comes to you. The judge model is llm.models.judge (local Ollama qwen2.5-7b-8k), and must be
   # another family than gpt-oss.
-  judge: shadow               # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML)
+  judge: "off"                # off | shadow | gate (quote "off": an unquoted off is the boolean false in YAML). v3.9: off, because the local qwen judge said "send, 5/5" on jobs Claude rightly parked (Sirius, Kong); the code stays, only this setting changed. The Claude judge (judge: below) stays in shadow mode.
 
 judge:
   # v3.5: who takes the decisions of the decision queue (`careerops queue`): Claude Code in headless mode (`claude -p`, no tools), then you.
@@ -543,5 +543,6 @@ apply:
 # v3.7.1 (apply/jd_knockout.py): ads that STATE a knock-out are moved to jds_done/skipped_knockout/ before any model call (the matched sentence is printed; a dry run
 # only names them; `careerops unskip --shortlist` brings one back). Empty by default = nothing changes. Allowed: security_clearance_residency (SC / DV / eSC clearance
 # with a UK residency period), years_experience_min_5 ("5+ years", "at least 5 years" in the requirements).
+# v3.9: security_clearance_residency is on (you agreed): an ad that states it is skipped before any model call.
 knockouts:
-  skip_before_tailoring: []
+  skip_before_tailoring: [security_clearance_residency]

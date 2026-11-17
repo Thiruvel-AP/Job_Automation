@@ -3,10 +3,10 @@
 `scripts/discover.sh` finds jobs; it does nothing else. It runs
 
 ```
-careerops discover --ats --reed --adzuna --gmail-alerts --gmail-label --report
+careerops discover --ats --reed --gmail-alerts --gmail-label --report
 ```
 
-which reads the Greenhouse / Lever / Ashby boards, Reed, Adzuna and your Gmail job alerts, writes each new ad that passes the role and
+which reads the Greenhouse / Lever / Ashby boards, Reed and your Gmail job alerts and LinkedIn label, writes each new ad that passes the role and
 place filters to `data/jds/inbox/`, and prints the report (counts per source and how many ads are in each freshness tier). It never
 tailors a CV, never opens an application form and never sends anything: you run `careerops live` (or `careerops live --fresh`) yourself.
 
@@ -14,38 +14,32 @@ Everything it prints is appended to `data/logs/discover_<YYYY-MM-DD>.log`, so th
 code is the command's: **non-zero when a source failed** (most often a lapsed Gmail sign-in; see below), so Task Scheduler shows the
 task as failed and you notice. A missing Reed or Adzuna key is only a note in the log, not a failure.
 
-## The task (you create it; this repo does not)
+## The task: one command, run by you
 
-The task runs a WSL command at **07:45** and **17:45** every day:
+`scripts/discover.sh` activates `.venv`, changes to `/mnt/d/VS_Code/DataScience/Projects/career-ops`, runs the command above and appends to
+`data/logs/discover_<date>.log`; it exits non-zero when the command (or a source) failed.
 
-```
-wsl.exe -e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"
-```
-
-In the Task Scheduler app (`taskschd.msc`):
-
-1. **Create Task** (not "Basic Task"), name it `career-ops discover`.
-2. **General:** "Run only when user is logged on" is fine (WSL starts with your session); leave "Run with highest privileges" off.
-3. **Triggers:** New, Daily, start 07:45, repeat every 1 day; add a second trigger, Daily, 17:45.
-4. **Actions:** New, Start a program.
-   - Program/script: `wsl.exe`
-   - Add arguments: `-e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"`
-5. **Conditions:** untick "Start the task only if the computer is on AC power" if the laptop is often on battery.
-6. **Settings:** tick "Run task as soon as possible after a scheduled start is missed" (a laptop asleep at 07:45 then runs it when
-   it wakes) and "If the task fails, restart every 10 minutes, up to 2 times".
-
-The same thing from a PowerShell prompt, if you prefer a command (run it yourself, once):
+From a PowerShell prompt, **you** run, once:
 
 ```powershell
-$action = New-ScheduledTaskAction -Execute "wsl.exe" -Argument '-e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"'
-$times  = @("07:45", "17:45") | ForEach-Object { New-ScheduledTaskTrigger -Daily -At $_ }
-$set    = New-ScheduledTaskSettingsSet -StartWhenAvailable -RestartCount 2 -RestartInterval (New-TimeSpan -Minutes 10)
-Register-ScheduledTask -TaskName "career-ops discover" -Action $action -Trigger $times -Settings $set
+powershell -ExecutionPolicy Bypass -File scripts\scheduler_install.ps1
 ```
 
-Test it once by hand before trusting it: right-click the task, **Run**, then open `data/logs/discover_<today>.log`; or run
-`wsl.exe -e bash -lc "cd /mnt/d/VS_Code/DataScience/Projects/career-ops && scripts/discover.sh"` in a terminal and read the exit code
-(`$LASTEXITCODE`).
+It registers the task `career-ops discover` with `Register-ScheduledTask`: two daily triggers, **07:45** and **17:45**, each running
+
+```
+wsl.exe -e bash -lc "/mnt/d/VS_Code/DataScience/Projects/career-ops/scripts/discover.sh"
+```
+
+It also turns on "run as soon as possible after a missed start" (a laptop asleep at 07:45 runs it on waking) and restarts a failed run twice, 10 minutes
+apart. Nothing in this repo runs the script for you, and no code creates a scheduled task.
+
+Test it: `Start-ScheduledTask -TaskName "career-ops discover"`, then read `data/logs/discover_<today>.log`; or run
+`wsl.exe -e bash -lc "/mnt/d/VS_Code/DataScience/Projects/career-ops/scripts/discover.sh"` in a terminal and read `$LASTEXITCODE`.
+Remove the task with `powershell -ExecutionPolicy Bypass -File scripts\scheduler_uninstall.ps1`.
+
+`careerops doctor` watches it: `[warn]` when no `data/logs/discover_*.log` is newer than 24 hours ("run scripts/scheduler_install.ps1"), and `[!!]`
+when a tracked file still spells the repo folder with its old name.
 
 ## What you do with the result
 

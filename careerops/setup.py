@@ -654,6 +654,31 @@ def region_size_checks(settings) -> list[tuple[str, object, str]]:
     return out
 
 
+OLD_FOLDER = "VS_" + "Codes"       # the folder's old name, spelt in pieces so this file does not contain it
+
+
+def scheduler_log_check(settings, now: float | None = None) -> tuple[str, object, str]:
+    """v3.9: `[warn]` when no data/logs/discover_*.log was written in the last 24 hours (the scheduled discovery is not running)."""
+    import time
+
+    logs = Path(settings.path("logs")) if "logs" in settings.raw.get("paths", {}) else settings.root / "data" / "logs"
+    newest = max((f.stat().st_mtime for f in logs.glob("discover_*.log")), default=None) if logs.is_dir() else None
+    age = (now or time.time()) - newest if newest else None
+    ok = age is not None and age <= 24 * 3600
+    return ("scheduled discovery ran in the last 24 hours (data/logs/discover_*.log)", True if ok else "warn", "run scripts/scheduler_install.ps1")
+
+
+def old_folder_name_check(settings) -> tuple[str, object, str]:
+    """v3.9: `[!!]` when a tracked file still spells the repo folder with its old name (docs, scripts and examples would send you to a folder that is gone)."""
+    try:
+        out = subprocess.run(["git", "grep", "-l", "-I", OLD_FOLDER], cwd=settings.root, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return ("no tracked file names the old folder", "warn", "git is not available here: run `git grep " + OLD_FOLDER + "` yourself")
+    files = [x for x in out.stdout.splitlines() if x.strip()]
+    return (f"no tracked file names the old folder ({OLD_FOLDER})" if not files else f"{len(files)} tracked file(s) name the old folder {OLD_FOLDER}: " + ", ".join(files[:5]),
+            not files, f"replace {OLD_FOLDER} with VS_Code in those files")
+
+
 def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     """(check, passed, hint) for each dependency the pipeline needs. `ping` = also send each llm.models model a tiny
     request (the only check that spends provider quota)."""
@@ -698,6 +723,8 @@ def doctor(settings, ping: bool = True) -> list[tuple[str, bool, str]]:
     checks += applicant_checks(settings.path("applicant"))
     checks += reminder_checks(settings)
     checks += gmail_label_checks(settings, ping)
+    checks.append(scheduler_log_check(settings))
+    checks.append(old_folder_name_check(settings))
     checks += region_size_checks(settings)
     checks += provider_checks(settings)
     checks += careers_checks(settings)
