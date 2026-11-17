@@ -2526,3 +2526,22 @@ Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` 
 - Tests: `tests/test_plain_default.py`. A letter with fewer than 3 numbers is demoted to the review band, so the `tailored` fixture (tests/conftest.py) now uses a company hook
   with three numbers and a letter that quotes them (`_fabricating_llm(numbers=True)`); the guard accepts them as claims about the company. No fact bank was touched.
 - Deferred to v1.1: a "transferable" reqmap bucket (weight 0.25, never printed as a skill); the judge's 3 reject / 3 shortlist reasons; a `deep-dive` command.
+
+### v3.7.1 (16 Nov 2026) — fixes from the Sirius Analysis dry run (job manual:2f46779b6f54) — **done offline** (fixture banks, no model, no network)
+- Retired bullets (`tailoring/selection.py`): a bullet id in another bullet's `replaces:` list of the SAME entry is retired and never printed while the replacer exists, however
+  it scores. The 80 % `REPLACE_RATIO` gate is gone (az10 scored under it, so az1 printed); the constant stays only because a test documents the old rule. Retired
+  bullets still count as evidence in the requirement map. One exception, `tailor.reconcile_proof`: a hook's proof bullet stays when no replacement says the hook's number.
+- Plain lines: no situation opener on a bullet that prints its `plain:` line (`ctx["plain"]`, `layout.no_opener`); `plain:` bullets are never sent to `rephrase_bullets`
+  (`propose_rephrases(skip=...)`, `tailor.plain_ids`), so a CV where every bullet has `plain:` makes 0 rephrase calls.
+- A saved `plain:` line the CV does not use is never silent: `report.style.plain_skipped = {bullet id: reason}` (a rule's own message, "no plain: line", or the ATS fallback; also
+  `plain_skipped` on the matching `ranking.bullets` rows). The `[r]` screen prints a rule rejection with the rule and "yours to fix in fact_bank.yaml" (`workflow.plain_skipped_lines`).
+  fl7's reason on the Sirius run: its plain line upgraded "contributed" to "built".
+- Skills rows named with the ad's words list only skills the bank lists (`skills:` and the family's `skill_lines`, `reqmap.skill_pool`); `jd_aliases` values are matching words
+  and are never printed. A row left with fewer than two items is dropped and the family's lines stay.
+- Letter slots (`template_letter.normalise_acronyms`): ai, ml, llm(s), nlp, sql, api(s), aws, gcp upper case (whole words) and "ai / ml" as "AI/ML", before the fact check (unchanged).
+- Profile (`reqmap.pick_fragments(skipped=...)`, `organisation_names`): a fragment that names an organisation an earlier sentence (the hook's profile line, an earlier fragment) names
+  is skipped; the skip is in `report.profile_fragments_skipped`.
+- Knock-outs before tailoring (`apply/jd_knockout.py`, new; not the form pre-scan of `apply/knockout.py`): `settings.yaml knockouts.skip_before_tailoring` (empty by default, so nothing
+  changes): `security_clearance_residency`, `years_experience_min_5`. A match moves the ad to `jds_done/skipped_knockout/` (reason note, decision log SKIP) before any model call and prints
+  the quoted sentence; a dry run only names it; `unskip --shortlist` brings it back. Also checks a file named with `--url`.
+- Tests: `tests/tailoring/test_fixes_v371.py`, `tests/apply/test_jd_knockout.py`; `test_oct18_round.py` no longer expects the 80 % rule.

@@ -410,6 +410,25 @@ class Live:
         gone = {st.path for st in stops}
         return [f for f in files if f not in gone]
 
+    def _knockouts(self, files: list[Path]) -> list[Path]:
+        """v3.7.1: before any model call, an ad that STATES a knock-out you listed in `settings knockouts.skip_before_tailoring` (apply/jd_knockout.py; empty by
+        default = nothing happens) moves to jds_done/skipped_knockout/ with its reason, and the matched sentence is printed. A dry run only names it and leaves
+        it out of this session. Also checks a file you named (`--url`): you listed the knock-out yourself. Returns the files left to work on."""
+        from . import jd_knockout
+
+        stops = jd_knockout.find(files, self.s)
+        if not stops:
+            return files
+        if self.dry_run:
+            for line in jd_knockout.lines(stops, applied=False):
+                self.out(line + " (dry run: left where it is, not worked on)")
+        else:
+            jd_knockout.file_away(self.s, stops)
+            for line in jd_knockout.lines(stops, applied=True):
+                self.out(line)
+        gone = {st.path for st in stops}
+        return [f for f in files if f not in gone]
+
     def _locate(self, name: str) -> Path:
         """Where the JD file called `name` is now: the inbox, else the approved folders."""
         here = self.dirs.inbox / name
@@ -567,7 +586,8 @@ class Live:
         self._ask_unconfirmed()
         if not self.dry_run and self.only is None and (why := self._daily_block()):
             raise StopSession(why, 0)                           # at the cap nothing more is tailored or applied to today
-        files = ([self.only] if self.only is not None else self._by_priority(self._hard_stops(self._gated(self._source_files()))))
+        files = (self._knockouts([self.only]) if self.only is not None
+                 else self._by_priority(self._knockouts(self._hard_stops(self._gated(self._source_files())))))
         if self.fresh and not files and self.only is None:
             self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
         if not files and self.require_approval:

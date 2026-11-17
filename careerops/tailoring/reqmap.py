@@ -300,10 +300,47 @@ def fragments(fb: dict) -> list[dict]:
     return [f for f in fb.get("profile_fragments") or [] if isinstance(f, dict) and f.get("id") and str(f.get("text") or "").strip()]
 
 
-def pick_fragments(rm: ReqMap, fb: dict, avoid: str = "", limit: int = MAX_FRAGMENTS) -> list[dict]:
+_ORG_SPLIT = re.compile(r"\s+[\u2013\u2014-]+\s+|\s+\ufffd\s+|\(|,|:")
+_GENERIC_ORG_WORDS = {"consulting", "bristol", "banking", "group", "datathon", "ltd", "ltd.", "limited", "inc", "inc.", "plc", "llc", "hackathon",
+                      "university", "uk", "uwe"}
+_NOT_AN_ORG = {"freelance", "self-employed", "self employed"}
+
+
+def _short_org(name: str) -> str | None:
+    """"180 Degrees Consulting Bristol" -> "180 Degrees", "Lloyd's Banking Group Datathon" -> "Lloyd's", "Avasoft LTD., Chennai" -> "Avasoft": the words before
+    the first generic one. None for a name that starts with a generic word ("Banking Customer Churn") or is too short to be a name."""
+    words: list[str] = []
+    for w in _ORG_SPLIT.split(" ".join(str(name or "").split()))[0].split():
+        if w.casefold().strip(".,") in _GENERIC_ORG_WORDS:
+            break
+        words.append(w)
+    short = " ".join(words).strip()
+    return short if len(short) >= 4 and short.casefold() not in _NOT_AN_ORG else None
+
+
+def organisation_names(fb: dict) -> list[str]:
+    """The organisations (and named projects) a profile sentence can name, from the fact bank's experience (`org`, `display_org`) and project names
+    (v3.7.1): their short names, in bank order, once each. Read only."""
+    out: list[str] = []
+    for e in fb.get("experience") or []:
+        out += [n for k in ("org", "display_org") if (n := _short_org(e.get(k) or ""))]
+    out += [n for p in fb.get("projects") or [] if (n := _short_org(p.get("name") or ""))]
+    return list(dict.fromkeys(out))
+
+
+def _names_in(text: str, names: Sequence[str]) -> list[str]:
+    """The names (as organisation_names gives them) that `text` says, whole words, apostrophe and case free."""
+    low = str(text or "").replace("\u2019", "'").casefold()
+    return [n for n in names if re.search(r"(?<!\w)" + re.escape(n.replace("\u2019", "'").casefold()) + r"(?!\w)", low)]
+
+
+def pick_fragments(rm: ReqMap, fb: dict, avoid: str = "", limit: int = MAX_FRAGMENTS, skipped: list[str] | None = None) -> list[dict]:
     """The 2-3 `profile_fragments` that add the most requirement weight, best first, none twice and none that repeats `avoid` (the hook's profile line)
     or an earlier pick (SHINGLE consecutive words). A fragment covers a requirement when its text or `terms` carry the requirement's words (term,
-    alts, aliases) and the requirement is not a gap. [] when no fragment covers anything: the caller then uses the family's profile_body."""
+    alts, aliases) and the requirement is not a gap. [] when no fragment covers anything: the caller then uses the family's profile_body.
+    v3.7.1: a fragment that names an organisation (organisation_names: AstraZeneca, 180 Degrees, Lloyd's, Avasoft ...) that `avoid` or an earlier pick
+    already names is skipped, so the profile never tells the same project twice ("my AstraZeneca-affiliated MSc dissertation" and "an MSc dissertation
+    with an AstraZeneca affiliation"); each skip is appended to `skipped` as "<fragment id> skipped: names <X>, as <where> already does"."""
     aliases = aliases_of(fb)
     live = [r for r in rm.reqs if r.bucket != GAP]
     members = {r.index: _members(r.term, r.alts, aliases) for r in live}
@@ -315,6 +352,8 @@ def pick_fragments(rm: ReqMap, fb: dict, avoid: str = "", limit: int = MAX_FRAGM
     picked: list[dict] = []
     seen: set[int] = set()
     used = shingles(avoid)
+    orgs = organisation_names(fb)
+    named_by = {n: "the hook sentence" for n in _names_in(avoid, orgs)}      # organisation -> who named it first
     pool = fragments(fb)
     while pool and len(picked) < limit:
         def gain(f: dict) -> float:
@@ -325,6 +364,13 @@ def pick_fragments(rm: ReqMap, fb: dict, avoid: str = "", limit: int = MAX_FRAGM
             break
         if shingles(str(best["text"])) & used:
             continue
+        named = _names_in(str(best["text"]), orgs)
+        again = [n for n in named if n in named_by]
+        if again:
+            if skipped is not None:
+                skipped.append(f"{best['id']} skipped: names {', '.join(again)}, as {named_by[again[0]]} already does")
+            continue
+        named_by.update({n: str(best["id"]) for n in named})
         picked.append(best)
         seen |= cover[str(best["id"])]
         used |= shingles(str(best["text"]))
@@ -353,24 +399,47 @@ def _top_level_pieces(line: str) -> list[str]:
     return [p for p in out if p]
 
 
+def skill_pool(fb: dict, family_lines: dict[str, str] | None = None) -> list[tuple[str, set[str]]]:
+    """The skills the CV may print in a row named with the ad's words (v3.7.1): [(the skill as the bank spells it, its canonical keys)] from the fact bank's
+    `skills:` groups, then the chosen family's `skill_lines` items (whole items, then the items inside their brackets). `jd_aliases` values are matching
+    words only: an alias that is not one of these is never printed ("data analysis, eda, exploratory data analysis, data audit, data quality, Explored"
+    was a Skills line on the 15 Nov Sirius CV)."""
+    raw: list[str] = []
+    for items in (fb.get("skills") or {}).values():
+        raw += [str(i).strip() for i in (items if isinstance(items, (list, tuple)) else [items]) if str(i).strip()]
+    for line in (family_lines or {}).values():
+        raw += _top_level_pieces(str(line))
+    for line in (family_lines or {}).values():
+        raw += line_items(str(line))
+    return [(i, covers(i)) for i in dict.fromkeys(raw) if covers(i)]
+
+
+def _skill_for(word: str, pool: list[tuple[str, set[str]]]) -> str | None:
+    """The first skill of the pool that is the word (case, plural, hyphen and a trailing bracket aside), as the bank spells it; None when none is."""
+    keys = covers(word)
+    return next((item for item, ks in pool if keys & ks), None) if keys else None
+
+
 def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None, jd_rows: int = JD_ROWS, max_rows: int = MAX_SKILL_ROWS) -> dict[str, str] | None:
     """The CV's Skills rows built from the ad's requirements: up to `jd_rows` rows NAMED with a requirement's own words (the JD phrase, verbatim),
-    each listing the evidence words that back it (the term and its aliases, as the user wrote them in the bank), then the family's own `skill_lines`
+    each listing the SKILLS that back it (v3.7.1: the term, its alts and its aliases that the bank lists as a skill in `skills:` or the family's
+    `skill_lines`, spelled as the bank spells them; an alias that is only evidence in a bullet is a matching word and is never printed), then the family's own `skill_lines`
     as the fallback rows (one best row per remaining requirement weight, a skill never twice). None when no requirement has enough evidence
     for a row, or the section would have fewer than three rows: the caller keeps the family's lines whole. A gap never reaches a row."""
     aliases = aliases_of(fb)
     bullets, others = _bank_sources(fb)
+    pool = skill_pool(fb, family_lines)
     rows: dict[str, list[str]] = {}
     seen: set[str] = set()
     for r in sorted(rm.reqs, key=lambda r: (-r.weight, r.index)):
         if r.bucket == GAP or len(rows) >= jd_rows:
             continue
-        # a row's items are the evidence words as written in the bank: the term itself and its aliases, not the alts of another requirement
+        # a row's items are skills the bank lists: the term itself and its aliases (not the alts of another requirement), each only when it IS one
         found = []
         for w in _members(r.term, r.alts, aliases):
             inb, elsewhere = find_evidence([w], bullets, others)
-            if inb or elsewhere:
-                found.append((inb or elsewhere)[0].quote)
+            if (inb or elsewhere) and (item := _skill_for(w, pool)):
+                found.append(item)
         items: list[str] = []
         for it in dict.fromkeys(found):
             keys = covers(it)

@@ -4,7 +4,7 @@
                        when the name and the URL do not fit one line the URL moves to the stack line, right-aligned. Checked on the rendered
                        PDF with `pdftotext -bbox`: the URL's box never touches another word's box.
   2. verbatim         a bullet with `verbatim: true` is never reworded, shortened, split or given an opener: the output is the fact-bank text.
-  3. replaces         a selected bullet with `replaces:` drops what it replaces (preferred when it scores >= 0.8 x the best of them); one situation
+  3. replaces         a selected bullet with `replaces:` drops what it replaces (v3.7.1: always preferred; the replaced bullet is retired); one situation
                        opener per role: the `situation:` text or a `situation_included: true` bullet, never both.
   4. skills           the family whose `match` terms carry the most keyword weight gives its `skill_lines` word for word.
   5. recent roles     a role dated within the last two years keeps at least two bullets; the shrink loop trims projects first.
@@ -293,11 +293,13 @@ def test_the_replacing_bullet_is_preferred_when_it_scores_at_least_80_percent_of
     assert _pick(fb, kws) == ["r"]
 
 
-def test_a_replacing_bullet_below_80_percent_leaves_the_originals():
+def test_a_replacing_bullet_below_80_percent_still_replaces_the_original():
+    """v3.7.1 (16 Nov 2026): the 80 % rule is gone. A replaced bullet is retired and never printed while its replacer exists, whatever it scores
+    (the 15 Nov Sirius CV printed az1 instead of az10 because az10 scored under 80 % of it)."""
     fb, kws = _micro(X_TEXT, "Built forecasting pipelines in python with pandas.", KW5)
     sc = selection.relevance_scores(fb, kws, "")
     assert sc["r"] < 0.8 * sc["x"]
-    assert _pick(fb, kws) == ["x"]
+    assert _pick(fb, kws) == ["r"]
 
 
 def test_selecting_a_replacing_bullet_drops_the_ones_it_replaces_even_when_the_entry_is_below_its_minimum():

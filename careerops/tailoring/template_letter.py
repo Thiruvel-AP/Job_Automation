@@ -367,8 +367,19 @@ def fill(t: Template, company: str, values: Mapping[str, str]) -> list[str]:
     return out
 
 
+_ACRONYMS = {"ai": "AI", "ml": "ML", "llm": "LLM", "llms": "LLMs", "nlp": "NLP", "sql": "SQL", "api": "API", "apis": "APIs", "aws": "AWS", "gcp": "GCP"}
+_ACRONYM = re.compile(r"(?<!\w)(" + "|".join(_ACRONYMS) + r")(?!\w)", re.I)
+_AI_ML = re.compile(r"(?<!\w)ai\s*/\s*ml(?!\w)", re.I)
+
+
+def normalise_acronyms(text: str) -> str:
+    """v3.7.1: the acronyms of a model-filled slot in upper case, whole words only (a small model wrote "Your ad asks for ai / ml solutions"): ai, ml, llm(s),
+    nlp, sql, api(s), aws and gcp, and "ai / ml" as "AI/ML". Runs before the fact check, which is unchanged."""
+    return _ACRONYM.sub(lambda m: _ACRONYMS[m.group(1).lower()], _AI_ML.sub("AI/ML", str(text or "")))
+
+
 def _clean_slot(key: str, v: Any) -> str:
-    s = " ".join(str(v or "").split()).strip().strip('"“”')
+    s = normalise_acronyms(" ".join(str(v or "").split()).strip().strip('"“”'))
     if key in ("question", "ad_requirement"):          # a phrase inside a sentence of the template: lower case, no end punctuation
         if key == "question":
             s = re.sub(r"^could we spend 20 minutes on\s+", "", s, flags=re.I)

@@ -531,3 +531,9 @@ apply:
   # jobs.lever.co: its hCaptcha / "error verifying your application" check turned the automated browser away (see data/live/submit_failures.csv).
   handoff_hosts: [jobs.lever.co]
   max_submit_failures: 2   # failed attempts on one job (verification error, a field LOST after re-fill, upload refused, FORM NOT FOUND) before it is handed off
+
+# v3.7.1 (apply/jd_knockout.py): ads that STATE a knock-out are moved to jds_done/skipped_knockout/ before any model call (the matched sentence is printed; a dry run
+# only names them; `careerops unskip --shortlist` brings one back). Empty by default = nothing changes. Allowed: security_clearance_residency (SC / DV / eSC clearance
+# with a UK residency period), years_experience_min_5 ("5+ years", "at least 5 years" in the requirements).
+knockouts:
+  skip_before_tailoring: []

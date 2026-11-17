@@ -10,7 +10,7 @@ import time
 from dataclasses import asdict, replace as dc_replace
 from datetime import date
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Collection, Iterable
 
 from .. import ats, bands
 from .. import pathstore
@@ -47,7 +47,7 @@ from .letter_rules import fallback_letter, gap_display, grammar_problems, term_d
 from .rewrite_rules import (added_word_problems, bare_keyword_problems, canonical_case, canonical_forms, filler_problems, must_keep_problems,
                             qualifier_problems)
 from . import selection as _selection
-from .selection import (JACCARD, ONE_PAGE, REPLACE_RATIO, Layout, bullet_hits, chunks, fill_order, is_recent, layout_from, missing_keywords,
+from .selection import (JACCARD, ONE_PAGE, Layout, bullet_hits, chunks, fill_order, is_recent, layout_from, missing_keywords,
                         project_cap, replacers, select_cv, selected_ids, settle_selection, situated_ids, skills_text, verbatim_ids)
 from .skills import (CORE_LABEL, core_skills, cv_skill_groups, cv_skills, dedupe_skills, family_basics_missing, family_skill_lines,
                      is_database_row, pick_family, skill_group_config, wants_databases)   # noqa: F401 — dedupe_skills is re-exported
@@ -297,20 +297,27 @@ def placement_offers(fb: dict, sel: dict, kws: list[Keyword], other_text: str = 
     return offers, unoffered
 
 
+def plain_ids(fb: dict) -> set[str]:
+    """The ids of the bullets that carry a `plain:` line (v3.7.1): in the plain style the user's own wording of them is final, so none goes to the model."""
+    return {str(b["id"]) for sec in ("experience", "projects") for e in fb.get(sec) or [] for b in e.get("bullets") or []
+            if str(b.get("plain") or "").strip()}
+
+
 def propose_rephrases(job: dict, fb: dict, sel: dict, kws: list[Keyword], llm, cache: dict,
-                      notes: list[str], other_text: str = "", introduce: bool = False) -> tuple[dict[str, str], dict]:
+                      notes: list[str], other_text: str = "", introduce: bool = False, skip: Collection[str] = ()) -> tuple[dict[str, str], dict]:
     """Ask for rewordings of the selected bullets that can carry a JD keyword the CV is missing (`placement_offers`: the
     keyword is in the bullet's `terms`, at most MAX_OFFERS per bullet, and only with `introduce`, which the pipeline never sets: a
     reworded bullet may not add a claim; `other_text` = the profile and skills text, which
     already count as having a keyword), in batches of REPHRASE_BATCH: each call gets the bullet text, its terms and the
     keywords it may introduce, and answers
     {bullet id: new text}. Returns ({bullet id: proposed text}, stats). `cache` maps (bullet id, missing words) to the
-    answer, so a later attempt never pays twice for the same question; a failed batch is not cached and is noted."""
+    answer, so a later attempt never pays twice for the same question; a failed batch is not cached and is noted. `skip` = ids that are never sent
+    (v3.7.1: in the plain style every bullet with a `plain:` line; no bullet left to ask about = no call at all)."""
     bidx, awards = bullet_index(fb), award_of(fb)
     result = lambda bid: unused_result(bidx[bid], awards.get(bid, ""))      # noqa: E731
     todo = []
     offers, unoffered = placement_offers(fb, sel, kws, other_text, introduce=introduce)
-    locked = verbatim_ids(fb)                         # `verbatim: true`: the user's own wording, never sent to the model
+    locked = verbatim_ids(fb) | set(skip)             # `verbatim: true`, and (plain style) the bullets with a `plain:` line: never sent to the model
     for bid in selected_ids(fb, sel):
         if bid in locked:
             continue
@@ -612,6 +619,9 @@ def _context(fb: dict, sel: dict, texts: dict[str, str], profile: str, kws: list
             "results": {i: " ".join(str(b["result"]).split()) for i, b in bidx.items() if str(b.get("result") or "").strip()},
             # layout.with_openers: no situation text on a verbatim bullet, none next to a bullet that has its own
             "verbatim": sorted(verbatim_ids(fb)), "situated": sorted(situated_ids(fb))}
+    # v3.7.1: the bullets that print their approved `plain:` line (plain_bank gave them `text_technical`): no situation opener goes on them
+    ctx["plain"] = sorted({i for sec in ("experience", "projects") for e in ctx[sec] for i, t in zip(e["bullet_ids"], e["bullets"])
+                           if bidx[i].get("text_technical") and t == bidx[i]["text"]})
     if achievements:
         ctx["achievements"] = achievements
     if hk is not None:
@@ -646,17 +656,16 @@ def lead_best(ctx: dict, scores: dict[str, float], hk: hooks.Hook | None = None)
 
 def reconcile_proof(fb: dict, sel: dict, hk: hooks.Hook, kws: list[Keyword] | None = None, jd: str = "") -> tuple[dict, hooks.Hook, list[str]]:
     """`sel` with the hook's proof bullet on it and no chosen bullet next to the one it replaces (`replaces:`), the hook (a copy), and notes.
-    A bullet that replaces the proof bullet and says the hook's number, in the same entry, and scores at least REPLACE_RATIO of it (the
-    check is skipped without `kws`), takes over as the proof (the one already chosen first, else the best scoring): the user rewrote
-    that bullet, the hook's strings are still true of it. Otherwise the proof stays and a chosen bullet that replaces it goes."""
+    A bullet that replaces the proof bullet and says the hook's number, in the same entry, takes over as the proof (the one already chosen first, else
+    the best scoring; v3.7.1: whatever it scores, the replaced bullet is retired): the user rewrote that bullet, the hook's strings are still true of it.
+    When no replacement says the number the proof stays (the hook is the first bullet by rule) and a chosen bullet that replaces it goes."""
     bidx, owner = bullet_index(fb), {b["id"]: e["id"] for sec in ("experience", "projects") for e in fb[sec] for b in e["bullets"]}
     notes: list[str] = []
     proof, reps = hk.proof_bullet_id, replacers(fb)
     sc = relevance_scores(fb, kws, jd) if kws else {}
     chosen = set(selected_ids(fb, sel))
     heirs = [r for r, olds in reps.items()
-             if proof in olds and owner.get(r) == hk.entry_id and hooks.keeps_number(bidx[r]["text"], hk)
-             and (not sc or sc.get(r, 0.0) >= REPLACE_RATIO * sc.get(proof, 0.0))]
+             if proof in olds and owner.get(r) == hk.entry_id and hooks.keeps_number(bidx[r]["text"], hk)]
     if heirs:
         heir = min(heirs, key=lambda r: (r not in chosen, -sc.get(r, 0.0)))
         hk = dc_replace(hk, proof_bullet_id=heir)
@@ -861,13 +870,13 @@ def fit_lengths(ctx: dict, render: Callable[[], tuple[Path, int]], fb: dict, kws
                     stats["split"].append(bid)
                     changed = True
                 else:                                        # nothing to cut at: straight on to a shorter wording
-                    lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), ctx.get("verbatim") or ())
+                    lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), pdflayout.no_opener(ctx))
                     tried.add("shorten")
                     wanted[bid] = (text, max(8, int((len(text.split()) + lead) * pdflayout.MAX_BULLET_LINES / lines * 0.92) - lead))
                     where[bid] = (sec, n, i)
             elif "shorten" not in tried:
                 tried.add("shorten")
-                lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), ctx.get("verbatim") or ())
+                lead = pdflayout.opener_words(e, i, ctx.get("situated") or (), pdflayout.no_opener(ctx))
                 wanted[bid] = (text, max(8, int((len(text.split()) + lead) * pdflayout.MAX_BULLET_LINES / lines * 0.92) - lead))
                 where[bid] = (sec, n, i)
         if wanted:
@@ -1842,21 +1851,43 @@ def _restore_plain(ctx: dict, fb: dict, info: dict) -> None:
 def plain_style_report(ctx: dict, info: dict, kws: list[Keyword], claimable: list[str]) -> dict:
     """The strict ATS of the plain CV and of the same CV in the full wording (both on the CV's words, plain.ctx_text). v3.7: when plain is more than
     5 points lower, bullets go back to their `text` one at a time, the one that recovers most first, until the gap is 5 or less
-    (plain.style_fallback; `style_fallback` lists the ids). Readability per plain bullet on the CV, and the CV's bullets that have no plain version."""
+    (plain.style_fallback; `style_fallback` lists the ids). Readability per plain bullet on the CV, and the CV's bullets that have no plain version.
+    v3.7.1: `plain_skipped` = {bullet id: why} for EVERY bullet on the CV that does not print its plain line (no `plain:` line, a saved one a rule refuses,
+    or the ATS fallback): the full wording is never put on the CV without a reason on record. ctx["plain"] (the bullets that print plain) loses the
+    fallback ids, so no situation opener goes on a plain line and the full wording keeps its own."""
     on_cv = [b for sec in ("experience", "projects") for e in ctx.get(sec) or [] for b in e.get("bullet_ids") or []]
     plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
+    before = (plain_s, tech_s)
     fallback: list[str] = []
     if tech_s - plain_s > plain_mod.MAX_STYLE_GAP:
         fallback = plain_mod.style_fallback(ctx, info, kws, claimable)
         plain_s, tech_s = plain_mod.strict_both(ctx, info, kws, claimable)
+    ctx["plain"] = [b for b in ctx.get("plain") or [] if b not in fallback]
     plain_set = set(info.get("plain") or [])
     refused = info.get("refused") or {}
+    skipped: dict[str, str] = {}
+    for b in dict.fromkeys(on_cv):
+        if b in refused:
+            skipped[b] = "the saved plain line breaks a rule: " + "; ".join(refused[b])
+        elif b not in plain_set:
+            skipped[b] = f"no `plain:` line in fact_bank.yaml (careerops plain-draft --id {b} drafts one for you to approve)"
+        elif b in fallback:
+            skipped[b] = (f"the ATS fallback put the full wording back: the all-plain CV scored {before[0]:.1f}% strict against {before[1]:.1f}% in the full "
+                          f"wording (more than {plain_mod.MAX_STYLE_GAP:g} points under)")
     return {"style": "plain", "strict_plain": plain_s, "strict_technical": tech_s, "strict_full": tech_s,
-            "style_fallback": fallback, "topped_up": [],
+            "style_fallback": fallback, "topped_up": [], "plain_skipped": skipped,
             "plain_refused": {b: refused[b] for b in on_cv if b in refused},
             "brackets": {b: t for b, t in (info.get("added") or {}).items() if b in on_cv},
             "readability": {b: s for b, s in (info.get("readability") or {}).items() if b in on_cv},
             "plain_on_cv": [b for b in on_cv if b in plain_set], "plain_missing": [b for b in on_cv if b not in plain_set and b not in refused]}
+
+
+def mark_plain_skipped(ranking: dict, skipped: dict[str, str]) -> dict:
+    """v3.7.1: each ranked bullet that is on the CV without its plain line carries `plain_skipped: <reason>` (the whole map is `style.plain_skipped`)."""
+    for row in ranking.get("bullets") or []:
+        if row["id"] in skipped:
+            row["plain_skipped"] = skipped[row["id"]]
+    return ranking
 
 
 def _keep_proof_number(ctx: dict, fb: dict, hk: hooks.Hook) -> None:
@@ -1979,7 +2010,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                                  "its profile_body (add a profile_opening sentence to that family in fact_bank.yaml)")
     # v3.6: the profile is the opening plus the 2-3 profile_fragments that cover the most requirement weight (none that repeats the hook's line); the
     # family's profile_body only when no fragment covers anything. With no hook, the best-covering proof bullet is line 1 (and the no-hook warning stays).
-    frags = reqmap_mod.pick_fragments(rm, fb, avoid=hk.profile_line if hk else "")
+    profile_skips: list[str] = []                       # v3.7.1: a fragment that names an organisation an earlier sentence names is skipped, and logged
+    frags = reqmap_mod.pick_fragments(rm, fb, avoid=hk.profile_line if hk else "", skipped=profile_skips)
     profile_body = " ".join(" ".join(str(f["text"]).split()) for f in frags) if frags else family_body
     proof_line = ""
     if hk is None and frags:
@@ -2001,7 +2033,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     achievements = achievement_entries(fb, moved, kws)
     report: dict[str, Any] = {"job_id": job["id"], "company": job["company"], "title": job["title"],
                               "family": family, "tier": tier, "headline": headline,
-                              "requirements": rm.to_dict(), "profile_fragments": [str(f["id"]) for f in frags], "profile_proof_line": proof_line,
+                              "requirements": rm.to_dict(), "profile_fragments": [str(f["id"]) for f in frags], "profile_fragments_skipped": profile_skips,
+                              "profile_proof_line": proof_line,
                               "keywords": [asdict(k) for k in kws], "company_hook": hook, "team": team,
                               "ceiling": ceil, "genuine_gaps": gaps, "possible_evidence": possible,
                               "context_terms": context_terms, "attempts": [], "out_dir": str(final_dir),
@@ -2041,7 +2074,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         else:
             sel, _ = settle_selection(fb, picked)
         proposed, rstats = propose_rephrases(job, fb, sel, kws, llm, cache, rephrase_notes,
-                                             other_text=profile_text + " " + skills_text(skills))
+                                             other_text=profile_text + " " + skills_text(skills), skip=plain_ids(fb) if plain_info is not None else ())
         accepted, viol, warn = guard_rephrases(fb, proposed, kws)
         if plain_info and plain_info["plain"]:          # an approved plain bullet is yours: never reworded by the model
             accepted = {k: v for k, v in accepted.items() if k not in set(plain_info["plain"])}
@@ -2246,7 +2279,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                     "links": link_issues},
         "hook_placed": hook_placement(ctx, hk, pdf_text(pdf)),
         "typography": typography_report(ctx, pdf_text(pdf), sep, keep),
-        "ranking": ranking_table(fb, kws, jd, chosen_ids),
+        "ranking": mark_plain_skipped(ranking_table(fb, kws, jd, chosen_ids), style_rep.get("plain_skipped") or {}),
         "rephrase_coverage": rec["rephrase_coverage"], "rephrase": rec["rephrase"], "placement": rec["placement"],
         "letter": letter, "llm_usage": usage_since(llm, usage_from), "style": style_rep,
         "cv_pdf": str(final_dir / pdf.name), "letter_pdf": _final_path(letter_pdf, out_dir, final_dir),

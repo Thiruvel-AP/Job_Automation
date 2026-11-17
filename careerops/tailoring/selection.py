@@ -18,9 +18,11 @@ selection is made here and the model is only asked to reword (rephrase batches) 
   * `fill_order` lists the bullets still unused, for the two-page loop that keeps adding until page 2 is full: further
     projects (up to 6) first, then more bullets of the shown projects, then more experience bullets
   * the shrink loop in tailor.py drops the least relevant bullets when the CV is over the page limit
-  * `replaces:` — a bullet that stands in for older ones (az10 replaces az1, az2): when it is chosen the ones it replaces are never
-    on the CV, and where one of them would have been chosen it is chosen instead if it scores at least REPLACE_RATIO (0.8) of the bullet it replaces
-    (the average of them when it replaces several); a replacer below that is left out and the originals compete as before
+  * `replaces:` — a bullet that stands in for older ones of the same entry (az10 replaces az1, az2). v3.7.1: the ones it replaces are RETIRED: never chosen
+    while it exists in the entry, however they score (they still count as evidence in the requirement map, reqmap.py), and where one of them would have
+    been chosen the replacer is chosen instead. (Before v3.7.1 a replacer scoring under REPLACE_RATIO of them was passed over and the retired bullet
+    printed: the 15 Nov Sirius CV showed az1 instead of az10.) The one exception is tailor.reconcile_proof: a hook's proof bullet stays when its
+    replacement does not say the hook's number
   * `situation_included: true` — a bullet that opens with its own situation: at most one per entry (the entry's `situation:` text is not
     added next to it, layout.with_openers)
   * `verbatim: true` — a bullet that is used word for word (tailor.py never sends it to the model); selection treats it like any bullet
@@ -124,7 +126,7 @@ def is_recent(entry: dict, years: int, ref: date | None = None) -> bool:
 
 
 # ------------------------------------------------------------------------------------------------------------- bullet flags
-REPLACE_RATIO = 0.8         # a replacing bullet is preferred when it scores at least this share of the best bullet it replaces
+REPLACE_RATIO = 0.8         # v3.7.1: no longer gates anything (a replacer always stands in for what it retires); kept for the tests that document the old rule
 
 
 def _bullets(fb: dict):
@@ -145,10 +147,17 @@ def situated_ids(fb: dict) -> frozenset[str]:
 
 
 def replacers(fb: dict) -> dict[str, frozenset[str]]:
-    """{bullet id: the ids it `replaces:`} for the bullets that replace others (only ids the fact bank has)."""
-    known = {b["id"] for _, b in _bullets(fb)}
-    return {b["id"]: frozenset(str(x) for x in b["replaces"] if str(x) in known and str(x) != b["id"])
-            for _, b in _bullets(fb) if b.get("replaces")}
+    """{bullet id: the ids it `replaces:`} for the bullets that replace others: only ids of the SAME entry (a bullet of another role or project is not
+    replaced by it)."""
+    owner = {b["id"]: e["id"] for e, b in _bullets(fb)}
+    return {b["id"]: frozenset(str(x) for x in b["replaces"] if owner.get(str(x)) == e["id"] and str(x) != b["id"])
+            for e, b in _bullets(fb) if b.get("replaces")}
+
+
+def retired_ids(fb: dict) -> frozenset[str]:
+    """The ids another bullet of the same entry `replaces:` (v3.7.1): never printed while that bullet exists. They stay in the fact bank and in the
+    requirement map as evidence."""
+    return frozenset().union(*replacers(fb).values())
 
 
 def tokens(text: str) -> frozenset[str]:
@@ -209,23 +218,14 @@ class _Picker:
         self.replaces = replacers(fb)
         self.situated = situated_ids(fb)
         self.owner = {b["id"]: e["id"] for e, b in _bullets(fb)}
-        self.qualifying: dict[str, list[str]] = {}                       # replaced id -> the replacers preferred over it
-        self.passed_over: set[str] = set()                               # replacers under REPLACE_RATIO of the best bullet they replace
+        self.qualifying: dict[str, list[str]] = {}                       # replaced id -> the replacers that stand in for it
+        self.passed_over: set[str] = set()                               # always empty since v3.7.1: no replacer is passed over for scoring lower
         for r, olds in self.replaces.items():
-            if self.sc.get(r, 0.0) >= REPLACE_RATIO * self._replaced_score(olds):
-                for o in olds:
-                    self.qualifying.setdefault(o, []).append(r)
-            else:
-                self.passed_over.add(r)
-        self.excluded: set[str] = set(self.passed_over)                  # never chosen: passed over, or replaced by a chosen bullet
+            for o in olds:
+                self.qualifying.setdefault(o, []).append(r)
+        self.retired = retired_ids(fb)                                   # v3.7.1: replaced bullets, never chosen whatever they score
+        self.excluded: set[str] = set(self.retired)                      # never chosen: retired (or replaced by a chosen bullet)
         self.situation_in: set[str] = set()                              # entries with a `situation_included` bullet chosen
-
-    def _replaced_score(self, olds: Sequence[str]) -> float:
-        """What a replacer has to match: the score of the one bullet it replaces, or the AVERAGE of the bullets when it replaces several (it takes
-        the place of all of them, one slot for the lot, so a single inflated hit in one of them, e.g. "packaged" for the keyword "packaging", must not
-        decide; 12 Nov 2026: p_af3 lost to p_af1 + p_af2 at 1.5 against 2.0)."""
-        sc = [self.sc.get(o, 0.0) for o in olds]
-        return sum(sc) / len(sc) if sc else 0.0
 
     def relevance(self, ids: Sequence[str]) -> float:
         """The best relevance score (keywords + domain, whether or not already covered) of these bullets."""
@@ -265,7 +265,7 @@ class _Picker:
         return near_duplicate(self.text[bid], [self.text[c] for c in self.chosen], self.limit)
 
     def allowed(self, bid: str, strict: bool = False) -> bool:
-        """May this bullet still be chosen? Not when a chosen bullet replaces it (or it is a replacer passed over), and not a second
+        """May this bullet still be chosen? Not when it is retired (another bullet of its entry replaces it), and not a second
         `situation_included` bullet of an entry. `strict` (the fill, which cannot take a bullet back) also refuses a replacer whose
         replaced bullets are already chosen."""
         if bid in self.excluded or (bid in self.situated and self.owner[bid] in self.situation_in):
@@ -273,14 +273,12 @@ class _Picker:
         return not (strict and self.replaces.get(bid, frozenset()) & set(self.chosen))
 
     def prefer(self, bid: str, pool: set[str]) -> str:
-        """`bid`, or the replacer in `pool` that stands in for it (REPLACE_RATIO of its score or more; the one adding most if several)."""
+        """`bid`, or the replacer in `pool` that stands in for it (the one adding most if several)."""
         better = [r for r in self.qualifying.get(bid, []) if r in pool]
         return max(better, key=lambda r: (self.gain([r]), self.sc[r], -self.order[r])) if better else bid
 
     def settle(self, ids: Sequence[str]) -> list[str]:
-        """`ids` (the bullets of one project) without the replacers passed over, without what a remaining replacer replaces, and with at
-        most one `situation_included` bullet."""
-        ids = [i for i in ids if i not in self.passed_over]
+        """`ids` (the bullets of one project) without what a remaining replacer replaces, and with at most one `situation_included` bullet."""
         gone = set().union(*(self.replaces.get(i, frozenset()) for i in ids)) if ids else set()
         out, opened = [], False
         for i in ids:
@@ -346,7 +344,7 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
             _, _, b = best(rest)
             add(eid, pk.prefer(b, {c[2] for c in rest}))
         if not picked[eid] and ids:                          # a CV lists every job: even a lone near-duplicate stays
-            add(eid, next((b for b in ids if pk.allowed(b)), ids[0]))
+            add(eid, next((b for b in ids if pk.allowed(b)), next((b for b in ids if b not in pk.retired), ids[0])))
 
     ranked = rank_projects(fb, kws, preferred, jd)           # best bullet, sum, preferred, fact bank
     rank = {p: i for i, p in enumerate(ranked)}
@@ -381,7 +379,7 @@ def select_cv(fb: dict, kws: list[Keyword], preferred: list[str] | None = None, 
             got = [g for g in got if g not in gone] + [b]
             left = [x for x in left if x != b]
         if not got and own[pid]:
-            first = next((b for b in own[pid] if pk2.allowed(b)), own[pid][0])
+            first = next((b for b in own[pid] if pk2.allowed(b)), next((b for b in own[pid] if b not in pk2.retired), own[pid][0]))
             got.append(first)
             pk2.take(first)
         project_bullets[pid] = got

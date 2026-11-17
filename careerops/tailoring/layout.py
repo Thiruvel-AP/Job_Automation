@@ -8,7 +8,8 @@
   * STAR     — an experience or project entry with `situation:` in the fact bank opens the bullet that situation BELONGS to with
                "<situation>: " (v3.5.3: `situation_bullet:` when the entry names one, else the entry's first bullet in the fact bank, or a
                bullet that `replaces:` it; never whichever bullet happens to be first on the CV), unless that bullet is `verbatim` (never
-               touched) or the entry shows a `situation_included` bullet (it has its own opener: one per role).
+               touched), a bullet printed as its approved `plain:` line (v3.7.1: a plain line is a complete sentence) or the entry shows a
+               `situation_included` bullet (it has its own opener: one per role).
   * links    — a project's GitHub URL is printed in the right-hand tag, or on the stack line when the name leaves no room (the template
                decides with TeX's own box widths); `link_problems` checks the rendered PDF's word boxes: every URL is there, inside the
                margin, and touches no other word.
@@ -244,14 +245,22 @@ def opener_index(e: dict, situated=(), verbatim=()) -> int | None:
     return at
 
 
+def no_opener(ctx: dict) -> set[str]:
+    """The ids of the bullets that never take a situation opener: `verbatim` ones, and (v3.7.1) the ones that print their approved `plain:` line
+    (`ctx["plain"]`, set by tailor._context; the ATS fallback takes a bullet out of it when it puts the full wording back)."""
+    return set(ctx.get("verbatim") or ()) | set(ctx.get("plain") or ())
+
+
 def with_openers(ctx: dict) -> dict:
     """A copy of `ctx` in which the bullet each experience entry's and project's `situation:` belongs to (`opener_index`) starts with
     "<situation>: " and the (rephrased) action and result after it. Once per entry (a split bullet: its first part); the model never
     writes a situation, it is the fact bank's own text. Not when the entry shows a bullet with its own opener (`ctx["situated"]`, the
-    ids of the `situation_included` bullets: one opener per role), and never on a `verbatim` bullet (`ctx["verbatim"]`). Any other bullet
+    ids of the `situation_included` bullets: one opener per role), and never on a `verbatim` bullet (`ctx["verbatim"]`) or a bullet that prints its
+    plain line (`ctx["plain"]`: "Needed structure in unstructured airline support tickets: built the text-cleaning ... for airline support tickets"
+    was a plain line with the situation glued on, 15 Nov 2026). Any other bullet
     of the entry, even the first one shown, never takes it (the 10 Nov Mining Insights bullet p_ia2 had p_ia1's situation glued on)."""
     out = dict(ctx)
-    situated, verbatim = set(ctx.get("situated") or ()), set(ctx.get("verbatim") or ())
+    situated, verbatim = set(ctx.get("situated") or ()), no_opener(ctx)
     for sec in ("experience", "projects"):
         entries = []
         for e in ctx.get(sec) or []:

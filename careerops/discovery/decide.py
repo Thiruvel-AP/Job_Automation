@@ -714,13 +714,15 @@ def reset(settings, *, match: str | None = None, now: datetime | None = None) ->
                            "was": e.get("decision")})
             out.append(f"back in the agent's pool: {name} (was {LABEL.get(e['decision'], e['decision'])})")
     log(settings, events, now)
-    from ..apply import estimate_skip, hardstop
+    from ..apply import estimate_skip, hardstop, jd_knockout
 
     keys = {e["key"] for e in events}
     for src, dst in hardstop.restore(settings, keys):        # v3.5.4: a file the hard stop filed away comes back to the inbox
         out.append(f"  moved {hardstop.FOLDER}/{src.name} -> inbox/{dst.name}")
     for src, dst in estimate_skip.restore(settings, keys):   # v3.5.5: so does one the estimate stop held back (and it is not estimate-skipped again)
         out.append(f"  moved {estimate_skip.FOLDER}/{src.name} -> inbox/{dst.name}")
+    for src, dst in jd_knockout.restore(settings, keys):    # v3.7.1: and one a listed knock-out filed away (its reason note stays as the record)
+        out.append(f"  moved {jd_knockout.FOLDER}/{src.name} -> inbox/{dst.name}")
     return out
 
 

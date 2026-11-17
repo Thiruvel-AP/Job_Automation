@@ -234,7 +234,7 @@ def cert_text(cert: Any) -> str:
 
 
 # ------------------------------------------------------------------------------------------------------------- context
-_SKIP = {"email", "phone", "links", "github", "url", "dates", "bullet_ids", "linespread", "employment_type", "verbatim", "situated"}
+_SKIP = {"email", "phone", "links", "github", "url", "dates", "bullet_ids", "linespread", "employment_type", "verbatim", "situated", "plain"}
 
 
 def handles(ctx: dict) -> tuple[str, ...]:

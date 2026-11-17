@@ -319,6 +319,21 @@ def number_lint_lines(rep: dict) -> list[str]:
     return numberlint.lines(rep.get("lints"))
 
 
+def plain_skipped_lines(rep: dict) -> list[str]:
+    """v3.7.1: a bullet whose saved plain line the CV does not use is never silent. A line a rule refused (ownership, credit) is printed with the rule's own
+    message and where to fix it (yours, in fact_bank.yaml; code never edits it); one the ATS fallback put back is listed with its reason. A bullet with no
+    plain line at all is already named in the warnings. [] for a technical-style report or one with nothing skipped."""
+    skipped = (rep.get("style") or {}).get("plain_skipped") or {}
+    out = []
+    for bid, why in skipped.items():
+        if why.startswith("the saved plain line breaks a rule"):
+            out.append(f"Plain line of {bid} not used, so its full wording is on the CV: {why[len('the saved plain line breaks a rule: '):]} "
+                       f"(yours to fix in fact_bank.yaml: reword its plain: line so it keeps the rule, or delete it to draft a new one)")
+        elif why.startswith("the ATS fallback"):
+            out.append(f"Plain line of {bid} not used: {why}")
+    return out
+
+
 def doc_check_lines(rep: dict, settings, fb: dict | None, job) -> list[str]:
     """`DOC CHECK: pass`, or the list of failures, on the review screen. Nothing without settings (a bare summary)."""
     if settings is None or fb is None:
@@ -442,6 +457,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | 
         *(gap_lines(rep, gap) if gap is not None else ats_lines(rep)),
         *ats_check_lines(rep, settings, fb if fb is not None else bank, job),
         *number_lint_lines(rep),
+        *plain_skipped_lines(rep),
         *provisional_lines(rep),
         *hook_lines(rep),
         *requirement_lines(rep, fb if fb is not None else bank),

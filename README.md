@@ -275,6 +275,7 @@ careerops shortlist --region uk,ie --size sme-first   # v2.4: the region(s) and 
 careerops discover --ats --gmail-alerts --report --region uk   # ... ends with `in region 41 · out 112 (parked) · unknown 9 | SME 14 · Large 22 · size? 31`
 careerops live --max 5             # the ads you APPROVED (data/jds/approved/<date>/), one job at a time, you at every gate (see "Live sessions"); --include-unapproved takes the whole inbox (never with --auto)
 careerops live --style full       # v3.7: this run's CV prints each bullet's `text` instead of its `plain:` (cv.style is the default: plain)
+careerops live --max 1 --dry-run --url <ad>   # v3.7.1: with `knockouts.skip_before_tailoring` set in settings.yaml (empty by default), an ad that states an SC clearance + UK residency period, or 5+ years, is named and left alone (a real run moves it to jds_done/skipped_knockout/, zero tokens)
 careerops live --fresh             # tier 0 only: the approved files posted at most 24 hours ago (older ones stay where they are, untouched)
                                    # v3.5.5: before tailoring, an approved ad whose estimate F is under priority.min_estimate (0.45) moves to jds_done/skipped_estimate/ (logged `skipped_estimate`, zero tokens); `careerops unskip --shortlist --match ...` brings it back for good
 careerops patterns                 # replies / interviews / rejections by role family, ATS kind and triage band, from the Sheet's Status column (information only; --db: the outcome log)
