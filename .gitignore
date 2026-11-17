@@ -30,3 +30,6 @@ attempts/
 queue_before.json
 queue_after.json
 scripts/debug/
+
+config/profile/fact_bank.yaml
+docs/legacy/
