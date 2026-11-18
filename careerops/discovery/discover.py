@@ -63,6 +63,7 @@ from urllib.parse import urlparse
 from ..apply.naming import folder_key
 from ..db import DB
 from . import applykind
+from . import blacklist as blacklist_mod
 from . import ats as ats_mod
 from . import candidate as cand
 from ..apply import decided as decided_mod
@@ -91,7 +92,7 @@ COMPANY_COLUMNS = ("company", "company_name", "employer", "employer_name", "orga
 TITLE_COLUMNS = ("title", "job_title", "job title", "position", "role", "job")
 SNIPPET_MAX_CHARS = 1500           # an Adzuna description shorter than this (or cut with an ellipsis) is a snippet, not the ad
 TITLE_MATCH = 0.9                  # default of discover.title_match: similarity at which an alert's title is taken for a posting's title
-COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "duplicate", "written", "listed_only", "listed_parked", "listed_capped",
+COUNTERS = ("alerts", "seen", "role_filtered", "place_filtered", "closed", "already_decided", "blacklisted", "duplicate", "written", "listed_only", "listed_parked", "listed_capped",
             "already_in_inbox", "bad_header", "resolved", "to_manual_queue", "to_manual_queue_overflow", "board_unverified", "possible_repost")
 RESOLVED_BY = ("reed", "board_link", "board_known", "board_guessed")       # the steps that can resolve an alert (counted as resolved_via_<step>)
 OLD_PROVIDERS = (*ats_mod.PROVIDERS, "workday")                 # the boards read before v2.6: the "before" of the v2.6 report lines
@@ -123,6 +124,7 @@ class Run:
     notes: list[str] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)       # a source that could not be read at all (a lapsed Gmail sign-in, an error): the command exits 1
     written: list[tuple[Candidate, Path]] = field(default_factory=list)
+    blacklisted: list[tuple[str, str, str]] = field(default_factory=list)   # (company, title, why) of ads never written: blacklist, training scheme
     dry_run: bool = False
     tiers: list[int] = field(default_factory=lambda: [0, 0, 0, 0])      # the freshness tiers (0 <= 24 h ... 3 older) of the ads written
     no_job_subjects: dict[str, str] = field(default_factory=dict)      # alert source id -> the first subject of a mail it read no job from
@@ -689,6 +691,7 @@ class Discover:
         self.inbox = settings.path("jds") / "inbox"
         self.new_files = 0
         self.listed_files = 0
+        self._blacklist: blacklist_mod.Blacklist | None = None       # loaded on first use
         lo = settings["discover"].get("listed_only") or {}
         self.listed_enabled = bool(lo.get("enabled", True))
         self.listed_cap = int(lo.get("max_per_run", 20))
@@ -704,7 +707,9 @@ class Discover:
 
     # ---- filters, in the order that spends least first
     def wanted(self, c: Candidate, label: str) -> bool:
-        """Role family and place; no network, no counters for the dedupe (a job costs a details request only after this)."""
+        """Blacklist, role family and place; no network, no counters for the dedupe (a job costs a details request only after this)."""
+        if self.blacklisted(c, label):
+            return False
         if cand.family_of(c, self.s) is None:
             self.run.count(label, "role_filtered")
             self.filtered_out(c.source, c.company, c.title, c.location, c.url, "role", role_reason(c.title))
@@ -725,6 +730,28 @@ class Discover:
         self.filtered_out(c.source, c.company, c.title, c.location, c.url, "place",
                           (f"not in region {','.join(self.regions)} ({where})" if self.regions is not None else f"not in the UK or remote UK ({where})"))
         return False
+
+    def blacklisted(self, c: Candidate, label: str) -> bool:
+        """v3.9.2: an employer on your blacklist, a known training-scheme seller (ITOL Recruit) or an ad that says "fees apply" is never written, whichever
+        source found it (Reed, ATS, Gmail alerts, Gmail label). Counted as `blacklisted`; the reason goes in the run's notes."""
+        why = ""
+        if (scheme := blacklist_mod.training_scheme(c.company, c.description)):
+            why = f"{blacklist_mod.TRAINING_SCHEME_LABEL}: {scheme}"
+        else:
+            if self._blacklist is None:
+                try:
+                    self._blacklist = blacklist_mod.load(blacklist_mod.path_for(self.s))
+                except blacklist_mod.BlacklistError as e:
+                    self._blacklist = blacklist_mod.Blacklist([])
+                    self.run.notes.append(f"{e}: employer blacklist not applied at discovery")
+            hit = self._blacklist.hit(c.company, c.url or "", c.apply_url or "")
+            if hit:
+                why = f"{c.company} is on your blacklist" + (f": {hit.reason}" if hit.reason else "")
+        if not why:
+            return False
+        self.run.count(label, "blacklisted")
+        self.run.blacklisted.append((c.company, c.title, why))
+        return True
 
     def filtered_out(self, source: str, company: str, title: str, location: str, link: str, which: str, reason: str) -> None:
         """Note a title the role or place filter turned away (written to paths.discover/filtered_<date>.csv by flush_filtered)."""
@@ -1668,6 +1695,40 @@ def park_inbox_listed(settings, regions: Sequence[str] | None = None, *, dry_run
                         [{"ts": now.isoformat(timespec="seconds"), "source": hdr.get("source") or "", "country": hdr.get("country") or "",
                           "company": hdr.get("company") or "", "title": hdr.get("title") or "", "location": hdr.get("location") or "",
                           "posted": hdr.get("posted") or "", "link": hdr.get("url") or "", "reason": f"{where}: moved out of the inbox", "file": f"parked/{dst.name}"}])
+    return moved
+
+
+def move_blacklisted_inbox(settings, *, dry_run: bool = False) -> list[Path]:
+    """v3.9.2: move the inbox files (and files in its dated subfolders) of a blacklisted employer, a training-scheme seller or an ad that says "fees apply"
+    to paths.jds_done/skipped_blacklist/, each with a `.reason.txt`. Nothing is deleted or overwritten; a dry run moves nothing. Returns the files moved."""
+    try:
+        bl = blacklist_mod.load(blacklist_mod.path_for(settings))
+    except blacklist_mod.BlacklistError:
+        bl = blacklist_mod.Blacklist([])
+    dest = settings.path("jds_done") / "skipped_blacklist"
+    moved: list[Path] = []
+    inbox = decided_mod.inbox_dir(settings)
+    for p in sorted(q for q in inbox.rglob("*.txt") if q.is_file() and not q.name.endswith(".reason.txt")) if inbox.is_dir() else []:
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        hdr = manual.header_fields(text)
+        company = hdr.get("company") or ""
+        scheme = blacklist_mod.training_scheme(company, text)
+        hit = bl.hit(company, hdr.get("url") or "", hdr.get("apply_url") or "")
+        why = scheme or (f"{company} is on your blacklist" + (f": {hit.reason}" if hit.reason else "") if hit else "")
+        if not why:
+            continue
+        if dry_run:
+            moved.append(p)
+            continue
+        try:
+            dst = decided_mod.move_file(settings, p, dest)
+        except (OSError, decided_mod.DecidedError):
+            continue
+        dst.with_suffix(".reason.txt").write_text(why + "\n", encoding="utf-8")
+        moved.append(dst)
     return moved
 
 

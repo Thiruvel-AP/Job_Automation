@@ -424,6 +424,10 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
              "gmail_alerts": ("gmail", d.from_gmail), "jobbank": ("jobbank", d.from_jobbank),
              "gmail_label": ("gmail_label", lambda: d.from_gmail_label(None if args.gmail_label == "*" else [args.gmail_label], getattr(args, "since", None),
                                                                        reread=getattr(args, "reread", False)))}
+    if not d.dry_run:                                                           # v3.9.2: one-time move of ads written before the discovery filter
+        gone = disc.move_blacklisted_inbox(s)
+        if gone:
+            print(f"moved {len(gone)} blacklisted ad(s) out of the inbox to {s.path('jds_done') / 'skipped_blacklist'}")
     d.run.asked = list(sources_asked)                                           # `shortlist` says when the alerts were last read from this
     for name in sources_asked:
         label, fn = steps[name]
@@ -456,6 +460,11 @@ def _discover_inbox(args, sources_asked: list[str]) -> None:
         print("\n".join(trace))
     _print_health(s, d.registry, run=d.run, fetcher=fetcher, cache=d.cache, save=not d.dry_run)
     lines = d.listing()
+    n_black = sum(c.get("blacklisted", 0) for c in d.run.sources.values())
+    if n_black:
+        print(f"\nblacklisted {n_black} (not written: blacklist or training scheme)")
+        for company, title, why in d.run.blacklisted[:10]:
+            print(f"  {company} | {title}: {why}")
     print(f"\n{len(d.run.written)} new ad(s) {'would be ' if d.dry_run else ''}written to {d.inbox}" + (", best first:" if lines else "."))
     print("\n".join(lines))
     if len(d.run.written) > len(lines):
@@ -1589,6 +1598,11 @@ def cmd_shortlist(args):
     if not dry:
         _park_region(db, rc)
     interactive = ask is not None and not getattr(args, "yes", False)
+    if not dry:                                           # v3.9.2: blacklisted / training-scheme ads written before the discovery filter existed
+        from .discovery import discover as disc_bl
+        gone = disc_bl.move_blacklisted_inbox(s)
+        if gone:
+            print(f"moved {len(gone)} blacklisted ad(s) out of the inbox to {s.path('jds_done') / 'skipped_blacklist'}")
     if not dry:                                           # ads `discover` wrote to the inbox as `listed_only` before listed ads were parked: out of the region, out of the inbox
         from .discovery import discover as disc
         moved = disc.park_inbox_listed(s, rc.value)

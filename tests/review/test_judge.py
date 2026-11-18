@@ -133,12 +133,13 @@ def test_every_claim_in_the_profile_hook_and_letter_has_its_source_text_in_the_j
     bidx = bullet_index(fb)
     assert "a4" not in [i for e in rep["context"]["experience"] for i in e["bullet_ids"]]
     facts = judge.build_input(job, rep, fb)["facts"]
-    assert f"[a4] {bidx['a4']['text']}" in facts                                  # the hook's proof bullet
-    assert f"[b2] {bidx['b2']['text']}" in facts                                  # the bullet behind a letter sentence
+    np = judge.NOT_PRINTED                                                        # v3.9.2: a bullet the CV does not print is labelled, not left out
+    assert f"[a4 {np}] {bidx['a4']['text']}" in facts                             # the hook's proof bullet
+    assert f"[b2 {np}] {bidx['b2']['text']}" in facts                             # the bullet behind a letter sentence
     assert "[profile_body ai_engineer] Led a five-person team" in facts and "[profile_opening ai_engineer] AI engineer who ships agents." in facts
     assert all(f"[profile_fact {n}]" in facts for n in range(1, len(fb["profile_facts"]) + 1))
     assert "[hook h_fixture letter_line] At Northwind I took an LLM agent" in facts and "[hook h_fixture profile_line]" in facts
-    assert facts.count("[a4]") == 1                                               # each source once
+    assert facts.count("[a4 ") == 1                                               # each source once
 
 
 def test_a_letter_that_is_off_none_or_pending_is_shown_as_no_letter(fb_fixture, job):

@@ -11,7 +11,7 @@
          blacklist, closed posting, unreadable ad, agency with no employer NEEDS CONFIRMATION        held with the reason (career-ops "unattended runs")
        a possible repost of a job you skipped is MARGINAL (it needs you, as at [a]).
     4. caps: at most targeting.daily_max_applications approvals a day, at most targeting.per_company_max_open at one company (counting its open applications
-       and the approved files still waiting), the cooldown; the highest global x freshness wins the slots, the rest WAIT (their evaluation is kept, so
+       and the approved files still waiting), the cooldown; the slots are filled by evaluation score, then ATS ceiling estimate, then freshness, the rest WAIT (their evaluation is kept, so
        tomorrow costs no tokens).
 
 Approval needs agent.approve_from (default 4.0; a value below 4.0 is not used). The decisions are logged in data/evals/decisions.jsonl (append-only) and
@@ -97,6 +97,7 @@ class Item:
     n: int = 0
     rank: float = 0.0
     dups: list[Path] = field(default_factory=list)
+    ceiling: float | None = None                 # v3.9.2: the pre-tailoring ATS ceiling estimate, percent (None: not known)
     freed_by: str = ""                           # v3.2.1: the veto whose freed slot this approval took ("<key>@<ts>")
 
     @property
@@ -147,6 +148,22 @@ def classify(ev: eval_mod.Evaluation, route: str, settings, *, repost_note: str 
     if route.startswith("employer form"):
         return (AUTO_PRIORITY if g >= PRIORITY_FROM else AUTO), ""
     return READY, f"apply: {route}: the pack is built, you apply"
+
+
+def ceiling_floor(decision: str, reason: str, ceiling: float | None, settings) -> tuple[str, str]:
+    """v3.9.2: an approval is never given when the ATS ceiling estimate is under apply.bands.review (50): `live` would skip such a job after tailoring, so it is MARGINAL
+    at best. A ceiling that is not known changes nothing."""
+    from .. import bands
+
+    review = bands.config(settings).review
+    if decision in APPROVING and ceiling is not None and ceiling < review:
+        return MARGINAL, f"ATS ceiling {ceiling:.0f}% is under {review:g}% (apply.bands.review): never auto-approved"
+    return decision, reason
+
+
+def slot_key(it: Item) -> tuple[float, float, float, str]:
+    """v3.9.2: the order the daily approval slots are filled in: evaluation score, then ATS ceiling estimate, then freshness (all highest first)."""
+    return (-(it.ev.global_score if it.ev else 0.0), -(it.ceiling if it.ceiling is not None else -1.0), -freshness(it.age_days), it.name)
 
 
 # ------------------------------------------------------------------ the log
@@ -345,7 +362,9 @@ def run(settings, db: DB, fb: dict, llm, *, now: datetime | None = None, fetcher
             d.evals_new += 1
             d.tokens += ev.tokens
         it.ev = ev
+        it.ceiling = inp.ceiling
         it.decision, it.reason = classify(ev, row.route, settings, repost_note=row.repost)
+        it.decision, it.reason = ceiling_floor(it.decision, it.reason, inp.ceiling, settings)
         it.rank = ev.global_score * freshness(row.t.age_days)
         items.append(it)
     for row in plan.marginal:
@@ -381,7 +400,7 @@ def caps(items: list[Item], settings, db: DB, day: date, *, freed: Sequence[dict
     waiting = Counter(folder_key(decided.header_of(p).get("company") or "") for p in shortlist.approved_files(settings, db))
     taken: Counter = Counter()
     slots = list(freed)
-    pending = sorted((i for i in items if i.decision in APPROVING), key=lambda i: -i.rank)
+    pending = sorted((i for i in items if i.decision in APPROVING), key=slot_key)
     while pending:
         it = next((i for i in pending if slots and i.key in prev), pending[0])
         pending = [i for i in pending if i is not it]

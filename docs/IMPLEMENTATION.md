@@ -2570,3 +2570,10 @@ Reference: career-ops `modes/pdf.md` and `jd-skill-gap.mjs` at `ext/career-ops` 
 - A bullet scoring 0 for the ad is left off a role that already has two scoring bullets (`prune_zero_score`, and the page fill does not add it back). `scoring.skip_zero_score_bullets` (true; the tests' settings copy sets false for the small synthetic fixture bank).
 - Skills rows named with the ad's wording never list the label itself or its singular/plural (`reqmap.echoes_label`).
 Status: done. Tests: `tests/tailoring/test_v391_pages_order.py`.
+
+## v3.9.2 — blacklist at discovery, shortlist knock-outs and ATS floor, slot order, judge sees all bullets
+- `Discover.wanted` (every source: Reed, ATS, Gmail alerts, Gmail label, agent search) drops an ad before it is written when the employer is on `blacklist.yaml`, is a training-scheme seller (ITOL Recruit) or the ad says "fees apply" etc. Counted as `blacklisted N` in the report. `discover` and `shortlist` first run `discover.move_blacklisted_inbox`: such files already in `inbox/` (and its dated subfolders) go to `jds_done/skipped_blacklist/` with a `.reason.txt`, never deleted.
+- `shortlist.build` applies `knockouts.skip_before_tailoring` (apply/jd_knockout) before any evaluation: the file goes to `jds_done/skipped_knockout/`, the matched sentence is printed. A promoted job is exempt. Only a stated sentence counts (a clearance ad with no residency period is not a hit: the knock-out is `security_clearance_residency`).
+- `decide.ceiling_floor`: a ceiling estimate under `apply.bands.review` (50%) is never approved (MARGINAL at best). `decide.slot_key`: the daily slots are filled by (evaluation score, ATS ceiling estimate, freshness).
+- `review/judge.source_lines` (also the Claude reviewer's `fact_bank_excerpt`) sends every bank bullet (text + result, never `terms`), labelling the ones the CV does not print `not printed on this CV`; they come last, so the size budget drops them first.
+Status: done. Tests: `tests/discovery/test_v392_gates.py`.

@@ -52,6 +52,7 @@ from ..apply import decided, targets, volume
 from ..apply import decisions as decisions_mod
 from ..apply.naming import folder_key
 from ..db import DB
+from ..apply import hardstop as hardstop_mod, jd_knockout as ko_mod
 from . import applykind, blacklist, channel, freshness, liveness, triage, workcountry
 from . import candidate as cand
 from .gmail import CV_TRACKING_HOST
@@ -370,6 +371,7 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
     apps = volume.applications(db, settings)
     others = [dict(r) for r in db.jobs()]
     day = now.date()
+    promoted = hardstop_mod.promoted_keys(settings)
     pool = []
     for p in (files if files is not None else decided.txt_files(decided.inbox_dir(settings))):
         job = triage.inbox_job(p, settings, fb, idx)
@@ -411,6 +413,9 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
                 plan.confirm.append((p, job, gate, d.reason))
             else:
                 plan.dropped.append((p, "skipped", f"disqualified, {d.line()}"))
+            continue
+        if (ko := _knockout(job, settings, promoted)) is not None:      # v3.9.2: the listed knock-outs, before any evaluation, with the ad's own sentence
+            plan.dropped.append((p, ko_mod.FOLDER, f"disqualified, knock-out {ko.kind} (settings knockouts.skip_before_tailoring): the ad says \"{ko.sentence}\""))
             continue
         if agent is not None:
             row = Row(p, job, t, kind_of(job), region=rm, repost=repost, quick=agent.quick(job, t))
@@ -582,6 +587,15 @@ def _board_label(r: dict, link: str) -> str:
     """`linkedin`, `indeed/workday`, `cvlibrary [agency or board-only]`: where the alert came from, the kind of page when it is the employer's own."""
     kind = (r.get("apply_kind") or "").strip()
     return (r.get("source") or "alert") + (f"/{kind}" if kind and kind != "aggregator_only" else "") + (f" [{BOARD_ONLY}]" if _cv_job_page(link) else "")
+
+
+def _knockout(job: dict, settings, promoted: set[str]):
+    """The first listed knock-out (settings knockouts.skip_before_tailoring) the ad states, as a jd_knockout.Match; None for none, or for a job you promoted."""
+    kinds = ko_mod.enabled(settings)
+    if not kinds or "|".join(decided.key_of(job.get("company"), job.get("title"))) in promoted:
+        return None
+    hits = ko_mod.match(str(job.get("description") or ""), kinds)
+    return hits[0] if hits else None
 
 
 def file_away(settings, path: Path, folder: str, reason: str) -> Path | None:

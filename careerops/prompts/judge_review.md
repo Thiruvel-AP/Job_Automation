@@ -10,7 +10,8 @@ Decisions
 Check, in this order
 1. Every claim about the candidate in the CV and the letter (a number, a tool, an employer, an outcome, what they owned) against
    the fact-bank excerpt you are given. The fact-bank excerpt is the only source of truth about the candidate. A claim the excerpt
-   does not support goes into unsupported_claims, word for word. The job ad never supports a claim about the candidate.
+   does not support goes into unsupported_claims, word for word. The excerpt holds every bullet of the fact bank; a line marked
+   "not printed on this CV" is still the candidate's own fact, so a letter or Skills claim that rests on it is supported. The job ad never supports a claim about the candidate.
 2. The hook (the headline and the letter's first paragraph) against the problem the ad describes: does it answer that problem?
 3. The plain-language rule: bullets are short, plain sentences (about 25 words at most, at most one jargon term), not keyword lists.
 4. No sentence is cut off mid-way, no text is truncated, and the letter contains no third-person text pasted in (no "he/she/they

@@ -149,7 +149,8 @@ CV (text; the contact block is left out):
 COVER LETTER:
 {letter}
 
-SOURCE FACTS (the applicant's own bullets the CV and letter rest on):
+SOURCE FACTS (the applicant's own record: every bullet of the fact bank. A bullet marked "not printed on this CV" is still the applicant's own fact: a claim in
+the letter or the Skills section that rests on one is supported, not unsupported):
 {facts}"""
 
 
@@ -177,6 +178,7 @@ def cv_text(ctx: dict) -> str:
 
 _SRC_STOP = frozenset("""that this with from were have been into over under than then them they their there which while would could should about
     after before also each such more most only other some what when where will your just like very using used use""".split())
+NOT_PRINTED = "not printed on this CV"
 SOURCE_MIN_SHARED = 4              # content words a letter sentence and a bank bullet must share for the bullet to count as behind that sentence
 SOURCE_MAX_EXTRA = 12              # most bank bullets added because the letter's own sentences rest on them
 
@@ -239,15 +241,20 @@ def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
     hk = rep.get("hook") or {}
     lib = next((h for h in fb.get("hook_library") or [] if isinstance(h, dict) and h.get("id") == hk.get("hook_id")), {})
     ids = [i for sec in ("experience", "projects") for e in ctx.get(sec) or [] for i in e.get("bullet_ids", [])]
+    printed = set(ids)                                         # v3.9.2: what this CV prints; every other bank bullet is labelled as not printed
     proofs = lib.get("proof") or []
     ids += [*(e["id"] for e in letter.get("evidence") or []), hk.get("proof_bullet_id"), *([proofs] if isinstance(proofs, str) else proofs)]
     ids += letter_source_ids(fb, [*(letter.get("paragraphs") or []), str(ctx.get("profile") or "")])
     out, seen = identity_lines(fb), set()
+
+    def bullet_line(i: str, b: dict) -> str:
+        tag = i if i in printed else f"{i} {NOT_PRINTED}"
+        return f"[{tag}] {b['text']}" + (f" Result: {b['result']}" if str(b.get("result") or "").strip() else "")      # text and result only, never `terms`
     for i in ids:
         b = bidx.get(i) if i else None
         if b and i not in seen:
             seen.add(i)
-            out.append(f"[{i}] {b['text']}" + (f" Result: {b['result']}" if str(b.get("result") or "").strip() else ""))
+            out.append(bullet_line(i, b))
     fams = {str(f.get("id")): f for f in fb.get("families") or [] if isinstance(f, dict)}
     wanted = [x for x in (*(rep.get("letter_families") or []), rep.get("family"), (rep.get("skills") or {}).get("family"),
                           letter.get("template_family")) if x]
@@ -258,6 +265,7 @@ def source_lines(fb: dict, rep: dict, paragraphs: list[str]) -> list[str]:
     out += [f"[skills {g}] " + ", ".join(str(x) for x in v) for g, v in (fb.get("skills") or {}).items() if isinstance(v, (list, tuple)) and v]
     out += [f"[profile_fact {n}] {' '.join(str(f).split())}" for n, f in enumerate(fb.get("profile_facts") or [], 1)]
     out += [f"[hook {lib['id']} {k}] {' '.join(str(lib[k]).split())}" for k in ("profile_line", "letter_line", "headline") if lib.get(k)]
+    out += [bullet_line(i, b) for i, b in bidx.items() if i not in seen]          # v3.9.2: the rest of the bank, last, so the size budget drops these first
     return out
 
 

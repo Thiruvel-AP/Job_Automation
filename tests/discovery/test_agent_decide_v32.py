@@ -27,6 +27,7 @@ def fb():
 
 @pytest.fixture(autouse=True)
 def roles(settings, fb, monkeypatch, tmp_path):
+    monkeypatch.setattr(gates, "pre_ceiling", lambda *a, **k: 0.9)          # v3.9.2: a ceiling under 50% is never approved; these tests are about the other rules
     gates.load_roles(settings, fb)
     monkeypatch.setattr(blacklist, "path_for", lambda s: tmp_path / "blacklist.yaml")
     settings.raw["agent"] = {"decide": "veto", "max_evals_per_day": 12}
