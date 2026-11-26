@@ -56,7 +56,7 @@ EXIT_INTERRUPTED = 130        # Ctrl-C (or an unanswered prompt)
 HANDED_OFF = "handed_off"       # the form went to the person's own browser (apply/handoff.py); mark-applied records it once they submit
 SKIPPED_USER = "skipped (user)"   # `s` at the review prompt of a job in the review band (the gap report): the job is skipped, its JD filed in jds_done/skipped/
 FINISHED = ("applied", "applied (archive incomplete)", "ready_not_submitted", "skipped", "skipped (rules)", SKIPPED_USER, bands.ATS_SKIP, "rejected",
-            "submit_unconfirmed", HANDED_OFF, route.ACCOUNT_STATUS)
+            "submit_unconfirmed", HANDED_OFF, route.ACCOUNT_STATUS, "closed")
 SENT = ("applied", "applied (archive incomplete)")
 # the ends of a job after which the facts the user typed for it (review's `f`) are offered for the fact bank, and how each end is put when
 # the CV was NOT sent (review/factsave.py says so in so many words)
@@ -916,6 +916,18 @@ class Live:
                 self.out(f"  This job needs you: {job['reason']}. Finish the form by hand (careerops apply --id {jid}); once submitted: "
                          f"careerops mark-applied --id {jid}")
                 return "needs_user"
+            elif st == "closed":
+                # Job was marked closed by pretailor liveness check.
+                # Move the JD file to jds_done/closed/ with reason.
+                reason = job["reason"] if job["reason"] else "posting closed"
+                try:
+                    from . import decided
+                    dst = decided.move_file(self.s, f, decided.decision_dir(self.s, "closed"))
+                    dst.with_name(dst.stem + ".reason.txt").write_text(f"closed: {reason}\n", encoding="utf-8")
+                    self.out(f"  CLOSED {f.name}: {reason}  (moved to jds_done/closed/)")
+                except (OSError, decided.DecidedError) as e:
+                    self.out(f"  CLOSED {f.name}: {reason}  (could not move file: {e})")
+                return "closed"
             elif st == "needs_review":
                 repost = self._repost(job)
                 if repost:
