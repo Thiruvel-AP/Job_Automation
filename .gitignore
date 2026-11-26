@@ -1,4 +1,6 @@
 .env
+# v3.9.3: careerops prefs backups of .env (they hold the same secrets)
+.env.bak-*
 .venv/
 data/
 data/dryruns/          # the record of a filled form (careerops live --record): personal data

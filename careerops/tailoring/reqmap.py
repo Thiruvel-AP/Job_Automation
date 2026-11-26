@@ -168,10 +168,47 @@ def find_evidence(words: Sequence[str], bullets, others) -> tuple[list[Evidence]
     return in_bullets, elsewhere
 
 
+def heirs(fb: dict) -> dict[str, str]:
+    """{retired bullet id: the bullet that replaces it} (v3.9.5), from `replaces:` (same entry only; a chain resolves to its last bullet). A retired
+    bullet is never printed, so it is never named as evidence: the replacing bullet is."""
+    direct: dict[str, str] = {}
+    for sec in ("experience", "projects"):
+        for e in fb.get(sec) or []:
+            own = {str(b["id"]) for b in e.get("bullets") or []}
+            for b in e.get("bullets") or []:
+                for old in b.get("replaces") or []:
+                    if str(old) in own and str(old) != str(b["id"]):
+                        direct.setdefault(str(old), str(b["id"]))
+    out: dict[str, str] = {}
+    for old in direct:
+        cur, seen = old, {old}
+        while cur in direct and direct[cur] not in seen:
+            cur = direct[cur]
+            seen.add(cur)
+        out[old] = cur
+    return out
+
+
+def _heir_evidence(inb: list[Evidence], heir: dict[str, str], texts: dict[str, str]) -> list[Evidence]:
+    """`inb` with every retired bullet swapped for the bullet that replaces it (once each, in order)."""
+    out: list[Evidence] = []
+    seen: set[str] = set()
+    for ev in inb:
+        if ev.id in heir:
+            new = heir[ev.id]
+            ev = Evidence("bullet", new, ev.quote, _first_words(texts.get(new, ""), 26), ev.via)
+        if ev.id not in seen:
+            seen.add(ev.id)
+            out.append(ev)
+    return out
+
+
 def build(kws: Sequence[Keyword], fb: dict, title: str = "") -> ReqMap:
     """The map of this ad's requirements (`kws`, one requirement each, same index) against the whole fact bank."""
     aliases, deny = aliases_of(fb), fb.get("deny_terms", [])
     bullets, others = _bank_sources(fb)
+    heir = heirs(fb)
+    texts = {b[0]: b[1] for b in bullets}
     low_title = norm_literal(title or "")
     reqs: list[Req] = []
     for i, k in enumerate(kws):
@@ -180,6 +217,7 @@ def build(kws: Sequence[Keyword], fb: dict, title: str = "") -> ReqMap:
         if not deny_hits(" ".join(k.members()), deny):          # a deny-listed term is a gap, whatever the aliases say
             words = _members(k.term, k.alts, aliases)
             inb, elsewhere = find_evidence(words, bullets, others)
+            inb = _heir_evidence(inb, heir, texts)
             r.evidence = inb + elsewhere
             r.bucket = EXISTING if inb else SUPPORTED if elsewhere else GAP
         reqs.append(r)
@@ -259,18 +297,19 @@ def _proofs(entry: dict) -> list[str]:
     return list(dict.fromkeys(str(x).strip() for x in (raw if isinstance(raw, (list, tuple)) else [raw]) if x is not None and str(x).strip()))
 
 
-def hook_cover(rm: ReqMap, entry: dict) -> list[Req]:
-    """The `existing` requirements the entry's proof bullets are evidence of."""
-    proofs = set(_proofs(entry))
+def hook_cover(rm: ReqMap, entry: dict, heir: dict[str, str] | None = None) -> list[Req]:
+    """The `existing` requirements the entry's proof bullets are evidence of (v3.9.5: a retired proof bullet counts as the bullet that replaces it)."""
+    proofs = {(heir or {}).get(p, p) for p in _proofs(entry)}
     return [r for r in rm.of(EXISTING) if proofs & set(r.bullet_ids())]
 
 
 def hook_scores(rm: ReqMap, fb: dict) -> dict[str, tuple[float, int]]:
     """{hook_library id: (sum w of the existing requirements its proof bullets cover, how many)}."""
     out: dict[str, tuple[float, int]] = {}
+    heir = heirs(fb)
     for e in fb.get("hook_library") or []:
         if isinstance(e, dict) and e.get("id"):
-            cov = hook_cover(rm, e)
+            cov = hook_cover(rm, e, heir)
             out[str(e["id"])] = (round(sum(r.weight for r in sorted(cov, key=lambda r: r.index)), 6), len(cov))
     return out
 
@@ -378,8 +417,12 @@ def pick_fragments(rm: ReqMap, fb: dict, avoid: str = "", limit: int = MAX_FRAGM
 
 
 # ------------------------------------------------------------------------------------------------------------------ skills
-def _phrase_label(term: str) -> str:
-    t = " ".join(str(term).split())
+def _phrase_label(term: str, casing: dict[str, str] | None = None) -> str:
+    """A row label from the ad's own words, capital first. v3.9.4: the same casing step as the letter slots (template_letter, v3.9.3): the fact bank's
+    spelling first, then the acronyms ("mlops" -> "MLOps"), then the capital (a word already cased is left as it is)."""
+    from . import template_letter as TL
+
+    t = TL.normalise_acronyms(TL.bank_case(" ".join(str(term).split()), casing))
     return t[:1].upper() + t[1:]
 
 
@@ -438,6 +481,22 @@ def echoes_label(item: str, label: str) -> bool:
     return bool(norm(item)) and norm(item) == norm(label)
 
 
+def drop_label_echoes(rows: dict[str, str]) -> dict[str, str]:
+    """v3.9.3: an item equal to ANY printed label leaves its row, not only one equal to its own row's label: the label "Machine learning concepts" and,
+    on the next row "Machine Learning, Deep Learning & Statistics", the item "Machine learning concepts". A row left with no item is dropped. Rows
+    with no echo are returned exactly as given."""
+    labels = list(rows)
+    out: dict[str, str] = {}
+    for label, line in rows.items():
+        pieces = _top_level_pieces(line)
+        kept = [p for p in pieces if not any(echoes_label(p, lab) for lab in labels)]
+        if len(kept) == len(pieces):
+            out[label] = line
+        elif kept:
+            out[label] = ", ".join(kept)
+    return out
+
+
 def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None, jd_rows: int = JD_ROWS, max_rows: int = MAX_SKILL_ROWS) -> dict[str, str] | None:
     """The CV's Skills rows built from the ad's requirements: up to `jd_rows` rows NAMED with a requirement's own words (the JD phrase, verbatim),
     each listing the SKILLS that back it (v3.7.1: the term, its alts and its aliases that the bank lists as a skill in `skills:` or the family's
@@ -447,6 +506,9 @@ def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None,
     aliases = aliases_of(fb)
     bullets, others = _bank_sources(fb)
     pool = skill_pool(fb, family_lines)
+    from .template_letter import bank_casing
+
+    TL_casing = bank_casing(fb)
     rows: dict[str, list[str]] = {}
     seen: set[str] = set()
     for r in sorted(rm.reqs, key=lambda r: (-r.weight, r.index)):
@@ -454,7 +516,7 @@ def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None,
             continue
         # a row's items are skills the bank lists: the term itself and its aliases (not the alts of another requirement), each only when it IS one
         found = []
-        label = _phrase_label(r.term)
+        label = _phrase_label(r.term, TL_casing)
         for w in _members(r.term, r.alts, aliases):
             inb, elsewhere = find_evidence([w], bullets, others)
             if (inb or elsewhere) and (item := _skill_for(w, pool)) and not echoes_label(item, label):
@@ -481,6 +543,7 @@ def skill_rows(rm: ReqMap, fb: dict, family_lines: dict[str, str] | None = None,
             out[label] = ", ".join(pieces)
             for p in pieces:
                 seen |= covers(p)
+    out = drop_label_echoes(out)
     # whatever still repeats (an item inside a bracket) leaves the later row, never the earlier one
     for _ in range(20):
         rep = row_repeats(out)

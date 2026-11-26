@@ -50,3 +50,52 @@ def file_stem(identity_name: str, kind: str, style: str = "full") -> str:
     name = parts[0] if style == "short" and parts else identity_name
     room = FILE_NAME_MAX - 4 - len(kind) - 1
     return safe_name(f"{safe_name(name, room)} {kind}", FILE_NAME_MAX - 4)
+
+
+# ---- v3.9.6: "<Name> CV - <Role> - <Company>.pdf" for the files a recruiter sees (the folder layout and the .tex stems are unchanged)
+OUT_NAME_MAX = 150                                  # the whole file name, extension included
+_OUT_ILLEGAL = re.compile(r'[\\/:*?"<>|\x00-\x1f]')
+
+
+def load_file_naming(path=None) -> dict[str, str]:
+    """{role family: label} from `config/file_naming.yaml` (code-owned): `roles:` plus `default:` under the key `_default`. {} + default AI Engineer when absent."""
+    import yaml
+
+    from ..config import ROOT
+
+    p = path or ROOT / "config" / "file_naming.yaml"
+    try:
+        raw = yaml.safe_load(open(p, encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        raw = {}
+    out = {str(k): str(v) for k, v in (raw.get("roles") or {}).items()}
+    out["_default"] = str(raw.get("default") or "AI Engineer")
+    return out
+
+
+def role_label(family: str | None, warn=print, path=None) -> str:
+    """The role family's file-name label; a family without an entry gets the default (AI Engineer) and a printed warning."""
+    cfg = load_file_naming(path)
+    if family and family in cfg and family != "_default":
+        return cfg[family]
+    if family:
+        warn(f"warning: role family '{family}' has no entry in config/file_naming.yaml; its file names say '{cfg['_default']}'")
+    return cfg["_default"]
+
+
+def _clean(s: str) -> str:
+    return re.sub(r"\s+", " ", _OUT_ILLEGAL.sub(" ", str(s or ""))).strip().rstrip(" .")
+
+
+def output_stem(name: str, kind: str, role: str, company: str, limit: int = OUT_NAME_MAX) -> str:
+    """'<Name> <kind> - <Role> - <Company>' (kind = CV | CoverLetter), Windows- and WSL-safe, with ".pdf" still inside `limit` characters.
+    The company is shortened first, then the role."""
+    head, role_s, comp = _clean(f"{name} {kind}"), _clean(role), _clean(company)
+    room = limit - 4 - len(head) - len(" - ") * 2
+    comp_room = max(1, room - len(role_s))
+    if len(comp) > comp_room:
+        comp = comp[:comp_room].rstrip(" .")
+    if len(role_s) + len(comp) > room:
+        role_s = role_s[:max(1, room - len(comp))].rstrip(" .")
+    stem = " - ".join(x for x in (head, role_s, comp) if x)
+    return safe_name(stem, limit - 4)

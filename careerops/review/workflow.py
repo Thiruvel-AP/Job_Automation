@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 from datetime import datetime
@@ -27,7 +28,7 @@ from ..apply import decided
 from ..db import DB, now
 from ..tailoring.faithfulness import deny_hits
 from ..discovery import applykind, freshness, priority as prio
-from ..discovery.gates import is_sponsor_flag
+from ..discovery.gates import NOT_ON_REGISTER, is_sponsor_flag
 from ..hook import headline_lint
 from ..llm import usage
 from ..tailoring import doccheck
@@ -425,6 +426,18 @@ def pdf_created(path) -> str:
         return ""
 
 
+def sponsor_tail(job, notes: list[str]) -> str:
+    """v3.9.7: the end of the Sponsor line. A matched employer (exact or alias) says it is on the register; "Not on sponsor register" only
+    ever appears for a job that is NOT MATCHED (a stale copy of that note in the stored flags of a matched job is dropped)."""
+    info = "(information only; a weight on priority, not a reason to skip)"
+    if not job["sponsor_name"]:
+        return f" - {'; '.join(notes)} {info}" if notes else ""
+    alias = next((m.group(1) for n in notes for m in [re.match(r"Sponsor matched via alias '([^']*)'", n)] if m), "")
+    via = (f' via alias "{alias}"' if alias else " via alias") if job["sponsor_match"] == "alias" else ""
+    rest = [n for n in notes if not n.startswith(NOT_ON_REGISTER) and not n.startswith("Sponsor matched via alias")]
+    return f" MATCHED{via} -> on the sponsor register {info}" + (f"; {'; '.join(rest)}" if rest else "")
+
+
 def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | None = None) -> str:
     """The review screen. With `fb` (the fact bank, plus the job's provisional facts) a job in the review band gets the gap report in place of
     the plain ATS header. `bank` (v3.5.2) is the fact bank for the v3.3 ATS structure line when `fb` is not given: that line (score, grade, lints,
@@ -445,7 +458,7 @@ def summary(job, rep: dict, settings=None, fb: dict | None = None, bank: dict | 
         f"{job['url']}",
         applykind.line(prio._get(job, "apply_url") or job["url"], prio._get(job, "apply_kind")),
         f"Sponsor: {job['sponsor_name'] or 'NOT MATCHED'} ({(job['sponsor_score'] or 0):.2f})"
-        + (f" - {'; '.join(sponsor_notes)} (information only; a weight on priority, not a reason to skip)" if sponsor_notes else ""),
+        + sponsor_tail(job, sponsor_notes),
         pr.line(),
         *([f"{pr.flag()} (L {pr.l:.2f}: P is multiplied by it, the ATS score cannot see seniority; edit priority.level_factor in settings.yaml)"]
           if pr.flag() else []),

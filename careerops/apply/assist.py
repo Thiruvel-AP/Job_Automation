@@ -543,10 +543,14 @@ def closed_browser(job: dict, rep: dict, applicant: dict, book, plan, url: str, 
     return paste
 
 
-def account_required(r: dict, why: str, url: str, ask=input, announce_only: bool = False) -> dict:
-    """A sign-in page (apply/route.py): nothing typed, status `manual_apply_account_required`, the listing URL printed. Returns the result `r`."""
+def account_required(r: dict, why: str, url: str, ask=input, announce_only: bool = False, pack=None) -> dict:
+    """A sign-in page (apply/route.py): nothing typed, status `manual_apply_account_required`, the listing URL printed.
+    `pack(why)`, when given, builds the apply pack and opens the listing for the person (the host is not recorded).
+    Returns the result `r`."""
     print("\n  " + route.account_line(why, url))
     r["account_required"], r["listing_url"], r["confirmation"] = why, url, "x"
+    if pack is not None:
+        pack(why)
     return r
 
 
@@ -645,14 +649,22 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                 problem = formfind.open_form(page, url, job.get("apply_kind"), follow=open_form_link, job=job, tokens=tokens)
                 if problem and can_agent:                               # ... and the form agent when no form is found
                     agent = make_agent(page, applicant, book, job, plan, cv, letter, letter_text, history, freetext)
-                    if agent.run("reach").outcome == "reached_form":
+                    reached = agent.run("reach")
+                    if reached.outcome == "reached_form":
                         problem = None
+                    elif reached.sign_in:
+                        raise AccountRequired(reached.reason, page.url or direct)
             else:                                                       # any other vendor: the form agent
                 page.goto(direct, wait_until="domcontentloaded")
                 page.wait_for_timeout(formfind.SETTLE_MS)
                 agent = make_agent(page, applicant, book, job, plan, cv, letter, letter_text, history, freetext)
                 reached = agent.run("reach")
-                problem = None if reached.outcome == "reached_form" else f"FORM NOT FOUND {direct}"
+                if reached.outcome == "reached_form":
+                    problem = None
+                elif reached.sign_in:
+                    raise AccountRequired(reached.reason, page.url or direct)
+                else:
+                    problem = f"FORM NOT FOUND {direct} (form agent: {reached.outcome}: {reached.reason})"
                 if problem is None:
                     by_agent = agent.run("fill")
             if problem:                                     # no form field after 15 s: say so, never print an empty "Filled: []"
@@ -699,7 +711,7 @@ def assist(job, rep: dict, applicant: dict, profile_dir: Path, *, launch=None, a
                     print(f"The form would not take {len(r['pasted'])} answer(s), typed or pasted: " + (f"they are in {saved}" if saved else "paste them yourself"))
                 print("\nReview everything in the browser and press Submit yourself.")
         except AccountRequired as e:                        # a sign-in page: nothing typed, the browser is closed below, the person applies by hand
-            account_required(r, e.reason, e.url or url, ask, announce_only=True)
+            account_required(r, e.reason, e.url or url, ask, announce_only=True, pack=lambda why: hand_off(why, remember=False))
         except knockout.SkipJob as e:                       # the person chose [s]kip at a knock-out: nothing was filled and nothing is submitted
             print(f"\n  Skipped at a knock-out: {e}")
             r["skipped"] = str(e)

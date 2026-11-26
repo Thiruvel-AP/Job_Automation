@@ -224,6 +224,8 @@ def sponsor_factor(job: Mapping[str, Any], settings=None) -> tuple[float, str]:
         options.append((w["exact"], "exact register match"))
     elif match.startswith("fuzzy"):
         options.append((w["fuzzy"], "fuzzy register match"))
+    elif match == "alias":
+        options.append((w["fuzzy"], "register match through a known alias"))
     elif match == "none":
         options.append((w["unknown"], "not on the register"))
     else:

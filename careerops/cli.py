@@ -1,6 +1,8 @@
 """career-ops command line.
 
   careerops init                create data/ folders and .env (idempotent)
+  careerops prefs [set region|size VALUE]
+                                the region and company size saved in .env (asked once, then reused); `set` changes one (backup first)
   careerops doctor              check xelatex, fonts, playwright, LLM keys, fact-bank TODO/CONFIRM items
   careerops llm-check           one tiny request per LLM provider: reachable, model, latency, JSON, json_mode
   careerops calibrate [--compare REPORT] [--only ID ..] [--limit N] [--provider NAME] [--freeze-keywords [--force]] [--summarise]
@@ -185,13 +187,27 @@ def _region_choice(args, s, *, auto: bool = False):
 
     interactive = sys.stdin.isatty() and not getattr(args, "yes", False) and not auto and not getattr(args, "mock", False)
     try:
-        c = choices.resolve_region(s, flag=getattr(args, "region", None), interactive=interactive, ask=input)
+        c = choices.resolve_region(s, flag=getattr(args, "region", None), interactive=interactive, ask=input, env=_prefs_env(args, s),
+                                   save=_save_prefs(args))
     except choices.ChoiceError as e:
         _fail(str(e))
     print(c.line("region"))
     if (note := choices.non_uk_line(c.value)):
         print(note)
     return c
+
+
+def _prefs_env(args, s):
+    """v3.9.3: the `.env` that holds CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE (prefs.env_path); None under --mock, which keeps the older
+    targeting.json chain and never reads or writes `.env`."""
+    from . import prefs
+
+    return None if getattr(args, "mock", False) else prefs.env_path(s)
+
+
+def _save_prefs(args) -> bool:
+    """`--save`: also write the --region / --size value to `.env` (never on a --dry-run, which writes nothing)."""
+    return bool(getattr(args, "save", False)) and not getattr(args, "dry_run", False)
 
 
 def _park_region(db, c) -> None:
@@ -1294,7 +1310,8 @@ def cmd_live(args):
     rc = _region_choice(args, s, auto=args.auto)
     _park_region(db, rc)
     try:
-        size_mode = choices.resolve_size(s, flag=getattr(args, "size", None)).value          # live never asks the size: --size, the last choice, settings
+        size_mode = choices.resolve_size(s, flag=getattr(args, "size", None), env=_prefs_env(args, s),
+                                         save=_save_prefs(args)).value          # live never asks the size: --size, .env, the last choice, settings
     except choices.ChoiceError as e:
         _fail(f"--size: {e}")
     sizes = size_mod.Resolver(s, key="" if args.mock else None)
@@ -1610,7 +1627,8 @@ def cmd_shortlist(args):
             print(f"parked {len(moved)} listed-only ad(s) outside {region_mod.label_of(rc.value)} out of the inbox: {disc.parked_path(s)} (the ads are in {disc.parked_dir(s)})")
 
     def choose_size(counts) -> str:
-        ch = choices.resolve_size(s, flag=getattr(args, "size", None), interactive=interactive, ask=input, counts=lambda: counts)
+        ch = choices.resolve_size(s, flag=getattr(args, "size", None), interactive=interactive, ask=input, counts=lambda: counts,
+                                  env=_prefs_env(args, s), save=_save_prefs(args))
         print(ch.line("size"))
         return ch.value
     resolver = size_mod.Resolver(s, key="" if args.mock else None, fetcher=fetcher)
@@ -1817,6 +1835,51 @@ def cmd_init(args):
     made = init(s)
     DB(s.path("db"))                      # creates the schema
     print("Created:\n  " + "\n  ".join(made) if made else "Everything already in place.")
+
+
+def prefs_lines(env) -> list[str]:
+    """`careerops prefs`: the two saved answers, one line each (only these two keys of `.env` are ever read out)."""
+    from . import prefs
+
+    out = []
+    for what in ("region", "size"):
+        key = prefs.KEYS[what]
+        v = prefs.saved(env, key)
+        out.append(f"{what + ':':<7} {v}   ({key} in .env)" if v else
+                   f"{what + ':':<7} not set   ({key}: asked once at the next terminal run; unattended runs use {prefs.FALLBACK[what]} and warn)")
+    return out
+
+
+def cmd_prefs(args):
+    """v3.9.3: `careerops prefs` lists CAREEROPS_REGION and CAREEROPS_COMPANY_SIZE; `careerops prefs set region eu` / `set size sme` changes one
+    (old -> new, after a `.env.bak-<stamp>` copy; only that line of `.env` changes)."""
+    from . import choices, prefs
+    from .discovery import region as region_mod
+
+    s = load_settings(args.config)
+    env = prefs.env_path(s)
+    if not args.action:
+        print("\n".join(prefs_lines(env)))
+        return
+    if not (args.what and args.value):
+        _fail("usage: careerops prefs set region|size VALUE")
+    if args.what == "region":
+        try:
+            value = ",".join(region_mod.parse_selection(args.value))
+        except region_mod.RegionError as e:
+            _fail(f"region: {e}")
+    else:
+        try:
+            value = prefs.SIZE_TO_ENV[choices.parse_size(args.value)]
+        except choices.ChoiceError as e:
+            _fail(f"size: {e}")
+    key = prefs.KEYS[args.what]
+    before = prefs.saved(env, key)
+    if before == value:
+        print(f"{args.what}: already {value}; .env not changed")
+        return
+    old, bak = prefs.set_value(env, key, value)
+    print(f"{args.what}: {old or '(not set)'} -> {value}   ({key} in .env" + (f"; backup {bak.name})" if bak else ")"))
 
 
 def cmd_doctor(args):
@@ -2276,6 +2339,13 @@ def main(argv=None):
     ap.add_argument("--config", default=None, help="path to settings.yaml")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init").set_defaults(fn=cmd_init)
+    pf = sub.add_parser("prefs", help="v3.9.3: the region and company size saved in .env (CAREEROPS_REGION, CAREEROPS_COMPANY_SIZE); "
+                        "`prefs set region eu` / `prefs set size sme` changes one (backup first)")
+    pf.add_argument("action", nargs="?", choices=["set"])
+    pf.add_argument("what", nargs="?", choices=["region", "size"])
+    pf.add_argument("value", nargs="?", help="region: uk, ie, eu, us, any, a country code or a list (uk,ie); "
+                                             "size: sme | large | both_sme_first | both_large_first | both")
+    pf.set_defaults(fn=cmd_prefs)
     pd = sub.add_parser("plain-draft", help="v3.4: one plain-language (STAR) version per fact-bank bullet and hook line that has none, for a "
                         "non-technical reader; you approve each ([y]/[e]/[n]/[q]) and only then it is saved as `plain:` (backup first)")
     pd.add_argument("--limit", type=int, help="draft at most this many")
@@ -2412,6 +2482,7 @@ def main(argv=None):
     dc.add_argument("--region", help="the region(s) to target: uk, ie, eu, us, any, a two-letter country code, or a list (uk,ie). Without it: today's / the last "
                                      "choice, then targeting.region, then uk; asked once a day at a terminal. Jobs outside it are parked, never skipped")
     dc.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region")
+    dc.add_argument("--save", action="store_true", help="v3.9.3: also save the --region / --size value in .env (CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE; backup first); without it a flag is for this run only")
     dc.set_defaults(fn=cmd_discover)
     so = sub.add_parser("sources", help="the source registry (config/sources.yaml): `check` = health of every source, `list`")
     so.add_argument("what", choices=["check", "list"])
@@ -2521,6 +2592,7 @@ def main(argv=None):
     lv.add_argument("--yes", "-y", action="store_true", help=argparse.SUPPRESS)       # refused with an explanation
     lv.add_argument("--region", help="the region(s) to work on: uk, ie, eu, us, any, a country code, or a list; approved ads outside it are left where they are")
     lv.add_argument("--size", help="company size bucket to work on: sme | large | both | sme-first | large-first (`sme` / `large` leave the other bucket alone)")
+    lv.add_argument("--save", action="store_true", help="v3.9.3: also save the --region / --size value in .env (CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE; backup first); without it a flag is for this run only")
     lv.add_argument("--record", action="store_true", help="when a form is filled and not submitted (the assist, or --auto --no-submit), keep a record of it "
                     "under data/dryruns/<date>_<company>_<role>_<ad id>/: every field with its value, source and status, a full-page screenshot, copies "
                     "of the CV and letter, the motivation answer and its guard results (personal data: git-ignored)")
@@ -2546,6 +2618,7 @@ def main(argv=None):
     sl.add_argument("--size", help="company size: sme | large | both | sme-first | large-first (SME = up to 250 staff; Companies Act limits). `sme` / `large` list the "
                                    "size-unknown ads under [u]; `*-first` orders by T + 0.3 for that bucket")
     sl.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
+    sl.add_argument("--save", action="store_true", help="v3.9.3: also save the --region / --size value in .env (CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE; backup first); without it a flag is for this run only")
     sl.add_argument("--all", action="store_true", help="list every undecided in-region ad, not only the new ones (also the ones parked after being shown "
                                                       "three times); the list is not counted as a showing")
     sl.add_argument("--ask", action="store_true", help="this run only: the old manual list and [a] prompt instead of the agent's decisions (agent.decide: ask)")
@@ -2569,6 +2642,7 @@ def main(argv=None):
     da.add_argument("--region", help="as for discover and shortlist")
     da.add_argument("--size", help="as for shortlist: sme | large | both | sme-first | large-first")
     da.add_argument("--yes", "-y", action="store_true", help="ask nothing: use the remembered region and size")
+    da.add_argument("--save", action="store_true", help="v3.9.3: also save the --region / --size value in .env (CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE; backup first); without it a flag is for this run only")
     da.add_argument("--limit", type=int, help="at most N new inbox files this run (default discover.max_new_per_run)")
     da.add_argument("--dry-run", dest="dry_run", action="store_true", help="discover writes nothing; the shortlist prints and moves nothing")
     da.add_argument("--no-liveness", dest="no_liveness", action="store_true", help="do not ask the network whether a posting is still open")

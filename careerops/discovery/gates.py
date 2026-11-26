@@ -206,6 +206,8 @@ def triage(job: dict, settings, sponsors: "CompanyIndex | SponsorIndex | None", 
                 v.flags.append(NOT_ON_REGISTER)
         elif m.method == "fuzzy":
             v.flags.append(f"Sponsor match is fuzzy ({m.score:.2f}): '{m.name}' — verify it is the same entity")
+        elif m.method == "alias":
+            v.flags.append(f"Sponsor matched via alias '{m.via}': register name '{m.name}' — verify it is the employer of this job")
     elif g.get("require_sponsor_match", True):
         v.flags.append("Sponsor register not loaded — sponsorship unchecked")
 

@@ -457,9 +457,19 @@ def settle_selection(fb: dict, sel: dict, protect: str | None = None) -> tuple[d
     proof bullet, the replacer goes instead) and no entry has two `situation_included` bullets (the first stays). Returns (selection,
     the ids dropped, in the order dropped). A project without an entry in `project_bullets` is listed with all its bullets first."""
     own = {p["id"]: [b["id"] for b in p["bullets"]] for p in fb.get("projects", [])}
-    out = {"experience": {k: list(v) for k, v in sel["experience"].items()}, "projects": list(sel["projects"]),
-           "project_bullets": {p: list((sel.get("project_bullets") or {}).get(p, own.get(p, []))) for p in sel["projects"]}}
-    lists = [*out["experience"].values(), *out["project_bullets"].values()]
+    projects = list(sel["projects"])
+    if len(projects) > MAX_PROJECTS:          # v3.9.4: the hook's project or a typed fact may be added to three chosen ones: never four on the CV
+        owner_of = {b["id"]: p["id"] for p in fb.get("projects", []) for b in p["bullets"]}
+        sacred = {owner_of[protect]} if protect in owner_of else set()
+        sacred |= {p["id"] for p in fb.get("projects", []) if any(b.get("provisional") for b in p["bullets"])}
+        for p in reversed(projects[:]):
+            if len(projects) <= MAX_PROJECTS:
+                break
+            if p not in sacred:
+                projects.remove(p)
+    out = {"experience": {k: list(v) for k, v in sel["experience"].items()}, "projects": projects,
+           "project_bullets": {p: list((sel.get("project_bullets") or {}).get(p, own.get(p, []))) for p in projects}}
+    lists =[*out["experience"].values(), *out["project_bullets"].values()]
     present = {i for ids in lists for i in ids}
     dropped: list[str] = []
 

@@ -1368,7 +1368,7 @@ class Discover:
         if idx is None or not company:
             return "?"
         label = str(idx.lookup(company, self.s["sponsors"].get("fuzzy_threshold", 0.92)).label or "none")
-        return "yes" if label.startswith("exact") else "near" if label.startswith("fuzzy") else "no"
+        return "yes" if label.startswith("exact") else "near" if label.startswith(("fuzzy", "alias")) else "no"
 
     @_finishing
     def from_gmail_label(self, labels: Sequence[str] | None = None, since: str | None = None, reread: bool = False) -> None:

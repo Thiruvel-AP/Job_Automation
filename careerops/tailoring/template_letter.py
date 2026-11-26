@@ -61,8 +61,10 @@ _ASK = re.compile(r"\b(?:could|can|shall|may|might)\s+we\s+(?:spend|find|take|ha
 
 SYSTEM = """You fill exactly three slots of a cover letter that the applicant wrote. You write nothing else and change nothing else.
 Return JSON only: {"company_problem_sentence": "...", "ad_requirement": "...", "question": "..."}.
-- company_problem_sentence: ONE sentence, at most 30 words, on what the team must achieve, taken from the ad. It starts "Your team ..." or
-  "<Company> needs ...". Never a description of the company ("X is a leading ..."), never "I", "my", "we" or "our"; every content word is the ad's.
+- company_problem_sentence: ONE sentence, at most 30 words, naming the problem or goal the team is hired to solve, taken from the ad's
+  responsibilities, e.g. "Your team is bringing generative AI tools into production for financial data users." It starts "Your team ..." or
+  "<Company> needs ...". No lists of job titles or teams ("engineers, managers, stakeholders"). Never a description of the company
+  ("X is a leading ..."), never "I", "my", "we" or "our"; every content word is the ad's.
 - ad_requirement: a NOUN PHRASE of the ad, at most 15 words, lower case, no full stop, that reads correctly in "Your ad asks for ___, which is the
   work I want to do next." Never start with a verb or an instruction ("Build ...", "Design ...", "to ..."); e.g. "production LLM agents with tool
   calling on AWS". Every content word is the ad's; no number or name the ad does not give.
@@ -184,7 +186,7 @@ IMPERATIVES = frozenset("""build design develop deploy lead own drive work colla
     partner support help define deliver evaluate train analyse analyze architect improve optimise optimize monitor integrate prototype
     research identify ensure contribute communicate mentor test debug scale operate apply use make take join""".split())
 FALLBACKS = {
-    "company_problem_sentence": "{company} needs the {title} to deliver the work described in this ad.",
+    "company_problem_sentence": "Your team is working on {ad_requirement}.",       # v3.9.4: the ad_requirement slot's value (see fallback())
     "ad_requirement": "the work this role would own",
     "question": "what the first problem in this role would be",
 }
@@ -214,6 +216,14 @@ def _tail_problems(key: str, s: str) -> list[str]:
     return out
 
 
+# v3.9.4: a sentence that lists who the team works with ("software engineers, SREs, product managers, platform teams and business stakeholders") states no problem
+_ROLE_WORDS = frozenset("""engineer engineers scientist scientists analyst analysts manager managers developer developers designer designers sre sres
+    stakeholder stakeholders team teams architect architects lead leads owner owners specialist specialists consultant consultants researcher
+    researchers colleague colleagues partner partners""".split())
+ROLE_LIST_MAX = 2                    # 3 or more of these words: a list of job titles or teams
+_GOAL_VERB = re.compile(r"\b(?:build\w*|built|bring\w*|brought|improv\w*|reduc\w*|scal\w*|automat\w*|deliver\w*|solv\w*|launch\w*|mov(?:e|es|ed|ing))\b", re.I)
+
+
 def problem_sentence_problems(slot: str, ad: list[str], company: str, ad_all: str = "", title: str = "") -> list[str]:
     """company_problem_sentence: ONE sentence of 6-30 words that says what the team must achieve ("Your team ..." / "<Company> needs ..."),
     no "I" / "my" / "we" / "our", no company description, every content word the ad's (a light shortening of an ad sentence passes too)."""
@@ -236,6 +246,11 @@ def problem_sentence_problems(slot: str, ad: list[str], company: str, ad_all: st
         out.append(f"company_problem_sentence must start \"Your team ...\" or \"{company} needs ...\" (what the team must achieve)")
     if _DESCRIBES.search(s):
         out.append("company_problem_sentence describes the company; say what the team must achieve")
+    roles = [w for w in _TOKEN.findall(s.lower()) if w in _ROLE_WORDS and w not in ("team",)]
+    if len(roles) > ROLE_LIST_MAX:
+        out.append(f"company_problem_sentence lists job titles or teams ({', '.join(dict.fromkeys(roles))}): name the problem or goal the team is hired to solve")
+    if not _GOAL_VERB.search(s):
+        out.append("company_problem_sentence names no goal (build, bring, improve, reduce, scale, automate, deliver, solve, launch, move): say what the team is hired to do")
     if not s.endswith((".", "!")) or s.endswith(".."):
         out.append("company_problem_sentence must end with a full stop")
     if ad_all and shortened_from(s, ad, company) is None:
@@ -267,20 +282,30 @@ def requirement_problems(slot: str, ad_all: str, company: str, title: str) -> li
     return out
 
 
-def _content_problems(key: str, s: str, ad_all: str, company: str, title: str) -> list[str]:
+def _content_problems(key: str, s: str, ad_all: str, company: str, title: str, extra_words: str = "") -> list[str]:
     out = []
     allowed = f"{ad_all} {company} {title}"
     if numbers(s) - numbers(allowed):
         out.append(f"{key} gives a number the ad does not: {', '.join(sorted(numbers(s) - numbers(allowed)))}")
     lit = norm_literal(allowed)
     out += [f"{key} names '{n}', which the ad does not" for n in _names("x " + s) if not name_allowed(lit, n)]
-    miss = _not_in_ad(s, ad_all, company, title)
+    miss = _not_in_ad(s, f"{ad_all} {extra_words}", company, title)
     if miss:
         out.append(f"{key} uses words the ad does not: {', '.join(miss[:6])}")
     return out
 
 
-def question_problems(slot: str, ad_all: str, company: str, title: str) -> list[str]:
+QUESTION_VERBS = ("evaluate", "validate", "measure", "test", "decide", "prioritise", "ship", "monitor")
+
+
+def _verb_forms(verbs=QUESTION_VERBS) -> str:
+    out = []
+    for v in verbs:
+        out += [v, v + "s", v + "es", v + "d", v + "ed", v + "ing", v + v[-1] + "ing", v[:-1] + "ing" if v.endswith("e") else v]
+    return " ".join(out)
+
+
+def question_problems(slot: str, ad_all: str, company: str, title: str, bank_words: str = "") -> list[str]:
     """question: a noun phrase of at most 15 words starting how / what / which, one question's end, no "I" / "my", the ad's words."""
     s = " ".join(str(slot or "").split()).rstrip(" ?.")
     if not s:
@@ -296,7 +321,8 @@ def question_problems(slot: str, ad_all: str, company: str, title: str) -> list[
     if _ME.search(s):
         out.append("question speaks about you: it asks about the role")
     out += _tail_problems("question", s)
-    out += _content_problems("question", s, ad_all, company, title)
+    # v3.9.4: the question may use the ad's words, the fact bank's, or a neutral verb (evaluates, validates, measures ...); the ad's names and numbers stay
+    out += _content_problems("question", s, ad_all, company, title, f"{bank_words} {_verb_forms()}")
     return out
 
 
@@ -367,7 +393,8 @@ def fill(t: Template, company: str, values: Mapping[str, str]) -> list[str]:
     return out
 
 
-_ACRONYMS = {"ai": "AI", "ml": "ML", "llm": "LLM", "llms": "LLMs", "nlp": "NLP", "sql": "SQL", "api": "API", "apis": "APIs", "aws": "AWS", "gcp": "GCP"}
+_ACRONYMS = {"ai": "AI", "ml": "ML", "llm": "LLM", "llms": "LLMs", "nlp": "NLP", "sql": "SQL", "api": "API", "apis": "APIs", "aws": "AWS", "gcp": "GCP",
+             "mlops": "MLOps", "devops": "DevOps"}
 _ACRONYM = re.compile(r"(?<!\w)(" + "|".join(_ACRONYMS) + r")(?!\w)", re.I)
 _AI_ML = re.compile(r"(?<!\w)ai\s*/\s*ml(?!\w)", re.I)
 
@@ -378,7 +405,38 @@ def normalise_acronyms(text: str) -> str:
     return _ACRONYM.sub(lambda m: _ACRONYMS[m.group(1).lower()], _AI_ML.sub("AI/ML", str(text or "")))
 
 
-def _clean_slot(key: str, v: Any) -> str:
+def bank_casing(fb: Mapping[str, Any]) -> dict[str, str]:
+    """v3.9.3: {casefolded name: the fact bank's own spelling} of every `skills:` item and every family `skill_lines` item (whole items and the items
+    inside their brackets). A one-letter name ("R") and a two-letter one in lower case ("Go") are left out: they are also ordinary words."""
+    from .skills import families, line_items
+
+    raw: list[str] = []
+    for items in (fb.get("skills") or {}).values():
+        raw += [str(i) for i in (items if isinstance(items, (list, tuple)) else [items])]
+    for fam in families(dict(fb)):
+        for line in fam.get("skill_lines") or []:
+            raw += line_items(str(line.get("items") or "") if isinstance(line, dict) else str(line))
+    out: dict[str, str] = {}
+    for t in raw:
+        t = " ".join(t.split())
+        if len(t) < 2 or len(t) == 2 and not t.isupper() or any(c in t for c in "()[]"):
+            continue
+        out.setdefault(t.casefold(), t)
+    return out
+
+
+def bank_case(text: str, casing: Mapping[str, str] | None) -> str:
+    """v3.9.3: each word or phrase of a model-filled slot that IS a fact-bank skill (any case) written as the bank writes it: "python" -> "Python",
+    "pytorch" -> "PyTorch", "pandas" stays "pandas". Whole words only; the longest name wins ("AWS Lambda" before "AWS"). Runs after the acronym
+    step and before the fact check, which is unchanged."""
+    if not casing or not text:
+        return text
+    names = sorted(casing, key=len, reverse=True)
+    pat = re.compile(r"(?<![\w+#])(" + "|".join(re.escape(n) for n in names) + r")(?![\w+#])", re.I)
+    return pat.sub(lambda m: casing.get(m.group(1).casefold(), m.group(1)), text)
+
+
+def _clean_slot(key: str, v: Any, casing: Mapping[str, str] | None = None) -> str:
     s = normalise_acronyms(" ".join(str(v or "").split()).strip().strip('"“”'))
     if key in ("question", "ad_requirement"):          # a phrase inside a sentence of the template: lower case, no end punctuation
         if key == "question":
@@ -387,7 +445,9 @@ def _clean_slot(key: str, v: Any) -> str:
             s = re.sub(r"^your ad asks for\s+", "", s, flags=re.I)
         s = s.rstrip(" ?.!,;:")
         first = s.split()[0] if s else ""
-        return s[:1].lower() + s[1:] if s[:1].isupper() and not first.isupper() and not first[1:2].isupper() else s
+        s = s[:1].lower() + s[1:] if s[:1].isupper() and not first.isupper() and not first[1:2].isupper() else s
+        return bank_case(s, casing)                    # after the lower-casing: "Python and pandas" stays "Python and pandas"
+    s = bank_case(s, casing)
     if s and s[-1] not in ".!?":
         s += "."
     return s[:1].upper() + s[1:]
@@ -398,12 +458,14 @@ def slot_problems(key: str, v: str, job: dict, fb: dict, kws: list[Keyword], tea
         return problem_sentence_problems(v, ad, job["company"], ad_all, job["title"])
     if key == "ad_requirement":
         return requirement_problems(v, ad_all, job["company"], job["title"])
-    return question_problems(v, ad_all, job["company"], job["title"])
+    return question_problems(v, ad_all, job["company"], job["title"], _raw_bank(fb) if fb else "")
 
 
-def fallback(key: str, job: dict) -> str:
-    """The FIXED value (FALLBACKS) of a slot the model never filled so that it fits its frame. Not patched from the ad: the letter is marked DRAFT."""
-    return FALLBACKS[key].format(company=job["company"], title=job["title"])
+def fallback(key: str, job: dict, values: Mapping[str, str] | None = None) -> str:
+    """The FIXED value (FALLBACKS) of a slot the model never filled so that it fits its frame. Not patched from the ad: the letter is marked DRAFT.
+    v3.9.4: the problem sentence's fallback is "Your team is working on {ad_requirement}." with the ad_requirement slot as it is filled."""
+    req = str((values or {}).get("ad_requirement") or FALLBACKS["ad_requirement"])
+    return FALLBACKS[key].format(company=job["company"], title=job["title"], ad_requirement=req)
 
 
 def make(t: Template, job: dict, fb: dict, kws: list[Keyword], llm, settings, out_dir: Path, final_name: str, team: str, header: dict | None,
@@ -424,6 +486,7 @@ def make(t: Template, job: dict, fb: dict, kws: list[Keyword], llm, settings, ou
     values: dict[str, str] = {}
     source: dict[str, str] = {}
     rejected: dict[str, list[str]] = {}
+    casing = bank_casing(fb)
     for attempt in range(TRIES):
         todo = [k for k in SLOTS if k not in values]
         if not todo:
@@ -440,15 +503,15 @@ def make(t: Template, job: dict, fb: dict, kws: list[Keyword], llm, settings, ou
             notes.append(f"cover_letter (template): the model failed ({str(e)[:120]}); the slots left are filled in code")
             break
         for k in todo:
-            v = _clean_slot(k, (out or {}).get(k))
+            v = _clean_slot(k, (out or {}).get(k), casing)
             bad = slot_problems(k, v, job, fb, kws, team, ad, ad_all, offered)
             if bad:
                 rejected[k] = bad
             else:
                 values[k], source[k] = v, "model"
-    for k in SLOTS:
+    for k in ("ad_requirement", "company_problem_sentence", "question"):      # the problem sentence's fallback reads the ad_requirement slot
         if k not in values:
-            v = fallback(k, job)
+            v = fallback(k, job, values)
             values[k], source[k] = v, "fallback"
             if k in rejected:
                 notes.append(f"cover_letter (template): {k} filled in code after {TRIES} rejected answer(s); last: {'; '.join(rejected[k])[:200]}")

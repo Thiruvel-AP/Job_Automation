@@ -1,0 +1,8 @@
+# v3.9.6: the {Role} in "<Name> CV - <Role> - <Company>.pdf": the role family's label, not the ad's title. Code-owned; a family with no entry gets `default` and a warning.
+roles:
+  data_scientist: Data Scientist
+  ai_engineer: AI Engineer
+  genai_engineer: AI Engineer
+  forward_deployed_engineer: AI Engineer
+  ai_automation_engineer: AI Engineer
+default: AI Engineer

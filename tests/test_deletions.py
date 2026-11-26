@@ -39,6 +39,9 @@ ALLOWED = {
                                                   "the destination is new, nothing is overwritten"),
     ("setup.py", "shutil.copy"): (1, "`careerops init` copies .env.example to .env only when .env does not exist"),
     ("tailoring/tailor.py", "shutil.copytree"): (1, "copies this run's llm_raw replies into <job>.failed (creates, never overwrites)"),
+    ("prefs.py", "shutil.copy2"): (1, "v3.9.3 backup: .env -> .env.bak-<stamp>, a new name (a -2, -3 suffix if it exists): never overwrites"),
+    ("prefs.py", ".truncate"): (1, "v3.9.3 set_value: rewrites .env in place after the backup, every line kept byte for byte except the one "
+                                   "CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE line; truncate drops only the old tail"),
 }
 
 

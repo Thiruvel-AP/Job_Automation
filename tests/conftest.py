@@ -48,6 +48,23 @@ def _is_real_settings(target) -> bool:
     return isinstance(target, (bytes, str, os.PathLike)) and os.path.realpath(os.fsdecode(target)) == REAL_SETTINGS
 
 
+REAL_ENV = os.path.realpath(ROOT / ".env")
+
+
+def _writes_real_env(event, args) -> bool:
+    """An open() that would write the real .env or a `.env.bak-*` beside it (mode w/a/x/+, or os.open with a write flag)."""
+    if event != "open" or not args or not isinstance(args[0], (bytes, str, os.PathLike)):
+        return False
+    p = os.path.realpath(os.fsdecode(args[0]))
+    if not (p == REAL_ENV or p.startswith(REAL_ENV + ".bak")):
+        return False
+    mode = args[1] if len(args) > 1 else None
+    flags = args[2] if len(args) > 2 else 0
+    if isinstance(mode, str):
+        return any(c in mode for c in "wax+")
+    return bool(isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_APPEND))
+
+
 def _heavy(event, args) -> str | None:
     """What a subprocess is, if it is the kind that makes a test slow and memory-hungry: xelatex (PDF rendering) or the
     Playwright driver (Chromium)."""
@@ -67,6 +84,9 @@ def _audit(event, args):
     if _guard["on"] and event in ("open", "sqlite3.connect") and args and _under_real_data(args[0]):
         _guard["hits"].append(f"{event}: {os.fsdecode(args[0])}")
         raise PermissionError(f"test touched the real data/ folder ({event} {os.fsdecode(args[0])}); use tmp_path")
+    if _guard["on"] and _writes_real_env(event, args):
+        _guard["hits"].append(f"{event}: {os.fsdecode(args[0])}")
+        raise PermissionError(f"test would write the real .env ({os.fsdecode(args[0])}); CAREEROPS_ENV_FILE points at a tmp file")
     if _guard["on"] and event == "open" and args and _is_real_settings(args[0]):
         _guard["settings_hits"].append(f"{event}: {os.fsdecode(args[0])}")
         raise PermissionError(f"test read the real settings ({os.fsdecode(args[0])}); use tests/fixtures/config/settings.yaml or a tmp copy")
@@ -101,6 +121,15 @@ def no_provider_keys(monkeypatch):
     """No test may reach a real provider by accident (doctor / llm-check send a tiny request when a key is set): a test that
     needs a key sets its own fake one."""
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def env_file_is_a_tmp_file(monkeypatch, tmp_path_factory):
+    """v3.9.3: the saved region / size (careerops/prefs.py) live in `.env`. Every test gets its own empty `.env` path (CAREEROPS_ENV_FILE), so the
+    user's real `.env` is never read for them nor written (the audit hook below also refuses any write to it or to a `.env.bak-*` beside it)."""
+    from careerops import prefs
+
+    monkeypatch.setenv(prefs.ENV_FILE_VAR, str(tmp_path_factory.mktemp("envfile") / ".env"))
 
 
 @pytest.fixture(autouse=True)

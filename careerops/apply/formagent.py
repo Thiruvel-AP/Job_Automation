@@ -63,6 +63,7 @@ REACH_CLICKS = (
 )
 NEXT = re.compile(r"^\s*(?:next(?:\s+step|\s+page)?|continue|save\s*(?:and|&)\s*continue|proceed|weiter|suivant|siguiente|continuar|volgende|avanti)\s*(?:→|>|»)?\s*$", re.I)
 SIGN_IN = re.compile(r"^\s*(?:sign\s*in|log\s*in|create\s+(?:an?\s+)?account|register|sign\s*up)\b", re.I)
+SIGN_IN_NEED = "a sign-in page: the agent never signs in or creates an account"
 AUTOFILL_LABEL = re.compile(r"auto-?fill|import|linkedin|dropbox|google\s+drive|enter\s+manually", re.I)
 
 ACTIONS = ("click", "type", "choose", "upload", "reached_form", "done", "need_user")
@@ -462,6 +463,11 @@ class AgentResult:
     outcome: str = ""                       # reached_form | done | need_user | limit
     reason: str = ""
     steps: int = 0
+
+    @property
+    def sign_in(self) -> bool:
+        """True when the agent stopped because it hit a sign-in / account page."""
+        return self.reason == SIGN_IN_NEED
     filled: list[str] = field(default_factory=list)
     uploaded: list[str] = field(default_factory=list)
     manual: list[str] = field(default_factory=list)
@@ -732,7 +738,7 @@ class FormAgent:
                 raise formfind.HandOff(stop)
             snap = self.snapshot()
             if snap.has_password and not snap.has_form():
-                return self._end(res, "need_user", "a sign-in page: the agent never signs in or creates an account")
+                return self._end(res, "need_user", SIGN_IN_NEED)
             sig = snap.signature
             if self.page_counts.get(sig, 0) >= self.max_page_steps:
                 return self._end(res, "limit", f"{self.max_page_steps} steps on this page")
@@ -885,7 +891,7 @@ class RulePlanner(Planner):
         if view.snapshot.has_form():
             return ReachedForm()
         if view.snapshot.has_password:
-            return NeedUser("a sign-in page: the agent never signs in or creates an account")
+            return NeedUser(SIGN_IN_NEED)
         buttons = [e for e in view.elements if e.ref and e.kind in ("button", "link") and not SIGN_IN.search(e.label)]
         for rx in (DISMISS, *REACH_CLICKS):
             for e in buttons:
@@ -903,7 +909,7 @@ class RulePlanner(Planner):
     def _fill(self, view: View) -> Action:
         snap = view.snapshot
         if snap.has_password:
-            return NeedUser("a sign-in page: the agent never signs in or creates an account")
+            return NeedUser(SIGN_IN_NEED)
         for e in snap.elements:                                           # what the agent may not set is listed with the recommended answer
             if e.kind == "radio" and not e.ref and e.key not in self.tried:
                 self.tried.add(e.key)

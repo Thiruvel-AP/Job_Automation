@@ -476,8 +476,9 @@ def iter_eligible(fb: dict, kws: list[Keyword], notes: list[str] | None = None, 
         from .tailoring import reqmap as RM
 
         found_rm = RM.hook_scores(rm, fb)
+        heir = RM.heirs(fb)
         scores = {eid: sw for eid, (sw, _) in found_rm.items()}
-        overlaps = {str(e["id"]): [(r.term, r.weight) for r in RM.hook_cover(rm, e)] for e in entries}
+        overlaps = {str(e["id"]): [(r.term, r.weight) for r in RM.hook_cover(rm, e, heir)] for e in entries}
         eligible = {eid: n >= RM.MIN_HOOK_REQS for eid, (_, n) in found_rm.items()}
     else:
         scores = library_scores(fb, kws)

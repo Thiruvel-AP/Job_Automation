@@ -16,9 +16,10 @@ from .. import ats, bands
 from .. import pathstore
 from .. import hook as hooks
 from .. import note as note_mod
-from ..apply.naming import file_stem
+from ..apply.naming import file_stem, output_stem, role_label
 from ..config import load_yaml
 from ..discovery import gates
+from ..discovery import manual as manual_mod
 from ..llm.router import TaskUnavailable
 from . import attempts as attempts_mod
 from . import evidence_fields
@@ -47,7 +48,7 @@ from .letter_rules import fallback_letter, gap_display, grammar_problems, term_d
 from .rewrite_rules import (added_word_problems, bare_keyword_problems, canonical_case, canonical_forms, filler_problems, must_keep_problems,
                             qualifier_problems)
 from . import selection as _selection
-from .selection import (JACCARD, ONE_PAGE, Layout, bullet_hits, chunks, fill_order, is_recent, layout_from, missing_keywords,
+from .selection import (JACCARD, MAX_PROJECTS, ONE_PAGE, Layout, bullet_hits, chunks, fill_order, is_recent, layout_from, missing_keywords,
                         project_cap, replacers, select_cv, selected_ids, settle_selection, situated_ids, skills_text, verbatim_ids)
 from .skills import (CORE_LABEL, core_skills, cv_skill_groups, cv_skills, dedupe_skills, family_basics_missing, family_skill_lines,
                      is_database_row, pick_family, skill_group_config, wants_databases)   # noqa: F401 — dedupe_skills is re-exported
@@ -1057,6 +1058,8 @@ def fill_page2(ctx: dict, fb: dict, order: list[str], texts: dict[str, str], rer
             if est >= target:
                 break
         queue = [q for q in queue if q not in over]
+        if over:
+            stats["project_cap_hit"] = True
         if not batch:
             break
         queue = [q for q in queue if q not in batch]
@@ -1100,6 +1103,8 @@ def fill_shortfall(fill: dict, page2: float, min_fill: float, left_out: list[dic
     its maximum or has used all its bullets); nothing is invented to fill the page. "" when page 2 was filled."""
     if fill.get("reached") is not False:                    # filled, or the fill was not run (a shrunk CV, one page)
         return ""
+    if fill.get("project_cap_hit"):                         # v3.9.4: short because a 4th project is never added: say so, leave it short
+        return f"Fill: page 2 {page2:.0%} (project cap {MAX_PROJECTS} reached)"
     if left_out:                                            # ranked bullets exist that the CV has no room for: the page is full, not the bank empty
         return f"page 2 is {page2:.0%} full (target {min_fill:.0%}): " + left_out_text(left_out)
     return (f"page 2 is {page2:.0%} full (target {min_fill:.0%}): fact bank has no more experience bullets to add (every role is at its maximum or "
@@ -1658,10 +1663,24 @@ def needs_result(fb: dict, ctx: dict) -> list[dict]:
             if not str(bidx[bid].get("result") or "").strip()]
 
 
-def _names(fb: dict, settings) -> tuple[str, str]:
-    """Final file stems for the CV and the letter: '<name> CV', '<name> Cover Letter' (files.name_style)."""
-    style = settings["files"]["name_style"]
-    return (file_stem(fb["identity"]["name"], "CV", style), file_stem(fb["identity"]["name"], "Cover Letter", style))
+def applicant_name(fb: dict, settings) -> str:
+    """The name on the files: applicant.yaml's first and last name (never hard-coded); the fact bank's identity.name when that file has none."""
+    try:
+        a = load_yaml(settings.path("applicant")) or {}
+    except Exception:  # noqa: BLE001 — a missing file falls back to the fact bank's name
+        a = {}
+    full = " ".join(f"{a.get('first_name') or ''} {a.get('last_name') or ''}".split())
+    return full or fb["identity"]["name"]
+
+
+def _names(fb: dict, settings, job: dict | None = None, family: str | None = None) -> tuple[str, str]:
+    """Final file stems for the CV and the letter (v3.9.6): '<Name> CV - <Role> - <Company>' and '<Name> CoverLetter - <Role> - <Company>'. Without a job
+    (older callers) the v3.9.5 '<name> CV' / '<name> Cover Letter' (files.name_style)."""
+    if job is None:
+        style = settings["files"]["name_style"]
+        return (file_stem(fb["identity"]["name"], "CV", style), file_stem(fb["identity"]["name"], "Cover Letter", style))
+    name, role, company = applicant_name(fb, settings), role_label(family), str(job.get("company") or "")
+    return output_stem(name, "CV", role, company), output_stem(name, "CoverLetter", role, company)
 
 
 def usage_by_task(calls: list[dict]) -> dict[str, dict]:
@@ -2020,6 +2039,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
     """The loop proper. Writes into out_dir (the staging folder); the report names final_dir's paths.
     Code selects the bullets, the model rewords them (batches) and writes the profile, the guard checks both."""
     sc = settings["scoring"]
+    job = {**dict(job), "company": letters_mod.display_company(job["company"], f"{job['title'] or ''}\n{manual_mod.ad_body(job['description'] or '')}")}   # v3.9.5: as the ad writes it
     fb = cv_bank(fb, sc)
     band = tuple(sc["band"])
     lo, hi = band
@@ -2076,7 +2096,7 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
         if wants_databases(jd) and not any(is_database_row(g) for g in skills):
             analysis_warnings.append("skills: the JD mentions SQL or databases but the fact bank has no Databases skill row to show")
     sep, keep = date_separator(settings), hyphen_keywords(kws)
-    cv_name, letter_name = _names(fb, settings)
+    cv_name, letter_name = _names(fb, settings, job, family)
     # the hook (hook.py): the fact bank's hook_library entry for this ad, word for word: in the headline, profile line 1, the first
     # bullet of its role and sentence 1 of the letter. No model and no template writes any of it; no qualifying entry = the family headline.
     hook_notes: list[str] = []
@@ -2261,7 +2281,8 @@ def _tailor(job: dict, fb: dict, llm, settings, out_dir: Path, final_dir: Path,
                 fill = {"added": fill["added"] + more["added"],
                         "rejected_overflow": fill["rejected_overflow"] + more["rejected_overflow"],
                         "renders": fill["renders"] + more["renders"], "reached": more["reached"],
-                        "sections": more["sections"], "linespread": more["linespread"]}
+                        "sections": more["sections"], "linespread": more["linespread"],
+                        "project_cap_hit": bool(fill.get("project_cap_hit") or more.get("project_cap_hit"))}
                 pdf, pages = rerender()
                 s = ats.score(pdf_text(pdf), kws)
 

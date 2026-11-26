@@ -1,0 +1,6 @@
+# Code-owned map (not the fact bank): a company as job ads name it -> the other names it may be on the Home Office sponsor register under.
+# An alias counts only when it is on the register (exact match after normalising); otherwise the job stays NOT MATCHED.
+LSEG:
+  - London Stock Exchange Group
+  - LSEG Business Services
+  - Refinitiv

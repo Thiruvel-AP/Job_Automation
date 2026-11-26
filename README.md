@@ -201,6 +201,7 @@ Modules marked M1–M4 are stubs with final signatures; their commands print "No
 
 ## Daily routine
 
+- **Region and company size (asked once):** the first run at a terminal asks both and saves them in `.env` as `CAREEROPS_REGION` and `CAREEROPS_COMPANY_SIZE` (`sme | large | both_sme_first | both_large_first | both`); later runs print `region: uk (saved in .env; change with careerops prefs)` and never ask. `careerops prefs` lists them, `careerops prefs set region eu` / `careerops prefs set size sme` changes one (a `.env.bak-<stamp>` copy is taken first). `--region X` / `--size X` apply to one run; add `--save` to keep the new value. Scheduled runs never prompt: with nothing saved they use `uk` / `both` and print a warning.
 - **Morning:** discovery has run at 07:45. Then `careerops live --fresh --max 3`: approve, edit or skip each one, and contact one person per approved job.
 - **Evening:** `careerops tracker sync` and `careerops judge-stats`.
 - **Weekly:** `careerops doctor`, `pytest -n auto`, and push a snapshot.
@@ -737,7 +738,8 @@ assist still never submit.
   an element is displayed and how big it is, never clicks, focuses or types into it.
 - **Submit failures and the hand-off.** Four things count as a failed attempt on a job, each one row in `data/live/submit_failures.csv` (time, job id,
   host, kind, detail): a verification error ("error verifying your application"), a field `LOST` after the re-fill, an upload the form refused, and
-  `FORM NOT FOUND`. After **two** failures on one job (`apply.max_submit_failures`), the assist and the auto-apply offer `[h] hand off`: your normal Windows
+  `FORM NOT FOUND`. **A sign-in / account wall is never a failure**: it ends `manual_apply_account_required` with no row written, the listing printed
+  and the apply pack offered. After **two** failures on one job (`apply.max_submit_failures`), the assist and the auto-apply offer `[h] hand off`: your normal Windows
   browser opens the apply page (`explorer.exe`), `answers_to_paste.txt` is written in the job's output folder (name, e-mail, phone, links, location,
   salary and notice from `answers.yaml`, the visa text, the cover letter, the `answers.yaml` answers, the free-text answers you approved), the first
   answer (your full name) is put on the clipboard with `clip.exe`, and the CV and letter paths are printed. The job ends `handed_off`. A host in
@@ -746,7 +748,8 @@ assist still never submit.
   delete its rows from `submit_failures.csv`; a host's entry in `handoff_hosts.json` works the same way, and `apply.handoff_hosts` is yours to edit.)
 - **Finding the form.** Ashby: `<job url>/application`. Lever: `<job url>/apply`. Greenhouse and others: the job page itself, waiting up to 15 s for the
   form; an "Apply" link on it is followed once. If no form field has appeared after 15 s the assist and the auto-apply print `FORM NOT FOUND <url>` (and no
-  `Filled:` line); the job is left to you.
+  `Filled:` line); the job is left to you. Workday: the agent clicks `Apply` / `Apply Manually` only (never `Sign In` or `Create Account`, never types),
+  then stops at the account page — the job becomes `manual_apply_account_required` with the apply pack offered, never `FORM NOT FOUND`.
 - **Fill order and read-back.** Files first: the CV goes only to the real Resume / CV field, never to an "Autofill from resume" control (printed `skipped the
   autofill upload control`); then the form is left alone until it has not changed for 2 s (an Ashby form re-renders after an upload and wipes what was typed);
   then the text fields. Afterwards every field that was filled is read back: an empty one is filled once more and printed `VERIFIED` (`(filled again)`) or

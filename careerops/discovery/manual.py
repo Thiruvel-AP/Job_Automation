@@ -85,6 +85,36 @@ def job_id_for(company: str, title: str, url: str | None) -> str:
     return "manual:" + hashlib.sha1(f"{company}|{title}|{url}".encode()).hexdigest()[:12]
 
 
+def ad_body(text: str) -> str:
+    """The ad without the file's own leading header block (`Company:`, `Title:` ... written by discovery, often from a board slug and so
+    wrongly cased): the company's spelling is read from the ad's words, never from that header."""
+    lines = (text or "").splitlines()
+    i = 0
+    while i < len(lines) and (not lines[i].strip() or (HEADER_LINE.match(lines[i]) and
+                                                       HEADER_KEYS.get(HEADER_LINE.match(lines[i]).group(1).strip().lower()))):
+        i += 1
+    return "\n".join(lines[i:])
+
+
+def display_name(company: str, title: str, text: str) -> str:
+    """v3.9.7: the company as the ad writes it (LSEG, not Lseg; Kong, not Kong Inc). Never `.title()`."""
+    from ..tailoring.letters import display_company
+
+    return display_company(company, f"{title or ''}\n{ad_body(text)}")
+
+
+def refresh_company(db: DB, job_id: str) -> bool:
+    """Re-derive the stored company name of a job added before v3.9.7 (a board slug had been title-cased). True when the row changed."""
+    job = db.job(job_id)
+    if job is None or not job["company"]:
+        return False
+    name = display_name(job["company"], job["title"] or "", job["description"] or "")
+    if name == job["company"]:
+        return False
+    db.update_job(job_id, company=name)
+    return True
+
+
 def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = None,
            location: str = "United Kingdom", source: str = "manual", posted: str | None = None, agency: bool = False,
            work_country: str | None = None, seen_on: str | None = None, open_listing: bool = False,
@@ -100,7 +130,7 @@ def add_jd(db: DB, text: str, *, company: str, title: str, url: str | None = Non
     have = db.job(jid)
     if have is not None and have["status"] not in REPLACEABLE:
         raise JobExists(f"{jid} ({company} / {title}) already exists with status '{have['status']}'")
-    db.upsert_job({"id": jid, "source": source, "company": company, "title": title, "location": location,
+    db.upsert_job({"id": jid, "source": source, "company": display_name(company, title, text), "title": title, "location": location,
                    "url": url, "apply_url": apply_url or url, "description": text, "posted_at": posted,
                    "posted_at_source": posted_source if posted else None})
     kind = apply_kind if apply_kind in applykind.KINDS else applykind.kind_of(apply_url or url)
@@ -120,3 +150,18 @@ def triage_job(db: DB, settings, job_id: str) -> str:
     fields = gates.verdict_fields(v)
     db.update_job(job_id, **fields)
     return fields["status"]
+
+
+def refresh_sponsor(db: DB, settings, job_id: str) -> bool:
+    """v3.9.6: re-run the register lookup (alias map included) for a stored job and save it when it differs, so the final P reads the same S as the
+    inbox estimate (which always looks the employer up fresh). A row triaged before the alias map existed kept 'none'. True when the row changed."""
+    job = db.job(job_id)
+    idx = sponsors.load_index(db)
+    if job is None or idx is None or not job["company"]:
+        return False
+    m = idx.lookup(job["company"], settings["sponsors"].get("fuzzy_threshold", 0.92))
+    if (job["sponsor_match"], job["sponsor_name"]) == (m.label, m.name):
+        return False
+    db.update_job(job_id, sponsor_name=m.name, sponsor_score=m.score, sponsor_match=m.label, sponsor_route=m.route, sponsor_rating=m.rating)
+    db.log(job_id, "live", f"sponsor re-checked: {job['sponsor_match']} -> {m.label}")
+    return True

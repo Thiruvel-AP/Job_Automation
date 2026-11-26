@@ -852,6 +852,9 @@ class Live:
             db.log(jid, "live", {"added_from": f.name})
         jid = entry["job_id"]
         self.current["job_id"] = jid
+        if manual.refresh_company(db, jid):                      # v3.9.7: a name stored title-cased from a slug ("Lseg") is re-derived from the ad
+            entry["company"] = db.job(jid)["company"]
+        manual.refresh_sponsor(db, self.s, jid)                # v3.9.6: the same register lookup as the inbox estimate (a stale 'none' made S 0.75 against 0.90)
         self.dir_before = db.job(jid)["application_dir"]
         self.out(f"\n== {entry.get('company')} | {entry.get('title')}  [{jid}]  ({f.name})")
         if self.retailor and not r.pass1_done and db.job(jid)["status"] in RETAILOR_FROM:     # once: not again at the review pass

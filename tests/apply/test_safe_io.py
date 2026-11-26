@@ -79,6 +79,8 @@ ALLOWED = {
                                              "after the user's y, a dated backup and a validation",
     ("apply/handoff.py", "record"): "swaps in paths.live/handoff_hosts.json.tmp, a file this call just wrote",
     ("apply/decided.py", "_reopen"): "swaps in paths.live/state.json.tmp, a file this call just wrote",
+    ("prefs.py", "set_value"): "v3.9.3: rewrites .env in place (after a .env.bak-<stamp> copy), only the CAREEROPS_REGION / CAREEROPS_COMPANY_SIZE "
+                               "line changes; truncate drops the old tail",
 }
 
 

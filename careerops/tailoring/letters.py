@@ -70,6 +70,25 @@ def named_team(team: str) -> str:
     return "" if " ".join(t.lower().split()) in GENERIC_TEAMS else t
 
 
+_LEGAL = re.compile(r"[\s,]+(?:inc|ltd|limited|llc|llp|plc|corp|corporation|gmbh|co)\.?$", re.I)
+
+
+def display_company(company: str, text: str = "") -> str:
+    """The company name as a person writes it (v3.9.5, for the greeting and the letter body; the CV file name stays a slug): the legal suffix is dropped
+    ("Kong Inc" -> "Kong"), and the name is taken as the ad writes it at its first occurrence in `text` (the ad's title and body). Capitals the ad uses
+    stay ("LSEG", "IBM", "AWS", "McKinsey"); a name the ad writes all in lower case gets a capital first letter ("deliveroo" -> "Deliveroo"); a name not
+    in the ad keeps its own casing, first letter capital. Never `.title()`."""
+    name = " ".join(str(company or "").split())
+    base = _LEGAL.sub("", name).strip() or name
+    if not base:
+        return name
+    m = re.search(r"(?<![\w])" + r"\s+".join(re.escape(w) for w in base.split()) + r"(?![\w])", str(text or ""), re.I)
+    seen = m.group(0) if m else base
+    if seen.isupper() and not (2 <= len(seen) <= 5 and seen.isalpha()):
+        seen = base if not base.isupper() else seen          # a long all-capitals heading is not the name's spelling
+    return " ".join(w[:1].upper() + w[1:] for w in seen.split())
+
+
 def greeting(job: dict, team: str, settings) -> str:
     """"Hi <first name>" when the contact's name is known, else "Hi <Company> team" (`letter.greeting_hook`; never "Dear Sir/Madam"); a recruitment
     agency gets "Hi <agency> team". "Hi <Company> <Team> team" only when the ad names a team (`named_team`). The comma is added by the template."""

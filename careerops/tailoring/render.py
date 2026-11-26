@@ -292,7 +292,7 @@ def result_span(text: str, result) -> tuple[int, int] | None:
 def bullet_latex(text, result="", wrap: str = "textbf") -> str:
     """A bullet as LaTeX: escaped, with the bullet's `result:` text inside \\<wrap>{...} when the bullet says it (nothing else in
     a bullet is wrapped). `wrap`: textbf for the one-page template, num (the reference CV's macro for result numbers) for cv2."""
-    s = str(text)
+    s = " ".join(str(text).split())        # v3.9.7: a line break or blank line inside a bullet (a `plain:` block scalar) would split its \item
     span = result_span(s, result)
     if not span:
         return inline(s)

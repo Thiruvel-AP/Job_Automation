@@ -110,8 +110,11 @@ class SponsorIndex:
 
     def lookup(self, company: str, threshold: float = 0.92) -> "SponsorMatch":
         """The same answer shape as CompanyIndex.lookup (this older index knows no route or rating)."""
-        name, score, method = self.match(company, threshold)
-        return SponsorMatch(name, score, "none" if method == "none" else "exact" if method == "exact" else "fuzzy")
+        def raw(c: str) -> SponsorMatch:
+            name, score, method = self.match(c, threshold)
+            return SponsorMatch(name, score, "none" if method == "none" else "exact" if method == "exact" else "fuzzy")
+
+        return with_alias(company, raw(company), raw)
 
 
 
@@ -134,10 +137,43 @@ class SponsorMatch:
     rating: str | None = None
     town: str | None = None
 
+    via: str = ""                      # method "alias": the alias name (from config/sponsor_aliases.yaml) that is on the register
+
     @property
     def label(self) -> str:
-        """What is stored on the job: 'exact', 'fuzzy(0.95)' or 'none'."""
+        """What is stored on the job: 'exact', 'fuzzy(0.95)', 'alias' or 'none'."""
         return f"fuzzy({self.score:.2f})" if self.method == "fuzzy" else self.method
+
+
+ALIASES_PATH: Path | None = None          # tests point this at a tmp file; None = config/sponsor_aliases.yaml under the project root
+
+
+def load_aliases(path: Path | None = None) -> dict[str, list[str]]:
+    """{normalised company: [other names it is registered under]} from `config/sponsor_aliases.yaml` (code-owned, never the fact bank). {} when the
+    file is absent or unreadable."""
+    import yaml
+
+    from ..config import ROOT
+
+    p = Path(path or ALIASES_PATH or ROOT / "config" / "sponsor_aliases.yaml")
+    try:
+        raw = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+    return {normalise(str(k)): [str(a) for a in (v if isinstance(v, (list, tuple)) else [v]) if str(a).strip()]
+            for k, v in raw.items() if isinstance(raw, dict) and normalise(str(k))}
+
+
+def with_alias(company: str, base: SponsorMatch, raw_lookup) -> SponsorMatch:
+    """`base` when the company is on the register; else the first alias name of the company that IS on the register by an exact match (no guessing:
+    an alias that is not on the register changes nothing). The match says which alias and which register name."""
+    if base.method != "none":
+        return base
+    for alias in load_aliases().get(normalise(company), []):
+        m = raw_lookup(alias)
+        if m.method == "exact" and m.name:
+            return SponsorMatch(m.name, 1.0, "alias", m.route, m.rating, m.town, via=alias)
+    return base
 
 
 def _lookup(company: str, exact: dict[str, list[tuple]], by_first: dict[str, list[tuple[str, tuple]]],
@@ -192,7 +228,8 @@ class CompanyIndex:
         return self._n
 
     def lookup(self, company: str, threshold: float = 0.92) -> SponsorMatch:
-        return _lookup(company, self.exact, self.by_first, threshold)
+        raw = lambda c: _lookup(c, self.exact, self.by_first, threshold)       # noqa: E731
+        return with_alias(company, raw(company), raw)
 
 
 def has_snapshot(db: DB) -> bool:

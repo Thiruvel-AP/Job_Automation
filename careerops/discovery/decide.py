@@ -22,6 +22,7 @@ Nothing here tailors, opens a form or submits: approval only moves a JD file to 
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -50,6 +51,7 @@ HELD = (MARGINAL, SKIP, CONFIRM, ESTIMATE_SKIP)  # a logged decision that keeps 
 LABEL = {AUTO_PRIORITY: "AUTO-APPROVED", AUTO: "AUTO-APPROVED", READY: "READY FOR YOU", MARGINAL: "MARGINAL", SKIP: "AGENT-SKIP",
          CONFIRM: "NEEDS CONFIRMATION", WAITING: "WAITING", ESTIMATE_SKIP: "ESTIMATE-SKIP"}
 ORDER = (AUTO_PRIORITY, AUTO, READY, WAITING, MARGINAL, CONFIRM, SKIP)
+_EVAL_CEILING = re.compile(r"ATS ceiling\D{0,12}?(\d+(?:\.\d+)?)\s*%", re.I)     # v3.9.3: the figure an evaluation's source line quotes
 RESUME = {"blacklist": "`careerops promote N` to evaluate it anyway", "posting_closed": "share a live posting (`careerops live --url LINK`)",
           "jd_unavailable": "paste the ad (`careerops live --clipboard`)", "agency": "`careerops promote N` once you know the employer"}
 LOG = "decisions.jsonl"
@@ -120,8 +122,23 @@ class Item:
         head = f"{self.n:>2}. {LABEL[self.decision]} {self.score_text()} | {self.name}{self.route_text()}"
         if self.ev is not None and self.decision in (*APPROVING, WAITING, MARGINAL):
             why = "; ".join(self.ev.why()) or "-"
-            return f"{head} | why: {why} | risk: {self.ev.risk()} | legitimacy {self.ev.legitimacy}" + (f" | {self.reason}" if self.reason else "")
+            ceil = self.ceiling_text()
+            return (f"{head} | why: {why} | risk: {self.ev.risk()} | legitimacy {self.ev.legitimacy}" + (f" | {ceil}" if ceil else "")
+                    + (f" | {self.reason}" if self.reason else ""))
         return f"{head} | {self.reason}" if self.reason else head
+
+    def ceiling_text(self) -> str:
+        """v3.9.3, display only: the two ATS ceiling numbers a line can show, labelled. `evaluation` is the figure the model wrote into its evaluation
+        (a dimension's `source`, e.g. "ATS ceiling 100%"), from the inputs of the day it ran; a cached evaluation keeps it. `estimate` is today's
+        pre-tailoring estimate (gates.pre_ceiling), the number the v3.9.2 floor (ceiling_floor) decides on. Empty when neither is known."""
+        parts = []
+        if self.ev is not None:
+            hit = next((m for d in self.ev.dimensions.values() if (m := _EVAL_CEILING.search(str((d or {}).get("source") or "")))), None)
+            if hit:
+                parts.append(f"evaluation {hit.group(1)}% (model's note, {self.ev.ts[:10] or 'date unknown'})")
+        if self.ceiling is not None:
+            parts.append(f"estimate {self.ceiling:.0f}% (pre-tailoring, today; the gate uses this)")
+        return "ATS ceiling: " + " vs ".join(parts) if parts else ""
 
 
 def freshness(age_days: float | None) -> float:

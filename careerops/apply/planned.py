@@ -17,7 +17,8 @@ from typing import Any
 
 from . import answerplan as AP
 from . import answers as answers_mod
-from . import attest, browser as browser_mod, dryrun, failures as failures_mod, formfind, formscan, knockout, letter_demand, planfill, planfirst, verify
+from . import attest, browser as browser_mod, dryrun, failures as failures_mod, formfind, formscan, knockout, letter_demand, planfill, planfirst, route, verify
+from . import assist as assist_mod
 from .errors import AccountRequired, BrowserClosed
 from .guard import check_job_files
 
@@ -113,11 +114,13 @@ def run(job: dict, rep: dict, applicant: dict, profile_dir: Path, *, plan, cv: s
     page, close = (launch or browser_mod.launcher(None, headless=record))(profile_dir)
     conf = "x"
     try:
-        reached = formscan.reach(page, qs.url or url, out=print)
+        agent = assist_mod.make_agent(page, applicant, book, job, plan, cv, letter, letter_text, history, freetext)
+        reached = formscan.reach(page, qs.url or url, agent=lambda p: agent.run("reach").outcome == "reached_form", out=print)
         stop = formfind.blocker(page)
         if stop:
             raise formfind.HandOff(stop)
         if not reached.ok:
+            route.require_no_auth(page)                                # a sign-in page: AccountRequired, not FORM NOT FOUND
             problem = f"FORM NOT FOUND {qs.url or url}"
             print(f"\n{problem}\nThe page opened but shows no application form; apply by hand (every answer is in answers_to_paste.txt).")
             r["not_found"] = problem
@@ -175,7 +178,7 @@ def run(job: dict, rep: dict, applicant: dict, profile_dir: Path, *, plan, cv: s
     except AccountRequired as e:                                   # a sign-in page: nothing typed; the browser is closed below
         from .assist import account_required
 
-        account_required(r, e.reason, e.url or url, ask)
+        account_required(r, e.reason, e.url or url, ask, pack=lambda why: hand_off(why, remember=False))
         conf = "x"
     except formfind.HandOff as e:
         if failures is not None and failures_mod.kind_of(str(e)) == failures_mod.VERIFICATION_ERROR:
