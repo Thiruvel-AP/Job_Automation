@@ -1,0 +1,79 @@
+Company: Deliveroo
+Title: Senior Machine Learning Engineer - Recommendations
+URL: https://job-boards.greenhouse.io/deliveroo/jobs/8261231
+Source: greenhouse
+Location: London, England
+Posted: 2026-10-07T09:29:52-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Our Global Structure
+
+Deliveroo is now part of DoorDash, bringing together teams with even greater reach, scale, and ambition. Depending on your role, you may collaborate with teammates, systems, and leaders across DoorDash and Wolt. Together, we’re unlocking new possibilities as one global team.
+Join us in our mission to transform the way people shop and eat, where impact, innovation and growth drive everything we do. Our Global Engineering teams tackle complex technical challenges across a global, three-sided marketplace, building and scaling systems that serve millions of customers, riders and partners every day.
+
+We're looking for a Senior Machine Learning Engineer to join our London office as part of a Global DoorDash Engineering team (working hybrid, 3 days in the office).
+
+This role sits in our Consumer Org, where you'll work on recommendation problems with direct, measurable impact on how customers discover relevant content. You’ll collaborate with experienced scientists and engineers across DoorDash, Deliveroo and Wolt, learning from multiple recommendation systems while helping shape the next generation of the experience.
+
+What You'll Be Doing
+
+- Design, develop and improve recommendation, ranking and retrieval models that surface relevant restaurants, dishes, items and content to customers.
+
+- Own applied ML problems end to end: frame the problem, analyze data, develop models, define offline evaluation, run experiments and monitor production performance.
+
+- Develop methods that balance relevance with product and customer needs, such as diversity, availability, business constraints and changing user intent.
+
+- Collaborate closely with Software Engineers, ML Engineers, Product Managers and Analysts to turn scientific insights into reliable customer-facing products.
+
+- Evaluate and apply state-of-the-art ML methods where they meaningfully improve recommendation quality, robustness or efficiency.
+
+- Contribute to a high bar for applied-science practice through technical reviews, knowledge sharing and thoughtful experimentation.
+
+What You'll Need to Thrive
+
+- You have substantial hands-on experience applying machine learning to real-world problems and a track record of bringing models from development into production; a PhD with relevant applied research experience is equally welcome.
+
+- You have experience with recommendation systems, ranking, retrieval, personalisation, or closely related ML problems.
+
+- You can independently turn an ambiguous customer or product problem into a well-scoped ML approach, make sound trade-offs and drive it to a measurable outcome.
+
+- You are proficient in Python and experienced with modern ML frameworks and large-scale data processing.
+
+- You understand how to evaluate ML systems rigorously, including offline metrics, experiment design and interpreting online results.
+
+- You communicate complex technical ideas clearly and work effectively with cross-functional partners.
+
+Why Join Us?
+
+At Deliveroo, you'll do work that matters—solving real-world problems in a three-sided marketplace that's constantly evolving. We're food lovers, problem solvers, community builders and more, brought together by a shared drive to make things better. Working here you can expect to:
+
+🔧 Solve meaningful problems at real scale
+Work on a complex, always-on marketplace that impacts millions every day.
+
+🌱 See your impact, fast
+Ship, test and improve ideas quickly in a low-hierarchy, high-ownership environment.
+
+🧠 Grow through challenge and ownership
+Take on big, ambiguous problems and accelerate your career with strong support.
+
+🌎 A culture built for builders
+High standards, collaboration, flexible working and continuous learning.
+
+💰 Share in the success you help create
+Competitive salary and equity options, so you're rewarded for the impact you make.
+
+➡️ Want a deeper look at how we build? Check out our Tech Blog.
+
+Diversity, Equity and Inclusion
+
+At Deliveroo, we know that a great workplace reflects the world around us and that true diversity and inclusion make us stronger, more creative, and better at what we do. We’re committed to fostering an environment where everyone can do their best work and feel they belong.
+
+We believe in equality of opportunity and welcome candidates from all backgrounds regardless of age, gender, ethnicity, disability, sexual orientation, gender identity, socio-economic background, religion, or belief.
+
+If you have a disability or long-term health condition and need support to apply for one of our roles, or require any reasonable adjustments during the recruitment process, you’ll have the opportunity to let us know once you’ve submitted your application. We’ll share details on how to request support so we can ensure you have a fair and equitable experience.
+
+If you’re excited about making a real impact in a fast-moving marketplace and growing your career alongside ambitious, supportive teams, we’d love to hear from you!
+
+Beware of recruitment scams: DASH Brands will never ask you to pay money or share sensitive financial information during hiring — learn more about DASH Brands' legitimate recruiting process at careersatdoordash.com/recruitment-scam-awareness.

@@ -1,0 +1,51 @@
+Company: Compass Group UK & Ireland Ltd
+Title: Senior Data Analyst
+URL: https://www.reed.co.uk/jobs/senior-data-analyst/57559379
+Source: reed
+Location: Birmingham, GB
+Salary: GBP 65,000-65,000
+Posted: 2026-11-11
+Posted via: reed.date
+First seen: 2026-11-17
+
+Data Analyst – Birmingham / London, Flexible hybrid working | Full-Time / Permanent 
+Up to £65,000 (depending on experience) + bonus and excellent benefits including healthcare, wellbeing support, 27 days' annual leave plus bank holidays, life insurance and more. 
+We're looking for a talented Data Analyst to turn workforce management, labour cost and productivity data into trusted, actionable insights that support operational decision-making across Compass Group UK & Ireland - a global leader in food services. Working as part of our Labour Intelligence team, you'll develop impactful reporting, analyse workforce trends, and help operational leaders make informed decisions through clear, accurate and reusable workforce analytics. 
+If you're passionate about data analysis, business intelligence and transforming data into meaningful outcomes, we'd love to hear from you. 
+Compass Digital & Technology is where ideas turn into possibilities. 
+We’re the technology team behind Compass Group UK&I, part of Compass Group, one of the world’s largest hospitality businesses. We’re shaping the next generation of products, platforms and experiences for Compass Group, harnessing AI to create competitive advantage and accelerate growth. 
+We create, manage and deploy technology which supports our operators, clients and guests. From enterprise-scale cloud engineering, cybersecurity, mobile ordering and guest-facing experiences to everyday IT support. Our work reaches across our business and all walks of life, from schools to banks and into the daily lives of millions of people. 
+But D&T is about more than technology. It’s a place to be curious, challenge what’s possible and turn great ideas into real outcomes. A place where talented people collaborate, experiment, learn and make an impact at scale. 
+We own it from idea to outcome. We challenge what’s possible. And together, we’re creating better solutions, every day. 
+Data Analyst WFM – The role 
+
+- Analyse workforce deployment, labour cost and productivity data to provide actionable business insights and support operational decision-making. 
+- Collaborate with product leadership, workforce management teams and operational stakeholders to understand business questions and identify reporting requirements. 
+- Develop and enhance dashboards, reports and analytical outputs using SQL and BI tools within the agreed workforce management product model. 
+- Apply consistent labour metrics and calculation definitions to ensure reporting accuracy and business confidence. 
+- Investigate anomalies, validate calculations and reconcile unexpected results with data owners and stakeholders. 
+- Identify opportunities to improve reporting efficiency, reduce manual processes and increase the reuse of trusted analytics. 
+- Support labour intelligence initiatives used by client-facing, operational and financial teams across the business. 
+- Apply enterprise data standards, privacy controls and responsible data practices when handling workforce information. 
+- Communicate findings, reporting changes and business insights clearly to non-technical stakeholders. 
+What we're looking for 
+
+- Experience using SQL and business intelligence tools to analyse data and create meaningful reporting solutions. 
+- Understanding of workforce deployment, labour cost and productivity analytics. 
+- Experience working with semantic models, validating calculations and producing reliable management information. 
+- Strong analytical and problem-solving skills with the ability to investigate trends, anomalies and data quality issues. 
+- Excellent communication skills with the ability to explain findings and recommendations clearly to a range of stakeholders. 
+- Strong collaboration skills and the ability to build effective relationships across operational and central teams. 
+- Sound judgement when handling sensitive workforce data and applying appropriate privacy and access controls. 
+- Ability to thrive in a fast-paced environment while managing multiple priorities and delivering high-quality insights 
+What you'll get in return 
+
+- Competitive salary with bonus and full company benefits 
+- 27 days' annual leave plus bank holidays, your birthday off, and a holiday purchase scheme 
+- Healthcare & wellbeing: Aviva Digicare, Medicash (dental, optical, therapy treatments) 
+- Mental health support: 24/7 Employee Assistance Programme 
+- Family benefits: Enhanced maternity, paternity, and adoption leave. 2 days' additional leave after returning from maternity leave, day off for your baby's first birthday, enhanced family leave 
+- Perks & discounts: Shopping, entertainment, and travel discounts, 20% off Nuffield Health and 10% off PureGym memberships 
+- Financial wellbeing: Pension scheme, Life Assurance, preferred rates on salary finance products 
+- Development opportunities: Professional subscriptions, ongoing training and structured career pathways 
+Compass Group is committed to creating a diverse and inclusive workplace where everyone can thrive

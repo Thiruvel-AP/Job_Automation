@@ -1,0 +1,136 @@
+Company: Valarian
+Title: MLOps Engineer
+URL: https://jobs.lever.co/valarian/924e389c-6cbd-40dc-a3e1-e7f2f4b930ec
+Source: lever
+Apply kind: lever
+Location: London
+Posted: 2026-10-22T08:57:57.450000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-22
+Listed: yes
+
+Valarian Technologies is a dual-use technology company building critical tools to safeguard the future in an era of evolving global security challenges. We're rethinking security beyond traditional military domains, addressing asymmetric threats that impact our technological advantage, economic strength, and democratic institutions.
+
+We build Acra – the platform foundation for everything we do as a dual-use technology company. The platform’s name, rooted in the Greek word for citadel (or, fortress), reflects the design and purpose of our infrastructure-agnostic secure enclaves: protecting critical data. Some of the government and commercial workflows include: increased operational resiliency for mission-critical systems and functions; enabling organisations to more quickly and widely adopt emerging technologies while ensuring the integrity of their intellectual property; information flow during disaster response scenarios, and zero-trust / least-privilege environments for M&A, attorney-client privileged communications, etc. And we’ve only scratched the surface.
+
+At our core, we're driven by a shared mission and a belief in making a tangible impact on our world. Whether you join our London HQ or the wider global organisation, you’ll be a part of collaborative, high-performing teams, creating cutting-edge software, platforms, and infrastructure.
+The Role
+
+We are looking for an experienced Senior MLOps / LLMOps Engineer to lead the deployment, monitoring, orchestration, and operational reliability of our production LLM applications and agentic AI platform. In this role, you will bridge the gap between AI development and production infrastructure, ensuring multi-step agentic workflows, data pipelines, and retrieval-augmented systems run reliably, securely, and at scale within a large-scale Kubernetes environment. 
+What you’ll do:
+
+- 
+
+Design, deploy, and manage LLM services, agentic applications, and supporting AI workloads inside high-throughput Kubernetes clusters. 
+
+- 
+
+Automate containerized deployments, scalable inference endpoints, and blue/green or canary rollout strategies for LLM/Agent releases via modern CI/CD pipelines.
+
+- 
+
+Support and maintain the production operation of agentic AI workflows, including multi-step tool execution, state management, and multi-agent coordination.
+
+- 
+
+Rapidly triage and resolve issues across AI application logic, orchestration frameworks, external API integrations, and underlying cloud infrastructure.
+
+- 
+
+Build end-to-end monitoring and evaluation (Eval) frameworks to measure and maintain AI output accuracy, drift, latency, cost, and hallucination metrics.
+
+- 
+
+Implement trace-level observability for agent execution paths (tracking prompts, completions, tool calls, and agent steps).
+
+- 
+
+Monitor and optimize real-time and batch data pipelines powering AI workloads, including feature stores, vector indexing, and embedding updates.
+
+- 
+
+Manage resource allocation (GPU/CPU utilization), memory footprint, autoscaling strategies, and cloud infrastructure expenditure to optimize time-to-first-token (TTFT) and throughput.
+
+What we are looking for: 
+
+- 
+
+3+ years of experience in MLOps, LLMOps, Platform Engineering, AI Infrastructure, or SRE with a focus on machine learning workloads.
+
+- 
+
+Hands-on experience managing and deploying complex containerized applications on Kubernetes (EKS, GKE, AKS, or bare metal) at scale.
+
+- 
+
+Strong proficiency in Python for backend automation, system debugging, custom tooling, and integration development.
+
+- 
+
+Proven experience with standard monitoring/logging tools (e.g., Prometheus, Grafana, Datadog, OpenTelemetry) as well as LLM-specific tracing and evaluation platforms (e.g., LangSmith, Phoenix/Arize, Langfuse, TruLens).
+
+- 
+
+Familiarity with modern CI/CD pipelines (GitHub Actions, GitLab CI, ArgoCD) and Infrastructure as Code (IaC) tools (Terraform, Pulumi).
+
+- 
+
+Deep operational understanding of agentic architectures, prompt chaining, function calling/tool execution, and non-deterministic application behavior.
+
+Nice to have:
+
+- 
+
+Practical experience operating Retrieval-Augmented Generation (RAG) pipelines and production vector databases (e.g., Pinecone, Qdrant, Milvus, pgvector, Weaviate).
+
+- 
+
+Hands-on exposure to agent development and orchestration frameworks (e.g., LangChain, LangGraph, LlamaIndex, AutoGen, CrewAI).
+
+- 
+
+Experience with high-performance LLM serving engines and frameworks (e.g., vLLM, TGI, Ollama, TensorRT-LLM).
+
+- 
+
+Understanding of AI security practices (prompt injection mitigation, data privacy, PII masking) and rate limiting/cost guardrails.
+
+Benefits:
+
+Our benefits are designed to ensure our employees feel taken care of and are proud to be a part of the Valarian team. We are committed to consistently enhancing our benefit package, taking into account the overall well-being and needs of our teammates. Here are the key benefits accessible to all employees at Valarian Technologies:
+
+- 
+
+Equity – because you have the right to own what you’re building
+
+- 
+
+A competitive salary – because we value your unique skills
+
+- 
+
+Employer pension contributions – because you deserve a secure future
+
+- 
+
+Private health insurance - because your health is important to us
+
+- 
+
+Hybrid work setup – because everyone has different needs
+
+- 
+
+Gym memberships - because staying active fuels productivity
+
+- 
+
+Rewarding company retreats and meetups that respect your work/life balance – because we love getting to know each other
+
+Life at Valarian
+
+Our culture is built on inclusivity, compassion and flexibility – we want everyone to be empowered to achieve their goals at Valarian.
+
+The work we do is vital, but so are the connections that make it happen. We thrive on the shared energy, spontaneous conversations, and mutual trust built when we spend time together. We operate on a hybrid model, gathering in our London office 3 days a week to support one another and collaborate. 
+
+We may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analyzing resumes, or assessing responses and identifying potential inconsistencies or verification signals in application materials based on available information. These tools assist our recruitment team but do not replace human judgment. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us.

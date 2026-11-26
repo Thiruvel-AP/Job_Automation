@@ -1,0 +1,142 @@
+Company: Lendable
+Title: Senior Strategy and Data Analyst
+URL: https://jobs.ashbyhq.com/lendable/fdfbe01f-4e33-48c7-a03a-e4e1e217f8e9
+Source: ashby
+Location: London, United Kingdom
+Posted: 2026-02-25T13:50:38.425+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-20
+Listed: yes
+
+ABOUT LENDABLE
+
+Lendable is on a mission to build the world's best technology to help people get credit and save money. We're building one of the world’s leading fintech companies and are off to a strong start:
+
+
+
+ - One of the UK’s most exciting unicorns with a team of over 800 people
+
+ - Among the fastest-growing tech companies in the UK
+
+ - Profitable since 2017
+
+ - Backed by top investors including Balderton Capital and Goldman Sachs
+
+ - Loved by customers with the best reviews in the market (4.9 across 10,000s of reviews on Trustpilot https://uk.trustpilot.com/review/lendable.co.uk)
+
+
+
+So far, we’ve rebuilt the Big Three consumer finance products from scratch: loans, credit cards and car finance. We get money into our customers’ hands in minutes instead of days.
+
+
+
+We’re growing fast, and there’s a lot more to do: we’re going after the two biggest Western markets (UK and US) where trillions worth of financial products are held by big banks with dated systems and painful processes.
+
+
+
+
+JOIN US IF YOU WANT TO
+
+ 1. Take ownership: you are trusted to make decisions that drive a material impact on the direction and success of Lendable from day 1
+
+ 2. Work in small teams of exceptional people: Lendies are relentlessly resourceful. We challenge the status quo to solve problems and find smarter solutions
+
+ 3. Build the best technology in-house: we use new data sources, machine learning and AI to make machines do the heavy lifting
+
+
+
+
+ABOUT THE ROLE
+
+Lendable is revolutionising the credit card industry by making financial tools accessible, intuitive, and empowering. Zable is a Mobile-App first credit card that empowers customers to build their credit score while meeting their spending and borrowing needs sustainably.
+
+
+
+We’re looking for an analytical, commercially-minded Senior Strategy Analyst to help us grow and scale the product exponentially. This is a dynamic role where you’ll tackle high impact business problems across a number of disciplines including pricing, financial forecasting, growth, credit risk, new product development and product analytics.
+
+
+
+You’ll help us solve our most complex multi-dimensional challenges, working cross-functionally to deliver insight-driven strategies that optimise performance, drive responsible growth, and put the customer at the heart of decision-making.
+
+You’ll operate in a fast-paced environment where ideas matter more than hierarchy, and execution beats bureaucracy. Your work will directly influence who we serve, how we grow, and how we deliver sustainable value.
+
+
+
+
+KEY RESPONSIBILITIES
+
+Drive promotions & pricing strategy:
+
+ - Develop and optimise promotional and pricing strategies through data-driven analysis and experimentation, balancing customer engagement, growth, price elasticity and profitability while continuously refining approaches based on product performance and scenario modelling.
+
+ - Build deep insight into marketing campaign and conversion funnel performance, identifying opportunities to improve cost and conversion efficiency.
+
+ - Stay abreast of industry trends and competitor activity to ensure our products remain fit for purpose.
+
+Financial forecasting & portfolio analytics:
+
+ - Collaborate closely with the Credit Risk Analytics, Growth and Data Science teams to understand how our products and portfolio are performing at a granular sub-segment level.
+
+ - Define key KPIs and develop detailed monitoring to track performance against these goals, and deliver actionable recommendations to improve outcomes. Use strategic analysis to shape and influence broader business strategy.
+
+Evaluate expansion opportunities:
+
+ - Navigate through ambiguity to assess the feasibility of new product, channel and segment expansion opportunities.
+
+ - Create robust commercial assessment frameworks, build tooling where necessary (e.g. RoI or NPV models) and extract data to support these assessments and deliver clear, insight-driven recommendations.
+
+Influence & execution:
+
+ - Collaborate with stakeholders across Credit Risk, Data Science, Product and Growth to bring your strategies to life.
+
+ - Present insights and recommendations to senior leadership - clear, concise, and backed by data.
+
+ - Approach every conversation with an open mind, valuing the strength of ideas over ego or hierarchy.
+
+ - Ensure your implemented strategies are working as intended once deployed in production, validating outcomes and iterating as needed.
+
+Fast-track your career growth:
+
+ - Opportunity to mentor and coach more junior graduate analysts, fostering their technical growth and strategic thinking.
+
+ - Well defined career progression pathways to Manager/Senior Manager for high performers.
+
+
+
+
+YOUR EXPERIENCE
+
+Essential:
+
+ - 3+ years of experience in an analytics role in any discipline (e.g. Growth, Credit Risk, Product Analytics, Marketing, etc.)
+
+ - Proficiency in coding - ideally SQL and Python
+
+Desirable:
+
+ - Experience in an FCA-regulated financial services firm
+
+
+
+
+LIFE AT LENDABLE
+
+ - Winning team: the opportunity to scale up one of the world’s most successful fintech companies
+
+ - Flexible working: flexible approach tailored to each role. Hybrid roles require three days in-office weekly; fully remote roles include regular opportunities for in-person connection through socials and off-sites
+
+ - Socials & connection: opportunities and events to come together, socialise, and get to know each other beyond the office walls
+
+ - Health coverage: support for your physical and mental wellbeing, including private health cover
+
+ - Retirement & savings: long-term financial wellbeing through retirement savings plans
+
+ - Employee referral programme: earn a competitive bonus when you refer successful new team members
+
+ - Office meals & snacks: enjoy a fully stocked kitchen, plus complimentary lunches prepared by in-house chefs on in-office days at select locations
+
+ - Sustainable commuting: cycle-to-work and electric vehicle salary sacrifice schemes available in select locations
+
+Please note: The availability and details of specific benefits vary by location and role. For more information, please speak to your Talent Partner.
+
+Check out our blog https://blog.lendable.co.uk/!

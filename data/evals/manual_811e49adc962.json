@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:811e49adc962",
+ "company": "Pay.UK",
+ "title": "AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family matches ai_engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large company, benefits, hybrid office policy"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifying language or requests in ad"
+  }
+ },
+ "global_score": 4.4,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate has required Microsoft Copilot Studio experience",
+  "Check salary expectations vs market since pay not disclosed",
+  "Verify hybrid work arrangement (minimum 40% office) aligns with candidate preferences"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.4,
+ "model_confidence": "High",
+ "jd_hash": "ac9f975eaf56a704",
+ "jd_words": 832,
+ "tokens": 2241,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

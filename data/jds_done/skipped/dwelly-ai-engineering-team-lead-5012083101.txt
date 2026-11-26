@@ -1,0 +1,102 @@
+Company: Dwelly
+Title: AI Engineering Team Lead
+URL: https://job-boards.eu.greenhouse.io/dwelly/jobs/5012083101
+Source: greenhouse
+Apply kind: greenhouse
+Location: London
+Posted: 2026-10-22T14:54:21-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+About Dwelly
+
+Dwelly is building the AI operating system for residential lettings. Its growing network of agencies provides its AI with real-world data, continuous feedback, and control over complete workflows, making exceptional service the standard for landlords and tenants. Today, Dwelly operates more than 15,000 properties and $470 million in GMV, making it one of the UK’s ten largest lettings operators. The company has raised $263 million.
+
+We’re a fast-growing, product-focused company, backed by top-tier investors and led by a team with deep experience in real estate, technology, and operations.
+
+Position Summary
+
+We are hiring exceptional engineering leaders for Tenant Find and Growth. Each leader will own an area: its technical direction, product delivery, and the organisation needed to build it.
+
+We expect these areas to grow significantly. You will start close to the work and build towards a team of 7–10 engineers, hiring and developing the team, growing new leaders, and evolving its structure as the scope expands. We are looking for people who have operated as a CTO, Senior Engineering Manager, or in a role with comparable responsibility for building and scaling engineering teams.
+
+You will work closely with product and operations, turn messy agency processes into reliable systems, and make decisions independently. You will remain hands-on in architecture, code reviews, debugging, and implementation where your involvement has the most impact.
+
+Key Responsibilities
+
+- Product outcomes: partner with product and operations on priorities, scope, and delivery. Own the path from problem definition to production and measurable business impact.
+
+- AI products: lead the delivery of LLM and agentic workflows into production. Own quality evaluation, observability, human feedback, and safe fallbacks; measure reliability, cost, and reductions in manual work.
+
+- AI-enabled engineering: build the team's ability to use coding agents effectively, with strong context, automated reviews, tests, and verification. Hire and develop engineers who can build and operate reliable AI systems.
+
+- Technical direction: guide architecture, integrations, data models, and legacy migration. Balance speed with quality, reliability, and the ability to support growth.
+
+- Hands-on engineering: stay actively involved in building the product. Write production code, design and implement complex systems, review critical changes, and lead by example. Balance hands-on contributions with growing the team and delegating ownership.
+
+- People leadership: set clear expectations, give direct feedback, manage performance, and create an environment where people grow and raise problems early.
+
+- Hiring and team building: define the capabilities your area needs, own hiring and onboarding, and build a strong team with high standards and shared ownership.
+
+- Organisational growth: shape team boundaries, responsibilities, and leadership as the area scales. Develop engineers and future leaders, delegate real authority, and build teams that operate independently.
+
+- Cross-team delivery: resolve dependencies directly with other leaders, agree shared interfaces and standards, and take responsibility for outcomes that cross team boundaries.
+
+Qualifications and Preferred Background
+
+- Experience as a CTO, Senior Engineering Manager, or an engineering leader with comparable scope and accountability. You have owned technical strategy, hiring, people development, and delivery through a meaningful period of growth.
+
+- A demonstrated record of building and scaling strong engineering teams: hiring well, developing leaders, evolving organisational structure, and increasing team autonomy.
+
+- Deep technical credibility built through designing, shipping, and operating complex production systems. You can challenge architectural decisions and still get into the code when needed.
+
+- Strong product and business judgment: you connect engineering priorities to operational efficiency, customer experience, and business economics.
+
+- Strong backend and systems expertise, including APIs, SQL, integrations, and legacy evolution; hands-on experience with Node.js and TypeScript.
+
+- Experience shipping and operating LLM or agentic products in production, with evidence of business impact. You understand tool use, orchestration, evaluation, and failure modes, and can judge when to use AI, deterministic software, or human review. You actively use coding agents and can raise the team's capability.
+
+- High autonomy and the ability to lead through ambiguity, make difficult trade-offs, and align people across teams.
+
+What Success Looks Like
+
+- Agencies and tenants feel the difference: work that used to take hours now happens automatically, and you can show exactly how much time and money it saves.
+
+- Your AI workflows run reliably in production, and the people who depend on them trust them, because you’ve built in evaluations, observability, and smart fallbacks.
+
+- Your team ships faster with coding agents than they ever could without them, and quality goes up, not down.
+
+- You’ve built a team people want to join, grown engineers into leaders, and created teams that run independently.
+
+- As the organisation grows, your area keeps its pace, with decisions made at the right level.
+
+- You thrive in ambiguity, bringing clarity and making sound decisions when everything around you is moving fast.
+
+Technology Stack
+
+We are moving from a legacy PHP monolith toward a backend-heavy TypeScript architecture. Our stack includes Node.js, TypeScript, React, tRPC, Drizzle, MySQL, and PostgreSQL. We value strong engineering fundamentals, AI-assisted development, and a short path from decision to production.
+
+Compensation and benefits
+
+- This is a hybrid role based in London, combining time together in the office with the flexibility of working from home.
+
+- Competitive salary with the potential for equity options based on performance, recognising exceptional contributions to our integration success.
+
+What is it like being a Dwell-er
+
+Feel free to check out Dwelly Core Principles. That’s about what we believe in, how we operate and make decisions
+
+What we offer is not a fancy office or a static workplace. Instead, this is solving one of the world’s most complex problems in the largest consumer industry in the world (residential rentals), to improve the experience for over 30% of households (more than 5 million in the UK, and over 100 million including EU and US) that live in rental homes
+
+This is about disrupting the largest, most antiquated industry in the world, with one of the strongest operational and technical teams that exist in the UK and the EU. We work hard, and we shoot for extremely ambitious results. But we want people to be proud of what they’ve built and be able to look back and say one day “hell yeah, that was me that did it all”
+
+- Customer obsession rather than competitive focus
+
+- Passion for invention
+
+- Operational excellence
+
+- Long-term thinking
+
+By applying for this position, you consent to the processing and storage of your personal data for recruitment purposes for up to 365 days, in accordance with our data retention policy and applicable data protection laws.

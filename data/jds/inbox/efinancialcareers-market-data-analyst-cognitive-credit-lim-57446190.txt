@@ -1,0 +1,52 @@
+Company: eFinancialCareers
+Title: Market Data Analyst - Cognitive Credit Limited
+URL: https://www.reed.co.uk/jobs/market-data-analyst-cognitive-credit-limited/57446190
+Source: reed
+Location: London, GB
+Posted: 2026-10-12
+Posted via: reed.date
+First seen: 2026-11-18
+
+http:// is expanding the Market Data Team that oversees the integrity of the bond and loan pricing and reference data that underpins our Global Credit product. 
+We are looking for a market data analyst who is frustrated working in a large institution, enjoys solving puzzles, likes to build automated processes, and has a fine attention to detail. 
+The analyst will have a background in evaluated pricing, independent price verification (IPV), fixed income trade support, or credit fund valuations. The analyst will work closely with our product and engineering teams to ensure the accuracy of the market data we deliver to clients. 
+We are a financial technology company that develops advanced analytics software for global credit investors. 
+Our clients are the world's largest investment banks, asset managers, and hedge funds. 
+An ideal candidate for this position will be comfortable with bond and loan price and reference data syntax, confident calculating fixed income analytics, and will bring the intelligence, puzzle-solving instinct, and proactivity needed to find the one wrong number in a very large dataset. 
+This job is for you if: 
+
+- you are frustrated by the pace and bureaucracy of large institutions
+- you enjoy puzzle-solving – you have an instinct for spotting the outlier that everyone else's process missed
+- you are highly analytical, detail-oriented, motivated by data integrity challenges, and can work independently
+- you would rather build automated market data checks than keep running them by hand
+- you know how to calculate YTM, YTW, z-spread, duration (Macaulay and Modified), and PV01 with ease
+- you understand how bond and loan pricing conventions work (clean vs. dirty price, accrued interest, day count) well enough to sanity-check a price against its fundamentals
+- you know how to leverage, but are not overly reliant on, the latest AI technologies
+- you are excited by and curious to learn what Cognitive Credit’s proprietary Market Data Pipeline does 
+Required Education/Experience/Skills: 
+
+- Experience in evaluated pricing, independent price verification (IPV), fixed income valuations/trade support, or credit fund NAV pricing
+- Work experience as an investment bank IPV or vendor-side pricing analyst
+- Strong familiarity with bond and loan reference data syntax and pricing feed structures
+- Advanced Excel/Google Sheets skills, including building complex spreadsheets with Macros/Apps Scripts
+- Demonstrated ability to work through large, messy datasets to identify pricing outliers and data errors
+- Strong academic track record; sharp analytical and quantitative reasoning
+- General interest in technology, especially as applied to financial market data
+- An understanding of corporate capital structures, simple and complex, is a plus
+- Coding experience in Python, SQL, or a similar language for data analysis is a plus 
+Typical Day: 
+
+- Reviewing pricing feeds received from our third-party pricing data provider against internal benchmarks and investigating anomalies
+- Sifting through large bond and loan price and reference datasets to identify, prioritize, and resolve outliers
+- Calculating and validating various bond and loan pricing data at scale
+- Tracing capital structures and inter-company relationships to ensure aggregate-level data integrity
+- Building automated algorithms that reduce manual reviews and checks
+- Documenting and escalating recurring data quality issues to our pricing vendor and internal stakeholders
+- Interacting with our clients, the world's leading investment firms, to answer questions about data and product functionality 
+Compensation: 
+Competitive pay and benefits, subject to individual experience. 
+Work Environment: 
+Dynamic, innovative, analytical, and collaborative. 
+Location: 
+The parent company is based in London, UK. The position can offer remote working flexibility. 
+We are an equal opportunity employer and value diversity. We do not discriminate on the basis of race, religion, color, national origin, gender, sexual orientation, age, marital status, veteran status, or disability status.

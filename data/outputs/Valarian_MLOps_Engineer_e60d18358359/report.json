@@ -1,0 +1,1558 @@
+{
+  "job_id": "manual:e60d18358359",
+  "company": "Valarian",
+  "title": "MLOps Engineer",
+  "family": "ml_engineer",
+  "tier": 2,
+  "headline": "Machine Learning Engineer",
+  "keywords": [
+    {
+      "term": "llm",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "agentic",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "kubernetes",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "mlops",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "ci/cd",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "LLMOps",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "tool execution",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI Infrastructure",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AKS",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "ArgoCD",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "bare metal",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "EKS",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "function calling",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "github actions",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "GitLab CI",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "GKE",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "LangSmith",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "machine learning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "non-deterministic application behavior",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "OpenTelemetry",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Phoenix/Arize",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Platform Engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "prompt chaining",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Pulumi",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "Valarian Technologies builds critical tools to safeguard the future by rethinking security beyond traditional military domains, addressing asymmetric threats with secure, infrastructure-agnostic enclaves and AI platforms.",
+  "team": "",
+  "ceiling": 0.4,
+  "genuine_gaps": [
+    "LLMOps",
+    "tool execution",
+    "AI Infrastructure",
+    "AKS",
+    "ArgoCD",
+    "bare metal",
+    "GitLab CI",
+    "GKE",
+    "LangSmith",
+    "non-deterministic application behavior",
+    "OpenTelemetry",
+    "Phoenix/Arize",
+    "Platform Engineering",
+    "prompt chaining",
+    "Pulumi"
+  ],
+  "possible_evidence": {},
+  "context_terms": [
+    {
+      "term": "Prometheus",
+      "weight": 2.0,
+      "required": true,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Grafana",
+      "weight": 2.0,
+      "required": true,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Datadog",
+      "weight": 2.0,
+      "required": true,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Langfuse",
+      "weight": 2.0,
+      "required": true,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Pinecone",
+      "weight": 1.0,
+      "required": false,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Qdrant",
+      "weight": 1.0,
+      "required": false,
+      "why": "a team / product-area name listed in the JD"
+    },
+    {
+      "term": "Milvus",
+      "weight": 1.0,
+      "required": false,
+      "why": "a team / product-area name listed in the JD"
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.32,
+      "score_stemmed": 0.32,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9326686604579876,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.03
+      },
+      "shrinks": 5,
+      "reverted": [],
+      "wording": {
+        "terms": [],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 7,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [
+          "p_ql3"
+        ],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          },
+          {
+            "id": "fl7",
+            "lines": 4
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_ql1: adds the word 'raising', which the original bullet does not say",
+        "p_ql1: dropped the number 15",
+        "p_ql1: dropped the number 384",
+        "p_ql1: dropped 'under'",
+        "p_ql1: dropped the word 'trained' of the result",
+        "p_ql3: adds the word 'attributing', which the original bullet does not say",
+        "p_ql3: adds the word 'staying', which the original bullet does not say",
+        "p_ql3: adds the word 'identified', which the original bullet does not say",
+        "p_ql3: adds the word 'due', which the original bullet does not say",
+        "p_ql3: adds the word 'multiple', which the original bullet does not say"
+      ],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: fl7 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: p_ql1 prints 4 lines (limit 3); it has no sentence or semicolon to split at and the model could not shorten it without losing a fact, so it is left as the fact bank has it"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "mlops",
+        "LLMOps",
+        "tool execution",
+        "AI Infrastructure",
+        "AKS",
+        "ArgoCD",
+        "bare metal",
+        "function calling",
+        "GitLab CI",
+        "GKE",
+        "LangSmith",
+        "non-deterministic application behavior",
+        "OpenTelemetry",
+        "Phoenix/Arize",
+        "Platform Engineering",
+        "prompt chaining",
+        "Pulumi"
+      ],
+      "rephrase": {
+        "eligible": 2,
+        "asked": 2,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "mlops",
+          "LLMOps",
+          "tool execution",
+          "AI Infrastructure",
+          "AKS",
+          "ArgoCD",
+          "bare metal",
+          "function calling",
+          "GitLab CI",
+          "GKE",
+          "LangSmith",
+          "non-deterministic application behavior",
+          "OpenTelemetry",
+          "Phoenix/Arize",
+          "Platform Engineering",
+          "prompt chaining",
+          "Pulumi"
+        ],
+        "proposed": 2,
+        "accepted": 0,
+        "blocked": 2,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az10",
+              "az12",
+              "az11",
+              "az6"
+            ],
+            "dc180": [
+              "dc1",
+              "dc3",
+              "dc7"
+            ],
+            "freelance": [
+              "fl7",
+              "fl5"
+            ],
+            "avasoft": [
+              "av8",
+              "av10",
+              "av5"
+            ]
+          },
+          "projects": [
+            "churn",
+            "qlora",
+            "gtaigraph",
+            "coverfit",
+            "astrofreud"
+          ],
+          "project_bullets": {
+            "churn": [
+              "p_ch1"
+            ],
+            "qlora": [
+              "p_ql1",
+              "p_ql3"
+            ],
+            "gtaigraph": [
+              "p_gg5",
+              "p_gg3"
+            ],
+            "coverfit": [
+              "p_cf2"
+            ],
+            "astrofreud": [
+              "p_as1"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_ql1": "Fine-tuned QLoRA-fine-tuned Llama 3.1 8B (4-bit, Unsloth, TRL) using 0.52% of parameters, raising answer completion from 32% to 52% and exact-answer accuracy from 16.2% to 27.3% on held-out NuminaMath problems (n=99).",
+          "p_ql3": "Reported that accuracy on completed answers barely moved (50% vs 52%), attributing the gain to staying within the token budget rather than stronger reasoning. Identified out-of-memory errors due to multiple models loaded in one runtime, not the KV cache."
+        },
+        "profile": "AI engineer who builds the harness around the model: at AstraZeneca I built a tool-calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three-tier, ~65-test evaluation harness. Over a year of hands-on experience building and deploying machine learning and LLM systems. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda)."
+      },
+      "selection": {
+        "az": [
+          "az10",
+          "az6",
+          "az11",
+          "az12"
+        ],
+        "dc180": [
+          "dc1",
+          "dc3",
+          "dc7"
+        ],
+        "freelance": [
+          "fl5",
+          "fl7"
+        ],
+        "avasoft": [
+          "av5",
+          "av8",
+          "av10"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "coverfit": [
+          "p_cf2"
+        ]
+      },
+      "profile": "AI engineer who builds the harness around the model: at AstraZeneca I built a tool-calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three-tier, ~65-test evaluation harness. Over a year of hands-on experience building and deploying machine learning and LLM systems. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).",
+      "rephrase_coverage": {
+        "eligible": 4,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "mlops",
+          "LLMOps",
+          "tool execution",
+          "AI Infrastructure",
+          "AKS",
+          "ArgoCD",
+          "bare metal",
+          "function calling",
+          "GitLab CI",
+          "GKE",
+          "LangSmith",
+          "non-deterministic application behavior",
+          "OpenTelemetry",
+          "Phoenix/Arize",
+          "Platform Engineering",
+          "prompt chaining",
+          "Pulumi"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/Valarian_MLOps_Engineer_e60d18358359",
+  "analysis_warnings": [
+    "keywords: cut the benefits section 'Benefits' (10 characters) before extraction",
+    "extract_keywords: dropped keyword 'Retrieval-Augmented Generation' (not verbatim, too long, generic or a degree)",
+    "keywords: dropped 'agentic architectures' (contains 'agentic' plus only generic head words)",
+    "keywords: capped at 25; dropped python, SRE, terraform, TruLens, production, data pipelines, retrieval, end-to-end, hallucination, multi-agent, scalable, AutoGen, CrewAI, data privacy, guardrails, insurance, langchain, langgraph, llamaindex, Ollama, pgvector, PII masking, prompt injection mitigation, rag, rate limiting/cost guardrails, TensorRT-LLM, TGI, vLLM, Weaviate",
+    "keywords: 'Prometheus' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Grafana' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Datadog' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Langfuse' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Pinecone' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Qdrant' is context (a team / product-area name listed in the JD), not scored",
+    "keywords: 'Milvus' is context (a team / product-area name listed in the JD), not scored",
+    "skills: the 'ai_engineer' family's skill_lines do not mention pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, which the fact bank lists (the lines are used as written; add them to the lines if you want them on the CV)"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Agentic AI & LLM Applications",
+      "Software Engineering & Integrations",
+      "Cloud & Deployment"
+    ],
+    "dropped_groups": [],
+    "family": "ai_engineer"
+  },
+  "achievements": [
+    "lloyds"
+  ],
+  "profile": {
+    "facts": [
+      "Over a year of hands-on experience building and deploying machine learning and LLM systems",
+      "Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda)"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "hook": {
+    "problem": "agentic and evaluation",
+    "proof_bullet_id": "az10",
+    "number": "19,213",
+    "headline": "LLM agent that recovers from tool failure, ~65-test evals",
+    "profile_line": "AI engineer who builds the harness around the model: at AstraZeneca I built a tool-calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three-tier, ~65-test evaluation harness.",
+    "letter_sentence": "At AstraZeneca I built a tool-calling agent that recovers when its tools fail, and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness.",
+    "entry_id": "az",
+    "entry_kind": "experience",
+    "org": "AstraZeneca",
+    "relevant_role_id": "az",
+    "score": 4.0,
+    "flags": [],
+    "source": "library",
+    "notes": [],
+    "hook_id": "h_agent_harness",
+    "overlap": [
+      [
+        "agentic",
+        2.0
+      ],
+      [
+        "evaluation",
+        2.0
+      ]
+    ],
+    "reason": "h_agent_harness won: its terms hit 2 of the ad's top 10 keywords, 'agentic' (2), 'evaluation' (2) (top-keyword weight 4; all-keyword score 4)"
+  },
+  "hook_notes": [],
+  "hook_family_headline": "",
+  "hook_family_profile": false,
+  "family_line": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+  "ats": {
+    "strict": 32.0,
+    "ceiling": 40.0,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "llm",
+      "agentic",
+      "kubernetes",
+      "ci/cd",
+      "evaluation",
+      "EKS",
+      "github actions",
+      "machine learning"
+    ],
+    "misses": [
+      "mlops",
+      "LLMOps",
+      "tool execution",
+      "AI Infrastructure",
+      "AKS",
+      "ArgoCD",
+      "bare metal",
+      "function calling",
+      "GitLab CI",
+      "GKE",
+      "LangSmith",
+      "non-deterministic application behavior",
+      "OpenTelemetry",
+      "Phoenix/Arize",
+      "Platform Engineering",
+      "prompt chaining",
+      "Pulumi"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "llm",
+    "agentic",
+    "kubernetes",
+    "mlops",
+    "ci/cd",
+    "evaluation",
+    "EKS",
+    "function calling",
+    "github actions",
+    "machine learning"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.32,
+    "score_stemmed": 0.32,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9326686604579876,
+    "hits": [
+      "llm",
+      "agentic",
+      "kubernetes",
+      "ci/cd",
+      "evaluation",
+      "EKS",
+      "github actions",
+      "machine learning"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "mlops",
+      "LLMOps",
+      "tool execution",
+      "AI Infrastructure",
+      "AKS",
+      "ArgoCD",
+      "bare metal",
+      "function calling",
+      "GitLab CI",
+      "GKE",
+      "LangSmith",
+      "non-deterministic application behavior",
+      "OpenTelemetry",
+      "Phoenix/Arize",
+      "Platform Engineering",
+      "prompt chaining",
+      "Pulumi"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9326686604579876,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.03
+  },
+  "needs_result": [
+    {
+      "id": "az6",
+      "entry": "AstraZeneca",
+      "text": "Integrated the agent into a React front end with real-time gene alias enrichment."
+    },
+    {
+      "id": "dc1",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+    },
+    {
+      "id": "dc3",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Designed hierarchical agent workflows with real-time query capabilities, integrating Exograph and PostgreSQL for persistent storage and retrieval across agent sessions."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+    },
+    {
+      "id": "fl7",
+      "entry": "Freelance",
+      "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+    },
+    {
+      "id": "av8",
+      "entry": "Avasoft",
+      "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+    },
+    {
+      "id": "av10",
+      "entry": "Avasoft",
+      "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn \u2014 propensity model",
+      "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+    }
+  ],
+  "lengths": {
+    "rounds": 7,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [
+      "p_ql3"
+    ],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      },
+      {
+        "id": "fl7",
+        "lines": 4
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 5,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {
+    "headline": true,
+    "profile": true,
+    "bullet": true,
+    "number_in_pdf": true
+  },
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "non-deterministic application behavior",
+      "non-deterministic"
+    ],
+    "results_bold": 3,
+    "results_unmatched": [
+      "az11"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 7.33,
+        "keywords": 6.0,
+        "domain": 1.33,
+        "chosen": false,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 7.33,
+        "keywords": 6.0,
+        "domain": 1.33,
+        "chosen": true,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "dc1",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 6.0,
+        "keywords": 6.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 6.0,
+        "keywords": 4.0,
+        "domain": 2.0,
+        "chosen": true,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      },
+      {
+        "id": "az4",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+      },
+      {
+        "id": "az11",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+      },
+      {
+        "id": "az12",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+      },
+      {
+        "id": "dc6",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement."
+      },
+      {
+        "id": "fl2",
+        "entry": "Freelance",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+      },
+      {
+        "id": "fl7",
+        "entry": "Freelance",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 6.0,
+        "sum": 6.0,
+        "chosen": true
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 4.0,
+        "sum": 8.0,
+        "chosen": false
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 3.33,
+        "sum": 10.65,
+        "chosen": false
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 3.33,
+        "sum": 6.66,
+        "chosen": true
+      },
+      {
+        "id": "astrofreud",
+        "name": "AstroFreud \u2014 LangGraph interview agent",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "cnn",
+        "name": "Image Classification \u2014 CNN and Transfer Learning",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "score": 1.33,
+        "sum": 1.33,
+        "chosen": false
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 0.67,
+        "sum": 0.67,
+        "chosen": false
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 4,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 2,
+    "asked": 2,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "mlops",
+      "LLMOps",
+      "tool execution",
+      "AI Infrastructure",
+      "AKS",
+      "ArgoCD",
+      "bare metal",
+      "function calling",
+      "GitLab CI",
+      "GKE",
+      "LangSmith",
+      "non-deterministic application behavior",
+      "OpenTelemetry",
+      "Phoenix/Arize",
+      "Platform Engineering",
+      "prompt chaining",
+      "Pulumi"
+    ],
+    "proposed": 2,
+    "accepted": 0,
+    "blocked": 2,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "mlops",
+      "LLMOps",
+      "tool execution",
+      "AI Infrastructure",
+      "AKS",
+      "ArgoCD",
+      "bare metal",
+      "function calling",
+      "GitLab CI",
+      "GKE",
+      "LangSmith",
+      "non-deterministic application behavior",
+      "OpenTelemetry",
+      "Phoenix/Arize",
+      "Platform Engineering",
+      "prompt chaining",
+      "Pulumi"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [
+      "P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have applied agentic principles to construct end-to-end Py'",
+      "P3: 'deployment' (capability) is in neither the evidence nor the job description: 'Using continuous integration built on GitHub Actions, I auto'",
+      "P4: 'pipelines' (capability) is in neither the evidence nor the job description: 'I have built evaluation pipelines for machine learning model'",
+      "P4: 'monitoring' (capability) is in neither the evidence nor the job description: 'The evaluation framework logged prediction distributions, fe'",
+      "P4: 'stakeholders' (client) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+      "P4: 'deployment' (capability) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+      "P4: 'model deployment' (capability) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+      "links 'executions while persisting state' to 'postgresql', but no one bullet says both (the object is in av10, av3, az3, the tool in dc1, dc3, dc6): 'I have applied agentic principles to construct end-to-end Py'",
+      "links 'by storing intermediate results' to 'postgresql', but no one bullet says both (the object is in dc7, p_gg5, the tool in dc1, dc3, dc6): 'By storing intermediate results in PostgreSQL, I ensured dat'"
+    ],
+    "score": null,
+    "pages": 0,
+    "words": 0,
+    "status": "none",
+    "mode": "company",
+    "notes": [
+      "cover_letter: draft 1 rejected (244 words: the letter must be between 360 and 420; P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have built end-to-end agentic pipelines using Python and P'; P3:); redrafting (2 of 3)",
+      "cover_letter: draft 2 rejected (306 words: the letter must be between 360 and 420; P2: claim about the company is not supported by the ad (not in it: combin): 'This combination of mission focus'; P2: claim about the company is not s); redrafting (3 of 3)"
+    ],
+    "retry": {
+      "count": 2,
+      "rejected_words": [],
+      "first_problems": [
+        "244 words: the letter must be between 360 and 420",
+        "P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have built end-to-end agentic pipelines using Python and P'",
+        "P3: 'pipelines' (capability) is in neither the evidence nor the job description: 'I have built end-to-end agentic pipelines using Python and P'",
+        "P3: 'Infrastructure' (name) is in neither the evidence nor the job description: 'My work routinely automates the coordination of tool executi'",
+        "P3: 'production' (capability) is in neither the evidence nor the job description: 'This experience aligns directly with the requirement for llm'",
+        "P4: 'AI' (name) is in neither the evidence nor the job description: 'This work produced reliable evaluation metrics that inform o'",
+        "lower case 'llm' (write LLM)"
+      ],
+      "failures": [
+        {
+          "attempt": 1,
+          "problems": [
+            "244 words: the letter must be between 360 and 420",
+            "P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have built end-to-end agentic pipelines using Python and P'",
+            "P3: 'pipelines' (capability) is in neither the evidence nor the job description: 'I have built end-to-end agentic pipelines using Python and P'",
+            "P3: 'Infrastructure' (name) is in neither the evidence nor the job description: 'My work routinely automates the coordination of tool executi'",
+            "P3: 'production' (capability) is in neither the evidence nor the job description: 'This experience aligns directly with the requirement for llm'",
+            "P4: 'AI' (name) is in neither the evidence nor the job description: 'This work produced reliable evaluation metrics that inform o'",
+            "lower case 'llm' (write LLM)"
+          ]
+        },
+        {
+          "attempt": 2,
+          "problems": [
+            "306 words: the letter must be between 360 and 420",
+            "P2: claim about the company is not supported by the ad (not in it: combin): 'This combination of mission focus'",
+            "P2: claim about the company is not supported by the ad (not in it: align, background, direct, scop, technical): 'technical scope aligns directly with my background in building secure'",
+            "P3: names 'kubernetes', which is not in the chosen bullets",
+            "P3: 'pipelines' (capability) is in neither the evidence nor the job description: 'My CI pipelines, built with GitHub Actions, orchestrated con'",
+            "P3: 'function calling' (capability) is in neither the evidence nor the job description: 'I regularly consulted stakeholders to refine prompt chaining'",
+            "P3: 'Kubernetes-driven' (name) is in neither the evidence nor the job description: 'This experience satisfies the requirement for llm expertise,'",
+            "P3: 'kubernetes' (capability) is in neither the evidence nor the job description: 'This experience satisfies the requirement for llm expertise,'",
+            "P3: 'scalable' (capability) is in neither the evidence nor the job description: 'This experience satisfies the requirement for llm expertise,'",
+            "P4: 'AI' (name) is in neither the evidence nor the job description: 'The focus on churn and propensity modelling illustrates my c'",
+            "'Kubernetes-driven' (a name) is not in the ad or the fact bank: 'This experience satisfies the requirement for llm expertise,'",
+            "lower case 'llm' (write LLM)",
+            "vague filler 'scalable' is not in the evidence",
+            "vague filler 'robust' is not in the evidence"
+          ]
+        },
+        {
+          "attempt": 3,
+          "problems": [
+            "P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have applied agentic principles to construct end-to-end Py'",
+            "P3: 'deployment' (capability) is in neither the evidence nor the job description: 'Using continuous integration built on GitHub Actions, I auto'",
+            "P4: 'pipelines' (capability) is in neither the evidence nor the job description: 'I have built evaluation pipelines for machine learning model'",
+            "P4: 'monitoring' (capability) is in neither the evidence nor the job description: 'The evaluation framework logged prediction distributions, fe'",
+            "P4: 'stakeholders' (client) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+            "P4: 'deployment' (capability) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+            "P4: 'model deployment' (capability) is in neither the evidence nor the job description: 'Results were visualised for stakeholders using concise repor'",
+            "links 'executions while persisting state' to 'postgresql', but no one bullet says both (the object is in av10, av3, az3, the tool in dc1, dc3, dc6): 'I have applied agentic principles to construct end-to-end Py'",
+            "links 'by storing intermediate results' to 'postgresql', but no one bullet says both (the object is in dc7, p_gg5, the tool in dc1, dc3, dc6): 'By storing intermediate results in PostgreSQL, I ensured dat'"
+          ]
+        }
+      ],
+      "removed": [],
+      "outcome": "no letter"
+    },
+    "evidence": [
+      {
+        "id": "dc1",
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+      },
+      {
+        "id": "p_ch1",
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      }
+    ],
+    "p2_sources": [],
+    "p2_used": [],
+    "requirements": [],
+    "reason": "3 draft(s) rejected by the company guards; last: P3: 'end-to-end' (capability) is in neither the evidence nor the job description: 'I have applied agentic principles to construct end-to-end Py'; P3: 'deployment' (capability) is in neither the evidence nor the job description: 'Using continuous integration built on GitHub Actions, I auto'; P4: 'pip"
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2483,
+        "prompt_tokens": 1956,
+        "completion_tokens": 884,
+        "reasoning_tokens": 513,
+        "total_tokens": 2840,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 900,
+        "prompt_tokens": 892,
+        "completion_tokens": 1200,
+        "reasoning_tokens": 1085,
+        "total_tokens": 2092,
+        "finish_reason": "length"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "ollama",
+        "model": "qwen2.5-7b-8k",
+        "max_tokens": 1200,
+        "est_input_tokens": 900,
+        "prompt_tokens": 855,
+        "completion_tokens": 155,
+        "reasoning_tokens": null,
+        "total_tokens": 1010,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 729,
+        "prompt_tokens": 771,
+        "completion_tokens": 304,
+        "reasoning_tokens": 215,
+        "total_tokens": 1075,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3435,
+        "prompt_tokens": 2776,
+        "completion_tokens": 471,
+        "reasoning_tokens": 146,
+        "total_tokens": 3247,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3487,
+        "prompt_tokens": 2835,
+        "completion_tokens": 553,
+        "reasoning_tokens": 148,
+        "total_tokens": 3388,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4042,
+        "prompt_tokens": 3282,
+        "completion_tokens": 399,
+        "reasoning_tokens": 143,
+        "total_tokens": 3681,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3435,
+        "prompt_tokens": 2776,
+        "completion_tokens": 471,
+        "reasoning_tokens": 146,
+        "total_tokens": 3247,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3487,
+        "prompt_tokens": 2835,
+        "completion_tokens": 553,
+        "reasoning_tokens": 148,
+        "total_tokens": 3388,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4042,
+        "prompt_tokens": 3282,
+        "completion_tokens": 498,
+        "reasoning_tokens": 167,
+        "total_tokens": 3780,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3435,
+        "prompt_tokens": 2776,
+        "completion_tokens": 329,
+        "reasoning_tokens": 42,
+        "total_tokens": 3105,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3703,
+        "prompt_tokens": 3017,
+        "completion_tokens": 578,
+        "reasoning_tokens": 226,
+        "total_tokens": 3595,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3915,
+        "prompt_tokens": 3191,
+        "completion_tokens": 2242,
+        "reasoning_tokens": 1760,
+        "total_tokens": 5433,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 31244,
+    "completion_tokens": 8637,
+    "reasoning_tokens": 4739,
+    "total_tokens": 39881,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1956,
+        "completion_tokens": 884,
+        "reasoning_tokens": 513,
+        "total_tokens": 2840,
+        "prompt_tokens_per_call": [
+          1956
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 3,
+        "prompt_tokens": 2518,
+        "completion_tokens": 1659,
+        "reasoning_tokens": 1300,
+        "total_tokens": 4177,
+        "prompt_tokens_per_call": [
+          892,
+          855,
+          771
+        ]
+      },
+      "cover_letter": {
+        "calls": 9,
+        "prompt_tokens": 26770,
+        "completion_tokens": 6094,
+        "reasoning_tokens": 2926,
+        "total_tokens": 32864,
+        "prompt_tokens_per_call": [
+          2776,
+          2835,
+          3282,
+          2776,
+          2835,
+          3282,
+          2776,
+          3017,
+          3191
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 3,
+        "prompt_tokens": 3619,
+        "completion_tokens": 2388,
+        "reasoning_tokens": 1813,
+        "total_tokens": 6007,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      },
+      "ollama/qwen2.5-7b-8k": {
+        "calls": 1,
+        "prompt_tokens": 855,
+        "completion_tokens": 155,
+        "reasoning_tokens": 0,
+        "total_tokens": 1010,
+        "tasks": [
+          "rephrase_bullets"
+        ]
+      },
+      "groq/openai/gpt-oss-120b": {
+        "calls": 9,
+        "prompt_tokens": 26770,
+        "completion_tokens": 6094,
+        "reasoning_tokens": 2926,
+        "total_tokens": 32864,
+        "tasks": [
+          "cover_letter"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "data/outputs/Valarian_MLOps_Engineer_e60d18358359/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Machine Learning Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "AI engineer who builds the harness around the model: at AstraZeneca I built a tool-calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three-tier, ~65-test evaluation harness. Over a year of hands-on experience building and deploying machine learning and LLM systems. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).",
+    "skills": {
+      "Agentic AI & LLM Applications": "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)",
+      "Software Engineering & Integrations": "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis",
+      "Cloud & Deployment": "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "indirect contract",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+          "Integrated the agent into a React front end with real-time gene alias enrichment.",
+          "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation.",
+          "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+        ],
+        "bullet_ids": [
+          "az10",
+          "az6",
+          "az11",
+          "az12"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo.",
+          "Designed hierarchical agent workflows with real-time query capabilities, integrating Exograph and PostgreSQL for persistent storage and retrieval across agent sessions.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+        ],
+        "bullet_ids": [
+          "dc1",
+          "dc3",
+          "dc7"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.",
+          "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+        ],
+        "bullet_ids": [
+          "fl5",
+          "fl7"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer (Jun 2023 \u2013 Sep 2024); Trainee (Jan 2023 \u2013 May 2023)",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.",
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av5",
+          "av8",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "display_name": "Banking Customer Churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "coverfit",
+        "display_name": "CoverFit -- Insurance Benchmarking API",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "stack": "FastAPI, pandas, LiteLLM, Pydantic, pytest",
+        "github": "https://github.com/Thiruvel-AP/AIHackathon-Phoenix",
+        "bullets": [
+          "An insurance sponsor needed a fast, low-cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in under 3 seconds at ~\u00a30.003 per query."
+        ],
+        "bullet_ids": [
+          "p_cf2"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 May 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "av2": "10 reusable component templates",
+      "av9": "10 reusable component templates",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ll1": "3rd place; 200:1 class imbalance",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "achievements": [
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "award": "3rd place",
+        "bullet_id": "p_ll1",
+        "text": "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.",
+        "result": "200:1 class imbalance"
+      }
+    ],
+    "hook_headline": "LLM agent that recovers from tool failure, ~65-test evals",
+    "hook_number": "19,213",
+    "linespread": 1.03,
+    "splits": {
+      "p_ql3": {
+        "text": "Reported the limits openly: accuracy on completed answers barely moved (50% vs 52%), so the gain came from finishing answers inside the token budget rather than stronger reasoning; traced out-of-memory errors to several models loaded in one runtime, not the KV cache.",
+        "parts": [
+          "Reported the limits openly: accuracy on completed answers barely moved (50% vs 52%), so the gain came from finishing answers inside the token budget rather than stronger reasoning.",
+          "Traced out-of-memory errors to several models loaded in one runtime, not the KV cache."
+        ]
+      }
+    }
+  }
+}

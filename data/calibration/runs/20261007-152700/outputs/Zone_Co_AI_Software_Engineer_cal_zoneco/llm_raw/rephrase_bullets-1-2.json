@@ -1,0 +1,1 @@
+{"az3":"Containerization of the agent involved deploying it as a Docker container on AWS Lambda via Lambda Web Adapter, using ECR pipelines, IAM roles, and least-privilege policies.","dc1":"Prototyped an MCP-based agentic tool in Python, integrating FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, and presented results in a live stakeholder demo."}

@@ -1,0 +1,51 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER (the CV's) ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    {\color{headernavy}\small\textbf{AI Engineer | LLM agent deployed on AWS Lambda, checked by \num{\textasciitilde{}65} tests}}\\[0.2cm]
+    {\small Bristol, UK\nobreak\ \,\textbar\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textbar\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textbar\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/}\nobreak\ \,\textbar\, \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP}\nobreak\ \,\textbar\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}}
+
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Hi RightShip team,
+
+Your team will work across LLM-based applications, agentic systems and retrieval over structured and unstructured maritime data. That is the kind of problem I have been working on. For my AstraZeneca-affiliated MSc dissertation I built a tool-calling LLM agent that keeps working when its data sources fail, deployed it on AWS Lambda and checked it with a three-tier framework of \textasciitilde{}65 automated tests. After a rate-limit evaluation moved the agent from Groq to AWS Bedrock, I used the same tests to confirm it still behaved.
+
+I care about the parts that make AI usable: grounding answers in trusted data through deterministic lookups, hallucination guards, and fallbacks for when external APIs go down. I also wrote the project\textquotesingle{}s agent evaluation, including a documented hallucination-rate analysis. At 180 Degrees Consulting I prototyped an agentic tool for a loosely defined client brief and contributed to the client\textquotesingle{}s production MCP server, now in live use; senior leadership rated the engagement five stars. At the Bristol × UWE AI Hackathon I paired a deterministic matching engine with a single LLM call, answering in under 3 seconds at about £0.003 per query. As a freelance engineer I built a production RAG and agentic retrieval system with LangChain and LangGraph.
+
+Your ad asks for agentic systems and retrieval pipelines, which is the work I want to do next.
+
+Could we spend 20 minutes on how the team evaluates AI at RightShip?
+
+\vspace{0.5cm}
+
+Regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

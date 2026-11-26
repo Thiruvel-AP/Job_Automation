@@ -1,0 +1,49 @@
+Company: Artefact
+Title: Data Engineer (GCP, Azure)
+URL: https://job-boards.greenhouse.io/artefact/jobs/8360395002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Pune, Maharashtra, India
+Country: India
+Status: listed_only
+Posted: 2026-01-06T07:48:26-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Artefact is a new generation of data service providers specialising in data consulting and data-driven digital marketing. It is dedicated to transforming data into business impact across the entire value chain of organisations. We are proud to say we’re enjoying skyrocketing growth.
+
+The backbone of our consulting missions, today our Data consulting team has more than 400 consultants covering all Artefact's offers (and more): data marketing, data governance, strategy consulting, product owner…
+
+What you will be doing?
+As a Data Engineer, your role involves crafting and maintaining robust data pipelines, utilising Python and SQL, to ensure efficient extraction, transformation, and loading (ETL) of data.
+
+Your responsibilities will include:
+
+- Data Pipeline Development: Building and optimising data pipelines to facilitate seamless data flow across systems and platforms.
+
+- Database Management: Managing databases, ensuring their integrity, and implementing data storage and retrieval solutions.
+
+- Cloud Services Integration: Leveraging cloud services such as MS Azure, GCP, and AWS to architect and deploy scalable data solutions.
+
+- Machine Learning Integration: Collaborating with teams to integrate machine learning models into data pipelines for enhanced data processing.
+
+- Utilising Spark & Kafka: Implementing and working with Spark and Kafka for real-time data processing and analytics.
+
+What we are looking for?
+
+- Proficiency in Python, SQL, and database management.
+
+- Experience with Data Pipelines ETL, Cloud Services (MS Azure, GCP preferred), ML Modeling, Spark & Kafka.
+
+- Proven problem-solving skills and a solution-oriented mindset.
+
+- Excellent communication skills to collaborate effectively within teams and with stakeholders.
+
+- Strong business acumen with an interest in business-facing roles.
+
+- Adaptability and a start-up mentality to thrive in a dynamic environment.
+
+- Candidates with similar skill sets and experiences have excelled in technology firms or consultancy firms.
+
+- Successful candidates often possess Computer Science, Electronics, and Communication Engineering degrees.

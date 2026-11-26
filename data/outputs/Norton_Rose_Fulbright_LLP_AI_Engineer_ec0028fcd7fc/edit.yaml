@@ -1,0 +1,47 @@
+profile: AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment,
+  with automated tests around them. At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup
+  client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from
+  senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools
+  (Claude Code, Cursor, Codex) daily. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped
+  data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).
+bullets:
+  az6: Integrated the agent into a React front end with real-time gene alias enrichment.
+  az10: 'Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built
+    a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered
+    explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls,
+    deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs
+    are unavailable.'
+  az11: Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level → API → live) and hallucination-rate
+    analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after
+    a rate-limit evaluation.
+  az12: 'Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the
+    agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the
+    architecture and evaluation.'
+  dc6: 'A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture
+    for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for
+    persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions
+    CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement.'
+  dc7: 'Proposed the request flow: a user''s text goes through the API and a customised prompt to the MCP server, where one
+    LLM instance writes GraphQL queries against the client''s Convex database and a second instance runs the statistical analysis
+    before the result returns to the user.'
+  dc8: 'Carried it into production with the client''s engineering team: contributed to their production TypeScript/Node.js
+    MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client''s production
+    repository alongside their CTO.'
+  fl5: Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target
+    encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.
+  fl7: Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph,
+    ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models
+    as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model.
+  av8: 'Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data
+    (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito
+    SSO.'
+  av9: Delivered 10 reusable SwiftUI/UIKit component templates that accelerated the team across concurrent releases, so features
+    shipped from shared, tested building blocks.
+  av10: As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and
+    session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that
+    surfaced market-trend signals used for pricing decisions.
+  p_gg3: Combined mRNA and protein evidence per gene with Stouffer's method.
+  p_ql1: 'Needed to know what fine-tuning can change in an 8B model on a free 15 GB GPU: QLoRA-fine-tuned Llama 3.1 8B (4-bit,
+    Unsloth, TRL) training 0.52% of its parameters, which under a fixed 384-token budget raised answer completion from 32%
+    to 52% and exact-answer accuracy from 16.2% to 27.3% on held-out NuminaMath problems (n=99).'
+

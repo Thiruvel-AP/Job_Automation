@@ -1,0 +1,6 @@
+{
+  "fl2": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+  "p_ch1": "Developed XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search and MCC evaluation.",
+  "p_gg1": "Created a networkx heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) with k-NN similarity and Leiden community detection (modularity 0.822).",
+  "p_gg2": "Trained per-gene protein-prediction models for 11,459 genes (OLS + GPU Random Forest ensemble) using resumable chunked GPU training on a free T4."
+}

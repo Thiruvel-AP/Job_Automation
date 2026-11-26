@@ -1,0 +1,145 @@
+Company: Lseg
+Title: Data Science Manager
+URL: https://lseg.wd3.myworkdayjobs.com/Careers/job/GBR-London-10-Paternoster-Square/Data-Science-Manager_R0121775-1
+Source: workday
+Apply kind: workday
+Location: GBR-London-10 Paternoster Square; Edinburgh, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+Data Science Manager
+
+Are you an experienced Data Science leader with a passion for building and scaling AI/ML products?
+
+Lead a team of exceptional Data Scientists and ML Engineers building next-generation AI solutions for financial markets. Drive innovation using LLMs, Generative AI, Deep Learning, Transformers, Agentic AI, and advanced Machine Learning to deliver real-world business impact.
+
+If you're passionate about shaping the future of AI, we'd love to talk to you.
+
+ROLE SUMMARY
+
+As a Data Science Manager, you will lead a high-performing team of Data Scientists delivering AI-powered products that create measurable business value at scale.
+
+This role combines technical leadership, people leadership, and strategic execution. You will drive innovation in AI and Machine Learning, establish engineering excellence, and develop exceptional talent while delivering production-grade solutions that solve complex customer problems.
+
+The ideal candidate has a consistent track record of leading technical teams, scaling AI initiatives from concept to production, and fostering a culture of innovation, collaboration, and continuous improvement. You will partner closely with Product, Engineering, Research, and business partners to shape strategy, accelerate execution, and deliver impactful AI solutions.
+
+WHAT YOU'LL BE DOING
+
+This role combines technical leadership, organizational leadership, and strategic execution within a high-impact AI organization.
+
+Technical Leadership
+
+- Lead the design, development, evaluation, and deployment of production-grade AI and Machine Learning solutions.
+- Drive innovation in Generative AI, Large Language Models (LLMs), Agentic AI, Retrieval-Augmented Generation (RAG), Deep Learning, and Transformer-based architectures.
+- Define the technical vision for AI products, ensuring solutions are scalable, secure, maintainable, and aligned with business objectives.
+- Provide deep expertise in model development, experimentation, optimization, evaluation, and production deployment.
+- Establish standard methodologies for LLM evaluation, model benchmarking, AI quality measurement, and performance assessment.
+- Evaluate emerging AI technologies, foundation models, and third-party solutions to find opportunities for innovation and business value.
+- Guide architectural decisions across AI platforms, model-serving infrastructure, data pipelines, and MLOps/LLMOps capabilities.
+- Partner closely with Engineering teams to productionize AI solutions and drive operational excellence.
+- Build, mentor, and lead high-performing teams of Data Scientists and AI/ML practitioners.
+- Set clear goals, drive accountability, and support career growth and development.
+- Lead performance management, coaching, feedback, and talent development activities.
+- Foster a culture of innovation, collaboration, ownership, and continuous learning.
+- Drive hiring, onboarding, succession planning, and team growth initiatives.
+- Accelerate technical excellence through mentoring, technical reviews, and knowledge sharing.
+
+Strategic & Delivery Leadership
+
+- Partner with Product, Engineering, and Business leaders to define AI strategy, roadmap, and priorities.
+- Drive execution through effective planning, prioritization, resource management, and delivery oversight.
+- Deliver high-quality AI solutions that create measurable business value.
+- Champion engineering excellence through guidelines, coding standards, experimentation, and governance.
+- Communicate technical strategy, risks, and recommendations clearly to technical and executive collaborators.
+- Promote responsible AI, model governance, compliance, and operational risk management.
+
+WHAT YOU'LL BRING
+
+ESSENTIAL SKILLS
+
+LEADERSHIP & MANAGEMENT
+
+- Proven track record of building, leading, and developing high-performing teams of Data Scientists, ML Engineers, and AI practitioners.
+- Demonstrated success delivering large-scale AI initiatives from ideation to production with measurable business impact.
+- Strong coaching, mentoring, performance management, and talent development capabilities.
+- Experience leading multiple concurrent programs, balancing priorities, resources, and customer expectations.
+- Exceptional leadership, communication, and influencing skills with experience engaging senior leadership and executive collaborators.
+
+TECHNICAL EXPERTISE
+
+- Extensive experience designing, building, and deploying production-grade AI and Machine Learning solutions at scale.
+- Deep expertise in LLMs, Generative AI, RAG, Agentic AI, Deep Learning, Neural Networks, and Transformer architectures.
+- Hands-on experience with LLM evaluation, benchmark design, model validation, prompt engineering, guardrails, and AI quality assessment.
+- Good foundation in statistics, probability, optimization, experimentation, and applied machine learning.
+- Advanced proficiency in Python and modern AI frameworks, including PyTorch, TensorFlow, Scikit-Learn, Hugging Face, LangChain, Semantic Kernel, and related ecosystems.
+- Experience building and scaling enterprise AI platforms, ML infrastructure, and intelligent applications serving thousands of users.
+- Strong understanding of model observability, monitoring, evaluation frameworks, experimentation, reliability, and operational perfection.
+- Expertise in cloud-native AI development using Azure AI Foundry, Azure Machine Learning, Azure OpenAI, Azure AI Search, AWS AI Services, and modern cloud architectures.
+- Experience implementing MLOps and LLMOps practices, including CI/CD, model lifecycle management, governance, and production operations at scale.
+
+COLLABORATION & COMMUNICATION
+
+- Ability to communicate complex technical concepts clearly to technical, business, and executive audiences.
+- Strong interested party leadership skills with a proven track record to drive alignment across Product, Engineering, Research, and Business teams.
+- Known to work influencing technical strategy, product direction, and organizational decision-making.
+
+DESIRABLE SKILLS
+
+- Experience leading teams building AI products for financial services, capital markets, research, analytics, or other data-intensive domains.
+- Experience developing multi-agent systems, autonomous workflows, copilots, and intelligent AI assistants.
+- Knowledge of reinforcement learning, fine-tuning, synthetic data generation, model compression, and advanced optimization techniques.
+- Experience with Knowledge Graphs, vector databases, semantic search, retrieval systems, and Graph RAG architectures.
+- Strong understanding of Responsible AI, model governance, AI safety, privacy, regulatory compliance, and risk management frameworks.
+- Experience with DevOps, CI/CD, Kubernetes, Infrastructure as Code, containerization, and distributed computing platforms.
+- Contributions to the AI community through publications, patents, conference presentations, research, or open-source projects.
+
+EDUCATION
+
+Bachelor's degree or equivalent experience in Computer Science, Data Science, Statistics, Mathematics, Engineering, Physics, Artificial Intelligence, Machine Learning, or a related quantitative field.
+
+Master's or equivalent experience or PhD preferred.
+
+WHAT YOU’LL GET IN RETURN
+
+HIGH-IMPACT AI LEADERSHIP
+
+Lead the development of next-generation AI products, demonstrating large-scale datasets, advanced AI models, and modern technologies to solve complex customer challenges.
+
+SIGNIFICANT OWNERSHIP
+
+Shape AI strategy, influence product direction, and build capabilities that deliver dynamic outcomes for customers worldwide.
+
+INDUSTRY LEADERSHIP
+
+Work at the forefront of Generative AI, LLMs, Agentic AI, Analytics, and Intelligent Search, helping define the future of AI innovation in financial markets.
+
+CAREER GROWTH
+
+Accelerate your leadership and technical career through continuous learning, innovation, and exposure to large-scale AI initiatives.
+
+WE ARE PROUD OF OUR VALUES
+
+We recognize that attracting exceptional talent requires flexibility and inclusivity. We take a hybrid-first approach and are committed to creating an environment where different perspectives, continuous learning, and innovation can thrive. We encourage applications from individuals of all backgrounds and experiences and are committed to providing equal opportunities for all.
+
+Career Stage:Manager
+
+London Stock Exchange Group (LSEG) Information:
+Join us and be part of a team that values innovation, quality, and continuous improvement. If you're ready to take your career to the next level and make a significant impact, we'd love to hear from you.
+
+LSEG is a leading global financial markets infrastructure and data provider. Our purpose is driving financial stability, empowering economies and enabling customers to create sustainable growth.
+
+Our purpose is the foundation on which our culture is built. Our values of Integrity, Partnership, Excellence and Change underpin our purpose and set the standard for everything we do, every day. They go to the heart of who we are and guide our decision making and everyday actions.
+
+Working with us means that you will be part of a dynamic organisation of 25,000 people across 65 countries. However, we will value your individuality and enable you to bring your true self to work so you can help enrich our diverse workforce.
+
+We are proud to be an equal opportunities employer. This means that we do not discriminate on the basis of anyone’s race, religion, colour, national origin, gender, sexual orientation, gender identity, gender expression, age, marital status, veteran status, pregnancy or disability, or any other basis protected under applicable law. Conforming with applicable law, we can reasonably accommodate applicants' and employees' religious practices and beliefs, as well as mental health or physical disability needs.
+
+You will be part of a collaborative and creative culture where we encourage new ideas. We are committed to sustainability across our global business and we are proud to partner with our customers to help them meet their sustainability objectives. Our charity, the LSEG Foundation provides charitable grants to community groups that help people access economic opportunities and build a secure future with financial independence. Colleagues can get involved through fundraising and volunteering.
+
+LSEG offers a range of tailored benefits and support, including healthcare, retirement planning, paid volunteering days and wellbeing initiatives.
+
+Please take a moment to read this privacy notice carefully, as it describes what personal information London Stock Exchange Group (LSEG) (we) may hold about you, what it’s used for, and how it’s obtained, your rights and how to contact us as a data subject. 
+
+If you are submitting as a Recruitment Agency Partner, it is essential and your responsibility to ensure that candidates applying to LSEG are aware of this privacy notice.

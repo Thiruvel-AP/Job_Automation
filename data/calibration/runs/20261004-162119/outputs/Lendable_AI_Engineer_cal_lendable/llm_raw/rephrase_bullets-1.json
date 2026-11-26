@@ -1,0 +1,7 @@
+{
+  "az3": "Deployed the agent as a Docker container on AWS Lambda with ECR image pipelines and IAM execution roles for production.",
+  "dc1": "Proposed and prototyped an MCP-based agentic tool in Python for a Madrid-based product start-up client, presented in a live stakeholder demo.",
+  "fl2": "Built NLP and agentic RAG workflows with Hugging Face Transformers and LangChain.",
+  "p_af1": "Developed a real-time WebSocket voice agent with a rolling VAD state machine for streaming speech-to-text.",
+  "p_ms1": "Built an MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model with CI across Python 3.9–3.11."
+}

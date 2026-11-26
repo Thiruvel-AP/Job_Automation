@@ -1,0 +1,60 @@
+Company: G-Research
+Title: Analytics Engineer
+URL: https://gresearch.wd103.myworkdayjobs.com/G-Research/job/London-UK/Analytics-Engineer_R3592
+Source: workday
+Apply kind: workday
+Location: London, UK, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+We tackle the most complex problems in quantitative finance, by bringing scientific clarity to financial complexity.
+
+From our London HQ, we unite world-class researchers and engineers in an environment that values deep exploration and methodical execution - because the best ideas take time to evolve. Together we’re building a world-class platform to amplify our teams’ most powerful ideas.
+
+Every breakthrough is built on strong foundations. In our Strategy and Insights team, you’ll work across disciplines to drive the strategy, culture and structure that enable our success.
+
+Take the next step in your career.
+
+The role
+Our Platform and Data Architecture team is part of the wider Strategy and Insights function, which is collectively responsible for providing timely insights on the firm’s health and for the development and delivery of G-Research's strategy.
+
+Data is at the heart of what we do and we see the ability to embed data-driven insight into the fabric of daily management as a core driver of competitive advantage for the firm.
+
+As an Analytics Engineer you will develop deep knowledge in one or more domains, own the stakeholder relationship and own the roadmap and delivery of analytics engineering work. You will build the data models, tools and AI-assisted workflows that support stakeholders in making data driven decisions with confidence.
+
+Key responsibilities of the role include:
+
+- Owning the analytics engineering relationship and roadmap for one or more business areas, turning stakeholder priorities into a prioritised programme of work
+- Developing clean, tested, documented and reusable datasets that power analyst-led deep dives, stakeholder self-service and agentic data analysis
+- Building tools, such as python packages, and AI-embedded workflows using langgraph that help analysts and stakeholders work faster and more confidently
+- Applying software engineering practice to the analytics stack, including CI/CD, containerisation, Linux tooling, testing and code review, and continuously raising the bar on our technology choices
+
+Collaborating with and supporting data analysts and business stakeholders, advocating best practice in data modelling, engineering and self-service analytics 
+Who are we looking for?
+
+The ideal candidate will have the following skills and experience:
+
+- Experience in analytics engineering, data engineering or a similar role, with equal measures of technical ability and business acumen
+- Strong data transformation skills using python and SQL, with hands-on experience of modern code-based transformation and ingestion frameworks, such as dbt core and dlt
+- Fluent in a modern software engineering environment, such as CI/CD, Docker/Kubernetes, Linux, version control, with a good understanding of DataOps
+- Practical use of AI tools in your day-to-day work and, ideally, experience building workflows or applications that put AI to work on real problems
+- A proven track record of independently owning end-to-end delivery, including scoping with stakeholders, design, delivery and support
+- Excellent interpersonal and communication skills, with the ability to build trusted relationships with senior stakeholders and bring them along on self-service
+- An innovative mindset with a desire to continuously improve every aspect of how we work 
+
+Why join us?
+
+- Highly competitive compensation plus annual discretionary bonus
+- Lunch provided (via Just Eat for Business) and dedicated barista bar
+- 30 days’ annual leave
+- 9% company pension contributions
+- Informal dress code and excellent work/life balance
+- Comprehensive healthcare and life assurance
+- Cycle-to-work scheme
+- Monthly company events
+
+G-Research is committed to cultivating and preserving an inclusive work environment. We are an ideas-driven business and we place great value on diversity of experience and opinions. 
+
+We want to ensure that applicants receive a recruitment experience that enables them to perform at their best. If you have a disability or special need that requires accommodation please let us know in the relevant section

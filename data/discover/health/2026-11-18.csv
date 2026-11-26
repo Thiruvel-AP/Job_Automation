@@ -1,0 +1,59 @@
+ts,source,name,method,country,status,new_jobs,reachable,robots,credentials,alerts,postings,detail,jobs_parsed
+2026-11-18T07:22:30+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,1,yes,n/a,present,50,,,128
+2026-11-18T07:22:30+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,8,,,47
+2026-11-18T07:22:30+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,21,yes,allowed,n/a,,1280,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T07:22:30+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,2,yes,n/a,present,50,,,279
+2026-11-18T07:22:30+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T07:22:30+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T07:22:30+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T07:22:30+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,openai,OpenAI,ashby,multi,ok,0,yes,allowed,n/a,,837,,
+2026-11-18T07:22:30+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,reed,Reed,reed,GB,ok,36,yes,n/a,present,1,5024,,
+2026-11-18T07:22:30+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,lever-boards,Lever boards,lever,multi,ok,0,yes,allowed,n/a,,1280,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T07:22:30+00:00,ashby-boards,Ashby boards,ashby,multi,ok,0,yes,allowed,n/a,,1280,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T07:22:30+00:00,workable-boards,Workable boards,workable,multi,ok,0,yes,allowed,n/a,,1280,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T07:22:30+00:00,smartrecruiters-boards,SmartRecruiters boards,smartrecruiters,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,teamtailor-boards,Teamtailor boards,teamtailor,multi,ok,0,n/a,n/a,n/a,,1280,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-18T07:22:30+00:00,pinpoint-boards,Pinpoint boards,pinpoint,multi,ok,0,n/a,n/a,n/a,,1280,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-18T07:22:30+00:00,recruitee-boards,Recruitee boards,recruitee,multi,ok,0,n/a,n/a,n/a,,1280,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-18T07:22:30+00:00,personio-boards,Personio boards,personio,multi,ok,0,n/a,n/a,n/a,,1280,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-18T07:22:30+00:00,workday-boards,Workday boards,workday,multi,ok,0,n/a,n/a,n/a,,1280,0 Workday site(s) in settings sources.workday,
+2026-11-18T07:22:30+00:00,vc-atomico,Atomico portfolio jobs,getro,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,vc-balderton,Balderton portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T07:22:30+00:00,vc-notion,Notion Capital portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,0,yes,n/a,present,50,,,134
+2026-11-18T10:15:00+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,18,,,192
+2026-11-18T10:15:00+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,23,yes,allowed,n/a,,8442,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T10:15:00+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,,310
+2026-11-18T10:15:00+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T10:15:00+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T10:15:00+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-18T10:15:00+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,openai,OpenAI,ashby,multi,ok,2,yes,allowed,n/a,,837,,
+2026-11-18T10:15:00+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,reed,Reed,reed,GB,ok,0,yes,n/a,present,1,5038,,
+2026-11-18T10:15:00+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,lever-boards,Lever boards,lever,multi,ok,6,yes,allowed,n/a,,8442,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T10:15:00+00:00,ashby-boards,Ashby boards,ashby,multi,ok,3,yes,allowed,n/a,,8442,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T10:15:00+00:00,workable-boards,Workable boards,workable,multi,ok,0,yes,allowed,n/a,,8442,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-18T10:15:00+00:00,smartrecruiters-boards,SmartRecruiters boards,smartrecruiters,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,teamtailor-boards,Teamtailor boards,teamtailor,multi,ok,0,n/a,n/a,n/a,,8442,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-18T10:15:00+00:00,pinpoint-boards,Pinpoint boards,pinpoint,multi,ok,0,n/a,n/a,n/a,,8442,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-18T10:15:00+00:00,recruitee-boards,Recruitee boards,recruitee,multi,ok,0,n/a,n/a,n/a,,8442,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-18T10:15:00+00:00,personio-boards,Personio boards,personio,multi,ok,0,n/a,n/a,n/a,,8442,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-18T10:15:00+00:00,workday-boards,Workday boards,workday,multi,ok,0,n/a,n/a,n/a,,8442,0 Workday site(s) in settings sources.workday,
+2026-11-18T10:15:00+00:00,vc-atomico,Atomico portfolio jobs,getro,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,vc-balderton,Balderton portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-18T10:15:00+00:00,vc-notion,Notion Capital portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,

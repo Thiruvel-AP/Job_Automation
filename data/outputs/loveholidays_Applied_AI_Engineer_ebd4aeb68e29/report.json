@@ -1,0 +1,1237 @@
+{
+  "job_id": "manual:ebd4aeb68e29",
+  "company": "loveholidays",
+  "title": "Applied AI Engineer",
+  "family": "ai_engineer",
+  "tier": 1,
+  "headline": "AI Engineer",
+  "keywords": [
+    {
+      "term": "integrations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "environments",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "access",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "apis",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "business data",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "configuration",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Google ADK",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "SaaS platforms",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "tools",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI-enabled services",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI-powered automations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "automation pipelines",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "ci/cd",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "cost",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "incident triage",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "lifecycle management",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "performance",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "service health",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "testing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "tool-using agents",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "usage",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "agentic",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "stakeholders",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "loveholidays uses progressive technology to enable customers to discover, book and experience holidays with unlimited choice and unmatched ease.",
+  "team": "Applied AI",
+  "ceiling": 0.5102040816326531,
+  "genuine_gaps": [
+    "environments",
+    "business data",
+    "SaaS platforms",
+    "AI-enabled services",
+    "AI-powered automations",
+    "automation pipelines",
+    "incident triage",
+    "lifecycle management",
+    "performance",
+    "service health",
+    "tool-using agents",
+    "usage"
+  ],
+  "possible_evidence": {},
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.3469387755102041,
+      "score_stemmed": 0.3469387755102041,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9889909922196677,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.03
+      },
+      "shrinks": 6,
+      "reverted": [],
+      "wording": {
+        "terms": [],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 8,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [
+          "p_ql3"
+        ],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          },
+          {
+            "id": "fl7",
+            "lines": 4
+          },
+          {
+            "id": "p_af3",
+            "lines": 4
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_ql1: new numbers ['3.1m']",
+        "p_ql1: adds the word 'raising', which the original bullet does not say",
+        "p_ql1: dropped the number 384",
+        "p_ql1: dropped 'under'",
+        "p_ql3: adds the word 'improved', which the original bullet does not say",
+        "p_ql3: adds the word 'only', which the original bullet does not say",
+        "p_ql3: adds the word 'attributing', which the original bullet does not say",
+        "p_ql3: adds the word 'multiple', which the original bullet does not say",
+        "p_ql3: adds the word 'concurrently', which the original bullet does not say",
+        "p_ql3: dropped the word 'vs' of the result"
+      ],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: fl7 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: p_af3 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: p_ql1 prints 4 lines (limit 3); it has no sentence or semicolon to split at and the model could not shorten it without losing a fact, so it is left as the fact bank has it"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "integrations",
+        "environments",
+        "access",
+        "business data",
+        "configuration",
+        "SaaS platforms",
+        "AI-enabled services",
+        "AI-powered automations",
+        "automation pipelines",
+        "cost",
+        "incident triage",
+        "lifecycle management",
+        "performance",
+        "service health",
+        "tool-using agents",
+        "usage"
+      ],
+      "rephrase": {
+        "eligible": 2,
+        "asked": 2,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "integrations",
+          "environments",
+          "access",
+          "business data",
+          "configuration",
+          "SaaS platforms",
+          "AI-enabled services",
+          "AI-powered automations",
+          "automation pipelines",
+          "incident triage",
+          "lifecycle management",
+          "performance",
+          "service health",
+          "tool-using agents",
+          "usage"
+        ],
+        "proposed": 2,
+        "accepted": 0,
+        "blocked": 2,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az10",
+              "az7",
+              "az11",
+              "az12"
+            ],
+            "dc180": [
+              "dc1",
+              "dc7",
+              "dc3"
+            ],
+            "freelance": [
+              "fl7",
+              "fl5"
+            ],
+            "avasoft": [
+              "av8",
+              "av10",
+              "av9"
+            ]
+          },
+          "projects": [
+            "coverfit",
+            "churn",
+            "agenticfriend",
+            "gtaigraph",
+            "qlora"
+          ],
+          "project_bullets": {
+            "coverfit": [
+              "p_cf2"
+            ],
+            "churn": [
+              "p_ch1"
+            ],
+            "agenticfriend": [
+              "p_af3"
+            ],
+            "gtaigraph": [
+              "p_gg5",
+              "p_gg3"
+            ],
+            "qlora": [
+              "p_ql1",
+              "p_ql3"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_ql1": "Fine-tuned an 8B Llama 3.1 model with QLoRA (4-bit, Unsloth, TRL) on a 15 GB GPU, training 0.52% of parameters, raising answer completion from 32% to 52% and exact-answer accuracy from 16.2% to 27.3% on 99 held-out NuminaMath problems.",
+          "p_ql3": "Reported that accuracy on completed answers improved only from 50% to 52%, attributing gains to finishing answers within the token budget, and traced out-of-memory errors to multiple models loaded concurrently rather than the KV cache."
+        },
+        "profile": "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN). Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda)."
+      },
+      "selection": {
+        "az": [
+          "az10",
+          "az11",
+          "az12"
+        ],
+        "dc180": [
+          "dc1",
+          "dc3",
+          "dc7"
+        ],
+        "freelance": [
+          "fl5",
+          "fl7"
+        ],
+        "avasoft": [
+          "av8",
+          "av9",
+          "av10"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "agenticfriend": [
+          "p_af3"
+        ]
+      },
+      "profile": "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN). Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).",
+      "rephrase_coverage": {
+        "eligible": 1,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "integrations",
+          "environments",
+          "access",
+          "business data",
+          "configuration",
+          "SaaS platforms",
+          "AI-enabled services",
+          "AI-powered automations",
+          "automation pipelines",
+          "incident triage",
+          "lifecycle management",
+          "performance",
+          "service health",
+          "tool-using agents",
+          "usage"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/loveholidays_Applied_AI_Engineer_ebd4aeb68e29",
+  "analysis_warnings": [
+    "keywords: cut the benefits section 'Perks of joining us' (459 characters) before extraction",
+    "extract_keywords: dropped keyword 'applied and agentic AI workflows' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'SaaS systems' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'cloud-based business systems' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'agentic workflows' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'retrieval-augmented generation' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'event-driven pipelines' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped agents, data pipelines, production, governance, operational practices, SaaS Administration, Google Cloud Platform, incident management, observability, release management, REST APIs, retrieval, runbooks, scheduled pipelines, secure change-management, secure operational practices, vendor support, webhooks",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'AI Engineer' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'evaluation' (2)))"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Machine Learning, Deep Learning & Statistics",
+      "Python, Data Quality & Cloud",
+      "NLP, LLMs, Embeddings & Evaluation",
+      "Client Delivery & Communication"
+    ],
+    "dropped_groups": [],
+    "family": "data_scientist"
+  },
+  "achievements": [
+    "lloyds"
+  ],
+  "profile": {
+    "facts": [
+      "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)",
+      "Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda)"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'evaluation' (2))"
+  ],
+  "hook_family_headline": "AI Engineer",
+  "ats": {
+    "strict": 34.69387755102041,
+    "ceiling": 51.02040816326531,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "apis",
+      "evaluation",
+      "Google ADK",
+      "models",
+      "tools",
+      "ci/cd",
+      "testing",
+      "agentic",
+      "stakeholders"
+    ],
+    "misses": [
+      "integrations",
+      "environments",
+      "access",
+      "business data",
+      "configuration",
+      "SaaS platforms",
+      "AI-enabled services",
+      "AI-powered automations",
+      "automation pipelines",
+      "cost",
+      "incident triage",
+      "lifecycle management",
+      "performance",
+      "service health",
+      "tool-using agents",
+      "usage"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "integrations",
+    "access",
+    "apis",
+    "configuration",
+    "evaluation",
+    "Google ADK",
+    "models",
+    "tools",
+    "ci/cd",
+    "cost",
+    "testing",
+    "agentic",
+    "stakeholders"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.3469387755102041,
+    "score_stemmed": 0.3469387755102041,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9889909922196677,
+    "hits": [
+      "apis",
+      "evaluation",
+      "Google ADK",
+      "models",
+      "tools",
+      "ci/cd",
+      "testing",
+      "agentic",
+      "stakeholders"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "integrations",
+      "environments",
+      "access",
+      "business data",
+      "configuration",
+      "SaaS platforms",
+      "AI-enabled services",
+      "AI-powered automations",
+      "automation pipelines",
+      "cost",
+      "incident triage",
+      "lifecycle management",
+      "performance",
+      "service health",
+      "tool-using agents",
+      "usage"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9889909922196677,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.03
+  },
+  "needs_result": [
+    {
+      "id": "dc1",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+    },
+    {
+      "id": "dc3",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Designed hierarchical agent workflows with real-time query capabilities, integrating Exograph and PostgreSQL for persistent storage and retrieval across agent sessions."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+    },
+    {
+      "id": "fl7",
+      "entry": "Freelance",
+      "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+    },
+    {
+      "id": "av8",
+      "entry": "Avasoft",
+      "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+    },
+    {
+      "id": "av10",
+      "entry": "Avasoft",
+      "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn \u2014 propensity model",
+      "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+    },
+    {
+      "id": "p_af3",
+      "entry": "AgenticFriend \u2014 real-time voice assistant",
+      "text": "Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full-stack application (React front end, FastAPI and Google ADK back end, full-duplex WebSocket) with ReAct-based agent orchestration, barge-in handling and self-hosted speech models on Docker/CUDA (float16 inference, model warm-up) to cut latency."
+    }
+  ],
+  "lengths": {
+    "rounds": 8,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [
+      "p_ql3"
+    ],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      },
+      {
+        "id": "fl7",
+        "lines": 4
+      },
+      {
+        "id": "p_af3",
+        "lines": 4
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 0,
+      "profile_lines": 4,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "AI-enabled services",
+      "AI-enabled",
+      "AI-powered automations",
+      "AI-powered",
+      "tool-using agents",
+      "tool-using"
+    ],
+    "results_bold": 3,
+    "results_unmatched": [
+      "az11"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "az4",
+        "entry": "AstraZeneca",
+        "score": 10.0,
+        "keywords": 10.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+      },
+      {
+        "id": "az11",
+        "entry": "AstraZeneca",
+        "score": 8.0,
+        "keywords": 8.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+      },
+      {
+        "id": "p_cf2",
+        "entry": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 7.33,
+        "keywords": 6.0,
+        "domain": 1.33,
+        "chosen": false,
+        "text": "An insurance sponsor needed a fast, low-cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in under 3 seconds at ~\u00a30.003 per query."
+      },
+      {
+        "id": "p_gg5",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 6.67,
+        "keywords": 6.0,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, cut RAM from 8.2 to 5.5 GB on a free T4 GPU, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
+      },
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 6.17,
+        "keywords": 5.5,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "p_ql1",
+        "entry": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 6.0,
+        "keywords": 6.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Needed to know what fine-tuning can change in an 8B model on a free 15 GB GPU: QLoRA-fine-tuned Llama 3.1 8B (4-bit, Unsloth, TRL) training 0.52% of its parameters, which under a fixed 384-token budget raised answer completion from 32% to 52% and exact-answer accuracy from 16.2% to 27.3% on held-out NuminaMath problems (n=99)."
+      },
+      {
+        "id": "fl7",
+        "entry": "Freelance",
+        "score": 5.5,
+        "keywords": 5.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+      },
+      {
+        "id": "av1",
+        "entry": "Avasoft",
+        "score": 5.33,
+        "keywords": 4.0,
+        "domain": 1.33,
+        "chosen": false,
+        "text": "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+      },
+      {
+        "id": "av8",
+        "entry": "Avasoft",
+        "score": 5.33,
+        "keywords": 4.0,
+        "domain": 1.33,
+        "chosen": true,
+        "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+      },
+      {
+        "id": "av10",
+        "entry": "Avasoft",
+        "score": 5.33,
+        "keywords": 4.0,
+        "domain": 1.33,
+        "chosen": true,
+        "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+      }
+    ],
+    "projects": [
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 7.33,
+        "sum": 12.66,
+        "chosen": false
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 6.67,
+        "sum": 19.35,
+        "chosen": false
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 6.0,
+        "sum": 10.0,
+        "chosen": false
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 5.33,
+        "sum": 5.33,
+        "chosen": true
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 4.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 4.0,
+        "sum": 4.0,
+        "chosen": true
+      },
+      {
+        "id": "cnn",
+        "name": "Image Classification \u2014 CNN and Transfer Learning",
+        "score": 4.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 2.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "lsde",
+        "name": "Auto-scaled word-frequency pipeline on AWS",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 1,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 2,
+    "asked": 2,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "integrations",
+      "environments",
+      "access",
+      "business data",
+      "configuration",
+      "SaaS platforms",
+      "AI-enabled services",
+      "AI-powered automations",
+      "automation pipelines",
+      "incident triage",
+      "lifecycle management",
+      "performance",
+      "service health",
+      "tool-using agents",
+      "usage"
+    ],
+    "proposed": 2,
+    "accepted": 0,
+    "blocked": 2,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "integrations",
+      "environments",
+      "access",
+      "business data",
+      "configuration",
+      "SaaS platforms",
+      "AI-enabled services",
+      "AI-powered automations",
+      "automation pipelines",
+      "incident triage",
+      "lifecycle management",
+      "performance",
+      "service health",
+      "tool-using agents",
+      "usage"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "letter.mode: off",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az11",
+        "text": "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+      },
+      {
+        "id": "fl7",
+        "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 1854,
+        "prompt_tokens": 1446,
+        "completion_tokens": 510,
+        "reasoning_tokens": 292,
+        "total_tokens": 1956,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 901,
+        "prompt_tokens": 891,
+        "completion_tokens": 183,
+        "reasoning_tokens": 23,
+        "total_tokens": 1074,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 730,
+        "prompt_tokens": 742,
+        "completion_tokens": 1081,
+        "reasoning_tokens": 992,
+        "total_tokens": 1823,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 3079,
+    "completion_tokens": 1774,
+    "reasoning_tokens": 1307,
+    "total_tokens": 4853,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1446,
+        "completion_tokens": 510,
+        "reasoning_tokens": 292,
+        "total_tokens": 1956,
+        "prompt_tokens_per_call": [
+          1446
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 2,
+        "prompt_tokens": 1633,
+        "completion_tokens": 1264,
+        "reasoning_tokens": 1015,
+        "total_tokens": 2897,
+        "prompt_tokens_per_call": [
+          891,
+          742
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 3,
+        "prompt_tokens": 3079,
+        "completion_tokens": 1774,
+        "reasoning_tokens": 1307,
+        "total_tokens": 4853,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "data/outputs/loveholidays_Applied_AI_Engineer_ebd4aeb68e29/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "AI Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN). Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).",
+    "skills": {
+      "Machine Learning, Deep Learning & Statistics": "Predictive modelling (gradient boosting with XGBoost, random forest, scikit-learn), clustering (K-Means, HAC, DBSCAN, Leiden), deep learning (PyTorch, TensorFlow/Keras, LSTM, GRU, BiRNN, CNN), time-series forecasting (cyclic time encoding, TimeSeriesSplit), anomaly detection (Isolation Forest), class-imbalance handling (SMOTE), hyper-parameter tuning (grid search, two-stage Bayesian), model evaluation (held-out, cross-validation, Pearson, MCC), statistical inference and experimental design (confidence intervals, bootstrap, hypothesis testing; MSc coursework), MLflow experiment tracking",
+      "Python, Data Quality & Cloud": "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS (Lambda, ECR, IAM, S3, Bedrock), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), serverless deployment (Lambda, Cloud Run), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git",
+      "NLP, LLMs, Embeddings & Evaluation": "NLP (text preprocessing, TF-IDF, SBERT embeddings, text clustering), Hugging Face Transformers, large language models (Claude, OpenAI, open-weight via Ollama), prompt engineering, RAG with embeddings (ChromaDB), agents (LangChain, LangGraph), team LoRA fine-tune of Llama, LLM evaluation (hallucination-rate analysis, deterministic guardrails)",
+      "Client Delivery & Communication": "Scoping ambiguous problems with clients, stakeholder demos, working with client engineering teams, code review, transparent reporting of model limitations, root-cause analysis, technical documentation"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "indirect contract",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+          "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation.",
+          "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+        ],
+        "bullet_ids": [
+          "az10",
+          "az11",
+          "az12"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo.",
+          "Designed hierarchical agent workflows with real-time query capabilities, integrating Exograph and PostgreSQL for persistent storage and retrieval across agent sessions.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+        ],
+        "bullet_ids": [
+          "dc1",
+          "dc3",
+          "dc7"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.",
+          "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+        ],
+        "bullet_ids": [
+          "fl5",
+          "fl7"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer (Jun 2023 \u2013 Sep 2024); Trainee (Jan 2023 \u2013 May 2023)",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated the team across concurrent releases, so features shipped from shared, tested building blocks.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av8",
+          "av9",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "display_name": "Banking Customer Churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "agenticfriend",
+        "display_name": "AgenticFriend -- Real-Time Voice AI Agent",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "stack": "FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA",
+        "github": "https://github.com/Thiruvel-AP/adk_multi-agent",
+        "bullets": [
+          "Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full-stack application (React front end, FastAPI and Google ADK back end, full-duplex WebSocket) with ReAct-based agent orchestration, barge-in handling and self-hosted speech models on Docker/CUDA (float16 inference, model warm-up) to cut latency."
+        ],
+        "bullet_ids": [
+          "p_af3"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 May 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "av2": "10 reusable component templates",
+      "av9": "10 reusable component templates",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ll1": "3rd place; 200:1 class imbalance",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "achievements": [
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "award": "3rd place",
+        "bullet_id": "p_ll1",
+        "text": "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.",
+        "result": "200:1 class imbalance"
+      }
+    ],
+    "linespread": 1.03,
+    "splits": {
+      "p_ql3": {
+        "text": "Reported the limits openly: accuracy on completed answers barely moved (50% vs 52%), so the gain came from finishing answers inside the token budget rather than stronger reasoning; traced out-of-memory errors to several models loaded in one runtime, not the KV cache.",
+        "parts": [
+          "Reported the limits openly: accuracy on completed answers barely moved (50% vs 52%), so the gain came from finishing answers inside the token budget rather than stronger reasoning.",
+          "Traced out-of-memory errors to several models loaded in one runtime, not the KV cache."
+        ]
+      }
+    }
+  }
+}

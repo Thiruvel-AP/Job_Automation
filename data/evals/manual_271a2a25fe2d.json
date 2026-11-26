@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:271a2a25fe2d",
+ "company": "G-Research",
+ "title": "Core AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.5, ATS ceiling 47%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family ai_engineer matches title Core AI Engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "London HQ, benefits listed, stable fintech firm"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No recruiter prompts or rating requests in ad"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm G-Research company size and growth trajectory",
+  "Obtain concrete compensation range to validate pay expectations",
+  "Verify candidate has Terraform experience or can quickly acquire it"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "5c942055a5188286",
+ "jd_words": 653,
+ "tokens": 2036,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

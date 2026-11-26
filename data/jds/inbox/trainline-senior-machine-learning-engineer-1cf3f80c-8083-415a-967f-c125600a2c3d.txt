@@ -1,0 +1,92 @@
+Company: Trainline
+Title: Senior Machine Learning Engineer
+URL: https://jobs.ashbyhq.com/trainline/1cf3f80c-8083-415a-967f-c125600a2c3d
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-08-06T15:29:24.907+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+About us
+
+At Trainline, our purpose is to empower greener travel choices, connecting people and places. https://www.thetrainline.com/terms/sustainability-faqs Trainline enables millions of travellers to find and book the best value tickets across carriers, fares, and journey options through our highly rated mobile app, website, and B2B partner channels. 
+
+Great journeys start with Trainline 🚄 
+
+We’re Europe’s leading independent rail platform, helping millions of travellers find and book the best-value rail and coach journeys across our app, website and partner channels.
+
+Our job is to make the green travel choice the best choice. By building a better train travel experience, we help more people choose rail - creating a positive impact for customers, our business and the planet.
+
+We’re a team of more than 1,000 Trainliners from over 50 nationalities, working across London, Paris, Barcelona, Milan, Edinburgh and Madrid. Now is a brilliant time to join us and help shape the future of travel.
+
+Introducing the Trainline Machine Learning and AI Team 👋
+
+Machine learning sits at the heart of Trainline's mission to help millions of people make sustainable travel choices every day. Our models power some of the most important parts of the platform, from search and recommendations across mobile and web, to pricing and routing optimisation, personalised experiences enhanced by generative AI, data-driven marketing, and AI agents that support our customers.
+
+Our machine learning teams own the complete delivery lifecycle from ideation through to production, working closely with engineers, data scientists and product managers across the business to grow the understanding and impact of machine learning and AI throughout Trainline. As a Senior Machine Learning Engineer, you will bring deep technical expertise and sound judgement to some of our most complex problems, and will play a key role in shaping technical direction and influencing stakeholders across the business, while helping to raise the capability of those around you.
+
+
+
+In this role as the Senior Machine Learning Engineer, you will... 🚄
+
+ - Work within cross-functional teams alongside data scientists, software engineers, data engineers and product managers
+
+ - Design and deliver machine learning models at scale that create measurable impact for the business
+
+ - Own the end-to-end machine learning delivery lifecycle, including data exploration, feature engineering, model selection and tuning, evaluation, deployment and maintenance
+
+ - Shape technical direction for your area, making well-reasoned architectural and modelling decisions that stand up at scale
+
+ - Partner with and influence stakeholders across the business to propose innovative data products that make the most of Trainline's extensive datasets and the latest algorithms
+
+ - Build tools, frameworks and libraries that accelerate the delivery of ML products and improve team workflows
+
+ - Provide technical mentorship and support the development of less experienced engineers, without formal people management responsibility
+
+ - Take an active role in our AI and ML community, helping foster a culture of rigorous learning and experimentation
+
+
+
+We'd love to hear from you if you have... 🔍
+
+ - An advanced degree in Computer Science, Mathematics or a related quantitative discipline, or equivalent experience
+
+ - Considerable experience productionising machine learning models, with strength in an area such as predictive modelling, classification, regression, optimisation or recommendation systems
+
+ - Strong proficiency in Python and open-source data libraries such as Pandas, NumPy and Scikit-learn
+
+ - A solid grounding in statistical methodologies, along with data extraction, manipulation and feature engineering techniques
+
+ - Experience with Spark, agile delivery methods and CI/CD practices
+
+ - Familiarity with DevOps and MLOps tools and practices, such as Docker, Terraform and MLFlow
+
+ - Confidence influencing and communicating with stakeholders across technical and non-technical teams
+
+ - Ideally, exposure to cloud infrastructure, NLP or large language models (such as fine-tuning, RAG or agents), graph technologies, or experience in the transport sector or with geographic information systems (GIS)
+
+
+
+More information:
+
+Enjoy fantastic perks like private healthcare & dental insurance, a generous work from abroad policy, 2-for-1 share purchase plans, an EV Scheme to further reduce carbon emissions, extra festive time off, and excellent family-friendly benefits. 
+
+We prioritise career growth with clear career paths, transparent pay bands, personal learning budgets, and regular learning days. Jump on board and supercharge your career from day one! 
+
+We're operating a hybrid model and ask that Trainliners work from the office a minimum of 60% of their time over a 12-week period. We also have a 28-day Work from Abroad policy.
+
+Our values represent the things that matter most to us and what we live and breathe everyday, in everything we do: 
+
+ - 💭 Think Big - We're building the future of rail 
+
+ - ✔️ Own It - We focus on every customer, partner and journey 
+
+ - 🤝  Travel Together - We're one team 
+
+ - ♻️ Do Good - We make a positive impact 
+
+We know that having a diverse team makes us better and helps us succeed. And we mean all forms of diversity - gender, ethnicity, sexuality, disability, nationality and diversity of thought. That's why we're committed to creating inclusive places to work, where everyone belongs and differences are valued and celebrated.
+
+Interested in finding out more about what it's like to work at Trainline? Why not check us out on LinkedIn https://www.linkedin.com/company/trainline/, Instagram https://www.instagram.com/lifeattrainline/ and Glassdoor https://www.glassdoor.co.uk/Overview/Working-at-Trainline-EI_IE249203.11,20.htm!

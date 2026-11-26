@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:eed34e9a4eea",
+ "company": "Faculty",
+ "title": "Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.0 and ATS ceiling 44% indicate moderate alignment"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family data_scientist matches the advertised Data Scientist II"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to floor score 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "Company founded 2014, rapid growth, London office suggests stability but size unknown"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or suspicious language found in ad"
+  }
+ },
+ "global_score": 3.8,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm Faculty's current employee count to assess company size",
+  "Obtain salary range for Data Scientist II to evaluate compensation",
+  "Verify that the role truly involves scalable model components as required"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.8,
+ "model_confidence": "Medium",
+ "jd_hash": "214c0c1023099482",
+ "jd_words": 815,
+ "tokens": 2219,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

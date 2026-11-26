@@ -1,0 +1,90 @@
+Company: dunnhumby
+Title: Senior Applied Data Scientist
+URL: https://job-boards.greenhouse.io/dunnhumby/jobs/8198773003
+Source: greenhouse
+Apply kind: greenhouse
+Location: London
+Posted: 2026-11-09T05:03:25-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-09
+Listed: yes
+Found via: linkedin_email
+LinkedIn job id: 4488846100
+
+London | Full-time | Hybrid
+
+About dunnhumby
+
+dunnhumby is the global leader in Customer Data Science, helping the world's most ambitious retailers and brands put the customer at the heart of every decision. With nearly 3,000 experts across Europe, Asia, Africa and the Americas, we partner with iconic businesses like Tesco, Coca-Cola, Meijer, Procter & Gamble and Metro to turn data into growth, innovation and measurable value for their customers.
+
+Applied Data Science
+
+Our Applied Data Science team turns dunnhumby’s analytical capability into real commercial impact for our clients. Working directly with retailers and brands, we design and deliver the models, algorithms and insights that answer the hardest questions in retail — from personalisation and basket analysis to pricing, promotions and customer loyalty. Every insight we produce is grounded in real customer data and built to make a measurable difference.
+
+About the Role
+
+We’re looking for a Senior Applied Data Scientist who expects more from their career. This is an opportunity to apply your expertise to distil complex problems into meaningful, actionable insights -leveraging world-first science, cutting-edge machine learning techniques and human creativity to deliver impactful solutions for clients.
+
+Our team is focused on delivering impactful insights to Tesco UK Suppliers using the breadth and depth of Tesco UK transactional, shopper and clickstream data.
+
+We partner with our Client Leadership teams to understand our clients’ needs and identify opportunities to help them grow. Using our data, tools and analytical expertise, we deliver impactful insights and develop scalable, reusable solutions that create measurable value. You’ll drive change, shape innovative solutions and help redefine how our clients use data to make better decisions.
+
+What We’re Looking For
+
+- Degree in Statistics, Mathematics, Physics, Economics, or a related quantitative field.
+
+- Strong programming skills — Python and SQL are essential; PySpark experience is highly advantageous.
+
+- Experience with version control tools (e.g. GIT).
+
+- Solid understanding of analytical technologies, tools, and techniques.
+
+- Excellent logical thinking and problem‑solving abilities.
+
+- Strong communication skills, with the ability to explain complex concepts clearly to non‑technical audiences.
+
+- Proven experience in statistical modelling and applying data science solutions to real client problems.
+
+- A passion for connecting technical work to real customer outcomes, delivering clear and measurable impact.
+
+- Comfortable building new workstreams from the ground up, including defining direction, structure, and stakeholder alignment.
+
+- Background in retail analytics is advantageous.
+
+You'll Thrive If You…
+
+- Enjoy balancing technical depth with commercial impact.
+
+- Like exploring new analytical approaches and challenging established thinking.
+
+- Take ownership of complex problems and see them through to delivery.
+
+- Are motivated by helping others develop and succeed.
+
+What You Can Expect From Us
+
+We won't just meet your expectations. We'll defy them. So you'll enjoy the comprehensive rewards package you'd expect from a leading technology company. But also, a degree of personal flexibility you might not expect. Plus, thoughtful perks, like flexible working hours and your birthday off.
+
+And we don't just talk about diversity and inclusion. We live it every day – with thriving networks including dh Gender Equality Network, dh Proud, dh Family, dh One, dh Enabled and dh Thrive as the living proof. We want everyone to have the opportunity to shine and perform at your best throughout our recruitment process — please let your recruiter know what adjustments would help.
+
+UK Benefits
+
+- Healthcare & Protection: Flexible allowance, private medical insurance through Vitality, life assurance, partner life assurance, income protection and critical illness cover.
+
+- Pension: Aviva pension scheme with up to 7.5% employer matching.
+
+- Wellbeing: Access to the Wellness Hub and confidential employee assistance support services.
+
+- Lifestyle Benefits: Car leasing, Cycle to Work scheme, technology purchase options and additional voluntary benefits.
+
+- Time Off: Annual holiday allowance, public holidays, the option to purchase additional leave, loyalty days and a birthday day off.
+
+- Additional Recognition: Long service awards and Talent Scout referral rewards.
+
+Our approach to Flexible Working
+
+At dunnhumby, we value and respect difference and are committed to building an inclusive culture by creating an environment where you can balance a successful career with your commitments and interests outside of work.
+
+We believe that you will do your best at work if you have a work / life balance. Some roles lend themselves to flexible options more than others, so if this is important to you please raise this with your recruiter, as we are open to discussing agile working opportunities during the hiring process.
+
+For further information about how we collect and use your personal information please see our Privacy Notice which can be found (here).

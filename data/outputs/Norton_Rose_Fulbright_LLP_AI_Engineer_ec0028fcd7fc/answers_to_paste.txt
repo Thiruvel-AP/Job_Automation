@@ -1,0 +1,13 @@
+Answers for Norton Rose Fulbright LLP - AI Engineer
+Form: https://www.reed.co.uk/jobs/ai-engineer/57364884
+CV: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Norton_Rose_Fulbright_LLP_AI_Engineer_ec0028fcd7fc/Thiruvel Andagurunathan Pandian CV.pdf
+Cover letter: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Norton_Rose_Fulbright_LLP_AI_Engineer_ec0028fcd7fc/Thiruvel Andagurunathan Pandian Cover Letter.pdf
+
+1. What  [BLANK; -]
+(you answer: no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it))
+
+2. town or postcode  [BLANK; -]
+(you answer: no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it))
+
+3. Email address  [READY; applicant]
+apthiruvel@gmail.com

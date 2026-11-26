@@ -1,0 +1,47 @@
+```json
+{
+  "required": [
+    "Python",
+    "AI systems",
+    "model behavior",
+    "reliability",
+    "latency",
+    "cost",
+    "safety",
+    "security",
+    "governance",
+    "operational readiness",
+    "evaluation harnesses",
+    "production accelerators",
+    "reusable architectures",
+    "tooling",
+    "playbooks",
+    "technical guidance",
+    "enterprise deployments",
+    "integration",
+    "observability",
+    "performance",
+    "data governance",
+    "privacy"
+  ],
+  "preferred": [
+    "JavaScript",
+    "TypeScript",
+    "customer engineering",
+    "solutions architecture",
+    "forward-deployed engineering",
+    "software engineering",
+    "technical consulting"
+  ],
+  "context_terms": [
+    "Applied AI Engineering team",
+    "Digital Native companies",
+    "customer product and engineering teams",
+    "OpenAI Product, Research, Engineering, Security, and go-to-market teams",
+    "enterprise environments",
+    "enterprise deployments"
+  ],
+  "company_hook": "OpenAI is an AI research and deployment company dedicated to ensuring that general‑purpose artificial intelligence benefits all of humanity.",
+  "team": "Applied AI Engineering team"
+}
+```

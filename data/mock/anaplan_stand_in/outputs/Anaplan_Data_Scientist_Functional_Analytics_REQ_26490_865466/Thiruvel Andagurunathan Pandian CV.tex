@@ -1,0 +1,159 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{microtype}
+\usepackage{ragged2e}
+\usepackage{needspace}
+
+% ---- palette: one accent colour, one text colour, one muted grey ----
+\definecolor{navy}{RGB}{12, 83, 166}
+\definecolor{ink}{RGB}{33, 37, 41}
+\definecolor{muted}{RGB}{96, 102, 110}
+\hypersetup{urlcolor=navy, linkcolor=navy}
+\color{ink}
+
+% ---- no hyphenation at line ends; ragged right reads faster than justified ----
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\linespread{1.03}
+\AtBeginDocument{\RaggedRight}
+
+% ---- type scale, ratio ~1.2 on an 11pt body: 11 -> 13 -> 22 (name) ----
+\titleformat{\section}
+  {\color{navy}\fontsize{13}{15}\selectfont\bfseries\addfontfeature{LetterSpace=6}}
+  {}{0em}{\MakeUppercase}[{\color{navy}\vspace{1pt}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+
+% ---- bullets: small navy dot, tight but breathable ----
+\setlist[itemize]{label={\color{navy}\small\textbullet}, leftmargin=1.1em, labelsep=0.45em,
+  itemsep=1.5pt, parsep=0pt, topsep=2pt, partopsep=0pt}
+
+% ---- building blocks: bold = names, italic = roles/places/stacks, grey = metadata ----
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
+  \textit{#4}\par}
+\newcommand{\roleNoLoc}[3]{% org, dates, title
+  \textbf{#1}\hfill{\color{muted}#2}\\
+  \textit{#3}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag (link or badge)
+  \textbf{#1}\hfill#3\\
+  {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{navy}\small\textbf{#1}}}
+\newcommand{\skillrow}[2]{\hangindent=1em\hangafter=1{\color{navy}\textbf{#1:}}~#2\par\vspace{2.5pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\fontsize{22}{26}\selectfont\bfseries\color{navy} Thiruvel Andagurunathan Pandian}\\[5pt]
+  {\fontsize{12}{14}\selectfont\color{navy} Data Scientist · Deep Learning and code review: \num{19,213} gene parquet fallback}\\[4pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textperiodcentered\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textperiodcentered\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textperiodcentered\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p}\nobreak\ \,\textperiodcentered\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}\nobreak\ \,\textperiodcentered\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{thiruvel-ap.github.io/PersonalPortfolio}\par}
+  \vspace{3pt}
+  {\small\itshape\color{muted} Right to work in UK under Graduate visa\nobreak\ \,\textperiodcentered\, Available to join immediately\par}
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+Data Scientist focused on Deep Learning and code review, including 19,213 gene parquet fallback at AstraZeneca. Data Scientist with Builds deployable ML models: forecasting (an LSTM time series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN). Owns data workflows end to end in Python and SQL, from merging.
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillrow{Core}{Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git}
+\skillrow{ML \& Statistics}{Time series forecasting, XGBoost, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, customer segmentation (k-means, HAC, DBSCAN), class imbalance handling (SMOTE), model validation (cross validation, MCC), hypothesis testing, ANOVA, bootstrap, PCA, maximum likelihood estimation, experimental design \textit{(MSc coursework)}}
+\skillrow{LLMs \& Agents}{AWS Bedrock, LangGraph, Google ADK, MCP (FastMCP, MCP SDK), Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, ChromaDB, tool calling, LoRA fine tuning, LLM evaluation, prompt design}
+\skillrow{Data \& Visualisation}{Databricks/PySpark \textit{(coursework)}, ggplot2, Streamlit, tidyverse, tidymodels, NLTK, networkx, Leiden clustering}
+\skillrow{Databases}{PostgreSQL, MongoDB, DynamoDB}
+\skillrow{Cloud \& MLOps}{AWS Lambda, GCP Cloud Run, MLflow, AWS ECS, Kubernetes (AWS EKS), ECR, IAM, EC2, S3, SQS, GitHub Actions, pytest, FastAPI, REST APIs, WebSockets, TensorFlow Serving}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist}
+\begin{itemize}
+  \item Designed a deterministic hallucination guard architecture and fail safe data resolution via live Ensembl/HGNC APIs with a local \num{19,213 gene parquet fallback} and circuit breakers.
+  \item Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least privilege policies.
+  \item Wrote a three tier test framework (tool level, API/integration, live agent) of \num{\textasciitilde{}65 tests across 8 files}, validated across the LLM provider migration from Groq to AWS Bedrock after a rate limit evaluation.
+  \item Managed AWS account governance for the project, including root user isolation, IAM user and group management and least privilege policies.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}
+\begin{itemize}
+  \item Proposed and prototyped an MCP based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid based product startup client, presented in a live stakeholder demo.
+  \item Contributed the MCP implementation to the client\textquotesingle{}s production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live daily use; engagement received a \num{five star commendation from senior leadership}.
+  \item Translated ambiguous business requirements into a production ready technical blueprint and owned the solution within a cross functional consulting team, from architecture design through stakeholder presentation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run.
+  \item Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross validation and hyperparameter tuning across classification and regression tasks.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)}
+\begin{itemize}
+  \item Built a JavaScript web scraping pipeline that automated a manual collection process and surfaced market trend signals used for pricing decisions.
+  \item Secured backend communication with SSL pinning and integrated AWS Cognito for user authentication with single sign on in the FinTech app.
+  \item Built ecommerce and ticketing UIs in Swift/SwiftUI with product search, cart logic, order tracking and booking management.
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\project{Banking Customer Churn: propensity model}{R, tidymodels, XGBoost}{\gh{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}
+\begin{itemize}
+  \item Predicted bank customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Lloyd\textquotesingle{}s Banking Group Datathon}{scikit-learn, Isolation Forest, SciPy, MLflow}{\badge{3rd place}}
+\begin{itemize}
+  \item Detected outliers in financial services data under \num{200:1 class imbalance}, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Bitcoin Forecasting: LSTM time series service}{Python, TensorFlow, TF Serving}{\gh{https://github.com/Thiruvel-AP/BitcoinForecasting}}
+\begin{itemize}
+  \item Trained a forecasting LSTM with cyclic date encoding and TimeSeriesSplit grid search tuning, then deployed it behind a TensorFlow Serving REST API.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Auto scaled word frequency pipeline on AWS}{EC2, SQS, S3, DynamoDB, CloudWatch, Auto Scaling}{\badge{MSc Coursework}}
+\begin{itemize}
+  \item Built an SQS driven word frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on CloudWatch queue alarms, and benchmarked instance configurations.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{mcp\_searchagent}{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}{\gh{https://github.com/Thiruvel-AP/mcp_searchagent}}
+\begin{itemize}
+  \item MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\needspace{3\baselineskip}
+\roleNoLoc{University of Bristol}{Sep 2025 – Sep 2026}{MSc Data Science, Distinction \textit{(Expected)}}
+{\color{muted}\small Large scale Data Engineering, Statistical Computing \& Empirical Methods, AI \& Text Analytics, Visual Analytics, Data Science Methods \& Practices, Technology, Innovation, Business \& Society}\par
+\gap
+\needspace{3\baselineskip}
+\roleNoLoc{St. Joseph\textquotesingle{}s College of Engineering}{Aug 2019 – May 2023}{B.E. Electrical and Electronics Engineering, 91\%, First Class with Distinction}
+
+% ================= CERTIFICATIONS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, AWS Academy Cloud Foundations, \textit{Nov 2025}\nobreak\ \,\textperiodcentered\, 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}\nobreak\ \,\textperiodcentered\, Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,692 @@
+{
+  "coverage": 0.4819,
+  "requirements": [
+    {
+      "term": "agentic",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agentic",
+          "snippet": "Built a generative AI…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agentic",
+          "snippet": "Led the design in a…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "agentic",
+          "snippet": "For a private client,…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "agentic",
+          "snippet": "Built a 14-step AI…",
+          "via": "agentic"
+        }
+      ]
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "production",
+          "snippet": "Did the data analysis on…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Collaborated with the…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "production",
+          "snippet": "Led the design in a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "production",
+          "snippet": "For a private client,…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a live…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "validation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "validation",
+          "snippet": "Built repeatable…",
+          "via": "validation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "validation",
+          "snippet": "Linked 14 public…",
+          "via": "validation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "validation",
+          "snippet": "Ran a data quality check…",
+          "via": "validation"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "validation",
+          "snippet": "model validation (cross-validation, MCC)",
+          "via": "validation"
+        }
+      ]
+    },
+    {
+      "term": "business case",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "cloud experience",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "consultancy-style experience",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "data pipelines",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "data pipelines",
+          "snippet": "Did the data analysis on…",
+          "via": "data pipelines"
+        },
+        {
+          "kind": "bullet",
+          "id": "av10",
+          "quote": "data pipelines",
+          "snippet": "As a trainee, replaced a…",
+          "via": "data pipelines"
+        }
+      ]
+    },
+    {
+      "term": "evaluation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "evaluation",
+          "snippet": "Found where the assistant…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "evaluation",
+          "snippet": "Did the data analysis on…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "evaluation",
+          "snippet": "Linked 14 public…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt2",
+          "quote": "evaluation",
+          "snippet": "Built a proof-of-concept…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "evaluation",
+          "snippet": "Fine-tuned an…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "evaluation",
+          "snippet": "Reported the limits…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "evaluation",
+          "snippet": "LLM evaluation",
+          "via": "evaluation"
+        }
+      ]
+    },
+    {
+      "term": "graceful failure",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "interfaces and integrations",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "llm",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "LLM",
+          "snippet": "Built a generative AI…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "llm",
+          "snippet": "Found where the assistant…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "llm",
+          "snippet": "Led the design in a…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "llm",
+          "snippet": "Designed how a user's…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "llm",
+          "snippet": "For a private client,…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "llm",
+          "snippet": "Built a private client an…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "LLM",
+          "snippet": "For an insurance hackathon…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "llm",
+          "snippet": "Built a search assistant…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "llm",
+          "snippet": "Fine-tuned an…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "llm",
+          "snippet": "Reported the limits…",
+          "via": "llm"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "LLMs",
+          "snippet": "LLMs",
+          "via": "llm"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LLM",
+          "snippet": "LLM evaluation",
+          "via": "llm"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "LLM",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "llm"
+        }
+      ]
+    },
+    {
+      "term": "observability",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "python"
+        }
+      ]
+    },
+    {
+      "term": "sensible testing",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "stakeholders",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholders",
+          "snippet": "Led the design in a…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "stakeholders",
+          "snippet": "Collaborated with the…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "stakeholders",
+          "snippet": "The client's founder later…",
+          "via": "stakeholders"
+        }
+      ]
+    },
+    {
+      "term": "research",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "research",
+          "snippet": "Built a generative AI…",
+          "via": "research"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "research",
+          "snippet": "Did the data analysis on…",
+          "via": "research"
+        },
+        {
+          "kind": "bullet",
+          "id": "az8",
+          "quote": "research",
+          "snippet": "Studied graph neural…",
+          "via": "research"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "research",
+          "snippet": "Linked 14 public…",
+          "via": "research"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_data_quality",
+          "quote": "research",
+          "snippet": "Checks the data before the model: audited 859,494 training…",
+          "via": "research"
+        }
+      ]
+    },
+    {
+      "term": "testing",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "tests",
+          "snippet": "Found where the assistant…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "tests",
+          "snippet": "Did the data analysis on…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "tests",
+          "snippet": "Linked 14 public…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "pytest",
+          "snippet": "For an insurance hackathon…",
+          "via": "pytest"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "testing",
+          "snippet": "hypothesis testing",
+          "via": "testing"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "tests",
+          "snippet": "post-hoc tests (Tukey, Dunnett)",
+          "via": "tests"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "pytest",
+          "snippet": "pytest",
+          "via": "pytest"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "testing",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "testing"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "tests",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "tests"
+        }
+      ]
+    },
+    {
+      "term": "prototyping",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "ad servers",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "agentic media buying",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "collaboration",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "collaboration",
+          "snippet": "Collaborated with the…",
+          "via": "collaboration"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia2",
+          "quote": "collaboration",
+          "snippet": "In a five-person team,…",
+          "via": "collaboration"
+        }
+      ]
+    },
+    {
+      "term": "cross-channel storytelling",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "cross-platform AI optimisation",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "front-end",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "programmatic",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    }
+  ]
+}

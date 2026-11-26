@@ -1,0 +1,68 @@
+Company: FRP Group
+Title: Data Engineer
+URL: https://www.reed.co.uk/jobs/data-engineer/57487833
+Source: reed
+Apply kind: aggregator_only
+Location: London, GB
+Posted: 2026-10-23
+Posted via: reed.date
+First seen: 2026-11-05
+
+Company Description 
+About FRP 
+FRP is a leading national business advisory firm based in the UK. With over 950 team members, including more than 100 partners, we specialise in Forensic Services, Corporate Finance, Debt Advisory, Financial Advisory, Restructuring Advisory and Real Estate Advisory. Operating from 35 offices across the UK, Isle of Man and Cyprus, we are dedicated to helping clients navigate complex and difficult situations to create, preserve, and recover value. 
+Our approach is known for being honest, clear, and considered. We provide strategic solutions that cater to a broad range of businesses, from multinational organisations to small enterprises. Our commitment is to deliver expert advice and support, ensuring our clients can make informed decisions and achieve their goals. Job Description 
+FRP Advisory are a UK-wide professional services organisation investing in Microsoft Fabric, Power BI and modern data engineering to provide reliable, well-governed data for reporting, analytics and AI. 
+Role Overview 
+This hands-on role sits within the Applications and Data team, working alongside an existing Data Engineer to develop and support our Microsoft Fabric-based enterprise data platform. 
+This role will report day to day to the Data & Analytics Lead, who will set priorities, provide technical direction and coordinate Data Engineering and Power BI delivery. Together, you will build reliable pipelines, dimensional models and transformations that make trusted data available across the business. 
+Key Responsibilities 
+
+- Lead and develop the data team, including Data Engineering, with clear priorities and responsibilities
+- Guide technical work across reporting, data modelling, integration and engineering
+- Design and maintain Power BI reports, dashboards, semantic models and supporting data models
+- Set Power BI standards for architecture, development, governance, deployment and reuse
+- Work with stakeholders to understand requirements, agree priorities and manage delivery
+- Work with Data Engineering to build reliable data pipelines and connect source systems, Microsoft Fabric and Power BI
+- Maintain standards for data quality, security, performance, documentation and support
+- Train selected technical colleagues to contribute to Power BI work alongside their main roles
+- Track the Microsoft Fabric roadmap and recommend relevant features for FRP
+- Travel to regional offices when needed for meetings, delivery and training Qualifications 
+
+- Strong commercial experience of Kimball dimensional modelling and dbt transformations.
+- Experience using Git and Azure DevOps for source control, testing and CI/CD.
+- Strong SQL skills and experience with complex data structures.
+- Experience building and supporting enterprise data warehouses or similar analytical platforms.
+- Experience developing reliable ETL or ELT processes in the Medallion architecture.
+- Experience with Microsoft Fabric data engineering, including Pyspark and dbt.
+- Practical knowledge of data quality, testing, monitoring and operational support.
+- Strong problem-solving skills and attention to detail.
+- Clear communication and the ability to work independently while collaborating with the Data & Analytics Lead, technical colleagues and business stakeholders. 
+Experience in the following areas would also be useful: 
+
+- Materialised Lake Views
+- Apache Spark or Python.
+- Power BI semantic modelling.
+- APIs and cloud business system integration.
+- Data governance, lineage and quality frameworks.
+- Professional services experience. 
+What We Offer 
+
+- A hands-on role developing an enterprise data platform using Microsoft Fabric and modern engineering practices.
+- Close collaboration with the Data & Analytics Lead, with significant ownership of technical delivery.
+- Varied work across data integration, dimensional modelling, transformation, automation and support.
+- Continued investment in data, analytics and staff development.
+- Hybrid working, with occasional UK travel.
+- Relevant training, certifications and career development. Additional Information 
+Our Values 
+
+- Straightforward: We provide clear, no-nonsense advice
+- Confident: Our guidance is backed by expertise and evidence
+- Pragmatic: We focus on practical solutions and tangible outcomes
+- Real: We are professional yet approachable, understanding the challenges our clients face 
+Our Commitment to You and the Environment 
+At FRP Advisory Group, sustainability is integral to our strategy and operations. Our sustainability depends on building and maintaining meaningful, long-term relationships with all our stakeholders – including our employees, clients, and local communities – while also reducing our impact on the natural environment. 
+We are always striving to improve in all areas – whether it’s our people, our clients, our planet or our governance. Our ongoing success as a business depends on our sustainability and agility in a changing and challenging global landscape. 
+We are committed to fostering an inclusive, equitable, and diverse culture for our people. We maintain an Equal Opportunities Policy, ensuring that recruitment and employment decisions are based solely on the skills and experience required for our professional services — regardless of ethnicity, race, sexual orientation, disability, or any other protected characteristic. We believe every individual should have the opportunity to thrive. 
+Our learning and development programmes enable us to invest in growing our employees’ careers. We aim to empower our team members to each achieve their potential. 
+We are committed to growing long-term relationships with our clients and supporting them in achieving their objectives. We understand that our clients’ sustainability and success lead to our sustainability and success. We are emotionally invested in our clients right from the beginning.

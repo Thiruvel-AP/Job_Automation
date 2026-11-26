@@ -1,0 +1,123 @@
+Company: Artefact
+Title: Forward Deployed Engineer
+URL: https://job-boards.greenhouse.io/artefact/jobs/8693306002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Stationsplein 32, 3511 ED Utrecht
+Country: Netherlands
+Status: listed_only
+Posted: 2026-08-10T10:37:32-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Who We Are
+
+Artefact is an applied AI company. We build systems that run in production, in our clients' own cloud, and keep running after we leave. We are present in 27 countries across all continents with a team of 2,500 employees and offer the most comprehensive set of AI & data solutions per industry, built on deep data science and cutting-edge AI technologies, delivering AI projects at scale in all industry sectors. From strategy to operations, we partner with 1000+ clients, including some of the world’s top 300 brands.
+
+The Role
+
+We are looking for a Senior Deployed AI Engineer specialized in Gemini Enterprise and the Google AI stack: an engineer who works embedded with our clients and takes AI products from idea to production.
+
+You will design and build the interfaces, services, and agentic systems at the heart of our client work, such as conversational applications over enterprise data, multi-step agents that automate business workflows, and the retrieval and data pipelines that support them. You will own your components end to end: the front end, the service behind it, the data and retrieval pipelines feeding it, the deployment, and the evaluations proving it works.
+
+This role combines deep, certified expertise in Google's enterprise AI stack (Gemini models, Vertex AI, and the Gemini Enterprise agent platform) with the ability to deliver end to end. Beyond your platform specialization, you will be expected to work confidently across the full delivery lifecycle — full-stack development, data engineering, cloud infrastructure, evaluation, and client communication.
+
+You will work closely with our clients, with direct exposure from the start, and you will support the professional development of the engineers around you.
+
+What You'll Do
+
+Build Full-Stack AI Applications, End to End
+
+You will build AI products across the entire stack, from interface to infrastructure.
+
+- Develop user-facing interfaces and the backend services and APIs behind them in Python.
+
+- Implement agentic behavior: orchestration, tool and function calling, memory, and guardrails.
+
+- Build retrieval-augmented generation (RAG) pipelines: ingestion, chunking, embeddings, vector and hybrid search.
+
+- Connect AI systems to enterprise data and applications via APIs, semantic layers, and protocols such as MCP.
+
+Go Deep on Gemini Enterprise and the Google AI Stack
+
+You will be the team's reference for Google's enterprise AI platform.
+
+- Design and build agents with Gemini models, Vertex AI, the Agent Development Kit (ADK), and Agent Engine.
+
+- Implement and configure Gemini Enterprise for clients: Agent Designer for natural-language and trigger-based agents, the Inbox for managing long-running agents at scale, and agent sandboxes for autonomous problem-solving.
+
+- Connect Gemini Enterprise to the client's application landscape through first-party and partner connectors, with proper permissions, governance, and auditability.
+
+- Build grounded, retrieval-backed applications with Vertex AI Search and RAG Engine, grounding with Google Search, and BigQuery as the data backbone.
+
+- Implement agent interoperability through the A2A protocol and MCP.
+
+- Track Google's releases closely and translate new capabilities into client value quickly.
+
+Make AI Systems Production-Grade
+
+Our standard is production quality: systems that are reliable, monitored, and maintainable.
+
+- Write evaluation suites and regression tests for LLM-powered features, and monitor cost, latency, and quality in production.
+
+- Apply solid engineering practice: version control, code review, automated testing, CI/CD, and observability.
+
+- Deploy on cloud infrastructure (GCP, Azure, or AWS) using containers, serverless, and infrastructure-as-code.
+
+- Build and maintain the data pipelines that feed AI systems, across warehouses, lakehouses, and vector stores.
+
+Work AI-Natively and Client-Facing
+
+Our engineers work AI-natively and represent Artefact directly with clients.
+
+- Use agentic coding tools (Claude Code, Gemini CLI, Codex, Cursor) daily, with good judgment about verification and review.
+
+- Communicate progress, trade-offs, and blockers clearly to clients and project leads.
+
+- Support pre-sales when needed: scope solutions, build demos, and estimate effort with our partnership and consulting teams.
+
+- Mentor junior engineers and contribute to internal accelerators, reusable components, and engineering standards.
+
+What We're Looking For
+
+- 1–3 years of experience in software engineering or data engineering, with extensive hands-on use of AI tools and LLM-based development over the past year (professional projects, internal initiatives, or substantial personal builds).
+
+- Strong hands-on experience with the Google AI stack: Gemini models, Vertex AI, and ideally Gemini Enterprise or ADK — ideally with experience taking at least one solution to production on GCP.
+
+- Strong programming skills in Python and TypeScript/JavaScript, and experience building and consuming APIs.
+
+- Experience with front-end development (React or similar) and at least one backend framework.
+
+- Hands-on experience with RAG, embeddings, and vector search, and with at least one agentic framework (Google ADK, LangGraph/LangChain).
+
+- Strong working experience with GCP; Azure or AWS is a plus.
+
+- Fluency with agentic coding tools such as Claude Code, Gemini CLI, Codex, or Cursor.
+
+- Experience building and maintaining data pipelines.
+
+- Bachelor's or Master's degree in computer science, engineering, or a related field, or equivalent practical experience.
+
+Why you should join us:
+
+- Learning and Development: Join a team of passionate Consultants always ready to help each other, providing opportunities to learn and collaborate with some of the best in the field.
+
+- Culture of Celebration: We pride ourselves on creating a collaborative and fun work environment with regular team events and activities.
+
+- Competitive Rewards: Enjoy a comprehensive benefits package, including a competitive salary, phone & travel reimbursements, remote work allowance, and a Onefit membership discount.
+
+- Work-Life Balance: We offer flexibility with a hybrid working environment that lets you balance personal and professional commitments.
+
+- Fuel Your Day: Enjoy a healthy and delicious daily lunch from our extensive organic buffet.
+
+- Weekly Unwind: Take advantage of our weekly massage sessions to de-stress and relax.
+
+- Centrally Located: Our office is conveniently situated near the station for easy commuting.
+
+- Career Growth Opportunities: We’re committed to your professional development, offering continuous learning and internal promotion opportunities.
+
+Join Us Now and Be Part of the Future:
+
+Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+Come join us!

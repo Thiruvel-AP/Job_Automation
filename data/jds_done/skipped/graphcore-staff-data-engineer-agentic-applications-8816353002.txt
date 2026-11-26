@@ -1,0 +1,126 @@
+Company: Graphcore
+Title: Staff Data Engineer – Agentic Applications
+URL: https://job-boards.greenhouse.io/graphcore/jobs/8816353002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Bristol, UK
+Posted: 2026-09-17T09:36:27-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+About us 
+
+Graphcore is one of the world's leading innovators in Artificial Intelligence compute. It is developing hardware, software and systems infrastructure that will unlock the next generation of AI breakthroughs and power the widespread adoption of AI solutions across every industry. 
+
+As part of the SoftBank Group, Graphcore is a member of an elite family of companies responsible for some of the world's most transformative technologies. Together, they share a bold vision: to enable Artificial Super Intelligence and ensure its benefits are accessible to everyone. 
+
+Graphcore's teams are drawn from diverse backgrounds and bring a broad range of skills and perspectives. A melting pot of AI research specialists, silicon designers, software engineers and systems architects, Graphcore brings together deep expertise to solve complex problems and deliver meaningful progress in AI compute. 
+
+Job Summary 
+
+Reporting to the Head of Data & Transformation, the Staff Data Engineer – Agentic Applications is a senior individual contributor responsible for designing, building and operating Python-based web applications, agentic workflows and supporting data services for Graphcore’s business teams. The role combines strong data engineering foundations with hands-on application development, using AI agents, trusted data and business system integrations to improve decision-making and automate operational workflows. 
+
+Depending on the use case, you will either deliver applications end to end, using AI-assisted coding tools to build and maintain the front end, or own the backend and enable business colleagues to create and look after their own front ends. In both approaches, you will help establish clear ownership, secure interfaces and appropriate engineering controls so applications remain reliable, maintainable and supportable. 
+
+Working closely with engineers, analysts and business stakeholders, you will take solutions from initial requirements through to production, contribute to the evolution of the underlying data platform and provide technical leadership through design reviews, code reviews and mentoring. 
+
+The Team 
+
+The Data & Analytics team enables better decision-making across Graphcore by building trusted data foundations, scalable platforms and high-quality data products. The team works across a broad range of business and technical domains, partnering with colleagues throughout the company to improve access to reliable information, strengthen operational insight and support efficient, data-informed ways of working. 
+
+Within this team, the Staff Data Engineer – Agentic Applications turns these foundations into practical business applications and automated workflows. The role also enables colleagues outside engineering to participate in application development, supported by reusable services, clear guidance and appropriate governance. 
+
+Responsibilities and Duties 
+
+- Build business-facing applications. Design, develop and operate production-ready Python web applications that help business teams access trusted data, complete tasks and improve operational workflows. 
+
+- Develop agentic capabilities. Build applications and workflows that connect AI agents to approved tools, APIs, datasets and business systems, with clear boundaries on what agents can access and do. 
+
+- Translate business needs into working solutions. Partner with analysts, engineers and business stakeholders to understand user needs, identify appropriate opportunities for automation and take applications from prototype through to supported production services. 
+
+- Deliver end-to-end applications where appropriate. Use AI-assisted coding tools to build and maintain front ends alongside Python backend services, taking responsibility for the quality, testing, security and maintainability of generated code. 
+
+- Enable business-owned front ends. Where business teams develop and maintain their own interfaces, own the backend and provide documented APIs, reusable templates, examples and practical coaching so colleagues can work effectively with AI-assisted coding tools. 
+
+- Establish clear ownership and support arrangements. Agree responsibilities for application changes, testing, releases and ongoing support, including appropriate review and deployment controls for business-maintained front ends. 
+
+- Build secure, reusable backend services. Design APIs and application services that enforce authentication, authorisation, input validation and business rules, keeping secrets and sensitive operations within controlled backend systems. 
+
+- Engineer reliable agentic workflows. Implement appropriate evaluation, monitoring, audit trails and safeguards, including constrained tool permissions, human approval for consequential actions and safe handling of failures or unreliable model outputs. 
+
+- Maintain strong data foundations. Design, build and enhance Python-based batch and streaming pipelines, trusted datasets and reusable data models that support applications, analytics, reporting and operational workloads. 
+
+- Own key platform components. Take ownership of relevant backend and data-platform services, using AWS services including S3, Lambda, Aurora PostgreSQL, Athena, Glue and Redshift to deliver secure, resilient and cost-effective solutions. 
+
+- Enable safe, repeatable delivery. Build and maintain orchestration, CI/CD workflows, automated testing, deployment processes, monitoring and operational support for applications and data workflows. 
+
+- Improve resilience and performance. Apply robust error handling, idempotent processing, retry and recovery mechanisms, and backfill or replay capabilities to improve reliability, scalability and operational performance. 
+
+- Apply engineering and governance standards. Contribute to standards for data quality, documentation, observability, security and access management, including least-privilege access, database permissions and secure secrets handling. 
+
+- Provide technical leadership. Review designs and code, mentor engineers and guide business application builders, helping raise engineering quality across both manually written and AI-generated software. 
+
+- Improve shared capabilities. Identify opportunities to simplify delivery, reuse application patterns and enhance platform capabilities, contributing to technical roadmaps and engineering practices across the Data & Analytics team. 
+
+Candidate Profile 
+
+Essential 
+
+- Strong experience designing, building and operating production-grade data pipelines and platforms using Python. 
+
+- Experience building and supporting Python web applications, backend services and APIs that integrate data and business systems. 
+
+- Practical experience developing applications or workflows that use large language models or AI agents, including connecting them to tools, APIs and governed data sources. 
+
+- Experience using AI-assisted coding tools effectively, with the ability to understand, review, test, debug and maintain generated code rather than relying on generated output without validation. 
+
+- Ability to either build usable web front ends with AI-assisted tools or enable business colleagues to develop and maintain front ends against well-defined backend services. Sufficient understanding of web development to review integrations and troubleshoot application behaviour is required; deep specialist front-end expertise is not essential. 
+
+- Strong hands-on experience with modern orchestration, automated testing, CI/CD, deployment and monitoring practices in production environments. 
+
+- Experience building cloud-based solutions using AWS services, including data storage, processing and query technologies. 
+
+- Strong understanding of data modelling, schema design, data quality and performance optimisation across relational and analytical systems. 
+
+- Experience working with both batch and streaming data pipelines, including operational support, troubleshooting and designing systems that recover gracefully from failures. 
+
+- Strong understanding of security, access control and governance for cloud-based data platforms and applications, including authentication, authorisation, IAM, database permissions and secure secrets management. 
+
+- Practical understanding of the reliability and security considerations of agentic applications, including permission boundaries, evaluation, auditability and appropriate human oversight. 
+
+- Experience providing technical leadership as a senior individual contributor through design reviews, code reviews, engineering standards and mentoring. 
+
+- Ability to collaborate effectively with technical and non-technical stakeholders, translate business requirements into practical, scalable solutions and explain technical concepts clearly. 
+
+- Ability to coach business colleagues in AI-assisted application development and establish clear boundaries between business-owned interfaces and engineering-owned services. 
+
+Desirable 
+
+- Experience with Python web application frameworks such as Streamlit, Flask or FastAPI. 
+
+- Working knowledge of JavaScript or TypeScript and a modern front-end framework. 
+
+- Experience with agent orchestration, retrieval over business data, or automated evaluation of AI-enabled applications. 
+
+- Experience with Prefect or a similar workflow orchestration platform. 
+
+- Experience with streaming or data collection technologies. 
+
+- Experience with PostgreSQL, Redshift, ClickHouse or similar database and data warehouse technologies. 
+
+- Experience with Infrastructure as Code and reusable application deployment patterns. 
+
+- Familiarity with dbt and analytics engineering practices. 
+
+- Experience improving observability, operational monitoring, application performance and cloud cost optimisation. 
+
+- Experience contributing to technical roadmaps and platform improvements within a collaborative engineering team. 
+
+- Experience working within a fast-moving technology or engineering environment. 
+
+Benefits
+
+In addition to a competitive salary, Graphcore offers flexible working, a generous annual leave policy, private medical insurance and health cash plan, a dental plan, pension (matched up to 5%), life assurance and income protection. We have a generous parental leave policy and an employee assistance programme (which includes health, mental wellbeing, and bereavement support). We offer a range of healthy food and snacks at our central Bristol office and have our own barista bar! We welcome people of different backgrounds and experiences; we’re committed to building an inclusive work environment that makes Graphcore a great home for everyone. We offer an equal opportunity process and understand that there are visible and invisible differences in all of us. We can provide a flexible approach to interview and encourage you to chat to us if you require any reasonable adjustments.
+
+Applicants for this position must hold the right to work in the UK. Unfortunately at this time, we are unable to provide visa sponsorship or support for visa applications

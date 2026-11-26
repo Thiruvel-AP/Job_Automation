@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Lack of direct experience with Claude models", "No cover letter provided"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "e64020fdb2b57b9dd306782d", "tokens": 3741, "note": "dropped 2 section(s) about the employer or process: About Anthropic, Annual Salary"}

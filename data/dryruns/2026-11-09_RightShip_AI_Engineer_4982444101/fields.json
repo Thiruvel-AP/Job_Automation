@@ -1,0 +1,325 @@
+[
+  {
+    "label": "Resume/CV",
+    "key": "resume",
+    "kind": "file",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Thiruvel Andagurunathan Pandian CV.pdf",
+    "source": "cv",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Cover Letter",
+    "key": "cover_letter",
+    "kind": "file",
+    "required": false,
+    "status": "VERIFIED",
+    "value": "Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+    "source": "letter",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "First Name",
+    "key": "first_name",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Thiruvel",
+    "source": "applicant",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Last Name",
+    "key": "last_name",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Andagurunathan Pandian",
+    "source": "applicant",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Email",
+    "key": "email",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "apthiruvel@gmail.com",
+    "source": "applicant",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Phone",
+    "key": "phone",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "+44 7741016954",
+    "source": "applicant",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "What are your working rights in the country where this role is advertised for?",
+    "key": "question_9689580101",
+    "kind": "combobox",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Work Visa",
+    "source": "applicant:visa.by_country.GB",
+    "reason": "",
+    "options": [
+      "Citizen",
+      "Resident",
+      "Work Visa"
+    ]
+  },
+  {
+    "label": "If you answered 'Work Visa' in the previous question, please specify the type of visa that you are currently holding. If you do not hold any valid visa currently, please answer 'N.A.'.",
+    "key": "question_9689581101",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Graduate visa",
+    "source": "answers:visa_type",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "What is your notice period?",
+    "key": "question_9689582101",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Immediately",
+    "source": "answers:notice_period",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "What motivated you to apply for this position?",
+    "key": "question_9689583101",
+    "kind": "textarea",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "The AI Engineer role at RightShip stands out to me for its focus on safety and risk intelligence. At AstraZeneca, I wro…",
+    "source": "freetext (DRAFT, not approved)",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Please provide your base salary expectations (in local currency, excluding bonus and commission).",
+    "key": "question_9689584101",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture…",
+    "source": "answers:salary_expectation",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "How did you hear about us?",
+    "key": "question_9689585101[]",
+    "kind": "combobox",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Corporate website",
+    "source": "how-heard",
+    "reason": "board -> 'Corporate website'",
+    "options": [
+      "Career Builder",
+      "College",
+      "Connection in the company",
+      "Corporate website",
+      "Employee emailed me the job",
+      "Event",
+      "Facebook",
+      "Glassdoor",
+      "Google",
+      "Graduate Recruitment Fair",
+      "Indeed",
+      "Instagram",
+      "LinkedIn",
+      "Market referral",
+      "Monster",
+      "Staff referral",
+      "Twitter",
+      "University"
+    ]
+  },
+  {
+    "label": "Please include a link to your LinkedIn profile.",
+    "key": "question_9689586101",
+    "kind": "text",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "https://www.linkedin.com/in/thiruvel-a-p/",
+    "source": "applicant",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+    "key": "question_9689587101",
+    "kind": "combobox",
+    "required": true,
+    "status": "EMPTY",
+    "value": "",
+    "source": "equal_opportunities",
+    "reason": "not listed in equal_opportunities: left blank",
+    "options": [
+      "She / Her / Hers",
+      "He / Him / His",
+      "They / Them / Theirs",
+      "Self-describe, please specify in the next question"
+    ]
+  },
+  {
+    "label": "If you have answered 'Self-describe' in the previous question, please specify:",
+    "key": "question_9689588101",
+    "kind": "text",
+    "required": false,
+    "status": "EMPTY",
+    "value": "",
+    "source": "",
+    "reason": "no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it)",
+    "options": []
+  },
+  {
+    "label": "I declare that the information provided by me is true and accurate. Furthermore, I willingly consent to being contacted by the company for any relevant matters pertaining to my application. I also give my unequivocal agreement for the company to retain my information (for as long as the respective country laws in which I am seeking employment allow) for potential future employment opportunities.",
+    "key": "question_9689589101",
+    "kind": "combobox",
+    "required": true,
+    "status": "NEEDS USER",
+    "value": "",
+    "source": "attestation",
+    "reason": "attestation: you tick it yourself, code never does",
+    "options": [
+      "Yes",
+      "No"
+    ]
+  },
+  {
+    "label": "Location",
+    "key": "location",
+    "kind": "text",
+    "required": true,
+    "status": "COVERED",
+    "value": "",
+    "source": "answers:current_location",
+    "reason": "not on the page; 'Location (City)' holds the answer (VERIFIED)",
+    "options": []
+  },
+  {
+    "label": "VeteranStatus",
+    "key": "veteran_status",
+    "kind": "combobox",
+    "required": false,
+    "status": "EMPTY",
+    "value": "",
+    "source": "equal_opportunities",
+    "reason": "not listed in equal_opportunities: left blank",
+    "options": [
+      "I don't wish to answer",
+      "I identify as one or more of the classifications of a protected veteran",
+      "I am not a protected veteran"
+    ]
+  },
+  {
+    "label": "Race",
+    "key": "race",
+    "kind": "combobox",
+    "required": false,
+    "status": "EMPTY",
+    "value": "",
+    "source": "equal_opportunities:ethnicity",
+    "reason": "no such field on the page",
+    "options": [
+      "Decline To Self Identify",
+      "Two or More Races",
+      "Native Hawaiian or Other Pacific Islander",
+      "White",
+      "Hispanic or Latino",
+      "Black or African American",
+      "Asian",
+      "American Indian or Alaskan Native"
+    ]
+  },
+  {
+    "label": "Gender",
+    "key": "gender",
+    "kind": "combobox",
+    "required": false,
+    "status": "VERIFIED",
+    "value": "Male",
+    "source": "equal_opportunities:eo_gender",
+    "reason": "",
+    "options": [
+      "Decline To Self Identify",
+      "Female",
+      "Male"
+    ]
+  },
+  {
+    "label": "Country",
+    "key": "country",
+    "kind": "combobox",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "+44",
+    "source": "applicant:location",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Location (City)",
+    "key": "candidate-location",
+    "kind": "combobox",
+    "required": true,
+    "status": "VERIFIED",
+    "value": "Bristol, England, United Kingdom",
+    "source": "answers:current_location",
+    "reason": "",
+    "options": []
+  },
+  {
+    "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+    "key": "4005559101",
+    "kind": "combobox",
+    "required": true,
+    "status": "EMPTY",
+    "value": "",
+    "source": "equal_opportunities",
+    "reason": "not listed in equal_opportunities: left blank",
+    "options": []
+  },
+  {
+    "label": "Are you Hispanic/Latino?",
+    "key": "hispanic_ethnicity",
+    "kind": "combobox",
+    "required": false,
+    "status": "EMPTY",
+    "value": "",
+    "source": "never_fill",
+    "reason": "listed in applicant.yaml never_fill: yours to answer",
+    "options": []
+  },
+  {
+    "label": "By checking this box, I consent to RightShip collecting, storing, and processing my responses to the demographic data surveys above.",
+    "key": "gdpr_demographic_data_consent_given",
+    "kind": "checkbox",
+    "required": true,
+    "status": "NEEDS USER",
+    "value": "",
+    "source": "attestation",
+    "reason": "attestation: you tick it yourself, code never does",
+    "options": []
+  }
+]

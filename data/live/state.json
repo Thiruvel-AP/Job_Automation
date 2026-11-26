@@ -1,0 +1,751 @@
+{
+  "version": 1,
+  "jobs": {
+    "f4b69750a1340b22beccdfde924562d44f75a44bbc4cffdfc172deb420c857c5": {
+      "file": "live-001.txt",
+      "job_id": "manual:de99f0a98229",
+      "done": false,
+      "company": "Monzo",
+      "title": "Data Scientist",
+      "url": "https://job-boards.greenhouse.io/monzo/jobs/8232726",
+      "location": "Cardiff, London or Remote (UK)"
+    },
+    "52dcbee5fb43a0744affbad79e40256e71bd14741b21ce193ae9af63ddf59e33": {
+      "file": "live-002.txt",
+      "job_id": "manual:628c7c26929e",
+      "done": false,
+      "company": "o",
+      "title": "o",
+      "url": "o",
+      "location": "United Kingdom"
+    },
+    "c3b88ac536ccffcc6bbcfb63d44ff6f7c9727aa4245aacb9e213d6b9f52ebb18": {
+      "file": "datatech-data-scientist-consumer-behaviour.txt",
+      "job_id": "manual:2ec56d5f4fd0",
+      "done": false,
+      "company": "Datatech",
+      "title": "Data Scientist - Consumer Behaviour",
+      "url": "https://www.cv-library.co.uk/job/apply/225704704",
+      "location": "United Kingdom"
+    },
+    "09da330d4cf4d0007c96788edda4007b9f713463c6149fc8c6113b4f539893d8": {
+      "file": "anthropic-applied-ai-engineer-beneficial-deploymen-5440821008.txt",
+      "job_id": "manual:b1f0216ae474",
+      "done": false,
+      "company": "Anthropic",
+      "title": "Applied AI Engineer, Beneficial Deployments (Lab Automation)",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5440821008",
+      "location": "London, UK"
+    },
+    "30401095eaa79a7fe7b0737dc193631c60b947acdb124647fa55553becc65bbe": {
+      "file": "anaplan-data-scientist-8654662002.txt",
+      "job_id": "manual:0511e7ae7ebb",
+      "done": true,
+      "company": "Anaplan",
+      "title": "Data Scientist",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8654662002",
+      "location": "London, United Kingdom",
+      "status": "applied"
+    },
+    "6ebf487ed321eb04b65b2a2fa4dd37b1e90fc80c43f2a0fd3e59ac94697d04e6": {
+      "file": "valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt",
+      "job_id": "manual:af9d3404e414",
+      "done": false,
+      "company": "Valarian",
+      "title": "AI Engineer (Harness)",
+      "url": "https://jobs.lever.co/valarian/55140de9-d3c0-48fb-bae3-41b16bcf7143",
+      "location": "London"
+    },
+    "38604846898198a86b9bab54bff3ebea205c551985eeff7f550e2e39039beb8f": {
+      "file": "lendable-data-analyst-strategic-projects-77e2a14b-f8c2-4b7c-b889-f98c20334e92.txt",
+      "job_id": "manual:e5c216a56af2",
+      "done": false,
+      "company": "Lendable",
+      "title": "Data Analyst (Strategic Projects)",
+      "url": "https://jobs.ashbyhq.com/lendable/77e2a14b-f8c2-4b7c-b889-f98c20334e92",
+      "location": "London"
+    },
+    "e0593e79b5b7aa035f940783c69579ebb8a00ef586d0f8c2f597832c14abfe0d": {
+      "file": "trainline-junior-machine-learning-engineer-529e124d-d65d-4aa2-bde3-be81750cc521.txt",
+      "job_id": "manual:ad31cb75bf32",
+      "done": true,
+      "company": "Trainline",
+      "title": "Junior Machine Learning Engineer",
+      "url": "https://jobs.ashbyhq.com/trainline/529e124d-d65d-4aa2-bde3-be81750cc521",
+      "location": "London",
+      "status": "applied"
+    },
+    "47376b0b623ed431733433a79e081f2ffe4dc45824ee02d55129bfdf70ad5f74": {
+      "file": "limbic-senior-ai-ml-engineer-5693cf4b-0182-4ceb-b464-369e5be1f29a.txt",
+      "job_id": "manual:177a9a1afcc1",
+      "done": true,
+      "company": "Limbic",
+      "title": "Senior AI/ML Engineer",
+      "url": "https://jobs.ashbyhq.com/limbic/5693cf4b-0182-4ceb-b464-369e5be1f29a",
+      "location": "UK",
+      "status": "applied"
+    },
+    "675fa9449114cc5f2d5242f6d988a4072cc19a2c8911be59e011dc48d08559d6": {
+      "file": "airwallex-staff-data-scientist-0778c237-c5f3-4572-b732-fa1fdcae3022.txt",
+      "job_id": "manual:90b70d4d23d9",
+      "done": true,
+      "company": "Airwallex",
+      "title": "Staff Data Scientist",
+      "url": "https://jobs.ashbyhq.com/airwallex/0778c237-c5f3-4572-b732-fa1fdcae3022",
+      "location": "UK - London",
+      "status": "skipped (rules)"
+    },
+    "e444938025b292af1ddded192cad731ce8489adb299c71e56d035f2889234f75": {
+      "file": "graphcore-early-careers-graduate-machine-learning-engineer-2027-8902058002.txt",
+      "job_id": "manual:edfb80bb6e8d",
+      "done": true,
+      "company": "Graphcore Early Careers",
+      "title": "Graduate Machine Learning Engineer 2027",
+      "url": "https://job-boards.greenhouse.io/graphcore-early-careers/jobs/8902058002",
+      "location": "Bristol, UK",
+      "status": "skipped"
+    },
+    "4d426483c724c3e4b19ba7bbfbced685a3c419fd02e5c7c70b518425121b16fd": {
+      "file": "graphcore-graduate-machine-learning-engineer-2027-8894041002.txt",
+      "job_id": "manual:416bac80086f",
+      "done": true,
+      "company": "Graphcore",
+      "title": "Graduate Machine Learning Engineer 2027",
+      "url": "https://job-boards.greenhouse.io/graphcore/jobs/8894041002",
+      "location": "Bristol, UK",
+      "status": "skipped"
+    },
+    "caca2eb5e10cd7e13d08d6157004d5e6b02cbad528844d84b725a0811ce39553": {
+      "file": "loveholidays-applied-ai-engineer-10ba54b7-8c04-455b-b7e9-287202e448e9.txt",
+      "job_id": "manual:ebd4aeb68e29",
+      "done": true,
+      "company": "loveholidays",
+      "title": "Applied AI Engineer",
+      "url": "https://jobs.ashbyhq.com/loveholidays/10ba54b7-8c04-455b-b7e9-287202e448e9",
+      "location": "London",
+      "status": "applied"
+    },
+    "823c40132079e7d7cd8f65eb5304c9e764f3650dd29463a64c82f7ff718a8c3f": {
+      "file": "wayve-senior-machine-learning-engineer-adas-e43c1c44-787e-471b-89fb-ff986c3ab588.txt",
+      "job_id": "manual:9f32b635b480",
+      "done": true,
+      "company": "Wayve",
+      "title": "Senior Machine Learning Engineer, ADAS",
+      "url": "https://jobs.ashbyhq.com/wayve/e43c1c44-787e-471b-89fb-ff986c3ab588",
+      "location": "London, United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "027e93f92333be5678edee1c1dc026fb8ca54f1f3d329858667296eaf069f6dc": {
+      "file": "wayve-principal-machine-learning-engineer-driv-9e02479e-88c0-4e01-bb43-993d9ad5d5c7.txt",
+      "job_id": "manual:f55d9d6e5b99",
+      "done": true,
+      "company": "Wayve",
+      "title": "Principal Machine Learning Engineer, Driving Product",
+      "url": "https://jobs.ashbyhq.com/wayve/9e02479e-88c0-4e01-bb43-993d9ad5d5c7",
+      "location": "London, United Kingdom",
+      "status": "skipped (rules)"
+    },
+    "97e82930782f9bf7fd9508caac87655cd2a82c2e1b321df119641418c7ab07cf": {
+      "file": "anthropic-manager-applied-ai-architects-digital-na-5424305008.txt",
+      "job_id": "manual:c04736bcceea",
+      "done": true,
+      "company": "Anthropic",
+      "title": "Manager, Applied AI Architects - Digital Natives, EMEA",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5424305008",
+      "location": "London, UK",
+      "status": "skipped (rules)"
+    },
+    "be87412ae3c08fabf3d34b792aa17827390169cac33e50def60df1e433b21738": {
+      "file": "trainline-machine-learning-engineering-manager-d04664ab-90ea-4ed5-9581-3b655a142f3d.txt",
+      "job_id": "manual:9860401c3140",
+      "done": true,
+      "company": "Trainline",
+      "title": "Machine Learning Engineering Manager",
+      "url": "https://jobs.ashbyhq.com/trainline/d04664ab-90ea-4ed5-9581-3b655a142f3d",
+      "location": "London",
+      "status": "skipped (rules)"
+    },
+    "c7ff420634b286d1a4df8dbf1a87551a15f9d603ff6b4061982d18698e18ef9e": {
+      "file": "flo-health-inc-machine-learning-engineer-8039864003.txt",
+      "job_id": "manual:2523781ce795",
+      "done": true,
+      "company": "Flo Health Inc.",
+      "title": "Machine Learning Engineer",
+      "url": "https://job-boards.greenhouse.io/flohealth/jobs/8039864003",
+      "location": "London",
+      "status": "applied"
+    },
+    "6e2d1a6c5ba3e3e7a8c5177d9ccc9a513000fcb14d7540e8574952dcca759e5d": {
+      "file": "elevenlabs-applied-ai-engineer-b8a111fa-9fd5-44d0-97ed-8fd1280be4ef.txt",
+      "job_id": "manual:ac26c7f1db0e",
+      "done": true,
+      "company": "ElevenLabs",
+      "title": "Applied AI Engineer",
+      "url": "https://jobs.ashbyhq.com/elevenlabs/b8a111fa-9fd5-44d0-97ed-8fd1280be4ef",
+      "location": "United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "9c7aa7787364cf573c143accdea4682018023bdce9358873f0bd76bdd043017c": {
+      "file": "loveholidays-it-systems-ai-engineer-82f18d2e-83c8-47aa-a61e-4f95a74e49fe.txt",
+      "job_id": "manual:71f1bff0c95c",
+      "done": true,
+      "company": "loveholidays",
+      "title": "IT Systems & AI Engineer",
+      "url": "https://jobs.ashbyhq.com/loveholidays/82f18d2e-83c8-47aa-a61e-4f95a74e49fe",
+      "location": "London",
+      "status": "applied"
+    },
+    "35c11644ca9426eb669adfad8ee1b411d02c77aba7042d26b93a3b17098f604e": {
+      "file": "valarian-mlops-engineer-924e389c-6cbd-40dc-a3e1-e7f2f4b930ec.txt",
+      "job_id": "manual:e60d18358359",
+      "done": true,
+      "company": "Valarian",
+      "title": "MLOps Engineer",
+      "url": "https://jobs.lever.co/valarian/924e389c-6cbd-40dc-a3e1-e7f2f4b930ec",
+      "location": "London",
+      "status": "ready_not_submitted"
+    },
+    "edf9a87101100b9abc9a51bd1cf6d0fbe5a59685eaa5eac1c31205e7740ff58b": {
+      "file": "prolific-data-analyst-supply-5014007101.txt",
+      "job_id": "manual:cc2039dec6d1",
+      "done": true,
+      "company": "Prolific",
+      "title": "Data Analyst - Supply",
+      "url": "https://job-boards.eu.greenhouse.io/prolific/jobs/5014007101",
+      "location": "United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "b194f0a5526f5e0885252c2f01e5a74252aa54ce17117819599f958576e7bd89": {
+      "file": "gigaton-research-scientist-control-machine-learn-f4e56f06-08bf-4a26-bf8a-2256cb1361a9.txt",
+      "job_id": "manual:1feb084155f5",
+      "done": true,
+      "company": "Gigaton",
+      "title": "Research Scientist - Control & Machine Learning",
+      "url": "https://jobs.ashbyhq.com/gigaton/f4e56f06-08bf-4a26-bf8a-2256cb1361a9",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "85f161817d833383239c3cf06fa84adffd6b4328d14b268c70815c0859f67aa3": {
+      "file": "fonio-forward-deployed-engineer-uk-929b890a-28f9-4d35-99cb-e9169a1d5f34.txt",
+      "job_id": "manual:6da04f7c79d9",
+      "done": true,
+      "company": "fonio",
+      "title": "Forward Deployed Engineer (UK)",
+      "url": "https://jobs.ashbyhq.com/fonio/929b890a-28f9-4d35-99cb-e9169a1d5f34",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "a07f72265daa25b0a1ebc9e2a98a9473e27e3a8287b226f2d0393f881f60ab6a": {
+      "file": "graphcore-early-careers-graduate-software-engineer-ai-compute-li-8902321002.txt",
+      "job_id": "manual:47ba2443c75e",
+      "done": true,
+      "company": "Graphcore Early Careers",
+      "title": "Graduate Software Engineer, AI Compute Libraries & Performance 2027",
+      "url": "https://job-boards.greenhouse.io/graphcore-early-careers/jobs/8902321002",
+      "location": "Bristol, UK",
+      "status": "skipped (ats)"
+    },
+    "787587d417e867a3798bb6ffb32ba1e72ccafd50b4e3266298744c2645db1c48": {
+      "file": "graphcore-graduate-software-engineer-ai-ml-test-sy-8894364002.txt",
+      "job_id": "manual:df166c1fcde8",
+      "done": true,
+      "company": "Graphcore",
+      "title": "Graduate Software Engineer, AI/ ML Test Systems 2027",
+      "url": "https://job-boards.greenhouse.io/graphcore/jobs/8894364002",
+      "location": "Bristol, UK",
+      "status": "skipped (ats)"
+    },
+    "6b2d404ac1c7f4ac1d84d8ec64b17f636fe977726622d54bbc22d79652be5774": {
+      "file": "graphcore-early-careers-software-engineer-summer-intern-ai-compu-8902325002.txt",
+      "job_id": "manual:4760e14b631f",
+      "done": true,
+      "company": "Graphcore Early Careers",
+      "title": "Software Engineer Summer Intern, AI Compute Libraries & Performance 2027",
+      "url": "https://job-boards.greenhouse.io/graphcore-early-careers/jobs/8902325002",
+      "location": "Bristol, UK",
+      "status": "skipped (rules)"
+    },
+    "60d33372086d030ba565ebfc51f77506346e7b97b5f0f0ec5d8f4e1bcf9bead0": {
+      "file": "graphcore-senior-software-engineer-ml-qa-8902107002.txt",
+      "job_id": "manual:a2dbf1f57a27",
+      "done": true,
+      "company": "Graphcore",
+      "title": "Senior Software Engineer (ML QA)",
+      "url": "https://job-boards.greenhouse.io/graphcore/jobs/8902107002",
+      "location": "London, UK",
+      "status": "skipped (user)"
+    },
+    "f80b0a5c75628d8e5306a04f541b77c0c67400f61bac0aa232beec1755aa0dbe": {
+      "file": "plasma-data-engineering-lead-4b6ba5e5-9d66-418f-86a3-84fa23342f76.txt",
+      "job_id": "manual:fbb4a9dadd23",
+      "done": true,
+      "company": "Plasma",
+      "title": "Data Engineering Lead",
+      "url": "https://jobs.ashbyhq.com/plasma/4b6ba5e5-9d66-418f-86a3-84fa23342f76",
+      "location": "London Office",
+      "status": "skipped (rules)"
+    },
+    "990fedfa123f0ae31d0e1eb8c1490d1e7161bc474d5dcdb0d0d87e4a6eb6a483": {
+      "file": "graphcore-staff-software-engineer-ml-qa-8902111002.txt",
+      "job_id": "manual:fad58e232a3a",
+      "done": true,
+      "company": "Graphcore",
+      "title": "Staff Software Engineer (ML QA)",
+      "url": "https://job-boards.greenhouse.io/graphcore/jobs/8902111002",
+      "location": "London, UK",
+      "status": "skipped (rules)"
+    },
+    "eb39147395469d63994b4c1674f69a526922e29fd7183fe0db007f1bfc67778b": {
+      "file": "anthropic-applied-ai-engineer-enterprise-5354765008.txt",
+      "job_id": "manual:beef7506ce2c",
+      "done": true,
+      "company": "Anthropic",
+      "title": "Applied AI Engineer, Enterprise",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5354765008",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "5e27853029375ec6ae864a8c7b802df747db0a32a1ad6604a6936f00784da297": {
+      "file": "openai-applied-ai-engineer-codex-32425ea6-a64b-408d-ae54-38342b83c875.txt",
+      "job_id": "manual:b61429894dbb",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Applied AI Engineer, Codex",
+      "url": "https://jobs.ashbyhq.com/openai/32425ea6-a64b-408d-ae54-38342b83c875",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "89f3eeedeaefd0d2281cd7f7c696a9147aec9480c79128ae93ccb178d3840bc5": {
+      "file": "openai-applied-ai-engineer-government-internati-6c01266f-6ddb-42d1-a529-84736ae8587a.txt",
+      "job_id": "manual:f70b6370341a",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Applied AI Engineer, Government, International",
+      "url": "https://jobs.ashbyhq.com/openai/6c01266f-6ddb-42d1-a529-84736ae8587a",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "a7b940e825064390842a25c859e5e338aca20e8621d8108624c94b9bbb24c4cc": {
+      "file": "openai-applied-ai-engineer-startups-codex-840963bb-7b1a-4021-91a0-40baf71b7e20.txt",
+      "job_id": "manual:fdde1fd48fa4",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Applied AI Engineer, Startups (Codex)",
+      "url": "https://jobs.ashbyhq.com/openai/840963bb-7b1a-4021-91a0-40baf71b7e20",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "30a3ba6285ded88b51e081eb50a1d8d0a33a0d1e8a8e4c6fdcc64af2b0c7bfa7": {
+      "file": "ekimetrics-junior-data-scientist-marketing-effectiv-23ede62a-a4c9-41e9-924f-0bb283438b5f.txt",
+      "job_id": "manual:cb22e64e095b",
+      "done": true,
+      "company": "Ekimetrics",
+      "title": "Junior Data Scientist & Marketing Effectiveness - Jan-March 2027 Start date",
+      "url": "https://jobs.lever.co/ekimetrics/23ede62a-a4c9-41e9-924f-0bb283438b5f",
+      "location": "London",
+      "status": "skipped (user)"
+    },
+    "8145673e6622fcdd078fd38b1f7983d4098e1b6e39a200343c0b63b7224af5e0": {
+      "file": "lendable-data-scientist-ai-502163b8-ddd4-48dc-9464-68b24056baac.txt",
+      "job_id": "manual:aa0ae20db59d",
+      "done": true,
+      "company": "Lendable",
+      "title": "Data Scientist (AI)",
+      "url": "https://jobs.ashbyhq.com/lendable/502163b8-ddd4-48dc-9464-68b24056baac",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "33e850d3c7d202a270c0816736bc0397505c585c15b7cdcadef6986b08b60220": {
+      "file": "wheely-associate-data-scientist-operations-rese-7655292003.txt",
+      "job_id": "manual:568bb449b867",
+      "done": true,
+      "company": "Wheely",
+      "title": "Associate Data Scientist - Operations Research",
+      "url": "https://boards.greenhouse.io/wheely/jobs/7655292003?gh_jid=7655292003",
+      "location": "London, England, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "0b74a162c52b3c60b91c7817115bc60110b53e7bba07b80a898133d0d84fddbb": {
+      "file": "wheely-data-scientist-7588277003.txt",
+      "job_id": "manual:f167044ce4e3",
+      "done": true,
+      "company": "Wheely",
+      "title": "Data Scientist",
+      "url": "https://boards.greenhouse.io/wheely/jobs/7588277003?gh_jid=7588277003",
+      "location": "London, England, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "609979fd19ea26d2c01a6576aa8f4360ddfee314b90670d189228967ce26f256": {
+      "file": "anthropic-forward-deployed-engineer-5423029008.txt",
+      "job_id": "manual:69406a1aef2d",
+      "done": false,
+      "company": "Anthropic",
+      "title": "Forward Deployed Engineer",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5423029008",
+      "location": "London, UK"
+    },
+    "d59560163ac6b04f5aa294f3e2d2377128dcd7787bfa639721fd81f0d973f1cd": {
+      "file": "openai-forward-deployed-engineer-london-spanish-7ce64627-b273-48e1-b3bc-ef4be0444706.txt",
+      "job_id": "manual:e3bab8e293ca",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Forward Deployed Engineer - London (Spanish-speaking)",
+      "url": "https://jobs.ashbyhq.com/openai/7ce64627-b273-48e1-b3bc-ef4be0444706",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "a57e71b3aac3923349bc37caadcd6a65001a2d3621da941d3ed0fa9f41e446e9": {
+      "file": "anthropic-applied-ai-engineer-startups-5432575008.txt",
+      "job_id": "manual:b251acbb8372",
+      "done": true,
+      "company": "Anthropic",
+      "title": "Applied AI Engineer, Startups",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5432575008",
+      "location": "London, UK",
+      "status": "skipped (ats)"
+    },
+    "9a3399cd98abe9c1e33169fe652ab9537e05a4d16c527f060f326aa774cc8aa8": {
+      "file": "epic-games-machine-learning-engineer-memory-6141143004.txt",
+      "job_id": "manual:ce97ff509081",
+      "done": true,
+      "company": "Epic Games",
+      "title": "Machine Learning Engineer, Memory",
+      "url": "https://epicgames.com/careers/jobs/6141143004?gh_jid=6141143004",
+      "location": "London,England,United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "3ff4df7fe16e4f6b50a8aff0123dce87720e07b3bd14b9645a1cc4673e7aacf8": {
+      "file": "wayve-applied-scientist-machine-learning-engin-5d3baafc-4af6-47db-91a0-ee5cb2cf3e04.txt",
+      "job_id": "manual:6f10fe2e6727",
+      "done": true,
+      "company": "Wayve",
+      "title": "Applied Scientist/Machine Learning Engineer, Gaia",
+      "url": "https://jobs.ashbyhq.com/wayve/5d3baafc-4af6-47db-91a0-ee5cb2cf3e04",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "2322e77e8e6167d325cf395e9c60142d94855b6075568ae4b0316093c7b198dc": {
+      "file": "wayve-machine-learning-engineer-synthetic-data-b52585d5-ed8a-4ec8-90f5-2cd06b766e73.txt",
+      "job_id": "manual:25778fefadab",
+      "done": true,
+      "company": "Wayve",
+      "title": "Machine Learning Engineer, Synthetic Data",
+      "url": "https://jobs.ashbyhq.com/wayve/b52585d5-ed8a-4ec8-90f5-2cd06b766e73",
+      "location": "London, United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "04666110a1fb4ce0c64f5033dcc88f51443bd08a8249aacb9e68ec0dd516dda7": {
+      "file": "anaplan-avp-data-analytics-ai-engineering-8819344002.txt",
+      "job_id": "manual:fee0107b8e9b",
+      "done": true,
+      "company": "Anaplan",
+      "title": "AVP, Data, Analytics & AI Engineering",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8819344002",
+      "location": "Manchester, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "40805f27be8aac8e59f819365d25caaa44830f703b95b1fbcbbb8e1f79a69cf8": {
+      "file": "rightship-ai-engineer-4982444101.txt",
+      "job_id": "manual:ff68fffd015a",
+      "done": true,
+      "company": "RightShip",
+      "title": "AI Engineer",
+      "url": "https://job-boards.eu.greenhouse.io/rightship/jobs/4982444101",
+      "location": "London, UK",
+      "status": "applied"
+    },
+    "cc74782aaa52f8c710256a982125c4db18ffb679bbf02386b83ba8023f77ac6b": {
+      "file": "isembard-computer-vision-ml-engineer-edd462db-a5f6-48d3-871f-43fe41a4a7ac.txt",
+      "job_id": "manual:076aade28296",
+      "done": true,
+      "company": "Isembard",
+      "title": "Computer Vision / ML Engineer",
+      "url": "https://jobs.ashbyhq.com/isembard/edd462db-a5f6-48d3-871f-43fe41a4a7ac",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "1d4b107e2b0e38aabb45b885bad11ac11b8ae55dc51f4c68aedecfb59970b173": {
+      "file": "juro-ai-engineer-572a6fb9-7a31-455f-a701-ab6dd8598f66.txt",
+      "job_id": "manual:f2e0f77d4051",
+      "done": true,
+      "company": "Juro",
+      "title": "AI Engineer",
+      "url": "https://jobs.ashbyhq.com/juro/572a6fb9-7a31-455f-a701-ab6dd8598f66",
+      "location": "London (UK), United Kingdom",
+      "status": "applied"
+    },
+    "779163b61a566237a2b403973c3f8725fba1f2a88b07afe206bb2dc8b06e2146": {
+      "file": "hawk-data-scientist-3b98f79d-a111-4b5d-a699-937fffdcccec.txt",
+      "job_id": "manual:a09bf16b32b4",
+      "done": true,
+      "company": "Hawk",
+      "title": "Data Scientist",
+      "url": "https://jobs.ashbyhq.com/hawk/3b98f79d-a111-4b5d-a699-937fffdcccec",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "b41af9ec6b801fc3fe425e83c940d0cb1cb49ac9f76200fc686f0a8035b24277": {
+      "file": "ekimetrics-partner-data-science-marketing-effective-653c0235-d1f5-4490-a839-1ddf68624ea8.txt",
+      "job_id": "manual:13b5c0fb9c36",
+      "done": true,
+      "company": "Ekimetrics",
+      "title": "Partner - Data Science & Marketing Effectiveness, London",
+      "url": "https://jobs.lever.co/ekimetrics/653c0235-d1f5-4490-a839-1ddf68624ea8",
+      "location": "London, GB",
+      "status": "skipped (ats)"
+    },
+    "dd6568be14f5cfd4cde24b3a29d20f542fa191e0c58153cd5645c2d2f28922ec": {
+      "file": "marshmallow-data-scientist-credit-car-finance-c316bf98-6f62-43be-914b-b96f486e08ce.txt",
+      "job_id": "manual:ddee06298da6",
+      "done": true,
+      "company": "Marshmallow",
+      "title": "Data Scientist (Credit) - Car Finance",
+      "url": "https://jobs.ashbyhq.com/marshmallow/c316bf98-6f62-43be-914b-b96f486e08ce",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "f248465de1646deeb54b54d7897955ca6f13184f60225aad460a814b4029e73e": {
+      "file": "iwoca-data-scientist-credit-risk-modelling-778ac542-07d8-471d-9a6c-e4780131a8d2.txt",
+      "job_id": "manual:7516c65a2598",
+      "done": false,
+      "company": "Iwoca",
+      "title": "Data Scientist - Credit Risk Modelling",
+      "url": "https://jobs.ashbyhq.com/iwoca.co.uk/778ac542-07d8-471d-9a6c-e4780131a8d2",
+      "location": "London, United Kingdom"
+    },
+    "eb4c11c54a53c3f8ea6034b0a394a160bb98ab263703ac8f4f00d04bdb1a2bb0": {
+      "file": "scale-ai-senior-applied-ai-engineer-4751081005.txt",
+      "job_id": "manual:ffd2a67d131b",
+      "done": false,
+      "company": "Scale AI",
+      "title": "Senior Applied AI Engineer",
+      "url": "https://job-boards.greenhouse.io/scaleai/jobs/4751081005",
+      "location": "London, UK"
+    },
+    "e7c25cf251163da1cfe660c3cb2a44d9e0cb7badcd58cfdbd9fdd23f015bb615": {
+      "file": "anaplan-avp-data-analytics-ai-engineering-8842888002.txt",
+      "job_id": "manual:d6b45a7c4e65",
+      "done": true,
+      "company": "Anaplan",
+      "title": "AVP, Data, Analytics & AI Engineering",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8842888002",
+      "location": "York, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "41be4c2b09747f6b29bf74d774f9c7531f6cf8c6ac551508aa6fe5d903e8bece": {
+      "file": "norton-rose-fulbright-llp-ai-engineer-57364884.txt",
+      "job_id": "manual:ec0028fcd7fc",
+      "done": true,
+      "company": "Norton Rose Fulbright LLP",
+      "title": "AI Engineer",
+      "url": "https://www.reed.co.uk/jobs/ai-engineer/57364884",
+      "location": "London, GB",
+      "status": "ready_not_submitted"
+    },
+    "23e899a3c79654544a19f7a83cd2ebd8e41db4b183f65da8a6c9dba9dec6003b": {
+      "file": "m-g-data-scientist-r19908.txt",
+      "job_id": "manual:bab3989748b4",
+      "done": true,
+      "company": "M&G",
+      "title": "Data Scientist",
+      "url": "https://mgpru.wd3.myworkdayjobs.com/mandgprudential/job/Stirling/Data-Engineer--Databricks-_R19908",
+      "location": "Stirling; Reading; Edinburgh, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "afd1fc8c1d978eedab04a999bff07e9e34aa329217b7d0e5932ba03a36be5767": {
+      "file": "sirius-analysis-data-scientist-57430938.txt",
+      "job_id": "manual:2f46779b6f54",
+      "done": false,
+      "company": "Sirius Analysis",
+      "title": "Data Scientist",
+      "url": "https://www.reed.co.uk/jobs/data-scientist/57430938",
+      "location": "Portsmouth, GB"
+    },
+    "91bc2b3f73c2d07a6950071841c656298fc46a750a1ae74b16e384ec36a7516d": {
+      "file": "databricks-ai-forward-deployed-engineer-8927179002.txt",
+      "job_id": "manual:f9d7a82c49cf",
+      "done": true,
+      "company": "Databricks",
+      "title": "AI Forward Deployed Engineer",
+      "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8927179002",
+      "location": "London, United Kingdom",
+      "status": "skipped (user)"
+    },
+    "4b2612ca71e3cc1ca5112c71f8e03ef2401734d79fac5e8a542b6a8b39a1c150": {
+      "file": "lseg-core-ai-engineer-r0121927.txt",
+      "job_id": "manual:b7a95ac82c20",
+      "done": true,
+      "company": "Lseg",
+      "title": "Core AI Engineer",
+      "url": "https://lseg.wd3.myworkdayjobs.com/Careers/job/GBR-London-10-Paternoster-Square/Core-AI-Engineer_R0121927",
+      "location": "GBR-London-10 Paternoster Square, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "208c9cc021425489541ec052f7c622b05a65f93cee4f7b8d9473cc2d7e4c9e11": {
+      "file": "kong-forward-deployed-engineer-ai-gateway-eme-3e5ef5b8-686d-4915-b436-26bcd2140951.txt",
+      "job_id": "manual:835ec605222c",
+      "done": false,
+      "company": "Kong",
+      "title": "Forward Deployed Engineer AI Gateway EMEA",
+      "url": "https://jobs.ashbyhq.com/kong/3e5ef5b8-686d-4915-b436-26bcd2140951",
+      "location": "England, United Kingdom"
+    },
+    "3717675e5dc66cd61f11ad32baa9b5e3c7e5386e98fbc9a41b6f94b9f912e146": {
+      "file": "openai-applied-ai-engineer-digital-natives-7be58f3a-6005-42ed-86fa-77773ebfb294.txt",
+      "job_id": "manual:03305dffa2c3",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Applied AI Engineer, Digital Natives",
+      "url": "https://jobs.ashbyhq.com/openai/7be58f3a-6005-42ed-86fa-77773ebfb294",
+      "location": "London, UK, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "0d37c8508bb4419658c1b45151806ac947928ce82a449ca4216c8e52bc257835": {
+      "file": "writer-ai-engineer-uk-c65c106a-caef-44b6-b906-e5b304519fdd.txt",
+      "job_id": "manual:a43094041888",
+      "done": false,
+      "company": "WRITER",
+      "title": "AI engineer (UK)",
+      "url": "https://jobs.ashbyhq.com/writer/c65c106a-caef-44b6-b906-e5b304519fdd",
+      "location": "London, UK, United Kingdom"
+    },
+    "f7f510bd097e049f92f8352e3739767eefd8122e505d19b7aa7b193cb32c10cb": {
+      "file": "edited-junior-data-scientist-0c669cd9-57fb-4021-bb86-628b04ab4da7.txt",
+      "job_id": "manual:3a7335aeab9c",
+      "done": true,
+      "company": "EDITED",
+      "title": "Junior Data Scientist",
+      "url": "https://jobs.ashbyhq.com/edited/0c669cd9-57fb-4021-bb86-628b04ab4da7",
+      "location": "London Office, UK",
+      "status": "applied"
+    },
+    "7cfbfc0a9716fffbb101a38b75b7eedd5556df5bb9ed832cf447cf6495eee015": {
+      "file": "capgemini-forward-deployed-engineer-ai-managing-co-57573640.txt",
+      "job_id": "manual:2d0d539cf49d",
+      "done": false,
+      "company": "Capgemini",
+      "title": "Forward Deployed Engineer AI-Managing Consultant-AI and Digital Factory",
+      "url": "https://www.reed.co.uk/jobs/forward-deployed-engineer-ai-managing-consultant-ai-and-digital-factory/57573640",
+      "location": "Bristol, GB"
+    },
+    "93181cccab196fe0dee701314383f1a02191750c2839afa0757bff1f1e0dd2fc": {
+      "file": "lseg-data-scientist-r0121912.txt",
+      "job_id": "manual:1d576f2fd4a5",
+      "done": true,
+      "company": "Lseg",
+      "title": "Data Scientist",
+      "url": "https://lseg.wd3.myworkdayjobs.com/Careers/job/GBR-London-10-Paternoster-Square/Data-scientist_R0121912",
+      "location": "GBR-London-10 Paternoster Square, United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "72e3e6a7fa0637ca1fde8fee8e07323ac9d8835396c7ed2af63e5330378cdce7": {
+      "file": "shi-wd12-myworkdayjobs-com-shi-shicareer-data-scientist-jr3788.txt",
+      "job_id": "manual:2b18795affde",
+      "done": true,
+      "company": "Shi",
+      "title": "Data Scientist",
+      "url": "https://shi.wd12.myworkdayjobs.com/shicareers/job/London-United-Kingdom/Data-Scientist_JR3788",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "9def430ed9ac356c18c4784aa91ef87ffde6e7c07eeee1fbe8c03e6448fb60f6": {
+      "file": "ultralytics-llm-engineer-82aa5083-9256-4441-890f-f4a1bfbc257e.txt",
+      "job_id": "manual:6e34a06ecc26",
+      "done": true,
+      "company": "Ultralytics",
+      "title": "LLM Engineer",
+      "url": "https://jobs.ashbyhq.com/ultralytics/82aa5083-9256-4441-890f-f4a1bfbc257e",
+      "location": "London, United Kingdom",
+      "status": "applied"
+    },
+    "6edc7ada810a813cf79c42e93388ebb52ffec018d6e8fbf84e120d8e7480ebd7": {
+      "file": "g-research-applied-ai-engineer-r3544.txt",
+      "job_id": "manual:8dbfe7a08723",
+      "done": true,
+      "company": "G-Research",
+      "title": "Applied AI Engineer",
+      "url": "https://gresearch.wd103.myworkdayjobs.com/G-Research/job/London-UK/AI-Engineer_R3544",
+      "location": "London, UK, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "2c2abf9a61acc457ece4d90528325094134b2a6b2d4c81db0b81c4b8ad83176a": {
+      "file": "lovable-data-scientist-growth-f7ffd722-a5bc-4229-9a9f-1d2c952dd7ba.txt",
+      "job_id": "manual:1fb47ec41a7c",
+      "done": true,
+      "company": "Lovable",
+      "title": "Data Scientist, Growth",
+      "url": "https://jobs.ashbyhq.com/lovable/f7ffd722-a5bc-4229-9a9f-1d2c952dd7ba",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "482270dbe9baf316811b8e6ce2ff6c61dd3edfc20e67e99750284d8537e343cd": {
+      "file": "wpp-forward-deployed-engineer-agentic-eco-sy-8788672002.txt",
+      "job_id": "manual:4fb239a519c2",
+      "done": true,
+      "company": "WPP",
+      "title": "Forward Deployed Engineer (Agentic & Eco-System)",
+      "url": "https://job-boards.greenhouse.io/wpp/jobs/8788672002",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "fbe6a1aefda3674d3cd3390a86ad15e5efb90f706207bd2f50fdb977ddb63851": {
+      "file": "healthhero-senior-ai-engineer-57554808.txt",
+      "job_id": "manual:f97f7222cbd2",
+      "done": false,
+      "company": "HealthHero",
+      "title": "Senior AI Engineer",
+      "url": "https://www.reed.co.uk/jobs/senior-ai-engineer/57554808",
+      "location": "London, GB"
+    },
+    "a9c4fe0a11b14b1a3fcc9030405c79c0972e900f3e109a8ad9bdcb6e3568efb7": {
+      "file": "efinancialcareers-software-engineer-ai-automation-london-g-57574524.txt",
+      "job_id": "manual:2fae0716fe03",
+      "done": true,
+      "company": "eFinancialCareers",
+      "title": "Software Engineer - AI Automation London- Global Prime Brokerage & Financing Platform",
+      "url": "https://www.reed.co.uk/jobs/software-engineer-ai-automation-london-global-prime-brokerage-financing-platform/57574524",
+      "location": "London, GB",
+      "status": "handed_off"
+    },
+    "364a65ff517766d1018ec5a8fe43a59eee18aee505d738d2027fff593b0fc097": {
+      "file": "moneybox-forward-deployed-engineer-a0e507ff-aad1-4308-9e8b-df8ba8747469.txt",
+      "job_id": "manual:d2f6aa967336",
+      "done": true,
+      "company": "MoneyBox",
+      "title": "Forward Deployed Engineer",
+      "url": "https://jobs.ashbyhq.com/moneybox/a0e507ff-aad1-4308-9e8b-df8ba8747469",
+      "location": "London Office",
+      "status": "ready_not_submitted"
+    },
+    "ab1573c9523f2a1dcfa55dc041d9a07708692c7f8e43a8ce5270403c114a07b1": {
+      "file": "codat-senior-ai-engineer-c496c971-66ae-4619-8293-3e7b7a748edf.txt",
+      "job_id": "manual:a0b4baae7191",
+      "done": true,
+      "company": "Codat",
+      "title": "Senior AI Engineer",
+      "url": "https://jobs.ashbyhq.com/codat/c496c971-66ae-4619-8293-3e7b7a748edf",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "16dd14002fd13afff345cbd7811933dde2bfb074027fb36d65b9e285bda3bf34": {
+      "file": "trainline-senior-data-scientist-2757aa18-5e60-45cf-ac9d-be11dee1afe2.txt",
+      "job_id": "manual:4914b93272d8",
+      "done": true,
+      "company": "Trainline",
+      "title": "Senior Data Scientist",
+      "url": "https://jobs.ashbyhq.com/trainline/2757aa18-5e60-45cf-ac9d-be11dee1afe2",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "a32af9445b8f5c238eb070f8498614152bd783387aab5cd4eacba7433062fb1b": {
+      "file": "anthropic-london-applied-ai-architect-partnerships-5432583008.txt",
+      "job_id": "manual:12e4f6edec35",
+      "done": true,
+      "company": "Anthropic",
+      "title": "[London] Applied AI Architect, Partnerships",
+      "url": "https://job-boards.greenhouse.io/anthropic/jobs/5432583008",
+      "location": "London, UK",
+      "status": "skipped (rules)"
+    }
+  }
+}

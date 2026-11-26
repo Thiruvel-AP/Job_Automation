@@ -1,0 +1,75 @@
+Company: fonio
+Title: Forward Deployed Engineer (UK)
+URL: https://jobs.ashbyhq.com/fonio/929b890a-28f9-4d35-99cb-e9169a1d5f34
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-10-20T16:07:57.090+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+ABOUT FONIO
+
+We grew from $1M to $10M ARR in under 12 months and now serve 10,000+ customers.
+
+Fonio is Europe’s market leader for AI phone agents for SMBs. Now we’re expanding globally and into new products.
+We move fast, take ownership, give direct feedback, and avoid politics and unnecessary meetings.
+Join one of Europe’s fastest-growing companies.
+
+
+
+
+YOUR ROLE
+
+As a Forward Deployed Engineer for our for our UK market, you work directly at the intersection of product and customer setups. You capture requirements, translate them into robust implementations, and take fonio live at customers – including integrations, automations, and ongoing optimization.
+
+
+You work closely with Product/Engineering and Go-to-Market, making sure deployments are fast, stable, and repeatable across the UK market.
+
+
+
+WHAT YOU'LL DO
+
+
+• Capture customer requirements and translate them into concrete implementation plans
+• Build and roll out fonio setups in production: workflows, logic, prompts, guardrails
+• Implement integrations with third-party systems (APIs, webhooks, CRM, calendar, ticketing, etc.)
+• Develop smaller features and glue code to cleanly map customer cases
+• Debug under production conditions: calls, flows, edge cases, fast fixes
+• Build reusable templates and deployment playbooks to make setups scalable
+• Deliver product feedback: bring pain points and feature gaps to the team, prioritized and concrete
+
+
+
+WHO WE'RE LOOKING FOR
+
+
+• Solid coding skills: you can implement independently, not just configure
+• Strong understanding of AI systems and LLMs (prompting, tool-use, RAG, failure modes)
+• Workflow thinking: translate complex processes into robust, testable flows
+• Experience with APIs, webhooks, auth, and common integration patterns
+• Cloud fundamentals: deployments, observability, debugging in production
+• Highly pragmatic working style: ship fast, make it stable, iterate
+• Bonus: Voice/Telephony, n8n, TypeScript/Python, SQL, monitoring/tracing, GDPR
+• English at native or near-native level
+
+
+
+WHAT WE OFFER
+
+
+• Competitive salary: £60,000–£95,000 per year
+• 100% Focus Time (no regular meetings)
+• Unlimited budget when the ROI is right
+• Extreme speed (we ship almost daily)
+• Thousands of enthusiastic customers building the product together with us
+
+
+Hiring Process
+
+ - 25 min intro
+
+ - 30 min deep dive with CTO & Co-Founder Matthias
+
+ - 20 min culture fit with one of our founders

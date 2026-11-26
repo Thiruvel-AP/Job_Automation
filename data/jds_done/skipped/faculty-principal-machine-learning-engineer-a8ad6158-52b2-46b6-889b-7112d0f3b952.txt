@@ -1,0 +1,127 @@
+Company: Faculty
+Title: Principal Machine Learning Engineer
+URL: https://jobs.ashbyhq.com/faculty/a8ad6158-52b2-46b6-889b-7112d0f3b952
+Source: ashby
+Location: London
+Posted: 2026-03-09T18:25:23.605+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-20
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+ABOUT THE TEAM 
+
+
+
+In our Professional and Financial Services Business unit, we bring everything we have learned in more than a decade of Applied AI, and use it to help our clients navigate a rapidly changing landscape.
+
+
+We develop and embed AI solutions which help financial institutions become more efficient, enhance customer experience, and find the commercial upside in uncertain markets. Within the constraints of a highly regulated industry, we see so much opportunity for impactful innovation and are proud to set the gold-standard for marrying technical excellence with safe deployment.
+
+
+
+
+ABOUT THE ROLE
+
+
+
+As a Principal Machine Learning Engineer, you will serve as a high-level technical authority, steering our most complex projects and driving the next wave of AI innovation. You will architect scalable, large-scale systems that integrate seamlessly into existing frameworks while setting the technical direction for Faculty’s flagship initiatives. 
+
+
+
+By leveraging your deep expertise, you will provide authoritative advice across business units, fostering team growth and influencing company strategy to ensure our solutions remain at the cutting edge of the industry.
+
+ 
+
+
+
+
+WHAT YOU'LL BE DOING
+
+
+
+ - Architecting sophisticated software and data science frameworks for large-scale, complex systems that meet rigorous functional and non-functional requirements.
+
+ - Designing integrated system architectures that scale effectively and align with broader organisational and technical standards.
+
+ - Solving intricate technical challenges that span multiple projects or business units, acting as a respected expert for both internal teams and external customers.
+
+ - Setting the strategic technical direction for flagship projects, providing the vision and guidance necessary to ensure successful delivery.
+
+ - Influencing company-wide technical strategy by leveraging deep domain expertise in machine learning and advanced statistics.
+
+ - Advising major initiatives as a technical authority, ensuring that architectural choices are robust, sustainable, and innovative.
+
+
+
+
+WHO WE'RE LOOKING FOR
+
+
+
+ - You are a recognised technical authority with extensive experience in machine learning, statistics, and advanced data science methodologies with a specific focus on solutions the Financial Services space 
+
+ - You possess a proven track record of defining software architecture and designing complex systems that thrive within existing organisational frameworks.
+
+ - You are a natural problem-solver who can navigate challenges across diverse projects and provide authoritative guidance on major initiatives.
+
+ - You have the strategic mindset required to set the technical pulse for high-impact projects and contribute meaningfully to long-term company goals.
+
+ - You excel at communicating complex technical concepts to both peers and customers, earning trust through expertise and clear architectural leadership.
+
+ - You thrive in an entrepreneurial environment, balancing hands-on system design with the ability to direct others toward technical excellence.
+
+
+
+
+OUR INTERVIEW PROCESS
+
+
+
+ 1. Talent Team Screen (30 minutes)
+
+ 2. Introduction to the role (45 minutes) 
+
+ 3. Pair Programming Interview (90 minutes) 
+
+ 4. System Design Interview (90 minutes) 
+
+ 5. Commercial & Leadership Interview  (60 minutes)
+
+
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

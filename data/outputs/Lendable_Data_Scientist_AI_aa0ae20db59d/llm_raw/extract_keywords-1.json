@@ -1,0 +1,42 @@
+```json
+{
+  "required": [
+    "chatbot",
+    "LLMs",
+    "Python development",
+    "production systems",
+    "prompt design",
+    "retrieval pipelines",
+    "agent workflows",
+    "evaluation",
+    "document extraction pipelines",
+    "LLM-driven workflows",
+    "automation",
+    "business processes",
+    "trade-offs",
+    "stakeholders"
+  ],
+  "preferred": [
+    "AI document parsers",
+    "voice AI",
+    "case management",
+    "Python development",
+    "LLMs in real workflows",
+    "design and improving prompts",
+    "retrieval pipelines",
+    "agent workflows",
+    "evaluation",
+    "automation"
+  ],
+  "context_terms": [
+    "small teams",
+    "in-house",
+    "loose defined problems",
+    "fast deployment",
+    "UK",
+    "US"
+  ],
+  "company_hook": "Lendable builds technology that helps people get credit and save money, operating as a leading fintech company in the UK and US.",
+  "team": ""
+}
+```

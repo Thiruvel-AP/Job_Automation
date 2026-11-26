@@ -1,0 +1,50 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    Bristol, UK \\
+    \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \ $|$ \ +44 7741 016954 \\
+\href{https://www.linkedin.com/in/thiruvel-a-p/}{LinkedIn} \ $|$ \ \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{Portfolio}
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Dear Chattermill hiring team,
+
+Brands like Uber and Amazon need to turn every comment into action. In my work I built NLP and agentic RAG workflows that turn raw text into actionable insights.
+
+I built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+
+I created an XGBoost churn classifier in R using tidymodels, a two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation.
+
+Could we schedule a brief call so I can walk you through how these techniques could help your platform turn feedback into next actions?
+
+\vspace{0.5cm}
+
+With regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

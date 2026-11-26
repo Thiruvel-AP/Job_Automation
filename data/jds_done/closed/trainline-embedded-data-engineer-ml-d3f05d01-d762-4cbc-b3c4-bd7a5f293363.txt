@@ -1,0 +1,88 @@
+Company: Trainline
+Title: Embedded Data Engineer - ML
+URL: https://jobs.ashbyhq.com/trainline/d3f05d01-d762-4cbc-b3c4-bd7a5f293363
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-09-09T08:36:32.715+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+About us
+
+At Trainline, our purpose is to empower greener travel choices, connecting people and places. https://www.thetrainline.com/terms/sustainability-faqs Trainline enables millions of travellers to find and book the best value tickets across carriers, fares, and journey options through our highly rated mobile app, website, and B2B partner channels. 
+
+Great journeys start with Trainline 🚄 
+
+We’re Europe’s leading independent rail platform, helping millions of travellers find and book the best-value rail and coach journeys across our app, website and partner channels.
+
+Our job is to make the green travel choice the best choice. By building a better train travel experience, we help more people choose rail - creating a positive impact for customers, our business and the planet.
+
+We’re a team of more than 1,000 Trainliners from over 50 nationalities, working across London, Paris, Barcelona, Milan, Edinburgh and Madrid. Now is a brilliant time to join us and help shape the future of travel.
+
+
+
+Introducing the Embedded Data Engineering in ML Team 👋
+
+At the heart of our Data and ML teams, embedded Data Engineers create the pipelines and tables that power business critical dashboards, enable self-service analytics, and fuel advanced machine learning models and real-time data products. Working with tools like DBT, Spark, and Airflow, you'll transform high volume raw event data into user-friendly, high impact datasets that support machine learning use cases across the business.
+
+As an Embedded Data Engineer in ML, you'll sit within the Machine Learning team, working day to day with Machine Learning Engineers and Data Scientists to build reliable datasets for ML use cases. You'll also have access to Trainline's wider Data Engineering, Data Platform, and analytics community, working alongside other embedded Data Engineers in ML, including senior and principal engineers.
+
+
+
+In this role as the Embedded Data Engineer (ML), you will...🚄
+
+ - Design and build scalable data pipelines, data models, and feature stores that support analytics and machine learning workloads within the ML domain.
+
+ - Deploy and maintain cloud-native data applications on AWS, using CI/CD pipelines to automate builds, testing, and releases.
+
+ - Maintain the technical quality, performance, and reliability of production data pipelines through strong observability and engineering best practices.
+
+ - Collaborate closely with Machine Learning Engineers and Data Scientists to build reliable, well-structured datasets that power ML use cases.
+
+ - Work with the wider Data Engineering, Data Platform, and analytics community to share knowledge and align on best practices across teams.
+
+
+
+We'd love to hear from you if you have...🔍
+
+ - Working knowledge of Python and SQL.
+
+ - Experience building data pipelines for downstream machine learning workloads, including feature engineering and model training workflows.
+
+ - Comfort with data modelling and building efficient data marts and warehouses in the cloud.
+
+ - Experience building data pipelines using tools such as Spark and Airflow, or similar technologies, within a cloud environment such as AWS.
+
+ - Familiarity with both real-time and batch data workloads, along with modern data transformation and orchestration patterns.
+
+ - Ideally, you may also have experience with parallel or distributed training frameworks such as Ray, or with modern data formats such as Parquet and Iceberg.
+
+ - It would also be helpful if you have some experience with Infrastructure as Code (Terraform) and containerisation (Docker) to support automated, standardised deployments.
+
+ - You may also have contributed to or maintained CI/CD pipelines (such as Jenkins or GitHub Actions) as part of production grade data systems, and enjoy solving complex data problems collaboratively.
+
+
+
+More information:
+
+Enjoy fantastic perks like private healthcare & dental insurance, a generous work from abroad policy, 2-for-1 share purchase plans, an EV Scheme to further reduce carbon emissions, extra festive time off, and excellent family-friendly benefits. 
+
+We prioritise career growth with clear career paths, transparent pay bands, personal learning budgets, and regular learning days. Jump on board and supercharge your career from day one! 
+
+We're operating a hybrid model and ask that Trainliners work from the office a minimum of 60% of their time over a 12-week period. We also have a 28-day Work from Abroad policy.
+
+Our values represent the things that matter most to us and what we live and breathe everyday, in everything we do: 
+
+ - 💭 Think Big - We're building the future of rail 
+
+ - ✔️ Own It - We focus on every customer, partner and journey 
+
+ - 🤝  Travel Together - We're one team 
+
+ - ♻️ Do Good - We make a positive impact 
+
+We know that having a diverse team makes us better and helps us succeed. And we mean all forms of diversity - gender, ethnicity, sexuality, disability, nationality and diversity of thought. That's why we're committed to creating inclusive places to work, where everyone belongs and differences are valued and celebrated.
+
+Interested in finding out more about what it's like to work at Trainline? Why not check us out on LinkedIn https://www.linkedin.com/company/trainline/, Instagram https://www.instagram.com/lifeattrainline/ and Glassdoor https://www.glassdoor.co.uk/Overview/Working-at-Trainline-EI_IE249203.11,20.htm!

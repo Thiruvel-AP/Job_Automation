@@ -1,0 +1,153 @@
+Company: Wayve
+Title: Senior Software Engineer, Data - AI Portal
+URL: https://jobs.ashbyhq.com/wayve/3ef8fd28-0831-44b8-b3db-deb18882aeec
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-06T07:52:32.283+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-29
+Listed: yes
+
+Before the detail, here's the challenge you'd help us solve.
+
+
+
+We build the embodied intelligence that moves real vehicles safely, and the ecosystem a billion machines will run on in the future. Very few people in AI can say this. Every role here, whatever the team, plugs into that.
+
+
+
+Here’s what this particular role covers.
+
+
+
+🛠️ ABOUT OUR PORTAL TEAM
+
+Portal is the cloud platform that connects Wayve to the outside world: enabling data exchange with partners, surfacing AI insights and supporting the commercial deployment of our AI Driver in vehicles around the globe.
+
+As a Senior Software Engineer, Data, you’ll join a small, high-autonomy team building Wayve’s Data Transfer Hub—mission-critical infrastructure designed to transfer petabytes of sensor data per day from global partners. Working with partners such as Uber, Stellantis and Nissan, you’ll help build the data foundations that make AI model training possible at scale.
+
+
+
+🧠 YOUR DAY-TO-DAY
+
+ - Build and operate large-scale pipelines that transfer video, LiDAR and other sensor data from global partners.
+
+ - Shape the technical design of the Data Transfer Hub, making pragmatic trade-offs across user experience, reliability, throughput, cost, partner constraints, observability and operational support.
+
+ - Write pipeline logic primarily in Python and manage infrastructure as code with Terraform.
+
+ - Work closely with product, commercial and partner-facing teams to understand constraints and solve real customer and partner problems.
+
+ - Take ownership of production systems, maintaining high engineering standards as requirements and partner delivery timelines evolve.
+
+ - Once the service is established, participate in an out-of-hours on-call and support rotation.
+   
+
+
+🧩 WHAT YOU’LL BE WORKING ON:
+
+ - A globally distributed Data Transfer Hub: implement and evolve a hub-and-spoke model for retrieving and sharing sensor data with partners at up to petabyte-per-day scale.
+
+ - Parallelised, distributed transfer pipelines: use Flyte for workflow orchestration, Kafka and event-driven patterns for lifecycle tracing, and Azure for storage and transfer infrastructure.
+
+ - Reliable, observable operations: build retry strategies, backfills, data integrity checks, lifecycle and state tracking, dashboards and alerting.
+
+ - Cloud-to-cloud and cross-cloud connectivity: develop networking and large-scale file-transfer solutions, with Azure as the primary cloud platform.
+
+ - Performance and efficiency at scale: improve throughput, reliability and cost efficiency while accommodating different partner environments and constraints.
+   
+
+
+🙌 YOU SHOULD APPLY IF:
+
+ - You’ve built and operated large-scale data transfer, ingestion or processing pipelines, ideally at multi-terabyte or petabyte scale.
+
+ - You have strong software engineering skills and experience delivering and maintaining production systems.
+
+ - You’re proficient in Python and Terraform.
+
+ - You’ve used workflow orchestration to run parallelised jobs. Flyte is preferred, but experience with Airflow, Prefect or similar tools is also relevant.
+
+ - You know how to build reliable, observable data systems, including retries, backfills, integrity checks, lifecycle and state tracking, and operational alerting.
+
+ - You have strong cloud platform skills, ideally with Azure, and experience with object or blob storage, large-scale file movement, networking or cloud-to-cloud transfers.
+
+ - You bring a product mindset: you focus on customer needs and build solutions that address real problems, rather than simply implementing requirements.
+
+ - You’re comfortable with evolving requirements and take ownership of outcomes, communicate clearly and help your team move quickly.
+
+It’s a bonus if you also have:
+
+ - Experience working with external data partners or building customer-facing technical integrations.
+
+ - A background in autonomous vehicles, robotics, geospatial data, video processing or another data-intensive domain.
+
+ - Experience with Kafka or other event-driven systems for transfer observability and lifecycle tracking, or dashboards that communicate transfer job status.
+
+ - Multi-cloud experience across Azure, AWS and/or GCP.
+
+ - Experience improving the cost efficiency, throughput or reliability of large-scale cloud data systems.
+
+🌱 Not ticking every box? That’s totally okay! If you’re passionate about autonomy and keen to learn, we encourage you to apply even if you don’t meet every requirement.
+
+
+
+MORE ABOUT WAYVE:
+
+🚀 Wayve is building the leading AI platform for autonomous driving. We are pioneering an end-to-end AI approach that enables vehicles to learn directly from real-world experience, developing the ability to adapt, generalise and improve at scale. Instead of relying on hand-coded rules or pre-mapped environments, our AI Driver learns to drive by understanding the world around it. The result is technology that navigates complex urban environments with intelligence, precision and natural flow, unlocking meaningful advances in both safety and efficiency. We believe autonomy represents a once-in-a-generation transformation in how people and goods move, comparable to the shift from horses to cars, and from human-driven vehicles to intelligent machines.
+
+Our ambition is to make autonomy universal. Wayve’s mapless and hardware-agnostic AI platform integrates with global OEM partners, enabling continuous software evolution and unlocking advanced levels of automation from L2+ through to L4 as our core AI model scales. In a race increasingly defined by intelligence and real-world learning, Wayve is taking a distinct approach, building a generalisable driving intelligence that can power any vehicle, anywhere. By combining embodied AI with scalable deployment, we are creating technology that can be shaped to each OEM brand and driver experience, accelerating the transition to a safer, more intelligent future of mobility.
+
+
+
+HOW WE WORK 💻 — LOCATIONS & FLEXIBLE WORKING:
+
+Our main hubs are in London, Sunnyvale, Yokohama, Herzliya, Vancouver and Leonberg. We operate a hybrid working model that combines in-person collaboration in our dedicated office spaces with focused time working remotely. This gives our teams the connection and energy of working together, alongside the flexibility to do their best work in a way that fits their lives.
+
+
+
+🔍 THE INTERVIEW PROCESS:
+
+Our process is clear and respectful of your time:
+
+ - Initial call / recruiter screen (30 minutes).
+
+ - Competency interviews (programming and hiring manager interview; 2 hours total).
+
+ - Deep-dive technical interviews (programming, systems and domain-specific interviews; 3 hours total).
+
+ - Final interview: mission and values alignment (1 hour).
+
+We’ll always explain the format and work around your availability.
+
+
+
+WHAT’S IN IT FOR YOU (LOCATION-DEPENDENT):
+
+ - 💰 Salaries benchmarked against the market annually.
+
+ - 📈 Meaningful equity, sharing in the ownership and long-term success of Wayve.
+
+ - ✈️ Relocation support and visa sponsorship where applicable.
+
+ - ✅ Hybrid working, core hours and the chance to work hands-on in vehicle workshops and labs.
+
+ - 📚 Learning and development budgets, with support for training, conferences and growth.
+
+ - 🩺 Comprehensive benefits including health insurance, dental, enhanced maternity and paternity leave, retirement or pension where applicable, access to therapists, wellbeing partnerships, team socials and more.
+
+A quick, honest note before you apply.
+
+Wayve is not a mature, fully-structured place with the playbook already written. Much of how we work is still being written, and if you join, you’ll help write it. That suits people who want real ownership more than people who need a settled structure from day one.
+
+
+
+If that sounds like the kind of problem you want to spend your time on, we’d really like to hear from you.
+
+At Wayve we're committed to creating a diverse, fair and respectful culture that is inclusive of everyone based on their unique skills and perspectives, and regardless of sex, race, religion or belief, ethnic or national origin, disability, age, citizenship, marital, domestic or civil partnership status, sexual orientation, gender identity, veteran status, pregnancy or related condition (including breastfeeding) or any other basis as protected by applicable law.
+
+
+For more information visit Careers at Wayve. https://wayve.ai/careers/ To learn more about what drives us, visit Values at Wayve https://wayve.ai/careers/
+
+DISCLAIMER: We will not ask about marriage or pregnancy, care responsibilities or disabilities in any of our job adverts or interviews. However, we do look to capture information about care responsibilities, and disabilities among other diversity information as part of an optional DEI Monitoring form to help us identify areas of improvement in our hiring process and ensure that the process is inclusive and non-discriminatory.

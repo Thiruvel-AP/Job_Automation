@@ -1,0 +1,98 @@
+Company: Graphcore
+Title: Staff Data Analyst
+URL: https://job-boards.greenhouse.io/graphcore/jobs/8816382002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Bristol, UK
+Posted: 2026-09-17T09:52:40-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+About us 
+
+Graphcore is one of the world’s leading innovators in Artificial Intelligence compute. It is developing hardware, software and systems infrastructure that will unlock the next generation of AI breakthroughs and power the widespread adoption of AI solutions across every industry. 
+
+As part of the SoftBank Group, Graphcore is a member of a family of companies responsible for some of the world’s most transformative technologies. Together, they share a bold vision: to enable Artificial Super Intelligence and ensure its benefits are accessible to everyone. 
+
+Graphcore’s teams are drawn from diverse backgrounds and bring a broad range of skills and perspectives. We bring together specialists across AI research, silicon design, software engineering and systems to solve complex problems and deliver meaningful impact. 
+
+Job Summary 
+
+Initially reporting to the Head of Data & Transformation, you will help business teams improve how they work and make decisions through process change, data analytics and AI-assisted and agentic workflows. Working closely with the Data Enablement Lead, you will independently lead complex, agreed initiatives from discovery and process mapping through requirements definition, hands-on analysis, prototyping, implementation and adoption. You will help teams find and use trusted data, embed analytics and agentic workflows into everyday activities, and achieve measurable improvements in business outcomes. 
+
+The Team 
+
+The Data & Transformation team brings together data capability and business transformation to improve how Graphcore operates and makes decisions. The team builds trusted data foundations, enables effective access to information and delivers cross-functional change to business processes, systems and ways of working. 
+
+You will partner directly with business teams, the Data Enablement Lead, Analytics Engineers and Project Managers. The Data Enablement Lead owns the overall data enablement approach, opportunity pipeline and shared solution standards. You will own end-to-end delivery of agreed initiatives within those approaches and standards, contributing new opportunities and improvements through practical delivery experience. 
+
+Responsibilities and Duties 
+
+- Lead business discovery and identify opportunities. Facilitate workshops to understand business objectives, information needs, current ways of working and underlying problems. Identify recurring needs and bring evidence-based opportunities to the Data Enablement Lead, considering business value, feasibility, risk and potential for reuse across teams. 
+
+- Map and improve processes. Document current-state and future-state processes, including activities, decisions, ownership, handovers, controls, systems and data flows. Identify opportunities to simplify workflows, reduce manual effort and improve the quality and timeliness of decisions. 
+
+- Own requirements definition. Translate business needs into clear, prioritised requirements, business rules, user stories and acceptance criteria. Build agreement with stakeholders and maintain traceability between the original need, proposed changes, delivered functionality and intended outcomes. 
+
+- Deliver hands-on analytics. Use SQL to explore organisational and warehouse data, test hypotheses, investigate discrepancies and identify patterns or causes of operational problems. Build and validate repeatable analyses, reports, dashboards and measures that support business decisions, communicating findings and data limitations clearly. 
+
+- Enable agentic self-service data use. Work with the Data Enablement Lead and Analytics Engineers to translate business questions and process needs into practical self-service data experiences. Help users discover data, ask questions, interpret trusted metrics and act on results. Validate that analytical and agentic interactions use agreed business definitions and meet user needs. 
+
+- Recommend practical solution approaches. Assess whether a need is best addressed through process changes, self-service analytics, existing tools, conventional automation or agentic workflows. Work with the Data Enablement Lead and technical colleagues to balance business value, usability, complexity, risk, implementation effort and ongoing support. 
+
+- Design agentic workflows. Map how users, agents, systems and data should interact, using agreed solution patterns and access controls. Define business rules, proposed agent actions, human approval points, exception handling and fallback processes. Work with the Data Enablement Lead and technical colleagues on decisions affecting shared architecture or controls. 
+
+- Prototype, evaluate and validate solutions. Use AI-assisted development tools to develop and iterate analytical and agentic workflow prototypes, reviewing generated code and outputs against agreed quality standards. Work with technical colleagues to test realistic business scenarios, outputs, actions and failure cases. Coordinate user acceptance testing and validate solutions against agreed requirements. 
+
+- Use trusted data and appropriate controls. Partner with Analytics Engineers to define data requirements, clarify metric definitions and resolve data-quality issues. Apply agreed expectations for data access, sensitive information handling, documentation and traceability of automated actions. 
+
+- Own delivery of agreed initiatives. Develop practical delivery plans, coordinate business and technical contributions, and manage scope, priorities, dependencies and risks. Make evidence-based decisions within your remit, working with your line manager and the Data Enablement Lead to resolve wider prioritisation or design decisions. 
+
+- Support implementation and adoption. Help business teams introduce new processes and incorporate analytics and agentic workflows into daily activities. Clarify ownership, provide guidance and training, support operational handover and help users understand appropriate use, limitations and escalation routes. 
+
+- Measure outcomes and improve reliability. Agree success measures and establish baselines with business stakeholders. Review adoption, analytical accuracy, workflow reliability and business outcomes after implementation. Use evidence and user feedback to improve solutions and address unintended results. 
+
+- Strengthen shared capability. Contribute reusable analytical methods, process-mapping approaches, workflow patterns and testing practices. Provide constructive peer review, coaching and practical guidance to help colleagues and business users develop their skills and confidence. 
+
+Candidate Profile 
+
+Essential 
+
+- Demonstrated experience combining hands-on data analysis with business process improvement, taking complex initiatives from problem definition through delivery, implementation and adoption. 
+
+- Strong SQL skills, including the ability to explore analytical or warehouse data, investigate discrepancies, validate assumptions and assess data quality. 
+
+- Strong business analysis skills, including stakeholder discovery, current-state and future-state process mapping, requirements definition, business rules and acceptance criteria. 
+
+- Hands-on experience prototyping or evaluating AI-assisted or agentic workflows using business data, including testing outputs and actions, identifying failure cases and defining appropriate human oversight. 
+
+- Experience using AI-assisted development tools for prototyping, analysis or technical problem-solving, with the ability to critically review generated code and outputs. 
+
+- Experience using business intelligence or data visualisation tools to develop practical analyses, reports or dashboards, supported by clearly defined and reliable measures. 
+
+- Strong analytical judgement and problem-solving skills, including the ability to identify underlying causes, evaluate solution options and recognise when a simpler approach is more appropriate. 
+
+- Strong facilitation, communication and influencing skills, including the ability to lead workshops, explain complex concepts to non-technical audiences and build agreement without relying on formal authority. 
+
+- Ability to independently plan and lead complex work, coordinate contributions across business and technical teams, manage competing priorities and make pragmatic delivery decisions. 
+
+- Experience testing and validating solutions, documenting changes and supporting users through implementation and adoption, with an understanding of appropriate data access and sensitive information handling. 
+
+Desirable 
+
+- Experience implementing and supporting agentic workflows in production, including monitoring reliability, managing exceptions and supporting user adoption. 
+
+- Experience using Python or comparable tools for repeatable analysis, workflow prototyping or lightweight automation. 
+
+- Familiarity with APIs, curated datasets, semantic-layer concepts and analytics engineering practices. 
+
+- Experience enabling self-service analytics or applying structured process improvement and change management methods. 
+
+- Experience working in a technology, engineering or fast-moving product environment. 
+
+Benefits
+
+In addition to a competitive salary, Graphcore offers flexible working, a generous annual leave policy, private medical insurance and health cash plan, a dental plan, pension (matched up to 5%), life assurance and income protection. We have a generous parental leave policy and an employee assistance programme (which includes health, mental wellbeing, and bereavement support). We offer a range of healthy food and snacks at our central Bristol office and have our own barista bar! We welcome people of different backgrounds and experiences; we’re committed to building an inclusive work environment that makes Graphcore a great home for everyone. We offer an equal opportunity process and understand that there are visible and invisible differences in all of us. We can provide a flexible approach to interview and encourage you to chat to us if you require any reasonable adjustments.
+
+Applicants for this position must hold the right to work in the UK. Unfortunately at this time, we are unable to provide visa sponsorship or support for visa applications

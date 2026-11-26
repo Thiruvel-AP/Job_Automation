@@ -1,0 +1,501 @@
+{
+  "coverage": 0.3,
+  "requirements": [
+    {
+      "term": "deal scoring",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "A/B testing",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "business experimentation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "classification",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "classification",
+          "snippet": "Built repeatable…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "classification",
+          "snippet": "Showed why airline support…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ch1",
+          "quote": "classification",
+          "snippet": "Predicted which bank…",
+          "via": "classification"
+        }
+      ]
+    },
+    {
+      "term": "clustering",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az8",
+          "quote": "clustering",
+          "snippet": "Studied graph neural…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "clustering",
+          "snippet": "Linked 14 public…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "clustering",
+          "snippet": "Built the text-cleaning…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "clustering",
+          "snippet": "Showed why airline support…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "clustering",
+          "snippet": "Ran a data quality check…",
+          "via": "clustering"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "clustering",
+          "snippet": "Leiden clustering",
+          "via": "clustering"
+        }
+      ]
+    },
+    {
+      "term": "cost data",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "customer segmentation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "customer segmentation",
+          "snippet": "customer segmentation (k-means, HAC, DBSCAN)",
+          "via": "customer segmentation"
+        }
+      ]
+    },
+    {
+      "term": "dashboards",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "historical pricing",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "machine learning models",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "margin prediction",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "pilot deployments",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Power BI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "pricing optimisation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "prioritisation models",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "Python"
+        }
+      ]
+    },
+    {
+      "term": "regression",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "regression",
+          "snippet": "Built repeatable…",
+          "via": "regression"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "regression",
+          "snippet": "Linked 14 public…",
+          "via": "regression"
+        }
+      ]
+    },
+    {
+      "term": "scikit-learn",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "scikit-learn",
+          "snippet": "For a private client,…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "scikit-learn",
+          "snippet": "Built repeatable…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "scikit-learn",
+          "snippet": "Linked 14 public…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "scikit-learn",
+          "snippet": "Built the text-cleaning…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "scikit-learn",
+          "snippet": "Showed why airline support…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        }
+      ]
+    },
+    {
+      "term": "SQL",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "SQL"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "SQL"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "SQL",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "SQL"
+        }
+      ]
+    },
+    {
+      "term": "statistical methods",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "supervised/unsupervised learning",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Tableau",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Tableau",
+          "snippet": "Tableau",
+          "via": "Tableau"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "Tableau",
+          "snippet": "Tableau",
+          "via": "Tableau"
+        }
+      ]
+    },
+    {
+      "term": "TensorFlow",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "TensorFlow",
+          "snippet": "For a private client,…",
+          "via": "TensorFlow"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "TensorFlow",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "TensorFlow"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "TensorFlow",
+          "snippet": "TensorFlow",
+          "via": "TensorFlow"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "TensorFlow",
+          "snippet": "TensorFlow",
+          "via": "TensorFlow"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "TensorFlow",
+          "snippet": "TensorFlow Serving",
+          "via": "TensorFlow"
+        }
+      ]
+    },
+    {
+      "term": "time series forecasting",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "vendor incentive",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+Company: Lseg
+Title: Principal Machine Learning Engineer
+URL: https://lseg.wd3.myworkdayjobs.com/Careers/job/GBR-London-5-Canada-Square/Principal-Machine-Learning-Engineer_R0122412
+Source: workday
+Apply kind: workday
+Location: GBR-London-5 Canada Square; Nottingham, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+About Us:
+LSEG (London Stock Exchange Group) is more than a diversified global financial markets infrastructure and data business. We are dedicated, open-access partners with a dedication to excellence in delivering the services our customers expect from us. With extensive experience, deep knowledge and worldwide presence across financial markets, we enable businesses and economies around the world to fund innovation, manage risk and create jobs. It’s how we’ve contributed to supporting the financial stability and growth of communities and economies globally for more than 300 years. Through a comprehensive suite of trusted financial market infrastructure services – and our open-access model – we provide the flexibility, stability and trust that enable our customers to pursue their ambitions with confidence and clarity.
+
+LSEG is headquartered in the United Kingdom, with significant operations in 70 countries across EMEA, North America, Latin America and Asia Pacific. We employ 25,000 people globally, more than half located in Asia Pacific. LSEG’s ticker symbol is LSEG.
+
+Our People:
+People are at the heart of what we do and drive the success of our business. Our culture of connecting, creating opportunity and delivering excellence shape how we think, how we do things and how we help our people fulfil their potential. We embrace diversity and actively seek to attract individuals with unique backgrounds and perspectives. We break down barriers and encourage teamwork, enabling innovation and rapid development of solutions that make a difference. Our workplace generates an enriching and rewarding experience for our people and customers alike. Our vision is to build an inclusive culture in which everyone feels encouraged to fulfil their potential.
+
+We know that real personal growth cannot be achieved by simply climbing a career ladder – which is why we encourage and enable a wealth of avenues and interesting opportunities for everyone to broaden and deepen their skills and expertise. As a global organisation spanning 70 countries and one rooted in a culture of growth, opportunity, diversity and innovation, LSEG is a place where everyone can grow, develop and fulfil your potential with meaningful careers.
+
+The Role:
+We are seeking a Principal Machine Learning Engineer (SageMaker, MLOps, Model Governance & Explainability) to provide technical leadership across the full lifecycle of machine learning systems powering a new matching platform. This role is accountable for defining ML architecture, establishing engineering standards, driving MLOps maturity, and ensuring that our models are scalable, secure, explainable, and governed to enterprise‑grade standards.
+You will contribute to the strategic direction of our ML platform—spanning data pipelines, model development, deployment automation, inference runtime design, telemetry, drift detection, and cross‑account productionisation. You will mentor engineers, influence product and architectural decisions, and ensure that our ML systems operate reliably at scale, underpinned by a robust governance and compliance framework.
+This is a highly hands‑on, highly technical, principal‑level role that combines architectural vision with deep practical expertise in ML engineering and AWS-native MLOps.
+
+Key Responsibilities
+
+Technical Leadership & Architecture
+
+- 
+Define the end‑to‑end ML architecture for the matching platform, including data pipelines, model training workflows, inference runtimes, and telemetry ecosystems.
+- 
+Lead adoption of best‑in‑class MLOps patterns, platform tooling, and AWS SageMaker capabilities across training, processing, registry, monitoring, and deployment.
+- 
+Partner with platform, security, and data engineering teams to implement scalable data lakehouse oriented feature architecture and enterprise‑grade ML governance.
+- 
+Champion engineering standards for model quality, documentation, observability, and platform resilience.
+
+Feature Engineering & Data Architecture
+
+- 
+Architect highly scalable, production‑ready feature pipelines within Lakehouse environments.
+- 
+Set the technical direction for fallback and resilience strategies (e.g., fallback pipelines).
+- 
+Establish and enforce data‑quality guardrails, validation schemas, and monitoring frameworks.
+- 
+Drive adoption and standards for enterprise feature stores.
+
+Model Development & Technical Excellence
+
+- 
+Lead the design of ranking, scoring, and similarity models tailored to the matching platform requirements.
+- 
+Define model calibration, scoring logic, confidence thresholds, and optimisation strategies.
+- 
+Mentor teams on advanced ML techniques using Model frameworks such as PyTorch, TensorFlow, and XGBoost.
+- 
+Review and approve technical designs for complex modeling workflows.
+- 
+
+Explainability & Regulatory-Grade Reasoning
+
+- 
+Establish explainability standards across the ML stack, using SHAP or equivalent frameworks.
+- 
+Define patterns to generate regulator‑ready reason codes, aligned with compliance requirements.
+- 
+Ensure explainability artefacts are accurate, robust, and traceable across model versions.
+
+ML Deployment & Automation (MLOps)
+
+- 
+Architect automated training, deployment, and retraining pipelines using AWS SageMaker.
+- 
+Set standards for model registry usage, automated approvals, and rollback orchestration.
+- 
+Drive infrastructure-as-code and CI/CD maturity for ML systems across multiple environments.
+- 
+Lead design of enterprise‑wide weight‑update patterns and lineage‑aware deployment strategies.
+
+Inference Runtime & Cross‑Account Productionisation
+
+- 
+Architect low‑latency, high‑throughput inference services that meet strict matching platform SLAs.
+- 
+Lead the design of secure cross‑account IAM patterns for model consumption.
+- 
+Own end‑to‑end telemetry design, including scoring metrics, latency, error analytics, and SLOs.
+- 
+Partner with platform teams to optimise cost, scale, and reliability of inference endpoints.
+
+Monitoring, Drift Detection & Observability
+
+- 
+Define observability standards for feature drift, concept drift, performance degradation, and data integrity.
+- 
+Lead the creation of dashboards, benchmarks, and automated alerting across the ML ecosystem.
+- 
+Ensure telemetry pipelines adhere to privacy, data minimisation, and compliance policies.
+- 
+Drive adoption of proactive failover, shadow-mode testing, and continuous validation patterns.
+
+Security, Compliance & ML Governance
+
+- 
+Set and enforce ML-specific security standards including data minimisation, encryption, and PII handling.
+- 
+Oversee creation of Model Cards, lineage artefacts, and compliance documentation.
+- 
+Ensure ML systems meet governance standards for auditability, reproducibility, versioning, and traceability.
+- 
+Collaborate with InfoSec and Risk teams to define ML governance frameworks and secure cross‑environment workflows.
+
+Testing, Validation & Performance Engineering
+
+- 
+Lead validation strategies using golden datasets, behavioural tests, and benchmark suites.
+- 
+Architect performance testing for latency‑sensitive inference paths and model hot paths.
+- 
+Establish standards for A/B testing, shadow deployments, canary rollouts, and controlled experiments.
+
+Principal-Level Skills & Experience
+Essential
+
+- 
+Proven track record architecting and delivering production ML systems at scale in enterprise environments.
+- 
+Deep expertise with AWS SageMaker (training, processing, pipelines, endpoints, registry) and complementary AWS services.
+- 
+Expert-level Python and ML Model frameworks (e.g. PyTorch, TensorFlow, XGBoost).
+- 
+Strong thought leadership in MLOps automation, CI/CD for ML, and model lifecycle management.
+- 
+Advanced experience designing explainability systems, reason codes, and governance artefacts.
+- 
+Expertise in low‑latency inference architectures and real-time model serving.
+- 
+Strong grounding in drift detection, telemetry pipelines, observability patterns, and model QA.
+- 
+Experience shaping ML security practices, including cross‑account IAM, data minimisation, and PII-safe design.
+- 
+Ability to influence architecture, mentor senior engineers, and set long-term technical direction.
+
+Nice to Have
+
+- 
+Experience building or leading feature store adoption.
+- 
+Background in ranking, search relevance, entity matching, or similarity modelling.
+- 
+Experience designing or governing multi‑account AWS ML platforms.
+- 
+Knowledge of distributed training, GPU/accelerator optimisation, and scaling strategies.
+- 
+Bachelors in a STEM subject, e.g. mathematics, physics, engineering, computer science, or adjacent degrees.
+- 
+Masters or PhD or equivalent experience in STEM desirable but not essential
+
+Career Stage:Manager
+
+London Stock Exchange Group (LSEG) Information:
+Join us and be part of a team that values innovation, quality, and continuous improvement. If you're ready to take your career to the next level and make a significant impact, we'd love to hear from you.
+
+LSEG is a leading global financial markets infrastructure and data provider. Our purpose is driving financial stability, empowering economies and enabling customers to create sustainable growth.
+
+Our purpose is the foundation on which our culture is built. Our values of Integrity, Partnership, Excellence and Change underpin our purpose and set the standard for everything we do, every day. They go to the heart of who we are and guide our decision making and everyday actions.
+
+Working with us means that you will be part of a dynamic organisation of 25,000 people across 65 countries. However, we will value your individuality and enable you to bring your true self to work so you can help enrich our diverse workforce.
+
+We are proud to be an equal opportunities employer. This means that we do not discriminate on the basis of anyone’s race, religion, colour, national origin, gender, sexual orientation, gender identity, gender expression, age, marital status, veteran status, pregnancy or disability, or any other basis protected under applicable law. Conforming with applicable law, we can reasonably accommodate applicants' and employees' religious practices and beliefs, as well as mental health or physical disability needs.
+
+You will be part of a collaborative and creative culture where we encourage new ideas. We are committed to sustainability across our global business and we are proud to partner with our customers to help them meet their sustainability objectives. Our charity, the LSEG Foundation provides charitable grants to community groups that help people access economic opportunities and build a secure future with financial independence. Colleagues can get involved through fundraising and volunteering.
+
+LSEG offers a range of tailored benefits and support, including healthcare, retirement planning, paid volunteering days and wellbeing initiatives.
+
+Please take a moment to read this privacy notice carefully, as it describes what personal information London Stock Exchange Group (LSEG) (we) may hold about you, what it’s used for, and how it’s obtained, your rights and how to contact us as a data subject. 
+
+If you are submitting as a Recruitment Agency Partner, it is essential and your responsibility to ensure that candidates applying to LSEG are aware of this privacy notice.

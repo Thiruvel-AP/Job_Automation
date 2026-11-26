@@ -1,0 +1,72 @@
+Company: Prolific
+Title: Senior Data Analyst - Supply
+URL: https://job-boards.eu.greenhouse.io/prolific/jobs/4931989101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-07-30T08:40:29-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-21
+Listed: yes
+
+Senior Data Analyst 
+
+Prolific
+
+Prolific is not just another player in the AI space—we are the architects of the human data infrastructure that's reshaping the landscape of AI development. In a world where foundational AI technologies are increasingly commoditized, it's the quality and diversity of human-generated data that truly differentiates products and models.
+
+The role
+
+As Prolific scales, maintaining a healthy and sustainable participant marketplace will be critical to our ability to meet growing demand for high-quality human data. We are looking for a Senior Data Analyst who can independently drive strategic marketplace analytics and act as an end-to-end partner across product, operations, and leadership.
+
+What you’ll bring to the role
+
+- Senior Analytics Expertise: Advanced SQL and strong Python proficiency (e.g. pandas, experimentation analysis, automation), with a proven track record of architecting scalable reporting frameworks and data marts in modern BI tools (Metabase, Looker, Tableau, Hex). Demonstrated capability to independently own ambiguous problems end-to-end — from complex raw data to executive-ready strategic insights.
+
+- Lifecycle Analytics: Experience analysing user acquisition, onboarding, activation, engagement, retention, churn, and behavioural cohorts.
+
+- Experimentation & Statistics: Experience designing and analysing A/B or operational experiments, with solid grounding in statistical concepts and causal thinking.
+
+- Product Thinking: Ability to translate participant and marketplace challenges into measurable hypotheses, success metrics, and actionable recommendations.
+
+- Commercial Acumen: Strong ability to connect operational metrics to revenue, margin, and financial performance — understanding not just what is happening, but why it matters commercially.
+
+- Strategic Autonomy & Ownership: Exceptional ability to operate with high autonomy in a dynamic environment, independently setting priorities, challenging assumptions, framing complex problems, and driving strategic initiatives from initial hypothesis through execution.
+
+- Executive Leadership & Stakeholder Management: Proven track record of influencing senior leadership and cross-functional partners across Product, Operations, Commercial, and Finance functions, telling compelling data-driven stories that shape strategy.
+
+- Marketplace Understanding: Strong grasp of B2B and two-sided marketplace metrics and economics.
+
+- Clear Communication: Ability to translate complex analysis into concise, decision-ready insights that shape strategy and execution.
+
+What you'll be doing
+
+- Autonomously own analytics across the full participant lifecycle—from acquisition and onboarding through activation, engagement, quality, retention, and reactivation
+
+- Define and build strategic metrics, executive-facing dashboards, and robust experimentation frameworks that reveal participant behavior and optimize marketplace dynamics
+
+- Work closely with Product, Operations, Growth, Data Science, and Executive Leadership to identify growth drivers, structure complex experiments, and translate intricate marketplace data into high-impact strategic decisions
+
+- Work hands-on across SQL, Python, experimentation, and senior stakeholder leadership to drive alignment around participant health, marketplace liquidity, unit economics, and long-term supply sustainability
+
+Why Prolific is a great place to work
+
+We've built a unique platform that connects researchers and companies with a global pool of participants, enabling the collection of high-quality, ethically sourced human behavioral data and feedback. This data is the cornerstone of developing more accurate, nuanced, and aligned AI systems.
+
+We believe that the next leap in AI capabilities won't come solely from scaling existing models but from integrating diverse human perspectives and behaviors into AI development. By providing this crucial human data infrastructure, Prolific is positioning itself at the forefront of the next wave of AI innovation—one that reflects the breath and the best of humanity.
+
+Working for us will place you at the forefront of AI innovation, providing access to our unique human data platform and opportunities for groundbreaking research. Join us to enjoy a competitive salary, benefits, and remote working within our impactful, mission-driven culture.
+
+Links to more information on Prolific
+
+Benefits 
+
+External Handbook 
+
+Website 
+
+YouTube 
+
+Privacy Statement
+
+By submitting your application, you agree that Prolific may collect your personal data for recruiting and global organisation planning. Prolific's Candidate Privacy Notice explains what personal information Prolific may process, where Prolific may process your personal information, its purposes for processing your personal information, and the rights you can exercise over Prolific use of your personal information.

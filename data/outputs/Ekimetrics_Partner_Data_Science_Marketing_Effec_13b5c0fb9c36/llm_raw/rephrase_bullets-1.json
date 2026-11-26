@@ -1,0 +1,6 @@
+```json
+{
+  "p_ql3": "Reported evaluation limits: accuracy on completed answers barely moved (50% vs 52%), tracing out‑of‑memory errors to multiple models in one runtime, not the KV cache.",
+  "p_ql1": "Trained 0.52% of Llama 3.1 8B parameters with QLoRA (4‑bit, Unsloth, TRL) on a free 15 GB GPU, raising answer completion from 32% to 52% and exact‑answer accuracy from 16.2% to 27.3% (n=99)."
+}
+```

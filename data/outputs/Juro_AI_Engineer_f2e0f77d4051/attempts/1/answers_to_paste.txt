@@ -1,0 +1,40 @@
+Answers for Juro - AI Engineer
+Form: https://jobs.ashbyhq.com/juro/572a6fb9-7a31-455f-a701-ab6dd8598f66/application
+CV: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Juro_AI_Engineer_f2e0f77d4051/attempts/1/Thiruvel Andagurunathan Pandian CV - AI Engineer - Juro.pdf
+Cover letter: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Juro_AI_Engineer_f2e0f77d4051/attempts/1/Thiruvel Andagurunathan Pandian CoverLetter - AI Engineer - Juro.pdf
+
+1. Name *  [READY; applicant]
+Thiruvel Andagurunathan Pandian
+
+2. Preferred first name  [READY; applicant]
+Thiruvel
+
+3. Email *  [READY; applicant]
+apthiruvel@gmail.com
+
+4. Resume *  [READY; cv]
+Thiruvel Andagurunathan Pandian CV - AI Engineer - Juro.pdf
+
+5. Preferred pronouns  [BLANK; equal_opportunities]
+(you answer: not listed in equal_opportunities: left blank)
+
+6. How did you first hear about this role?  [READY; how-heard]
+Other
+
+7. What is your base salary expectation for this role? *  [READY; answers:salary_expectation]
+I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture of the role's full scope and responsibilities.
+
+8. Do you have the right to work long-term without visa sponsorship in the UK?  [READY; applicant:visa.by_country.GB]
+I have completed my MSc in Data Science at the University of Bristol and am moving onto the UK Graduate visa (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship and am flexible on how we arrange it.
+
+9. Are you based in the UK?  [BLANK; -]
+(you answer: no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it))
+
+10. Tell us about an AI or agent system you built and shipped at a company.  [READY; freetext (approved)]
+I built a tool-calling LLM agent for a multi-omics cancer research platform. The agent used LangChain, AWS Bedrock, and Claude Haiku 4.5 to provide gene alias resolution, scoring-methodology explanation, and dataset provenance. I added deterministic Ensembl and HGNC calls, hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when external APIs were unavailable. The system was validated with a ~65-test evaluation harness that examined tool-level, API, and live performance, and it was used to confirm a Groq to Bedrock migration. The agent was shipped to researchers who could trust it for critical analyses.
+
+11. Link we can look at:  [BLANK; -]
+(you answer: no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it))
+
+12. Anything else you want us to know?  [BLANK; freetext]
+(you answer: free-text question of no kind a draft can answer ('Anything else you want us to know?'): it is yours)

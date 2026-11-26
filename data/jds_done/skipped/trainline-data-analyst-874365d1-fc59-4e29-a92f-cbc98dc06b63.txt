@@ -1,0 +1,93 @@
+Company: Trainline
+Title: Data Analyst
+URL: https://jobs.ashbyhq.com/trainline/874365d1-fc59-4e29-a92f-cbc98dc06b63
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-09-30T16:09:29.075+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+About us
+
+At Trainline, our purpose is to empower greener travel choices, connecting people and places. https://www.thetrainline.com/terms/sustainability-faqs Trainline enables millions of travellers to find and book the best value tickets across carriers, fares, and journey options through our highly rated mobile app, website, and B2B partner channels. 
+
+Great journeys start with Trainline 🚄 
+
+We’re Europe’s leading independent rail platform, helping millions of travellers find and book the best-value rail and coach journeys across our app, website and partner channels.
+
+Our job is to make the green travel choice the best choice. By building a better train travel experience, we help more people choose rail - creating a positive impact for customers, our business and the planet.
+
+We’re a team of more than 1,000 Trainliners from over 50 nationalities, working across London, Paris, Barcelona, Milan, Edinburgh and Madrid. Now is a brilliant time to join us and help shape the future of travel.
+
+Introducing the Trainline Partner Solutions Data Analytics Team 👋
+Data Analytics is central to how we build better products, support our partners and grow our business. Our Data Analysts are embedded across cross-functional teams spanning product, commercial and industry initiatives, working closely with Product Managers, Software Engineers, Commercial teams, Embedded Data Scientists and the wider Data organisation to enable confident, evidence-based decision making. As a Data Analyst within Enterprise Solutions, our B2B arm, you will help shape the future of rail through business travellers and wider retail innovation, supporting partners across the industry with data-driven insight that improves how rail travel is sold, delivered and experienced.
+
+You will work closely with Embedded Data Scientists, Product Managers and commercial colleagues to structure analytical approaches, interpret findings and translate complex data into insight that informs product strategy and partner-facing solutions. This role sits within a growing Data organisation that includes Data Science, Machine Learning, Data Engineering, Business Intelligence and Data Product Management, offering the opportunity to contribute to decisions that shape the next generation of rail retail and enterprise capability.
+
+
+
+In this role as the Data Analyst, you will... 🚄
+
+ - Analyse partner and customer behaviour to inform the development of enterprise and retail solutions.
+
+ - Translate complex analysis into clear, compelling insights and practical recommendations for technical and non-technical audiences.
+
+ - Produce high-quality analytical deliverables, dashboards, reports and presentations that help senior stakeholders and external partners make informed decisions.
+
+ - Work closely with Data Scientists to structure analytical approaches, interpret findings and draw meaningful conclusions from large and complex datasets.
+
+ - Collaborate across Data, Product and Design to ensure insight is embedded into decision making from early exploration through to delivery.
+
+ - Help define how we measure success across TPS products and partner solutions.
+
+ - Contribute to a growing Data organisation that includes Data Science, Machine Learning, Data Engineering, Business Intelligence and Data Product Management.
+
+ - Support the development of innovative retail and enterprise solutions that help shape the future of rail.
+
+
+
+We'd love to hear from you if you have... 🔎
+
+ - Experience using analytics to support business decisions, answer complex commercial questions and identify opportunities for improvement.
+
+ - Strong SQL skills and confidence working with large datasets to produce accurate, reliable and well-structured analysis.
+
+ - Some experience using AI to responsibly accelerate your coding for analysis, as well as basic automation of day-to-day work processes
+
+ - The ability to structure analytical work clearly, navigate ambiguity and turn complex findings into actionable recommendations.
+
+ - Experience communicating insight to a range of audiences, including senior stakeholders, partners and colleagues from technical and non-technical backgrounds.
+
+ - Strong data visualisation skills, ideally using Python or tools such as Tableau, Power BI, or similar.
+
+ - A thoughtful approach to storytelling, with the ability to create polished deliverables that make insight easy to understand and act on.
+
+ - Strong organisational skills, with the ability to manage multiple analytical work streams and balance competing priorities.
+
+ - You may also have experience with DBT or modern data transformation workflows
+
+
+
+More information:
+
+Enjoy fantastic perks like private healthcare & dental insurance, a generous work from abroad policy, 2-for-1 share purchase plans, an EV Scheme to further reduce carbon emissions, extra festive time off, and excellent family-friendly benefits. 
+
+We prioritise career growth with clear career paths, transparent pay bands, personal learning budgets, and regular learning days. Jump on board and supercharge your career from day one! 
+
+We're operating a hybrid model and ask that Trainliners work from the office a minimum of 60% of their time over a 12-week period. We also have a 28-day Work from Abroad policy.
+
+Our values represent the things that matter most to us and what we live and breathe everyday, in everything we do: 
+
+ - 💭 Think Big - We're building the future of rail 
+
+ - ✔️ Own It - We focus on every customer, partner and journey 
+
+ - 🤝  Travel Together - We're one team 
+
+ - ♻️ Do Good - We make a positive impact 
+
+We know that having a diverse team makes us better and helps us succeed. And we mean all forms of diversity - gender, ethnicity, sexuality, disability, nationality and diversity of thought. That's why we're committed to creating inclusive places to work, where everyone belongs and differences are valued and celebrated.
+
+Interested in finding out more about what it's like to work at Trainline? Why not check us out on LinkedIn https://www.linkedin.com/company/trainline/, Instagram https://www.instagram.com/lifeattrainline/ and Glassdoor https://www.glassdoor.co.uk/Overview/Working-at-Trainline-EI_IE249203.11,20.htm!

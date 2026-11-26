@@ -1,0 +1,2 @@
+level excluded (\bchief\b)
+(from 2026-11-05/, 2026-11-11 15:26 UTC; `careerops unskip --shortlist --match ...` brings it back)

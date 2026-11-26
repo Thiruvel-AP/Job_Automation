@@ -1,0 +1,98 @@
+Company: Kpler
+Title: Data Analyst (Vessel Particulars)
+URL: https://jobs.lever.co/kpler/c51380da-4888-4609-8fc1-c16cc8b7d25a
+Source: lever
+Apply kind: lever
+Location: London, GB
+Posted: 2026-10-16T16:48:43.611000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-18
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors. 
+ 
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 850 experts from 69 countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+ 
+
+
+As a Data Analyst within our Data Platform team, you will play a key role in maintaining and enhancing the accuracy, completeness and reliability of Kpler’s vessel particulars datasets. Your work will underpin our core products and commercial decisions by ensuring that vessel-level data is accurate, consistent and comprehensive.
+Combining hands-on data curation with independent analysis, you will research and validate information from multiple sources, identify data gaps and anomalies, and develop processes to improve data quality. You will take ownership of specific vessel data domains while helping automate recurring tasks and strengthen the reliability of our data pipelines.
+Working closely with the Vessel Data Manager, Market Analysts, Product and Engineering teams, you will contribute to continuous improvements in our vessel data capabilities and ensure that our datasets meet the needs of internal teams and customers.
+
+
+
+
+Responsibilities 
+- Own the end-to-end quality of assigned vessel particulars datasets, including specifications, ownership, classification and technical attributes.
+
+- Research and validate vessel data from multiple sources, ensuring accuracy, consistency and completeness.
+
+- Analyse datasets to identify data gaps and anomalies, developing and running validation checks to improve data quality and coverage.
+
+- Create and maintain SQL- and Python-based workflows to automate recurring data collection, cleansing and enrichment tasks.
+
+- Develop dashboards and reports to monitor vessel data quality, providing Market Analysts with relevant vessel-level insights.
+
+- Support the integration of new vessel data sources, including scoping, testing and validating incoming data feeds.
+
+- Investigate and resolve data quality issues raised by internal teams or customers, identifying root causes and implementing fixes.
+
+- Document data logic, business rules and definitions to ensure consistency and adherence to vessel particulars data standards.
+
+- Collaborate with Product and Engineering teams to translate data quality findings into platform and pipeline improvements.
+
+- Work proactively with the Vessel Data Manager, taking ownership of issues independently, communicating clearly and recommending solutions.
+
+Skills and Experience 
+- 2–4 years of experience in a data analyst, data quality or data operations role.
+
+- Experience working with SQL for data querying, cleansing and analysis.
+
+- Demonstrable knowledge of vessel data and maritime shipping concepts.
+
+- Experience working with large, real-world datasets, particularly vessel particulars.
+
+- Experience in the maritime industry.
+
+- Strong analytical skills, with a structured and detail-oriented approach to problem-solving.
+
+- Experience with data validation, monitoring and quality-improvement techniques.
+
+- Strong ownership and accountability, with the ability to work independently and prioritise effectively.
+
+- Clear communication skills, with the ability to work effectively with technical and non-technical stakeholders.
+
+Nice to have 
+- Familiarity with data visualisation tools and dashboarding.
+
+- Practical experience with ETL processes and/or web scraping for data collection.
+
+- Experience using Python for data analysis and automation.
+
+- Experience working with APIs for data ingestion and validation.
+
+- Experience building or maintaining data pipelines.
+
+- Familiarity with maritime data sources.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+ 
+Our People Pledge
+ 
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+ 
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.
+ 
+ 
+ 
+By applying, I confirm that I have read and accept the Staff Privacy Notice

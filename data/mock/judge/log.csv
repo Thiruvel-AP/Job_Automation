@@ -1,0 +1,6 @@
+ts,job_id,company,title,mode,judge_model,judge_would_send,judge_score,judge_issues,judge_error,human,reason,letter_status,verdict_key
+2026-10-10T17:38:37+00:00,mock:northwind-ai-engineer,Northwind Health AI,AI Engineer,shadow,mock,true,4,,,approve,,off,7244f720aa7974bf6588cc2c
+2026-10-20T15:07:35+00:00,manual:fde969c23cb8,Northwind Health AI,AI Engineer,shadow,mock,true,4,,,reject,skipped in live review,off,07760ddf636bd5267843ae1f
+2026-10-20T15:07:35+00:00,manual:5c8b12fa8384,Valarian,Senior Data Scientist,shadow,mock,true,4,,,reject,skipped in live review,off,b2407f6b22298ee2229f01f3
+2026-10-20T15:07:35+00:00,manual:5b9a650f3bd0,Acme Corp,Applied AI Architect,shadow,mock,true,4,,,reject,skipped in live review,off,2ff4835e9fded720bffde87e
+2026-10-22T21:39:36+00:00,manual:42470a12bd61,Valarian,MLOps Engineer,shadow,mock,true,4,,,reject,skipped in live review,none,c06a4dc10f09b78ee1fd7350

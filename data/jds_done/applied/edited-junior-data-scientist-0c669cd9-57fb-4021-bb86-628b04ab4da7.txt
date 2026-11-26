@@ -1,0 +1,95 @@
+Company: EDITED
+Title: Junior Data Scientist
+URL: https://jobs.ashbyhq.com/edited/0c669cd9-57fb-4021-bb86-628b04ab4da7
+Source: ashby
+Apply kind: ashby
+Location: London Office, UK
+Posted: 2026-11-03T08:08:28.660+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-05
+Listed: yes
+
+ABOUT EDITED
+
+EDITED is the world’s leading AI-driven retail intelligence platform. We empower the world’s most successful brands and retailers with real-time decision making power. 
+
+By connecting internal business and external market data, EDITED infuses intelligence into every retail decision. We help retailers increase margins, generate more sales, and drive better business outcomes through AI-powered market and enterprise intelligence that fuels automation. 
+
+At EDITED, we foster a dynamic and inclusive culture where creativity thrives and collaboration is at the heart of everything we do. Our environment is dynamic and supportive, encouraging team members to take initiative, innovate, and continuously grow. We value diversity, transparency, and a shared commitment to excellence, creating a workplace where everyone's voice is heard and contributions are recognised. 
+
+We believe that achieving a positive work-life balance is key to driving innovation and success. Our flexible working options—including hybrid working, flexible hours and a work from anywhere policy—empower our team to perform at their best. 
+
+
+
+
+THE OPPORTUNITY
+
+We're seeking a motivated and curious Junior Data Scientist to join our team. In this role, you'll work alongside experienced data scientists and engineers to deliver actionable insights and build data-driven solutions across EDITED. You'll learn key methodologies, contribute to impactful projects, and develop your technical and analytical skills in a supportive environment.
+
+
+
+What You'll Do As A Junior Data Scientist:
+
+ - Deliver Data Science Projects: Assist in designing, building, and maintaining data science models and pipelines to solve core business problems.
+
+ - Data Analysis & Exploration: Analyze complex datasets to extract meaningful insights, trends, and patterns supporting retail intelligence.
+
+ - Collaborate & Learn: Work closely with senior team members, receiving mentorship and feedback to continuously refine your technical skills.
+
+ - Cross-Functional Collaboration: Partner with product and engineering teams to integrate data products into production systems.
+
+ - Maintain Data Quality: Validate and clean data sources to ensure high reliability and consistency across models and reporting.
+
+ - Communicate Findings: Present project outcomes and analytical findings clearly to team members and key stakeholders.
+
+What You'll Bring:
+
+ - A strong STEM degree (including Data Science, Computer Science, Mathematics/Statistics, etc), or equivalent experience.
+
+ - Solid understanding of foundational data science concepts and statistical methods.
+
+ - Proficiency with Python and standard data science libraries (e.g. Pandas, NumPy, Scikit-Learn).
+
+ - Strong problem-solving ability and enthusiasm for learning new technologies.
+
+ - Clear written and verbal communication skills.
+
+ - Curiosity to learn in an ever changing, fast paced environment.
+
+
+
+
+WHAT WE’RE LOOKING FOR IN A JUNIOR DATA SCIENTIST
+
+It’s important for us to look for candidates that strive for excellence with a positive attitude, a strong sense of ownership and work ethic, and a passion to consistently develop and improve their knowledge and skillset. If you’re excited about the role of Junior Data Scientist and the opportunity to work at EDITED, we encourage you to apply even if you only match some, rather than all, of the requirements.
+
+Essential:
+
+ - 1+ years of experience (or strong academic/project background) in data analysis or machine learning.
+
+ - Good working knowledge of Python.
+
+ - Understanding of core machine learning concepts and statistical analyses.
+
+
+WHAT WE OFFER YOU AS A JUNIOR DATA SCIENTIST
+
+We value our team and to attract exceptional people, we offer an excellent package! This year, we were recognised as one of the top companies to work for in the UK.
+
+ - You can utilise our flexible working policy to ensure you can work around your schedule - this means starting & finishing when it suits you best!
+
+ - At EDITED we are set up to work remotely
+
+ - Enhanced parental leave policy
+
+ - 25 days annual leave + public holidays (and an extra day for every year at EDITED)
+
+ - Season Ticket Loan & Cycle to Work schemes
+
+ - Access to an Employee Assistance Programme
+
+ - Gifts for work anniversaries and big life events
+
+ - Dog friendly office
+
+We do not use AI to source, screen, evaluate, or make decisions about candidates - every hiring decision is made by our team. We use Ashby, our applicant tracking system, which includes AI-assisted interview notetaking and automation for scheduling interviews and sending routine emails. These tools support our hiring process but do not make hiring decisions. We aim to be an equal opportunities employer and we are determined to ensure that no applicant or employee receives less favourable treatment on the grounds of gender, age, disability, religion, belief, sexual orientation, marital status, or race, or is disadvantaged by conditions or requirements which cannot be shown to be justifiable.

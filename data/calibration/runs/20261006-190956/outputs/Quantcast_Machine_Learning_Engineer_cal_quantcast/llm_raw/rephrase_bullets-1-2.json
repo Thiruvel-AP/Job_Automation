@@ -1,0 +1,9 @@
+```json
+{
+  "fl1": "Built Python machine learning pipelines with scikit-learn and TensorFlow/Keras LSTM/BiRNN/CNN models, deploying them as FastAPI services in Docker.",
+  "fl3": "Contributed to a LoRA fine-tune of an instruction-tuned Llama llm for a maths-focused task.",
+  "p_ch1": "Built an R XGBoost churn classifier with two-stage Bayesian hyperparameter search, SMOTE in the recipe, and MCC evaluation.",
+  "p_gg2": "Trained per-gene protein-prediction regression models using Scikit-learn OLS and GPU Random Forest ensemble on 11,459 genes with resumable chunked GPU training on a free T4.",
+  "p_gg1": "Created a networkx heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) with k-NN similarity and Leiden community detection clustering (modularity 0.822)."
+}
+```

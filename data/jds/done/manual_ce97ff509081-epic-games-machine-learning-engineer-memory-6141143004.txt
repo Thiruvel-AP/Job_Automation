@@ -1,0 +1,64 @@
+Company: Epic Games
+Title: Machine Learning Engineer, Memory
+URL: https://epicgames.com/careers/jobs/6141143004?gh_jid=6141143004
+Source: greenhouse
+Location: London,England,United Kingdom
+Posted: 2026-08-11T12:38:01-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+WHAT MAKES US EPIC?
+
+At the core of Epic’s success are talented, passionate people. Epic prides itself on creating a collaborative, welcoming, and creative environment. Whether it’s building award-winning games or crafting engine technology that enables others to make visually stunning interactive experiences, we’re always innovating.
+
+Being Epic means being a part of a team that continually strives to do right by our community and users. We’re constantly innovating to raise the bar of engine and game development.
+ENGINEERING - GAMES
+
+What We Do
+
+Unreal projects have been leading the pack of real-time entertainment with our constantly growing team of engineering experts. We’re always improving on the tools and technology that empower content developers worldwide.
+
+What You'll Do
+
+As foundation models move from answering questions to acting over long horizons, memory becomes a central requirement. Systems must decide what is worth keeping and improve from experience. Large context windows and retrieval systems are not enough. You will work with researchers on projects across the company that require memory in different modalities to define general solutions that enable models to represent experience, decide what they keep and what they discard, and to efficiently store, retrieve and exploit memory.
+
+In this role, you will
+
+- Design new memory architectures that work across problems, modalities and products
+
+- Define new ways to measure and evaluate memory performance
+
+- Help create and deliver production-ready, scalable and high-quality learning models and associated algorithms
+
+- Critically assess the effectiveness of such models and make recommendations for the ongoing roadmap
+
+What we're looking for
+
+- PhD in Computer Science, Mathematics or related field, or 3+ years of relevant industry experience
+
+- Experience creating machine learning algorithms for vision and/or language problems and deploying them as production-level systems
+
+- Expert, hands-on knowledge of:
+
+- Foundational models and vision and/or language, incl. local deployment and model post-training of open weights models
+
+- Memory, state, or long-horizon behaviour in foundation models: your experience may come from language agents and long-context methods, reinforcement learning under partial observability, world models, or sequence modelling
+
+- Python and associated ML tools/frameworks (numpy, scipy, sklearn, pytorch)
+
+- Experience with working collaboratively with other developers, following a flexible and agile approach
+
+EPIC JOB + EPIC BENEFITS = EPIC LIFE
+
+We pay 100% for benefits except for PMI (for dependents). Our current benefits package includes pension, private medical insurance, health care cash plan, dental insurance, disability and life insurance, critical illness, cycle to work scheme, flu shots, health checks, and meals. We also offer a robust mental well-being program through Modern Health, which provides free therapy and coaching for employees & dependents. 
+
+ABOUT US
+
+Epic Games​ ​is a leading interactive entertainment company. For over 30 years we've been making award-winning games and engine technology that empowers others to make visually stunning games and 3D content that bring environments to life like never before. Epic's award-winning Unreal Engine technology not only provides game developers the ability to build high-fidelity, interactive experiences for PC, console, mobile, and VR, it is also a tool being embraced by content creators across a variety of industries such as media and entertainment, automotive, and architectural design. As we continue to build our Engine technology and develop remarkable games, we strive to build teams of world-class talent.
+
+Like what you hear? Come be a part of something Epic!
+
+Epic Games deeply values diverse teams and an inclusive work culture, and we are proud to be an Equal Opportunity employer. Learn more about our Equal Employment Opportunity (EEO) Policy here.
+
+Note to Recruitment Agencies: Epic does not accept any unsolicited resumes or approaches from any unauthorized third party (including recruitment or placement agencies) (i.e., a third party with whom we do not have a negotiated and validly executed agreement). We will not pay any fees to any unauthorized third party. Further details on these matters can be found here.

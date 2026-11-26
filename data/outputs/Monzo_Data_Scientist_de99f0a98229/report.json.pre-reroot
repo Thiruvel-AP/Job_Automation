@@ -1,0 +1,974 @@
+{
+  "job_id": "manual:de99f0a98229",
+  "company": "Monzo",
+  "title": "Data Scientist",
+  "family": "data_scientist",
+  "tier": 1,
+  "headline": "Data Scientist",
+  "keywords": [
+    {
+      "term": "A/B experiments",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data mining",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "lifetime value",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "quantitative analysis",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "SQL",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Looker",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "real-time analytics",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "Monzo builds a fair, transparent, and delightful bank that empowers customers to make money work for everyone.",
+  "team": "Data Science",
+  "ceiling": 0.2857142857142857,
+  "genuine_gaps": [
+    "lifetime value",
+    "Looker",
+    "real-time analytics"
+  ],
+  "possible_evidence": {
+    "A/B experiments": [
+      {
+        "via": "hypothesis testing",
+        "where": [
+          "skills: ML & Stats"
+        ]
+      },
+      {
+        "via": "experimental design",
+        "where": [
+          "skills: ML & Stats"
+        ]
+      }
+    ],
+    "data mining": [
+      {
+        "via": "exploratory data analysis",
+        "where": [
+          "bullet az5"
+        ]
+      },
+      {
+        "via": "clustering",
+        "where": [
+          "skills: Data Visualisation & Analysis",
+          "bullet p_gg1",
+          "bullet p_ia1"
+        ]
+      }
+    ],
+    "quantitative analysis": [
+      {
+        "via": "statistics",
+        "where": [
+          "skills: core",
+          "skills: ML & Stats"
+        ]
+      },
+      {
+        "via": "hypothesis testing",
+        "where": [
+          "skills: ML & Stats"
+        ]
+      }
+    ]
+  },
+  "context_terms": [
+    {
+      "term": "cross-functional squads",
+      "weight": 1.0,
+      "required": false,
+      "why": "organisational noun 'squads'"
+    },
+    {
+      "term": "central data discipline",
+      "weight": 1.0,
+      "required": false,
+      "why": "generic head word 'discipline' (how the company works, not a skill)"
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.2857142857142857,
+      "score_stemmed": 0.2857142857142857,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.6111400349442084,
+      "fill": {
+        "added": [
+          "az5",
+          "az6",
+          "az7",
+          "fl4",
+          "av4",
+          "av5"
+        ],
+        "rejected_overflow": [],
+        "renders": 2,
+        "reached": false
+      },
+      "shrinks": 0,
+      "reverted": [],
+      "wording": {
+        "terms": [],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [],
+        "kept": null
+      },
+      "violations": [],
+      "warnings": [],
+      "wording_misses": [],
+      "misses": [
+        "A/B experiments",
+        "data mining",
+        "lifetime value",
+        "quantitative analysis",
+        "Looker",
+        "real-time analytics"
+      ],
+      "rephrase": {
+        "eligible": 0,
+        "asked": 0,
+        "cached": 0,
+        "calls": 0,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "A/B experiments",
+          "data mining",
+          "lifetime value",
+          "quantitative analysis",
+          "Looker",
+          "real-time analytics"
+        ],
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az2",
+              "az3",
+              "az4"
+            ],
+            "dc180": [
+              "dc1",
+              "dc2"
+            ],
+            "freelance": [
+              "fl1",
+              "fl2",
+              "fl3"
+            ],
+            "avasoft": [
+              "av1",
+              "av2",
+              "av3"
+            ]
+          },
+          "projects": [
+            "mcpsearch",
+            "lloyds",
+            "churn"
+          ],
+          "project_bullets": {
+            "mcpsearch": [
+              "p_ms1"
+            ],
+            "lloyds": [
+              "p_ll1"
+            ],
+            "churn": [
+              "p_ch1"
+            ]
+          }
+        },
+        "rephrase": {},
+        "profile": "Data Scientist with an MSc in Data Science from the University of Bristol (2026) and experience developing production LLM agents for a multi-omics research platform affiliated with AstraZeneca."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az2",
+          "az3",
+          "az4",
+          "az5",
+          "az6",
+          "az7"
+        ],
+        "dc180": [
+          "dc1",
+          "dc2"
+        ],
+        "freelance": [
+          "fl1",
+          "fl2",
+          "fl3",
+          "fl4"
+        ],
+        "avasoft": [
+          "av1",
+          "av2",
+          "av3",
+          "av4",
+          "av5"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ],
+        "lloyds": [
+          "p_ll1"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "profile": "Data Scientist with an MSc in Data Science from the University of Bristol (2026) and experience developing production LLM agents for a multi-omics research platform affiliated with AstraZeneca.",
+      "rephrase_coverage": {
+        "eligible": 2,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "A/B experiments",
+          "data mining",
+          "lifetime value",
+          "quantitative analysis",
+          "Looker",
+          "real-time analytics"
+        ]
+      }
+    }
+  ],
+  "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/outputs/Monzo_Data_Scientist_de99f0a98229",
+  "analysis_warnings": [
+    "keywords: 'cross-functional squads' is context (organisational noun 'squads'), not scored",
+    "keywords: 'central data discipline' is context (generic head word 'discipline' (how the company works, not a skill)), not scored"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Core",
+      "Languages",
+      "ML & Stats",
+      "LLMs & Agents",
+      "Data Visualisation & Analysis",
+      "Cloud & MLOps"
+    ],
+    "dropped_groups": [
+      "Mobile & Web"
+    ]
+  },
+  "profile": {
+    "facts": [
+      "MSc Data Science, University of Bristol (completed 2026)",
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "final": {
+    "score": 0.2857142857142857,
+    "score_stemmed": 0.2857142857142857,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.6111400349442084,
+    "hits": [
+      "Python",
+      "SQL"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "A/B experiments",
+      "data mining",
+      "lifetime value",
+      "quantitative analysis",
+      "Looker",
+      "real-time analytics"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.6111400349442084,
+  "fill": {
+    "added": [
+      "az5",
+      "az6",
+      "az7",
+      "fl4",
+      "av4",
+      "av5"
+    ],
+    "rejected_overflow": [],
+    "renders": 2,
+    "reached": false
+  },
+  "needs_result": [
+    {
+      "id": "az1",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+    },
+    {
+      "id": "az2",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers."
+    },
+    {
+      "id": "az3",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies."
+    },
+    {
+      "id": "az4",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+    },
+    {
+      "id": "az5",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Surveyed and explored 14 heterogeneous source datasets (gene expression, gene properties, nomenclature), owning the identity-spine datasets and setting metadata boundaries for downstream modelling."
+    },
+    {
+      "id": "az6",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Integrated the agent into a React front end with real-time gene alias enrichment."
+    },
+    {
+      "id": "az7",
+      "entry": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+      "text": "Managed AWS account governance for the project, including root-user isolation, IAM user and group management and least-privilege policies."
+    },
+    {
+      "id": "dc1",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo."
+    },
+    {
+      "id": "dc2",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership."
+    },
+    {
+      "id": "fl1",
+      "entry": "Self-employed, Chennai",
+      "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+    },
+    {
+      "id": "fl2",
+      "entry": "Self-employed, Chennai",
+      "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+    },
+    {
+      "id": "fl3",
+      "entry": "Self-employed, Chennai",
+      "text": "Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task."
+    },
+    {
+      "id": "fl4",
+      "entry": "Self-employed, Chennai",
+      "text": "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run."
+    },
+    {
+      "id": "av1",
+      "entry": "Avasoft",
+      "text": "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+    },
+    {
+      "id": "av2",
+      "entry": "Avasoft",
+      "text": "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated team velocity across concurrent releases."
+    },
+    {
+      "id": "av3",
+      "entry": "Avasoft",
+      "text": "Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management."
+    },
+    {
+      "id": "av4",
+      "entry": "Avasoft",
+      "text": "Built a JavaScript web-scraping pipeline that automated a manual collection process and surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+    },
+    {
+      "id": "p_ms1",
+      "entry": "mcp_searchagent",
+      "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+    },
+    {
+      "id": "p_ll1",
+      "entry": "Lloyd's Banking Group Datathon \u2014 3rd place",
+      "text": "Anomaly detection on 200:1 class-imbalanced data with Isolation Forest and ensemble classifiers, tracked in MLflow."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn",
+      "text": "XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation."
+    }
+  ],
+  "rephrase_coverage": {
+    "eligible": 2,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 0,
+    "asked": 0,
+    "cached": 0,
+    "calls": 0,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "A/B experiments",
+      "data mining",
+      "lifetime value",
+      "quantitative analysis",
+      "Looker",
+      "real-time analytics"
+    ],
+    "proposed": 0,
+    "accepted": 0,
+    "blocked": 0,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "A/B experiments",
+      "data mining",
+      "lifetime value",
+      "quantitative analysis",
+      "Looker",
+      "real-time analytics"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [
+      "the hook says the company mirrors my work, but they share no domain term (company: finance; my work: customer): 'Monzo's mission to build a fair, transparent, and delightful'",
+      "paragraph starts with a bare past-tense verb (write 'I ...'): 'Built a tool-calling LLM agent (LangChain, AWS Bed'",
+      "pastes an evidence bullet verbatim: 'Built a tool-calling LLM agent (LangChain, AWS Bed'",
+      "'LLM-driven' (name) is in neither the evidence nor the job description: 'I am eager to bring this blend of statistical modelling and '",
+      "'statistical modelling' (capability) is in neither the evidence nor the job description: 'I am eager to bring this blend of statistical modelling and '"
+    ],
+    "score": null,
+    "pages": 0,
+    "status": "none",
+    "reason": "3 draft(s) rejected",
+    "notes": [
+      "cover_letter: draft 1 rejected (pastes an evidence bullet (100% of its words are the bullet's): 'I built a tool-calling LLM agent (LangChain, AWS B'); retry 1 of 2",
+      "cover_letter: draft 2 rejected (paragraph starts with a bare past-tense verb (write 'I ...'): 'Built a tool-calling LLM agent (LangChain, AWS Bed'; pastes an evidence bullet verbatim: 'Built a tool-calling LLM agent (LangChain, AWS ); retry 2 of 2"
+    ],
+    "retry": {
+      "count": 2,
+      "rejected_words": [
+        "LLM-driven",
+        "statistical modelling"
+      ],
+      "first_problems": [
+        "pastes an evidence bullet (100% of its words are the bullet's): 'I built a tool-calling LLM agent (LangChain, AWS B'"
+      ],
+      "failures": [
+        {
+          "attempt": 1,
+          "problems": [
+            "pastes an evidence bullet (100% of its words are the bullet's): 'I built a tool-calling LLM agent (LangChain, AWS B'"
+          ]
+        },
+        {
+          "attempt": 2,
+          "problems": [
+            "paragraph starts with a bare past-tense verb (write 'I ...'): 'Built a tool-calling LLM agent (LangChain, AWS Bed'",
+            "pastes an evidence bullet verbatim: 'Built a tool-calling LLM agent (LangChain, AWS Bed'"
+          ]
+        },
+        {
+          "attempt": 3,
+          "problems": [
+            "the hook says the company mirrors my work, but they share no domain term (company: finance; my work: customer): 'Monzo's mission to build a fair, transparent, and delightful'",
+            "paragraph starts with a bare past-tense verb (write 'I ...'): 'Built a tool-calling LLM agent (LangChain, AWS Bed'",
+            "pastes an evidence bullet verbatim: 'Built a tool-calling LLM agent (LangChain, AWS Bed'",
+            "'LLM-driven' (name) is in neither the evidence nor the job description: 'I am eager to bring this blend of statistical modelling and '",
+            "'statistical modelling' (capability) is in neither the evidence nor the job description: 'I am eager to bring this blend of statistical modelling and '"
+          ]
+        }
+      ],
+      "removed": [],
+      "outcome": "no letter"
+    },
+    "evidence": [
+      {
+        "id": "p_ch1",
+        "text": "XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation."
+      },
+      {
+        "id": "az1",
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2338,
+        "prompt_tokens": 1845,
+        "completion_tokens": 292,
+        "reasoning_tokens": 186,
+        "total_tokens": 2137,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "tailor_profile",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 600,
+        "est_input_tokens": 286,
+        "prompt_tokens": 354,
+        "completion_tokens": 251,
+        "reasoning_tokens": 193,
+        "total_tokens": 605,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 1282,
+        "prompt_tokens": 1148,
+        "completion_tokens": 549,
+        "reasoning_tokens": 406,
+        "total_tokens": 1697,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 1330,
+        "prompt_tokens": 1196,
+        "completion_tokens": 996,
+        "reasoning_tokens": 855,
+        "total_tokens": 2192,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 1356,
+        "prompt_tokens": 1219,
+        "completion_tokens": 535,
+        "reasoning_tokens": 390,
+        "total_tokens": 1754,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 5762,
+    "completion_tokens": 2623,
+    "reasoning_tokens": 2030,
+    "total_tokens": 8385,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1845,
+        "completion_tokens": 292,
+        "reasoning_tokens": 186,
+        "total_tokens": 2137,
+        "prompt_tokens_per_call": [
+          1845
+        ]
+      },
+      "tailor_profile": {
+        "calls": 1,
+        "prompt_tokens": 354,
+        "completion_tokens": 251,
+        "reasoning_tokens": 193,
+        "total_tokens": 605,
+        "prompt_tokens_per_call": [
+          354
+        ]
+      },
+      "cover_letter": {
+        "calls": 3,
+        "prompt_tokens": 3563,
+        "completion_tokens": 2080,
+        "reasoning_tokens": 1651,
+        "total_tokens": 5643,
+        "prompt_tokens_per_call": [
+          1148,
+          1196,
+          1219
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 2,
+        "prompt_tokens": 2199,
+        "completion_tokens": 543,
+        "reasoning_tokens": 379,
+        "total_tokens": 2742,
+        "tasks": [
+          "extract_keywords",
+          "tailor_profile"
+        ]
+      },
+      "groq/openai/gpt-oss-120b": {
+        "calls": 3,
+        "prompt_tokens": 3563,
+        "completion_tokens": 2080,
+        "reasoning_tokens": 1651,
+        "total_tokens": 5643,
+        "tasks": [
+          "cover_letter"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/outputs/Monzo_Data_Scientist_de99f0a98229/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Scientist",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to work in UK under Graduate visa",
+        "Available to join immediately"
+      ]
+    },
+    "profile": "Data Scientist with an MSc in Data Science from the University of Bristol (2026) and experience developing production LLM agents for a multi-omics research platform affiliated with AstraZeneca.",
+    "skills": {
+      "Core": [
+        "Python",
+        "SQL",
+        "R",
+        "Machine Learning",
+        "Deep Learning",
+        "NLP",
+        "Statistics",
+        "scikit-learn",
+        "PyTorch",
+        "TensorFlow",
+        "pandas",
+        "NumPy",
+        "SciPy",
+        "LLMs",
+        "RAG",
+        "LangChain",
+        "Matplotlib",
+        "Seaborn",
+        "Plotly",
+        "Tableau",
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "Git"
+      ],
+      "Languages": [
+        "TypeScript",
+        "JavaScript",
+        "Swift",
+        "Dart"
+      ],
+      "ML & Stats": [
+        "XGBoost",
+        "Keras",
+        "LSTM",
+        "Isolation Forest",
+        "Random Forest",
+        "RAPIDS cuML",
+        "time-series forecasting",
+        "hypothesis testing",
+        "ANOVA",
+        "bootstrap",
+        "PCA",
+        "maximum likelihood estimation",
+        "experimental design"
+      ],
+      "LLMs & Agents": [
+        "LangGraph",
+        "Google ADK",
+        "MCP (FastMCP, MCP SDK)",
+        "AWS Bedrock",
+        "Claude API",
+        "OpenAI API",
+        "Gemini via LiteLLM",
+        "Hugging Face Transformers",
+        "Ollama",
+        "ChromaDB",
+        "tool calling",
+        "LoRA fine-tuning",
+        "LLM evaluation",
+        "prompt design"
+      ],
+      "Data Visualisation & Analysis": [
+        "NLTK",
+        "networkx",
+        "Leiden clustering",
+        "tidyverse",
+        "tidymodels",
+        "PostgreSQL",
+        "MongoDB",
+        "Databricks/PySpark",
+        "ggplot2",
+        "Streamlit",
+        "Jupyter",
+        "Google Colab",
+        "Google AI Studio",
+        "Kaggle"
+      ],
+      "Cloud & MLOps": [
+        "AWS Lambda",
+        "ECR",
+        "IAM",
+        "EC2",
+        "S3",
+        "SQS",
+        "DynamoDB",
+        "GCP Cloud Run",
+        "GitHub Actions",
+        "pytest",
+        "MLflow",
+        "FastAPI",
+        "REST APIs",
+        "WebSockets",
+        "TensorFlow Serving",
+        "AWS ECS",
+        "Kubernetes (AWS EKS)"
+      ]
+    },
+    "experience": [
+      {
+        "id": "az",
+        "title": "Data Scientist",
+        "org": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "bullets": [
+          "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
+          "Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers.",
+          "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies.",
+          "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.",
+          "Surveyed and explored 14 heterogeneous source datasets (gene expression, gene properties, nomenclature), owning the identity-spine datasets and setting metadata boundaries for downstream modelling.",
+          "Integrated the agent into a React front end with real-time gene alias enrichment.",
+          "Managed AWS account governance for the project, including root-user isolation, IAM user and group management and least-privilege policies."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az2",
+          "az3",
+          "az4",
+          "az5",
+          "az6",
+          "az7"
+        ]
+      },
+      {
+        "id": "dc180",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.",
+          "Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership."
+        ],
+        "bullet_ids": [
+          "dc1",
+          "dc2"
+        ]
+      },
+      {
+        "id": "freelance",
+        "title": "Freelance AI/ML Engineer",
+        "org": "Self-employed, Chennai",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+          "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+          "Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task.",
+          "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run."
+        ],
+        "bullet_ids": [
+          "fl1",
+          "fl2",
+          "fl3",
+          "fl4"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "title": "Software Engineer (SDE Trainee Jan\u2013Jun 2023)",
+        "org": "Avasoft",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.",
+          "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated team velocity across concurrent releases.",
+          "Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management.",
+          "Built a JavaScript web-scraping pipeline that automated a manual collection process and surfaced market-trend signals used for pricing decisions.",
+          "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+        ],
+        "bullet_ids": [
+          "av1",
+          "av2",
+          "av3",
+          "av4",
+          "av5"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "stack": "FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions",
+        "github": "https://github.com/Thiruvel-AP/mcp_searchagent",
+        "bullets": [
+          "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+        ],
+        "bullet_ids": [
+          "p_ms1"
+        ]
+      },
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon \u2014 3rd place",
+        "stack": "Isolation Forest, ensemble classifiers, MLflow",
+        "github": null,
+        "award": "3rd place",
+        "bullets": [
+          "Anomaly detection on 200:1 class-imbalanced data with Isolation Forest and ensemble classifiers, tracked in MLflow."
+        ],
+        "bullet_ids": [
+          "p_ll1"
+        ]
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "org": "University of Bristol",
+        "dates": "2025 \u2013 2026",
+        "note": "Distinction (Expected)"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction"
+      }
+    ],
+    "certifications": [
+      "Anthropic MCP certifications (Introductory and Advanced), Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ]
+  }
+}

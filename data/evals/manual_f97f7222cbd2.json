@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:f97f7222cbd2",
+ "company": "HealthHero",
+ "title": "Senior AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.5,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.5"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family matches ai_engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "unknown",
+   "source": "Pay not stated"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "Regulated medical device, cross‑functional team, but company size unknown"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or suspicious language found"
+  }
+ },
+ "global_score": 4.3,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Verify salary range or compensation package",
+  "Find out company size and growth trajectory",
+  "Confirm remote/hybrid work model and any visa sponsorship details"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.3,
+ "model_confidence": "Medium",
+ "jd_hash": "e3efb2e2f4ad7b1e",
+ "jd_words": 818,
+ "tokens": 2197,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

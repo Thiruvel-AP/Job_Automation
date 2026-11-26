@@ -1,0 +1,52 @@
+Company: Artefact
+Title: AI Consultant
+URL: https://job-boards.greenhouse.io/artefact/jobs/8883142002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 71 Robinson Rd 068895 Singapore
+Country: Singapore
+Status: listed_only
+Posted: 2026-10-26T03:03:43-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+Who we are
+
+Artefact is a leading global consulting company dedicated to accelerating the adoption of data and AI to positively impact people and organizations. We specialize in data & AI transformation and data marketing to drive tangible business results across the entire enterprise value chain for our clients. 
+
+Artefact offers the most comprehensive set of data-driven solutions per industry, built on deep data science and cutting-edge AI technologies, delivering AI projects at scale in all industry sectors. From strategy to operations, we offer an end-to-end approach and solutions: data strategy, data quality and governance, data platforms, AI Factory, data-driven customer experience and marketing ROI. Our 1500+ employees operate in 22 countries (Europe, Asia, Americas, Middle East, Africa) and we partner with 1000+ clients, including some of the world’s top 300 brands such as Heineken, Mars, Samsung and L’Oréal.
+
+What you will be doing:
+
+Our Data Consulting department leads the way in effectively exploiting data & AI in all its forms. Do you want to help our clients define best-in-class data & AI strategies, drive transformations and build data & AI solutions that have impact? Join our dynamic consulting team and contribute to developing our international client portfolio!
+
+As an AI Consultant, you will support national and international clients across various industries in developing and implementing innovative data & AI strategies. Your role will encompass:
+
+- Client advisory: collaborate with clients alongside your (international) team to understand their business needs and goals, delivering data-driven recommendations that guide decision-making and strategy.
+
+- Data Collection and organization: collect, clean, and prepare data for analysis, correcting errors and formatting it for statistical software.
+
+- Ownership of project stream: drive individual workstreams, ensuring successful and timely delivery, in alignment with project goals.
+
+- Data analysis and interpretation: use tools like Excel, SQL, and Python to analyze data, apply statistical techniques to uncover trends and patterns, and present clear, actionable insights to clients, ensuring clarity for both technical and non-technical audiences.
+
+What we are looking for
+
+- Educational background: a completed Bachelor degree, ideally focusing on Technology or (Business) Economics (MSc, MBA), with strong academic performance. 
+
+- Work experience: 1 year experience in consulting, data/analytics, marketing, advertising, finance, or tech is a plus but not required.
+
+- Business acumen: you possess a dual profile in ‘business’ and ‘data,’ with a keen eye for identifying business opportunities.
+
+- Technical proficiency: you have strong Excel and PowerPoint skills; knowledge of statistical software and programming languages such as R or Python is an advantage.
+
+- Analytical mindset: strong analytical abilities with attention to detail, comfortable working with large datasets.
+
+- Language proficiency: you have strong verbal and written communication skills in English, with the ability to represent Artefact in a client-facing capacity.
+
+- Personal attributes: you are curious and passionate about data and technological evolution. You demonstrate rigour, proactivity, and enjoy problem-solving.
+
+Join us now and be part of the future: Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+
+Apply today!

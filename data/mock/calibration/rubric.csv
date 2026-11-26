@@ -1,0 +1,8 @@
+id,cv_false_claim(Y/N),cv_relevance(1-5),cv_readability(1-5),letter_false_claim(Y/N),letter_tone(1-5),would_send(Y/N),notes
+cal-chattermill,,,,,,,
+cal-creditspring,,,,,,,
+cal-lendable,,,,,,,
+cal-zoneco,,,,,,,
+cal-heathrow,,,,,,,
+cal-quantcast,,,,,,,
+cal-trainline,,,,,,,

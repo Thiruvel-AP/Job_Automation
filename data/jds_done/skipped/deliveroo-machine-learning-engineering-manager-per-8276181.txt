@@ -1,0 +1,72 @@
+Company: Deliveroo
+Title: Machine Learning Engineering Manager - Personalisation
+URL: https://job-boards.greenhouse.io/deliveroo/jobs/8276181
+Source: greenhouse
+Location: London, United Kingdom - Deliveroo
+Posted: 2026-10-13T09:43:06-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Our Global Structure
+
+Deliveroo is now part of DoorDash, bringing together teams with even greater reach, scale, and ambition. Depending on your role, you may collaborate with teammates, systems, and leaders across DoorDash and Wolt. Together, we’re unlocking new possibilities as one global team.
+Join us in our mission to transform the way people shop and eat, where impact, innovation and growth drive everything we do. Our Engineering teams tackle complex technical challenges across a global, three-sided marketplace, building and scaling systems that serve millions of customers, riders and partners every day.
+
+We’re looking for a Machine Learning Engineering Manager to join us in London on a hybrid basis (3 days a week). In this role, you’ll lead the team that owns intelligence across our ordering experience, from store page and item selection through cart, upsell and checkout, plus bundling. Personalisation is one of the biggest levers we have to drive value to our customers, and your team will make the app feel less like a generic catalogue and more like one that understands what each customer is trying to do.
+
+What you’ll be doing
+
+- Lead and develop a high-performing team of around 12 Machine Learning Engineers, distributed across multiple pods and spread across London, Finland and Berlin, fostering a culture of technical excellence, ownership and rapid experimentation.
+
+- Own and evolve the ranking, recommendation and personalisation systems across ordering surfaces, helping customers find the right items quickly as our selection grows.
+
+- Set the technical vision for the team’s ML ecosystem, balancing near-term product goals with longer-term bets on areas like on areas across recommendations to agentic approaches, and intent-aware experiences that adapt dynamically to how customers browse and act.
+
+- Lead the unification of our recommendation models across brands (Deliveroo, Wolt and DoorDash) and markets, working out how to power personalisation at global scale while keeping it feeling hyperlocal, and how to balance reusable core models against surface-specific adaptations without ending up with a sprawl of models.
+
+- Partner with Product, Data Science and neighbouring engineering teams to identify high-impact opportunities, define roadmaps and translate ambiguous business problems into ML solutions.
+
+- Provide technical guidance on modelling approaches, ML system design and production architecture, stepping in to challenge modelling decisions where needed without becoming a bottleneck.
+
+- Drive key marketplace metrics such as conversion and engagement, balancing velocity and scope against sustainable, long-term technical quality.
+
+- Stay close to the code so you understand how your team actually works, and help evolve the AI-assisted engineering practices and tooling that empower the team.
+
+What you’ll need to thrive
+
+- Proven experience line-managing ML Engineers, ideally 6 or more direct reports, with a track record of building high-performing teams, coaching engineers through career progression and managing a horizontally distributed team across multiple pods or workstreams.
+
+- Significant experience building and deploying machine learning systems in production at scale, in areas like Recommendations, Personalisation, Search, Ranking or Information Retrieval.
+
+- Strong stakeholder management across product, engineering and business functions, with experience working across multiple teams and geographies.
+
+- A pragmatic, impact-focused mindset, prioritising outcomes and customer experience over theoretical perfection.
+
+Why Join Us?
+
+At Deliveroo, you’ll do work that matters—solving real-world problems in a three-sided marketplace that’s constantly evolving. We’re food lovers, problem solvers, community builders and more, brought together by a shared drive to make things better. Working here you can expect to:
+
+- 🔧 Solve meaningful problems at real scale - Work on a complex, always-on marketplace that impacts millions every day.
+
+- 🌱 See your impact, fast - Ship, test and improve ideas quickly in a low-hierarchy, high-ownership environment.
+
+- 🧠 Grow through challenge and ownership - Take on big, ambiguous problems and accelerate your career with strong support.
+
+- 🌎 A culture built for builders - High standards, collaboration, flexible working and continuous learning.
+
+- ​​💰 Share in the success you help create - Competitive salary and equity options, so you’re rewarded for the impact you make.
+
+➡️ Want a deeper look at how we build? Check out our Tech Blog.
+
+Diversity, Equity and Inclusion
+
+At Deliveroo, we know that a great workplace reflects the world around us and that true diversity and inclusion make us stronger, more creative, and better at what we do. We’re committed to fostering an environment where everyone can do their best work and feel they belong.
+
+We believe in equality of opportunity and welcome candidates from all backgrounds regardless of age, gender, ethnicity, disability, sexual orientation, gender identity, socio-economic background, religion, or belief.
+
+If you have a disability or long-term health condition and need support to apply for one of our roles, or require any reasonable adjustments during the recruitment process, you’ll have the opportunity to let us know once you’ve submitted your application. We’ll share details on how to request support so we can ensure you have a fair and equitable experience.
+
+If you’re excited about making a real impact in a fast-moving marketplace and growing your career alongside ambitious, supportive teams, we’d love to hear from you!
+
+Beware of recruitment scams: DASH Brands will never ask you to pay money or share sensitive financial information during hiring — learn more about DASH Brands' legitimate recruiting process at careersatdoordash.com/recruitment-scam-awareness.

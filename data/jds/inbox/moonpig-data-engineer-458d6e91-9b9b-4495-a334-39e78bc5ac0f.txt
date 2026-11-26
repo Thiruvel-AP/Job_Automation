@@ -1,0 +1,109 @@
+Company: Moonpig
+Title: Data Engineer
+URL: https://jobs.lever.co/moonpig/458d6e91-9b9b-4495-a334-39e78bc5ac0f
+Source: lever
+Apply kind: lever
+Location: London, GB
+Posted: 2026-11-13T10:23:11.165000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-18
+Listed: yes
+
+Buyagift and Red Letter Days are the UK’s leading gift experience provider. We’re all about turning special moments into extra-special memories. With a gifting range of 4000+ experiences from spa days and skydives to gourmet treats and once-in-a-lifetime adventures, we make it easy to give the gift of wow. 🎁
+ 
+As part of the Moonpig Group, we’re proud to share that our vision is to become the most trusted platform in the UK gift experience market. Our mission is to spread happiness through thoughtful, joy-filled experiences. People are at the heart of everything we do. Since joining the Moonpig Group in 2022, we’ve been powered by strong values, bold ideas and a shared passion for making a real difference. Here, you’ll have the chance to shape the kind of experiences people never forget – and help us build connections that truly matter.
+ 
+
+
+Key Responsibilities
+- Design, build and maintain data pipelines to ingest, transform and load data from a variety of sources into our data warehouse.
+
+- Optimise, maintain and troubleshoot pipelines so consistent, high-quality data is up to date and available.
+
+- Develop and maintain data models that support business intelligence and analytics needs.
+
+- Ensure the quality, performance and security of our data infrastructure.
+
+- Follow best practices for security and infrastructure.
+
+- Create and maintain relevant documentation.
+
+- Collaborate with other engineering teams to build and deploy data-driven products and features.
+
+About You
+- 5+ years of experience in data engineering.
+
+- Strong experience with SQL and ETL/ELT tools such as Fivetran and dbt.
+
+- Experience with data warehousing on Snowflake.
+
+- Confidence interacting with databases and web APIs and processing data.
+
+- Good understanding of relational databases and data modelling best practices.
+
+- Awareness of data governance and security.
+
+- Excellent problem-solving and analytical skills.
+
+- Strong communication and collaboration skills.
+
+- Technical experience with Snowflake, Fivetran, dbt, Git source control, MS DevOps, GitHub Actions and Python.
+
+- Azure experience is a plus.
+
+- Experience with orchestration tooling such as Airflow is nice to have.
+
+- Experience with infrastructure-as-code tools such as Terraform is nice to have.
+
+Our Tech Environment
+- Snowflake, Fivetran, dbt, Git source control, MS DevOps, GitHub Actions and Python.
+
+- Data warehouses, data pipelines, databases, web APIs and cloud computing platforms.
+
+- Azure, Airflow and Terraform are relevant additional technologies for this role.
+
+How We Get There
+- We use applied engineering best practices to solve real-world problems and make a positive impact on the business.
+
+- We collaborate with teams across the organisation to understand data requirements and make data available through secure, stable and GDPR-compliant single sources of truth.
+
+- We enable reporting, analytics and ad-hoc queries while focusing on data quality, performance and security.
+
+Interview Process:
+Stage 1: 30 min call with the Recruiter
+
+Stage 2: 30 min call with the Hiring Manager 
+
+Stage 3 (Final stage): Take-home technical task (sent to you to work on in your own time)
+
+If successful, a 1hour in person interview with the hiring manager and team member to go through the test and some stakeholder management/behavioural questions. 
+
+Our process may vary depending on role and availability. We keep candidates informed of any changes.
+
+What’s in it for you?
+We believe in empowering our team to do their best work. Enjoy:
+ 💸 Competitive Pay & Bonuses: Plus generous pension plans, staff discounts, and share schemes.
+ 💆🏾‍♀️ Wellbeing First: Private healthcare (UK), dental, life insurance and mental health support
+ 🏖️ Flexible Working & Time Off: Generous holidays, hybrid working (unless specified otherwise, 2 days a week in the office), and opportunities for international working.
+ 📈 Career Growth: Learning allowances, coaching, and development programs.
+ 🤝 Recognition & Giving Back: Regular awards, charity support, length of service awards, and volunteering days.
+ 
+Want to see more? 
+Check out our Linked In pages below:
+Buyagift
+Red Letter Days
+Moonpig Group
+ 
+Our Ways of Working:
+We trust our colleagues to do what’s right and offer flexibility to support a balance between work and life. At the same time, face-to-face office time is an important and expected part of working at Moonpig Group. We believe regular in-person working supports collaboration, alignment, and effective decision-making. Candidates will have regular and ongoing time working from the office as part of their role, which will be discussed during the recruitment process.
+ 
+Moonpig Group's Commitment to Equality, Diversity, and Inclusivity:
+At Moonpig Group, we’re all about creating a workplace where everyone feels they truly belong. We celebrate what makes each of us unique, whether that’s our background, how we work best, or what matters most to us.
+ 
+From working parents who need flexible hours to neurodiverse colleagues with specific working styles, we’re here to support our people in ways that work for them. Because when you feel valued and included, you can thrive, and so can we.
+ 
+We’re proud to have a number of employee-led groups driving this forward, including our LGBTQ+, Gender Balance, Neurodiversity and EMBRACE (Educating Myself for Better Racial Awareness and Cultural Enrichment) communities, plus our Group-wide EDI committee. These teams help make sure every voice is heard and every idea has a place.
+ 
+We know that diversity fuels creativity, innovation and connection, and that’s why we’ll keep pushing for progress. Together, we’re building a culture where everyone feels safe, supported, and free to be their brilliant, authentic selves.
+ 
+If you have a preferred name, please use it to apply and share your pronouns if you are comfortable to do so😊 - If you have any reasonable adjustment requests throughout the interview process please let us know on your application or speak to the Recruiter.

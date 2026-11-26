@@ -1,0 +1,528 @@
+{
+  "coverage": 0.6034,
+  "requirements": [
+    {
+      "term": "databases",
+      "alts": [
+        "data warehouses"
+      ],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "databases",
+          "snippet": "Built a generative AI…",
+          "via": "databases"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "databases",
+          "snippet": "Collaborated with the…",
+          "via": "databases"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "databases",
+          "snippet": "Designed how a user's…",
+          "via": "databases"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "databases",
+          "snippet": "Built a search assistant…",
+          "via": "databases"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_agents",
+          "quote": "databases",
+          "snippet": "Built an AI assistant on AWS for an MSc dissertation with an…",
+          "via": "databases"
+        }
+      ]
+    },
+    {
+      "term": "events",
+      "alts": [
+        "protocols (including MCP"
+      ],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "av10",
+          "quote": "events",
+          "snippet": "As a trainee, replaced a…",
+          "via": "events"
+        }
+      ]
+    },
+    {
+      "term": "applied AI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "process automation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "production-grade automation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "Python"
+        }
+      ]
+    },
+    {
+      "term": "workflow automation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "apis",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "APIs",
+          "snippet": "Built a generative AI…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "apis",
+          "snippet": "Designed how a user's…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "apis",
+          "snippet": "For a private client,…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "APIs",
+          "snippet": "Shipped features in a live…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "apis",
+          "snippet": "Helped build a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "apis",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "apis",
+          "snippet": "For an insurance hackathon…",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "OpenAI API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "APIs",
+          "snippet": "REST APIs",
+          "via": "apis"
+        }
+      ]
+    },
+    {
+      "term": "collaboration",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "collaboration",
+          "snippet": "Collaborated with the…",
+          "via": "collaboration"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia2",
+          "quote": "collaboration",
+          "snippet": "In a five-person team,…",
+          "via": "collaboration"
+        }
+      ]
+    },
+    {
+      "term": "communication",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "communication",
+          "snippet": "Did the data analysis on…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholder",
+          "snippet": "Led the design in a…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "stakeholder",
+          "snippet": "Collaborated with the…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "communication",
+          "snippet": "The client's founder later…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "communication",
+          "snippet": "Shipped features in a live…",
+          "via": "communication"
+        }
+      ]
+    },
+    {
+      "term": "cross-functional",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "cross-functional",
+          "snippet": "Led the design in a…",
+          "via": "cross-functional"
+        }
+      ]
+    },
+    {
+      "term": "financial services",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "financial services",
+          "snippet": "Shipped features in a live…",
+          "via": "financial services"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "financial services",
+          "snippet": "Helped build a…",
+          "via": "financial services"
+        }
+      ]
+    },
+    {
+      "term": "mcp",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "MCP",
+          "snippet": "Led the design in a…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "MCP",
+          "snippet": "Collaborated with the…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "MCP",
+          "snippet": "Designed how a user's…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "MCP",
+          "snippet": "Built a search assistant…",
+          "via": "mcp"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "MCP",
+          "snippet": "MCP (FastMCP, MCP SDK)",
+          "via": "mcp"
+        }
+      ]
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "production",
+          "snippet": "Did the data analysis on…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Collaborated with the…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "production",
+          "snippet": "Led the design in a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "production",
+          "snippet": "For a private client,…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a live…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "scalable",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "capital markets",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "digital asset platforms",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "fintech",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "fintech",
+          "snippet": "Built a private client an…",
+          "via": "fintech"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "FinTech",
+          "snippet": "Shipped features in a live…",
+          "via": "fintech"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "fintech",
+          "snippet": "Helped build a…",
+          "via": "fintech"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:ed17343d629a",
+ "company": "G-Research",
+ "title": "Graduate Machine Learning Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 3.5,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0, ATS ceiling 40%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family ml_engineer matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "London HQ, benefits listed, but company size unknown"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or problematic language found"
+  }
+ },
+ "global_score": 3.9,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm actual compensation package (base salary, bonus)",
+  "Find company size and growth trajectory to validate culture score",
+  "Verify start date feasibility and visa sponsorship if needed"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.9,
+ "model_confidence": "Medium",
+ "jd_hash": "971f118063b20258",
+ "jd_words": 529,
+ "tokens": 1832,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

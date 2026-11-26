@@ -1,0 +1,9 @@
+```json
+{
+  "az1": "Built an agentic genai tool using LangChain, AWS Bedrock, and Claude Haiku 4.5 to call LLM functions for gene alias resolution, scoring methodology explanation, and dataset provenance.",
+  "az3": "Deployed the agent as a production Docker container on AWS Lambda with ECR pipelines, IAM roles, and least‑privilege policies.",
+  "dc1": "Proposed and prototyped an MCP-based agentic tool in Python, using FastMCP, Ollama gpt‑oss:20b, PostgreSQL, and GitHub Actions CI, and communicated results in a live stakeholder demo.",
+  "fl2": "Built retrieval-augmented generation workflows with Hugging Face Transformers, Ollama, LangChain, and LangGraph, integrating NLP and agentic capabilities.",
+  "fl3": "Contributed to a LoRA fine-tuning of an instruction-tuned Llama model for a maths-focused task."
+}
+```

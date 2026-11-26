@@ -1,0 +1,96 @@
+Company: Faculty
+Title: Research Scientist - AI Safety
+URL: https://jobs.ashbyhq.com/faculty/188ecaba-2f9c-4a15-a86b-dc2f369f03bd
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-08-06T12:48:35.683+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+
+ABOUT THE ROLE
+
+
+
+As a Research Scientist - AI Safety at Faculty, you will conduct original technical research in AI safety to build the foundation for safe, trustworthy AI deployment. Operating at the forefront of AI, you will design and execute impactful experiments, study model behaviour, and develop robust, reproducible tooling. Working alongside Senior and Lead Research Scientists, you will bridge scientific discovery with practical application, helping translate complex technical insights for external partners, frontier labs, and national security institutes. This is an incredible opportunity to hone your expertise, shape emerging safety standards, and solve some of the most critical challenges in modern AI.
+
+
+
+
+WHAT YOU'LL BE DOING:
+
+
+
+ - Executing technical research in AI safety by designing and running experiments to study and steer model behaviour.
+
+ - Applying white-box and black-box methodologies, focusing on interpretability, steering, and behavioural studies of transformer-based LLMs.
+
+ - Developing high-quality, modular, and reproducible research code in Python using deep learning frameworks like PyTorch.
+
+ - Building and maintaining research infrastructure and technical tooling to accelerate scientific discovery.
+
+ - Documenting and communicating experimental findings through high-quality academic papers, technical reports, and presentations.
+
+ - Collaborating with senior scientists to identify literature gaps, refine hypotheses, and identify research scope.
+
+ - Translating complex technical insights for diverse audiences, including external frontier labs, government bodies, and safety institutes.
+
+
+
+
+WHO WE'RE LOOKING FOR:
+
+
+
+ - Solid background in machine learning fundamentals and transformer architectures (specifically LLMs).
+
+ - A practical understanding of white-box and black-box interpretability techniques, such as steering vectors or mechanistic interpretability.
+
+ - Demonstrated capability to take structured technical problems and formulate hypotheses
+
+ - Strong programming skills in Python and deep learning frameworks like PyTorch, with a track record of writing clean, modular research code, using Git for version control.
+
+ - Excellent communication, enabling you to translate complex technical concepts and experimental results into clear reports and presentations.
+
+ - Curiosity and analytical rigour, combined with exposure to core AI safety areas such as robustness, evaluations, or uncertainty calibration.
+   
+   
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

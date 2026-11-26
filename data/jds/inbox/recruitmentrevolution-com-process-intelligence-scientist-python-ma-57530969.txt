@@ -1,0 +1,76 @@
+Company: RecruitmentRevolution.com
+Title: Process Intelligence Scientist - Python, Machine Learning, Statistics, Data Science
+URL: https://www.reed.co.uk/jobs/process-intelligence-scientist-python-machine-learning-statistics-data-science/57530969
+Source: reed
+Location: Didcot, GB
+Salary: GBP 45,000-65,000
+Posted: 2026-11-04
+Posted via: reed.date
+First seen: 2026-11-17
+
+Machine Learning | Python | Data Science | Industrial Analytics | Predictive Modelling | Process Optimisation 
+Imagine using advanced analytics to predict problems before they happen, improve manufacturing performance and help industrial plants operate more efficiently. 
+Not through hypothetical datasets, but by working with real industrial processes, real customers and data that makes a measurable difference. 
+Welcome to Keit. 
+We're an innovative UK technology company developing advanced analytical solutions that help manufacturers understand and optimise their processes in real time. 
+Our technology combines spectroscopy, industrial process data and intelligent software to unlock insights that traditional monitoring methods can't provide. 
+Now we're looking for a talented Process Intelligence Scientist to help take that capability to the next level. 
+The Role at a Glance 
+Process Intelligence Scientist 
+Harwell Campus, Didcot, Oxfordshire | Office-Based 
+£45,000–£65,000 DOE 
+Full Time | Permanent 
+Monday–Friday, 9am–5:30pm (Some Flexibility Available) 
+Occasional International Travel, Primarily North America 
+Candidates must already have the unrestricted right to work in the UK. 
+The Keit Story 
+At Keit, we're passionate about making complex industrial processes easier to understand, monitor and improve. 
+Our IRmadillo spectrometer platform provides advanced, real-time chemical analysis, while our IRis software platform combines spectroscopy, laboratory measurements and operational data to deliver meaningful process insights. 
+Today, our technology helps customers in the fuel ethanol industry monitor and optimise fermentation. 
+But we're only scratching the surface. 
+Your Role in the Story 
+As our Process Intelligence Scientist, you'll work at the intersection of machine learning, chemistry, industrial processes and software development. 
+You'll develop predictive models, improve existing chemometric capabilities and explore new ways to turn complex process data into practical recommendations for customers. 
+Working closely with chemometricians, software developers and customer engineering teams, you'll understand real operational challenges and develop solutions that create measurable value. 
+This is a hands-on opportunity to combine technical problem-solving, experimentation and customer collaboration while helping shape the future of our IRis platform. 
+About You 
+You're a curious data scientist or analytical specialist who enjoys solving difficult problems and finding meaningful insights in complex information. 
+You're comfortable working with incomplete, noisy and imperfect datasets, and enjoy translating technical ideas into practical solutions. 
+You'll also bring: 
+• Strong foundations in machine learning, statistics or data science. 
+• Excellent Python programming skills and hands-on predictive modelling experience. 
+• Proven ability to extract valuable insights from messy, real-world datasets. 
+• Experience developing and applying statistical or machine learning models to practical problems. 
+• Strong analytical reasoning and an evidence-led approach to problem-solving. 
+• The confidence to explain complex technical concepts clearly to non-specialists. 
+• A collaborative, customer-focused mindset and the initiative to turn ideas into working solutions. 
+Highly Desirable 
+• Experience within industrial biotechnology, fermentation, manufacturing or process industries. 
+• Knowledge of chemometrics, including PLS, PCA, spectral preprocessing or calibration development. 
+• Experience with spectroscopy or analytical instrumentation. 
+• Time-series analytics, anomaly detection or industrial process optimisation. 
+• Familiarity with Azure-based data and analytics environments. 
+The Person We're Looking For 
+We value potential and attitude just as highly as existing industry knowledge. 
+You don't need to know everything about spectroscopy or fermentation, but you do need the curiosity and technical foundations to learn quickly. 
+You'll thrive in a team that debates ideas constructively, challenges assumptions and makes evidence-based decisions. 
+At Keit, we believe the best solutions come from collaboration, continuous improvement and being willing to experiment, even when that means occasionally getting things wrong. 
+What's on Offer 
+• £45,000–£65,000 Salary Depending on Experience 
+• Some Flexibility in Working Hours 
+• The Opportunity to Work with Advanced Spectroscopy and Machine Learning Technology 
+• Direct Exposure to Industrial Challenges and International Customers 
+• The Chance to Influence Future Product Capabilities and Technical Direction 
+• Collaboration with Experienced Scientists, Engineers and Software Developers 
+• A Supportive, Collaborative and Evidence-Led Working Environment 
+• A Key Role in Building Keit's Future Process Intelligence Capability 
+Why Join Keit? 
+This is more than another data science role. 
+It's an opportunity to apply your technical expertise to real industrial challenges, where better predictions and smarter decisions can directly improve manufacturing performance. 
+You'll work with a unique combination of spectroscopy, laboratory and operational data, developing solutions that have genuine practical value. 
+And you'll help shape a technology platform with the potential to transform process monitoring and optimisation across multiple industries. 
+Ready to Turn Data into Something Extraordinary? 
+If you're a talented machine learning or data science professional who loves solving complex problems and wants to help build the future of industrial process intelligence, we'd love to hear from you. 
+Apply now and help shape the next chapter of Keit. 
+Application Notice 
+We take your privacy seriously. As you might expect, you may be contacted by email, text or telephone. Your data is processed by our talent partner RR (Recruitment Revolution) on the basis of their legitimate interests in fulfilling the recruitment process. Please refer to their Data Privacy Policy & Notice on their website for further details.

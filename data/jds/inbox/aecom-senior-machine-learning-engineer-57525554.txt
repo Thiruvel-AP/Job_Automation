@@ -1,0 +1,52 @@
+Company: AECOM
+Title: Senior Machine Learning Engineer
+URL: https://www.reed.co.uk/jobs/senior-machine-learning-engineer/57525554
+Source: reed
+Location: London, GB
+Posted: 2026-11-04
+Posted via: reed.date
+First seen: 2026-11-18
+
+Senior Machine Learning Engineer 
+In AECOM's AI Engineering team your code will directly shape the physical world around us. We build AI-driven technology that revolutionises how infrastructure and buildings are designed and engineered; reducing waste, cutting CO2, and making the built environment more efficient and sustainable. This is where software has measurable, real-world impact. 
+Our AI Engineering team combines the speed, ownership, and technical ambition of a startup with the scale, resources, and domain expertise of one of the world's leading engineering firms. 
+You'll work on challenging applied machine learning problems spanning optimization, simulation, and real-world engineering systems, building models that move beyond experimentation and into products used to solve tangible infrastructure challenges. These are often complex, ambiguous problems where the solution is not already defined. 
+What You'll Do 
+
+- Lead the design and development of advanced machine learning models that deliver measurable impact across engineering and infrastructure applications.
+- Own the end-to-end modelling lifecycle—from problem formulation and feature strategy through experimentation, validation, deployment, and iteration.
+- Tackle complex, ambiguous problems and translate them into scalable ML solutions.
+- Design robust experimentation frameworks and evaluation methodologies that measure real-world model performance.
+- Diagnose model failure modes, evaluate performance trade-offs, and continuously improve models after deployment.
+- Collaborate closely with MLOps and software engineering teams to productionize models while maintaining a strong focus on modelling quality and performance.
+- Partner with product managers, engineers, and domain experts to embed AI capabilities into our SaaS platform.
+- Provide technical leadership across ML initiatives, mentoring other engineers and helping shape modelling approaches, experimentation standards, and technical direction. 
+Must-Have Qualifications 
+
+- Proven experience developing and deploying ML models in production settings
+- Master's or PhD in Engineering, Computer Science, Applied Mathematics, Data Science, Operations Research, or a related field
+- Strong expertise in Python and modern ML frameworks (e.g., PyTorch, TensorFlow, scikit-learn)
+- Demonstrated depth in model design, optimization, and evaluation beyond standard off-the-shelf approaches
+- Strong intuition for model failure modes, generalization, and real-world performance trade-offs
+- Experience owning machine learning initiatives end-to-end, from problem definition through deployment and iteration.
+- Proven ability to independently scope, execute, and deliver high-impact ML initiatives
+- Clear communicator who can explain complex modelling decisions and trade-offs to diverse stakeholders 
+Preferred Skills 
+
+- Experience applying machine learning to engineering-heavy or physical-world domains such as mechanical engineering, construction, transportation, HVAC, energy systems, or robotics.
+- Background in optimisation, simulation, scientific machine learning, physics-informed learning, or digital twins
+- Experience with time-series forecasting, computer vision, sensor data, or other complex engineering datasets.
+- Track record of mentoring or technically leading ML initiatives. 
+Our Hiring Process 
+
+- 25-minute screening call
+- Take-home challenge: A hands-on task to assess your problem-solving and technical skills
+- Combined technical and cultural interview (in-person)
+- Whiteboard Interview: 1-hour with 2 of our engineers to discuss your solution to the take-home challenge
+- Culture fit: 30-minute meeting with our leadership team 
+Why Join Us? 
+
+- Work on real-world problems where AI creates measurable impact.
+- Be part of a team where your work matters, and your ideas become real.
+- Collaborate with sharp, driven colleagues in a culture of trust, ownership, and high standards.
+- Contribute to making the built environment smarter and more sustainable.

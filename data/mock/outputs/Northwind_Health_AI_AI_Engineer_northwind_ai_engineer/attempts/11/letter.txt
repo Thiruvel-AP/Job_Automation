@@ -1,0 +1,13 @@
+Hi Northwind Health AI team,
+
+Northwind Health AI needs the AI Engineer to deliver the work described in this ad. That is the kind of problem I have been working on. For my AstraZeneca-affiliated MSc dissertation I built an AI assistant that researchers could trust: it checks its answers against official databases, keeps working when those services go down, and is checked by about 65 automated tests. When the project switched AI providers, the same tests showed it still behaved, and I wrote up how often it got answers wrong so the team knew where it could be trusted.
+
+At 180 Degrees Consulting I led the design in a five-person team that turned a startup's vague idea into a working AI prototype in three months, which the client's engineers then put into everyday use. The client's founder later called it "stable, production-ready" and said it arrived "ahead of schedule". At a hackathon I built a tool that answers in under 3 seconds for about £0.003 per question, and as a freelancer I built a private client an AI finance assistant that runs on his own server to keep costs down. Before my MSc, at Avasoft, I helped ship the first release of a money-management app for a company's 10,000+ employees.
+
+Your ad asks for the work this role would own, and that is the part of this role I most want to grow into.
+
+Could we spend 20 minutes on what the first problem in this role would be?
+
+Regards,
+
+Thiruvel Andagurunathan Pandian

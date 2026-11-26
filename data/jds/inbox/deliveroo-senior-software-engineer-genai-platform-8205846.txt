@@ -1,0 +1,133 @@
+Company: Deliveroo
+Title: Senior Software Engineer, GenAI Platform
+URL: https://job-boards.greenhouse.io/deliveroo/jobs/8205846
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, United Kingdom - Deliveroo
+Posted: 2026-10-06T05:39:54-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Our Global Structure
+
+Deliveroo is now part of DoorDash, bringing together teams with even greater reach, scale, and ambition. Depending on your role, you may collaborate with teammates, systems, and leaders across DoorDash and Wolt. Together, we’re unlocking new possibilities as one global team.
+Senior Software Engineer, GenAI Platform
+
+About the Team
+
+Deliveroo's GenAI Platform team sits within Machine Learning Platform and builds the shared infrastructure that helps DoorDash, Wolt, and Deliveroo teams safely bring GenAI-powered products, agents, automation, and personalisation to production. Our mission is to increase the velocity of business impact from GenAI. A central pillar of that work is running frontier open-weight LLMs and VLMs (such as GLM, Qwen, Kimi, and DeepSeek) ourselves — real-time GPU serving, high-throughput batch inference, and fine-tuning on autoscaling GPUs — delivering large cost and latency wins (for example, a billion embeddings produced roughly 20× cheaper and visual models served roughly 72% cheaper). We also own core platform surfaces including the LLM Gateway, Agent Gateway, evals infrastructure, guardrails, and cost attribution.
+
+About the Role
+
+You will join a small, high-leverage team building production infrastructure for Generative AI at Deliveroo and DoorDash, leading the design and architecture of our open-weights model platform spanning inference and fine-tuning: real-time GPU serving, high-throughput batch inference, and model fine-tuning. You’ll set technical direction across model serving and inference engines, fine-tuning and training pipelines, GPU autoscaling and utilization, batch pipelines, backend services, and observability, and mentor engineers as you go. This role is ideal for a senior engineer who enjoys owning ambiguous, high-impact systems and pushing the cost/performance frontier of GPU inference and fine-tuning in a fast-moving technical area where product needs, model capabilities, vendor ecosystems, and cost/performance tradeoffs are evolving quickly.
+
+You’re excited about this opportunity because you will…
+
+- 
+
+Lead the design of infrastructure that helps teams move GenAI ideas from prototype to production, increasing the velocity of business impact from AI across the company.
+
+- 
+
+Own and evolve our open-weights serving stack — real-time GPU endpoints, high-throughput batch inference, and fine-tuning (SFT/DPO/LoRA) — alongside the LLM Gateway, Agent Gateway, evals infrastructure, guardrails, and cost attribution.
+
+- 
+
+Architect scalable, high-performance systems for model serving, batch inference, GPU autoscaling, and fine-tuning that power real customer and internal automation use cases
+
+- 
+
+Push the cost and latency frontier of GPU inference — turning batch jobs that took days into hours and cutting inference cost by multiples — while giving product teams a clean choice across open-weight and closed-source models with reliability, fallback, observability, and cost controls built in.
+
+- 
+
+Build platforms that support rapid experimentation while meeting production standards for latency, scale, monitoring, SLOs, playbooks, and operational excellence.
+
+- 
+
+Partner closely with — and raise the technical bar for — ML engineers, product engineers, data scientists, and platform teams across DoorDash, Wolt, and Deliveroo to turn emerging GenAI capabilities into durable platform primitives.
+
+- 
+
+Set technical direction for the future of the company's centralised GenAI platform — including emerging directions such as reinforcement learning (RLHF/RLVR), agent optimisation, and other post-training and agentic techniques — enabling the next generation of AI-powered products, agents, automation, and personalisation.
+
+We’re excited about you because…
+
+- 
+
+BSc, MSc or PhD in Computer Science or equivalent
+
+- 
+
+5+ years of industry experience in software engineering
+
+- 
+
+Deep backend engineering fundamentals, especially in Python and distributed systems.
+
+- 
+
+Track record of designing and owning production services, APIs, data pipelines, or ML infrastructure at scale.
+
+- 
+
+Experience operating systems in production, including observability, debugging, reliability, incident response, and performance/cost optimization.
+
+- 
+
+Deep hands-on experience with LLM inference and/or fine-tuning of open-weight models in production — serving (latency, throughput, batching, autoscaling, GPU utilization) and/or fine-tuning (SFT/DPO/LoRA).
+
+- 
+
+Demonstrated technical leadership: leading design across ambiguous, fast-moving technical areas, mentoring engineers, and turning customer use cases into reusable platform capabilities
+
+- 
+
+Proficiency in using AI coding tools (e.g., Claude Code, Codex, Cursor) in the full software development lifecycle, including designing, generating code, testing, monitoring and releasing software
+
+Nice To Haves
+
+- 
+
+Experience with LLM inference engines and serving frameworks (e.g., vLLM, SGLang, TensorRT-LLM) in production
+
+- 
+
+Experience with distributed/multi-node fine-tuning and training pipelines (SFT, DPO/RLHF, LoRA), including data preparation and evaluation
+
+- 
+
+GPU performance work — multi-node/distributed inference, KV-cache/memory optimisation, quantisation (FP8/INT8/AWQ/GPTQ), or cold-start/throughput tuning
+
+- 
+
+Experience with Kubernetes, cloud infrastructure (AWS/GCP), GPUs, serverless/elastic GPU platforms (e.g., Modal), or high-throughput batch systems
+
+- 
+
+Experience with LLM gateways, model routing, vendor abstraction, or cost attribution
+
+- 
+
+Experience building developer platforms, internal platforms, or self-serve infrastructure
+
+- 
+
+Experience building and deploying AI agents or MCP servers in production
+
+- 
+
+Experience with eval systems, LLM observability, tracing, RAG, search, or vector databases
+
+Diversity, Equity and Inclusion
+
+At Deliveroo, we know that a great workplace reflects the world around us and that true diversity and inclusion make us stronger, more creative, and better at what we do. We’re committed to fostering an environment where everyone can do their best work and feel they belong.
+
+We believe in equality of opportunity and welcome candidates from all backgrounds regardless of age, gender, ethnicity, disability, sexual orientation, gender identity, socio-economic background, religion, or belief.
+
+If you have a disability or long-term health condition and need support to apply for one of our roles, or require any reasonable adjustments during the recruitment process, you’ll have the opportunity to let us know once you’ve submitted your application. We’ll share details on how to request support so we can ensure you have a fair and equitable experience.
+
+If you’re excited about making a real impact in a fast-moving marketplace and growing your career alongside ambitious, supportive teams, we’d love to hear from you!
+
+Beware of recruitment scams: DASH Brands will never ask you to pay money or share sensitive financial information during hiring — learn more about DASH Brands' legitimate recruiting process at careersatdoordash.com/recruitment-scam-awareness.

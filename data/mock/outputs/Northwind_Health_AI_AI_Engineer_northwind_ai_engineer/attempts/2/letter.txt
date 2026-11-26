@@ -1,0 +1,13 @@
+Hi Northwind Health AI team,
+
+Northwind Health AI needs the AI Engineer to deliver the work described in this ad. That is the kind of problem I have been working on. For my AstraZeneca-affiliated MSc dissertation I built a tool-calling LLM agent that keeps working when its data sources fail, deployed it on AWS Lambda and checked it with a three-tier framework of ~65 automated tests. After a rate-limit evaluation moved the agent from Groq to AWS Bedrock, I used the same tests to confirm it still behaved.
+
+I care about the parts that make AI usable: grounding answers in trusted data through deterministic lookups, hallucination guards, and fallbacks for when external APIs go down. I also wrote the project's agent evaluation, including a documented hallucination-rate analysis. At 180 Degrees Consulting I prototyped an agentic tool for a loosely defined client brief and contributed to the client's production MCP server, now in live use; senior leadership rated the engagement five stars. At the Bristol × UWE AI Hackathon I paired a deterministic matching engine with a single LLM call, answering in under 3 seconds at about £0.003 per query. As a freelance engineer I built a production RAG and agentic retrieval system with LangChain and LangGraph.
+
+Your ad asks for the work this role would own, which is the work I want to do next.
+
+Could we spend 20 minutes on what the first problem in this role would be?
+
+Regards,
+
+Thiruvel Andagurunathan Pandian

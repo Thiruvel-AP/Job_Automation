@@ -1,0 +1,77 @@
+Company: Deliveroo
+Title: Senior Data Science Manager
+URL: https://job-boards.greenhouse.io/deliveroo/jobs/8367228
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, United Kingdom
+Posted: 2026-11-10T09:12:17-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-18
+Listed: yes
+
+Our Global Structure
+
+Deliveroo is now part of DoorDash, bringing together teams with even greater reach, scale, and ambition. Depending on your role, you may collaborate with teammates, systems, and leaders across DoorDash and Wolt. Together, we’re unlocking new possibilities as one global team.
+Join us in our mission to transform the way people shop and eat, where impact, innovation and growth drive everything we do.
+
+Our EMEA Data Science organisation sits at the heart of Deliveroo and Wolt, powering decision-making across product, commercial and operational teams through experimentation, causal inference and deep business understanding. As part of DoorDash, our EMEA Data Science team brings together colleagues across Deliveroo and Wolt, creating opportunities to learn from different markets and tackle complex local-commerce challenges.
+
+We’re looking for a Senior Data Science Manager to shape data science strategy across a broad area of our Logistics organisation. You’ll combine strong people leadership, technical judgement and commercial thinking to help our teams make better decisions and deliver measurable business impact.
+
+About The Logistics Team
+
+Logistics makes our marketplace work in the real world: connecting riders with orders and helping deliveries happen efficiently and reliably. The organisation works on problems such as predicting demand, improving delivery-time estimates, and matching orders with riders, all in an efficient way to ensure we can offer the most affordable pricing to our customers.
+
+These are interconnected challenges. Decisions about supply, incentives and network efficiency can affect consumers, riders and restaurant and retail partners at the same time. Data Science helps us understand those relationships, test new approaches and balance delivery reliability, rider experience and sustainable business economics.
+
+It’s an environment where rigorous experimentation meets real-world complexity, and where your team’s work can shape both everyday operational decisions and longer-term product strategy.
+
+What You’ll Be Doing 
+
+You’ll own the data science direction and measurable impact of a broad Logistics problem space spanning multiple cross-functional teams. You’ll:
+
+- Set strategy and priorities with Product, Engineering and Operations leaders, focusing investment on the highest-impact opportunities across immediate needs and longer-term goals.
+
+- Build and develop a high-performing, inclusive team through hiring, coaching and performance management, growing leaders who can deliver independently.
+
+- Guide solutions to complex marketplace challenges, from balancing supply and demand to evaluating incentives and improving delivery performance and economics.
+
+- Set the technical bar for experimentation, causal inference and analysis, staying close enough to challenge approaches and ensure decisions reflect real marketplace effects.
+
+- Influence senior stakeholders and align teams around shared outcomes, resolving competing priorities and turning evidence into product and operational decisions.
+
+- Directly lead projects that resolve highly complex challenges, which often span across multiple parts of the business and unlock new vectors of impact, boosting company-level goals.
+
+What You’ll Need to Thrive
+
+Our ideal candidate will bring:
+
+- A track record of leading and developing high-performing data science or closely related analytical teams, with responsibility for complex work spanning multiple teams or business areas.
+
+- Experience setting analytical strategy and allocating people and effort across competing priorities, with clear evidence of product, operational or commercial impact.
+
+- Strong technical foundations in experimentation, causal inference and statistical analysis, with the judgement to select appropriate methods, challenge conclusions and coach experienced practitioners.
+
+- The ability to reason about interconnected systems and trade-offs, including how an intervention in one part of a marketplace can affect outcomes elsewhere.
+
+- Experience influencing senior cross-functional leaders, aligning teams around shared goals and turning complex evidence into clear, actionable recommendations.
+
+- A thoughtful approach to building teams: hiring, coaching, managing performance and developing future technical and people leaders.
+
+- Comfort creating structure in ambiguous environments, making pragmatic decisions with incomplete information and adapting as new evidence emerges.
+
+Experience developing other people managers would be particularly valuable. Experience in marketplaces, logistics, mobility, pricing, incentives or other operationally complex businesses is helpful, but not essential. We also value leaders who can bring relevant approaches from other domains.
+
+You don’t need to have worked on every problem listed here. We’re interested in the depth of your leadership, the quality of your judgement and the impact you enable through others.
+
+Diversity, Equity and Inclusion
+
+At Deliveroo, we know that a great workplace reflects the world around us and that true diversity and inclusion make us stronger, more creative, and better at what we do. We’re committed to fostering an environment where everyone can do their best work and feel they belong.
+
+We believe in equality of opportunity and welcome candidates from all backgrounds regardless of age, gender, ethnicity, disability, sexual orientation, gender identity, socio-economic background, religion, or belief.
+
+If you have a disability or long-term health condition and need support to apply for one of our roles, or require any reasonable adjustments during the recruitment process, you’ll have the opportunity to let us know once you’ve submitted your application. We’ll share details on how to request support so we can ensure you have a fair and equitable experience.
+
+If you’re excited about making a real impact in a fast-moving marketplace and growing your career alongside ambitious, supportive teams, we’d love to hear from you!
+
+Beware of recruitment scams: DASH Brands will never ask you to pay money or share sensitive financial information during hiring — learn more about DASH Brands' legitimate recruiting process at careersatdoordash.com/recruitment-scam-awareness.

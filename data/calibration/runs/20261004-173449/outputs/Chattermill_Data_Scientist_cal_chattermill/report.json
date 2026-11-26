@@ -1,0 +1,670 @@
+{
+  "job_id": "calibration:cal-chattermill",
+  "company": "Chattermill",
+  "title": "Data Scientist",
+  "family": "data_scientist",
+  "tier": 1,
+  "headline": "Data Scientist",
+  "keywords": [
+    {
+      "term": "extraction",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "fine-tuning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "retrieval",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "classification",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "reranking",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "search",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "agentic",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "classical ML",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "communication",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "custom models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "embeddings",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "genai",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "instruction fine-tuning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "LoRA",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "metrics",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "model serving",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "nlp",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "production",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pytorch",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "real-world text data",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "semantic search",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "sentiment analysis",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "statistics",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "summarisation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "training loops",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "Chattermill builds a Customer Experience Intelligence platform that continuously analyses explicit and implicit customer feedback for large brands such as Uber, Amazon, Wise, and HelloFresh.",
+  "team": "Data Science team",
+  "ceiling": 0.6,
+  "genuine_gaps": [
+    "extraction",
+    "reranking",
+    "custom models",
+    "instruction fine-tuning",
+    "metrics",
+    "real-world text data",
+    "semantic search",
+    "sentiment analysis",
+    "summarisation",
+    "training loops"
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.44,
+      "score_stemmed": 0.44,
+      "band": "below",
+      "pages": 1,
+      "shrinks": 0,
+      "reverted": [],
+      "violations": [
+        "fl2: keyword 'search' not evidenced by source"
+      ],
+      "warnings": [
+        "p_ch1: unrecognised name 'ML XGBoost'"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "extraction",
+        "retrieval",
+        "classification",
+        "reranking",
+        "communication",
+        "custom models",
+        "embeddings",
+        "instruction fine-tuning",
+        "metrics",
+        "real-world text data",
+        "semantic search",
+        "sentiment analysis",
+        "summarisation",
+        "training loops"
+      ],
+      "rephrase": {
+        "eligible": 6,
+        "asked": 6,
+        "cached": 0,
+        "calls": 2,
+        "failed_calls": 0,
+        "proposed": 6,
+        "accepted": 5,
+        "blocked": 1
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az3"
+            ],
+            "dc180": [
+              "dc1"
+            ],
+            "freelance": [
+              "fl2"
+            ],
+            "avasoft": [
+              "av1"
+            ]
+          },
+          "projects": [
+            "churn",
+            "bitcoin"
+          ]
+        },
+        "rephrase": {
+          "az1": "Built an agentic genai tool using LangChain and AWS Bedrock to call Claude Haiku 4.5, resolving gene aliases, explaining scoring methodology, and tracking dataset provenance.",
+          "az3": "Deployed the agent as a production Docker container on AWS Lambda with ECR pipelines, IAM roles, and least-privilege policies.",
+          "dc1": "Proposed and prototyped an MCP-based agentic tool in Python, using FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, and communicated results in a live stakeholder demo.",
+          "fl2": "Built NLP retrieval workflows with Hugging Face Transformers, Ollama, LangChain, and LangGraph, integrating agentic RAG for document search.",
+          "p_ch1": "Built a classical ML XGBoost churn classifier in R with tidymodels, two-stage Bayesian hyperparameter search, SMOTE, and MCC evaluation.",
+          "p_bt1": "Built an LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, deploying model serving via TensorFlow Serving REST API."
+        },
+        "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az3"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl2"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "bitcoin": [
+          "p_bt1"
+        ]
+      },
+      "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+      "rephrase_coverage": {
+        "eligible": 6,
+        "rephrased": 5,
+        "ratio": 0.8333333333333334
+      }
+    }
+  ],
+  "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Chattermill_Data_Scientist_cal_chattermill",
+  "analysis_warnings": [
+    "keywords: frozen (2026-10-04 17:32), extract_keywords not called",
+    "keywords: cut the benefits section 'Our Perks' (2851 characters) before extraction",
+    "extract_keywords: dropped keyword 'LLM-powered features' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'reranking systems' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'insight generation' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'evaluation frameworks' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'test sets' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'generative tasks' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'embedding-based approaches' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'NLP tasks' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'fine-tuning workflows' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'agentic patterns' (not verbatim, too long, generic or a degree)",
+    "keywords: dropped 'retrieval pipelines' (contains 'retrieval' plus only generic head words)",
+    "keywords: capped at 25; dropped transformer architectures, llm, data pipelines, evaluation, research, machine learning"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "final": {
+    "score": 0.44,
+    "score_stemmed": 0.44,
+    "band": "below",
+    "pages": 1,
+    "hits": [
+      "fine-tuning",
+      "search",
+      "agentic",
+      "classical ML",
+      "genai",
+      "LoRA",
+      "model serving",
+      "nlp",
+      "production",
+      "pytorch",
+      "statistics"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "extraction",
+      "retrieval",
+      "classification",
+      "reranking",
+      "communication",
+      "custom models",
+      "embeddings",
+      "instruction fine-tuning",
+      "metrics",
+      "real-world text data",
+      "semantic search",
+      "sentiment analysis",
+      "summarisation",
+      "training loops"
+    ],
+    "chosen_attempt": 1
+  },
+  "rephrase_coverage": {
+    "eligible": 6,
+    "rephrased": 5,
+    "ratio": 0.8333333333333334
+  },
+  "rephrase": {
+    "eligible": 6,
+    "asked": 6,
+    "cached": 0,
+    "calls": 2,
+    "failed_calls": 0,
+    "proposed": 6,
+    "accepted": 5,
+    "blocked": 1
+  },
+  "letter": {
+    "paragraphs": [
+      "Chattermill's Data Scientist role sits close to the work I have been doing most recently.",
+      "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph. XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation.",
+      "Could we find twenty minutes to talk about where I could contribute first on the Data Science team team at Chattermill?"
+    ],
+    "problems": [
+      "'at scale' (capability) is in neither the evidence nor the job description: 'Chattermill's mission to turn every customer touchpoint into'",
+      "used fallback letter"
+    ],
+    "score": 0.12,
+    "pages": 1,
+    "status": "fallback",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "fl2",
+        "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+      },
+      {
+        "id": "p_ch1",
+        "text": "XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "tailor_profile",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 600,
+        "est_input_tokens": 399,
+        "prompt_tokens": 461,
+        "completion_tokens": 80,
+        "reasoning_tokens": 16,
+        "total_tokens": 541,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 897,
+        "prompt_tokens": 896,
+        "completion_tokens": 784,
+        "reasoning_tokens": 585,
+        "total_tokens": 1680,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 483,
+        "prompt_tokens": 521,
+        "completion_tokens": 213,
+        "reasoning_tokens": 169,
+        "total_tokens": 734,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 889,
+        "prompt_tokens": 860,
+        "completion_tokens": 169,
+        "reasoning_tokens": 44,
+        "total_tokens": 1029,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 999,
+        "prompt_tokens": 958,
+        "completion_tokens": 159,
+        "reasoning_tokens": 44,
+        "total_tokens": 1117,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 3696,
+    "completion_tokens": 1405,
+    "reasoning_tokens": 858,
+    "total_tokens": 5101,
+    "by_task": {
+      "tailor_profile": {
+        "calls": 1,
+        "prompt_tokens": 461,
+        "completion_tokens": 80,
+        "reasoning_tokens": 16,
+        "total_tokens": 541,
+        "prompt_tokens_per_call": [
+          461
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 2,
+        "prompt_tokens": 1417,
+        "completion_tokens": 997,
+        "reasoning_tokens": 754,
+        "total_tokens": 2414,
+        "prompt_tokens_per_call": [
+          896,
+          521
+        ]
+      },
+      "cover_letter": {
+        "calls": 2,
+        "prompt_tokens": 1818,
+        "completion_tokens": 328,
+        "reasoning_tokens": 88,
+        "total_tokens": 2146,
+        "prompt_tokens_per_call": [
+          860,
+          958
+        ]
+      }
+    }
+  },
+  "cv_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Chattermill_Data_Scientist_cal_chattermill/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Chattermill_Data_Scientist_cal_chattermill/Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Scientist",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "UK Graduate visa on completion (Dec 2026): no sponsorship needed for 2 years",
+        "Available from December 2026"
+      ]
+    },
+    "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+    "skills": {
+      "Languages": [
+        "Python",
+        "SQL",
+        "R",
+        "TypeScript",
+        "JavaScript",
+        "Swift",
+        "Dart"
+      ],
+      "ML & Stats": [
+        "PyTorch",
+        "statistics",
+        "scikit-learn",
+        "XGBoost",
+        "TensorFlow",
+        "Keras",
+        "LSTM",
+        "Isolation Forest",
+        "Random Forest",
+        "hypothesis testing",
+        "ANOVA",
+        "bootstrap",
+        "PCA",
+        "maximum likelihood estimation",
+        "experimental design"
+      ],
+      "LLMs & Agents": [
+        "LangChain",
+        "LangGraph",
+        "Google ADK",
+        "AWS Bedrock",
+        "Claude API",
+        "OpenAI API",
+        "Gemini via LiteLLM",
+        "Hugging Face Transformers",
+        "Ollama",
+        "RAG",
+        "MCP",
+        "tool calling",
+        "LoRA fine-tuning",
+        "LLM evaluation"
+      ],
+      "Data & Cloud": [
+        "pandas",
+        "NumPy",
+        "NLTK",
+        "Matplotlib",
+        "Seaborn",
+        "PostgreSQL",
+        "ChromaDB",
+        "AWS Lambda",
+        "ECR",
+        "IAM",
+        "GCP Cloud Run",
+        "S3, SQS, DynamoDB (MSc coursework)",
+        "Databricks/PySpark (coursework)"
+      ],
+      "Engineering": [
+        "FastAPI",
+        "Docker",
+        "GitHub Actions",
+        "pytest",
+        "React",
+        "Git",
+        "MLflow",
+        "Streamlit",
+        "Tableau"
+      ]
+    },
+    "experience": [
+      {
+        "id": "az",
+        "title": "Data Scientist",
+        "org": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "bullets": [
+          "Built an agentic genai tool using LangChain and AWS Bedrock to call Claude Haiku 4.5, resolving gene aliases, explaining scoring methodology, and tracking dataset provenance.",
+          "Deployed the agent as a production Docker container on AWS Lambda with ECR pipelines, IAM roles, and least-privilege policies."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az3"
+        ]
+      },
+      {
+        "id": "dc180",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python, using FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, and communicated results in a live stakeholder demo."
+        ],
+        "bullet_ids": [
+          "dc1"
+        ]
+      },
+      {
+        "id": "freelance",
+        "title": "Freelance AI/ML Engineer",
+        "org": "Self-employed, Chennai",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+        ],
+        "bullet_ids": [
+          "fl2"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "title": "Software Engineer (SDE Trainee Jan\u2013Jun 2023)",
+        "org": "Avasoft",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+        ],
+        "bullet_ids": [
+          "av1"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Built a classical ML XGBoost churn classifier in R with tidymodels, two-stage Bayesian hyperparameter search, SMOTE, and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting",
+        "stack": "TensorFlow, LSTM, TensorFlow Serving",
+        "github": "https://github.com/Thiruvel-AP/BitcoinForecasting",
+        "bullets": [
+          "Built an LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, deploying model serving via TensorFlow Serving REST API."
+        ],
+        "bullet_ids": [
+          "p_bt1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "org": "University of Bristol",
+        "dates": "2025 \u2013 2026"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction"
+      }
+    ],
+    "certifications": [
+      "Anthropic MCP certifications (Introductory and Advanced), Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ]
+  }
+}

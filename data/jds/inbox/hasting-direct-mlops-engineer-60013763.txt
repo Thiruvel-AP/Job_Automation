@@ -1,0 +1,140 @@
+Company: Hasting Direct
+Title: MLOps Engineer
+URL: https://hastingsdirect.wd3.myworkdayjobs.com/external_careers/job/Leicester/MLOps-Engineer_60013763
+Source: workday
+Apply kind: workday
+Location: Leicester; Bexhill; London, United Kingdom
+Posted: 2026-11-04
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+Job Title: MLOps Engineer
+Location: Leicester / Bexhill / London – Hybrid
+
+Unfortunately we are unable to offer sponsorship for this position
+
+Welcome to Hastings Direct
+We’re a digital insurance provider with a clear strategy to become the best and biggest player in the UK market. As a company, we’ve made huge investments in our technology, pricing, data and analytics capabilities over the past few years, along with nurturing our 4Cs culture and substantial investment in our people. And as a Finance team, we're doing exactly the same – building a market leading finance technology platform, investing in our team and our approach to leadership development, with a real focus on commercially adding value to the business. 
+
+The fact you’re now reading this job advert means we’ve tempted you to find out more about #lifeatHD. If you like what you see, we hope you'll consider joining our team. 
+
+We have high standards and understand some people may not apply for jobs unless they feel they tick every box. If you’re excited about joining us and think you have some of what we are looking for, even if you’re not 100% sure, we would love to hear from you.
+
+Role Purpose: 
+We’re looking for an MLOps Engineer to help turn pricing models and data science work into reliable production workflows.
+
+You’ll work with Pricing, Data Science, Data Engineering and ML Engineering teams to build pipelines that are easier to test, release, monitor and maintain. The role is hands-on, with a focus on Python, SQL, automation, good engineering practice and controlled delivery in a regulated environment.
+
+You’ll own defined MLOps components and pipelines, while working with senior colleagues on wider standards, architecture and governance.
+
+What you’ll do
+
+- 
+Build, improve and maintain machine learning pipelines used within Market Pricing.
+- 
+Productionise Python-based models, notebooks and data science workflows.
+- 
+Help move models from development into repeatable, tested and documented production processes.
+- 
+Improve how model workflows are tested, released, monitored and maintained.
+- 
+Investigate issues across data, model and pipeline workflows.
+- 
+Automate manual steps where this improves quality, speed or control.
+- 
+Support good engineering practices, including Git, code review, testing and documentation.
+- 
+Make sure pipelines and model workflows are traceable, auditable and safe to change.
+- 
+Work closely with Pricing, Data Science, Data Engineering, ML Engineering and governance stakeholders.
+
+Technology and ways of working
+You’ll work in a modern data and machine learning environment. The role is likely to involve:
+
+- 
+Python, including libraries such as Pandas, NumPy and scikit-learn.
+- 
+SQL and large structured datasets.
+- 
+Cloud data platforms such as Snowflake, Databricks or similar.
+- 
+Git-based version control and code review.
+- 
+CI/CD and automated testing using tools such as Azure DevOps, GitHub Actions or similar.
+- 
+Model deployment, monitoring, versioning and governance.
+- 
+Reusable engineering patterns for production machine learning.
+
+You do not need experience with every tool listed. Strong Python, SQL, engineering fundamentals and a willingness to work across data science and production workflows are most important.
+
+What we’re looking for
+
+- 
+Strong Python skills and experience building data or machine learning workflows.
+- 
+Good SQL skills and confidence working with structured datasets.
+- 
+Experience building reliable, reusable and maintainable code or pipelines.
+- 
+Understanding of machine learning fundamentals, especially supervised learning.
+- 
+Experience with Git, code review, testing and technical documentation.
+- 
+Exposure to cloud-based data or engineering environments.
+- 
+Good problem-solving skills and attention to detail.
+- 
+Clear communication skills, with the ability to explain technical ideas to different audiences.
+- 
+Comfortable working with data scientists, analysts, engineers and business stakeholders.
+- 
+A practical focus on quality, reliability, governance and maintainability.
+
+Nice to have
+
+- 
+Hands -on experience with cloud platforms such as Azure, AWS or GCP.
+- 
+Exposure to modern data platforms such as Snowflake, Databricks, Spark or similar.
+- 
+Experience with MLOps practices such as model deployment, monitoring, versioning or model registries.
+- 
+Exposure to workflow orchestration or deployment tools such as Airflow, MLflow, Azure DevOps, GitHub Actions or similar.
+- 
+Experience in pricing, insurance, financial services or another regulated environment.
+- 
+Understanding of model governance, responsible AI or explainability.
+
+The interview process:
+Our interview process involves the below: 
+
+- 
+Recruiter screening call 
+- 
+Intro with Hiring manager
+- 
+Interview with hiring team – Case study
+- 
+Final chat with business leader
+
+As a Disability Confident employer, we’re committed to ensuring our recruitment processes are fully inclusive – what this means to you is if you’re applying for a job with us, you’ll have fair access to support and adjustments throughout your recruitment journey. We also welcome applications through the Disability Confident Scheme (DCS).For more information on the DCS, please visit our inclusive business page on our careers website
+
+Benefits: In addition to a competitive salary you will also receive…
+Flexible working – we champion a flexible hybrid working approach – please speak to your recruiter to discuss in more detail
+Competitive bonus scheme - all colleagues are eligible for our annual 4Cs performance bonus
+Financial wellbeing – as well as providing you with 4x your salary with our life assurance cover, income protection at no extra cost, and matched pension contributions up to 10%, we are proud to provide you with an award winning package which includes – discounts, cashback, free independent mortgage advice and free access to financial wellbeing support
+Mental wellbeing programme – we have the thrive mental health app, our colleague assistance programme available 24/7, our own in-house mental health first aiders, support groups and a dedicated team to make sure we are covering your needs
+There's more! – 25 days annual leave + bank holidays, with the option to buy or sell one of your weeks, access to our health care cash back plans, dental plans, discounted health assessments, Cycle to work and tech schemes, discounted and free onsite facilities, social events throughout the year and much more ….
+
+Join us and you’ll find a different way of doing things. We call it the 4Cs. We focus on getting it right for our colleagues, customers, company and community. As one of our colleagues, you’ll be helping to drive our growth, so in return, we’ll give you all the support, training and development you need. Our 4Cs principles are simple: we believe by creating the right culture for our colleagues and giving them the right tools to do their job, we’ll deliver good outcomes for every customer, helping us to grow the company profitably and sustainably and allowing us to invest in the communities we serve.
+
+If you are interested in any other positions at Hasting Direct – you can view our live vacancy list via our carers page. Link below:
+Careers
+
+Hastings Group is an equal opportunities employer which means we treat people fairly. We welcome applications from all suitably skilled persons regardless of their gender, age, race, disability, ethnic background, religion/belief, sexual orientation, gender reassignment or marital/family status. Please also note that we have a thorough referencing process, which includes credit and criminal record checks.
+
+At Hastings Direct, we’re committed to creating an inclusive environment where everyone has the opportunity to succeed. If you require any reasonable adjustments during the recruitment process, we encourage you to be open with us. Our recruitment team is here to provide the support you need to ensure a fair and accessible experience for all.
+
+Job posting end date:04/11/2026

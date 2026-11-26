@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:306140c95998",
+ "company": "Iwoca",
+ "title": "Applied AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 2.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 2.8 indicates limited keyword match"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family ai_engineer aligns with candidate goal"
+  },
+  "comp": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Salary range £80k‑£120k aligns with market and likely above candidate floor"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large, stable fintech with hybrid model, strong benefits"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers; ad asks for salary goals but not a blocker"
+  }
+ },
+ "global_score": 3.8,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate has end‑to‑end system ownership experience",
+  "Verify concrete LLM‑agent engineering projects on CV",
+  "Check candidate's salary floor vs £80k‑£120k range"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.8,
+ "model_confidence": "Medium",
+ "jd_hash": "40c85b571e03a4f8",
+ "jd_words": 1259,
+ "tokens": 2794,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

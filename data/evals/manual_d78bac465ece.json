@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:d78bac465ece",
+ "company": "Distyl",
+ "title": "AI Engineer, UK",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.6 and ATS ceiling 54%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Title matches ai_engineer and required keywords align"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large company, strong investors, office opening, hybrid model"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks for rating or contains suspicious instructions"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm actual salary range and equity details",
+  "Clarify hybrid work expectations and office attendance requirements",
+  "Verify UK work visa sponsorship availability"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "ed6a908566649107",
+ "jd_words": 648,
+ "tokens": 2135,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

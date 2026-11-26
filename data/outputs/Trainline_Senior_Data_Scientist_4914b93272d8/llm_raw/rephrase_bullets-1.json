@@ -1,0 +1,1 @@
+{"p_gg2":"Trained per-gene regression models using GPU-enabled random forest and scikit-learn, reducing RAM from 8.2 to 5.5 GB, and validated them, revealing overfitting (train Pearson 0.807 vs test 0.545)."}

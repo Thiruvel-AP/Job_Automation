@@ -1,0 +1,114 @@
+Company: Deliveroo
+Title: Senior Data Scientist (Economist)
+URL: https://job-boards.greenhouse.io/deliveroo/jobs/8242432
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, United Kingdom - Deliveroo
+Posted: 2026-09-30T04:27:55-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+Possible repost: possible repost of a job you skipped on ? (manual:e68c252102ba)
+
+Our Global Structure
+
+Deliveroo is now part of DoorDash, bringing together teams with even greater reach, scale, and ambition. Depending on your role, you may collaborate with teammates, systems, and leaders across DoorDash and Wolt. Together, we’re unlocking new possibilities as one global team.
+The Data & Science Org
+
+At Deliveroo we have an outstanding data science organisation, with a mission to enable the highest quality human and machine decision-making. We work throughout the company - in product, business and platform teams - using analysis, experimentation, causal inference and machine learning techniques. We are uniquely placed to use data to help make better decisions and improve data literacy across Deliveroo.
+
+Data Scientists at Deliveroo report into our data science management team, and we have a highly active data science community, with guest lecturers, study groups, mentorship programmes, a robust technical review process, and plenty of opportunities to learn new things. Data Scientists can equally progress as technical leads (individual contributors) and as people managers.
+
+Our data scientists come from all kinds of backgrounds but have excellence in common. Many are formally trained in data science, many are not. We celebrate difference and have a dedicated data science diversity committee.
+
+As an Economist at Deliveroo you will help scale our business and improve the experience for restaurants, riders, and eaters. Using experimental or observational data, you will get to help answer questions like:
+
+- 
+
+Which markets/cities should we enter next?
+
+- 
+
+How can we incentivise good rider behaviour?
+
+- 
+
+What is the business impact of exclusive deals we have with restaurants?
+
+- 
+
+Can the Delivery food market sustain multiple players?
+
+- 
+
+What are the trade-offs we face when choosing between growth and profitability? How should we decide between them?
+
+- 
+
+What is the optimum selection and variety of restaurants?
+
+- 
+
+What impact do online reviews have?
+
+- 
+
+How will a change in the user interface affect customer choice behaviour?
+
+The work you will do will have a direct, measurable impact on the bottom line of the company.
+
+Requirements:
+
+- 
+
+Masters Degree or PhD in Economics or Econometrics (preferred)
+
+- 
+
+Always curious and willing to learn new skills
+
+- 
+
+A problem solver with a deep analytical mindset
+
+- 
+
+Ability to think creatively and insightfully about business-relevant economic problems
+
+- 
+
+A critical thinker with very strong attention to detail
+
+- 
+
+Proficiency with analytical tools like R/Python and familiarity with SQL
+
+- 
+
+Ideally industry experience since the completion of your academic career
+
+- 
+
+Excellent people skills — you’ll be meeting with stakeholders to translate business needs into economic problems
+
+At Deliveroo these are just some of the tough problems we are solving - and there is no challenge that cannot be yours. The scope for growth and personal impact is enormous.
+
+Why Deliveroo
+Our mission is to transform the way you shop and eat, bringing the neighbourhood to your door by connecting consumers, restaurants, shops and riders. We are transforming the way the world eats and shops by making access to food and products more convenient and enjoyable. We give people the opportunity to buy what they want, as they want it, when and where they want it.
+
+We are a technology-driven company at the forefront of the most rapidly expanding industry in the world. We are still a small team, making a very large impact, looking to answer some of the most interesting questions out there. We move fast, value autonomy and ownership, and we are always looking for new ideas.
+
+Workplace & Benefits
+At Deliveroo we know that people are the heart of the business and we prioritise their welfare. Benefits differ by country, but we offer many benefits in areas including healthcare, well-being, parental leave, pensions, and generous annual leave allowances, including time off to support a charitable cause of your choice. Benefits are country-specific, please ask your recruiter for more information.
+
+Diversity, Equity and Inclusion
+
+At Deliveroo, we know that a great workplace reflects the world around us and that true diversity and inclusion make us stronger, more creative, and better at what we do. We’re committed to fostering an environment where everyone can do their best work and feel they belong.
+
+We believe in equality of opportunity and welcome candidates from all backgrounds regardless of age, gender, ethnicity, disability, sexual orientation, gender identity, socio-economic background, religion, or belief.
+
+If you have a disability or long-term health condition and need support to apply for one of our roles, or require any reasonable adjustments during the recruitment process, you’ll have the opportunity to let us know once you’ve submitted your application. We’ll share details on how to request support so we can ensure you have a fair and equitable experience.
+
+If you’re excited about making a real impact in a fast-moving marketplace and growing your career alongside ambitious, supportive teams, we’d love to hear from you!
+
+Beware of recruitment scams: DASH Brands will never ask you to pay money or share sensitive financial information during hiring — learn more about DASH Brands' legitimate recruiting process at careersatdoordash.com/recruitment-scam-awareness.

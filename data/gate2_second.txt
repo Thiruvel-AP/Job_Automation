@@ -1,0 +1,92 @@
+careerops live: inbox /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/jds/inbox (max 1, dry run)
+Inbox order by freshness tier, then priority P = F x S:
+  T2     6 d  0.86 = 0.96 x 0.90  valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt
+  T2     7 d  0.86 = 0.86 x 1.00  anthropic-applied-ai-engineer-beneficial-deploymen-5440821008.txt
+  T2     6 d  0.79 = 0.88 x 0.90  trainline-junior-machine-learning-engineer-529e124d-d65d-4aa2-bde3-be81750cc521.txt
+  T2     6 d  0.77 = 0.77 x 1.00  anaplan-data-scientist-8654662002.txt
+  T2     6 d  0.75 = 1.00 x 0.75  loveholidays-applied-ai-engineer-10ba54b7-8c04-455b-b7e9-287202e448e9.txt
+  T2     6 d  0.56 = 0.62 x 0.90  preply-staff-data-scientist-paid-marketing-opti-64abe943-b897-4c31-93f1-90d4cb1b6ce0.txt
+
+== Valarian | AI Engineer (Harness)  [manual:af9d3404e414]  (valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt)
+Tailoring 1 job(s).
+- Valarian | AI Engineer (Harness)
+  ATS strict CV 20.0% | claimable ceiling 28.0% | STRETCH
+  ATS 20% (stemmed 24%, ceiling 28%) → below band | CV 2 page(s), page 2 95% full (the fact bank has no more content to add), letter off (letter.mode: off)
+  LLM tokens: 2,633 (prompt 2,009, completion 624, of which reasoning 326) in 1 calls
+    extract_keywords: 1 call(s), prompt tokens 2,009, total 2,633
+==============================================================================
+Valarian — AI Engineer (Harness)  [London]
+T1 · AI Engineer
+https://jobs.lever.co/valarian/55140de9-d3c0-48fb-bae3-41b16bcf7143
+Sponsor: Valarian Technologies Limited (0.90) - Sponsor match is fuzzy (0.90): 'Valarian Technologies Limited' — verify it is the same entity (information only; a weight on priority, not a reason to skip)
+Priority P=0.25 = F 0.28 (ATS ceiling) x S 0.90 (fuzzy register match) | age 6 d (tier 2, <= 7 d, first seen)
+Posted: posted 133 h ago (6 d) (first seen by discover: the source gave no trusted posting time), tier 2 (<= 7 d)
+Work location: United Kingdom (GB), onsite — evidence: "Location: London"
+Visa answers (by_country.GB): right to work Yes · sponsorship now No · sponsorship in the future Yes
+ATS literal 20% | stemmed 24% | honest ceiling 28% | band: below | pages 2 | attempts 1
+ATS strict CV 20.0% | claimable ceiling 28.0%
+STRETCH: the honest ceiling (28%) is under the 70% band. Kept, never dropped: expect a lower interview rate; the fact bank, not the CV, is what stops it.
+Hook h_agent_harness: evaluation, LLM and guardrails | proof az10 (AstraZeneca) | number 19,213 [library]
+  headline: agents that recover from tool failure | ~65-test evals
+  profile sentence 1: AI engineer (MSc Data Science, University of Bristol) who builds the harness around the model: at AstraZeneca, built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) that recovers when its tools fail (circuit breakers with a 19,213-gene parquet fallback, deterministic Ensembl and HGNC calls) and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness, which also validated a Groq-to-Bedrock model migration.
+  letter sentence 1: At AstraZeneca I built a tool-calling agent that recovers when its tools fail, and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness.
+Fill: page 2 95% full (target 96%) | 2 projects  !! below target: the fact bank has no more content to add
+Typography: no em dashes | 4 result(s) in bold
+  result not in bold (the bullet words it differently): az11
+Ranking, top bullets (score = keyword + domain; * = on the CV):
+   1.  10.0 (8.0+2.0)   az4        Wrote a three-tier test framework (tool-level, API/inte…
+   2.  10.0 (8.0+2.0) * az11       Diagnosed where it struggled with a three-tier, ~65-tes…
+   3.   9.3 (6.0+3.3) * az10       Needed an agent that researchers could trust on a cance…
+   4.   7.3 (6.0+1.3)   az1        Built a tool-calling LLM agent (LangChain, AWS Bedrock,…
+   5.   7.3 (6.0+1.3) * p_cf2      An insurance sponsor needed a fast, low-cost, explainab…
+   6.   6.0 (4.0+2.0) * dc7        Proposed the request flow: a user's text goes through t…
+   7.   5.3 (2.0+3.3)   p_gg2      Trained per-gene regression models for 11,459 genes (OL…
+   8.   5.3 (4.0+1.3)   p_gg5      Integrated 14 public omics source files into one graph …
+   9.   5.3 (4.0+1.3)   p_cf1      Deterministic comparable-company matching over 221 prof…
+  10.   4.0 (4.0+0.0)   az2        Designed a deterministic hallucination-guard architectu…
+Ranking, projects:
+   1.   7.3 (all bullets 12.7) * CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
+   2.   5.3 (all bullets 18.6)   GTAI Cell Line Finder — multi-omics graph for cancer cell-line selection (PoC)
+   3.   4.0 (all bullets 4.0) * mcp_searchagent
+   4.   4.0 (all bullets 4.0)   Image Classification — CNN and Transfer Learning
+   5.   3.3 (all bullets 3.3)   Banking Customer Churn — propensity model
+   6.   2.0 (all bullets 2.0)   Bitcoin Forecasting — LSTM time-series service
+   7.   1.3 (all bullets 1.3)   Lloyd's Banking Group Datathon
+   8.   0.0 (all bullets 0.0)   Mining Insights from Customer Feedback — NLP & unsupervised analytics (MSc team project)
+   9.   0.0 (all bullets 0.0)   AgenticFriend — real-time voice assistant
+  10.   0.0 (all bullets 0.0)   AstroFreud — LangGraph interview agent
+Letter: off (letter.mode: off; write your own, or apply without)
+Letter evidence: az11, p_cf2
+FLAGS: Stretch: honest ceiling 28% is under the 70% band
+Needs a result (yours to supply in fact_bank.yaml, never invented): dc1, dc7, dc8, fl5, fl7, av8, av10, p_ms1
+Genuine gaps (no evidence, left out): agent scaffolding, agreement metrics, bootstrapping, evaluation datasets, inter-annotator agreement, label noise, power analysis, safety guardrails, scoring rubrics, tool orchestration, annotation guidelines, Cohen's kappa, context management, context window compaction, correlation, error analysis, function/tool calling, judge failure modes
+Wording-only misses (substance present): testing
+Warnings: length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it; length: fl7 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it; wording: no bullet carries the stem of testing (skills or profile only)
+Profile: AI engineer (MSc Data Science, University of Bristol) who builds the harness around the model: at AstraZeneca, built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) that recovers when its tools fail (circuit breakers with a 19,213-gene parquet fallback, deterministic Ensembl and HGNC calls) and diagnosed its failures layer by layer with a three-tier, ~65-test evaluation harness, which also validated a Groq-to-Bedrock model migration. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda). Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform.
+CV: /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/outputs/Valarian_AI_Engineer_Harness_af9d3404e414/Thiruvel Andagurunathan Pandian CV.pdf (created 2026-10-20 13:34:28)
+Letter: (none)
+letter: off
+LLM tokens by model:
+  groq/openai/gpt-oss-20b: 2,633 tokens (prompt 2,009, completion 624, reasoning 326) in 1 call(s): extract_keywords
+  Judge (ollama/qwen2.5-7b-8k): WOULD NOT SEND 2/5 [shadow]
+  Judge input: 4,041 prompt tokens (dropped 1 section(s) about the employer or process: Benefits)
+    - CV and cover letter do not include a personal statement or explanation of why the applicant is interested in Valarian specifically.
+    - The CV does not clearly lead with the most relevant experience for the AI Engineer role at Valarian.
+    - The cover letter is missing, which is a critical component for a job application.
+[a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [s]kip  [q]uit > [a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [s]kip  [q]uit > 
+STOPPED at stage 'review' of valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt (job manual:af9d3404e414, status 'needs_review').
+The JD is still in inbox/ and the job keeps the status it reached; nothing was submitted by this command.
+Resume with:  careerops live --max 1 --dry-run
+# careerops live — 2026-10-20 13:49 (dry run)
+
+## valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt
+- id: manual:af9d3404e414
+- company: Valarian
+- role: AI Engineer (Harness)
+- status: needs_review
+- sponsor register: fuzzy(0.90) (Valarian Technologies Limited)
+- archive check: ok (unchanged)
+- visa lines: none
+
+Stopped: you chose quit at the review prompt; the job stays 'needs_review'
+Summary written to /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/live/20261020-134943.md

@@ -1,0 +1,4 @@
+{
+  "p_ql1": "Fine-tuned QLoRA Llama 3.1 8B model (4-bit, Unsloth, TRL) on a 15 GB GPU, training 0.52% of parameters under a 384-token budget, raising answer completion from 32% to 52% and exact-answer accuracy from 16.2% to 27.3% (n=99).",
+  "p_ql3": "Reported that accuracy on completed answers barely moved (50% vs 52%), attributing the gain to staying within the token budget rather than stronger reasoning. Identified out-of-memory errors due to multiple models loaded in one runtime, not the KV cache."
+}

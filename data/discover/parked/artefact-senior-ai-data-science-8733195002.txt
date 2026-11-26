@@ -1,0 +1,114 @@
+Company: Artefact
+Title: Senior, AI & Data Science
+URL: https://job-boards.greenhouse.io/artefact/jobs/8733195002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Montréal, Quebec, Canada
+Country: Canada
+Status: listed_only
+Posted: 2026-08-20T09:34:54-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+About the job
+
+Artefact is a next-generation data and AI consulting firm dedicated to accelerating the adoption of data and AI to create measurable business impact across the full enterprise value chain.We sit at the intersection of consulting, data science, AI technologies, data engineering, and digital transformation. We do not just advise — we build, implement, and deliver results our clients can measure. Our teams bring together consultants, data scientists, data engineers, AI engineers, analysts, and digital experts to solve complex business challenges with pragmatic, production-ready solutions.
+
+As Artefact continues to grow in the US, we are building a team of entrepreneurial data and AI talent who can help clients move beyond experimentation and into scalable, governed, value-generating AI adoption.
+
+Who We Are
+
+Founded and headquartered in Paris, Artefact is a next-generation consulting firm, specializing in data, analytics & AI consulting, dedicated to transforming data into business impact across the entire value chain of organizations. We are proud to say that we help our clients grow their data and digital capabilities, and that we’re also growing in parallel.
+
+We have 2000 employees across 36 offices who are focused on accelerating digital transformation. Our state-of-the-art data technologies, lean AI agile methodologies, and cohesive teams of the finest business consultants, data analysts, data scientists, data engineers, and digital experts are all dedicated to bringing extra value to every client. We design data-based solutions to meet our clients' specific needs, always conceived with a business-centric approach and delivered with tangible results. Our data-driven services are built upon the deep AI expertise we've acquired with our 1000+ client base around the globe.
+
+Find out more at artefact.com.
+
+What you will be doing 
+
+Artefact is looking for a Senior AI & Data Scientist: a scientist who owns models end to end, from problem framing through production.
+
+You will work across the full modeling spectrum — forecasting, classification, clustering, and causal analysis on one engagement; fine-tuning experiments and LLM evaluation on the next. You will own your models: the data behind them, the methodology, the deployment, and the story told to the client. You will also help junior scientists grow.
+
+- Translate business and marketing challenges into analytical use cases with clear hypotheses and success metrics.
+
+- Develop statistical and machine learning models: regression, forecasting, classification, clustering, and causal inference.
+
+- Select techniques based on business context, constraints, and data availability — and be able to justify the choice.
+
+- Ship production-ready solutions: training, deployment, monitoring, and ongoing refinement.
+
+- Run fine-tuning experiments: dataset curation, SFT, LoRA/PEFT, and rigorous evaluation of results against baselines.
+
+- Build evaluation suites for LLM systems: benchmarks, LLM-as-judge patterns, and regression tests.
+
+- Work with embeddings and retrieval where they affect answer quality.
+
+- Contribute to model selection decisions: prompting vs. RAG vs. fine-tuning, cost vs. quality vs. latency.
+
+- Build data pipelines for ingestion, transformation, and quality assurance across diverse data sources.
+
+- Create clear visualizations and dashboards that support data storytelling and decision making.
+
+- Present findings to client stakeholders, translating methodology into business language.
+
+- Mentor junior data scientists and use AI-assisted tools (Claude Code, Gemini CLI) to raise the whole team's pace.
+
+What we are looking for 
+
+- 3–5 years of relevant data science experience with a substantial quantitative skill set.
+
+- Strong knowledge of statistics and ML algorithms, with at least one proven experience developing and deploying models.
+
+- Proficiency in Python (scikit-learn, XGBoost; PyTorch a strong plus) and solid SQL.
+
+- Hands-on experience with LLMs: evaluation, RAG, or fine-tuning experiments (professional or substantial personal projects).
+
+- Specialization in at least one major AI platform ecosystem — Google (Gemini, Vertex AI), Anthropic (Claude), or OpenAI — and familiarity with a cloud platform (GCP, Azure, or AWS).
+
+- Comfort with AI-assisted development tools such as Claude Code, Gemini CLI, or Cursor.
+
+- Excellent interpersonal and communication skills: you can present methodology and results to non-technical audiences.
+
+- Master's degree (or higher) in statistics/mathematics, engineering, computer science, economics, or a related field, or equivalent experience.
+
+Preferred: 
+
+- Causal inference, time series, or advanced statistics experience.
+
+- Hugging Face Transformers, LoRA/PEFT, or open-weight model experience.
+
+- MLOps exposure: model versioning, pipelines, monitoring.
+
+- Cloud certifications, especially Google Cloud Professional Machine Learning Engineer.
+
+- 
+
+Why Join Us
+
+We are united by our values and strengthened by our hybrid expertise.
+
+- There is always a way: We're from the breed of does, of diggers, of makers. Because ideas are valuable only if executed.
+
+- Client trust is won on the field: Addressing client needs flows better hands on at their side.
+
+- If not used, it is useless: Our love for technology translates into a steep desire for adoption, true brilliance is about impact.
+
+- If not shared, our work is not done: Sharing knowledge is the best way to button up a mission, benefitting clients and colleagues.
+
+- We learn everyday: Tech is a land where everything moves at the speed of light, you better be ready to challenge yourself.
+
+How We Support Our People
+
+In addition to our values-driven culture, we offer a range of benefits and programs designed to support our employees' growth and well-being, including:
+
+- Learning and Development: Work alongside a multidisciplinary team of AI, data, and consulting experts who are committed to continuous learning, knowledge sharing, and professional growth.
+
+- Hybrid Flexibility: Our hybrid work model gives you the flexibility to balance collaboration, client needs, and personal commitments.
+
+- Comprehensive Benefits: We offer a competitive benefits package that includes medical, dental, and vision coverage, a 401(k) plan with company matching, and paid parental leave.
+
+- Time to Recharge: We believe sustainable performance matters. That's why we offer unlimited paid time off, giving you the flexibility to take the time you need.
+
+- Growth Opportunities: As a rapidly growing organization, you'll have the opportunity to expand your skills, take on new challenges, and help shape the future of the company.

@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:8dd4726ae60c",
+ "company": "Graphcore",
+ "title": "Senior Machine Learning Engineer (Large Systems)",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.5,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.5"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family ml_engineer matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "unknown",
+   "source": "Pay not stated"
+  },
+  "culture": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Large company, hybrid model, benefits, stable backing by SoftBank"
+  },
+  "red_flags": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Candidate lacks explicit strong communicator evidence; no visa sponsorship offered"
+  }
+ },
+ "global_score": 4.1,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate can demonstrate strong communication skills (e.g., presentations, cross‑team work)",
+  "Determine expected compensation to see if it aligns with market and candidate floor",
+  "Verify candidate has legal right to work in the UK (no sponsorship provided)"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.1,
+ "model_confidence": "Medium",
+ "jd_hash": "aebb543e60296d51",
+ "jd_words": 961,
+ "tokens": 2516,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

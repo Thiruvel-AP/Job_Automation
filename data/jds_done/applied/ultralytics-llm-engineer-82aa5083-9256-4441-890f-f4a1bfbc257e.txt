@@ -1,0 +1,97 @@
+Company: Ultralytics
+Title: LLM Engineer
+URL: https://jobs.ashbyhq.com/ultralytics/82aa5083-9256-4441-890f-f4a1bfbc257e
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-06-10T17:20:35.300+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-06
+Listed: yes
+
+About Ultralytics:
+
+At Ultralytics https://ultralytics.com/, we commit to relentless innovation in the AI space and seek team members https://www.ultralytics.com/about who resonate with our ambition to produce the world's best YOLO AI models https://ultralytics.com/yolo. If you're obsessed with AI, eager to make an impact on the world, and thrive in dynamic, high-intensity environments, we invite you to apply for a position on our team.
+
+🌎 Where and how you can work
+
+This full-time LLM Engineer position is based at our brand-new Ultralytics office https://www.ultralytics.com/about in London, UK, with a hybrid model of three days in-office and two days remote. Applicants must have legal authorization to work in the UK, as Ultralytics does not provide visa sponsorship.
+
+🚀 What you'll do
+
+As an LLM Engineer at Ultralytics, you will spearhead the development and integration of advanced language model capabilities across our ecosystem. You will work on cutting-edge projects that merge the power of large language models (LLMs) https://www.ultralytics.com/glossary/large-language-model-llm with our state-of-the-art computer vision https://www.ultralytics.com/glossary/computer-vision-cv technologies. Key responsibilities include:
+
+ - Developing and scaling robust LLM-powered applications using a variety of APIs, including OpenAI https://developers.openai.com/api/docs/quickstart, Anthropic https://www.anthropic.com/claude, and Gemini https://deepmind.google/models/gemini/.
+
+ - Implementing and managing multi-API workflows using tools like LiteLLM https://www.litellm.ai/ to ensure flexibility and resilience.
+
+ - Building sophisticated Retrieval-Augmented Generation (RAG) https://www.ultralytics.com/glossary/retrieval-augmented-generation-rag systems, leveraging advanced techniques like embeddings with Voyage AI https://www.voyageai.com/, rerankers, and query enrichment.
+
+ - Designing and maintaining efficient data pipelines and vector storage solutions using MongoDB https://www.mongodb.com/products/platform/atlas-vector-search Atlas Vector Search.
+
+ - Fine-tuning LLMs on custom datasets to enhance performance for specialized tasks related to our documentation https://docs.ultralytics.com/ and user support.
+
+ - Collaborating with our YOLO https://docs.ultralytics.com/models/yolo26/ development team to explore and build innovative multimodal solutions https://www.ultralytics.com/glossary/multi-modal-model.
+
+ - Automating deployment and testing processes using CI/CD pipelines https://www.ultralytics.com/glossary/continuous-integration-ci with GitHub Actions https://github.com/features/actions.
+
+Your work will directly enhance the Ultralytics Platform https://docs.ultralytics.com/platform/ and empower our global community of developers and researchers.
+
+🧠 Skills and experience
+
+ - 5+ years of experience in software engineering, with a strong focus on AI and machine learning (ML) https://www.ultralytics.com/glossary/machine-learning-ml.
+
+ - Expert-level proficiency in Python https://www.python.org/ and deep learning frameworks, particularly PyTorch https://pytorch.org/.
+
+ - Proven experience building and deploying applications with LLM APIs such as OpenAI, Anthropic, Gemini, and DeepSeek.
+
+ - Hands-on experience with the full RAG pipeline, including vector embeddings, rerankers, and data indexing in databases like MongoDB https://www.mongodb.com/.
+
+ - Practical knowledge of LLM fine-tuning https://www.ultralytics.com/glossary/fine-tuning, prompt engineering, and performance optimization.
+
+ - Familiarity with MLOps principles and tools, including CI/CD with GitHub Actions.
+
+ - A strong interest in computer vision https://www.ultralytics.com/blog/all-you-need-to-know-about-computer-vision-tasks and an understanding of object detection models like Ultralytics YOLO26 https://docs.ultralytics.com/models/yolo26/ is a significant plus.
+
+ - Excellent problem-solving skills and the ability to perform in a fast-paced, high-intensity environment.
+
+🌟 Cultural fit
+
+Ultralytics is a high-performance environment for world-class talent obsessed with achieving extraordinary results. We operate at a relentless pace, demanding exceptional dedication and an unwavering commitment to excellence, guided by our mission, vision, and values https://handbook.ultralytics.com/mission-vision-values/. Our team https://www.ultralytics.com/about thrives on audacious goals and absolute ownership. This is not a conventional workplace. If your priority is predictable comfort or a standard work-life balance over the relentless pursuit of progress, Ultralytics is not for you. We seek driven individuals prepared for the profound personal investment required to make a defining contribution to the future of AI.
+
+💰 Compensation and benefits
+
+ - Competitive salary: Highly competitive based on experience.
+
+ - Equity packages: Participate directly in our company's growth and success.
+
+ - Hybrid flexibility: 3 days per week in our brand-new office — 2 days remote.
+
+ - Generous time off: 24 days vacation, your birthday off, plus local holidays.
+
+ - Flexible working hours: Tailor your working hours to suit your productivity.
+
+ - Tech & tools: Engage with cutting-edge AI projects https://www.ultralytics.com/solutions and contribute to leading open-source https://github.com/ultralytics software.
+
+ - Gear: Brand-new Apple MacBook Air/Pro, Apple Studio Display, and AirPods Pro 3.
+
+ - Team: Become part of a supportive and passionate team environment https://www.ultralytics.com/about.
+
+What we offer:
+
+Cutting-Edge, Next-Generation AI Computer Vision Technology: Contribute to building cutting-edge computer vision AI models based on the YOLO framework.
+
+Impactful Work: Shape the future of AI-powered solutions that transform industries.
+
+Collaborative Culture: Join a talented and passionate team that values open communication and innovation.
+
+
+
+Ultralytics Handbook
+
+Comprehensive guide to our company's mission, vision, values, and operational practices. This handbook is designed to provide key insights and resources for our (future) team members, collaborators, and community to align with Ultralytics' core principles.
+
+Link: https://handbook.ultralytics.com/
+
+
+Ultralytics is an equal opportunity employer committed to building an inclusive workplace. We believe that everyone should be able to bring their whole selves to work, and we do not discriminate on the basis of race, religion, national origin, gender, sexual orientation, age, veteran status, disability, or any other legally protected status.

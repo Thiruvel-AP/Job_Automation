@@ -1,0 +1,107 @@
+Company: Lawhive
+Title: Senior Data Engineer
+URL: https://jobs.ashbyhq.com/lawhive/1d028f8c-cd32-4ae2-848a-727e10d7759f
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-11-05T15:26:51.471+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-06
+Listed: yes
+
+ABOUT LAWHIVE
+
+Lawhive is an AI-native law firm operating in the US and UK. We partner with leading Main Street law firms and give their lawyers and back-office teams what they need to grow faster than they could alone: our own AI platform, plus marketing and operational support.
+
+We build that platform ourselves, alongside the people who use it every day. That means no guessing what users want, no six-month feedback loops, and no compromises to fit someone else’s product. At its heart is Lawrence, our AI agent for legal work. Lawrence takes on the heavy lifting so lawyers can put their judgement where it belongs: at the centre of every matter. We’re a team obsessed with building the best tools in legal.
+
+We're backed by a $60M Series B at a $685M valuation, from investors including Google Ventures, TQ Ventures, Mitch Rales, Balderton Capital and Premier League footballers Harry Maguire and Reece James. In the last few years we've hit milestone after milestone, raising over $110M in funding. Today, we're on track to exceed $100 million in annual revenue, and we have offices in London, New York, Austin, and Phoenix.
+
+So if you want your work to have real, tangible impact as we redefine an entire industry, Lawhive is where you can make it happen.
+
+
+
+
+THE ROLE
+
+We’re rapidly acquiring law firms and bringing them onto our platform. Every one comes with its own case management system, its own reporting and its own messy data, and how quickly we bring it together shapes how fast Lawhive can grow.
+
+As our Senior Data Engineer, you’ll own our data engineering, including the hands-on work behind every migration. Working with our Head of Data, you’ll make each migration faster than the last.
+
+You’ll sit at the foundation of a small, AI-native data team, building the pipelines our Analytics Engineer and product analytics rely on, so data actually improves the product. You’ll work alongside our staff engineers and bring the DevOps, infrastructure, security and governance know-how to run your own platform.
+
+Our stack: BigQuery, dbt, Hex, Dagster, K8s, Elementary, Claude Code, GCP and AWS.
+
+
+
+
+WHY THIS ROLE MATTERS
+
+ - You’ll build data engineering for AI and humans. What you build doesn’t just serve people. It feeds Lawrence, our AI agent for legal work, and makes it better.
+
+ - You’ll make every migration faster than the last. You’ll work out what we can standardise across firms, what needs to stand alone, and how we move faster each time. You’ll work with Analytics Engineering on a shared model that scales to every firm, with the right access and privacy controls in place.
+
+ - You’ll lay the foundations for product insight. Good data engineering leads to good analytics engineering, product analytics and product insight. You’ll build the layer everything else sits on.
+
+ - You’ll own the platform. Pipelines, orchestration, infrastructure, security and governance. You’ll keep BigQuery fast and cost-efficient as volumes grow.
+
+ - You’ll help build the function. The data team is small and the company is scaling fast. There’s real scope to grow into leading a team and building out data engineering as a central function.
+
+
+
+
+WHAT YOU’LL BRING
+
+ - Senior data engineering experience at a startup or scale-up. You’ve owned production pipelines and seen your work through to real business outcomes.
+
+ - Data migration and integration. You’ve brought together messy data from very different source systems. The more varied the industries you’ve worked across, the better.
+
+ - Modern tech stack. Strong BigQuery (or similar), Python and orchestration (Dagster, Airflow or similar).
+
+ - Platform engineering. Experience across DevOps, infrastructure, security and governance.
+
+ - AI-native, with opinions. AI is part of how you work every day, and you’re clear on where it helps and where you draw the line.
+
+ - Commercial instinct. You care about what your work does for the business, not just whether the pipeline runs.
+
+
+
+Interview process
+
+ - Introductory call with our Talent team
+
+ - Interview with our Head of Data
+
+ - Technical interview
+
+ - In-person values interview with our CTO/Co-Founder
+
+ - We offer!
+
+
+
+Benefits
+
+ - 💰 Meaningful early-stage equity at one of Europe’s fastest growing startups
+
+ - ✈️ 25 days of holiday plus bank holidays, and an extra day for your birthday, moving day and wedding day, with the opportunity to earn up to 5 more days with tenure!
+
+ - 🩺 Private Medical Insurance via Bupa (including subsidised gym membership)
+
+ - 🚲 Cycle to work scheme
+
+ - 🍼 Nursery benefits
+
+ - 💰 Pension contribution via Nest
+
+ - 🌍 Work from anywhere for a month
+
+ - 💻 Top-spec Macbook
+
+ - ⛳️ Regular team building activities and socials!
+   
+   
+
+Diversity at Lawhive
+
+At Lawhive, we know that diversity of thought is critical to delivering outlier outcomes. As such, we’re always working hard to ensure we build a diverse, inclusive team, and as we scale, we’ll only ever increase the focus we apply to this.

@@ -1,0 +1,62 @@
+Company: Artefact
+Title: Data Scientist Manager
+URL: https://job-boards.greenhouse.io/artefact/jobs/4127302002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 9th arrondissement of Paris, 75009, Paris, France
+Country: France
+Status: listed_only
+Posted: 2019-10-01T09:21:45-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Présentation du poste :
+
+Au sein de l'équipe Data Science d'Artefact, vous rejoignez une communauté d'experts en IA et Data en tant que Manager et référent technique. Rattaché(e) au CTO, vous jouez un rôle central dans le cadrage, la conception, le déploiement et le passage à l'échelle de solutions d'IA à fort impact business pour nos clients grands comptes.
+
+Ce qu’on attend de vous :
+
+En tant que Manager, vous garantissez l'excellence technique et la valeur délivrée sur vos projets (ML, GenAI, MLOps) tout en assurant l'encadrement, le coaching et le développement de carrière des Data Scientists. Vous êtes l'interlocuteur privilégié des décideurs (C-level), participez au rayonnement de l'expertise Artefact et pilotez la croissance de l'équipe.
+
+Vos missions :
+
+- Piloter des projets IA de bout en bout : du cadrage des cas d'usage avec les parties prenantes business jusqu'à la mise en production de solutions mesurables.
+
+- Définir et garantir l'architecture technique des solutions : choix méthodologiques, validation de la donnée, industrialisation en environnement Cloud et application des meilleures pratiques MLOps & Software Engineering.
+
+- Accompagner, mentorer et faire grandir les Data Scientists : suivi de performance, planes de développement de carrière, staffing et maintien du bien-être de l'équipe au quotidien.
+
+- Être le référent technique et partenaire de confiance des clients : vulgariser les concepts IA complexes, évaluer les risques, le ROI et la faisabilité auprès des équipes C-level et opérationnelles.
+
+- Développer l'expertise technique interne : tester de nouvelles approches IA/GenAI, créer des accélérateurs réutilisables (outils, modules) et maintenir une veille technologique active.
+
+- Inculquer une culture de la rigueur et de la collaboration : organiser des revues de code, des ateliers de partage de connaissances et favoriser les synergies entre Data Scientists, Data Engineers et équipes métier.
+
+Profil recherché :
+
+- Expérience & Leadership : 5 ans ou plus d'expérience concrète dans le développement de solutions Data/IA, avec une expérience éprouvée en gestion d'équipe et pilotage de projets complexes.
+
+- Expertise IA & Cloud : Solides compétences en Machine Learning appliqué, IA Générative, principes MLOps et industrialisation de workflows IA sur les environnements Cloud.
+
+- Posture & Management : Capacité à mentorer des juniors comme à challenger des seniors, avec une approche pragmatique, créative et orientée résolution de problèmes.
+
+- Relation Client & Impact : Excellente communication pour fédérer les équipes, piloter les parties prenantes et instaurer une relation de confiance durable avec les clients.
+
+Process de recrutement :
+
+- HR Call : Échange initial sur votre parcours, vos compétences managériales et l'adéquation culturelle.
+
+- Standard Interview : Entretien dédié à votre parcours, vos expériences de pilotage et la gestion de projets.
+
+- Technical Interview : Évaluation approfondie de vos compétences techniques, d'architecture IA/MLOps et de cas pratiques.
+
+- Fit Interview : Échange final de projection opérationnelle et managériale.
+
+Rémunération : Package : 75 000 € à 85 000 € brut annuel (fixe) + 8 000 € de variable, selon expérience et séniorité.
+
+Présentation entreprise : 
+
+ Artefact est un cabinet de conseil spécialisé en data et en intelligence artificielle, qui accompagne les entreprises pour transformer ces technologies en impact business concret et mesurable. A la croisée du conseil, de la data et de la technologie, nos 2 500 collaborateurs dans 27 pays mettent leurs expertises en commun pour concevoir, développer et déployer des solutions qui répondent aux enjeux de transformation de nos clients. Envie d'en savoir plus? Découvrez Artefact, nos expertises et notre culture : https://www.artefact.com
+
+Chez Artefact, nous sommes convaincus que la diversité des parcours, des expériences et des perspectives fait la richesse de nos équipes. Nous nous engageons à offrir un environnement inclusif et des opportunités équitables, où chacune et chacun peut évoluer et exprimer pleinement son potentiel. Nos recrutements reposent sur les compétences, le potentiel et l'adéquation avec le rôle.

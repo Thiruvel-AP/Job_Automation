@@ -1,0 +1,5 @@
+{
+  "av4": "Built a JavaScript web-scraping pipeline for automating manual data collection and surfacing market-trend signals for pricing decisions.",
+  "p_gg2": "Developed per-gene protein-prediction models using OLS and GPU Random Forest ensemble for 11,459 genes with resumable chunked GPU training.",
+  "p_ch1": "Created an XGBoost churn classifier in R using tidymodels, with two-stage Bayesian hyperparameter search and SMOTE for customer behaviour analysis."
+}

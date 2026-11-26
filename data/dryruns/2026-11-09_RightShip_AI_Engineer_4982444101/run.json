@@ -1,0 +1,166 @@
+{
+  "job": {
+    "id": "manual:ff68fffd015a",
+    "company": "RightShip",
+    "title": "AI Engineer",
+    "url": "https://job-boards.eu.greenhouse.io/rightship/jobs/4982444101"
+  },
+  "ats": {
+    "strict": 63.44086021505376,
+    "ceiling": 75.26881720430107,
+    "claimable_only": 75.26881720430107
+  },
+  "hook": {
+    "id": "h_prod_tests",
+    "headline": "LLM agent shipped to AWS Lambda behind ~65 automated tests",
+    "proof": "az4"
+  },
+  "required_blocking": [
+    {
+      "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+      "key": "question_9689587101",
+      "kind": "combobox",
+      "required": true,
+      "status": "EMPTY",
+      "value": "",
+      "source": "equal_opportunities",
+      "reason": "not listed in equal_opportunities: left blank",
+      "options": [
+        "She / Her / Hers",
+        "He / Him / His",
+        "They / Them / Theirs",
+        "Self-describe, please specify in the next question"
+      ]
+    },
+    {
+      "label": "I declare that the information provided by me is true and accurate. Furthermore, I willingly consent to being contacted by the company for any relevant matters pertaining to my application. I also give my unequivocal agreement for the company to retain my information (for as long as the respective country laws in which I am seeking employment allow) for potential future employment opportunities.",
+      "key": "question_9689589101",
+      "kind": "combobox",
+      "required": true,
+      "status": "NEEDS USER",
+      "value": "",
+      "source": "attestation",
+      "reason": "attestation: you tick it yourself, code never does",
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+      "key": "4005559101",
+      "kind": "combobox",
+      "required": true,
+      "status": "EMPTY",
+      "value": "",
+      "source": "equal_opportunities",
+      "reason": "not listed in equal_opportunities: left blank",
+      "options": []
+    },
+    {
+      "label": "By checking this box, I consent to RightShip collecting, storing, and processing my responses to the demographic data surveys above.",
+      "key": "gdpr_demographic_data_consent_given",
+      "kind": "checkbox",
+      "required": true,
+      "status": "NEEDS USER",
+      "value": "",
+      "source": "attestation",
+      "reason": "attestation: you tick it yourself, code never does",
+      "options": []
+    }
+  ],
+  "letter_status": "ok",
+  "motivation": [
+    {
+      "question": "What motivated you to apply for this position?",
+      "text": "The AI Engineer role at RightShip stands out to me for its focus on safety and risk intelligence. At AstraZeneca, I wrote a three-tier test framework of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation. I want to build AI systems that are trustworthy in production, not just demos: tested, measured and safe when their dependencies fail. I enjoy taking a loosely defined problem from prototype to something a team uses in production.",
+      "words": 85,
+      "sources": [
+        "ad",
+        "letter",
+        "az4",
+        "m1",
+        "m2"
+      ],
+      "motivations_left_out": [
+        "I am drawn to applied AI in domains where correctness matter (names health; the company is not)",
+        "Longer term I want to grow towards research-oriented work in (research ambition, industry role)"
+      ],
+      "guard": "passed",
+      "overlap": "0.00 (no earlier motivation answer)",
+      "assembled": true,
+      "fluency": {
+        "source": "fallback",
+        "tries": 2,
+        "problems": [
+          [
+            "answer: pastes a sentence of the ad: 'Rapidly prototype and experiment with LLM-based applications'",
+            "answer: jargon not on the allow-list: AWS Bedrock, AstraZeneca",
+            "does not name the company (RightShip)"
+          ],
+          [
+            "takes a sentence from this job's letter: 'RightShip's focus on safety and risk intelligence motivates '",
+            "answer: jargon not on the allow-list: AWS Bedrock, RightShip, AstraZeneca"
+          ]
+        ],
+        "tokens": 2286
+      }
+    }
+  ],
+  "ats_structure": {
+    "line": "ATS structure 95/A (0 critical) | lints: parenthetical-in-title (180 Degrees Consulting Bristol), multiple-date-ranges (Avasoft), parenthetical-in-title (Avasoft) | title match: yes | years: experience 3+ met | degree met | skills-only required: 2",
+    "lines": [
+      "ATS structure 95/A (0 critical) | lints: parenthetical-in-title (180 Degrees Consulting Bristol), multiple-date-ranges (Avasoft), parenthetical-in-title (Avasoft) | title match: yes | years: experience 3+ met | degree met | skills-only required: 2",
+      "  WARNING hidden-or-stuffed: keyword(s) more than 4 times outside Skills: llm ×5, production ×5",
+      "  letter structure 100/A (0 critical)",
+      "  LINT parenthetical-in-title (180 Degrees Consulting Bristol): title \"Data Consultant (AI Engineering & AI System)\"\n      decide: \"(AI Engineering & AI System)\" is read as part of the job title, so the title matches no search. Decide where it belongs (a bullet, the dates, nowhere) and edit fact_bank.yaml experience id `dc180` yourself; the title is never reworded for you",
+      "  LINT multiple-date-ranges (Avasoft): title \"Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)\" | dates \"Jan 2023 – Sep 2024\"\n      decide: 3 date ranges in one role parse as one stint. Split it into separate roles (and say which bullets belong to which), or keep it as one: your call, in fact_bank.yaml experience id `avasoft`; nothing is changed for you",
+      "  LINT parenthetical-in-title (Avasoft): title \"Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)\"\n      decide: \"(Jun 2023 – Sep 2024)\" is read as part of the job title, so the title matches no search. Decide where it belongs (a bullet, the dates, nowhere) and edit fact_bank.yaml experience id `avasoft` yourself; the title is never reworded for you",
+      "  title match yes: \"AI Engineer\" carries ai_engineer",
+      "  degree met: the ad asks for a bachelor's; the CV shows a master's",
+      "  skills-only required (no bullet or profile line shows them): code review, guardrails"
+    ],
+    "ok": true,
+    "cv": {
+      "kind": "cv",
+      "score": 95,
+      "grade": "A",
+      "ok": true,
+      "issues": [
+        {
+          "code": "hidden-or-stuffed",
+          "severity": "warning",
+          "message": "keyword(s) more than 4 times outside Skills: llm ×5, production ×5"
+        }
+      ]
+    },
+    "letter": {
+      "kind": "letter",
+      "score": 100,
+      "grade": "A",
+      "ok": true,
+      "issues": []
+    },
+    "lints": [
+      {
+        "code": "parenthetical-in-title",
+        "where": "180 Degrees Consulting Bristol",
+        "value": "title \"Data Consultant (AI Engineering & AI System)\"",
+        "decision": "\"(AI Engineering & AI System)\" is read as part of the job title, so the title matches no search. Decide where it belongs (a bullet, the dates, nowhere) and edit fact_bank.yaml experience id `dc180` yourself; the title is never reworded for you"
+      },
+      {
+        "code": "multiple-date-ranges",
+        "where": "Avasoft",
+        "value": "title \"Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)\" | dates \"Jan 2023 – Sep 2024\"",
+        "decision": "3 date ranges in one role parse as one stint. Split it into separate roles (and say which bullets belong to which), or keep it as one: your call, in fact_bank.yaml experience id `avasoft`; nothing is changed for you"
+      },
+      {
+        "code": "parenthetical-in-title",
+        "where": "Avasoft",
+        "value": "title \"Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)\"",
+        "decision": "\"(Jun 2023 – Sep 2024)\" is read as part of the job title, so the title matches no search. Decide where it belongs (a bullet, the dates, nowhere) and edit fact_bank.yaml experience id `avasoft` yourself; the title is never reworded for you"
+      }
+    ],
+    "error": ""
+  }
+}

@@ -1,0 +1,101 @@
+Company: Graphcore Early Careers
+Title: Graduate Software Engineer, AI Compute Libraries & Performance 2027
+URL: https://job-boards.greenhouse.io/graphcore-early-careers/jobs/8902321002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Bristol, UK
+Posted: 2026-10-20T08:15:41-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-21
+Listed: yes
+
+Location: Bristol, UK 
+Start date: September 2027
+Application deadline: Midnight, 29th November 2026 
+We encourage you to apply early, as we may close applications before the advertised deadline.
+
+The Graduate Programme at Graphcore
+
+Join Graphcore in a permanent role and start your career with two years of hands-on learning. From day one, you’ll be trusted to take ownership, share your ideas and help shape what we’re creating. You’ll tackle challenging problems alongside a team who support your development and are as excited about your success as you are.
+
+What you’ll work on
+
+Use your programming skills and curiosity to help AI models run efficiently on next-generation Graphcore hardware. 
+
+In AI Compute Libraries & Performance, you’ll contribute to C++ libraries and compute kernels for machine learning workloads. Your work will include: 
+
+- Developing compute kernels: Implement and improve operations such as matrix multiplication (GEMM), convolutions, reductions, elementwise operations and fused kernels that combine multiple operations. 
+
+- Understanding and improving performance: Use profiling and microbenchmarks to measure execution speed and investigate how threading, cache locality, memory layout and kernel launch efficiency affect performance. 
+
+- Checking correctness and reliability: Build regression tests and numerical checks, investigate issues and improve the quality of the libraries our customers use. 
+
+Through these projects, you’ll develop practical experience connecting numerical computing with how code runs on hardware, helping deliver software that is fast, accurate and reliable. 
+
+Your team and support 
+
+You’ll join a team building high-performance compute libraries that help customers get more from Graphcore hardware. Our work brings together machine learning, numerical computing and accelerator performance, with colleagues sharing their expertise to solve engineering problems. 
+
+You’ll contribute to clearly scoped projects and build your skills with guidance from engineers working in performance and low-level software. Together, we use profiling, experiments and technical reviews to compare approaches, understand trade-offs and improve our solutions. 
+
+Your buddy will help you settle in, get familiar with our tools and ways of working, and find the right people to ask. Your manager will meet with you regularly to agree goals, offer feedback and discuss your development, including time for learning. 
+
+We welcome different perspectives and make space for everyone to contribute. Questions, alternative approaches and requests for help are part of how we work. As you take on more responsibility, your colleagues will help you work through challenges, and your ideas will be listened to and discussed respectfully. 
+
+How you’ll learn and grow 
+
+During the two-year programme, you’ll build performance engineering skills through hands-on work on compute kernels, benchmarks and tests. 
+
+Profiling and experiments will help you understand where time is spent and how changes to code and data layout affect performance. Numerical validation and regression testing will show you how to check that an optimisation preserves correct results and continues to work as software changes. 
+
+Working with specialists and discussing technical trade-offs will help you develop your engineering judgement, explain your findings and connect mathematical operations to efficient implementations on hardware. 
+
+What we're looking for 
+
+- Bachelor’s/Master’s degree in Computer Science, Maths, Machine Learning, Data Science or a related field 
+
+- Experience with C++11 
+
+- Familiarity with Python or scripting tools for automation and testing 
+
+- Understanding of linear algebra, numerical methods or scientific computing, with problem-solving skills and collaborative approach to unfamiliar technical challenges 
+
+You can demonstrate these skills through coursework, a dissertation, personal or team projects, research, or other relevant experience. Tell us what you built or investigated, how you approached it and what you learned. 
+
+Coursework or experience in machine learning frameworks, parallel programming, code optimisation, maths libraries or performance analysis would be useful. These are additional strengths, rather than essential requirements.
+
+Benefits
+
+- Flexible working: Balance your work and personal life with greater flexibility
+
+- Retirement planning support: Up to 5% matched pension
+
+- Phantom equity: Share in Graphcore’s success
+
+- Workplace experience: Enjoy thoughtfully designed office spaces for collaboration, with free food and an on-site barista to support your day
+
+- Peace of mind protection: Income protection and life assurance to provide financial security for you and your loved ones
+
+- Electric Vehicle Scheme: Choose an electric vehicle and lease it through salary sacrifice
+
+- Flexible benefits: Tailor your benefits package with a choice of additional options, including private medical insurance and dental cover
+
+- Optional benefits: Dental cover, health cash plan, private medical insurance, cycle to work scheme, give as you earn
+
+We welcome people from all backgrounds and experiences and are committed to building an inclusive environment where everyone can do their best work.
+
+We’re an equal opportunity employer and recognise that everyone brings different strengths and perspectives. If you need any adjustments during the interview process, just let us know - we’re happy to support you.
+
+Sponsorship
+
+Applicants must already have the right to work in the UK for the full duration of the programme, without requiring visa sponsorship. We are unable to sponsor work visas for our Early Careers opportunities.
+
+Introduction to Graphcore
+
+At Graphcore, we’re building next generation AI compute: from semiconductors and software to systems at datacenter scale. We are proud to be owned by SoftBank Group and work with other companies in the SoftBank family to deliver AI compute to customers working at the AI frontier. Starting your career here means working alongside people with different backgrounds and expertise, from AI researchers to chip designers and software engineers. You’ll learn from each other, bring fresh ideas and help solve challenging problems together.
+
+How to apply and what to expect 
+
+To apply, answer the application questions below and upload your CV and cover letter. We’ll let you know the outcome of your application by early December at the latest. If successful, you’ll be invited to complete a technical assessment. Candidates who reach the final stage will then be invited to attend in-person assessments in early spring.
+
+Ready to put your learning into practice? Start your career in a permanent Software Engineer role, with two years of hands-on learning through the Graphcore Graduate Programme. Apply now and help make AI compute more efficient.

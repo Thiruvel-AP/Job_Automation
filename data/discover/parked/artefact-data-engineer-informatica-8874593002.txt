@@ -1,0 +1,45 @@
+Company: Artefact
+Title: Data Engineer Informatica
+URL: https://job-boards.greenhouse.io/artefact/jobs/8874593002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Pune, Maharashtra, India
+Country: India
+Status: listed_only
+Posted: 2026-10-07T08:43:18-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Who we are
+Artefact is a leading global consulting firm dedicated to accelerating the adoption of data and AI. We work with a variety of businesses, from supermarket chains, to private equity firms and telecoms; including Nissan, L'Oréal, Carrefour, WHSmith, Orange, Beiersdorf, BNP Paribas, and Samsung.
+Our success stems from combining advanced data technologies, agile methods for quick delivery, and dedicated teams of data scientists, data engineers, business consultants, and data analysts.
+Our 2000 employees operate in 26 countries (Americas, Europe, Asia, Middle East, India, Africa) and we partner with 1,000+ clients.
+
+What you will be doing
+As a Senior Engineer in our India office, you will support and develop client data platforms, with a focus on metadata management and data governance using enterprise tools such as Informatica Intelligent Data Management Cloud (IDMC). 
+
+Your role would include:
+Platform maintenance: Run and support IDMC day to day, including Secure Agent management, connectivity, access control (asset groups, roles, SSO/SCIM provisioning), and environment promotion.
+Metadata engineering: Configure and troubleshoot metadata scans across cloud data warehouses, databases, CRM platforms, APIs and reporting tools, and resolve scan and profiling failures at scale.
+Data quality and governance: Build and maintain data quality rules, scorecards, business glossaries and data classifications, and keep them consistent across sources.
+Lineage: Map end-to-end data flow across the enterprise, so that data pipelines are visible and trusted.
+Automation: Use IDMC REST APIs, Python and bulk import/export to automate glossary loads, catalog clean-up, and governance workflows.
+
+Qualifications & Experience
+Informatica Experience: Hands-on experience with Informatica IDMC in production (CDGC, Metadata Command Center or Data Quality), including platform administration, metadata scanning and lineage.
+Data Pipelines: Design, build, and maintain scalable and robust data pipelines using SQL and Python
+Data Integration: Lead the integration of complex data systems and ensure consistency and accuracy of data across multiple platforms.
+Stakeholder Collaboration: Work closely with data architects, analysts, and other stakeholders to understand business requirements and translate them into technical implementations.
+Team Leadership: Provide guidance and mentorship to junior data engineers, ensuring high-quality project deliverables.
+Data Governance: Develop and enforce best practices in data governance, security, and compliance within the organisation.
+
+Senior Engineer
+Cloud Exposure: Strong experience with a cloud platform (AWS, GCP, or Azure) and an awareness of concepts like containerization (Docker).
+Communication & Collaboration: Strong verbal and written communication skills, with the ability to work effectively in a team environment and support the growth of more junior members.
+
+Desirable experience
+Advanced Education: A Master's degree or PhD in a relevant field is a strong plus.
+Reporting & Dashboards: Optimise data retrieval and develop dashboards and reports for business teams.
+Technology Evaluation: Continuously evaluate new technologies and tools to enhance the capabilities of the data engineering function.
+Data Platform Expertise: Hands-on experience building and supporting solutions on one or more of Databricks, Snowflake, Azure Data Factory, AWS Glue, Apache Airflow or PySpark.Informatica certification (IDMC, CDGC or Data Quality) or experience with other catalogs such as Collibra, Purview or Alation.

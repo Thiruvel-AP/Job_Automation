@@ -1,0 +1,7 @@
+QUESTION: What motivated you to apply for this position?
+WORDS: 100
+GUARD: passed
+SOURCES: ad, letter
+REUSE OVERLAP (5-word shingles, limit 0.30): 0.00 (no earlier motivation answer)
+
+I am applying for the AI Engineer role at RightShip. What draws me to this role is RightShip is the maritime industry's leading safety and risk intelligence platform. At AstraZeneca, I needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.

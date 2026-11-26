@@ -1,0 +1,68 @@
+Company: Nuffield Health
+Title: Forward-Deployed Senior Software Engineer (AI products)
+URL: https://nuffieldhealth.wd3.myworkdayjobs.com/NH_Careers/job/Epsom/Senior-Software-Engineer--AI-products-_JR0102379-1
+Source: workday
+Apply kind: workday
+Location: Epsom; London, United Kingdom
+Posted: 2026-11-06
+Posted via: workday.postedOn
+First seen: 2026-11-06
+Listed: yes
+
+Forward-Deployed Senior Software Engineer (AI products)
+Epsom & Barbican, London | Hybrid (One office day per week) | Permanent | Full-Time 
+Competitive salary, depending on experience
+37.5 hour per week
+
+We are seeking Forward-deployed Senior Software/AI Product Engineers to identify, design, build and put into production AI-powered tools that solve real business problems. This is a genuinely forward-deployed role: you will be embedded with business stakeholders, with no dedicated Product Owner, Business Analyst or Delivery Manager between you and the business, so you will own discovery, scoping, prioritisation, delivery and stakeholder communication yourself. We are looking for engineers who already have significant experience of working this way, with success measured through adoption, reliability and measurable business value.
+
+Successful candidates will be comfortable owning the full lifecycle, combining strong, product-driven software engineering fundamentals and practical application of AI technologies with cloud and DevOps expertise to deliver value quickly and safely. While AI-assisted development is central to the role, this remains a hands-on software engineering position requiring strong coding, critical-thinking, architectural and operational capabilities.
+
+As a Forward-deployed Senior Software Engineer, you will:
+
+- Own discovery, problem definition, scoping and prioritisation directly with the business, acting as your own product owner and business analyst.
+- Build digital products, AI-powered features, agents and automated workflows that solve priority business challenges.
+- Work embedded with business stakeholders as their direct engineering partner, validating ideas and quantifying benefits quickly through AI-prototyped products and solutions rather than documentation.
+- Use AI-assisted tools (Claude and/or Copilot) to take solutions from discovery and prototype through testing, deployment, monitoring, and iterative development.
+- Manage your own delivery, including planning, managing expectations, communicating progress and trade-offs, and reporting outcomes to stakeholders at all levels.
+- Build and maintain CI/CD pipelines and deployment automation of cloud-hosted solutions.
+- Productionise successful prototypes into secure, maintainable internal applications.
+- Champion effective use of AI to increase engineering productivity and accelerate delivery.
+
+As a Forward-deployed Senior Software Engineer, you’ll bring experience in: 
+
+- Working in a forward-deployed or embedded engineering model, for example through a digital agency or consultancy, a start-up or scale-up, or a small product team, where you worked directly with the customer or business to uncover needs and deliver solutions.
+- Translating loosely defined business challenges and/or requirements into working digital products, collaborating directly with stakeholders to validate ideas through rapid iteration.
+- Strong stakeholder collaboration and management skills, including the confidence to challenge, negotiate priorities and manage expectations with senior business stakeholders, plus product judgement and a bias for practical delivery.
+- AI-assisted development tools (e.g. Claude) to accelerate digital product delivery, rapidly producing prototypes, proof-of-concepts and production-ready solutions whilst maintaining appropriate levels of quality, security and maintainability.
+- Building AI functionality into a product or application, for example by integrating LLM-based features using Azure AI Foundry, Azure OpenAI or similar platforms, with exposure to techniques and frameworks such as retrieval-augmented generation (RAG), Model Context Protocol (MCP) vector databases and embeddings, semantic search and agentic workflows.
+- Full-stack engineering, building web applications, dashboards, APIs and internal tools using established languages (JavaScript/Java/Python) and frameworks (e.g. React), integrating data from internal and third-party platforms, with a strong grounding in software architecture, security, performance, scalability and resilience.
+- Exposure to relational and non-relational database technologies, Data Engineering, Machine Learning and LLM transformer architectures.
+- Deploying, operating and supporting applications in cloud environments, such as Microsoft Azure, implementing and maintaining CI/CD pipelines, infrastructure-as-code and automated deployment processes.
+
+Desirable skills and experience:
+
+- Evaluating and introducing emerging AI technologies to improve engineering productivity and business outcomes.
+- Developing solutions on Microsoft Azure including App Services, Functions, Storage and managed database services, Azure AI Foundry and Azure AI Search
+- Building and operating production services with appropriate monitoring, alerting, logging and observability tooling (e.g. New Relic), using platforms such as.
+- Event-driven architectures, messaging platforms and system integrations.
+- Experience in healthcare, fitness, retail, digital or other customer-facing environments.
+
+We will provide:
+
+- A wide variety of interesting and challenging work that involves most of Nuffield Health’s Digital systems.
+- An environment where you will be given responsibility to develop your ideas and solutions. You will be working within a community of engineers where your opinions are valued and contribute to the engineering standards and practices adopted.
+- Opportunities to learn and develop your career through self-learning, mentoring and/or training courses.
+- An environment that allows you to perform at your best work, working collaboratively with like-minded colleagues who are focussed on improving the health of our nation and making a real difference to peoples’ everyday lives
+
+Helping you feel good.
+
+We want you to love coming to work, feeling healthy, happy and valued. That’s why we’ve developed a benefits package with you in mind. Here, you can choose from a range of fitness, lifestyle, health and fitness wellbeing rewards, such as free gym membership, health assessments, retail discounts and pension options.
+
+At Nuffield Health, we take care of what’s important to you.
+
+If you like what you see, why not start your application now? We consider applications as we receive them and reserve the right to close adverts early (for example, where we have received an unprecedented high volume of applications). So, it’s a good idea to apply right away to ensure you’re considered for this role.
+
+Apply today… It starts with you.
+
+#CentralSupport

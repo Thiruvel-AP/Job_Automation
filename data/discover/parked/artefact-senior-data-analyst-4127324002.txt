@@ -1,0 +1,68 @@
+Company: Artefact
+Title: Senior Data Analyst
+URL: https://job-boards.greenhouse.io/artefact/jobs/4127324002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 9th arrondissement of Paris, 75009, Paris, France
+Country: France
+Status: listed_only
+Posted: 2020-02-19T12:21:30-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Présentation du poste :
+
+Au sein de l’équipe Data Analytics d'Artefact, vous rejoignez un pôle clé couvrant le dashboarding, l'analytics engineering, la mesure marketing et le low-code data science. Dans un environnement à forte croissance, vous intervenez auprès de grands comptes pour transformer leurs enjeux business grâce à une collecte, un traitement et une visualisation de données performants.
+
+Ce qu’on attend de vous :
+
+En tant que profil Senior, vous garantissez l'excellence technique et la qualité de la valeur livrée sur vos projets analytiques. Vous jouez un rôle de conseiller de confiance auprès des clients, tout en mentorant des profils plus juniors et en intégrant les derniers usages d'IA Générative appliqués à l'analytics.
+
+Vos missions :
+
+- Piloter la livraison de projets Analytics de bout en bout : du cadrage des cas d'usage avec les équipes métier jusqu'au déploiement de dashboards, pipelines et produits data décisionnels.
+
+- Concevoir et implémenter des architectures analytiques scalables en appliquant les pratiques modernes d'Analytics Engineering (modélisation de données, tests, qualité de code).
+
+- Exploiter les développements récents en GenAI pour maximiser la valeur délivrée à nos clients.
+
+- Extraire des insights stratégiques et les restituer de manière claire et actionnable pour accompagner la prise de décision des parties prenantes.
+
+- Agir en expert référent auprès des clients : construire une relation de confiance et apporter des recommandations sur les meilleures pratiques d'analyse de données.
+
+- Mentorer les Data Analysts juniors, partager les meilleures pratiques (ateliers, documentation) et participer à la création d'accélérateurs internes et à la veille technologique.
+
+Profil recherché :
+
+- Expérience & Mindset : 3 ans ou plus d'expérience concrète dans un environnement data-driven, avec autonomie, rigueur et curiosité intellectuelle.
+
+- Domaines d'expertise (au moins 1) :
+
+- Dashboarding & Dataviz (Power BI, Looker, Tableau, Superset)
+
+- Analytics Engineering (dbt sur BigQuery, Snowflake, Databricks)
+
+- Marketing Analytics & Mesure (CDP, MMM, attribution, Clean Rooms)
+
+- Low-Code / No-Code Data Science (Dataiku, Copilot Studio)
+
+- Socle Technique : Solide maîtrise de SQL et Python, bases en Git et principes d'ingénierie logicielle (versioning, tests), ainsi qu'une expérience sur les environnements Cloud (GCP, Azure, AWS).
+
+- Posture & Communication : Capacité avérée à faire le pont entre équipes techniques et métier, accompagnement des profils juniors et communication claire.
+
+Process de recrutement :
+
+- HR Call : Échange initial sur votre parcours, vos motivations et l'adéquation culturelle.
+
+- Technical Interview : Évaluation approfondie de votre socle technique (SQL, Python, Cloud) et de vos expertises Analytics.
+
+- Business Interview : Mise en situation sur la résolution de cas d'usage business et la restitution analytique.
+
+- Fit Interview : Échange final de projection opérationnelle et de fit culturel.
+
+Rémunération : Package : 53 000 € à 63 000 € brut annuel (fixe) + 5 000 € de variable, selon expérience et séniorité.
+
+Présentation entreprise Artefact est un cabinet de conseil spécialisé en data et en intelligence artificielle, qui accompagne les entreprises pour transformer ces technologies en impact business concret et mesurable. A la croisée du conseil, de la data et de la technologie, nos 2 500 collaborateurs dans 27 pays mettent leurs expertises en commun pour concevoir, développer et déployer des solutions qui répondent aux enjeux de transformation de nos clients. Envie d'en savoir plus? Découvrez Artefact, nos expertises et notre culture : https://www.artefact.com
+
+Chez Artefact, nous sommes convaincus que la diversité des parcours, des expériences et des perspectives fait la richesse de nos équipes. Nous nous engageons à offrir un environnement inclusif et des opportunités équitables, où chacune et chacun peut évoluer et exprimer pleinement son potentiel. Nos recrutements reposent sur les compétences, le potentiel et l'adéquation avec le rôle.

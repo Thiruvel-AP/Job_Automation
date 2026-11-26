@@ -1,0 +1,69 @@
+Company: Wheely
+Title: Data Scientist
+URL: https://boards.greenhouse.io/wheely/jobs/7588277003?gh_jid=7588277003
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, England, United Kingdom
+Posted: 2026-01-13T07:43:20-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+About Wheely
+
+Wheely is redefining premium transportation across major cities in Europe, the US, and the Middle East. We blend cutting-edge technology with the craft of five-star chauffeuring to deliver an experience trusted by more than 100,000 active riders and 1,200 corporate accounts.
+
+We’re a profitable, fast-growing scale-up with $43M raised and over $100M in annual revenue. Having recently launched in New York City, we’re expanding rapidly across the US and EMEA. If you take pride in your craft and want to help shape the next chapter of our growth, we'd love to hear from you.
+
+About The Role
+We're hiring mid-level and senior Data Scientists / ML Engineers. You will own the entire process: from ideation and research through to production deployment.
+
+You'll join one of several hiring teams (Mapping, Matching, Pricing, or Supply) tackling challenging & high-impact problems such as ETA prediction, routing, map matching, dynamic pricing, bipartite matching, driving style prediction, and LLM integration.
+
+Responsibilities
+
+- Collaborate with engineers, designers, and product managers to solve ambiguous problems
+
+- Research, prototype, and ship ML models into production
+
+- Continuously improve existing algorithms and identify opportunities for new ones
+
+Requirements
+
+- Strong academic background in a STEM field
+
+- 2+ years of experience in Data Science or Machine Learning for mid-level; 5+ years for senior roles
+
+- Strong foundation in probability & statistics
+
+Nice To Have
+
+- Experience with geospatial data or routing (particularly relevant for the Mapping team)
+
+- Background in operations research or combinatorial optimization (particularly relevant for the Matching and Pricing teams)
+
+- Experience deploying real-time or latency-sensitive ML systems
+
+What We Offer
+
+- Office-based role in West London, four days a week with flexible start and finish times, plus one remote day of your choice
+
+- Salary: £90,000 – £110,000
+
+- Employee stock options plan
+
+- Private medical and dental insurance
+
+- Life and critical illness cover
+
+- Latest-generation MacBook Pro and 4k display
+
+- Monthly credit towards Wheely journeys
+
+- Cycle to Work scheme
+
+- Professional development stipend
+
+- Relocation support, including visa sponsorship and allowance
+
+All of your personal information will be collected stored and processed in accordance with Wheely’s Candidate Privacy Notice

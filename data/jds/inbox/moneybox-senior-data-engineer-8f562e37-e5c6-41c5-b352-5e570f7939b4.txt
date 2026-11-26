@@ -1,0 +1,173 @@
+Company: MoneyBox
+Title: Senior Data Engineer
+URL: https://jobs.ashbyhq.com/moneybox/8f562e37-e5c6-41c5-b352-5e570f7939b4
+Source: ashby
+Apply kind: ashby
+Location: London Office
+Posted: 2026-10-15T11:04:39.484+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+About Moneybox
+
+ 
+
+At Moneybox, our mission is to give everyone the means to get more out of life. We're guided by our belief that wealth isn't about the money, it's about the means to more - more freedom, opportunities, possibilities, and peace of mind. Moneybox is an award-winning wealth management platform, helping over one and a half million people build wealth throughout their lives, whether they’re saving and investing, buying their first home, or planning for retirement.
+
+ 
+
+Job Brief
+
+ 
+
+We’re looking for a Senior Data Engineer to join our Data Engineering team and play a key role in shaping how data moves through Moneybox.
+
+Working closely with our Data Engineering lead, you’ll act as a senior technical partner and take significant ownership of our data platform, architecture and engineering standards. This is a hands-on role, but one with broad influence across Engineering and Insight.
+
+You’ll need to be comfortable operating with a high degree of autonomy, making pragmatic technical decisions and taking ownership from problem definition through to production.
+
+What You'll Do
+
+ - 
+
+ - Act as a senior technical partner within Data Engineering, providing continuity and ownership across the platform
+
+ - Help set the technical direction and priorities for Data Engineering
+
+ - Own, maintain and improve our core data processing and analytical platforms, with a strong focus on reliability, scalability and resilience
+
+ - Design, build and maintain robust data pipelines and integrations across Moneybox systems
+
+ - Lead the design of significant data architecture and integration changes
+
+ - Build integrations to ingest new data sources and make them available across our analytical platforms
+
+ - Partner with Backend Engineering and Insight teams to maintain reliable, accurate and meaningful data models as our products evolve
+
+ - Establish and promote good engineering practices across data pipelines, modelling, observability, performance and reliability
+
+ - Ensure data quality and integrity throughout our pipelines, identifying and addressing issues before they impact downstream users
+
+ - Provide technical guidance to engineers and analysts working with the data platform
+
+ - Work with Engineering, Information Security and Compliance to ensure analytical data is secure, appropriately restricted and handled in line with our policies
+
+ - Monitor and improve the performance, efficiency and cost of our data processing platforms
+
+ - Take ownership of complex technical problems and drive them through to resolution
+
+ - Keep up to date with developments in data engineering and identify where new technologies or approaches could deliver meaningful value
+
+ - Contribute to the wider engineering community at Moneybox, sharing expertise and helping raise standards across our technology estate
+
+Our Data Technology Stack
+
+ - 
+
+ - Cloud: Microsoft Azure
+
+ - Data platforms: Azure Databricks, SQL Server, Cosmos DB and Blob Storage
+
+ - Data processing: Python, Spark and SQL
+
+ - Messaging: Azure Service Bus and Event Hubs
+
+ - DevOps and infrastructure: Azure DevOps, GitHub Actions and Terraform
+
+You don’t need to have worked with every technology we use, but we expect you to have strong experience with comparable technologies and the ability to learn quickly.
+
+Who You Are
+
+ - 
+
+ - An experienced data engineer who enjoys solving complex technical problems and building reliable systems
+
+ - Comfortable taking significant ownership and operating with a high degree of autonomy
+
+ - Able to act as a trusted technical partner and help shape technical direction
+
+ - Pragmatic and able to balance strong engineering practices with the needs of a fast-moving business
+
+ - Curious and motivated by improving systems, processes and ways of working
+
+ - A strong communicator who can explain complex technical concepts clearly to both technical and non-technical audiences
+
+ - Someone who cares about the quality of their work and the impact it has on customers and colleagues
+
+ - Comfortable working across team boundaries and bringing clarity to ambiguous or complex problems
+
+Skills & Experience
+
+ - 
+
+
+ESSENTIAL
+
+ - Strong experience designing, building and operating scalable production data pipelines
+
+ - Strong understanding of ETL and ELT architectures and patterns
+
+ - Strong programming and data transformation skills, particularly using technologies such as Python, Spark and SQL
+
+ - Experience working with cloud-based data platforms
+
+ - Experience designing systems for reliability, observability, performance and data quality
+
+ - Strong understanding of data modelling and the principles behind well-structured analytical data
+
+ - Experience making technical design decisions and taking ownership of significant engineering work
+
+ - Ability to independently investigate problems and drive work through to completion
+
+ - Ability to communicate technical concepts clearly and work effectively with a broad range of stakeholders
+
+
+DESIRABLE
+
+
+ - Experience with NoSQL technologies such as Cosmos DB, DynamoDB or MongoDB
+
+ - Experience with messaging or event-streaming technologies such as Azure Service Bus or Event Hubs
+
+ - Experience using infrastructure-as-code tools such as Terraform
+
+ - Understanding of REST APIs, authentication and API security
+
+ - Experience working with sensitive or regulated data
+
+ - Experience improving the cost and performance of large-scale data workloads
+
+Whats in it for you?
+
+ - 
+
+ - The opportunity to join a fast-growing, award-winning and ambitious company
+
+ - The chance to have a meaningful impact on the technology and data capabilities behind Moneybox
+
+ - A friendly and highly motivated team
+
+ - A collaborative and inclusive culture where your ideas will be heard
+
+ - Company bonus scheme
+
+ - Company pension scheme
+
+ - Hybrid working
+
+ - Home office furniture allowance
+
+ - Personal annual learning and development budget
+
+ - Private medical insurance
+
+ - Health Cash Plan, including cashback on services such as dental and optical care
+
+ - Cycle to Work scheme
+
+ - Wellbeing and fitness benefits
+
+ - Enhanced parental pay and leave
+
+ - 25 days' holiday plus bank holidays, with additional days based on length of service

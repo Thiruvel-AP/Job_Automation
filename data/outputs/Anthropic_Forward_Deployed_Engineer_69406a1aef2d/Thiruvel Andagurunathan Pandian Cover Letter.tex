@@ -1,0 +1,53 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    {\fontsize{12}{14}\selectfont\color{headernavy} Forward Deployed Engineer}\\[0.2cm]
+    {\small Bristol, UK\nobreak\ \,\textperiodcentered\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textperiodcentered\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textperiodcentered\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p}\nobreak\ \,\textperiodcentered\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}\nobreak\ \,\textperiodcentered\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{Portfolio}}
+
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Dear Anthropic Applied AI team,
+
+Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo, the kind of work your ad describes: "Production experience with LLMs including advanced prompt engineering, agent development, evaluation frameworks, and deployment at scale". At 180 Degrees Consulting, led the architecture for a product-startup client\textquotesingle{}s hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client\textquotesingle{}s production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.
+
+Anthropic\textquotesingle{}s mission is to create reliable, interpretable, and steerable AI systems, and you want AI to be safe and beneficial for users and for society as a whole. As a member of the Applied AI team you will be a Forward Deployed Engineer who embeds directly with strategic customers to drive transformational AI adoption. You will work within customer systems to build production applications with Claude models, ensuring those products meet customer requirements, and you will deliver technical artifacts such as MCP servers, sub-agents, and agent skills for production workflows. You will provide white-glove deployment support in enterprise environments and travel to customer sites to build solutions in person, acting as a champion for Anthropic\textquotesingle{}s mission in the field.
+
+I built an agentic system using Python and PostgreSQL, employing continuous integration and collaborating closely with stakeholders. I also delivered MCP services that combined search, GraphQL and open-weight models on a PostgreSQL back-end, again using continuous integration. Both initiatives involved LLMs, advanced prompt engineering and agent development, and produced technical artifacts ready for deployment at scale, directly addressing the LLMs requirement.
+
+I created a data pipeline in Python, containerised with Docker and deployed on AWS Lambda with appropriate IAM roles, integrating fourteen source datasets into a unified service. I also built FastAPI applications that incorporated scikit-learn and Keras models, packaging them with Docker for consistent production deployment. These projects demonstrate deep Python expertise, deployment at scale and clear communication with technical and non-technical stakeholders, satisfying the Python requirement.
+
+Could we take 20 minutes to talk about LLMs and MCP servers?
+
+\vspace{0.5cm}
+
+With regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

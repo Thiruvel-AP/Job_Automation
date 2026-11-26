@@ -1,0 +1,123 @@
+Company: Anthropic
+Title: Data Scientist, Growth
+URL: https://job-boards.greenhouse.io/anthropic/jobs/5161402008
+Source: greenhouse
+Apply kind: greenhouse
+Location: New York City, NY | Seattle, WA; San Francisco, CA
+Country: United States
+Status: listed_only
+Posted: 2026-03-23T16:37:20-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+About Anthropic
+
+Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole. Our team is a quickly growing group of committed researchers, engineers, policy experts, and business leaders working together to build beneficial AI systems.
+About the role
+
+The Growth team's job is to keep Anthropic on the exponential by getting more people and companies using and paying for Claude. Growth Data Scientists partner closely with growth product managers, engineers and marketers on experimentation, opportunity sizing, strategic analysis, metrics and personalization.
+
+We're hiring for two focus areas within this posting. Tell us in your application which one fits you best, or if you're excited about both:
+
+- Growth generalist: a strong generalist across marketing and product who drives experimentation, opportunity sizing, marketing measurement and strategic analysis.
+
+- Personalization: building and evaluating the models and experiments that pick the right message, offer or product experience for each user, across lifecycle marketing, onboarding and in-product experiences.
+
+We work in an AI-native way. Much of our analysis, reporting and experiment work is done with Claude as a collaborator, and we expect you to push that further.
+
+Responsibilities
+
+Across both focus areas, you will:
+
+- Design and analyze A/B tests and quasi-experiments across activation, retention and monetization, and turn the results into a clear call on what to ship
+
+- Define systems of metrics and guardrails that tie short-term wins to long-term value
+
+- Present analyses and recommendations to technical and non-technical audiences, leading with the decision and keeping the numbers in support
+
+In the Growth generalist focus, you will also:
+
+- Size opportunities and make the case for what Growth should work on next
+
+- Measure the incrementality of paid and lifecycle marketing with holdouts, geo experiments and other causal methods, and turn the results into budget and channel recommendations
+
+- Tie acquisition and lifecycle programs to long-term value (LTV, CAC and payback)
+
+In the Personalization focus, you will also:
+
+- Build and ship targeting and personalization models that decide which users get which message, offer or experience, working closely with growth product managers and engineers
+
+- Design the tests that evaluate and iterate on our personalization strategy, including holdouts, bandits and off-policy estimates where A/B tests aren't practical
+
+You may be a good fit if you have
+
+- 7+ years of experience in data science, with significant time on growth, marketing, lifecycle or personalization problems
+
+- Deep expertise in experimental design and causal inference, including A/B testing at scale, holdouts and quasi-experimental methods when randomization isn't available
+
+- Experience analyzing growth funnels: acquisition, activation, retention and monetization
+
+- Proficiency with Python and SQL
+
+- Clear written communication, and a track record of recommendations that changed priorities or what a team built
+
+- A bias for action and comfort in ambiguous, fast-moving environments
+
+- An interest in Anthropic's mission of building safe and beneficial AI
+
+For the Growth generalist focus, we're also looking for:
+
+- Experience measuring marketing: incrementality testing, holdouts or geo experiments, and LTV/CAC for paid or lifecycle programs
+
+For the Personalization focus, we're also looking for:
+
+- Hands-on experience building and shipping machine learning models that drive user-facing decisions (targeting, ranking, recommendation or personalization)
+
+Strong candidates may also have
+
+- Experience defining activation metrics and lifecycle measurement for a product-led business
+
+- Experience with experimentation platforms and meta-analysis across experiment portfolios
+
+- Background at consumption-based, multi-product companies serving both consumers and enterprises
+
+- Experience using LLMs or coding agents in your own analytical workflow
+
+- Experience with marketing mix modeling, geo experiments or synthetic controls
+
+- Experience running contextual bandits, uplift models or similar decision systems in production
+
+- Experience with lifecycle or CRM personalization (email, push, in-product messaging) and its measurement problems, such as global holdouts and interference between campaigns
+
+The annual compensation range for this role is listed below. 
+
+For sales roles, the range provided is the role’s On Target Earnings ("OTE") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.
+Annual Salary:
+$285,000—$380,000 USD
+
+Logistics
+
+Minimum education: Bachelor’s degree or an equivalent combination of education, training, and/or experience
+
+Required field of study: A field relevant to the role as demonstrated through coursework, training, or professional experience
+
+Minimum years of experience: Years of experience required will correlate with the internal job level requirements for the position
+
+Location-based hybrid policy: Currently, we expect all staff to be in one of our offices at least 25% of the time. However, some roles may require more time in our offices.
+
+Visa sponsorship: We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.
+
+We encourage you to apply even if you do not believe you meet every single qualification. Not all strong candidates will meet every single qualification as listed. Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.
+
+Your safety matters to us. To protect yourself from potential scams, remember that Anthropic recruiters only contact you from @anthropic.com email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit anthropic.com/careers directly for confirmed position openings.
+
+How we're different
+
+We believe that the highest-impact AI research will be big science. At Anthropic we work as a single cohesive team on just a few large-scale research efforts. And we value impact — advancing our long-term goals of steerable, trustworthy AI — rather than work on smaller and more specific puzzles. We view AI research as an empirical science, which has as much in common with physics and biology as with traditional efforts in computer science. We're an extremely collaborative group, and we host frequent research discussions to ensure that we are pursuing the highest-impact work at any given time. As such, we greatly value communication skills.
+
+The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI & Compute, Concrete Problems in AI Safety, and Learning from Human Preferences.
+
+Come work with us!
+
+Anthropic is a public benefit corporation headquartered in San Francisco. We offer competitive compensation and benefits, optional equity donation matching, generous vacation and parental leave, flexible working hours, and a lovely office space in which to collaborate with colleagues. Guidance on Candidates' AI Usage: Learn about our policy for using AI in our application process.

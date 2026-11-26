@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:b89331cd6c23",
+ "company": "Capgemini",
+ "title": "Fabric / Power BI Analytics Consultant",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.2, ATS ceiling 49%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family data_consultant matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Capgemini large, hybrid, learning culture, growth pathways"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks candidate to rate or give instructions"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm salary range or compensation details",
+  "Verify Capgemini's UK sponsor status for work visas",
+  "Check exact company size and growth metrics for cultural fit"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "4d98fe4abaf12cc4",
+ "jd_words": 636,
+ "tokens": 1991,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

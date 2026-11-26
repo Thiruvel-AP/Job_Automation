@@ -1,0 +1,129 @@
+Company: Faculty
+Title: Data Scientist
+URL: https://jobs.ashbyhq.com/faculty/0b6ad03f-8633-47ef-9dec-a8eb3cebf9b2
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-11-17T19:55:10.582+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-18
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+ABOUT THE TEAM
+
+
+
+Our Energy, Transition and Environment business unit is pioneering meaningful change in the clean energy revolution. Our vision is to accelerate the transition to net-zero emissions and drive efficiencies for a new era of utility companies.
+
+ 
+
+We believe that the responsible, and intelligent, deployment of AI is critical to the success of this mission. We partner with a wide range of clients - from major energy operators, to GreenTech startups, and national infrastructure providers - to build solutions which return measurable impact and move us towards a smarter, cleaner, and more sustainable world.
+
+ 
+
+
+
+ABOUT THE ROLE:
+
+
+As a Data Scientist II at Faculty, you will lead the design of end-to-end analytical approaches, developing high-quality models that solve complex, multi-faceted business problems. Joining our Applied AI division, you will leverage advanced programming to turn high-level client needs into rigorous mathematical frameworks. 
+
+This role is for an ambitious practitioner ready to own the delivery of robust, scalable model components while ensuring every solution is mathematically sound and ethically responsible. You will play a vital part in pushing our technical boundaries and mentoring others.
+
+ 
+ 
+
+
+WHAT YOU'LL BE DOING:
+
+
+ - Designing and implementing core data science approaches for project workstreams, including the selection of optimal algorithms and validation strategies.
+
+ - Combining deep domain expertise with advanced machine learning techniques to solve unique and complex business challenges.
+
+ - Owning the end-to-end delivery of specific model components, ensuring they are scalable, robust, and mathematically precise.
+
+ - Developing innovative algorithms or adapting existing frameworks to meet bespoke client requirements and technical constraints.
+
+ - Building the software architecture required to wrap models and agentic workflows into production-grade, reliable environments.
+
+ - Supporting Level 1 Data Scientists by providing technical guidance and conducting rigorous peer reviews on modeling tasks.
+
+ - Managing personal delivery timelines while proactively identifying and mitigating technical risks or data limitations within projects.
+
+ 
+ 
+
+
+WHO WE'RE LOOKING FOR:
+
+
+ - You possess expertise in statistical modeling and deep learning frameworks, such as PyTorch or TensorFlow, to implement complex paradigms.
+
+ - You are disciplined in extracting valid insights from messy or incomplete datasets, ensuring solutions remain robust under uncertainty.
+
+ - You have the ability to translate high-level, ambiguous client needs into actionable data science requirements and mathematical frameworks.
+
+ - You promote a culture of shared best practices, ensuring all AI development is transparent, ethical, and held to high peer-reviewed standards.
+
+ - You are a clear communicator who can manage technical discussions with customers and articulate project feasibility and delivery timelines.
+
+ - You are highly proficient in advanced Python and harness frameworks, capable of building the architectures necessary for production-grade AI.
+
+
+
+
+OUR INTERVIEW PROCESS
+
+ 
+
+ 1. Talent Team Screen (30 minutes)
+
+ 2. Take Home Technical Assessment
+
+ 3. Technical Interview (90 minutes)
+
+ 4. Commercial Interview (60 minutes)
+
+
+
+
+
+
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

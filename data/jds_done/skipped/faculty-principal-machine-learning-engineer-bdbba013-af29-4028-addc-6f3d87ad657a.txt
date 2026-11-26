@@ -1,0 +1,116 @@
+Company: Faculty
+Title: Principal Machine Learning Engineer
+URL: https://jobs.ashbyhq.com/faculty/bdbba013-af29-4028-addc-6f3d87ad657a
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-06-29T09:19:37.135+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-20
+Listed: yes
+Possible repost: possible repost of a job you skipped on ? (manual:edfcb56d49c9)
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+ABOUT THE ROLE
+
+
+
+As a Principal Machine Learning Engineer, you'll serve as the definitive technical authority on ML engineering across the organisation, setting the standard for how we design, build, and scale AI systems. You will own the architectural vision for our most complex and high-stakes programmes, influence engineering strategy at an organisational level, and act as a trusted partner to senior leadership and executive clients.
+
+This role goes beyond leading projects, you are a force multiplier who shapes the engineering culture, elevates the capability of those around you, and ensures our technical foundations are built to last.
+
+
+
+
+WHAT YOU'LL BE DOING:
+
+
+
+ - Defining and owning the organisation-wide technical vision for ML engineering, establishing architectural standards and engineering practices that scale across teams and clients.
+
+ - Overseeing the end-to-end delivery of flagship, business-critical ML programmes, spanning multiple workstreams, engineering teams, and client organisations.
+
+ - Driving the strategic adoption of new technologies, platforms, and ways of working, influencing how the entire engineering craft evolves.
+
+ - Cultivating senior engineering talent, coaching leads and managers, building capability pipelines, and embedding a culture of technical rigour and excellence.
+
+ - Acting as the principal technical voice in C-suite and executive client engagements, shaping AI strategy and securing long-term strategic partnerships.
+
+ - Leading on the most significant sales and pre-sales opportunities, providing architectural authority that differentiates our proposition and wins high-value engagements.
+
+ - Partnering with Data Science, Commercial, and Infrastructure leadership to align ML engineering strategy with broader business goals and growth ambitions.
+
+
+
+
+WHO WE'RE LOOKING FOR:
+
+
+
+ - You are a recognised ML engineering authority, able to go exceptionally deep across multiple domains and provide definitive technical judgement on the hardest problems.
+
+ - You have mastery of Python and a proven track record of designing and operationalising production-grade ML systems at scale, across multiple frameworks and paradigms.
+
+ - You are an expert across multiple major Cloud Solution Providers and have set the architectural direction for complex, full-stack AI platforms spanning multiple organisations.
+
+ - You have deep expertise in containerisation, orchestration, and MLOps at scale, and have established the standards others follow.
+
+ - You have a proven track record of developing senior engineering talent, coaching leads and managers, building capability, and shaping high-performance engineering cultures.
+
+ - You have a visible external profile, through publications, conference contributions, open-source leadership, or industry influence, that reflects your standing in the field.
+
+ - You operate naturally at the executive level, translating complex ML engineering decisions into commercial outcomes and proactively shaping the strategic direction of client engagements.
+
+
+
+
+
+
+OUR INTERVIEW PROCESS
+
+
+
+ 1. Talent Team Screen (30 minutes)
+
+ 2. Introduction to the role (45 minutes)
+
+ 3. Pair Programming Interview (90 minutes)
+
+ 4. System Design Interview (90 minutes)
+
+ 5. Commercial & Leadership Interview (60 minutes)
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

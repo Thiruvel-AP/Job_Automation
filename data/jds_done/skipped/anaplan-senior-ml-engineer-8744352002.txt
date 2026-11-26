@@ -1,0 +1,89 @@
+Company: Anaplan
+Title: Senior ML Engineer
+URL: https://job-boards.greenhouse.io/anaplan/jobs/8744352002
+Source: greenhouse
+Location: Manchester, United Kingdom
+Posted: 2026-09-03T12:30:40-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+At Anaplan, we are a team of innovators focused on optimizing business decision-making through our leading AI-infused scenario planning and analysis platform so our customers can outpace their competition and the market.
+
+What unites Anaplanners across teams and geographies is our collective commitment to our customers’ success and to our Winning Culture.
+
+Our customers rank among the who’s who in the Fortune 50. Coca-Cola, LinkedIn, Adobe, LVMH and Bayer are just a few of the 2,400+ global companies who rely on our best-in-class platform.
+
+Our Winning Culture is the engine that drives our teams of innovators. We champion diversity of thought and ideas, we behave like leaders regardless of title, we are committed to achieving ambitious goals, and we love celebrating our wins – big and small.
+
+Supported by operating principles of being strategy-led, values-based and disciplined in execution, you’ll be inspired, connected, developed and rewarded here. Everything that makes you unique is welcome; join us and let’s build what’s next - together!
+
+You will join the Predictive Intelligence engineering team within Anaplan, building the backend services that power the ML Engine behind the Syrup platform and Anaplan’s forecasting solutions. The team is responsible for the production execution of forecasting and predictive models, the MLOps infrastructure supporting our data scientists, and the data processing services that deliver insights to enterprise customers. This role reports to the Director of Engineering for Predictive Intelligence and works closely with data scientists, ML engineers, and platform partners.
+
+Your Impact
+
+- Design and implement scalable, fault-tolerant predictive intelligence services and features as a core contributor to the ML Engine backend.
+
+- Lead the technical implementation of MLOps capabilities, including model training pipelines, deployment workflows, and runtime infrastructure for production ML.
+
+- Partner with data scientists to productionize models and graduate experimental work into stable, observable production services.
+
+- Drive the evolution of forecasting, scoring, and data processing services with a focus on performance, scalability, and cost efficiency.
+
+- Take part in on-call rotations and own the operational health of high-availability production services, including incident response and post-incident improvements.
+
+- Lead design reviews and code reviews, raising the quality bar across the team and mentoring mid-level and junior engineers.
+
+- Identify and drive cross-cutting platform improvements that benefit multiple services and teams.
+
+Your Qualifications
+
+- Strong professional software engineering experience building production backend services.
+
+- Strong proficiency in Python, with a track record of writing performant, well-tested production code.
+
+- Hands-on experience operating containerized services on Kubernetes in at least one major cloud (AWS, GCP, or Azure).
+
+- Experience with data warehousing or analytics technologies such as Snowflake, Iceberg, Trino, or Postgres.
+
+- Experience designing, deploying, and operating ML models in production, including familiarity with MLOps tooling such as MLflow.
+
+- Demonstrated ability to work autonomously, take ownership of meaningful systems, and deliver against ambiguous requirements.
+
+- Track record of being on-call for production services and contributing to operational excellence.
+
+- Bachelor’s degree in Computer Science, Engineering, or a related technical field, or equivalent practical experience.
+
+Preferred Skills
+
+- Experience with gradient-boosted tree models, neural networks, and optimization solvers in production.
+
+- Familiarity with data orchestration tools (e.g., Prefect, Airflow, dbt) and modern data lake architectures.
+
+- Experience working closely with data scientists to operationalize research code.
+
+- Multi-cloud experience across AWS, GCP, and Azure.
+
+- Background in forecasting, demand planning, or retail/supply chain domains.
+
+Our Commitment to Diversity, Equity, Inclusion and Belonging (DEIB) 
+
+We believe attracting and retaining the best talent and fostering an inclusive culture strengthens our business. DEIB improves our workforce, enhances trust with our partners and customers, and drives business success. Build your career in a place where diversity, equity, inclusion and belonging aren’t just words on paper – this is what drives our innovation, it’s how we connect, and it contributes to what makes us a market leader. We believe in a hiring and working environment where all people are respected and valued, regardless of gender identity or expression, sexual orientation, religion, ethnicity, age, neurodiversity, disability status, citizenship, or any other aspect which makes people unique. We hire you for who you are, and we want you to bring your authentic self to work every day! 
+
+We will ensure that individuals with disabilities are provided reasonable accommodation to participate in the job application or interview process, perform essential job functions, and receive equitable benefits and all privileges of employment. Please contact us to request accommodation.  
+
+Fraud Recruitment Disclaimer  
+
+It has come to our attention that fraudulent and fictitious job opportunities are being circulated on the Internet. Prospective candidates are being contacted by certain individuals, mainly through telephone calls, emails and correspondence, claiming they are representatives of Anaplan. The main purpose of these correspondences and announcements is to obtain privileged information from individuals.  
+
+Anaplan does not:  
+
+- Extend offers to candidates without an extensive interview process with a member of our recruitment team and a hiring manager via video or in person.   
+
+- Send job offers via email. All offers are first extended verbally by a member of our internal recruitment team whenever possible and then followed up via written communication.  
+
+All emails from Anaplan would come from an @anaplan.com email address. Should you have any doubts about the authenticity of an email, letter or telephone communication purportedly from, for, or on behalf of Anaplan, please send an email to people@anaplan.com before taking any further action in relation to the correspondence.   
+
+Privacy & AI Notice
+
+Candidate data processed during our recruitment activities is handled in accordance with our Candidate Privacy Notice. This may include the use of artificial intelligence or automated tools to assist our team in evaluating qualifications.

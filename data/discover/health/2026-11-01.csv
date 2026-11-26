@@ -1,0 +1,27 @@
+ts,source,name,method,country,status,new_jobs,reachable,robots,credentials,alerts,postings,detail,jobs_parsed
+2026-11-01T18:59:23+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,3,yes,n/a,present,50,,,120
+2026-11-01T18:59:23+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,5,,,11
+2026-11-01T18:59:23+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,21,yes,allowed,n/a,,4825,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-01T18:59:23+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,,427
+2026-11-01T18:59:23+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-01T18:59:23+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-01T18:59:23+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,stepstone-de,StepStone DE,gmail_alerts,DE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,stepstone-nl,StepStone NL,gmail_alerts,NL,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,irishjobs,IrishJobs,gmail_alerts,IE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,jobbank-ca,Job Bank Canada,jobbank_csv,CA,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,seek-au,SEEK AU,gmail_alerts,AU,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,seek-nz,SEEK NZ,gmail_alerts,NZ,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,mycareersfuture,MyCareersFuture,gmail_alerts,SG,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-01T18:59:23+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,openai,OpenAI,ashby,multi,ok,0,yes,allowed,n/a,,810,api.ashbyhq.com last answered HTTP 401 at 2026-10-31T16:40:41+00:00 after 39 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-01T18:59:23+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,reed,Reed,reed,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-01T18:59:23+00:00,lever-boards,Lever boards,lever,multi,ok,0,yes,allowed,n/a,,4825,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-01T18:59:23+00:00,ashby-boards,Ashby boards,ashby,multi,blocked,0,no,allowed,n/a,,,ashby API: HTTP 401: api.ashbyhq.com blocks automated access; it is not asked again this run; api.ashbyhq.com last answered HTTP 401 at 2026-11-01T18:59:23+00:00 after 56 request(s) that run; requests to it are at least 2 s apart for 7 days,

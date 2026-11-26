@@ -1,0 +1,754 @@
+{
+  "coverage": 0.5745,
+  "requirements": [
+    {
+      "term": "evals",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "evals",
+          "snippet": "Found where the assistant…",
+          "via": "evals"
+        }
+      ]
+    },
+    {
+      "term": "product",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "av7",
+          "quote": "product",
+          "snippet": "Built e-commerce and…",
+          "via": "product"
+        }
+      ]
+    },
+    {
+      "term": "context",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "certification",
+          "id": "certification:0",
+          "quote": "Context",
+          "snippet": "Model Context Protocol: Advanced Topics — Anthropic, Jun…",
+          "via": "context"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:1",
+          "quote": "Context",
+          "snippet": "Introduction to Model Context Protocol — Anthropic, Jun 2026",
+          "via": "context"
+        }
+      ]
+    },
+    {
+      "term": "MongoDB",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:Databases",
+          "quote": "MongoDB",
+          "snippet": "MongoDB",
+          "via": "MongoDB"
+        }
+      ]
+    },
+    {
+      "term": "planning",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "planning",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "planning"
+        }
+      ]
+    },
+    {
+      "term": "agent harness",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "agent-written code",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "AI layer",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "AI stack",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "AWS",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "AWS",
+          "snippet": "Built a generative AI…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "AWS",
+          "snippet": "Did the data analysis on…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "AWS",
+          "snippet": "Found where the assistant…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az7",
+          "quote": "AWS",
+          "snippet": "Ran AWS account governance…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "AWS",
+          "snippet": "Shipped features in a live…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "AWS",
+          "snippet": "Helped build a…",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "AWS",
+          "snippet": "AWS",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "AWS",
+          "snippet": "AWS Bedrock",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "AWS",
+          "snippet": "Claude (via AWS Bedrock)",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS Lambda",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS ECS",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "Kubernetes (AWS EKS)",
+          "via": "AWS"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "AWS",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "AWS"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "AWS",
+          "snippet": "Put an AI assistant online on AWS for an…",
+          "via": "AWS"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_agents",
+          "quote": "AWS",
+          "snippet": "Built an AI assistant on AWS for an MSc dissertation with an…",
+          "via": "AWS"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_deploy",
+          "quote": "AWS",
+          "snippet": "Deploys on AWS (Lambda) with CI/CD and MLflow experiment…",
+          "via": "AWS"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:2",
+          "quote": "AWS",
+          "snippet": "AWS Academy Cloud Foundations, Nov 2025",
+          "via": "AWS"
+        }
+      ]
+    },
+    {
+      "term": "Bedrock",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "Bedrock",
+          "snippet": "Built a generative AI…",
+          "via": "Bedrock"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "Bedrock",
+          "snippet": "Found where the assistant…",
+          "via": "Bedrock"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "Bedrock",
+          "snippet": "AWS Bedrock",
+          "via": "Bedrock"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "Bedrock",
+          "snippet": "Claude (via AWS Bedrock)",
+          "via": "Bedrock"
+        }
+      ]
+    },
+    {
+      "term": "LiteLLM",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LiteLLM",
+          "snippet": "Gemini via LiteLLM",
+          "via": "LiteLLM"
+        }
+      ]
+    },
+    {
+      "term": "LLMs",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "LLMs",
+          "snippet": "Built a generative AI…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "LLMs",
+          "snippet": "Found where the assistant…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "LLMs",
+          "snippet": "Led the design in a…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "LLMs",
+          "snippet": "Designed how a user's…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "LLMs",
+          "snippet": "For a private client,…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "LLMs",
+          "snippet": "Built a private client an…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "LLMs",
+          "snippet": "For an insurance hackathon…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "LLMs",
+          "snippet": "Built a search assistant…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "LLMs",
+          "snippet": "Fine-tuned an…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "LLMs",
+          "snippet": "Reported the limits…",
+          "via": "LLMs"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "LLMs",
+          "snippet": "LLMs",
+          "via": "LLMs"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LLMs",
+          "snippet": "LLM evaluation",
+          "via": "LLMs"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "LLMs",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "LLMs"
+        }
+      ]
+    },
+    {
+      "term": "Mastra",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "open-source project",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "pgvector",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Redis",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "tool use",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "tool calling",
+          "snippet": "Built a generative AI…",
+          "via": "tool calling"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "tool calling",
+          "snippet": "tool calling",
+          "via": "tool calling"
+        }
+      ]
+    },
+    {
+      "term": "TypeScript/Node.js",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "TypeScript/Node.js",
+          "snippet": "Collaborated with the…",
+          "via": "TypeScript/Node.js"
+        }
+      ]
+    },
+    {
+      "term": "agentic",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agentic",
+          "snippet": "Built a generative AI…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agentic",
+          "snippet": "Led the design in a…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "agentic",
+          "snippet": "For a private client,…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "agentic",
+          "snippet": "Built a 14-step AI…",
+          "via": "agentic"
+        }
+      ]
+    },
+    {
+      "term": "agents",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agents",
+          "snippet": "Built a generative AI…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "agents",
+          "snippet": "Did the data analysis on…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az6",
+          "quote": "agents",
+          "snippet": "Integrated the agent into…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agents",
+          "snippet": "Led the design in a…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "agents",
+          "snippet": "Designed how a user's…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "agents",
+          "snippet": "Built a voice assistant…",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "ReAct agent loops",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "agent memory",
+          "via": "agents"
+        }
+      ]
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "production",
+          "snippet": "Did the data analysis on…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Collaborated with the…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "production",
+          "snippet": "Led the design in a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "production",
+          "snippet": "For a private client,…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a live…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "typescript",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "TypeScript",
+          "snippet": "Collaborated with the…",
+          "via": "typescript"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "TypeScript",
+          "snippet": "TypeScript",
+          "via": "typescript"
+        }
+      ]
+    },
+    {
+      "term": "apis",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "APIs",
+          "snippet": "Built a generative AI…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "apis",
+          "snippet": "Designed how a user's…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "apis",
+          "snippet": "For a private client,…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "APIs",
+          "snippet": "Shipped features in a live…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "apis",
+          "snippet": "Helped build a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "apis",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "apis",
+          "snippet": "For an insurance hackathon…",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "OpenAI API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "APIs",
+          "snippet": "REST APIs",
+          "via": "apis"
+        }
+      ]
+    },
+    {
+      "term": "generative ai",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "generative ai",
+          "snippet": "Built a generative AI…",
+          "via": "generative ai"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "generative ai",
+          "snippet": "Found where the assistant…",
+          "via": "generative ai"
+        }
+      ]
+    }
+  ]
+}

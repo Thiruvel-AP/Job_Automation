@@ -1,0 +1,92 @@
+Company: LiveScore Group
+Title: Lead Data Engineer
+URL: https://job-boards.greenhouse.io/livescore9/jobs/8885643002
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, England, United Kingdom
+Posted: 2026-10-13T12:36:25-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+Soho, London
+
+Hybrid working: 3 days in the office Tues - Thurs
+
+The Role
+
+To provide technical leadership and hands-on contribution within a data engineering team, designing, building, and optimizing robust data pipelines and infrastructure for a global sports betting and media business. This role is crucial in delivering high-quality data solutions that support LiveScore’s strategic goals and embody our commitment to being Fan Driven and a Champion of Sport. This will involve working with high-volume, low-latency, real-time sports data, including football, cricket, NFL and other sporting events. You will manage two Data Engineers, supporting their professional development through coaching, objective setting, and regular performance discussions. You will also be responsible for planning, prioritising and overseeing workload and delivery to ensure each team member is set up for success.
+
+At LiveScore Group, we’re the proud home of three of the most exciting brands in the sports and gaming world: LiveScore, LiveScore Bet and Virgin Bet. A fully owned and operated ecosystem that converges the two worlds of sports media and sports betting. We’re proud of the high ratings for our commitment to excellence and fueling fan’s passion for sport driving us to the top.
+
+We don’t just lead; we innovate. Our cutting-edge products and immersive experiences set the standard, but it’s our people who truly make the difference. Every day, our team embody our values: adaptability, teamwork, a fan-driven approach, and an ever-curious mindset that fuels our ambition. As we scale and continue to create a culture that allows all employees to thrive, we know we need the most talented people with diverse backgrounds, perspectives and skills. If you’re good at what you do, come and join us. The more inclusive we are, the more amazing experiences we can create for our users.
+
+We know that job descriptions can sometimes seem daunting, and you might not feel you tick every box. But, if you’re passionate about the role and have relevant experience, we want to hear from you! 
+
+Key Responsibilities 
+
+- Technical Leadership and Guidance: Act as a primary technical point of contact and subject matter expert for specific data engineering projects or domains, guiding team members through complex technical challenges and promoting innovative solutions.
+
+- End-to-End Data Solution Development: Design, develop, test, and deploy highly scalable, reliable, and fault-tolerant data pipelines and ETL/ELT processes. This includes data ingestion from diverse sources, data transformation, and data loading into various data stores (e.g., data warehouses, data lakes).
+
+- Architectural Implementation: Work closely with Data Architects to translate architectural blueprints and standards into concrete implementations, ensuring new data components align with the overall data strategy and infrastructure requirements.
+
+- Managing and Skill Development: Actively manage and coach junior and mid-level data engineers, providing constructive feedback, sharing technical knowledge, and fostering their growth in coding, data modeling, and general data engineering best practices.
+
+- Hands-On Contribution: Maintain a significant hands-on role in coding, data modeling, infrastructure-as-code development, and platform configuration, leading by example and ensuring high-quality output.
+
+- Data Quality and Performance Assurance: Take direct responsibility for ensuring the quality, integrity, and performance of data assets within their assigned domain or projects, implementing monitoring, validation, and optimization strategies.
+
+- Operational Efficiency and Cost Optimization: Proactively identify and implement technical optimizations for data processing, storage, and infrastructure utilization to improve efficiency, reduce operational costs, and enhance system performance.
+
+- Code Review and Best Practices: Lead and participate in rigorous code reviews, advocating for and enforcing engineering best practices, coding standards, and architectural patterns to maintain high code quality and system stability.
+
+- Complex Problem Solving: Diagnose, troubleshoot, and provide effective solutions for highly complex data-related issues, incidents, and performance bottlenecks, often working under pressure.
+
+- Cross-Functional Collaboration: Collaborate effectively with other engineering teams, product managers, data scientists, and business stakeholders to understand data requirements, integrate solutions, and provide technical insights.
+
+Skills, Knowledge and Experience 
+
+- Advanced Data Pipeline Expertise: Proven, in-depth experience as a senior or lead data engineer with a strong portfolio of hands-on contributions to designing, building, and optimizing complex, large-scale data pipelines and ETL/ELT processes.
+
+- Enterprise Data Warehousing (EDW) and Data Modeling: Strong practical experience with EDW concepts, principles, and implementation, specifically including the design and practical application of a single, integrated data model for analytical purposes.
+
+- Cloud Data Platforms: Hands-on experience with cloud-native data services and infrastructure on at least one major cloud provider (e.g., AWS services like S3, Redshift, Glue, EMR; GCP services like BigQuery, Dataflow, Pub/Sub; Azure services like Data Lake, Synapse Analytics).
+
+- Cost Optimization Strategies: Demonstrated ability to identify, propose, and implement technical solutions that lead to significant cost savings in data processing, storage, and infrastructure within a large-scale data environment.
+
+- Software Engineering Fundamentals: Expert proficiency in software development methodologies (e.g., Agile, Scrum), version control (Git), CI/CD pipelines, automated testing, and comprehensive understanding of software engineering best practices.
+
+- Programming Languages: Exceptional coding skills in at least one relevant programming language (e.g., Python, Scala, Java, JavaScript, C/C++), with a focus on writing clean, efficient, and maintainable code.
+
+- Database Systems: Extensive experience with various database technologies including relational databases (e.g., PostgreSQL, MySQL), NoSQL databases (e.g., MongoDB, Cassandra), and analytical data warehouses (e.g., Snowflake, Redshift, BigQuery).
+
+- Data Architecture Principles: Solid understanding of data architecture patterns (e.g., Data Mesh, Data Lakehouse, Lambda/Kappa architectures), distributed systems, and their practical application.
+
+- Regulatory Reporting: Practical experience in developing and maintaining robust and auditable data solutions for regulatory reporting, particularly within the gaming or other highly regulated industries.
+
+- AI: Fluent in AI prompting alongside staying ahead of emerging AI technologies.
+
+- Technical Leadership & Mentorship: A natural leader who can effectively guide, inspire, and technically mentor junior and mid-level engineers. Possesses the ability to break down complex problems, provide clear direction, and foster a learning environment, thereby enhancing team capabilities and promoting adherence to best practices.
+
+What can we offer? 
+
+- Company Performance Bonus
+
+- Flexible Working Agreements where applicable
+
+- Private Healthcare Scheme + Employee Enhanced Assistance
+
+- Enhanced Family Leave - Maternity, Shared Parental & Adoption Leave: up to 6 months at full pay and 6 months at half pay. Paternity leave: up to 4 weeks at full pay
+
+- Subsidised Gym Membership
+
+- Annual Travel Card Loan & Ride to Work Scheme
+
+- Life Assurance (x3 salary)
+
+- Contributory Pension Plan
+
+- Virgin Family: Giving you access to exclusive Virgin offers and experiences
+
+- Thursday drinks in the office and regular socials

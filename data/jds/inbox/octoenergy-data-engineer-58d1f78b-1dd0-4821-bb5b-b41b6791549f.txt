@@ -1,0 +1,74 @@
+Company: Octoenergy
+Title: Data Engineer
+URL: https://jobs.lever.co/octoenergy/58d1f78b-1dd0-4821-bb5b-b41b6791549f
+Source: lever
+Apply kind: lever
+Location: London (GB)
+Posted: 2026-08-27T10:38:28.661000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-06
+Listed: yes
+
+Help us make a big green dent in the universe. We're on a mission to drive the global renewable energy revolution, and we need many more people to help us make our vision a reality.
+ 
+Octopus Energy Generation (OEGEN) is a leader in sourcing, investing in, and managing a wide range of utility-scale renewable energy assets. As we continue to expand our investment base, we are dedicated to building a diverse team that reflects the communities we serve. Currently, we manage a global portfolio of over £8 billion in renewable energy assets.
+ 
+We are committed to delivering best-in-class responsible investment activity, offering like-minded investors the means and products to invest their capital sustainably. It is our ambition to change the entire energy lifecycle and make every green electron matter, delivering the best outcomes for customers, investors, the environment and society, accelerating the transition to net zero.
+OEGEN Data, Tech & Transformation Team 
+We are embarking on a comprehensive transformation program designed to drive significant advancements in our business operations and technology landscape. Our primary goal is to transition from our current reliance on legacy systems and specialized off-the-shelf tools to a more integrated, AI-driven, and data-centric operational model. 
+Leveraging insights and guidance from our other technically mature entities like Kraken and OE, we plan to adopt cutting-edge tools and capabilities, particularly in AI and Python-driven solutions. 
+By investing in a diverse range of skills, we aim to create a hybrid team capable of operating in both our legacy and future environments, ultimately transforming OEGEN into an efficient, data-driven organization.
+About the role
+We’re looking for a Data Engineer who can own the journey of data from source systems to decision-ready outputs. You’ll build and maintain pipelines, model data, stand up dashboards, and integrate systems via APIs. In a team this size, you’ll also get involved in application development - building internal tools with Streamlit, FastAPI, or HTMX that put data directly in the hands of our investment and asset management teams. 
+In your first 3 months you’ll have taken ownership of at least one critical pipeline from an external system into Databricks, and built or materially improved a reporting layer used by Fund Management or Asset Management. 
+
+
+What you'll do
+- Design, build, and maintain scalable data pipelines in Databricks, ensuring data is reliable, timely, and well-documented.
+
+- Own and evolve our Databricks models - define schemas, enforce testing, and keep the warehouse clean.
+
+- Automate manual data processes using Python, replacing spreadsheets and ad-hoc workflows with robust, repeatable jobs.
+
+- Build performance dashboards and reports in Streamlit and HTMX (FastAPI) that Finance, Asset Management, and Fund Management actually use.
+
+- Integrate internal and third-party systems via REST APIs, improving data accessibility across the business.
+
+- Champion data quality - implement validation, monitoring, and governance practices that give stakeholders confidence in the numbers.
+
+- Collaborate directly with non-technical teams to understand their problems and translate them into data solutions.
+
+What you'll need
+- Strong SQL and Python skills, used daily for pipeline development, data modelling, and automation.
+
+- Experience with modern data stack tooling: a cloud data platform (Databricks preferred), and version control (Git/GitHub).
+
+- A solid understanding of data modelling, warehousing patterns, and ETL/ELT design.
+
+- To be comfortable working with Postgres or similar relational databases.
+
+- Clear communication - you can explain a data model to a fund manager and discuss trade-offs with an engineer.
+
+- A bias toward shipping: you’d rather get something working and iterate than spend weeks in design.
+
+Bonus points for
+- Full-stack development experience - particularly with Streamlit, FastAPI, or HTMX.
+
+- Experience building and managing REST APIs, including authentication, rate limiting, and documentation.
+
+- Familiarity with renewable energy, infrastructure investment, or financial services data.
+
+- Experience evaluating and adopting AI/ML tooling to augment engineering workflows.
+
+💚 Why else you'll love it here
+- 💰 Wondering what the salary for this role is? Just ask us! On a call with one of our recruiters it's something we always cover as we genuinely want to match your experience with the correct salary. The reason why we don't advertise is because we honestly have a degree of flexibility and would never want salary to be a reason why someone doesn't apply to Octopus - what's more important to us is finding the right octofit!
+
+- 🎉 Octopus Energy Group is a unique culture. An organisation where people learn, decide, and build quicker. Where people work with autonomy, alongside a wide range of amazing co-owners, on projects that break new ground. We want your hard work to be rewarded with perks you actually care about! We were recently named the UK's top company to work for, and we ranked in the top ten in the Sunday Times Best Places to Work 2024. Our Group CEO, Greg has recorded a podcast about our culture and how we empower our people. We’ve also been placed in the top 10 companies for senior leadership
+
+Our process usually takes up to 4 weeks, but we’ll always do our best to flex around what works for you. Along the way, you’ll chat with our recruitment team and your Recruiter will help you throughout different stages. Got any burning questions before then? Drop us a message at hiring@octoenergy.com and we’d love to help!
+ 
+If this sounds like you then we'd love to hear from you. 🚀
+ 
+Are you ready for a career with us? We want to ensure you have all the tools and environment you need to unleash your potential. Need any specific accommodations? Whether you require specific accommodations or have a unique preference, let us know, and we'll do what we can to customise your interview process for comfort and maximum magic!
+ 
+Studies have shown that some groups of people, like women, are less likely to apply to a role unless they meet 100% of the job requirements. Whoever you are, if you like one of our jobs, we encourage you to apply as you might just be the candidate we hire. Across Octopus, we're looking for genuinely decent people who are honest and empathetic. Our people are our strongest asset and the unique skills and perspectives people bring to the team are the driving force of our success. As an equal opportunity employer, we do not discriminate on the basis of any protected attribute. Our commitment is to provide equal opportunities, an inclusive work environment, and fairness for everyone.

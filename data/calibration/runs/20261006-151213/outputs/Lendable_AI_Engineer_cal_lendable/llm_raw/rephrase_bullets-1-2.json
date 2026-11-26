@@ -1,0 +1,1 @@
+{"p_ms1":"Built MCP server and stdio client integrating web search with GraphQL/PostgreSQL, running against a local llm (gpt-oss:20b) with CI across Python 3.9–3.11."}

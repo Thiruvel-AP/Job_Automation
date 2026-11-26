@@ -1,0 +1,54 @@
+Company: BIMM University
+Title: Digital Product and AI Engineer
+URL: https://www.reed.co.uk/jobs/digital-product-and-ai-engineer/57502375
+Source: reed
+Apply kind: aggregator_only
+Location: Manchester, GB
+Salary: GBP 39,000-45,000
+Posted: 2026-10-28
+Posted via: reed.date
+First seen: 2026-11-05
+
+Digital Product and AI Engineer 
+Salary: £39,000 – £45,000 per annum 
+At BIMM University, we're more than just an educational institution; we're a vibrant community dedicated to nurturing creativity and empowering students to reach their full potential. With campuses across the UK, Ireland, and Germany, we offer a diverse range of courses in modern music, performing arts, filmmaking and creative technology. Our commitment to excellence in creative arts education sets us apart, providing students with the knowledge, skills, and opportunities they need to succeed in their chosen fields. 
+About the Role 
+As Digital Product and AI Engineer, you will play an important role in designing, building and improving digital products and AI-enabled solutions that support students and colleagues across BIMM University. Drawing on a blend of software engineering, product thinking and user-centred design, you'll help turn ideas into practical, scalable solutions that deliver real value across the institution. 
+Working within Digital, AI and Platform Services, you'll collaborate with colleagues across the University to develop user-facing applications, workflow solutions, integrations and digital experiences that improve how people learn, work and engage with our services. You'll also help shape how AI is applied in a responsible, effective and sustainable way, supporting innovation while ensuring solutions are secure, accessible and fit for purpose. 
+What You'll Do: 
+
+- Design, build and enhance digital products, web applications and workflow solutions that improve the experience of students and colleagues across the University.
+- Work with stakeholders to understand challenges, define requirements and develop practical, user-centred solutions.
+- Develop and maintain integrations, APIs and automated processes that connect systems and streamline services.
+- Design, develop and support AI-enabled applications and workflows, helping move successful ideas from prototype into production.
+- Collaborate with academic, digital and technology teams to identify opportunities where digital products and AI can enhance learning, teaching and operational processes.
+- Use a range of development approaches and technologies to deliver solutions efficiently, selecting the most appropriate tool for each challenge.
+- Build security, accessibility, privacy and resilience into solutions from the outset, ensuring they meet organisational standards and best practice.
+- Monitor product performance, usage and feedback, using insights to drive continuous improvement and future development.
+- Contribute to software engineering best practice, including testing, documentation, release management and ongoing support.
+- Evaluate emerging technologies and AI capabilities, helping identify opportunities that can deliver meaningful benefits for students, colleagues and the wider University. 
+What You'll Bring: 
+
+- Experience designing, building and supporting digital products, web applications or software solutions within a professional environment.
+- Strong development experience using modern technologies such as C#/.NET, TypeScript / JavaScript or similar platforms and frameworks.
+- Experience working with APIs, integrations, authentication and data flows across multiple systems.
+- Practical experience developing, integrating or prototyping AI-enabled solutions, automations or intelligent workflows.
+- An understanding of software development lifecycles, including discovery, testing, deployment, support and continuous improvement.
+- Knowledge of secure software development, accessibility, data protection and user-focused design principles.
+- Strong analytical and problem-solving skills, with the ability to translate user needs into effective technical solutions.
+- Experience using product insights, service data and user feedback to inform development decisions and improve outcomes.
+- The ability to communicate effectively with both technical and non-technical audiences and build positive working relationships across teams. 
+The postholder can be based within a commutable distance of one of BIMM University’s seven UK campuses (Brighton, London, Essex, Bristol, Birmingham, Manchester or Leeds). 
+We encourage early applications, as we may close the advert ahead of the stated deadline if we receive a high volume of interest. 
+Why BIMM University 
+We are a values-led organisation, meaning our core values underpin all that we do: 
+Believe in Everyone, Challenge the Norm, Grow Together, Do The Right Thing, Own It. 
+In addition to joining a committed and dedicated team, you will have access to: 
+
+- 25 days holiday per year (FTE)
+- SMART pension
+- A comprehensive benefits package 
+We continually strive to create a culture of inclusivity so that we truly represent our diverse communities. We particularly welcome applications from people of colour who are underrepresented in our organisation. 
+We are committed to promoting the safety and welfare of our students therefore, all successful applicants are required to complete a basic DBS disclosure. Depending on the role, you may be required to complete an enhanced check / enhanced check with barred list if required by statute and internal policy. 
+How To Apply 
+Click apply and you will be redirected to our careers site to complete your application.

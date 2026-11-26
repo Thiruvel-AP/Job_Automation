@@ -1,0 +1,65 @@
+Company: Nimble Gravity
+Title: BI Analyst
+URL: https://job-boards.greenhouse.io/nimblegravity/jobs/4740685005
+Source: greenhouse
+Apply kind: greenhouse
+Location: LATAM (Remote)
+Posted: 2026-10-19T14:20:37-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+At Nimble Gravity, we help organizations turn data, technology, and AI into measurable business results. We’re looking for a Business Intelligence Analyst to join our growing team and help transform data into clear, actionable insights that support business decision-making. This role is ideal for someone who enjoys working with data, understanding business needs, and building dashboards and reports that make complex information easy to understand and use.
+
+What You’ll Do
+
+- Analyze business data to identify trends, patterns, and opportunities.
+
+- Build and maintain dashboards, reports, and visualizations that support business teams and stakeholders.
+
+- Work with stakeholders to understand business questions and translate them into reporting and analytics solutions.
+
+- Write and optimize SQL queries to extract, transform, and analyze data from multiple sources.
+
+- Define and track key business metrics and KPIs.
+
+- Validate data and help ensure accuracy, consistency, and reliability across reports and dashboards.
+
+- Communicate findings and insights clearly to both technical and non-technical audiences.
+
+- Collaborate with data, engineering, product, and business teams on analytics initiatives.
+
+What You Bring
+
+- Experience in Business Intelligence, Data Analytics, or a similar analytical role.
+
+- Strong SQL skills and experience working with relational databases.
+
+- Experience with BI and data visualization tools such as Power BI, Tableau, Looker, or similar.
+
+- Strong analytical and problem-solving skills.
+
+- Ability to translate business requirements into meaningful metrics, dashboards, and reports.
+
+- Good understanding of data modeling and reporting concepts.
+
+- Strong attention to detail and commitment to data accuracy.
+
+- Clear communication skills and the ability to work effectively with different stakeholders.
+
+- Ability to work independently and manage multiple priorities in a fast-paced environment.
+
+Nice to Have
+
+- Experience working with cloud data platforms such as Databricks, Snowflake, BigQuery, or similar.
+
+- Familiarity with Python or other data analysis tools.
+
+- Experience working in consulting or client-facing environments.
+
+- Familiarity with modern data warehousing and analytics practices.
+
+Why Join Nimble Gravity? 
+You'll help leading financial institutions and other clients adopt AI in meaningful ways. You'll work directly with clients, engineers, and AI specialists to turn emerging technology into measurable business outcomes. If you enjoy teaching, facilitating, influencing, and helping people embrace new ways of working, we'd love to talk. 
+
+Nimble Gravity is an Equal Opportunity Employer and considers applicants without regard to race, color, religion, sex, sexual orientation, national origin, age, disability, veteran status, or any other protected characteristic under applicable law.

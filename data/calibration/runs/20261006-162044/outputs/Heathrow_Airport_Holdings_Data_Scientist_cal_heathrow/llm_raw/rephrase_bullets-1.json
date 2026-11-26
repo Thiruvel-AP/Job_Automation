@@ -1,0 +1,9 @@
+```json
+{
+  "az5": "Conducted data analysis on 14 heterogeneous source datasets, owning identity-spine datasets and setting metadata boundaries for downstream modelling.",
+  "az2": "Implemented a deterministic hallucination-guard architecture, ensuring data quality via live Ensembl/HGNC APIs, a 19,213-gene parquet fallback, and circuit breakers.",
+  "az1": "Built a Python LLM agent using LangChain, AWS Bedrock, and Claude Haiku 4.5 for a multi-omics cancer platform, providing gene alias resolution, scoring-methodology explanation, and dataset provenance.",
+  "fl1": "Built machine learning pipelines with scikit-learn and deep learning models (LSTM, BiRNN, CNN) in TensorFlow/Keras, deploying them as Python FastAPI services in Docker.",
+  "p_ch1": "Developed a machine learning XGBoost churn classifier in R with tidymodels, performing two-stage Bayesian hyperparameter search, SMOTE in the recipe, and MCC evaluation."
+}
+```

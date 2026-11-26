@@ -1,0 +1,182 @@
+Company: Lendable
+Title: Data Analyst (Strategic Projects)
+URL: https://jobs.ashbyhq.com/lendable/77e2a14b-f8c2-4b7c-b889-f98c20334e92
+Source: ashby
+Location: London
+Posted: 2026-10-16T09:29:19.968+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-20
+Listed: yes
+
+ABOUT LENDABLE
+
+Lendable is on a mission to build the world's best technology to help people get credit and save money. We're building one of the world’s leading fintech companies and are off to a strong start:
+
+
+
+ - One of the UK’s most exciting unicorns with a team of over 800 people
+
+ - Among the fastest-growing tech companies in the UK
+
+ - Profitable since 2017
+
+ - Backed by top investors including Balderton Capital and Goldman Sachs
+
+ - Loved by customers with the best reviews in the market (4.9 across 10,000s of reviews on Trustpilot https://uk.trustpilot.com/review/lendable.co.uk)
+
+
+
+So far, we’ve rebuilt the Big Three consumer finance products from scratch: loans, credit cards and car finance. We get money into our customers’ hands in minutes instead of days.
+
+
+
+We’re growing fast, and there’s a lot more to do: we’re going after the two biggest Western markets (UK and US) where trillions worth of financial products are held by big banks with dated systems and painful processes.
+
+
+
+
+JOIN US IF YOU WANT TO
+
+ 1. Take ownership: you are trusted to make decisions that drive a material impact on the direction and success of Lendable from day 1
+
+ 2. Work in small teams of exceptional people: Lendies are relentlessly resourceful. We challenge the status quo to solve problems and find smarter solutions
+
+ 3. Build the best technology in-house: we use new data sources, machine learning and AI to make machines do the heavy lifting
+
+
+
+
+ABOUT THE ROLE
+
+We’re building the most advanced, data-driven operating model in fintech. As part of Lendable’s Operations Science & Strategy team, you’ll sit at the intersection of analytics, data science, and AI engineering - using data, LLMs, and automation to transform how our Operations teams work at scale.
+
+You’ll work directly with senior operations leadership working on special projects to diagnose demand drivers, uncover commercial opportunities, build KPI frameworks, and deploy automation that materially reduces our cost-to-serve while improving customer outcomes.
+
+If you’re technical, curious, and love owning problems end-to-end, this is the role for you.
+
+
+
+
+WHAT YOU’LL DO
+
+
+1. AUTOMATION & AI ENGINEERING
+
+ - Use Python and LLM APIs (e.g. OpenAI) to design and deploy automation that replaces manual CS/FS processes.
+
+ - Build prototypes, test with real operations data, and scale the successful ones into production workflows.
+
+ - Partner with PMs and engineers to operationalise AI-driven solutions across Operations.
+
+
+2. DEMAND ANALYTICS & STRATEGY
+
+ - Analyse key operations demand drivers (contact per customer, reason drivers, seasonality, servicing behaviour).
+
+ - Identify levers to reduce avoidable demand and improve customer outcomes.
+
+ - Build analytical models that drive decision-making around cost optimisation and resourcing.
+
+
+3. KPI & FUNNEL INTELLIGENCE
+
+ - Build clear, robust KPI frameworks and funnel views across customer journeys.
+
+ - Translate data into commercial insight, operational efficiency recommendations, and productivity tracking.
+
+ - Create metrics that scale across new geographies, products, and teams.
+
+
+4. WORK WITH SENIOR LEADERSHIP
+
+ - Work directly with Ops Directors, Heads of CS/FS/Fraud/Complaints, and the COO on strategic initiatives.
+
+ - Turn raw data into narrative-driven recommendations that are simple, actionable, and commercially grounded.
+
+ - Own analytics for high-impact projects end-to-end.
+   
+
+
+WHAT WE’RE LOOKING FOR
+
+
+MUST-HAVE SKILLS
+
+ - 2-3 years of hands-on experience using Python in a professional setting.
+
+ - Highly numerate with strong analytical reasoning 
+
+ - Ability to independently structure analysis, build prototypes, and deliver insights.
+
+ - Experience communicating data-driven recommendations to non-technical business stakeholders.
+
+
+NICE-TO-HAVES
+
+ - STEM Degree
+
+ - Experience with dbt or modern data stacks.
+
+ - Familiarity with LLMs, APIs, or interest in building AI automation.
+
+ - Exposure to product, strategy, or operations environments.
+
+ - Thrives in fast-paced, ambiguous environments.
+
+ - Comfortable wearing multiple hats Analyst, Data Scientist, AI Engineer, PM.
+
+ - Highly motivated, entrepreneurial mindset, and excited by building the strongest operating model in fintech.
+   
+
+
+WHY JOIN
+
+ - Work on high-visibility, high-impact projects that directly shape the future of Lendable’s operations.
+
+ - Build automation and analytics used daily by hundreds of agents and thousands of customers.
+
+ - Collaborate with a small, sharp, and ambitious team that moves fast.
+
+ - Real ownership: if you build it, you’ll see it shipped and scaled.
+
+
+
+
+INTERVIEW PROCESS
+
+Cognitive test
+
+Screening Call + Python Questions
+
+Live Technical Python Interview
+
+Final interviews with 2 senior leaders 
+
+
+
+
+
+
+
+
+LIFE AT LENDABLE
+
+ - Winning team: the opportunity to scale up one of the world’s most successful fintech companies
+
+ - Flexible working: flexible approach tailored to each role. Hybrid roles require three days in-office weekly; fully remote roles include regular opportunities for in-person connection through socials and off-sites
+
+ - Socials & connection: opportunities and events to come together, socialise, and get to know each other beyond the office walls
+
+ - Health coverage: support for your physical and mental wellbeing, including private health cover
+
+ - Retirement & savings: long-term financial wellbeing through retirement savings plans
+
+ - Employee referral programme: earn a competitive bonus when you refer successful new team members
+
+ - Office meals & snacks: enjoy a fully stocked kitchen, plus complimentary lunches prepared by in-house chefs on in-office days at select locations
+
+ - Sustainable commuting: cycle-to-work and electric vehicle salary sacrifice schemes available in select locations
+
+Please note: The availability and details of specific benefits vary by location and role. For more information, please speak to your Talent Partner.
+
+Check out our blog https://blog.lendable.co.uk/!

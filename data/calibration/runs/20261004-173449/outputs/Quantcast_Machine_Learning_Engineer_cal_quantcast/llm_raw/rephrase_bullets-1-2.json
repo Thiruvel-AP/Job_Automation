@@ -1,0 +1,7 @@
+```json
+{
+  "p_gg1": "Built a heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) using k‑NN similarity and Leiden community detection, achieving modularity 0.822 through clustering.",
+  "p_gg2": "Trained per‑gene protein‑prediction models for 11,459 genes with OLS and GPU Random Forest ensemble, employing resumable chunked GPU training on a free T4, using Scikit‑learn for regression.",
+  "p_ch1": "Developed an XGBoost churn classifier in R with tidymodels, performing two‑stage Bayesian hyperparameter search, SMOTE in the recipe, and MCC evaluation, demonstrating classification and machine learning expertise."
+}
+```

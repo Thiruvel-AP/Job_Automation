@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV and cover letter do not match", "Lack of direct relevance to the job description", "No cover letter provided"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "e0591e192a594dc115b3b8c1", "tokens": 3465, "note": "dropped 2 section(s) about the employer or process: Perks of joining us, Our commitment to inclusion"}

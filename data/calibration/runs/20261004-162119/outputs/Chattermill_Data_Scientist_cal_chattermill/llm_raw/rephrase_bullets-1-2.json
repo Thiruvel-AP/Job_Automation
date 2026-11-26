@@ -1,0 +1,4 @@
+{
+  "p_as1": "Developed a 14-node LangGraph interview pipeline incorporating face verification, psycholinguistic scoring, and emergency alerts.",
+  "p_ia1": "Designed preprocessing and clustering pipelines using K-Means, HAC, and DBSCAN with embeddings to improve support ticket analysis."
+}

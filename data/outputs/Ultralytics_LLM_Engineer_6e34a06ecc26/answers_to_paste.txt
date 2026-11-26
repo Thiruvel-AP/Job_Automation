@@ -1,0 +1,22 @@
+Answers for Ultralytics - LLM Engineer
+Form: https://jobs.ashbyhq.com/ultralytics/82aa5083-9256-4441-890f-f4a1bfbc257e/application
+CV: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Ultralytics_LLM_Engineer_6e34a06ecc26/Thiruvel Andagurunathan Pandian CV - AI Engineer - Ultralytics.pdf
+Cover letter: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/Ultralytics_LLM_Engineer_6e34a06ecc26/Thiruvel Andagurunathan Pandian CoverLetter - AI Engineer - Ultralytics.pdf
+
+1. Name *  [READY; applicant]
+Thiruvel Andagurunathan Pandian
+
+2. Email *  [READY; applicant]
+apthiruvel@gmail.com
+
+3. Location *  [READY; answers:current_location]
+Bristol
+
+4. Resume *  [READY; cv]
+Thiruvel Andagurunathan Pandian CV - AI Engineer - Ultralytics.pdf
+
+5. LinkedIn Link  [READY; applicant]
+https://www.linkedin.com/in/thiruvel-a-p/
+
+6. Please, share your yearly compensation *  [NEEDS USER; never_fill]
+(you answer: listed in applicant.yaml never_fill: yours to answer)

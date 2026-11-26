@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["Exaggerates role at AstraZeneca", "Lacks specific mention of ML models and pipelines", "No cover letter provided"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "2b78937071ea144e84a31541", "tokens": 3751, "note": "dropped 1 section(s) about the employer or process: Privacy & AI Notice"}

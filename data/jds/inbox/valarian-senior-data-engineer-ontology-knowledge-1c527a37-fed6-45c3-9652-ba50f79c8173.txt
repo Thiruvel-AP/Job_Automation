@@ -1,0 +1,64 @@
+Company: Valarian
+Title: Senior Data Engineer - Ontology & Knowledge Graphs
+URL: https://jobs.lever.co/valarian/1c527a37-fed6-45c3-9652-ba50f79c8173
+Source: lever
+Apply kind: lever
+Location: London
+Posted: 2026-10-26T10:57:02.716000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-29
+Listed: yes
+
+Valarian: A New Era of Sovereign Intelligence 
+Valarian is a dual use technology company building critical tools to safeguard the future in an era of evolving global security challenges. Backed by a Series A funding round of $50m led by NEA, we are rethinking security beyond traditional military domains to address asymmetric threats that impact our technological advantage, economic strength, and democratic institutions. We provide the control infrastructure that allows government and regulated enterprise to put frontier-class AI to work safely.
+We are bringing a frontier AI experience inside secure boundaries for the first time. Our technology supports mission critical workflows across government, healthcare, and enterprise, including:
+Scaling open-weight models without external inference endpoints.
+Putting frontier class AI to work across organisations through partnerships with other leading AI startups such as Perplexity. 
+Increasing operational resiliency for air gapped, on prem, and cloud based systems.
+Securing intellectual property and maintaining auditability for high stakes enterprise environments.
+Facilitating secure information flow during disaster response, M&A due diligence, and privileged legal communications.
+We’ve only scratched the surface. Built in Britain by veterans of the Ministry of Defence, British Forces, Darktrace, and elite engineering backgrounds, we are driven by a shared mission to safeguard western democracy . Whether you join our London HQ or our wider global organisation, you’ll be part of a collaborative, high performing team creating the cutting edge software and infrastructure that defines the frontier of enterprise AI.
+The Role
+You will design and build the data foundations that allow ACRA applications and Valarie to understand organisational information. Your work will turn heterogeneous sources into coherent entities, relationships and queryable data products across graph, relational and NoSQL databases.
+What you’ll do:
+Work with product teams and domain experts to define and evolve ontologies covering organisational entities, relationships, classifications and business rules.
+Build ingestion and transformation pipelines from APIs, databases, documents, files and events into canonical data models.
+Implement entity resolution, deduplication and source reconciliation, retaining provenance and handling conflicting or uncertain information.
+Design and maintain graph models, relational schemas and NoSQL structures, choosing representations according to query and consistency requirements.
+Develop efficient queries and data interfaces for applications, retrieval services and AI tools, with traceable results.
+Implement automated tests for transformation correctness, semantic constraints, relationship integrity and source-to-target reconciliation.
+Preserve source permissions, classification and retention requirements through derived datasets and graph relationships.
+Own model evolution and migration logic, partnering with DataOps on deployment, backfills and recovery.
+What you’ll bring:
+Strong production Python engineering and experience building maintainable, tested ingestion and transformation pipelines.
+Strong SQL, including relational modelling, transactions, indexing, migrations and query optimisation.
+Practical NoSQL experience, including document or key-value modelling, indexing and consistency trade-offs.
+Production experience designing, populating and querying a graph database or triple store—for example, Neo4j with Cypher, or an RDF store with SPARQL.
+Practical ontology design experience: clear entity definitions, stable identifiers, relationship semantics, controlled vocabularies, constraints and versioning.
+Understanding of property graphs and RDF-based knowledge graphs, including when each approach is appropriate.
+Experience integrating heterogeneous sources, resolving entity identity and maintaining provenance and lineage.
+Experience handling incremental updates, deletions, schema changes and automated data validation.
+Ability to translate ambiguous domain requirements into documented models, useful queries and reliable data interfaces.
+Benefits
+Our benefits are designed to ensure our employees feel taken care of and are proud to be a part of the Valarian team. We are committed to consistently enhancing our benefit package, taking into account the overall well-being and needs of our teammates. Here are the key benefits accessible to all employees at Valarian Technologies:
+Equity – because you have the right to own what you’re building
+A competitive salary – because we value your unique skills
+Employer pension contributions – because you deserve a secure future
+Private health insurance - because your health is important to us
+Hybrid work setup – because everyone has different needs
+Gym memberships - because staying active fuels productivity
+Rewarding company retreats and meetups that respect your work/life balance – because we love getting to know each other
+ 
+Life at Valarian
+ 
+Our culture is built on inclusivity, compassion and flexibility – we want everyone to be empowered to achieve their goals at Valarian.
+ 
+The work we do is vital, but so are the connections that make it happen. We thrive on the shared energy, spontaneous conversations, and mutual trust built when we spend time together. We operate on an office first hybrid model, regularly gathering in our London office to support one another and collaborate. 
+ 
+
+
+Valarian Technologies Limited is an equal opportunity employer and welcomes applications from invdividuals regardless of race, colour, religion, sex, sexual orientation, gender, identity or expression, national origin, age, disability, genetic information, marital status, veteran, amnesty, or any other legally protected characteristic. 
+ 
+We are committed to ensuring a fair and inclusive recruitment process and providing employment opportunities to all applicants. Decision recruitment, hiring, and employment are based solely on qualifications, skills, and experience relevant to the job requirements.
+ 
+We may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analysing resumes, or assessing responses and identifying potential inconsistencies or verification signals in application materials based on available information. These tools assist our recruitment team but do not replace human judgement. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us.

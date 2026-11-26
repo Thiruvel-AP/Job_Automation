@@ -1,0 +1,28 @@
+{
+  "required": [
+    "LLM",
+    "chatbot",
+    "document parser",
+    "voice AI",
+    "Python development",
+    "production systems",
+    "prompt design",
+    "retrieval pipelines",
+    "agent workflows",
+    "case management",
+    "AI engineering",
+    "process design",
+    "ambiguity",
+    "trade-offs"
+  ],
+  "preferred": [
+    "LLMs in real workflows",
+    "document extraction pipelines",
+    "LLM-driven workflows",
+    "AI systems",
+    "discovery and prototyping",
+    "evaluation and monitoring"
+  ],
+  "company_hook": "Lendable is a UK-based fintech unicorn that has rebuilt major consumer finance products and is expanding into the UK and US markets.",
+  "team": "AI Accelerator"
+}

@@ -1,0 +1,122 @@
+Company: Wayve
+Title: Senior Machine Learning Engineer, AI Performance
+URL: https://jobs.ashbyhq.com/wayve/a5ed4581-e57b-405a-9636-de4f64abd28a
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-02T15:34:51.948+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+Before the detail, here's the challenge you'd help us solve.
+
+
+
+We build the embodied intelligence that moves real vehicles safely, and the ecosystem a billion machines will run on in the future. Very few people in AI can say this. Every role here, whatever the team, plugs into that.
+
+
+
+Here’s what this particular role covers.
+
+
+
+🛠️ About our ML Optimisation Team (AI Performance)
+
+We're a high-ownership team responsible for delivering production-ready model releases as Wayve's OEM engagements and release cadence accelerate. We're applied and delivery-focused: we take models from "works in training" to "meets product constraints," working closely with downstream inference and performance specialists to get models ready for on-vehicle deployment.
+
+
+🧠 Your day-to-day
+
+ - Owning end-to-end delivery of model releases, from initial requirements through training, evaluation, iteration and deployment readiness
+
+ - Training and iterating on PyTorch models with a hypothesis-driven approach, running ablations against clear evaluation criteria
+
+ - Debugging model performance: identifying regressions, root-causing issues and proposing fixes
+
+ - Collaborating with adjacent ML and performance engineering teams to hand off models, define bottlenecks and align on optimisation priorities
+
+ - Communicating with stakeholders on delivery timelines, trade-offs and readiness criteria
+   
+
+🧩 What you'll be working on
+
+ - Getting models to meet tight runtime constraints on-vehicle as model capability grows
+
+ - Applying practical optimisation techniques such as quantisation, distillation and low-rank methods, where the trade-offs make sense
+
+ - Shaping the handoff between training, evaluation and deployment, so models ship quickly and reliably
+
+ - Working at multiple levels of abstraction, from high-level model behaviour down to runtime and latency implications
+   
+
+🙌 You should apply if
+
+ - You have proven experience improving performance in production systems with tight constraints (latency, memory, bandwidth, power/thermal or cost)
+
+ - You have strong hands-on experience training and iterating on deep learning models in PyTorch, beyond high-level tooling
+
+ - You're proficient with at least one relevant stack or toolchain (e.g. TensorRT, CUDA, Qualcomm QNN, Triton, OpenCL) and can pick up adjacent frameworks quickly
+
+ - You're comfortable moving between high-level model behaviour and low-level kernel/runtime execution
+
+ - You're familiar with model optimisation concepts such as quantisation and/or distillation (hands-on is a strong signal, but solid fundamentals are enough)
+
+ - You have strong engineering fundamentals and collaboration skills
+
+ - Bonus: experience with models under tight latency/efficiency constraints (edge, embedded, real-time), exposure to ML systems from training through to deployment handoff, and embedded/edge deployment including benchmarking on real devices
+
+🌱 Not ticking every box? That's totally okay! If you're passionate about autonomy and keen to learn, we encourage you to apply even if you don't meet every requirement.
+
+
+More about Wayve:
+
+🚀 Wayve is building the leading AI platform for autonomous driving. We are pioneering an end to end AI approach that enables vehicles to learn directly from real world experience, developing the ability to adapt, generalise and improve at scale. Instead of relying on hand coded rules or pre mapped environments, our AI Driver learns to drive by understanding the world around it. The result is technology that navigates complex urban environments with intelligence, precision and natural flow, unlocking meaningful advances in both safety and efficiency. We believe autonomy represents a once in a generation transformation in how people and goods move, comparable to the shift from horses to cars, and from human driven vehicles to intelligent machines.
+
+Our ambition is to make autonomy universal. Wayve's mapless and hardware agnostic AI platform integrates with global OEM partners, enabling continuous software evolution and unlocking advanced levels of automation from L2 plus through to L4 as our core AI model scales. In a race increasingly defined by intelligence and real world learning, Wayve is taking a distinct approach, building a generalisable driving intelligence that can power any vehicle, anywhere. By combining embodied AI with scalable deployment, we are creating technology that can be shaped to each OEM brand and driver experience, accelerating the transition to a safer, more intelligent future of mobility.
+
+
+How we work 💻 - Locations & Flexible Working:
+
+Our main hubs are in London, Sunnyvale, Yokohama, Herzliya, Vancouver and Leonberg. We operate a hybrid working model that combines in-person collaboration in our dedicated office spaces with focused time working remotely. This gives our teams the connection and energy of working together, alongside the flexibility to do their best work in a way that fits their lives.
+
+
+🔍 The Interview Process:
+
+Our process is clear and respectful of your time:
+
+ - Initial call / recruiter screen (30 mins)
+
+ - Hiring Manager Meeting (30 mins)
+
+ - Deep-dive technical interviews (programming, system design & domain-specific interview; 3 hours total)
+
+ - Final interview: mission & values alignment (45 mins)
+
+We'll always explain the format and work around your availability.
+
+
+What's in it for you (Location dependant):
+
+💰 Salaries benchmarked against the market annually
+📈 Meaningful equity, sharing in the ownership and long term success of Wayve
+✈️ Relocation support and visa sponsorship where applicable
+✅ Hybrid working, core hours and the chance to work hands on in vehicle workshops and labs
+📚 Learning and development budgets with support for training, conferences and growth
+🩺 Comprehensive benefits including health insurance, dental, enhanced maternity and paternity leave, retirement or pension where applicable, access to therapists, wellbeing partnerships, team socials and more
+
+
+A quick, honest note before you apply.
+
+Wayve is not a mature, fully-structured place with the playbook already written. Much of how we work is still being written, and if you join, you’ll help write it. That suits people who want real ownership more than people who need a settled structure from day one.
+
+
+
+If that sounds like the kind of problem you want to spend your time on, we’d really like to hear from you.
+
+At Wayve we're committed to creating a diverse, fair and respectful culture that is inclusive of everyone based on their unique skills and perspectives, and regardless of sex, race, religion or belief, ethnic or national origin, disability, age, citizenship, marital, domestic or civil partnership status, sexual orientation, gender identity, veteran status, pregnancy or related condition (including breastfeeding) or any other basis as protected by applicable law.
+
+
+For more information visit Careers at Wayve. https://wayve.ai/careers/ To learn more about what drives us, visit Values at Wayve https://wayve.ai/careers/
+
+DISCLAIMER: We will not ask about marriage or pregnancy, care responsibilities or disabilities in any of our job adverts or interviews. However, we do look to capture information about care responsibilities, and disabilities among other diversity information as part of an optional DEI Monitoring form to help us identify areas of improvement in our hiring process and ensure that the process is inclusive and non-discriminatory.

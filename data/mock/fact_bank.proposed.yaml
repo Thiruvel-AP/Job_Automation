@@ -1,0 +1,188 @@
+# PROPOSED fact-bank entries from linkedin.pdf, generated 2026-10-11 by `careerops import-linkedin`.
+# Nothing reads this file. Merge what you want into fact_bank.yaml by hand: LinkedIn's wording, empty `terms`.
+# employment_type, location, modules, publications, languages and research_focus are optional fact-bank fields
+# that the two-page CV prints when they are present.
+experience:
+- id: az
+  title: Data Scientist
+  org: AstraZeneca
+  dates: May 2026 – Sep 2026
+  location: City Of Bristol, England, United Kingdom
+  employment_type: indirect contract
+  bullets:
+  - id: az1
+    text: Conducted full-landscape survey and EDA across 14 heterogeneous source datasets spanning gene expression, gene properties,
+      and nomenclature owning the identity-spine datasets (sample_info, Cellosaurus, DepMap profiles) and establishing metadata
+      boundaries for downstream modelling.
+    terms: []
+  - id: az2
+    text: Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph-formation strategy; designed a bipartite/heterogeneous
+      graph approach with Leiden clustering for similarity detection and KNN for gene-to-cell-line association.
+    terms: []
+  - id: az3
+    text: Architected and implemented a production AI agent system covering three business cases gene alias resolution (deterministic
+      API calls via Ensembl + HGNC), scoring-statistic NLP explanation (prompt-engineered against fixed mathematical pipeline),
+      and dataset source descriptions (static validated knowledge base). Migrated LLM backend from Groq to AWS Bedrock (Claude
+      Haiku 4.5) after rate-limit evaluation.
+    terms: []
+  - id: az4
+    text: 'Established AWS account governance: root-user isolation, IAM user/group management (GTAI-UserGroup), and least-privilege
+      policy management across evolving service adoption.'
+    terms: []
+  - id: az5
+    text: Designed a three-tier testing framework (tool-level → API/integration → live agent) across ~65 tests in 8 files;
+      wrote full dissertation AI Agent sections covering architecture, implementation, and evaluation with documented hallucination-rate
+      analysis and test case outcomes.
+    terms: []
+- id: dc180
+  title: Data Consultant (AI Engineering & AI System)
+  org: 180 Degrees Consulting Bristol
+  dates: Sep 2025 – Dec 2025
+  location: Greater Bristol Area, United Kingdom
+  employment_type: internship
+  bullets:
+  - id: dc1801
+    text: Architected an end-to-end agentic AI system for a Madrid-based product startup translating ambiguous business requirements
+      into a production-ready technical blueprint using Model Context Protocol (MCP) and GPT-OSS-20B.
+    terms: []
+  - id: dc1802
+    text: Designed hierarchical agent workflows with real-time query capabilities; integrated Exograph + PostgreSQL for structured,
+      persistent data storage and efficient retrieval across agent sessions.
+    terms: []
+  - id: dc1803
+    text: Delivered a live functional demo to client stakeholders within a 3-month engagement; received 5-star rating from
+      senior leadership.
+    terms: []
+  - id: dc1804
+    text: Contributed the MCP implementation directly to the client's production GitHub repository, coordinated with the startup's
+      engineering team throughout and post-engagement.
+    terms: []
+  - id: dc1805
+    text: Led full solution ownership within a cross-functional consulting team from architecture design through stakeholder
+      presentation.
+    terms: []
+- id: freelance
+  title: AI/ML Engineer
+  org: Self Employed
+  dates: Jan 2025 – Aug 2025
+  location: Chennai, Tamil Nadu, India
+  employment_type: freelance
+  bullets:
+  - id: freelance1
+    text: 'Designed and implemented reproducible scikit-learn ML pipelines: data preprocessing, feature engineering (temporal
+      features, interaction terms, target encoding), model selection, cross-validation, and hyperparameter tuning across classification
+      and regression tasks.'
+    terms: []
+  - id: freelance2
+    text: Built and validated deep learning sequence models LSTM, Bidirectional RNN, CNN using TensorFlow/Keras for time series
+      and sequential modelling; validated with proper train/test splits and metric tracking. Directly applicable to financial
+      forecasting and healthcare temporal data streams.
+    terms: []
+  - id: freelance3
+    text: Deployed ML inference as production REST APIs via FastAPI; containerised full services with Docker for reproducible,
+      portable deployment.
+    terms: []
+  - id: freelance4
+    text: Developed NLP pipelines covering tokenisation, word embeddings, and contextual language models using Hugging Face
+      Transformers and local LLMs via Ollama.
+    terms: []
+  - id: freelance5
+    text: Prototyped agentic AI workflows using LangChain/LangGraph with RAG patterns and LLM tool use for multi-step automated
+      reasoning pipelines.
+    terms: []
+- id: avasoft
+  title: Software Development Engineer
+  org: AVASOFT
+  dates: Jun 2023 – Sep 2024
+  location: Chennai, Tamil Nadu, India
+  employment_type: full-time
+  bullets:
+  - id: avasoft1
+    text: Engineered a production-grade FinTech application integrating Twelve Data API for real-time stock market data feeds
+      and Plaid for secure bank account linkage and direct transaction imports.
+    terms: []
+  - id: avasoft2
+    text: Implemented offline-first data persistence (ISAR) with background synchronisation, ensuring uninterrupted access
+      to financial records in low-connectivity environments.
+    terms: []
+  - id: avasoft3
+    text: Secured backend communication with SSL pinning; integrated AWS Cognito for user authentication with Single Sign-On
+      (SSO) production-grade security for financial data handling authentication with Single Sign On (SSO) production grade
+      security for financial data handling.
+    terms: []
+  - id: avasoft4
+    text: Built RESTful API integrations across third-party financial services; designed reusable, scalable UI component architecture
+      (SwiftUI/UIKit) that reduced development overhead across multiple product release cycles.
+    terms: []
+  - id: avasoft5
+    text: Delivered 10 reusable component templates, measurably accelerating team velocity across concurrent product timelines.
+    terms: []
+- id: avasoft
+  title: Software Development Engineer Trainee
+  org: AVASOFT
+  dates: Jan 2023 – May 2023
+  location: Chennai, Tamil Nadu, India
+  employment_type: full-time
+  bullets:
+  - id: avasoft1
+    text: Engineered data persistence pipelines using Core Data (iOS) designed schemas for user profiles, transaction histories,
+      and event bookings; implemented CRUD operations with efficient querying and session-state management. Foundation directly
+      applicable to structured data management in production ML systems.
+    terms: []
+  - id: avasoft2
+    text: Built a web scraping pipeline in vanilla JavaScript to extract structured data from multiple web sources; automated
+      a previously manual collection process and surfaced market trend signals used to optimise product pricing and identify
+      growth opportunities demonstrating end-to-end data collection, transformation, and business insight delivery.
+    terms: []
+  - id: avasoft3
+    text: Developed full-featured e-commerce and ticketing UIs (Swift / SwiftUI) with product search, cart logic, order tracking,
+      and booking management built with scalability hooks for future payment gateway and database integrations.
+    terms: []
+  - id: avasoft4
+    text: Applied performance and accessibility optimization across device form factors established reusable component patterns
+      that fed directly into the team's production component library in the subsequent SDE role.
+    terms: []
+education:
+- degree: Master of Science - MSc, Data Science
+  org: University of Bristol
+  dates: Sep 2025 – Sep 2026
+  modules:
+  - Large-Scale Data Engineering
+  - Statistical Computing & Empirical Methods
+  - AI & Text Analytics
+  - Visual Analytics
+  - Data Science Methods & Practices
+  - Technology, Innovation, Business & Society
+- degree: B.E, Electrical and Electronics Engineering
+  org: St. Joseph's College Of Engineering
+  dates: Aug 2019 – May 2023
+  grade: 91 %
+projects:
+- id: gtaigraph
+  name: 'GTAI_Cell Line Finder: Multi-Omics Graph for Cancer Cell Line Selection (PoC)'
+  bullets:
+  - id: gtaigraph1
+    text: Choosing the right cancer cell line for a gene of interest usually …
+    terms: []
+- id: iata
+  name: Mining Insights from Customer Feedback NLP & Unsupervised Analytics Pipeline
+  bullets:
+  - id: iata1
+    text: Built an end-to-end unsupervised NLP pipeline on IATA airline …
+    terms: []
+certifications:
+- 'Model Context Protocol: Advanced Topics (Anthropic), Jun 2026'
+- Introduction to MCP (Anthropic), Jun 2026
+publications:
+- title: Modern Power System Operations in Effective Transmission Congestion Management via Optimal DG Capacity Using Firefly
+    Algorithms
+  venue: icees2023 EEE SSN
+  date: Mar 23, 2023
+languages:
+- name: English
+  level: Professional working proficiency
+- name: Tamil
+  level: Native or bilingual proficiency
+research_focus: 'GNN-based multi-omics integration for drug target prediction designing learnable, data-driven adjacency matrices
+  using scaled dot-product attention (no knowledge-graph dependency). Architecture: per-omics GAT → multi-head cross-omics
+  GAT fusion → per-node MLP classifier with disease-association probability ranking.'

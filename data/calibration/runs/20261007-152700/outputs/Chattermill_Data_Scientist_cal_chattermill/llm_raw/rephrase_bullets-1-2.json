@@ -1,0 +1,1 @@
+{"p_bt1":"Built an LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, deploying model serving via a TensorFlow Serving REST API."}

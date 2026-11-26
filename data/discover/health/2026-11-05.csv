@@ -1,0 +1,68 @@
+ts,source,name,method,country,status,new_jobs,reachable,robots,credentials,alerts,postings,detail,jobs_parsed
+2026-11-05T11:56:19+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,0,yes,n/a,present,50,,,195
+2026-11-05T11:56:19+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,18,,,261
+2026-11-05T11:56:19+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,20,yes,allowed,n/a,,4881,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T11:56:19+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,5,yes,n/a,present,50,,,685
+2026-11-05T11:56:19+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T11:56:19+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T11:56:19+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T11:56:19+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,openai,OpenAI,ashby,multi,ok,0,yes,allowed,n/a,,811,api.ashbyhq.com last answered HTTP 401 at 2026-11-04T11:25:19+00:00 after 21 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T11:56:19+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,reed,Reed,reed,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T11:56:19+00:00,lever-boards,Lever boards,lever,multi,ok,0,yes,allowed,n/a,,4881,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T11:56:19+00:00,ashby-boards,Ashby boards,ashby,multi,blocked,1,no,allowed,n/a,,,ashby API: HTTP 401: api.ashbyhq.com blocks automated access; it is not asked again this run; api.ashbyhq.com last answered HTTP 401 at 2026-11-05T11:56:19+00:00 after 186 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T16:17:09+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,1,yes,n/a,present,50,,,213
+2026-11-05T16:17:09+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,5,,,265
+2026-11-05T16:17:09+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,19,yes,allowed,n/a,,4645,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T16:17:09+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,,691
+2026-11-05T16:17:09+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T16:17:09+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T16:17:09+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T16:17:09+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,openai,OpenAI,ashby,multi,ok,1,yes,allowed,n/a,,811,api.ashbyhq.com last answered HTTP 401 at 2026-11-05T11:56:19+00:00 after 186 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T16:17:09+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,reed,Reed,reed,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T16:17:09+00:00,lever-boards,Lever boards,lever,multi,ok,0,yes,allowed,n/a,,4645,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T16:17:09+00:00,ashby-boards,Ashby boards,ashby,multi,blocked,1,no,allowed,n/a,,,ashby API: HTTP 401: api.ashbyhq.com blocks automated access; it is not asked again this run; api.ashbyhq.com last answered HTTP 401 at 2026-11-05T16:17:09+00:00 after 21 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T20:59:02+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,0,yes,n/a,present,50,,,245
+2026-11-05T20:59:02+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,7,,,293
+2026-11-05T20:59:02+00:00,aiapply,AIApply,dedupe_only,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,12,yes,allowed,n/a,,4875,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T20:59:02+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,,745
+2026-11-05T20:59:02+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from welcometothejungle.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T20:59:02+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T20:59:02+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)",0
+2026-11-05T20:59:02+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,openai,OpenAI,ashby,multi,ok,1,yes,allowed,n/a,,817,api.ashbyhq.com last answered HTTP 401 at 2026-11-05T16:17:09+00:00 after 21 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T20:59:02+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,reed,Reed,reed,GB,ok,0,yes,n/a,present,0,4419,,
+2026-11-05T20:59:02+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,lever-boards,Lever boards,lever,multi,ok,2,yes,allowed,n/a,,4875,"postings = those `discover --ats` looked at in this run, across all boards found",
+2026-11-05T20:59:02+00:00,ashby-boards,Ashby boards,ashby,multi,blocked,6,no,allowed,n/a,,,ashby API: HTTP 401: api.ashbyhq.com blocks automated access; it is not asked again this run; api.ashbyhq.com last answered HTTP 401 at 2026-11-05T20:59:01+00:00 after 42 request(s) that run; requests to it are at least 2 s apart for 7 days,
+2026-11-05T20:59:02+00:00,workable-boards,Workable boards,workable,multi,blocked,0,no,allowed,n/a,,,"workable API: apply.workable.com answered HTTP 429 until 2026-11-06 11:31 UTC; not asked again; apply.workable.com last answered HTTP 429 at 2026-11-05T11:31:52+00:00 after 53 request(s) that run; not asked at all until 2026-11-06 11:31 UTC, then requests to it are at least 2 s apart for 7 days",
+2026-11-05T20:59:02+00:00,smartrecruiters-boards,SmartRecruiters boards,smartrecruiters,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,teamtailor-boards,Teamtailor boards,teamtailor,multi,ok,0,n/a,n/a,n/a,,4875,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-05T20:59:02+00:00,pinpoint-boards,Pinpoint boards,pinpoint,multi,ok,0,n/a,n/a,n/a,,4875,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-05T20:59:02+00:00,recruitee-boards,Recruitee boards,recruitee,multi,ok,0,n/a,n/a,n/a,,4875,one host per company: each board's robots.txt is read before its first request; found per company by `discover --ats`,
+2026-11-05T20:59:02+00:00,personio-boards,Personio boards,personio,multi,ok,0,n/a,n/a,n/a,,4875,"one host per company: each board's robots.txt is read before its first request; found from a link or sources:, never guessed",
+2026-11-05T20:59:02+00:00,workday-boards,Workday boards,workday,multi,ok,0,n/a,n/a,n/a,,4875,0 Workday site(s) in settings sources.workday,
+2026-11-05T20:59:02+00:00,vc-atomico,Atomico portfolio jobs,getro,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,vc-balderton,Balderton portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,
+2026-11-05T20:59:02+00:00,vc-notion,Notion Capital portfolio jobs,consider,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml,

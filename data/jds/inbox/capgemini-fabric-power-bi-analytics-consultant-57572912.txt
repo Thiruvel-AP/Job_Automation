@@ -1,0 +1,43 @@
+Company: Capgemini
+Title: Fabric / Power BI Analytics Consultant
+URL: https://www.reed.co.uk/jobs/fabric-power-bi-analytics-consultant/57572912
+Source: reed
+Location: Birmingham, GB
+Posted: 2026-11-16
+Posted via: reed.date
+First seen: 2026-11-18
+
+Join Capgemini's Ai And Analytics Team 
+You will join Capgemini's AI and Analytics team within the Insights and Data Global Business Unit. You will work with visualisation specialists, data engineers, data scientists, business analysts and solution architects to solve client problems using modern data and analytics services. 
+Build high-quality analytics solutions using Microsoft Fabric and Power BI, translating business needs into trusted data models, reports and insights. Work as part of a client delivery team, with support from senior consultants and architects. 
+This is a hands-on consulting role for someone developing their career across Microsoft Fabric and Power BI. You will help clients turn data into clear, accessible and actionable insight. You will contribute to the design, build, test and deployment of analytics solutions, while learning how enterprise security, governance and delivery standards are applied in practice. 
+The role is broader than report development alone. Depending on the engagement, you may work across: 
+
+- Microsoft Power BI reports, dashboards, semantic models and apps
+- Microsoft Fabric lakehouses, warehouses, data pipelines and dataflows
+- DAX, Power Query and dimensional data modelling
+- Data quality, security, governance and deployment controls
+- Requirements discovery, prototyping, testing and user adoption
+- Monitoring, support, troubleshooting and continuous improvement 
+You will combine practical analytics skills with curiosity, structured problem-solving and an interest in helping clients make better decisions. You do not need to be an solutions architect, but you should understand how your work fits within a governed data and analytics solution. 
+Essential skills and experience: 
+
+- Hands-on experience building Power BI reports and dashboards for business users.
+- Working knowledge of DAX, Power Query and data modelling, including facts, dimensions and relationships.
+- Experience connecting to, preparing and validating data from common sources such as SQL databases, files, APIs or cloud platforms.
+- Understanding of Power BI Service concepts, including workspaces, apps, refresh, gateways, permissions and deployment.
+- Awareness and experience of Microsoft Fabric capabilities such as OneLake, Lakehouse, Warehouse, Data Factory and semantic models, with practical exposure to at least one area.
+- Ability to translate requirements into user stories, prototypes or working analytics outputs.
+- Good analytical, written and verbal communication skills, with the confidence to work collaboratively in a client-facing team.
+- Commitment to inclusive design, accessibility, data quality and secure handling of client information. 
+Desirable skills and experience: 
+
+- Experience with SQL, Azure data services, Databricks, Microsoft Purview, Power Platform or other cloud data platforms.
+- Exposure to version control and CI/CD using Git, Azure DevOps or Fabric deployment pipelines.
+- Awareness of capacity, licensing, performance optimisation and governance considerations in Power BI or Fabric.
+- Experience working in agile delivery and producing documentation, test evidence or training materials.
+- A relevant Microsoft certification, or willingness to work towards one, such as PL-300 or DP-600. 
+This Grade B role is expected to deliver defined work packages with appropriate guidance, progressively taking greater ownership as experience grows. You will have access to learning, certification and coaching, with opportunities to develop towards senior consultant, analytics lead or solution architecture pathways. 
+Hybrid working: Your working location will vary according to the role, client needs and business requirements, with a blend of Capgemini offices, client sites and home working. The role is not expected to be home-based 100% of the time. 
+You will be supported to maintain a positive work-life balance and to build your career through Capgemini's learning-for-life culture. This includes practical delivery experience, coaching, professional communities, internal learning and access to external certification pathways. 
+At Capgemini, we help organisations become more agile, competitive and successful through tailored technology and data solutions. Our work combines technical quality with collaboration, inclusion and a close understanding of client goals. We value diversity of thought and the different experiences people bring to our teams.

@@ -1,0 +1,658 @@
+{
+  "job_id": "calibration:cal-quantcast",
+  "company": "Quantcast",
+  "title": "Machine Learning Engineer",
+  "family": "ml_engineer",
+  "tier": 2,
+  "headline": "Machine Learning Engineer",
+  "keywords": [
+    {
+      "term": "LLMs",
+      "weight": 2.0,
+      "required": true,
+      "alts": [
+        "llm"
+      ]
+    },
+    {
+      "term": "NLP",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "clustering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "statistics",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Java",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "testing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "regression",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "classification",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Pandas",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "NumPy",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Scikit-learn",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "PyTorch",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "XGBoost",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "probability",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "ranking",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "distributed system",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "concurrent algorithms",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data structures",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "machine learning",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "production",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "scalable",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "research",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "Quantcast builds AI-powered advertising technology that optimizes real-time ad auctions to deliver measurable outcomes for marketers.",
+  "team": "Modeling team",
+  "ceiling": 0.6931818181818182,
+  "genuine_gaps": [
+    "Java",
+    "probability",
+    "ranking",
+    "distributed system",
+    "concurrent algorithms",
+    "data structures",
+    "scalable"
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.6022727272727273,
+      "score_stemmed": 0.6022727272727273,
+      "band": "below",
+      "pages": 1,
+      "shrinks": 1,
+      "reverted": [],
+      "violations": [],
+      "warnings": [
+        "az1: unrecognised name 'Python LLM'"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "clustering",
+        "Java",
+        "regression",
+        "probability",
+        "ranking",
+        "distributed system",
+        "concurrent algorithms",
+        "data structures",
+        "scalable"
+      ],
+      "rephrase": {
+        "eligible": 9,
+        "asked": 9,
+        "cached": 0,
+        "calls": 2,
+        "failed_calls": 0,
+        "proposed": 9,
+        "accepted": 9,
+        "blocked": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az4",
+              "az3"
+            ],
+            "dc180": [
+              "dc1",
+              "dc2"
+            ],
+            "freelance": [
+              "fl1",
+              "fl2"
+            ],
+            "avasoft": [
+              "av1"
+            ]
+          },
+          "projects": [
+            "churn",
+            "gtaigraph"
+          ]
+        },
+        "rephrase": {
+          "az1": "Built a Python LLM agent using LangChain and AWS Bedrock for a multi-omics cancer platform, calling tools for gene alias resolution, scoring explanation, and dataset provenance.",
+          "az4": "Wrote a three-tier testing framework of ~65 tests across 8 files, validating LLM provider migration from Groq to AWS Bedrock after rate-limit evaluation.",
+          "az3": "Deployed the agent as a Docker container on AWS Lambda with ECR pipelines, IAM roles, and least-privilege policies for production.",
+          "dc1": "Proposed and prototyped an MCP-based LLM agent in Python using FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI for a Madrid-based startup, presented live.",
+          "fl1": "Built Python machine learning pipelines with scikit-learn and TensorFlow/Keras LSTM/BiRNN/CNN models, deployed as FastAPI services in Docker.",
+          "fl2": "Built NLP and agentic RAG workflows using Hugging Face Transformers, Ollama, LangChain, LangGraph, and llm.",
+          "p_ch1": "Developed XGBoost churn classifier in R, applying classification, machine learning, two-stage Bayesian hyperparameter search, SMOTE, and MCC evaluation.",
+          "p_gg1": "Constructed a heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) using k-NN similarity, Leiden community detection, and clustering with modularity 0.822.",
+          "p_gg2": "Trained per-gene protein-prediction models for 11,459 genes using OLS, GPU Random Forest ensemble, and Scikit-learn, with resumable chunked GPU training on a free T4."
+        },
+        "profile": "Machine Learning Engineer with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az4",
+          "az3"
+        ],
+        "dc180": [
+          "dc1",
+          "dc2"
+        ],
+        "freelance": [
+          "fl1",
+          "fl2"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "gtaigraph": [
+          "p_gg2"
+        ]
+      },
+      "profile": "Machine Learning Engineer with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+      "rephrase_coverage": {
+        "eligible": 8,
+        "rephrased": 8,
+        "ratio": 1.0
+      }
+    }
+  ],
+  "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-160853/outputs/Quantcast_Machine_Learning_Engineer_cal_quantcast",
+  "analysis_warnings": [
+    "extract_keywords: dropped keyword 'ML frameworks' (not verbatim, too long, generic or a degree)",
+    "keywords: dropped 'hypothesis testing' (contains 'testing')"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "final": {
+    "score": 0.6022727272727273,
+    "score_stemmed": 0.6022727272727273,
+    "band": "below",
+    "pages": 1,
+    "hits": [
+      "LLMs",
+      "NLP",
+      "Python",
+      "statistics",
+      "testing",
+      "classification",
+      "Pandas",
+      "NumPy",
+      "Scikit-learn",
+      "PyTorch",
+      "XGBoost",
+      "machine learning",
+      "production",
+      "research"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "clustering",
+      "Java",
+      "regression",
+      "probability",
+      "ranking",
+      "distributed system",
+      "concurrent algorithms",
+      "data structures",
+      "scalable"
+    ],
+    "chosen_attempt": 1
+  },
+  "rephrase_coverage": {
+    "eligible": 8,
+    "rephrased": 8,
+    "ratio": 1.0
+  },
+  "rephrase": {
+    "eligible": 9,
+    "asked": 9,
+    "cached": 0,
+    "calls": 2,
+    "failed_calls": 0,
+    "proposed": 9,
+    "accepted": 9,
+    "blocked": 0
+  },
+  "letter": {
+    "paragraphs": [
+      "Quantcast's mission to optimise real-time ad auctions with AI mirrors my recent work building a tool-calling LLM agent that delivers precise, actionable insights for complex scientific problems.",
+      "I built a tool-calling LLM agent using LangChain, AWS Bedrock and Claude Haiku 4.5 for a multi-omics cancer research platform, integrating three specialised tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
+      "I also constructed scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deploying them as FastAPI services in Docker.",
+      "Could we schedule a brief call so I can walk you through how these experiences translate to driving measurable outcomes for Quantcast's advertisers?"
+    ],
+    "problems": [],
+    "score": 0.125,
+    "pages": 1,
+    "status": "ok",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az1",
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "fl1",
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 1629,
+        "prompt_tokens": 1255,
+        "completion_tokens": 184,
+        "reasoning_tokens": 76,
+        "total_tokens": 1439,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "tailor_profile",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 600,
+        "est_input_tokens": 405,
+        "prompt_tokens": 462,
+        "completion_tokens": 81,
+        "reasoning_tokens": 16,
+        "total_tokens": 543,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 914,
+        "prompt_tokens": 910,
+        "completion_tokens": 774,
+        "reasoning_tokens": 573,
+        "total_tokens": 1684,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 731,
+        "prompt_tokens": 760,
+        "completion_tokens": 700,
+        "reasoning_tokens": 526,
+        "total_tokens": 1460,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 920,
+        "prompt_tokens": 891,
+        "completion_tokens": 185,
+        "reasoning_tokens": 24,
+        "total_tokens": 1076,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 4278,
+    "completion_tokens": 1924,
+    "reasoning_tokens": 1215,
+    "total_tokens": 6202,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1255,
+        "completion_tokens": 184,
+        "reasoning_tokens": 76,
+        "total_tokens": 1439,
+        "prompt_tokens_per_call": [
+          1255
+        ]
+      },
+      "tailor_profile": {
+        "calls": 1,
+        "prompt_tokens": 462,
+        "completion_tokens": 81,
+        "reasoning_tokens": 16,
+        "total_tokens": 543,
+        "prompt_tokens_per_call": [
+          462
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 2,
+        "prompt_tokens": 1670,
+        "completion_tokens": 1474,
+        "reasoning_tokens": 1099,
+        "total_tokens": 3144,
+        "prompt_tokens_per_call": [
+          910,
+          760
+        ]
+      },
+      "cover_letter": {
+        "calls": 1,
+        "prompt_tokens": 891,
+        "completion_tokens": 185,
+        "reasoning_tokens": 24,
+        "total_tokens": 1076,
+        "prompt_tokens_per_call": [
+          891
+        ]
+      }
+    }
+  },
+  "cv_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-160853/outputs/Quantcast_Machine_Learning_Engineer_cal_quantcast/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-160853/outputs/Quantcast_Machine_Learning_Engineer_cal_quantcast/Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Machine Learning Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "UK Graduate visa on completion (Dec 2026): no sponsorship needed for 2 years",
+        "Available from December 2026"
+      ]
+    },
+    "profile": "Machine Learning Engineer with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+    "skills": {
+      "Languages": [
+        "Python",
+        "SQL",
+        "R",
+        "TypeScript",
+        "JavaScript",
+        "Swift",
+        "Dart"
+      ],
+      "ML & Stats": [
+        "scikit-learn",
+        "XGBoost",
+        "PyTorch",
+        "statistics",
+        "TensorFlow",
+        "Keras",
+        "LSTM",
+        "Isolation Forest",
+        "Random Forest",
+        "hypothesis testing",
+        "ANOVA",
+        "bootstrap",
+        "PCA",
+        "maximum likelihood estimation",
+        "experimental design"
+      ],
+      "LLMs & Agents": [
+        "LangChain",
+        "LangGraph",
+        "Google ADK",
+        "AWS Bedrock",
+        "Claude API",
+        "OpenAI API",
+        "Gemini via LiteLLM",
+        "Hugging Face Transformers",
+        "Ollama",
+        "RAG",
+        "MCP",
+        "tool calling",
+        "LoRA fine-tuning",
+        "LLM evaluation"
+      ],
+      "Data & Cloud": [
+        "pandas",
+        "NumPy",
+        "NLTK",
+        "Matplotlib",
+        "Seaborn",
+        "PostgreSQL",
+        "ChromaDB",
+        "AWS Lambda",
+        "ECR",
+        "IAM",
+        "GCP Cloud Run",
+        "S3, SQS, DynamoDB (MSc coursework)",
+        "Databricks/PySpark (coursework)"
+      ],
+      "Engineering": [
+        "FastAPI",
+        "Docker",
+        "GitHub Actions",
+        "pytest",
+        "React",
+        "Git",
+        "MLflow",
+        "Streamlit",
+        "Tableau"
+      ]
+    },
+    "experience": [
+      {
+        "id": "az",
+        "title": "Data Scientist",
+        "org": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "bullets": [
+          "Built a Python LLM agent using LangChain and AWS Bedrock for a multi-omics cancer platform, calling tools for gene alias resolution, scoring explanation, and dataset provenance.",
+          "Wrote a three-tier testing framework of ~65 tests across 8 files, validating LLM provider migration from Groq to AWS Bedrock after rate-limit evaluation.",
+          "Deployed the agent as a Docker container on AWS Lambda with ECR pipelines, IAM roles, and least-privilege policies for production."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az4",
+          "az3"
+        ]
+      },
+      {
+        "id": "dc180",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based LLM agent in Python using FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI for a Madrid-based startup, presented live.",
+          "Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership."
+        ],
+        "bullet_ids": [
+          "dc1",
+          "dc2"
+        ]
+      },
+      {
+        "id": "freelance",
+        "title": "Freelance AI/ML Engineer",
+        "org": "Self-employed, Chennai",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built Python machine learning pipelines with scikit-learn and TensorFlow/Keras LSTM/BiRNN/CNN models, deployed as FastAPI services in Docker.",
+          "Built NLP and agentic RAG workflows using Hugging Face Transformers, Ollama, LangChain, LangGraph, and llm."
+        ],
+        "bullet_ids": [
+          "fl1",
+          "fl2"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "title": "Software Engineer (SDE Trainee Jan\u2013Jun 2023)",
+        "org": "Avasoft",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+        ],
+        "bullet_ids": [
+          "av1"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Developed XGBoost churn classifier in R, applying classification, machine learning, two-stage Bayesian hyperparameter search, SMOTE, and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Graph PoC \u2014 cancer cell-line omics graph",
+        "stack": "networkx, leidenalg, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "bullets": [
+          "Trained per-gene protein-prediction models for 11,459 genes using OLS, GPU Random Forest ensemble, and Scikit-learn, with resumable chunked GPU training on a free T4."
+        ],
+        "bullet_ids": [
+          "p_gg2"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "org": "University of Bristol",
+        "dates": "2025 \u2013 2026"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction"
+      }
+    ],
+    "certifications": [
+      "Anthropic MCP certifications (Introductory and Advanced), Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+Company: ITOL Recruit
+Title: Junior AI Developer
+URL: https://www.reed.co.uk/jobs/junior-ai-developer/57470445
+Source: reed
+Apply kind: aggregator_only
+Location: Wolverhampton, GB
+Salary: GBP 30,000-45,000
+Posted: 2026-10-19
+Posted via: reed.date
+First seen: 2026-11-05
+
+Trainee AI Engineer – No Experience Needed 
+Future-proof your career in Artificial Intelligence – starting today. 
+Looking for a career change? Currently employed but want something better? Or maybe you're between jobs and ready for a fresh start? ITOL Recruit's AI Traineeship is designed to get you into one of the fastest-growing industries with zero experience required. 
+Train online at your own pace and land your first AI Engineer role in 1-3 months. 
+Please note this is a training course and fees apply 
+Job guaranteed - complete the programme and get a job or get your money back. 
+Our candidates earn £28,000-£45,000. 
+
+Why AI? 
+AI is reshaping every industry you can think of. Healthcare, finance, retail, and manufacturing – they’re all scrambling for skilled professionals. 
+The demand far outstrips supply, which means excellent salaries, flexible working arrangements, and genuine job security. 
+
+How It Works 
+Step 1 – AI Engineering Fundamentals 
+Start with the basics of AI, including neural networks and large language models, to build a solid foundation in AI engineering. 
+Step 2 – Data Fundamentals 
+Understand the data workflow, from collection to cleaning, and learn how to prepare data for AI applications. 
+Step 3 – Notebooks & IDEs 
+Get hands-on with industry-standard tools like Jupyter Notebooks and VS Code to develop AI systems. 
+Step 4 – Python Programming 
+Master Python, covering everything from the basics to object-oriented programming (OOP). 
+Step 5 – Python Streamlit Project 
+Apply your Python skills by building a car price prediction app using Python and Streamlit. 
+Step 6 – Python for Data 
+Learn essential Python libraries like NumPy, Pandas, and Matplotlib for data manipulation and visualisation. 
+Step 7 – AI Sentiment Analysis Project 
+Work with Hugging Face to build a sentiment analysis classifier using real-world AI techniques. 
+Step 8 – AI Prompt Engineering 
+Master prompt engineering, learning how to craft effective prompts for controlling AI outputs. 
+Step 9 – Retrieval-Augmented Generation (RAG) 
+Learn how to integrate external knowledge into AI systems using RAG techniques and vector databases. 
+Step 10 – AI Specialised Customer Service Chatbot Project 
+Combine prompt engineering and RAG to build an AI-powered customer service chatbot, delivering intelligent responses using vector databases and knowledge bases. 
+Step 11 – Machine Learning Fundamentals 
+Understand machine learning principles and algorithms, and how to train and test models using scikit-learn. 
+Step 12 – Machine Learning Project 
+Put your machine learning knowledge into practice with a hands-on project. 
+Step 13 – AI & Data Ethics 
+Study the ethical considerations in AI, including issues of bias, fairness, and data privacy. 
+Step 14 – Oral Exam 
+Complete a virtual oral exam to assess your understanding and ability to apply your learning. 
+Step 15 – AWS Certified Cloud Practitioner 
+Finish with the AWS Certified Cloud Practitioner course and exam to gain essential cloud computing knowledge. 
+
+What You Get 
+· 100% online, self-paced training 
+· Microsoft AI-900 certification included 
+· 1-to-1 tutor and recruitment support 
+· Real-world project experience 
+· Job guarantee – get a job or your money back 
+· Starting salary of £28,000–£45,000 
+
+We Get You Hired 
+We're not new to this. ITOL Recruit has 15+ years of experience and has placed over 5,000 people into new roles. 
+Our job programmes include certified tutors, UK-accredited qualifications, and one-on-one support from a recruitment adviser focused on placing you. 
+We don't believe in empty promises. Complete our programme, follow the process, and if you don't land a job, you get your money back. 
+"Five months from complete beginner to AI engineer. Best decision I ever made." – Jamie W., now working as a Junior AI Engineer in London 
+
+Ready to Start? 
+If you’re motivated, curious, and excited about technology, we’ll help you turn that into a career you can be proud of. 
+Apply now, and one of our expert Career Advisors will be in touch within 4 working hours to guide you through your next steps.

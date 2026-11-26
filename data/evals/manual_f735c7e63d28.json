@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:f735c7e63d28",
+ "company": "GitLab",
+ "title": "Backend Engineer (Ruby), AI Engineering: AI Catalog",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0, ATS ceiling 51%"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family ai_engineer matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large company, remote UK, stable signals, growth focus"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifying language or requests in ad"
+  }
+ },
+ "global_score": 4.2,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm compensation range and equity details",
+  "Verify on-call rotation expectations and support",
+  "Ensure remote work setup aligns with async EMEA/AMER collaboration"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.2,
+ "model_confidence": "Medium",
+ "jd_hash": "4723004f4a451848",
+ "jd_words": 1018,
+ "tokens": 2445,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

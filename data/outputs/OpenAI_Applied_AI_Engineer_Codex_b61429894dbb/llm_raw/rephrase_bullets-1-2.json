@@ -1,0 +1,1 @@
+{"p_ql1": "Fine-tuned QLoRA Llama 3.1 8B (4-bit) on a 15 GB GPU, increasing answer completion and exact-answer accuracy from 32% to 52% and 16.2% to 27.3% respectively on 99 held-out NuminaMath problems."}

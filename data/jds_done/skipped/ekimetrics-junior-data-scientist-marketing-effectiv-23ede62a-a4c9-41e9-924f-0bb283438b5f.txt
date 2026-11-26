@@ -1,0 +1,94 @@
+Company: Ekimetrics
+Title: Junior Data Scientist & Marketing Effectiveness - Jan-March 2027 Start date
+URL: https://jobs.lever.co/ekimetrics/23ede62a-a4c9-41e9-924f-0bb283438b5f
+Source: lever
+Apply kind: lever
+Location: London
+Posted: 2026-09-14T16:53:26.921000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-22
+Listed: yes
+
+London – Junior Consultant, Data Science & Marketing Effectiveness
+Multiple Start Dates available for Jan-March 2027 Start date
+£40,500 + Bonus + benefits. 
+ 
+Ekimetrics is a leader in Marketing Effectiveness, Data Science and AI-powered solutions. We are one of the world’s largest independent analytics and consulting firms, pioneering the use of AI and advanced data science for over 16 years. 
+ 
+Our goal: Combine high-impact AI and data science solutions for long-term sustainable business performance
+ 
+Key figures about Eki
+·        400 data science experts globally 
+·        1000+ diverse projects for more than 350 clients
+·         5 offices: Paris, Hong Kong, London, New York & Shanghai 
+·        $1 billion in profits generated for our clients
+·        7000 tons of CO2 prevented by our clients in 2022.
+·        UK data company of the year 2023
+·        Shortlisted Best STEM company to work for Women 2024
+·        Voted Great Place to Work 2023 
+·        Voted as a leader in “Marketing Measurement and Optimisation” by Forrester Wave 2023.
+ 
+Here in the UK, at our London-based office, we engage across four business offerings: MMM (mixed market modelling), customer analytics, data science transformations, and AI4 sustainability. We have clients across multiple industries such as retail, consumer goods, luxury fashion, insurance, banking, private equity, tech partners and many more.
+ 
+About the Role 
+As a Junior Consultant, this is an exciting opportunity to develop a dual profile – The data scientist and strategic consultant. You will be working on challenging data science projects with international clients across multiple industries, building bespoke marketing analytics solutions to answer our clients’ key questions. 
+ 
+What you’ll be doing as a Junior Consultant:
+·        Apply econometrics using data science and AI for business problems.
+·        Understand clients’ business context and collaborate in a fast-paced environment.
+·        Work on Marketing Mix Modelling (MMM) and Customer Analytics projects end-to-end, from gathering and analysing data to building statistical machine learning models and delivering presentations.
+·        Work on 1-3 projects across global markets and industries such as retail, consumer goods, luxury fashion, insurance, banking, private equity, tech partners and many more.
+·        Contribute to Ekimetrics R&D to support the development of new methodologies and build data Engineering/Architecture capabilities in the office.
+·        Contribute to Eki.Life culture initiatives, well-being and help drive our CSR commitments 
+ 
+This is a great opportunity to join a growing, international pioneer in data science that will empower you to have an immediate impact from the beginning. At Ekimetrics, we thrive on accelerating growth for ambitious individuals. A Junior Consultant can expect to develop significantly in a short period while consistently delivering exceptional, high-quality results for our clients.
+ 
+About You
+Ekimetrics is seeking individuals who can wear 2 hats – the data scientist and the strategic consultant. You will most likely be a recent graduate with internship experience or early in your professional career.
+ 
+What you need to succeed:
+·        A degree in Data Science, Economics or a similar analytical field (e.g. econometrics, statistics, mathematics, or other quantitative degrees like Engineering, Data Science, etc.)
+·        Prior experience (academic or professional) in data analysis/ modelling / advanced analytics or ML.
+·        Experience with programming languages such as Python or R - we use Python at Eki. 
+·        Capacity to work and learn quickly in a fast-paced environment.
+·        Exceptional written and oral communication skills.
+·        Interest in Data and Marketing to make an impact for businesses
+·        Ability to work within an inclusive and diverse team to deliver innovative solutions. 
+·        A passion for joining a small team and a keen interest in personal learning and development.
+·        Demonstration of behaviours that support our values: Curiosity, Creativity, Excellence, Transmission, and Pleasure.
+ Additional Requirements:
+·        Must be able to work on-site a minimum of 2 days a week in London, UK (Hybrid)
+·        Good sense of humour! 
+ 
+Working for Eki
+ 
+Working for Ekimetrics is a lot of fun! Our London team is growing (65+people). We come from all over the world, have varied experiences and passions, and all contribute value to Ekimetrics’ success.
+ 
+As well as an opportunity to join a driven, energetic, and highly innovative team, we also offer the following:
+·        Competitive Compensation + individual & company y bonuses
+·        Continuous Learning and development opportunities with Eki.Academy, training programs and certifications
+·        Hybrid working (Minimum 2 days a week in the office)
+·        20 days a year Work from Anywhere
+·        25 days annual leave (+ Bank Holidays + additional days for tenure)
+·        Private healthcare, life insurance, critical illness cover, and professional wellbeing support services
+·        Group pension scheme
+·        An emphasis on work-life balance and a strong company culture
+·        Eki. Anniversary gifts for every year of service
+·        Opportunities to develop a dual profile in data science and strategic consulting.
+·        Opportunities for international mobility
+·        Cycle to Work Scheme
+·        Wellbeing support, Gym and retail discounts & 50% off runners need! 
+ 
+At Ekimetrics, we believe our best assets are our people - they are what set us apart and drive our success. We encourage entrepreneurial spirit and innovation. We share what we know with others, and, above all, we love what we do. These sentiments are supported by our company values which serve as pillars in our work and attitude. 
+ 
+Follow our Ekimetrics’ values: Curiosity, Creativity, Excellence, Transmission and Pleasure.
+ 
+Ekimetrics is an equal opportunities employer committed to making all employment decisions without regard to race, ethnicity, gender, pregnancy, gender identity or expression, creed, religion, nationality, age, disability, marital status, sexual orientation, military veteran status, current employment status, or any other legally protected categories, subject to applicable law.
+
+
+Interview process
+1. Online Hacker rank - May contrain Python coding
+2. HR interview
+3. Assessment with a consultant
+4. Case study Assessment
+5. Final interview with a Manager

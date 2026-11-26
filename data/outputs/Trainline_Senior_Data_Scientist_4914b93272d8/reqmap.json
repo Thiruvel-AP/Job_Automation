@@ -1,0 +1,543 @@
+{
+  "coverage": 0.4054,
+  "requirements": [
+    {
+      "term": "AI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "ai",
+          "snippet": "Built a generative AI…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "AI",
+          "snippet": "Found where the assistant…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "AI",
+          "snippet": "Did the data analysis on…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "AI",
+          "snippet": "Led the design in a…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "AI",
+          "snippet": "Designed how a user's…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "AI",
+          "snippet": "Built a private client an…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "AI",
+          "snippet": "For a private client,…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "ai",
+          "snippet": "Built a voice assistant…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "AI",
+          "snippet": "Built a 14-step AI…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "AI",
+          "snippet": "Built a search assistant…",
+          "via": "AI"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "AI",
+          "snippet": "Fine-tuned an…",
+          "via": "AI"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "AI",
+          "snippet": "AI-assisted development (Claude Code, Cursor, OpenAI Codex)",
+          "via": "AI"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "AI",
+          "snippet": "Put an AI assistant online on AWS for an…",
+          "via": "AI"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "AI",
+          "snippet": "Worked freelance building AI and machine-learning tools for…",
+          "via": "AI"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_agents",
+          "quote": "AI",
+          "snippet": "Built an AI assistant on AWS for an MSc dissertation with an…",
+          "via": "AI"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_client",
+          "quote": "AI",
+          "snippet": "At 180 Degrees Consulting, led the design in a five-person…",
+          "via": "AI"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_tools",
+          "quote": "AI",
+          "snippet": "Builds with AI coding tools (Claude Code, Cursor, Codex)…",
+          "via": "AI"
+        },
+        {
+          "kind": "modules",
+          "id": "modules:MSc Data Science",
+          "quote": "AI",
+          "snippet": "AI & Text Analytics",
+          "via": "AI"
+        }
+      ]
+    },
+    {
+      "term": "random forest",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "random forest",
+          "snippet": "Linked 14 public…",
+          "via": "random forest"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "Random Forest",
+          "snippet": "Random Forest",
+          "via": "random forest"
+        }
+      ]
+    },
+    {
+      "term": "Tableau",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Tableau",
+          "snippet": "Tableau",
+          "via": "Tableau"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "Tableau",
+          "snippet": "Tableau",
+          "via": "Tableau"
+        }
+      ]
+    },
+    {
+      "term": "A/B tests",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "AWS Athena",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "clustering",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az8",
+          "quote": "clustering",
+          "snippet": "Studied graph neural…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "clustering",
+          "snippet": "Linked 14 public…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "clustering",
+          "snippet": "Built the text-cleaning…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "clustering",
+          "snippet": "Showed why airline support…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "clustering",
+          "snippet": "Ran a data quality check…",
+          "via": "clustering"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "clustering",
+          "snippet": "Leiden clustering",
+          "via": "clustering"
+        }
+      ]
+    },
+    {
+      "term": "logit/probit",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "neural net",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Power BI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "predictive modelling",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "Python"
+        }
+      ]
+    },
+    {
+      "term": "SQL",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "SQL"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "SQL"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "SQL",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "SQL"
+        }
+      ]
+    },
+    {
+      "term": "healthcare",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "healthcare",
+          "snippet": "Linked 14 public…",
+          "via": "healthcare"
+        }
+      ]
+    },
+    {
+      "term": "insurance",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "insurance",
+          "snippet": "For an insurance hackathon…",
+          "via": "insurance"
+        }
+      ]
+    },
+    {
+      "term": "automation",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "av10",
+          "quote": "automation",
+          "snippet": "As a trainee, replaced a…",
+          "via": "automation"
+        }
+      ]
+    },
+    {
+      "term": "deep learning",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "deep learning",
+          "snippet": "For a private client,…",
+          "via": "deep learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Deep Learning",
+          "snippet": "Deep Learning",
+          "via": "deep learning"
+        }
+      ]
+    },
+    {
+      "term": "geospatial",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "graph analyses",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product effectiveness",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product engagement evaluation",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product experiences",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product experiments",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product market fit",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "product opportunities",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    }
+  ]
+}

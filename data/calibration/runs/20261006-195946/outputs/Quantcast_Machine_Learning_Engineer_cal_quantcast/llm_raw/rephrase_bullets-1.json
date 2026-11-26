@@ -1,0 +1,6 @@
+```json
+{
+  "p_ch1": "Built an XGBoost churn classifier in R using tidymodels, two-stage Bayesian hyperparameter search, SMOTE in the recipe, and MCC evaluation for classification.",
+  "p_gg2": "Built per-gene protein-prediction models for 11,459 genes with OLS and GPU Random Forest ensemble, training on a free T4 with resumable chunked GPU training for regression."
+}
+```

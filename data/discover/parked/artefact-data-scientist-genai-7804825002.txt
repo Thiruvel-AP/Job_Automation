@@ -1,0 +1,70 @@
+Company: Artefact
+Title: Data Scientist - GenAI
+URL: https://job-boards.greenhouse.io/artefact/jobs/7804825002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Brussels-Capital, Belgium
+Country: Belgium
+Status: listed_only
+Posted: 2025-02-04T05:43:36-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Join Artefact Belgium: Shape the Future of Generative AI and Large Language Models (LLMs)
+
+Are you an early-career professional excited to harness the power of generative AI and Large Language Models (LLMs)? Artefact Belgium is seeking a Data Scientist - Gen AI to join our innovative team in Brussels. Our Belgian team specializes in LLM and GenAI projects, and this is your chance to work on cutting-edge solutions, collaborate with top-tier experts, and contribute to impactful projects in a dynamic, forward-thinking environment.
+
+Who You Are
+
+A recent graduate or professional with 1 to 3 years of experience, with hands-on experience working with LLMs and a passion for generative AI and NLP. Motivated to apply your technical expertise to real-world challenges in AI. Able to thrive in collaborative settings while independently driving your own workstreams. Eager to learn, grow, and push the boundaries of what's possible in AI innovation.
+
+Who We Are
+
+Artefact is a leading Data & AI consulting firm operating at the forefront of AI innovation. With a global presence, we help clients across industries—public health, manufacturing, etc. —leverage generative AI to achieve transformative outcomes. Our team in Belgium is specialized in LLM and GenAI projects, working on the most advanced applications of these technologies. At Artefact, we foster a culture of innovation, collaboration, and continuous learning, with a strong commitment to inclusivity and employee growth.
+
+What You Will Do
+
+- Collaborate with the team to design, train, and fine-tune state-of-the-art models for client projects and internal tools. 
+
+- Develop and integrate agentic AI solutions using tool calling, and emerging protocols like Model Context Protocol (MCP) to create autonomous, context-aware applications.
+
+- Research and implement innovative generative AI applications to solve complex business problems. 
+
+- Design and implement comprehensive evaluation frameworks to measure LLM performance, establishing quality metrics and benchmarks that guide development decisions and ensure reliable, production-ready solutions.
+
+- Optimize the performance, scalability, and usability of LLM-powered products and tools. 
+
+- Contribute to the deployment and maintenance of AI systems, including models, APIs, and supporting infrastructure. 
+
+- Participate in technical discussions and brainstorming sessions to shape impactful solutions.
+
+What You Bring
+
+- A degree in computer science, mathematics, engineering, physics, or a related field. 
+
+- Experience working with LLMs, generative AI, or advanced NLP applications (e.g., fine-tuning models, using frameworks like Hugging Face or OpenAI).
+
+- Strong programming skills in Python and familiarity with AI and NLP libraries.
+
+- Analytical and problem-solving capabilities, with an ability to address real-world challenges through AI. 
+
+- Good communication skills in English, Dutch or French; additional languages are a plus. 
+
+- A growth mindset, adaptability, and eagerness to work in a fast-paced, cutting-edge environment.
+
+What We Offer
+
+- A competitive salary with benefits tailored for early-career professionals. 
+
+- Hands-on experience with state-of-the-art LLM technologies in impactful projects. 
+
+- A dynamic and supportive work environment that fosters creativity and professional development.
+
+- Resources for ongoing training, certification, and skill-building in generative AI and related fields. 
+
+- A collaborative, inclusive workplace with access to global expertise through Artefact's network.
+
+This position is based in Brussels.
+
+Don't worry if you don't meet every criterion! We value passion, potential, and a commitment to innovation. If you're excited about generative AI and ready to grow your career, we'd love to hear from you!

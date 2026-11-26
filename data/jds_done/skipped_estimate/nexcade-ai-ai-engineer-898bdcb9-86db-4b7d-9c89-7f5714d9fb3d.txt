@@ -1,0 +1,76 @@
+Company: Nexcade AI
+Title: AI Engineer
+URL: https://jobs.ashbyhq.com/nexcade/898bdcb9-86db-4b7d-9c89-7f5714d9fb3d
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-11-04T10:59:36.264+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-06
+Listed: yes
+
+ABOUT US
+
+People assume the supply chain is an automated, algorithmic system. It is not. It is a large number of people acting as the glue between organisations and systems, doing work the world depends on with tools that have barely changed in decades. Nexcade builds AI agents for those people, starting in freight forwarding, a $210BN industry.
+
+Our agents are live in production with some of the leading global forwarders, pricing millions in freight every week, and we are expanding the platform deeper into the shipment lifecycle. We have raised $8.5M to make this a reality.
+
+Our founders, Dan and Tasho, spent years at Sedna and Palantir working with supply chain companies on problems like this one. We are backed by top VCs and angels who backed or founded Synthesia, n8n and other world-class companies.
+
+ 
+
+
+HOW WE WORK
+
+ - Everybody codes, founders included. The whole company is technical, commercial team included, and runs on coding agents.
+
+ - Closely with customers and design partners, so what we ship changes how they operate.
+
+ - At pace. Fast cycles and quick iterations, on the product and on how we work.
+
+ - End to end. If you see something broken or missing, you have the freedom (and the responsibility) to fix it.
+
+ - In person, 4+ days a week in London. We value synchronous communication.
+
+ - Debate rigorously, decide quickly, execute relentlessly.
+
+ - Enjoy the journey. Hard problems, good colleagues.
+   
+    
+
+
+THE ROLE
+
+We are building the AI platform for freight forwarding and expanding our product surface, and we are hiring software engineers across product, AI and platform to do it.
+
+You will build products that do freight forwarding work alongside our customers' teams, operating across the entire shipment lifecycle. You will work across the stack in Python, TypeScript and React, and directly with customers and founders on what gets built.
+
+Everyone here works across the stack, but each engineer has a spike: the area where they set the bar for the team. You spend most of your time where yours is, and lean on your colleagues where theirs are.
+
+ - Product: You build best in class products for the core jobs in freight forwarding, one job at a time. You work as a design partner with our customers to understand the work deeply, turn that understanding into a product they would choose over anything else, and feed what you learn back into the platform everyone builds on.
+
+ - AI: You raise the ceiling on what our AI can do and the floor on how reliably it does it. That spans high volume tasks like classification and extraction and deep workflow tasks that run for hours. You design for performance, reliability, explainability and control, set up the gyms and evals to measure them, and build the harness that runs our agents in all of our products.
+
+ - Platform: You own the foundation every product stands on: the runtime for thousands of concurrent agents and workflows, the way they communicate and scale, the controls for how they access data with permissions that hold, and the observability to see and measure all of it. You ensure the rest of the team can move fast without fear.
+   
+    
+
+
+WHAT WE LOOK FOR
+
+ - A spike, with evidence. Something you have been exceptional at and proof of it. We hire on slope rather than years, so there is no experience threshold in either direction.
+
+ - Strong fundamentals. In the AI-assisted era, having good technical judgement is key. You have shipped production systems people depend on, seen them fail and learned from it.
+
+ - High agency and ownership. You take an ambiguous problem, make a call, and see it through.
+
+ - Humility and learning velocity. You want to get better and you change your mind when the evidence says so.
+
+ - Interest in the problem. You do not need a freight background, but you need to find messy real-world operations interesting rather than a chore.
+   
+    
+
+
+WHY JOIN
+
+You will shape the product, the architecture and the company, working alongside an engineering team from Palantir, Raft, Faculty, UnlikelyAI and Oxford. You will work directly with the businesses using what you build, on AI applied to an industry that has resisted software for decades. You will get meaningful equity, so when this works you share in it.

@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:dfab08670b50",
+ "company": "Iwoca",
+ "title": "Data Scientist - iwocaPay",
+ "dimensions": {
+  "cv_match": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 3.1 indicates moderate keyword match"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "Title matches candidate target role family data_scientist"
+  },
+  "comp": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Salary up to £80k aligns with market and likely above candidate floor"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large stable company, hybrid model, extensive benefits"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or suspicious language in ad"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate has strong statistical foundations and production ML experience",
+  "Verify candidate's salary expectations are within £60k‑£80k range",
+  "Check candidate is comfortable with hybrid (1 day/week office) schedule"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "Medium",
+ "jd_hash": "8ea2b0bffc9dcab2",
+ "jd_words": 1149,
+ "tokens": 2716,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

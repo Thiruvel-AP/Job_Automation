@@ -1,0 +1,95 @@
+Company: Gigaton
+Title: Research Scientist - Control & Machine Learning
+URL: https://jobs.ashbyhq.com/gigaton/f4e56f06-08bf-4a26-bf8a-2256cb1361a9
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-10-20T13:41:35.225+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+At Gigaton, we’re on a mission to cut gigatonnes of carbon emissions from the world’s biggest emitting industries (like cement, steel and glass), by building autonomous AI control and optimisation systems that learn and leverage the physics of manufacturing. Our products run heavy industrial plants more efficiently, more stably, and with lower emissions in real time - laying the foundation for the next industrial revolution.
+
+We are a team of scientists, engineers, builders, and operators who love hard problems, have high standards, and want to make change happen in the physical world. We care about deep tech, but we care even more about whether it delivers cost and carbon impact in a live plant, with real people, under real constraints.
+
+With Gigaton, you’ll solve really tough problems in places few people ever get close to, and build something that actually helps the planet. Are you up for the challenge?
+
+
+
+
+RESEARCH QUESTIONS YOU COULD INITIALLY WORK ON
+
+ - Learning dynamics from operational data. How can we identify useful models of a plant from noisy, partially observed data collected during closed-loop control?
+
+ - Optimising under uncertainty. How can Bayesian optimisation improve plant performance when experiments are expensive, samples are noisy, and operating constraints must be respected?
+
+ - Learning while controlling. How can we use dual control and active learning to choose actions that improve performance while gathering information about uncertain dynamics?
+
+ - Learning across plants. Which parts of a model or control strategy can transfer between plants, and how can we adapt them efficiently to a new site?
+
+These are meant as examples rather than an exhaustive list. We’re looking for someone who can bring depth to a relevant area, identify promising connections, and help us decide which problems to tackle next.
+
+
+
+YOUR MAIN RESPONSIBILITIES
+
+As a Research Scientist, you’ll:
+
+ - Help shape our research and development agenda, turning challenges from live plants into well-defined research problems.
+
+ - Develop and implement methods for modelling, identification, optimisation and control of complex physical systems.
+
+ - Design rigorous experiments, establish strong baselines and understand when and why a method works.
+
+ - Work with process engineers to incorporate plant physics, operating knowledge and constraints into models and algorithms.
+
+ - Work with machine learning and deployment engineers to evaluate promising methods and bring them into production.
+
+ - Follow deployed performance, investigate failures, and use what you learn to guide further research.
+
+ - Communicate your findings clearly and contribute to the team’s scientific understanding.
+
+
+
+
+WHAT A GREAT FIT LOOKS LIKE
+
+ - A PhD in control, machine learning, applied mathematics, engineering, physics or a related field, or equivalent research experience.
+
+ - A strong research background in one or more of control theory, data-driven control, system identification, Bayesian optimisation, probabilistic modelling, physics-informed machine learning, imitation learning or model-based reinforcement learning.
+
+ - Evidence that you can formulate a research question, develop a method and evaluate it carefully, through publications, open-source work or applied research.
+
+ - Strong Python skills and experience implementing machine learning models using tools such as Pandas, NumPy, SciPy, PyTorch.
+
+ - An interest in working closely with engineers and taking responsibility for how your methods perform in practice.
+
+ - Practical experience deploying machine learning and control algorithms.
+
+ - A strong interest in climate mitigation.
+
+You don’t need to know about cement. You do need to get excited about the physics, willing to learn from operators and process engineers, and keen to understand why a plant behaves the way it does.
+
+We don’t expect you to tick every box. If you bring depth in a relevant area and these problems excite you, we’d like to hear from you.
+
+In return for your hard work, we’ll give you
+
+📈 Equity in the company: When we win, you win. You’ll get share options, so you’re part of our journey from the inside.
+
+🕰️ Flexible working We trust you to know how and when you work best and to work that out with your team.
+
+🌴 30 days of holiday (plus bank holidays). Rest is productive. Take the time you need to recharge
+
+🪙 A generous pension scheme. We’re planning for the future in more ways than one.
+
+Our Operating Principles 
+
+
+↗️ Go Gig or Go Home: High Bar, All In. What we do matters to humanity, to our customers and to each other. We hold ourselves to an extraordinarily high bar and bring the urgency this mission requires.
+
+🏭 Concrete Honesty: Be honest. As concrete forms the foundation of our world, genuine honesty and transparency are the bedrock of our culture.
+
+🦾 Autonomous Ownership: High agency, high ownership. We build systems that take control and make things better. We do the same: see it, own it, drive it.
+
+😄 Cement it with Kindness & Fun: Have fun, be kind. We're here to extend Earth's life, but ours is still limited. We want to enjoy the ride. To see these in full, go to Gigaton’s Operating Principles https://gigaton-technologies.notion.site/gigaton-s-operating-principles Notion page.

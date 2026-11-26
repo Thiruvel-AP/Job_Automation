@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "stamp": "20261004-172026",
+    "keywords": {
+      "mode": "live",
+      "dates": []
+    },
+    "pinned": null,
+    "providers": [],
+    "band": [
+      0.7,
+      0.85
+    ],
+    "temperature": 0,
+    "seed": 7,
+    "max_keywords": 25,
+    "models": [
+      "MockLLM"
+    ],
+    "manifest": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/manifest.yaml"
+  },
+  "rows": [
+    {
+      "id": "cal-chattermill",
+      "company": "Chattermill",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 1.0
+      },
+      "keywords": {
+        "n": 17,
+        "required": 15,
+        "terms": [
+          "fine-tuning",
+          "classification",
+          "agentic",
+          "communication",
+          "embeddings",
+          "genai",
+          "nlp",
+          "production",
+          "pytorch",
+          "statistics",
+          "llm",
+          "retrieval",
+          "data pipelines",
+          "evaluation",
+          "research",
+          "lora",
+          "machine learning"
+        ],
+        "notes": [
+          "keywords: cut the benefits section 'Our Perks' (2851 characters) before extraction"
+        ],
+        "frozen": null
+      },
+      "ceiling": 1.0,
+      "gaps": [],
+      "final": {
+        "literal": 0.5932203389830508,
+        "stemmed": 0.5932203389830508,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "classification",
+          "communication",
+          "embeddings",
+          "genai",
+          "retrieval",
+          "data pipelines",
+          "machine learning"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "calls": 2,
+        "coverage": {
+          "eligible": 8,
+          "rephrased": 0,
+          "ratio": 0.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az3"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl2",
+          "fl1"
+        ],
+        "avasoft": [
+          "av4"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "iata": [
+          "p_ia1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "MSc Data Science, University of Bristol (completed 2026)",
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.1016949152542373,
+        "pages": 1,
+        "evidence": [
+          "az1",
+          "fl2"
+        ]
+      },
+      "usage": {
+        "calls": 0,
+        "total_tokens": 0,
+        "served_by": [],
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": null,
+        "by_task": {}
+      },
+      "seconds": 3.6,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": "interview",
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/mock/calibration/runs/20261004-172026/outputs/Chattermill_Data_Scientist_cal_chattermill"
+    }
+  ],
+  "aggregates": {
+    "jobs": 1,
+    "ok": 1,
+    "errors": 0,
+    "not_run": 0,
+    "guard": {
+      "proposed": 0,
+      "blocked": 0,
+      "rate": null,
+      "investigate": false
+    },
+    "band": {
+      "in_scope": 1,
+      "in_band": 0,
+      "rate": 0.0
+    },
+    "headroom": 0.4067796610169492,
+    "manual": {
+      "n": 0,
+      "mean_abs_diff": null,
+      "rho": null
+    },
+    "reference": {
+      "n": 0,
+      "mean_delta": null
+    },
+    "rank": {
+      "basis": null,
+      "n": 0,
+      "rho": null
+    },
+    "cost": {
+      "calls_per_job": 0.0,
+      "seconds_per_job": 3.6,
+      "tokens_per_job": 0.0,
+      "tokens_total": 0,
+      "max_prompt": null
+    },
+    "rephrase": {
+      "eligible": 8,
+      "rephrased": 0,
+      "ratio": 0.0
+    },
+    "letters": {
+      "ok": 1,
+      "fallback": 0,
+      "pending": 0
+    },
+    "violations": 0,
+    "keywords_per_job": 17.0,
+    "mean_final": 0.5932203389830508,
+    "mean_ceiling": 1.0
+  }
+}

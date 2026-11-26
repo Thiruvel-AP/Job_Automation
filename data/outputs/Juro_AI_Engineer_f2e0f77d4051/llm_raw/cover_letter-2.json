@@ -1,0 +1,7 @@
+{
+  "paragraphs": [
+    "I have built production‑grade AI services on AWS, packaging them in Docker containers and running them via AWS Lambda with fine‑grained IAM policies. I created agentic architectures that let autonomous agents operate safely within the platform, and I set up continuous evaluation pipelines that log performance metrics and trigger debugging cycles. Each release is validated against a suite of tests before reaching production, ensuring reliability and observability across the cloud stack. The system also supports rapid iteration on new tool integrations today.",
+    "At AstraZeneca I owned the evaluation and debugging pipeline, delivering roughly 65 tests that validated tool resilience. I introduced Docker‑based deployment and managed IAM roles to streamline cloud operations. At 180 Degrees Consulting Bristol I owned the client‑facing agentic prototype architecture, coordinated cross‑functional teams and earned a 5‑star rating from senior leadership. I also oversaw migration to PostgreSQL and implemented CI pipelines, demonstrating leadership.",
+    "Juro’s Agentic team builds the AI foundations the rest of engineering ships on — starting with Operator, the agent that works across contracts inside Juro."
+  ]
+}

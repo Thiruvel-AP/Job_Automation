@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["Exaggerated experience with LLMs and agents, not aligned with the job description", "Overstated role in multiple projects, not all supported by source facts", "CV and cover letter do not match; cover letter is missing"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "6d789c596c953df2e2bf5dbe", "tokens": 2624, "note": ""}

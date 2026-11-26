@@ -1,0 +1,1506 @@
+{
+  "coverage": 0.9213,
+  "requirements": [
+    {
+      "term": "llms",
+      "alts": [
+        "llm"
+      ],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "llms",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "llms",
+          "snippet": "Wrote about 65 automated…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "llms",
+          "snippet": "Built an AI assistant…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "llms",
+          "snippet": "Found where the assistant…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "llms",
+          "snippet": "Proposed and prototyped an…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "llms",
+          "snippet": "Proposed the request flow:…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "llms",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl3",
+          "quote": "llms",
+          "snippet": "Contributed to a team LoRA…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "llms",
+          "snippet": "Built a private client an…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl6",
+          "quote": "LLMs",
+          "snippet": "Developed NLP pipelines…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "llms",
+          "snippet": "Deterministic…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "llms",
+          "snippet": "For an insurance hackathon…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "llms",
+          "snippet": "Built a search assistant…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "llms",
+          "snippet": "Fine-tuned an…",
+          "via": "llms"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "llms",
+          "snippet": "Reported the limits…",
+          "via": "llms"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "LLMs",
+          "snippet": "LLMs",
+          "via": "llms"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "llms",
+          "snippet": "LLM evaluation",
+          "via": "llms"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "llms",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "llms"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "llms",
+          "snippet": "Deployed an LLM agent on AWS for an AstraZeneca-affiliated…",
+          "via": "llms"
+        }
+      ]
+    },
+    {
+      "term": "aws",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "AWS",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "AWS",
+          "snippet": "Deployed the agent as a…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "AWS",
+          "snippet": "Wrote about 65 automated…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "az7",
+          "quote": "AWS",
+          "snippet": "Managed AWS account…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "AWS",
+          "snippet": "Built an AI assistant…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "AWS",
+          "snippet": "Did the data analysis on…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "av6",
+          "quote": "AWS",
+          "snippet": "Secured backend…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "AWS",
+          "snippet": "Helped build a…",
+          "via": "aws"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "AWS",
+          "snippet": "Shipped features in a…",
+          "via": "aws"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "AWS",
+          "snippet": "AWS",
+          "via": "aws"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "AWS",
+          "snippet": "AWS Bedrock",
+          "via": "aws"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS Lambda",
+          "via": "aws"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS ECS",
+          "via": "aws"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "Kubernetes (AWS EKS)",
+          "via": "aws"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "AWS",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "aws"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "AWS",
+          "snippet": "Deployed an LLM agent on AWS for an AstraZeneca-affiliated…",
+          "via": "aws"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_agents",
+          "quote": "AWS",
+          "snippet": "Built an AI assistant on AWS for an MSc dissertation with an…",
+          "via": "aws"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_deploy",
+          "quote": "AWS",
+          "snippet": "Deploys on AWS (Lambda) with CI/CD and MLflow experiment…",
+          "via": "aws"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:2",
+          "quote": "AWS",
+          "snippet": "AWS Academy Cloud Foundations, Nov 2025",
+          "via": "aws"
+        }
+      ]
+    },
+    {
+      "term": "docker",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "Docker",
+          "snippet": "Deployed the agent as a…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "docker",
+          "snippet": "Did the data analysis on…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "Docker",
+          "snippet": "Built scikit-learn…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "Docker",
+          "snippet": "Built a production RAG and…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "docker",
+          "snippet": "For a private client,…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af2",
+          "quote": "Docker",
+          "snippet": "Text-to-speech on CUDA in…",
+          "via": "docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "docker",
+          "snippet": "Built a voice assistant…",
+          "via": "docker"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Docker",
+          "snippet": "Docker",
+          "via": "docker"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "Docker",
+          "snippet": "Docker",
+          "via": "docker"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Docker",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "docker"
+        }
+      ]
+    },
+    {
+      "term": "lambda",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "Lambda",
+          "snippet": "Deployed the agent as a…",
+          "via": "lambda"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Lambda",
+          "snippet": "Did the data analysis on…",
+          "via": "lambda"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "lambda",
+          "snippet": "Helped build a…",
+          "via": "lambda"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "Lambda",
+          "snippet": "AWS Lambda",
+          "via": "lambda"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Lambda",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "lambda"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_deploy",
+          "quote": "Lambda",
+          "snippet": "Deploys on AWS (Lambda) with CI/CD and MLflow experiment…",
+          "via": "lambda"
+        }
+      ]
+    },
+    {
+      "term": "agentic",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "agentic",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agentic",
+          "snippet": "Built an AI assistant…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "agentic",
+          "snippet": "Proposed and prototyped an…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc3",
+          "quote": "agentic",
+          "snippet": "Designed hierarchical…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agentic",
+          "snippet": "Led the design in a…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "agentic",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "agentic",
+          "snippet": "Built a production RAG and…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "agentic",
+          "snippet": "For a private client,…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "agentic",
+          "snippet": "Built a 14-step AI…",
+          "via": "agentic"
+        }
+      ]
+    },
+    {
+      "term": "apis",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "APIs",
+          "snippet": "Designed a deterministic…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "apis",
+          "snippet": "Built an AI assistant…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "apis",
+          "snippet": "Proposed the request flow:…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "apis",
+          "snippet": "Built a production RAG and…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "APIs",
+          "snippet": "For a private client,…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av1",
+          "quote": "APIs",
+          "snippet": "Integrated Twelve Data…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "apis",
+          "snippet": "Helped build a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "APIs",
+          "snippet": "Shipped features in a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "apis",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "apis",
+          "snippet": "Deterministic…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "apis",
+          "snippet": "For an insurance hackathon…",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "Claude API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "OpenAI API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "APIs",
+          "snippet": "REST APIs",
+          "via": "apis"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "apis",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "apis"
+        }
+      ]
+    },
+    {
+      "term": "fastapi",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "FastAPI",
+          "snippet": "Built scikit-learn…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "FastAPI",
+          "snippet": "Built a production RAG and…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "FastAPI",
+          "snippet": "For a private client,…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "fastapi",
+          "snippet": "Deterministic…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "FastAPI",
+          "snippet": "For an insurance hackathon…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "FastAPI",
+          "snippet": "Built a voice assistant…",
+          "via": "fastapi"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "FastAPI",
+          "snippet": "FastAPI",
+          "via": "fastapi"
+        }
+      ]
+    },
+    {
+      "term": "machine learning",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "machine learning",
+          "snippet": "Built scikit-learn…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "machine learning",
+          "snippet": "Designed reproducible…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "machine learning",
+          "snippet": "For a private client,…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ch1",
+          "quote": "machine learning",
+          "snippet": "Predicted which bank…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Machine Learning",
+          "snippet": "Machine Learning",
+          "via": "machine learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "machine learning",
+          "snippet": "machine learning concepts",
+          "via": "machine learning"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "machine learning",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "machine learning"
+        }
+      ]
+    },
+    {
+      "term": "prompt engineering",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "prompt engineering",
+          "snippet": "Built an AI assistant…",
+          "via": "prompt engineering"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "prompt engineering",
+          "snippet": "Proposed the request flow:…",
+          "via": "prompt engineering"
+        }
+      ]
+    },
+    {
+      "term": "python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "python",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az5",
+          "quote": "Python",
+          "snippet": "Explored 14 research…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built an AI assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "Python",
+          "snippet": "Proposed and prototyped an…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "python",
+          "snippet": "Built scikit-learn…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Python",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "python"
+        }
+      ]
+    },
+    {
+      "term": "pytorch",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "p_af2",
+          "quote": "pytorch",
+          "snippet": "Text-to-speech on CUDA in…",
+          "via": "pytorch"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "PyTorch",
+          "snippet": "PyTorch",
+          "via": "pytorch"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "PyTorch",
+          "snippet": "PyTorch",
+          "via": "pytorch"
+        }
+      ]
+    },
+    {
+      "term": "s3",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "S3",
+          "snippet": "S3",
+          "via": "s3"
+        }
+      ]
+    },
+    {
+      "term": "scikit-learn",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "scikit-learn",
+          "snippet": "Built scikit-learn…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "scikit-learn",
+          "snippet": "Designed reproducible…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "scikit-learn",
+          "snippet": "For a private client,…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg2",
+          "quote": "scikit-learn",
+          "snippet": "Trained per-gene…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "scikit-learn",
+          "snippet": "Built the text-cleaning…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "scikit-learn",
+          "snippet": "Showed why airline support…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:5",
+          "quote": "scikit-learn",
+          "snippet": "Freelance AI/ML engineering across scikit-learn,…",
+          "via": "scikit-learn"
+        }
+      ]
+    },
+    {
+      "term": "sql",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "sql"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "sql"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "SQL",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "sql"
+        }
+      ]
+    },
+    {
+      "term": "agents",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "agents",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "agents",
+          "snippet": "Deployed the agent as a…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az6",
+          "quote": "agents",
+          "snippet": "Integrated the agent into…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az9",
+          "quote": "agents",
+          "snippet": "Wrote the dissertation's…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agents",
+          "snippet": "Built an AI assistant…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "agents",
+          "snippet": "Proposed and prototyped an…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc3",
+          "quote": "agents",
+          "snippet": "Designed hierarchical…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agents",
+          "snippet": "Led the design in a…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "agents",
+          "snippet": "Proposed the request flow:…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af1",
+          "quote": "agents",
+          "snippet": "Full-duplex WebSocket…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "agents",
+          "snippet": "Built a voice assistant…",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "ReAct agent loops",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "agent memory",
+          "via": "agents"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "agents",
+          "snippet": "Deployed an LLM agent on AWS for an AstraZeneca-affiliated…",
+          "via": "agents"
+        }
+      ]
+    },
+    {
+      "term": "evaluation",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "evaluation",
+          "snippet": "Wrote about 65 automated…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "az9",
+          "quote": "evaluation",
+          "snippet": "Wrote the dissertation's…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "evaluation",
+          "snippet": "Found where the assistant…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg4",
+          "quote": "evaluation",
+          "snippet": "Reported that Leiden…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "evaluation",
+          "snippet": "Linked 14 public…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt2",
+          "quote": "evaluation",
+          "snippet": "Built a Bitcoin forecaster…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "evaluation",
+          "snippet": "Fine-tuned an…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "evaluation",
+          "snippet": "Reported the limits…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "evaluation",
+          "snippet": "LLM evaluation",
+          "via": "evaluation"
+        }
+      ]
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "production",
+          "snippet": "Deployed the agent as a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc2",
+          "quote": "production",
+          "snippet": "Contributed the MCP…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc4",
+          "quote": "production",
+          "snippet": "Translated ambiguous…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc5",
+          "quote": "production",
+          "snippet": "Reviewed pull requests in…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Collaborated with the…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "production",
+          "snippet": "Built a production RAG and…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a…",
+          "via": "production"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:6",
+          "quote": "production",
+          "snippet": "Shipped production fintech features integrating Twelve Data…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "stakeholders",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "stakeholders",
+          "snippet": "Proposed and prototyped an…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc4",
+          "quote": "stakeholders",
+          "snippet": "Translated ambiguous…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc5",
+          "quote": "stakeholders",
+          "snippet": "Reviewed pull requests in…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholders",
+          "snippet": "Led the design in a…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "stakeholders",
+          "snippet": "The client's founder later…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:7",
+          "quote": "stakeholders",
+          "snippet": "Turns statistical outputs into clear recommendations for…",
+          "via": "stakeholders"
+        }
+      ]
+    },
+    {
+      "term": "ci/cd",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "CI/CD",
+          "snippet": "MLOps (experiment tracking, CI/CD, containerised deployment)",
+          "via": "ci/cd"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "CI/CD",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "ci/cd"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_deploy",
+          "quote": "CI/CD",
+          "snippet": "Deploys on AWS (Lambda) with CI/CD and MLflow experiment…",
+          "via": "ci/cd"
+        }
+      ]
+    },
+    {
+      "term": "data analysis",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "data quality",
+          "snippet": "Designed a deterministic…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "az5",
+          "quote": "data analysis",
+          "snippet": "Explored 14 research…",
+          "via": "data analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "data analysis",
+          "snippet": "Did the data analysis on…",
+          "via": "data analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "data quality",
+          "snippet": "Ran a data quality check…",
+          "via": "data quality"
+        }
+      ]
+    },
+    {
+      "term": "data quality",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "data quality",
+          "snippet": "Designed a deterministic…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "data quality",
+          "snippet": "Did the data analysis on…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "data quality",
+          "snippet": "Ran a data quality check…",
+          "via": "data quality"
+        }
+      ]
+    },
+    {
+      "term": "end-to-end",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "end-to-end",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "end-to-end"
+        }
+      ]
+    },
+    {
+      "term": "exploratory data analysis",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az5",
+          "quote": "exploratory data analysis",
+          "snippet": "Explored 14 research…",
+          "via": "exploratory data analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "exploratory data analysis",
+          "snippet": "Ran a data quality check…",
+          "via": "exploratory data analysis"
+        }
+      ]
+    },
+    {
+      "term": "github actions",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "GitHub Actions",
+          "snippet": "Proposed and prototyped an…",
+          "via": "github actions"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "GitHub Actions",
+          "snippet": "GitHub Actions",
+          "via": "github actions"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "GitHub Actions",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "github actions"
+        }
+      ]
+    },
+    {
+      "term": "guardrails",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "guardrails",
+          "snippet": "Designed a deterministic…",
+          "via": "guardrails"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "guardrails",
+          "snippet": "Built an AI assistant…",
+          "via": "guardrails"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+Company: Artefact
+Title: Data Scientist
+URL: https://job-boards.greenhouse.io/artefact/jobs/8360412002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Pune, Maharashtra, India
+Country: India
+Status: listed_only
+Posted: 2026-01-06T07:56:59-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Artefact is a new generation of data service providers specialising in data consulting and data-driven digital marketing. It is dedicated to transforming data into business impact across the entire value chain of organisations. We are proud to say we’re enjoying skyrocketing growth.
+
+The backbone of our consulting missions, today our Data consulting team has more than 400 consultants covering all Artefact's offers (and more): data marketing, data governance, strategy consulting, product owner…
+
+What you will be doing?
+
+As a Data Scientist, your primary role revolves around leveraging Python and SQL to conduct data science modelling, employing statistical and machine learning algorithms to derive actionable insights. Your responsibilities will encompass:
+
+- Data Modeling: Developing and implementing sophisticated data science models to extract valuable insights from complex datasets.
+
+- Algorithm Implementation: Applying statistical and machine learning algorithms to solve business problems and enhance decision-making processes.
+
+- Visualization: Utilizing visualization tools like Tableau and PowerBI to present findings in a compelling and understandable manner.
+
+- Cloud-Based Deployment: Deploying models on cloud platforms such as MS Azure, GCP, and AWS, optimizing their functionality and scalability.
+
+What we are looking for?
+
+- Proficiency in Python, SQL, data science modeling, and statistical analysis.
+
+- Strong grasp of ML algorithms and their implementation in real-world scenarios.
+
+- Experience in visualization tools like Tableau and PowerBI, along with knowledge of deploying models on cloud platforms (MS Azure, GCP, AWS).
+
+- Proven problem-solving skills and a solution-oriented mindset.
+
+- Excellent communication skills to collaborate effectively within teams and with stakeholders.
+
+- Strong business acumen with an interest in business-facing roles.
+
+- Adaptability and a start-up mentality to thrive in a dynamic environment.
+
+- Candidates with similar skill sets and experiences have excelled in technology firms or consultancy firms.
+
+- Successful candidates often possess Computer Science, Electronics and Communication Engineering degrees.

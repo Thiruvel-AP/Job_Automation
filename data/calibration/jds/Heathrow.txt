@@ -1,0 +1,75 @@
+HEATHROW AIRPORT HOLDINGS - Data Scientist
+Source: freehire.me mirror of the employer's Ashby/ATS listing: https://freehire.me/jobs/data-scientist-heathrow-airport-holdings-limited-o3tmx3nv
+Fetched 2026-10-02 (posted 2026-10-02, valid to 2026-11-01). Page chrome removed; JD wording untouched.
+======================================================================
+
+Data Scientist — Heathrow Airport Holdings Limited · freehire
+freehire
+Location
+/
+Point your AI agent at freehire and let it find you a job.
+A CLI and an MCP server over the whole job API — no browser.
+Get the CLI →
+✕
+Heathrow Airport Holdings Limited
+New
+Be an early applicant
+Posted
+15 hr. ago
+Updated
+1 hr. ago
+Data Scientist
+Apply 
+Tailor my CV 
+Posted
+15 hr. ago
+Updated
+1 hr. ago
+ Discussion
+ Report
+ Save
+Profile match
+80%
+6 of 8 skills
+Analytics
+Cloud
+Data Governance
+Sign in to see your match
+Sign in
+Location
+United Kingdom
+Region
+UK
+Work type
+Full-time
+Category
+Data Science
+Country
+United Kingdom
+Oracle
+Heathrow Airport Holdings Limited
+·
+Data Scientist
+Apply 
+Tailor my CV 
+ Description
+ Company
+ Discussion
+ Report
+ Save
+As a Data Scientist at Heathrow, you’ll develop analytical models and data science solutions that improve airport operations and inform business decisions.
+You’ll apply statistical methods, machine learning and data analysis to varied business challenges. Your work will help teams across Customer, Operations, Corporate and Technology make effective use of data. You’ll also help ensure solutions are secure, well governed and designed to deliver measurable value. 
+Develop and maintain statistical, machine learning and predictive models that address business needs.
+Turn complex data into clear insights and practical recommendations for airport operations.
+Assess model performance, data quality and analytical bias, taking action where risks are identified.
+Prepare evidence for data science investment proposals, including expected benefits and measures of success.
+Work with internal teams and specialist suppliers to deliver effective solutions within agreed budgets and standards. 
+Applied experience of statistical modelling, machine learning and data science methods.
+Practical experience using Python or R, SQL and relevant cloud-based analytics tools.
+Ability to use data science methods to address business questions and produce measurable outcomes.
+Understanding of data governance, model risk, data protection and security requirements.
+Ability to explain technical information clearly to people with different levels of technical knowledge.
+A degree, equivalent learning or relevant practical experience in a quantitative subject.
+Desirable
+Experience of working with specialist data or analytics suppliers.
+Experience of delivering data science solutions in a complex organisation.

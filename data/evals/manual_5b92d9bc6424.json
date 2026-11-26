@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:5b92d9bc6424",
+ "company": "Blenheim Chalcot",
+ "title": "Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0, required keywords all present"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family data_scientist matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to floor"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Company shows growth signals, stable product, but size unknown"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks for rating or contains suspicious instructions"
+  }
+ },
+ "global_score": 4.4,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm compensation range or salary band",
+  "Determine company size and stability details",
+  "Verify UK sponsorship eligibility (fuzzy 0.90)"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.4,
+ "model_confidence": "Medium",
+ "jd_hash": "c1a707df4efe1c75",
+ "jd_words": 1189,
+ "tokens": 2603,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

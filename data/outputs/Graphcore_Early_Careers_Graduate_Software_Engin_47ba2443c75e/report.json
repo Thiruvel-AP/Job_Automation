@@ -1,0 +1,1288 @@
+{
+  "job_id": "manual:47ba2443c75e",
+  "company": "Graphcore Early Careers",
+  "title": "Graduate Software Engineer, AI Compute Libraries & Performance 2027",
+  "family": "sde_ai",
+  "tier": 3,
+  "headline": "Software Development Engineer (AI)",
+  "keywords": [
+    {
+      "term": "machine learning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "profiling",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "testing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "C++11",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "cache locality",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "convolutions",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "elementwise operations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "fused kernels",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "kernel launch efficiency",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "linear algebra",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "matrix multiplication (GEMM",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "memory layout",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "microbenchmarks",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "numerical checks",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "numerical methods",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "problem-solving",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "reductions",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "regression tests",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "research",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "scientific computing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "threading",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "regression",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "code optimisation",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "maths libraries",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "Graphcore builds next-generation AI compute, from semiconductors and software to datacenter-scale systems, to help customers run AI models more efficiently.",
+  "team": "AI Compute Libraries & Performance",
+  "ceiling": 0.2421052631578947,
+  "genuine_gaps": [
+    "C++11",
+    "cache locality",
+    "convolutions",
+    "elementwise operations",
+    "fused kernels",
+    "kernel launch efficiency",
+    "linear algebra",
+    "matrix multiplication (GEMM",
+    "memory layout",
+    "microbenchmarks",
+    "numerical checks",
+    "numerical methods",
+    "problem-solving",
+    "reductions",
+    "scientific computing",
+    "threading",
+    "code optimisation",
+    "maths libraries"
+  ],
+  "possible_evidence": {
+    "regression tests": [
+      {
+        "via": "machine learning",
+        "where": [
+          "profile facts",
+          "skills: core",
+          "bullet fl1",
+          "bullet fl5"
+        ]
+      },
+      {
+        "via": "classification",
+        "where": [
+          "profile facts",
+          "bullet fl5",
+          "bullet p_ch1",
+          "bullet p_ll1"
+        ]
+      }
+    ]
+  },
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.15789473684210525,
+      "score_stemmed": 0.24210526315789474,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9733796711218485,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.03
+      },
+      "shrinks": 5,
+      "reverted": [],
+      "wording": {
+        "terms": [
+          "profiling",
+          "testing"
+        ],
+        "asked": 1,
+        "calls": 1,
+        "accepted": [],
+        "blocked": [
+          "az9"
+        ],
+        "unplaced": [
+          "profiling"
+        ],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 6,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "dc6",
+            "lines": 5
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_gg2: adds the word 'reducing', which the original bullet does not say",
+        "p_gg2: adds the word 'revealing', which the original bullet does not say",
+        "p_gg1: adds the word 'applied', which the original bullet does not say",
+        "p_gg1: adds the word 'identify', which the original bullet does not say",
+        "p_ia1: adds the word 'support', which the original bullet does not say",
+        "p_ia1: dropped the word 'cause' of the result"
+      ],
+      "warnings": [
+        "length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "wording: no bullet carries the stem of profiling (skills or profile only)"
+      ],
+      "wording_misses": [
+        "profiling",
+        "testing"
+      ],
+      "misses": [
+        "C++11",
+        "cache locality",
+        "convolutions",
+        "elementwise operations",
+        "fused kernels",
+        "kernel launch efficiency",
+        "linear algebra",
+        "matrix multiplication (GEMM",
+        "memory layout",
+        "microbenchmarks",
+        "numerical checks",
+        "numerical methods",
+        "problem-solving",
+        "reductions",
+        "regression tests",
+        "scientific computing",
+        "threading",
+        "code optimisation",
+        "maths libraries"
+      ],
+      "rephrase": {
+        "eligible": 3,
+        "asked": 3,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "profiling",
+          "testing",
+          "C++11",
+          "cache locality",
+          "convolutions",
+          "elementwise operations",
+          "fused kernels",
+          "kernel launch efficiency",
+          "linear algebra",
+          "matrix multiplication (GEMM",
+          "memory layout",
+          "microbenchmarks",
+          "numerical checks",
+          "numerical methods",
+          "problem-solving",
+          "reductions",
+          "regression tests",
+          "scientific computing",
+          "threading",
+          "code optimisation",
+          "maths libraries"
+        ],
+        "proposed": 3,
+        "accepted": 0,
+        "blocked": 3,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az9",
+              "az11",
+              "az8"
+            ],
+            "dc180": [
+              "dc6",
+              "dc8",
+              "dc7"
+            ],
+            "freelance": [
+              "fl5",
+              "fl1",
+              "fl2"
+            ],
+            "avasoft": [
+              "av10",
+              "av8",
+              "av5"
+            ]
+          },
+          "projects": [
+            "gtaigraph",
+            "churn",
+            "coverfit",
+            "iata",
+            "mcpsearch"
+          ],
+          "project_bullets": {
+            "gtaigraph": [
+              "p_gg2",
+              "p_gg1"
+            ],
+            "churn": [
+              "p_ch1"
+            ],
+            "coverfit": [
+              "p_cf2"
+            ],
+            "iata": [
+              "p_ia1",
+              "p_ia2"
+            ],
+            "mcpsearch": [
+              "p_ms1"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_gg2": "Trained per-gene regression models for 11,459 genes using OLS and GPU random forest, with resumable chunked training, reducing RAM from 8.2 to 5.5 GB and validating on held-out data, revealing overfitting (train Pearson 0.807 vs test 0.545).",
+          "p_gg1": "Merged 14 public omics source files into a graph of 1,399 cell lines and 16,385 genes (~2.8M edges), then applied Leiden community detection to identify 19 clusters with modularity 0.822, exploring its structure.",
+          "p_ia1": "Designed preprocessing and clustering pipelines (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram, and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in support tickets."
+        },
+        "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Over a year of hands-on experience building and deploying machine learning and LLM systems."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az8",
+          "az9",
+          "az11"
+        ],
+        "dc180": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ],
+        "freelance": [
+          "fl1",
+          "fl2",
+          "fl5"
+        ],
+        "avasoft": [
+          "av5",
+          "av8",
+          "av10"
+        ],
+        "gtaigraph": [
+          "p_gg2"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ]
+      },
+      "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Over a year of hands-on experience building and deploying machine learning and LLM systems.",
+      "rephrase_coverage": {
+        "eligible": 5,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "profiling",
+          "testing",
+          "C++11",
+          "cache locality",
+          "convolutions",
+          "elementwise operations",
+          "fused kernels",
+          "kernel launch efficiency",
+          "linear algebra",
+          "matrix multiplication (GEMM",
+          "memory layout",
+          "microbenchmarks",
+          "numerical checks",
+          "numerical methods",
+          "problem-solving",
+          "reductions",
+          "regression tests",
+          "scientific computing",
+          "threading",
+          "code optimisation",
+          "maths libraries"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/Graphcore_Early_Careers_Graduate_Software_Engin_47ba2443c75e",
+  "analysis_warnings": [
+    "keywords: cut the benefits section 'Benefits' (818 characters) before extraction",
+    "extract_keywords: dropped keyword 'machine learning frameworks' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped parallel programming, performance analysis",
+    "skills: the 'ai_engineer' family's skill_lines do not mention pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, which the fact bank lists (the lines are used as written; add them to the lines if you want them on the CV)",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'Software Development Engineer (AI)' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_prod_tests' with 1: 'testing' (2)))"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Agentic AI & LLM Applications",
+      "Software Engineering & Integrations",
+      "Cloud & Deployment"
+    ],
+    "dropped_groups": [],
+    "family": "ai_engineer"
+  },
+  "achievements": [
+    "lloyds"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Over a year of hands-on experience building and deploying machine learning and LLM systems"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_prod_tests' with 1: 'testing' (2))"
+  ],
+  "hook_family_headline": "Software Development Engineer (AI)",
+  "hook_family_profile": true,
+  "family_line": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+  "ats": {
+    "strict": 15.789473684210526,
+    "ceiling": 24.210526315789473,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "machine learning",
+      "python",
+      "research",
+      "regression"
+    ],
+    "misses": [
+      "C++11",
+      "cache locality",
+      "convolutions",
+      "elementwise operations",
+      "fused kernels",
+      "kernel launch efficiency",
+      "linear algebra",
+      "matrix multiplication (GEMM",
+      "memory layout",
+      "microbenchmarks",
+      "numerical checks",
+      "numerical methods",
+      "problem-solving",
+      "reductions",
+      "regression tests",
+      "scientific computing",
+      "threading",
+      "code optimisation",
+      "maths libraries",
+      "profiling",
+      "testing"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "band": {
+    "outcome": "skip",
+    "strict": 15.789473684210526,
+    "ceiling": 24.210526315789473,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": "ATS S < 50"
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "machine learning",
+    "profiling",
+    "testing",
+    "python",
+    "research",
+    "regression"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.15789473684210525,
+    "score_stemmed": 0.24210526315789474,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9733796711218485,
+    "hits": [
+      "machine learning",
+      "python",
+      "research",
+      "regression"
+    ],
+    "wording_misses": [
+      "profiling",
+      "testing"
+    ],
+    "misses": [
+      "C++11",
+      "cache locality",
+      "convolutions",
+      "elementwise operations",
+      "fused kernels",
+      "kernel launch efficiency",
+      "linear algebra",
+      "matrix multiplication (GEMM",
+      "memory layout",
+      "microbenchmarks",
+      "numerical checks",
+      "numerical methods",
+      "problem-solving",
+      "reductions",
+      "regression tests",
+      "scientific computing",
+      "threading",
+      "code optimisation",
+      "maths libraries"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9733796711218485,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.03
+  },
+  "needs_result": [
+    {
+      "id": "az1",
+      "entry": "AstraZeneca",
+      "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+    },
+    {
+      "id": "az8",
+      "entry": "AstraZeneca",
+      "text": "Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph-formation strategy, and designed a bipartite/heterogeneous graph approach with Leiden clustering for similarity detection and KNN for gene-to-cell-line association."
+    },
+    {
+      "id": "az9",
+      "entry": "AstraZeneca",
+      "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "dc8",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+    },
+    {
+      "id": "fl1",
+      "entry": "Freelance",
+      "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+    },
+    {
+      "id": "fl2",
+      "entry": "Freelance",
+      "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+    },
+    {
+      "id": "av8",
+      "entry": "Avasoft",
+      "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+    },
+    {
+      "id": "av10",
+      "entry": "Avasoft",
+      "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "p_ms1",
+      "entry": "mcp_searchagent",
+      "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 6,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "dc6",
+        "lines": 5
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 6,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "problem-solving"
+    ],
+    "results_bold": 1,
+    "results_unmatched": [
+      "az11",
+      "p_gg2"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "p_gg2",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 8.17,
+        "keywords": 5.5,
+        "domain": 2.67,
+        "chosen": true,
+        "text": "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545)."
+      },
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 6.0,
+        "keywords": 4.0,
+        "domain": 2.0,
+        "chosen": true,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 6.0,
+        "keywords": 2.0,
+        "domain": 4.0,
+        "chosen": false,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      },
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 4.67,
+        "keywords": 2.0,
+        "domain": 2.67,
+        "chosen": false,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "fl5",
+        "entry": "Freelance",
+        "score": 4.17,
+        "keywords": 3.5,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+      },
+      {
+        "id": "az9",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+      },
+      {
+        "id": "fl1",
+        "entry": "Freelance",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      },
+      {
+        "id": "av3",
+        "entry": "Avasoft",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management."
+      },
+      {
+        "id": "av10",
+        "entry": "Avasoft",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": true,
+        "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+      },
+      {
+        "id": "p_gg5",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 8.17,
+        "sum": 18.17,
+        "chosen": true
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 6.0,
+        "sum": 6.0,
+        "chosen": false
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 4.0,
+        "sum": 8.0,
+        "chosen": false
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 2.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": true
+      },
+      {
+        "id": "cnn",
+        "name": "Image Classification \u2014 CNN and Transfer Learning",
+        "score": 0.67,
+        "sum": 0.67,
+        "chosen": false
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 0.67,
+        "sum": 0.67,
+        "chosen": false
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 5,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 3,
+    "asked": 3,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "profiling",
+      "testing",
+      "C++11",
+      "cache locality",
+      "convolutions",
+      "elementwise operations",
+      "fused kernels",
+      "kernel launch efficiency",
+      "linear algebra",
+      "matrix multiplication (GEMM",
+      "memory layout",
+      "microbenchmarks",
+      "numerical checks",
+      "numerical methods",
+      "problem-solving",
+      "reductions",
+      "regression tests",
+      "scientific computing",
+      "threading",
+      "code optimisation",
+      "maths libraries"
+    ],
+    "proposed": 3,
+    "accepted": 0,
+    "blocked": 3,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "profiling",
+      "testing",
+      "C++11",
+      "cache locality",
+      "convolutions",
+      "elementwise operations",
+      "fused kernels",
+      "kernel launch efficiency",
+      "linear algebra",
+      "matrix multiplication (GEMM",
+      "memory layout",
+      "microbenchmarks",
+      "numerical checks",
+      "numerical methods",
+      "problem-solving",
+      "reductions",
+      "regression tests",
+      "scientific computing",
+      "threading",
+      "code optimisation",
+      "maths libraries"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "ATS S < 50: no letter was drafted",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "p_gg2",
+        "text": "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545)."
+      },
+      {
+        "id": "az1",
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2421,
+        "prompt_tokens": 1753,
+        "completion_tokens": 292,
+        "reasoning_tokens": 4,
+        "total_tokens": 2045,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 972,
+        "prompt_tokens": 947,
+        "completion_tokens": 228,
+        "reasoning_tokens": 18,
+        "total_tokens": 1175,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 654,
+        "prompt_tokens": 607,
+        "completion_tokens": 172,
+        "reasoning_tokens": 128,
+        "total_tokens": 779,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 3307,
+    "completion_tokens": 692,
+    "reasoning_tokens": 150,
+    "total_tokens": 3999,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1753,
+        "completion_tokens": 292,
+        "reasoning_tokens": 4,
+        "total_tokens": 2045,
+        "prompt_tokens_per_call": [
+          1753
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 2,
+        "prompt_tokens": 1554,
+        "completion_tokens": 400,
+        "reasoning_tokens": 146,
+        "total_tokens": 1954,
+        "prompt_tokens_per_call": [
+          947,
+          607
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 3,
+        "prompt_tokens": 3307,
+        "completion_tokens": 692,
+        "reasoning_tokens": 150,
+        "total_tokens": 3999,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "data/outputs/Graphcore_Early_Careers_Graduate_Software_Engin_47ba2443c75e/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Software Development Engineer (AI)",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Over a year of hands-on experience building and deploying machine learning and LLM systems.",
+    "skills": {
+      "Agentic AI & LLM Applications": "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)",
+      "Software Engineering & Integrations": "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis",
+      "Cloud & Deployment": "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "indirect contract",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.",
+          "Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph-formation strategy, and designed a bipartite/heterogeneous graph approach with Leiden clustering for similarity detection and KNN for gene-to-cell-line association.",
+          "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes.",
+          "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az8",
+          "az9",
+          "az11"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user.",
+          "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+        ],
+        "bullet_ids": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+          "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+          "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+        ],
+        "bullet_ids": [
+          "fl1",
+          "fl2",
+          "fl5"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer (Jun 2023 \u2013 Sep 2024); Trainee (Jan 2023 \u2013 May 2023)",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.",
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av5",
+          "av8",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "display_name": "GTAI Graph PoC -- Cancer Cell-Line Omics Graph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "stack": "Python, networkx, Leiden, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "situation": "Needed to find which cell lines behave unusually for a gene",
+        "bullets": [
+          "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545)."
+        ],
+        "bullet_ids": [
+          "p_gg2"
+        ]
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "stack": "FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions",
+        "github": "https://github.com/Thiruvel-AP/mcp_searchagent",
+        "bullets": [
+          "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+        ],
+        "bullet_ids": [
+          "p_ms1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 May 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "av2": "10 reusable component templates",
+      "av9": "10 reusable component templates",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ll1": "3rd place; 200:1 class imbalance",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "achievements": [
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "award": "3rd place",
+        "bullet_id": "p_ll1",
+        "text": "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.",
+        "result": "200:1 class imbalance"
+      }
+    ],
+    "profile_head": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+    "linespread": 1.03
+  }
+}

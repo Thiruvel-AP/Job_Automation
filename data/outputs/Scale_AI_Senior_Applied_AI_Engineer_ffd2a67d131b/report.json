@@ -1,0 +1,1315 @@
+{
+  "job_id": "manual:ffd2a67d131b",
+  "company": "Scale AI",
+  "title": "Senior Applied AI Engineer",
+  "family": "ai_engineer",
+  "tier": 1,
+  "headline": "AI Engineer",
+  "keywords": [
+    {
+      "term": "agents",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI behaviour",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "root-cause analysis",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "backend engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "backend services",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "client expectations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "code review",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "context engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "delegated ownership",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation components",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation methods",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "inference optimisation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "model adaptation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "model integration",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pairing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "reusable tooling",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "production",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "guardrails",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "research",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "retrieval",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "stakeholders",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "tool calling",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI applications",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "auditability",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "Scale AI develops reliable AI systems for critical public sector decisions, powering models for enterprises and governments.",
+  "team": "Global Public Sector",
+  "ceiling": 0.4157303370786517,
+  "genuine_gaps": [
+    "AI behaviour",
+    "backend engineering",
+    "backend services",
+    "client expectations",
+    "context engineering",
+    "delegated ownership",
+    "evaluation components",
+    "evaluation methods",
+    "inference optimisation",
+    "model adaptation",
+    "model integration",
+    "reusable tooling",
+    "AI applications",
+    "auditability"
+  ],
+  "possible_evidence": {},
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.3707865168539326,
+      "score_stemmed": 0.4157303370786517,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9719210211848447,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.02
+      },
+      "shrinks": 1,
+      "reverted": [],
+      "wording": {
+        "terms": [
+          "pairing"
+        ],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [
+          "pairing"
+        ],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 2,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          },
+          {
+            "id": "dc6",
+            "lines": 5
+          },
+          {
+            "id": "p_af3",
+            "lines": 4
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_ia1: dropped the word 'cause' of the result"
+      ],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: p_af3 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "wording: no bullet carries the stem of pairing (skills or profile only)"
+      ],
+      "wording_misses": [
+        "pairing"
+      ],
+      "misses": [
+        "AI behaviour",
+        "backend engineering",
+        "backend services",
+        "client expectations",
+        "context engineering",
+        "delegated ownership",
+        "evaluation components",
+        "evaluation methods",
+        "inference optimisation",
+        "model adaptation",
+        "model integration",
+        "reusable tooling",
+        "AI applications",
+        "auditability"
+      ],
+      "rephrase": {
+        "eligible": 1,
+        "asked": 1,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "AI behaviour",
+          "backend engineering",
+          "backend services",
+          "client expectations",
+          "context engineering",
+          "delegated ownership",
+          "evaluation components",
+          "evaluation methods",
+          "inference optimisation",
+          "model adaptation",
+          "model integration",
+          "pairing",
+          "reusable tooling",
+          "AI applications",
+          "auditability"
+        ],
+        "proposed": 1,
+        "accepted": 0,
+        "blocked": 1,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az10",
+              "az9",
+              "az3",
+              "az11"
+            ],
+            "dc180": [
+              "dc5",
+              "dc6",
+              "dc7"
+            ],
+            "freelance": [
+              "fl4",
+              "fl2",
+              "fl1"
+            ],
+            "avasoft": [
+              "av8",
+              "av9",
+              "av10"
+            ]
+          },
+          "projects": [
+            "iata",
+            "coverfit",
+            "agenticfriend"
+          ],
+          "project_bullets": {
+            "iata": [
+              "p_ia1",
+              "p_ia2"
+            ],
+            "coverfit": [
+              "p_cf2"
+            ],
+            "agenticfriend": [
+              "p_af3"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_ia1": "Designed preprocessing and clustering pipelines (K-Means, HAC, DBSCAN) on BoW, TF-IDF, Skip-gram, SBERT, and traced silhouette <0.30 to repeated template vocabulary in tickets."
+        },
+        "profile": "AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment, with automated tests around them. At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools (Claude Code, Cursor, Codex) daily. Deployed an LLM agent on AWS for an AstraZeneca-affiliated multi-omics research platform (MSc dissertation). Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking."
+      },
+      "selection": {
+        "az": [
+          "az3",
+          "az9",
+          "az10",
+          "az11"
+        ],
+        "dc180": [
+          "dc5",
+          "dc6",
+          "dc7"
+        ],
+        "freelance": [
+          "fl1",
+          "fl2",
+          "fl4"
+        ],
+        "avasoft": [
+          "av8",
+          "av9",
+          "av10"
+        ],
+        "iata": [
+          "p_ia2"
+        ],
+        "coverfit": [
+          "p_cf2"
+        ],
+        "agenticfriend": [
+          "p_af3"
+        ]
+      },
+      "profile": "AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment, with automated tests around them. At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools (Claude Code, Cursor, Codex) daily. Deployed an LLM agent on AWS for an AstraZeneca-affiliated multi-omics research platform (MSc dissertation). Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking.",
+      "rephrase_coverage": {
+        "eligible": 5,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "AI behaviour",
+          "backend engineering",
+          "backend services",
+          "client expectations",
+          "context engineering",
+          "delegated ownership",
+          "evaluation components",
+          "evaluation methods",
+          "inference optimisation",
+          "model adaptation",
+          "model integration",
+          "pairing",
+          "reusable tooling",
+          "AI applications",
+          "auditability"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/Scale_AI_Senior_Applied_AI_Engineer_ffd2a67d131b",
+  "analysis_warnings": [
+    "extract_keywords: dropped keyword 'production systems' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'retrieval-augmented generation' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'regulated data' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'sovereign deployment' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped benchmark methodology, full-stack technologies, high-quality data, ML research, novel agent architecture, on-premise deployment, sensitive data",
+    "skills: the 'ai_engineer' family's skill_lines do not mention pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, which the fact bank lists (the lines are used as written; add them to the lines if you want them on the CV)",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'AI Engineer' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'agents' (2)))",
+    "plain style: plain version missing for az3, az9, az10, az11, dc5, dc6, dc7, fl1, fl2, fl4, av8, av9, av10, p_ia2, p_cf2, p_af3 (their original wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Agentic AI & LLM Applications",
+      "Software Engineering & Integrations",
+      "Cloud & Deployment"
+    ],
+    "dropped_groups": [],
+    "family": "ai_engineer"
+  },
+  "achievements": [],
+  "profile": {
+    "facts": [
+      "Deployed an LLM agent on AWS for an AstraZeneca-affiliated multi-omics research platform (MSc dissertation)",
+      "Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking"
+    ],
+    "retried": false,
+    "fallback": false,
+    "words": 110,
+    "shortfall": ""
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'agents' (2))"
+  ],
+  "hook_family_headline": "AI Engineer",
+  "hook_family_profile": true,
+  "family_line": "At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools (Claude Code, Cursor, Codex) daily.",
+  "family_opening": "AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment, with automated tests around them.",
+  "letter_families": [
+    "ai_engineer"
+  ],
+  "ats": {
+    "strict": 37.07865168539326,
+    "ceiling": 41.57303370786517,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "agents",
+      "root-cause analysis",
+      "code review",
+      "production",
+      "evaluation",
+      "guardrails",
+      "research",
+      "retrieval",
+      "stakeholders",
+      "tool calling"
+    ],
+    "misses": [
+      "AI behaviour",
+      "backend engineering",
+      "backend services",
+      "client expectations",
+      "context engineering",
+      "delegated ownership",
+      "evaluation components",
+      "evaluation methods",
+      "inference optimisation",
+      "model adaptation",
+      "model integration",
+      "reusable tooling",
+      "AI applications",
+      "auditability",
+      "pairing"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "band": {
+    "outcome": "skip",
+    "strict": 37.07865168539326,
+    "ceiling": 41.57303370786517,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": "ATS S < 50"
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "agents",
+    "root-cause analysis",
+    "code review",
+    "pairing",
+    "production",
+    "evaluation",
+    "guardrails",
+    "research",
+    "retrieval",
+    "stakeholders",
+    "tool calling"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.3707865168539326,
+    "score_stemmed": 0.4157303370786517,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9719210211848447,
+    "hits": [
+      "agents",
+      "root-cause analysis",
+      "code review",
+      "production",
+      "evaluation",
+      "guardrails",
+      "research",
+      "retrieval",
+      "stakeholders",
+      "tool calling"
+    ],
+    "wording_misses": [
+      "pairing"
+    ],
+    "misses": [
+      "AI behaviour",
+      "backend engineering",
+      "backend services",
+      "client expectations",
+      "context engineering",
+      "delegated ownership",
+      "evaluation components",
+      "evaluation methods",
+      "inference optimisation",
+      "model adaptation",
+      "model integration",
+      "reusable tooling",
+      "AI applications",
+      "auditability"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9719210211848447,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.02
+  },
+  "fill_shortfall": "",
+  "needs_result": [
+    {
+      "id": "az3",
+      "entry": "AstraZeneca",
+      "text": "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies."
+    },
+    {
+      "id": "az9",
+      "entry": "AstraZeneca",
+      "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+    },
+    {
+      "id": "dc5",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Reviewed pull requests in the client's production repository alongside the client's CTO, the engagement's point of contact."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "fl1",
+      "entry": "Freelance",
+      "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+    },
+    {
+      "id": "fl2",
+      "entry": "Freelance",
+      "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+    },
+    {
+      "id": "fl4",
+      "entry": "Freelance",
+      "text": "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run."
+    },
+    {
+      "id": "p_ia2",
+      "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+      "text": "In a five person team, coordinated per member Git branches merged through pull requests and ran the team Trello board."
+    },
+    {
+      "id": "p_af3",
+      "entry": "AgenticFriend \u2014 real-time voice assistant",
+      "text": "Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full-stack application (React front end, FastAPI and Google ADK back end, full-duplex WebSocket) with ReAct-based agent orchestration, barge-in handling and self-hosted speech models on Docker/CUDA (float16 inference, model warm-up) to cut latency."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 2,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      },
+      {
+        "id": "dc6",
+        "lines": 5
+      },
+      {
+        "id": "p_af3",
+        "lines": 4
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 7,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [
+      "root-cause"
+    ],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "root-cause analysis",
+      "root-cause"
+    ],
+    "results_bold": 6,
+    "results_unmatched": [
+      "az11"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 6.5,
+        "keywords": 6.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 5.0,
+        "keywords": 5.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "az9",
+        "entry": "AstraZeneca",
+        "score": 5.0,
+        "keywords": 5.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+      },
+      {
+        "id": "dc5",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 5.0,
+        "keywords": 5.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Reviewed pull requests in the client's production repository alongside the client's CTO, the engagement's point of contact."
+      },
+      {
+        "id": "dc6",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 5.0,
+        "keywords": 5.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement."
+      },
+      {
+        "id": "p_ia1",
+        "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 4.67,
+        "keywords": 2.0,
+        "domain": 2.67,
+        "chosen": false,
+        "text": "Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.17,
+        "keywords": 1.5,
+        "domain": 2.67,
+        "chosen": false,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      },
+      {
+        "id": "az3",
+        "entry": "AstraZeneca",
+        "score": 3.5,
+        "keywords": 3.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies."
+      },
+      {
+        "id": "az4",
+        "entry": "AstraZeneca",
+        "score": 3.5,
+        "keywords": 3.5,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+      },
+      {
+        "id": "az11",
+        "entry": "AstraZeneca",
+        "score": 3.5,
+        "keywords": 3.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+      }
+    ],
+    "projects": [
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 4.67,
+        "sum": 7.34,
+        "chosen": true
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.17,
+        "sum": 4.17,
+        "chosen": false
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 3.5,
+        "sum": 7.0,
+        "chosen": false
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 3.5,
+        "sum": 5.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 3.0,
+        "sum": 5.0,
+        "chosen": true
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": true
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "astrofreud",
+        "name": "AstroFreud \u2014 LangGraph interview agent",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 5,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 1,
+    "asked": 1,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "AI behaviour",
+      "backend engineering",
+      "backend services",
+      "client expectations",
+      "context engineering",
+      "delegated ownership",
+      "evaluation components",
+      "evaluation methods",
+      "inference optimisation",
+      "model adaptation",
+      "model integration",
+      "pairing",
+      "reusable tooling",
+      "AI applications",
+      "auditability"
+    ],
+    "proposed": 1,
+    "accepted": 0,
+    "blocked": 1,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "AI behaviour",
+      "backend engineering",
+      "backend services",
+      "client expectations",
+      "context engineering",
+      "delegated ownership",
+      "evaluation components",
+      "evaluation methods",
+      "inference optimisation",
+      "model adaptation",
+      "model integration",
+      "pairing",
+      "reusable tooling",
+      "AI applications",
+      "auditability"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "ATS S < 50: no letter was drafted",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az10",
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "dc5",
+        "text": "Reviewed pull requests in the client's production repository alongside the client's CTO, the engagement's point of contact."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2015,
+        "prompt_tokens": 1527,
+        "completion_tokens": 535,
+        "reasoning_tokens": 327,
+        "total_tokens": 2062,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 693,
+        "prompt_tokens": 681,
+        "completion_tokens": 231,
+        "reasoning_tokens": 170,
+        "total_tokens": 912,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 2208,
+    "completion_tokens": 766,
+    "reasoning_tokens": 497,
+    "total_tokens": 2974,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1527,
+        "completion_tokens": 535,
+        "reasoning_tokens": 327,
+        "total_tokens": 2062,
+        "prompt_tokens_per_call": [
+          1527
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 1,
+        "prompt_tokens": 681,
+        "completion_tokens": 231,
+        "reasoning_tokens": 170,
+        "total_tokens": 912,
+        "prompt_tokens_per_call": [
+          681
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 2,
+        "prompt_tokens": 2208,
+        "completion_tokens": 766,
+        "reasoning_tokens": 497,
+        "total_tokens": 2974,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      }
+    }
+  },
+  "style": {
+    "style": "plain",
+    "strict_plain": 37.07865168539326,
+    "strict_technical": 37.07865168539326,
+    "topped_up": [],
+    "plain_refused": {},
+    "brackets": {},
+    "readability": {},
+    "plain_on_cv": [],
+    "plain_missing": [
+      "az3",
+      "az9",
+      "az10",
+      "az11",
+      "dc5",
+      "dc6",
+      "dc7",
+      "fl1",
+      "fl2",
+      "fl4",
+      "av8",
+      "av9",
+      "av10",
+      "p_ia2",
+      "p_cf2",
+      "p_af3"
+    ],
+    "additional_experience": [],
+    "section_order": [
+      "profile",
+      "skills",
+      "experience",
+      "projects",
+      "education",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "section_order_reason": "standard order (Skills, Work Experience, Projects, then Education): not a graduate, junior or scheme ad",
+    "first_bullet_at": 0.631
+  },
+  "cv_pdf": "data/outputs/Scale_AI_Senior_Applied_AI_Engineer_ffd2a67d131b/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "AI Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment, with automated tests around them. At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools (Claude Code, Cursor, Codex) daily. Deployed an LLM agent on AWS for an AstraZeneca-affiliated multi-omics research platform (MSc dissertation). Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking.",
+    "skills": {
+      "Agentic AI & LLM Applications": "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)",
+      "Software Engineering & Integrations": "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis",
+      "Cloud & Deployment": "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist, MSc Dissertation Project",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "MSc dissertation (industry-affiliated)",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least-privilege policies.",
+          "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes.",
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+          "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation."
+        ],
+        "situation_owner": [
+          "az1",
+          "az10"
+        ],
+        "bullet_ids": [
+          "az3",
+          "az9",
+          "az10",
+          "az11"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Reviewed pull requests in the client's production repository alongside the client's CTO, the engagement's point of contact.",
+          "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+        ],
+        "situation_owner": [
+          "dc1",
+          "dc6"
+        ],
+        "bullet_ids": [
+          "dc5",
+          "dc6",
+          "dc7"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+          "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+          "Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "fl1",
+          "fl2",
+          "fl4"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer Trainee, then Software Development Engineer",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated the team across concurrent releases, so features shipped from shared, tested building blocks.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "av8",
+          "av9",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "iata",
+        "display_name": "IATA Customer-Feedback Text Analytics",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "stack": "Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN",
+        "situation": "Needed structure in unstructured airline support tickets",
+        "github": "https://github.com/Thiruvel-AP/TextAnalytics",
+        "public": true,
+        "bullets": [
+          "In a five person team, coordinated per member Git branches merged through pull requests and ran the team Trello board."
+        ],
+        "situation_owner": [
+          "p_ia1"
+        ],
+        "bullet_ids": [
+          "p_ia2"
+        ]
+      },
+      {
+        "id": "coverfit",
+        "display_name": "CoverFit -- Insurance Benchmarking API",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "stack": "FastAPI, pandas, LiteLLM, Pydantic, pytest",
+        "github": "https://github.com/Thiruvel-AP/AIHackathon-Phoenix",
+        "public": true,
+        "bullets": [
+          "An insurance sponsor needed a fast, low-cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in under 3 seconds at ~\u00a30.003 per query."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "p_cf2"
+        ]
+      },
+      {
+        "id": "agenticfriend",
+        "display_name": "AgenticFriend -- Real-Time Voice AI Agent",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "stack": "FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA",
+        "github": "https://github.com/Thiruvel-AP/adk_multi-agent",
+        "public": true,
+        "bullets": [
+          "Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full-stack application (React front end, FastAPI and Google ADK back end, full-duplex WebSocket) with ReAct-based agent orchestration, barge-in handling and self-hosted speech models on Docker/CUDA (float16 inference, model warm-up) to cut latency."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "p_af3"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 April 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "dc8": "now in live use",
+      "av2": "10 reusable component templates",
+      "av8": "shipped in a production fintech application",
+      "av9": "10 reusable component templates",
+      "av10": "market-trend signals used for pricing decisions",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "profile_head": "AI engineer with an MSc in Data Science from the University of Bristol who takes LLM agents from prototype to deployment, with automated tests around them. At 180 Degrees Consulting, led the architecture in a five-person team that turned a startup client's loose brief into a working agent prototype within a three-month engagement, demoed it live (5-star rating from senior leadership), then contributed to the client's production MCP server, now in live use. Builds with AI coding tools (Claude Code, Cursor, Codex) daily.",
+    "section_order": [
+      "profile",
+      "skills",
+      "experience",
+      "projects",
+      "education",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "education_compact": [
+      {
+        "kind": "degree",
+        "head": "MSc Data Science",
+        "school": "University of Bristol, UK",
+        "cls": "",
+        "tail": "University of Bristol, UK",
+        "dates": "Sep 2025 \u2013 Sep 2026"
+      },
+      {
+        "kind": "dissertation",
+        "text": "Dissertation with AstraZeneca affiliation (GeneTraceAI)"
+      },
+      {
+        "kind": "degree",
+        "head": "B.E. Electrical & Electronics Engineering",
+        "school": "St. Joseph's College of Engineering",
+        "cls": "First Class with Distinction",
+        "tail": "St. Joseph's College of Engineering, First Class with Distinction",
+        "dates": "Aug 2019 \u2013 April 2023"
+      }
+    ],
+    "linespread": 1.02,
+    "profile_min_words": 100
+  }
+}

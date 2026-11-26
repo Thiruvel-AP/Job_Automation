@@ -1,0 +1,21 @@
+  #  req  type      label (short)                          answer (<=60 chars)                                          source                   status
+  1  *    text      First Name                             Thiruvel                                                     applicant                READY
+  2  *    text      Last Name                              Andagurunathan Pandian                                       applicant                READY
+  3  *    text      Email                                  apthiruvel@gmail.com                                         applicant                READY
+  4  *    text      Phone                                  +44 7741016954                                               applicant                READY
+  5  *    file      Resume/CV                              Thiruvel Andagurunathan Pandian CV.pdf                       cv                       READY
+  6       file      Cover Letter                           Thiruvel Andagurunathan Pandian Cover Letter.pdf             letter                   READY
+  7  *    combo     What are your working rights in the c… Work Visa                                                    applicant:visa.by_country.GB READY
+  8  *    text      If you answered 'Work Visa' in the pr… Graduate visa                                                answers:visa_type        READY
+  9  *    text      What is your notice period?            Immediately                                                  answers:notice_period    READY
+ 10  *    textarea  What motivated you to apply for this … (draft, 85 words)                                            freetext                 DRAFT
+ 11  *    text      Please provide your base salary expec… I'd welcome the opportunity to discuss salary expectation... answers:salary_expectation READY
+ 12  *    combo     How did you hear about us?             Corporate website                                            how-heard                READY
+ 13  *    text      Please include a link to your LinkedI… https://www.linkedin.com/in/thiruvel-a-p/                    applicant                READY
+ 14  *    combo     Inclusion and Diversity is very impor… -                                                            equal_opportunities      BLANK
+ 15       text      If you have answered 'Self-describe' … -                                                                                     BLANK
+ 16  *    combo     I declare that the information provid… -                                                            attestation              NEEDS USER
+ 17  *    text      Location                               Bristol -> (the option with Bristol)                         answers:current_location READY
+ 18       combo     VeteranStatus                          -                                                            equal_opportunities      BLANK
+ 19       combo     Race                                   Asian                                                        equal_opportunities:ethnicity READY
+ 20       combo     Gender                                 Male                                                         equal_opportunities:eo_gender READY

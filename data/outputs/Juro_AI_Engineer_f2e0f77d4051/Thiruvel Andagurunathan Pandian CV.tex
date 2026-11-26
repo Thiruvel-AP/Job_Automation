@@ -1,0 +1,154 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{needspace}
+
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\definecolor{muted}{RGB}{96, 102, 110}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+\titleformat{\section}
+  {\color{headernavy}\normalsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\linespread{1.02}
+
+% ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
+  \textit{#4}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\hfill{\color{muted}#2}\\ \textit{#3}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag
+  \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{headernavy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{headernavy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\LARGE\bfseries Thiruvel Andagurunathan Pandian} \\[3pt]
+  {\color{headernavy}\small\textbf{LLM agent that recovers from tool failure, \textasciitilde{}65 test evals}} \\[3pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textbar\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textbar\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textbar\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/}\nobreak\ \,\textbar\, \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP}\nobreak\ \,\textbar\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}}\par\vspace{4pt}
+  \noindent{} Right to Work in UK \,\textbar\, Available to join Immediately
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+AI engineer who builds the harness around the model: at AstraZeneca I built a tool calling LLM agent that recovers when its tools fail, and diagnosed its failures with a three tier, \textasciitilde{}65 test evaluation harness. At 180 Degrees Consulting, led the architecture for a product startup client\textquotesingle{}s hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (five star rating from senior leadership) and contributed to the client\textquotesingle{}s production TypeScript/Node.js MCP server (OpenAI based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca affiliated multiomics research platform. Owns data workflows end to end in Python and SQL, from merging structured, API and web scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda).
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillgroup{Agentic AI \& LLM Applications}{Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open weight models via Ollama), LLM evaluation (three tier tests, hallucination rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)}
+\skillgroup{Software Engineering \& Integrations}{TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root cause analysis}
+\skillgroup{Cloud \& Deployment}{AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist}
+\begin{itemize}
+  \item Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a \num{19,213 gene parquet fallback} for when the external APIs are unavailable.
+  \item Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least privilege policies.
+  \item Managed AWS account governance for the project, including root user isolation, IAM user and group management and least privilege policies.
+  \item Diagnosed where it struggled with a three tier, \textasciitilde{}65 test evaluation harness (tool level → API → live) and hallucination rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate limit evaluation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}
+\begin{itemize}
+  \item A product startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five person cross functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders \num{(five star rating from senior leadership)} within the three month engagement.
+  \item Carried it into production with the client\textquotesingle{}s engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI based query generation, Convex), now in live use, and reviewed pull requests in the client\textquotesingle{}s production repository alongside their CTO.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+  \item Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer (Jun 2023 – Sep 2024); Software Development Engineer Trainee (Jan 2023 – May 2023)}
+\begin{itemize}
+  \item Built ecommerce and ticketing UIs in Swift/SwiftUI with product search, cart logic, order tracking and booking management.
+  \item Shipped features in a production fintech (financial services) application as part of a team: integrated Twelve Data (real time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.
+  \item Delivered \num{10 reusable SwiftUI/UIKit component templates} that accelerated the team across concurrent releases, so features shipped from shared, tested building blocks.
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{AgenticFriend: real time voice assistant}\hspace{1em}\url{https://github.com/Thiruvel-AP/adk_multi-agent}}%
+\setbox2=\hbox{{\small\textit{FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/adk_multi-agent}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{AgenticFriend: real time voice assistant}\\ {\color{muted}\small\textit{FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/adk_multi-agent}}\par
+\else
+\textbf{AgenticFriend: real time voice assistant}\\ {\color{muted}\small\textit{FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA}}\hfill{\small\url{https://github.com/Thiruvel-AP/adk_multi-agent}}\par
+\fi
+\else
+\project{AgenticFriend: real time voice assistant}{FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA}{\url{https://github.com/Thiruvel-AP/adk_multi-agent}}
+\fi
+\begin{itemize}
+  \item Needed a voice assistant that answers in real time and can be interrupted: built it end to end as a full stack application (React front end, FastAPI and Google ADK back end, full duplex WebSocket) with ReAct based agent orchestration, barge in handling and self hosted speech models on Docker/CUDA (float16 inference, model warm up) to cut latency.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}\hspace{1em}\url{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}%
+\setbox2=\hbox{{\small\textit{FastAPI, pandas, LiteLLM, Pydantic, pytest}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}\\ {\color{muted}\small\textit{FastAPI, pandas, LiteLLM, Pydantic, pytest}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}\par
+\else
+\textbf{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}\\ {\color{muted}\small\textit{FastAPI, pandas, LiteLLM, Pydantic, pytest}}\hfill{\small\url{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}\par
+\fi
+\else
+\project{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}{FastAPI, pandas, LiteLLM, Pydantic, pytest}{\url{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}
+\fi
+\begin{itemize}
+  \item An insurance sponsor needed a fast, low cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in \num{under 3 seconds at \textasciitilde{}£0.003 per query}.
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\needspace{3\baselineskip}
+\roleNoLoc{University of Bristol}{Sep 2025 – Sep 2026}{MSc Data Science, Distinction \textit{(Expected)}}
+{\color{muted}\small Large scale Data Engineering, Statistical Computing \& Empirical Methods, AI \& Text Analytics, Visual Analytics, Data Science Methods \& Practices, Technology, Innovation, Business \& Society}\par
+\gap
+\needspace{3\baselineskip}
+\roleNoLoc{St. Joseph\textquotesingle{}s College of Engineering}{Aug 2019 – Apr 2023}{B.E. Electrical and Electronics Engineering, 91\%, First Class with Distinction}
+
+% ================= CERTIFICATIONS & ACHIEVEMENTS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}
+  \item Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}
+  \item AWS Academy Cloud Foundations, \textit{Nov 2025}
+  \item 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}
+  \item Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,86 @@
+Already in the inbox: anaplan-data-scientist-8654662002.txt  (Anaplan | Data Scientist)
+careerops live: inbox /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/jds/inbox (max 1, dry run)
+
+== Anaplan | Data Scientist  [manual:0511e7ae7ebb]  (anaplan-data-scientist-8654662002.txt)
+  --retailor: 'needs_review' -> 'triaged'; the earlier tailoring of this job is replaced.
+Tailoring 1 job(s).
+- Anaplan | Data Scientist
+  keywords: reusing the extraction frozen on 2026-10-16 (--re-extract to redo it)
+  ATS strict CV 56.0% | claimable ceiling 64.0% | STRETCH
+  ATS 56% (stemmed 56%, ceiling 64%) → below band | CV 2 page(s), page 2 99% full, letter off (letter.mode: off)
+==============================================================================
+Anaplan — Data Scientist  [London, United Kingdom]
+T1 · Data Scientist
+https://job-boards.greenhouse.io/anaplan/jobs/8654662002
+Sponsor: Anaplan Limited (1.00)
+Priority P=0.64 = F 0.64 (ATS ceiling) x S 1.00 (exact register match) | age 6 d (tier 2, <= 7 d, first seen)
+Posted: posted 132 h ago (6 d) (first seen by discover: the source gave no trusted posting time), tier 2 (<= 7 d)
+Work location: United Kingdom (GB), onsite — evidence: "Location: London, United Kingdom"
+Visa answers (by_country.GB): right to work Yes · sponsorship now No · sponsorship in the future Yes
+ATS literal 56% | stemmed 56% | honest ceiling 64% | band: below | pages 2 | attempts 1
+ATS strict CV 56.0% | claimable ceiling 64.0%
+STRETCH: the honest ceiling (64%) is under the 70% band. Kept, never dropped: expect a lower interview rate; the fact bank, not the CV, is what stops it.
+Hook h_prod_tests: production, testing and MLOps | proof az4 (AstraZeneca) | number ~65 [library]
+  headline: LLM agent shipped to AWS Lambda behind ~65 automated tests
+  profile sentence 1: Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests.
+  letter sentence 1: At AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests.
+Fill: page 2 99% full (target 96%) | 2 projects
+Typography: no em dashes | 6 result(s) in bold
+Ranking, top bullets (score = keyword + domain; * = on the CV):
+   1.   6.0 (6.0+0.0)   az3        Deployed the agent as a Docker container on AWS Lambda …
+   2.   6.0 (6.0+0.0) * az12       Built the Python data pipeline: reconciled 14 heterogen…
+   3.   4.7 (4.0+0.7) * av8        Shipped features in a production fintech (financial-ser…
+   4.   4.7 (4.0+0.7) * p_cf2      An insurance sponsor needed a fast, low-cost, explainab…
+   5.   4.0 (4.0+0.0)   az1        Built a tool-calling LLM agent (LangChain, AWS Bedrock,…
+   6.   4.0 (4.0+0.0) * az4        Wrote a three-tier test framework (tool-level, API/inte…
+   7.   4.0 (4.0+0.0) * az10       Needed an agent that researchers could trust on a cance…
+   8.   4.0 (4.0+0.0)   fl1        Built scikit-learn pipelines and LSTM/BiRNN/CNN models …
+   9.   4.0 (4.0+0.0) * fl4        Built a production RAG and agentic retrieval system (Cl…
+  10.   4.0 (4.0+0.0) * av9        Delivered 10 reusable SwiftUI/UIKit component templates…
+Ranking, projects:
+   1.   4.7 (all bullets 7.3) * CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
+   2.   4.0 (all bullets 4.0) * Image Classification — CNN and Transfer Learning
+   3.   2.7 (all bullets 2.7)   Banking Customer Churn — propensity model
+   4.   2.7 (all bullets 2.7)   Lloyd's Banking Group Datathon
+   5.   2.0 (all bullets 4.7)   GTAI Cell Line Finder — multi-omics graph for cancer cell-line selection (PoC)
+   6.   2.0 (all bullets 4.0)   Mining Insights from Customer Feedback — NLP & unsupervised analytics (MSc team project)
+   7.   2.0 (all bullets 2.0)   Bitcoin Forecasting — LSTM time-series service
+   8.   2.0 (all bullets 2.0)   AgenticFriend — real-time voice assistant
+   9.   2.0 (all bullets 2.0)   mcp_searchagent
+  10.   2.0 (all bullets 2.0)   Auto-scaled word-frequency pipeline on AWS
+Letter: off (letter.mode: off; write your own, or apply without)
+Letter evidence: az12, av8
+FLAGS: Stretch: honest ceiling 64% is under the 70% band
+Needs a result (yours to supply in fact_bank.yaml, never invented): az7, dc8, fl4, fl5, av8, p_cn1
+Possible evidence — you decide (nothing is claimed; add the word to the fact bank if it is true):
+  dbt <- sql (profile facts, skills: core); data modelling (bullet av3, bullet av10)
+  LightGBM <- xgboost (profile facts, skills: ML & Statistics); random forest (skills: ML & Statistics, bullet p_gg2)
+  timeseries forecasting <- time-series forecasting (skills: ML & Statistics); time series (profile facts, skills: ML & Statistics)
+Genuine gaps (no evidence, left out): scalable, Optuna, snowflake, airflow, azure, Prefect
+Warnings: length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it; length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it
+Profile: Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda). Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).
+CV: /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/outputs/Anaplan_Data_Scientist_0511e7ae7ebb/Thiruvel Andagurunathan Pandian CV.pdf (created 2026-10-20 13:20:42)
+Letter: (none)
+letter: off
+  Judge (ollama/qwen2.5-7b-8k): WOULD NOT SEND 2/5 [shadow]
+  Judge input: 3,994 prompt tokens (dropped 1 section(s) about the employer or process: Privacy & AI Notice)
+    - CV does not lead with what the JD asks for
+    - Lack of a cover letter
+    - Some claims are not supported by SOURCE FACTS
+[a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [s]kip  [q]uit > [a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [s]kip  [q]uit > 
+STOPPED at stage 'review' of anaplan-data-scientist-8654662002.txt (job manual:0511e7ae7ebb, status 'needs_review').
+The JD is still in inbox/ and the job keeps the status it reached; nothing was submitted by this command.
+Resume with:  careerops live --max 1 --url https://job-boards.greenhouse.io/anaplan/jobs/8654662002 --dry-run
+# careerops live — 2026-10-20 13:33 (dry run)
+
+## anaplan-data-scientist-8654662002.txt
+- id: manual:0511e7ae7ebb
+- company: Anaplan
+- role: Data Scientist
+- status: needs_review
+- sponsor register: exact (Anaplan Limited)
+- archive check: ok (unchanged)
+- visa lines: none
+
+Stopped: you chose quit at the review prompt; the job stays 'needs_review'
+Summary written to /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/live/20261020-133346.md

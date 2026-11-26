@@ -1,0 +1,130 @@
+Company: Artefact
+Title: Senior AI Engineer / Technical Consultant
+URL: https://job-boards.greenhouse.io/artefact/jobs/8270870002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Lausanne, Vaud, Switzerland
+Country: Switzerland
+Status: listed_only
+Posted: 2025-11-09T13:10:02-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Who is Artefact?
+
+Artefact is a next-generation strategy and data consulting firm dedicated to transforming organizations through data and AI. We combine the rigor of top-tier strategy consulting with deep expertise in data, digital, and analytics to help clients achieve tangible business impact.
+
+With 1,800+ consultants, data scientists, and engineers across 23 countries, we work with global leaders such as Samsung, L’Oréal, Orange, and Sanofi. Our Romandie office (Geneva/Lausanne) is at the heart of Artefact’s growth, advising clients on their most pressing strategic challenges — from AI strategy and governance to digital transformation roadmaps and new business model design.
+
+Main Responsibilities
+
+As a Senior Technical Consultant / Senior AI Engineer, you will lead the design and delivery of impactful AI and data solutions. You’ll combine hands-on engineering with client advisory, guiding multi-disciplinary teams from opportunity framing to production deployment.
+
+- 
+
+Own solution architecture & delivery: Define end-to-end architectures (data, ML/LLM, APIs, security), make build/buy decisions, and drive projects from PoC to production with reliability, observability, and cost in mind.
+
+- 
+
+Lead complex PoCs & pilots: Scope, prototype, and validate AI/ML use cases (incl. LLMs/GenAI, RAG, fine-tuning, evaluation) and convert successful pilots into scalable products.
+
+- 
+
+Advanced programming & modeling: Build, adapt, and evaluate ML/DL/LLM models using Python (PyTorch, TensorFlow, HuggingFace, LangChain/LlamaIndex), including prompt engineering, fine-tuning/LoRA, vector search, and safety/guardrails.
+
+- 
+
+Cloud & MLOps/LLMOps: Design and operate solutions on Azure, GCP, or AWS (CI/CD, containers, model serving, feature stores, vector DBs, monitoring, eval pipelines).
+
+- 
+
+Client advisory & stakeholder management: Translate business goals into technical roadmaps, present to senior stakeholders, manage risks and trade-offs, and ensure measurable business impact.
+
+- 
+
+Quality, security & governance: Enforce best practices on data privacy, model risk management, responsible AI, and documentation.
+
+- 
+
+Team leadership & mentoring: Coach engineers/consultants, perform code and design reviews, and help shape delivery standards and reusable accelerators.
+
+- 
+
+Pre-sales & thought leadership: Support proposals, estimates, and statements of work; contribute to assets, talks, and publications that advance Artefact’s AI offering.
+
+Candidate Profile
+
+Engineer first, consultant second — with a builder’s mindset and a track record of shipping.
+
+- 
+
+Experience: 5–8+ years in data/ML/AI engineering or adjacent roles, including end-to-end delivery of production AI systems (not just prototypes).
+
+- 
+
+Programming: Expert Python; solid software engineering (testing, packaging, CI/CD). SQL required; Java/Scala/TypeScript a plus.
+
+- 
+
+AI/ML: Hands-on with ML/DL and LLMs (prompting, fine-tuning/LoRA, embeddings/RAG, evaluation & observability, guardrails).
+
+- 
+
+Cloud: Deep experience on at least one major cloud (Azure, GCP, or AWS) deploying secure, scalable services.
+
+- 
+
+MLOps/LLMOps: Containers (Docker/Kubernetes), Git, pipelines (e.g., GitHub Actions/Cloud-native), model serving (FastAPI/TorchServe/Triton), experiment tracking, model registry, vector DBs (FAISS, Pinecone, pgvector, OpenSearch).
+
+- 
+
+Architecture & data: Designing data/ML platforms, APIs, microservices; familiarity with data pipelines and streaming is valued.
+
+- 
+
+Consulting skills: Requirements gathering, storytelling, senior stakeholder management, and clear documentation.
+
+- 
+
+Languages: Fluency in French and English (written & spoken) is mandatory.
+
+- 
+
+Work eligibility: You must be eligible to work in Switzerland.
+
+Nice to have
+
+- 
+
+Experience with responsible AI/governance frameworks, security reviews, and cost optimization.
+
+- 
+
+Domain experience in one or more industries (e.g., retail, pharma, manufacturing, finance).
+
+- 
+
+Contributions to open-source, publications, or conference talks.
+
+Why Join Us
+
+- 
+
+Strategy with a Data Edge: Operate at the intersection of boardroom strategy and cutting-edge AI engineering.
+
+- 
+
+Romandie Office Impact: High visibility from day one; help shape our Swiss footprint and work directly with senior leadership.
+
+- 
+
+Learning & Growth: Advanced training across strategy, AI/ML/LLM, and cloud; international missions and communities of practice.
+
+- 
+
+Culture of Doers: Innovation, action, collaboration. We move fast, deliver impact, and support each other’s growth.
+
+Location: Lausanne / Geneva (Romandie)
+
+If you don’t meet 100% of the criteria, we still want to hear from you. Passion, curiosity, and impact orientation matter — tell us about yours.

@@ -1,0 +1,2 @@
+{"qid": "r-647f2dd9", "kind": "review", "job_id": "mock:northwind-ai-engineer", "created": "2026-11-10T19:32:13+00:00", "options": ["send", "retailor", "park"], "allowed_deciders": ["user", "claude"], "version": "534123b6a6e1", "company": "Northwind Health AI", "title": "AI Engineer"}
+{"qid": "r-d4ddaa51", "kind": "review", "job_id": "manual:84fecb2c6c50", "created": "2026-11-10T19:32:13+00:00", "options": ["send", "retailor", "park"], "allowed_deciders": ["user", "claude"], "version": "2cb819bc2c5f", "company": "Gapdemo Analytics", "title": "Data Scientist (Retail)"}

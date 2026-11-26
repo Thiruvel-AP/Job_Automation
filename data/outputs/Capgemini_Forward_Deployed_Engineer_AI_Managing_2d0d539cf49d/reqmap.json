@@ -1,0 +1,820 @@
+{
+  "coverage": 0.5,
+  "requirements": [
+    {
+      "term": "Anthropic",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "anthropic",
+          "snippet": "Built a production RAG and…",
+          "via": "Anthropic"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:0",
+          "quote": "Anthropic",
+          "snippet": "Model Context Protocol: Advanced Topics — Anthropic, Jun…",
+          "via": "Anthropic"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:1",
+          "quote": "Anthropic",
+          "snippet": "Introduction to Model Context Protocol — Anthropic, Jun 2026",
+          "via": "Anthropic"
+        }
+      ]
+    },
+    {
+      "term": "AWS",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "AWS",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "AWS",
+          "snippet": "Deployed the agent as a…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "AWS",
+          "snippet": "Wrote about 65 automated…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az7",
+          "quote": "AWS",
+          "snippet": "Managed AWS account…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "AWS",
+          "snippet": "Built an AI assistant…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "AWS",
+          "snippet": "Did the data analysis on…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "av6",
+          "quote": "AWS",
+          "snippet": "Secured backend…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "AWS",
+          "snippet": "Helped build a…",
+          "via": "AWS"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "AWS",
+          "snippet": "Shipped features in a…",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "AWS",
+          "snippet": "AWS",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "AWS",
+          "snippet": "AWS Bedrock",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS Lambda",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "AWS ECS",
+          "via": "AWS"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "AWS",
+          "snippet": "Kubernetes (AWS EKS)",
+          "via": "AWS"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "AWS",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "AWS"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "AWS",
+          "snippet": "Deployed an LLM agent on AWS for an AstraZeneca-affiliated…",
+          "via": "AWS"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_agents",
+          "quote": "AWS",
+          "snippet": "Built an AI assistant on AWS for an MSc dissertation with an…",
+          "via": "AWS"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_deploy",
+          "quote": "AWS",
+          "snippet": "Deploys on AWS (Lambda) with CI/CD and MLflow experiment…",
+          "via": "AWS"
+        },
+        {
+          "kind": "certification",
+          "id": "certification:2",
+          "quote": "AWS",
+          "snippet": "AWS Academy Cloud Foundations, Nov 2025",
+          "via": "AWS"
+        }
+      ]
+    },
+    {
+      "term": "Azure",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Docker",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "Docker",
+          "snippet": "Deployed the agent as a…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "docker",
+          "snippet": "Did the data analysis on…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "Docker",
+          "snippet": "Built scikit-learn…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "Docker",
+          "snippet": "Built a production RAG and…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "docker",
+          "snippet": "For a private client,…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af2",
+          "quote": "Docker",
+          "snippet": "Text-to-speech on CUDA in…",
+          "via": "Docker"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "docker",
+          "snippet": "Built a voice assistant…",
+          "via": "Docker"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Docker",
+          "snippet": "Docker",
+          "via": "Docker"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "Docker",
+          "snippet": "Docker",
+          "via": "Docker"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Docker",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "Docker"
+        }
+      ]
+    },
+    {
+      "term": "GCP",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "TypeScript",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc2",
+          "quote": "TypeScript",
+          "snippet": "Contributed the MCP…",
+          "via": "TypeScript"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "TypeScript",
+          "snippet": "Collaborated with the…",
+          "via": "TypeScript"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "TypeScript",
+          "snippet": "TypeScript",
+          "via": "TypeScript"
+        }
+      ]
+    },
+    {
+      "term": "Anthropic Agent SDK",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "ChromaDB",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "ChromaDB",
+          "snippet": "Built a production RAG and…",
+          "via": "ChromaDB"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "chromadb",
+          "snippet": "For a private client,…",
+          "via": "ChromaDB"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "ChromaDB",
+          "snippet": "ChromaDB",
+          "via": "ChromaDB"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Databases",
+          "quote": "ChromaDB",
+          "snippet": "ChromaDB",
+          "via": "ChromaDB"
+        }
+      ]
+    },
+    {
+      "term": "CrewAI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Docker Compose",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "GitHub Actions",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "GitHub Actions",
+          "snippet": "Proposed and prototyped an…",
+          "via": "GitHub Actions"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "GitHub Actions",
+          "snippet": "GitHub Actions",
+          "via": "GitHub Actions"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "GitHub Actions",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "GitHub Actions"
+        }
+      ]
+    },
+    {
+      "term": "GitLab CI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Jenkins",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Kubernetes",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Kubernetes",
+          "snippet": "Kubernetes",
+          "via": "Kubernetes"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "Kubernetes",
+          "snippet": "Kubernetes (AWS EKS)",
+          "via": "Kubernetes"
+        }
+      ]
+    },
+    {
+      "term": "LangChain",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "LangChain",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "LangChain"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "LangChain",
+          "snippet": "Built an AI assistant…",
+          "via": "LangChain"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "LangChain",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "LangChain"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "LangChain",
+          "snippet": "Built a production RAG and…",
+          "via": "LangChain"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "LangChain",
+          "snippet": "For a private client,…",
+          "via": "LangChain"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "LangChain",
+          "snippet": "LangChain",
+          "via": "LangChain"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LangChain",
+          "snippet": "LangChain",
+          "via": "LangChain"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:5",
+          "quote": "LangChain",
+          "snippet": "Freelance AI/ML engineering across scikit-learn,…",
+          "via": "LangChain"
+        }
+      ]
+    },
+    {
+      "term": "LangGraph",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "LangGraph",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "LangGraph"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "LangGraph",
+          "snippet": "Built a production RAG and…",
+          "via": "LangGraph"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "langgraph",
+          "snippet": "For a private client,…",
+          "via": "LangGraph"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "LangGraph",
+          "snippet": "Built a 14-step AI…",
+          "via": "LangGraph"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LangGraph",
+          "snippet": "LangGraph",
+          "via": "LangGraph"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:5",
+          "quote": "LangGraph",
+          "snippet": "Freelance AI/ML engineering across scikit-learn,…",
+          "via": "LangGraph"
+        }
+      ]
+    },
+    {
+      "term": "Llama",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl3",
+          "quote": "Llama",
+          "snippet": "Contributed to a team LoRA…",
+          "via": "Llama"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "Llama",
+          "snippet": "Built a private client an…",
+          "via": "Llama"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "Llama",
+          "snippet": "For a private client,…",
+          "via": "Llama"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "Llama",
+          "snippet": "Fine-tuned an…",
+          "via": "Llama"
+        }
+      ]
+    },
+    {
+      "term": "Mistral",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "MongoDB Vector Search",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Next.js",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "OpenAI",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc2",
+          "quote": "OpenAI",
+          "snippet": "Contributed the MCP…",
+          "via": "OpenAI"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "OpenAI",
+          "snippet": "Collaborated with the…",
+          "via": "OpenAI"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "OpenAI",
+          "snippet": "AI-assisted development (Claude Code, Cursor, OpenAI Codex)",
+          "via": "OpenAI"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "OpenAI",
+          "snippet": "OpenAI API",
+          "via": "OpenAI"
+        }
+      ]
+    },
+    {
+      "term": "PGVector",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Pinecone",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "PostgreSQL",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "PostgreSQL",
+          "snippet": "Proposed and prototyped an…",
+          "via": "PostgreSQL"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc3",
+          "quote": "PostgreSQL",
+          "snippet": "Designed hierarchical…",
+          "via": "PostgreSQL"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "postgresql",
+          "snippet": "Led the design in a…",
+          "via": "PostgreSQL"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "PostgreSQL",
+          "snippet": "Built a search assistant…",
+          "via": "PostgreSQL"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Databases",
+          "quote": "PostgreSQL",
+          "snippet": "PostgreSQL",
+          "via": "PostgreSQL"
+        }
+      ]
+    },
+    {
+      "term": "Python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "python",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az5",
+          "quote": "Python",
+          "snippet": "Explored 14 research…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built an AI assistant…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "Python",
+          "snippet": "Proposed and prototyped an…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "python",
+          "snippet": "Built scikit-learn…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "Python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "Python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Python",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "Python"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"p_ql1":"Fine‑tuned an 8B Llama 3.1 model with QLoRA (4‑bit) on a 15 GB GPU, training 0.52% of parameters, boosting answer completion 32%→52% and exact‑answer accuracy 16.2%→27.3% on 99 NuminaMath problems."}

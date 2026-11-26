@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV and cover letter do not match in key details", "Cover letter does not align with the job description", "Exaggerated claims without supporting evidence"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "b11e6fc11c9f31373f113bc6", "tokens": 5649, "note": ""}

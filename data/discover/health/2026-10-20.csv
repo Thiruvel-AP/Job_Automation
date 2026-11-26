@@ -1,0 +1,53 @@
+ts,source,name,method,country,status,new_jobs,reachable,robots,credentials,alerts,postings,detail
+2026-10-20T13:41:02+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,0,yes,n/a,present,50,,
+2026-10-20T13:41:02+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,7,,
+2026-10-20T13:41:02+00:00,aiapply,AIApply,dedupe_only,multi,no_file,0,n/a,n/a,n/a,,,/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/aiapply_applied.csv not found: nothing to skip (export your applications there as a CSV with company and title columns)
+2026-10-20T13:41:02+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,0,yes,allowed,n/a,,,the boards are found per company by `discover --ats`; this checks the API host only
+2026-10-20T13:41:02+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,
+2026-10-20T13:41:02+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,ok,0,yes,n/a,present,2,,
+2026-10-20T13:41:02+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-20T13:41:02+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,stepstone-de,StepStone DE,gmail_alerts,DE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,stepstone-nl,StepStone NL,gmail_alerts,NL,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,irishjobs,IrishJobs,gmail_alerts,IE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,jobbank-ca,Job Bank Canada,jobbank_csv,CA,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,seek-au,SEEK AU,gmail_alerts,AU,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,seek-nz,SEEK NZ,gmail_alerts,NZ,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,mycareersfuture,MyCareersFuture,gmail_alerts,SG,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-20T13:41:02+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,openai,OpenAI,ashby,multi,ok,0,yes,allowed,n/a,,807,
+2026-10-20T13:41:02+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,blackrock,BlackRock,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,jpmorgan,JPMorgan Chase,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,reed,Reed,reed,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T13:41:02+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,0,yes,n/a,present,50,,
+2026-10-20T14:02:05+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,7,,
+2026-10-20T14:02:05+00:00,aiapply,AIApply,dedupe_only,multi,error,0,n/a,n/a,n/a,,0,aiapply_applied.csv: no company and title columns (found: none); nothing was skipped because of it
+2026-10-20T14:02:05+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,20,yes,allowed,n/a,,4073,"postings = those `discover --ats` looked at in this run, across all boards found"
+2026-10-20T14:02:05+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,0,yes,n/a,present,50,,
+2026-10-20T14:02:05+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,ok,0,yes,n/a,present,2,,
+2026-10-20T14:02:05+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-20T14:02:05+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,eures,EURES,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,stepstone-de,StepStone DE,gmail_alerts,DE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,stepstone-nl,StepStone NL,gmail_alerts,NL,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,irishjobs,IrishJobs,gmail_alerts,IE,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,jobbank-ca,Job Bank Canada,jobbank_csv,CA,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,seek-au,SEEK AU,gmail_alerts,AU,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,seek-nz,SEEK NZ,gmail_alerts,NZ,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,mycareersfuture,MyCareersFuture,gmail_alerts,SG,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-20T14:02:05+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,openai,OpenAI,ashby,multi,ok,26,yes,allowed,n/a,,807,
+2026-10-20T14:02:05+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,blackrock,BlackRock,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,jpmorgan,JPMorgan Chase,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,reed,Reed,reed,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,eurotechjobs,EuroTechJobs,gmail_alerts,multi,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml
+2026-10-20T14:02:05+00:00,totaljobs,Totaljobs,gmail_alerts,GB,disabled,0,n/a,n/a,n/a,,,enabled: false in config/sources.yaml

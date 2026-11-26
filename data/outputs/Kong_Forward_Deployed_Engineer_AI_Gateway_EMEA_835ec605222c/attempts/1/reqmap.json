@@ -1,0 +1,1066 @@
+{
+  "coverage": 0.54,
+  "requirements": [
+    {
+      "term": "AI Gateway",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "API",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "APIs",
+          "snippet": "Designed a deterministic…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "apis",
+          "snippet": "Built an AI assistant…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "API",
+          "snippet": "Proposed the request flow:…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "API",
+          "snippet": "Built a production RAG and…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "APIs",
+          "snippet": "Working independently for…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "av1",
+          "quote": "APIs",
+          "snippet": "Integrated Twelve Data…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "API",
+          "snippet": "Helped build a…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "APIs",
+          "snippet": "Shipped features in a…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "API",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "api",
+          "snippet": "Deterministic…",
+          "via": "API"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "api",
+          "snippet": "For an insurance hackathon…",
+          "via": "API"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "API",
+          "snippet": "Claude API",
+          "via": "API"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "API",
+          "snippet": "OpenAI API",
+          "via": "API"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "APIs",
+          "snippet": "REST APIs",
+          "via": "API"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "API",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "API"
+        }
+      ]
+    },
+    {
+      "term": "apis",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az2",
+          "quote": "APIs",
+          "snippet": "Designed a deterministic…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "apis",
+          "snippet": "Built an AI assistant…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "apis",
+          "snippet": "Proposed the request flow:…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "apis",
+          "snippet": "Built a production RAG and…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "APIs",
+          "snippet": "Working independently for…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av1",
+          "quote": "APIs",
+          "snippet": "Integrated Twelve Data…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "apis",
+          "snippet": "Helped build a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "APIs",
+          "snippet": "Shipped features in a…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "apis",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "apis",
+          "snippet": "Deterministic…",
+          "via": "apis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "apis",
+          "snippet": "For an insurance hackathon…",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "Claude API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "apis",
+          "snippet": "OpenAI API",
+          "via": "apis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "APIs",
+          "snippet": "REST APIs",
+          "via": "apis"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "apis",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "apis"
+        }
+      ]
+    },
+    {
+      "term": "identity",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "policy",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az3",
+          "quote": "production",
+          "snippet": "Deployed the agent as a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc2",
+          "quote": "production",
+          "snippet": "Contributed the MCP…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc4",
+          "quote": "production",
+          "snippet": "Translated ambiguous…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc5",
+          "quote": "production",
+          "snippet": "Reviewed pull requests in…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Helped the client's…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "production",
+          "snippet": "Built a production RAG and…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a…",
+          "via": "production"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:6",
+          "quote": "production",
+          "snippet": "Shipped production fintech features integrating Twelve Data…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "agentic",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "agentic",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agentic",
+          "snippet": "Built an AI assistant…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "agentic",
+          "snippet": "Proposed and prototyped an…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc3",
+          "quote": "agentic",
+          "snippet": "Designed hierarchical…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agentic",
+          "snippet": "Led the design in a…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "agentic",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl4",
+          "quote": "agentic",
+          "snippet": "Built a production RAG and…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "agentic",
+          "snippet": "Working independently for…",
+          "via": "agentic"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_as1",
+          "quote": "agentic",
+          "snippet": "Built a 14-step AI…",
+          "via": "agentic"
+        }
+      ]
+    },
+    {
+      "term": "mcp",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "MCP",
+          "snippet": "Proposed and prototyped an…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc2",
+          "quote": "MCP",
+          "snippet": "Contributed the MCP…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "MCP",
+          "snippet": "Led the design in a…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "MCP",
+          "snippet": "Proposed the request flow:…",
+          "via": "mcp"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "MCP",
+          "snippet": "Built a search assistant…",
+          "via": "mcp"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "MCP",
+          "snippet": "MCP (FastMCP, MCP SDK)",
+          "via": "mcp"
+        }
+      ]
+    },
+    {
+      "term": "cost",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "costs",
+          "snippet": "Built a private client an…",
+          "via": "cost"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "cost",
+          "snippet": "Deterministic…",
+          "via": "cost"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "cost",
+          "snippet": "For an insurance hackathon…",
+          "via": "cost"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "cost",
+          "snippet": "Fine-tuned an…",
+          "via": "cost"
+        }
+      ]
+    },
+    {
+      "term": "evaluation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "evaluation",
+          "snippet": "Wrote about 65 automated…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "az9",
+          "quote": "evaluation",
+          "snippet": "Wrote the dissertation's…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "evaluation",
+          "snippet": "Found where the assistant…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg4",
+          "quote": "evaluation",
+          "snippet": "Reported that Leiden…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "evaluation",
+          "snippet": "Linked 14 public…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt2",
+          "quote": "evaluation",
+          "snippet": "Built a Bitcoin forecaster…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "evaluation",
+          "snippet": "Fine-tuned an…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "evaluation",
+          "snippet": "Reported the limits…",
+          "via": "evaluation"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "evaluation",
+          "snippet": "LLM evaluation",
+          "via": "evaluation"
+        }
+      ]
+    },
+    {
+      "term": "latency",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "latency",
+          "snippet": "Deterministic…",
+          "via": "latency"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "latency",
+          "snippet": "For an insurance hackathon…",
+          "via": "latency"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af2",
+          "quote": "latency",
+          "snippet": "Text-to-speech on CUDA in…",
+          "via": "latency"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "latency",
+          "snippet": "Built a voice assistant…",
+          "via": "latency"
+        }
+      ]
+    },
+    {
+      "term": "API management platforms",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "communication",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az9",
+          "quote": "communication",
+          "snippet": "Wrote the dissertation's…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "stakeholder",
+          "snippet": "Proposed and prototyped an…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc4",
+          "quote": "stakeholder",
+          "snippet": "Translated ambiguous…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc5",
+          "quote": "stakeholder",
+          "snippet": "Reviewed pull requests in…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholder",
+          "snippet": "Led the design in a…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "communication",
+          "snippet": "The client's founder later…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "av6",
+          "quote": "communication",
+          "snippet": "Secured backend…",
+          "via": "communication"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:7",
+          "quote": "stakeholders",
+          "snippet": "Turns statistical outputs into clear recommendations for…",
+          "via": "stakeholder"
+        }
+      ]
+    },
+    {
+      "term": "Go",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "go",
+          "snippet": "Built an AI assistant…",
+          "via": "Go"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "goes",
+          "snippet": "Proposed the request flow:…",
+          "via": "Go"
+        }
+      ]
+    },
+    {
+      "term": "Kong Gateway",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Konnect",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "kubernetes",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Kubernetes",
+          "snippet": "Kubernetes",
+          "via": "kubernetes"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "Kubernetes",
+          "snippet": "Kubernetes (AWS EKS)",
+          "via": "kubernetes"
+        }
+      ]
+    },
+    {
+      "term": "llm",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "LLM",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "az4",
+          "quote": "llm",
+          "snippet": "Wrote about 65 automated…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "llm",
+          "snippet": "Built an AI assistant…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "llm",
+          "snippet": "Found where the assistant…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "llm",
+          "snippet": "Proposed and prototyped an…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "LLM",
+          "snippet": "Proposed the request flow:…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl2",
+          "quote": "llm",
+          "snippet": "Built NLP and agentic RAG…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl3",
+          "quote": "llm",
+          "snippet": "Contributed to a team LoRA…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl8",
+          "quote": "llm",
+          "snippet": "Built a private client an…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl6",
+          "quote": "LLMs",
+          "snippet": "Developed NLP pipelines…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf1",
+          "quote": "LLM",
+          "snippet": "Deterministic…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "llm",
+          "snippet": "For an insurance hackathon…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "llm",
+          "snippet": "Built a search assistant…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql1",
+          "quote": "llm",
+          "snippet": "Fine-tuned an…",
+          "via": "llm"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "llm",
+          "snippet": "Reported the limits…",
+          "via": "llm"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "LLMs",
+          "snippet": "LLMs",
+          "via": "llm"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "LLM",
+          "snippet": "LLM evaluation",
+          "via": "llm"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "LLM",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "llm"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:4",
+          "quote": "LLM",
+          "snippet": "Deployed an LLM agent on AWS for an AstraZeneca-affiliated…",
+          "via": "llm"
+        }
+      ]
+    },
+    {
+      "term": "model APIs",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "mTLS",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "OAuth/OIDC",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "policy enforcement",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "python",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az5",
+          "quote": "Python",
+          "snippet": "Explored 14 research…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built an AI assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Combined 14 separate…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc1",
+          "quote": "Python",
+          "snippet": "Proposed and prototyped an…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl1",
+          "quote": "python",
+          "snippet": "Built scikit-learn…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Checked all 859,494…",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:3",
+          "quote": "Python",
+          "snippet": "Owns data workflows end-to-end in Python and SQL, from…",
+          "via": "python"
+        }
+      ]
+    },
+    {
+      "term": "service mesh",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "tool calling",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az1",
+          "quote": "tool calling",
+          "snippet": "Built a tool-calling LLM…",
+          "via": "tool calling"
+        },
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "tool calling",
+          "snippet": "Built an AI assistant…",
+          "via": "tool calling"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "tool calling",
+          "snippet": "tool calling",
+          "via": "tool calling"
+        }
+      ]
+    }
+  ]
+}

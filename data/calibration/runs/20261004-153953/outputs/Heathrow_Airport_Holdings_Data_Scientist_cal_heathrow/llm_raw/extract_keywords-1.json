@@ -1,0 +1,21 @@
+{
+  "required": [
+    "statistical methods",
+    "machine learning",
+    "data analysis",
+    "statistical modelling",
+    "Python or R",
+    "SQL",
+    "cloud-based analytics tools",
+    "data governance",
+    "model risk",
+    "data protection",
+    "security requirements"
+  ],
+  "preferred": [
+    "specialist data or analytics suppliers",
+    "delivering data science solutions in a complex organisation"
+  ],
+  "company_hook": "Heathrow Airport Holdings focuses on improving airport operations and informing business decisions through advanced data science techniques.",
+  "team": "Data Science"
+}

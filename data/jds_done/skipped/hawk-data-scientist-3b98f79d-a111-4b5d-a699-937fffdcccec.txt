@@ -1,0 +1,70 @@
+Company: Hawk
+Title: Data Scientist
+URL: https://jobs.ashbyhq.com/hawk/3b98f79d-a111-4b5d-a699-937fffdcccec
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-30T13:54:58.816+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-31
+Listed: yes
+
+About Us 
+
+Hawk is the leading provider of AI-supported anti-money laundering and fraud detection technology. Banks and payment providers globally are using Hawk’s powerful combination of traditional rules and explainable AI to improve the effectiveness of their AML compliance and fraud prevention by identifying more crime while maximizing efficiency by reducing false positives. With our solution, we are playing a vital role in the global fight against Money Laundering, Fraud, or the financing of terrorism. We offer a culture of mutual trust, support and passion – while providing individuals with opportunities to grow professionally and make a difference in the world. 
+
+
+
+
+YOUR MISSION
+
+As a Customer Data Scientist at Hawk, you're the person our customers trust to make their AML and fraud detection models actually work for them: tuned to their transaction patterns, defensible to their regulators, and provably effective in their own numbers. You sit inside the regional customer team, working directly alongside Customer Value Partners on live accounts, not behind a wall of tickets from a central data science function. Your work spans model and threshold tuning, deep analytical investigation into detection performance, and building the customer-facing narrative that shows exactly what's improved and why. You've done this in front of customers before, and you know the difference between a model that scores well in a notebook and one that survives contact with a real investigator's workload.
+
+
+
+
+KEY RESPONSIBILITIES
+
+ - Tune and optimize detection models and thresholds against each customer's live transaction data, balancing detection effectiveness against false positive load, not just against a benchmark dataset.
+
+ - Investigate detection performance deeply: dig into missed cases, alert quality, and pattern drift, and turn what you find into concrete tuning or configuration changes.
+
+ - Translate technical findings into customer-facing insight: build the analysis that shows investigator productivity gains, false positive cost reduction, and detection effectiveness improvements in language a customer's compliance and risk leadership actually uses.
+
+ - Sit in the room with customers directly. Present findings, defend your methodology to a customer's own data science or compliance team, and answer the hard “why did the model do this” questions live.
+
+ - Partner closely with your regional Customer Value Partners on account strategy, informing where the model needs to change to unlock the next stage of value realization or a renewal conversation.
+
+ - Feed patterns and findings back into Hawk's broader model and product functions, distinguishing between “this customer needs local tuning” and “this is a systemic gap worth fixing centrally.”
+
+ - Own the regulatory defensibility of the tuning decisions you make. Document your reasoning so a customer's audit or regulator review holds up.
+
+ - Bring rigor to how you validate model changes before they go live: backtesting, sample review, and sign-off discipline that protects the customer's compliance posture.
+   
+   
+
+
+YOUR PROFILE
+
+ - 5-7 years as a data scientist in a customer-facing role, presenting analysis and defending model decisions directly to clients. This is not an internal-facing engineering or product data science background; you've sat across the table from a customer before.
+
+ - Real experience in AML, fraud detection, or financial crime analytics is required. You understand transaction monitoring, typologies, and what a false positive actually costs an investigator, not just what one costs on a confusion matrix.
+
+ - Strong hands-on skills in the standard data science stack (Python, SQL, and whatever ML tooling you've used in production), but your edge is judgment under ambiguity: knowing when a model change is safe to make and when it needs a human in the loop.
+
+ - Comfortable being the technical voice in a room with a customer's risk, compliance, or data science stakeholders, and holding your own when questioned.
+
+ - A track record of translating model performance into business value a non-technical stakeholder can act on: not just accuracy metrics, but investigator hours saved, false positive cost avoided, and cases caught.
+
+ - Genuine comfort with ambiguity and live production systems. You're not looking for a clean offline research problem, you're looking for the “why did this alert fire on a real customer's data at 2pm today” problem.
+
+ - An ownership mentality. You don't wait for a ticket; you notice when an account's detection performance is drifting and you go find out why.
+   
+   
+
+
+BONUS
+
+ - Experience specifically in transaction monitoring or payments fraud detection at a bank, payment provider, or a vendor serving them.
+
+ - Familiarity with explainable AI and rules-based hybrid detection approaches, since that's core to how Hawk's models work.

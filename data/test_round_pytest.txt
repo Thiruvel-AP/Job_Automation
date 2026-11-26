@@ -1,0 +1,3 @@
+FAILED tests/tailoring/test_calibration_fixes.py::test_a_skill_listed_twice_renders_once_on_the_cv
+FAILED tests/tailoring/test_selection.py::test_the_model_is_never_asked_to_select_and_the_cv_follows_the_code_selection
+2 failed, 2776 passed in 1748.85s (0:29:08)

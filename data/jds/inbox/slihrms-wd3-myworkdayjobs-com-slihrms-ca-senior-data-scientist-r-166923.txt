@@ -1,0 +1,104 @@
+Company: Slihrms
+Title: Senior Data Scientist
+URL: https://slihrms.wd3.myworkdayjobs.com/Careers/job/GBLondonNova-North/Senior-Data-Scientist_R-166923
+Source: workday
+Apply kind: workday
+Location: GB.London.Nova North; GB.Bristol.The Hub, United Kingdom
+Posted: 2026-10-23
+Posted via: workday.postedOn
+First seen: 2026-11-06
+Listed: yes
+
+Job Description
+
+Overview
+
+Join a genuinely collaborative team whose diverse expertise delivers innovative solutions to complex engineering challenges worldwide. As an experienced data scientist, you will work across the data lifecycle in a fast-paced Agile environment, helping keep people, critical businesses and communication networks connected and secure. The role includes some client-site work, with flexible and remote working options, career development, training and a competitive reward package.
+The successful candidate will develop insightful, machine learning and data-driven solutions that support defensive cyber operations, mission data exploitation and operational decision-making within a secure national security environment.
+Working within Agile, multidisciplinary product teams, you will collaborate with Product Owners, Business Analysts, Data Engineers, Data Visualisers and cyber specialists to transform large-scale data into trusted, operationally useful data products. The role requires a strong foundation in data science together with practical experience operating within modern data platforms, MLOps environments and software engineering workflows.
+
+Your role
+
+Data Science & Analytics
+
+- Design, develop and deploy statistical, insightful, AI and machine learning solutions to solve operational challenges.
+- Explore large and complex datasets to identify trends, patterns and actionable insights.
+- Apply appropriate machine learning, predictive analytics and data science techniques to real-world problems.
+- Develop and evaluate insightful models using robust performance and validation methodologies.
+- Communicate findings and recommendations clearly to both technical and non-technical stakeholders.
+- Contribute to development of innovative AI, machine learning and advanced analytics capabilities.
+Data Product Delivery
+
+- Ensure large datasets are managed appropriately across staging, modelling, analytics and presentation layers.
+- Contribute to the design and delivery of high-quality data products that support Cyber Capability requirements.
+- Work collaboratively with Product Owners and Business Analysts to translate user needs into insightful solutions.
+- Support data quality assurance, governance and reproducibility across insightful workflows.
+Platform & Engineering
+
+- Develop and maintain production-quality Python and SQL code.
+- Use Git-based source control and branch management practices across multiple deployment environments.
+- Work with Spark and PySpark to process and analyse large-scale datasets.
+- Develop and manage machine learning workflows within an MLOps environment.
+- Use tooling such as MLflow, VS Code or JupyterHub for model development, experimentation and deployment.
+- Work with technologies to access, manage and analyse data at scale (e.g., Apache Iceberg and Trino).
+Delivery Excellence
+
+- Participate fully in Agile ceremonies including sprint planning, backlog refinement, demonstrations and retrospectives.
+- Produce high-quality technical documentation and knowledge-sharing materials.
+- Contribute to continuous improvement of data science and MLOps practices.
+
+About you
+
+Essential Skills & Experience
+
+- Candidates should typically bring at least three years of relevant professional experience, although applicants with less experience and strong evidence of capability will also be considered.
+- Strong Python and SQL skills, with experience developing production-quality insightful, statistical, AI and machine-learning solutions.
+- Experience working with large, complex, structured and unstructured datasets, including data preparation, exploratory analysis, feature engineering and model validation.
+- Practical experience with Git, Agile delivery and collaborative software-development workflows.
+- Experience using distributed data-processing and MLOps tools such as Spark, PySpark, MLflow, JupyterHub or equivalent technologies.
+- Understanding of data-product lifecycles, data quality, governance, reproducibility and auditable insightful workflows.
+- Ability to translate operational or business needs into insightful solutions and communicate findings clearly to technical and non-technical stakeholders.
+- Effective collaboration within multidisciplinary teams, supported by strong problem-solving, documentation and critical-thinking skills.
+Desirable Skills & Experience
+
+- Advanced statistical modelling, experimental design, forecasting, anomaly detection, model optimisation or explainability.
+- Deployment and operation of machine-learning models, including monitoring, drift detection and performance management.
+- Awareness of modern lakehouse or enterprise data platforms and technologies such as Trino and Apache Iceberg.
+- Experience in NLP, large language models, Generative AI, deep learning, graph analytics.
+- Responsible AI or retrieval-augmented generation.
+- Delivery of data products or decision-support capabilities in secure, governed or operational environments.
+- Stakeholder engagement, workshop facilitation and presentation of insightful findings to senior audiences.
+Personal Attributes
+
+- Curious, insightful and outcome-focused, with a commitment to technical excellence and continuous learning.
+- Collaborative and comfortable working through complexity and ambiguity.
+- Able to balance innovation with operational reliability, governance and security.
+- Motivated to deliver data products that create measurable user and mission impact.
+Qualifications
+
+- A degree in data science, computer science, software engineering, mathematics, statistics, physics, engineering or another quantitative discipline, or equivalent professional experience.
+- Evidence of relevant continuing professional development.
+- A postgraduate qualification or recognised professional certification in data science, AI, machine learning, data engineering, cloud platforms, Agile delivery, Responsible AI or security is advantageous but not essential.
+
+Rewards & benefits
+
+Explore the rewards and benefits that help you thrive – at every stage of your life and your career. Enjoy competitive salaries, employee rewards and a brilliant range of benefits you can tailor to suit your own health, wellbeing, financial and lifestyle choices. Make the most of a myriad of opportunities for training and professional development to grow your skills and expertise. And combine our hybrid working culture and flexible holiday allowances to balance a great job and fulfilling personal life.
+Rewards and benefits – Careers at AtkinsRéalis.
+
+About AtkinsRéalis
+
+We're AtkinsRéalis, a world-class engineering services and nuclear organization. We connect people, data and technology to transform the world's infrastructure and energy systems. Together, with our industry partners and clients, and our global team of consultants, designers, engineers and project managers, we can change the world. We're committed to leading our clients across our various end markets to engineer a better future for our planet and its people.
+Find out more.
+
+Additional information
+
+Security clearance
+This role may require security clearance and offers of employment will be dependent on obtaining the relevant level of clearance. If this is necessary, it will be discussed with you at interview. The vetting process is delivered by United Kingdom Security Vetting (UKSV) and may require candidates to provide proof of residency in the UK of 5 years or longer. If applying to this role please do not make reference to (in conversation) or include in your application or CV, details of any current or previously held security clearance.
+We are committed to creating a culture where everyone feels that they belong - a place where we can all be ourselves, thrive and develop to be the best we can be. So, we offer a range of family friendly, inclusive employment policies, flexible working arrangements and employee resource groups to support all employees. As an Equal Opportunities Employer, we value applications from all backgrounds, cultures and ability. As a Disability Confident Leader, we are committed to offering an interview to all applicants who have a disability and meet the essential criteria. If you would like to be considered under this commitment, please let us know at the application stage.
+#LI-ADST | #LI-UK | #SGCampaign
+
+Worker TypeEmployee
+
+Job TypeRegular
+
+At AtkinsRéalis, we seek to hire individuals with diverse characteristics, backgrounds and perspectives. We strongly believe that world-class talent makes no distinctions based on gender, ethnic or national origin, sexual identity and orientation, age, religion or disability, but enriches itself through these differences.

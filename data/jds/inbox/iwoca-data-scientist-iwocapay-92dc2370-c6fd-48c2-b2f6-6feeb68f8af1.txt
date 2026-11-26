@@ -1,0 +1,156 @@
+Company: Iwoca
+Title: Data Scientist - iwocaPay
+URL: https://jobs.ashbyhq.com/iwoca.co.uk/92dc2370-c6fd-48c2-b2f6-6feeb68f8af1
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-21T07:59:44.264+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-06
+Listed: yes
+
+DATA SCIENTIST - IWOCAPAY RISK SQUAD 
+
+Hybrid in London, United Kingdom (one day per week in office requirement)
+
+
+
+We're looking for a Data Scientist to join the iwocaPay Risk Squad.
+
+You'll own credit models that decide who iwocaPay can safely fund, on what terms, and how far the product can grow. You'll help shape how risk modelling develops.
+
+
+
+The company
+
+Small businesses move fast. Opportunities often don't wait, and cash flow pressures can appear overnight. To keep going, and growing, SMEs need finance that's as flexible and responsive as they are.
+
+That's why we built iwoca. Our smart technology, data science and five-star customer service ensures business owners can act with the speed, confidence and control they need, exactly when it's needed.
+
+We've already cleared the way for 100,000 businesses with more than £4 billion in funding. Our passionate team is driven to help even more SMEs succeed, through access to better finance and other services that make running a business easier. Our ultimate mission is to support one million SMEs in their defining moments, creating lasting impact for the communities and economies they drive.
+
+
+
+The team
+
+The Risk Squad owns credit risk and fraud for iwocaPay, iwoca's Buy Now Pay Later product for businesses. The aim is to lend to every business likely to repay, and to spot the ones that aren't.
+
+The squad works across three areas:
+
+ - Lending decisions. Building and improving the automated credit model.
+
+ - The portfolio. Tracking losses, chargebacks, and seller performance, and deciding which segments to grow or pull back from.
+
+ - New products. Designing the risk side of each one before it launches.
+
+The squad is small and new – two data scientists, a risk analyst and a risk lead.
+
+
+
+The role
+
+As a Data Scientist in the Risk Squad, you'll co-own every credit model with the other data scientist and review one another's work. The job is mostly supervised ML on tabular data, with a fair amount of data engineering as the squad moves onto its own pipelines. You'll start on the automated credit model and take on the invoice financing models over time. You can also test ideas with iwoca's other lending data science teams, who work on similar credit problems.
+
+You'll choose what to work on and write the plans you deliver. Much of the squad's work happens in iwocaPay's product and strategy meetings, so your models shape the roadmap. You'll also help set up how the squad works – what it monitors, and the guidelines it follows.
+
+Live project examples:
+
+ - Model architecture. Rethinking the model around how iwocaPay actually lends: overlapping facilities, short terms, and a growing set of products a customer can use.
+
+ - Blending datasets. Bringing more iwocaPay-specific data into the models while still drawing on iwoca's larger core lending dataset, through methods such as transfer learning.
+
+ - Invoice financing. Building a credit risk model from scratch for a new product on a segment iwoca hasn’t lent to before. Plus finding the modelling opportunities elsewhere in the funnel, like in our offers...
+
+
+
+The requirements
+
+Essential:
+
+ - Statistical foundations. You have a background in probability and statistics from a quantitative field – typically a degree or Master's in Statistics, Mathematics, Physics, Engineering, or similar. You reason about uncertainty and calibration as first-order concerns.
+
+ - Production ML. You have built supervised ML models on tabular data end to end – exploration, training, deployment, and monitoring.
+
+ - Ownership. You work well in a small, early-stage team where priorities move quickly. You build what you need as you go, and take loosely defined problems from framing to a landed decision.
+
+ - Judgement. You know when a model is good enough to go live, and when it needs more work. You critically evaluate model output – yours, a colleague's, or an LLM's – and can explain why a choice is right.
+
+ - AI leverage. You've used AI to produce work you couldn't have delivered without it – a modelling pipeline, a prototype, or a tool others use. You judge where it helps and where it doesn't.
+
+ - Communication. You write and speak clearly, directly, and concisely. You adapt technical detail for non-technical colleagues in product, risk, and leadership.
+
+Bonus:
+
+ - Domain experience. You have worked in credit risk modelling or lending.
+
+ - Non-linear methods. You have used gradient boosting or neural networks on tabular data in production.
+
+ - Combining datasets. You have used transfer learning, domain adaptation, or similar methods on data sources of different size and relevance.
+
+ - Data engineering. You have built data pipelines and managed datasets alongside your modelling work.
+
+ - Coding. You can write code for analysis. The squad works in Python.
+
+
+
+The salary
+
+We expect to pay from £60,000 to £80,000 for this role. But, we’re open-minded, so definitely include your salary goals with your application. We routinely benchmark salaries against market rates, and run quarterly performance and salary reviews.
+
+
+
+The culture
+
+At iwoca, the best idea wins. We model our culture on independent thinking, challenging untested logic, and evidence-based decisions. We prioritise learning and growth, and give people the autonomy to develop in the direction that makes them most effective.
+
+We're a tech company and believe in the power of AI to help us work faster and better. We provide the infrastructure where every iwocan always has access to the best models and where those models have access to all of our data. We will help our people to learn how to use and grow with the new tools available to them.
+
+
+
+The offices
+
+We put a lot of effort into making iwoca a great place to work:
+
+ - Offices in London, Leeds, Berlin, and Frankfurt with plenty of drinks and snacks.
+
+ - Events and community-led groups, including running groups, padel, and monthly ping-pong and pool competitions.
+
+
+
+The benefits
+
+ - Flexible working hours.
+
+ - Medical insurance from Vitality, including discounted gym membership.
+
+ - A private GP service (separate from Vitality) for you, your partner, and your dependents.
+
+ - 25 days’ holiday per year, an extra day off for your birthday, the option to buy or sell an additional five days of annual leave, and unlimited unpaid leave.
+
+ - A one-month, fully paid sabbatical after four years.
+
+ - Instant access to external counselling and therapy sessions for team members that need emotional or mental health support.
+
+ - 3% Pension contributions on total earnings.
+
+ - An employee equity incentive scheme.
+
+ - Generous parental leave and a nursery tax benefit scheme to help you save money.
+
+ - Electric car scheme and cycle to work scheme.
+
+ - Two company retreats a year: we’ve been to France, Italy, Spain, and further afield.
+
+And to make sure we all keep learning, we offer:
+
+ - A learning and development budget for everyone.
+
+ - Company-wide talks with internal and external speakers.
+
+ - Access to learning platforms like Treehouse.
+
+Useful links:
+
+ - iwoca benefits & policies https://coda.io/@iwocauk/iwoca-benefits-policies-uk
+
+ - Interview welcome pack https://coda.io/@iwocauk/interview-welcome-pack-tap

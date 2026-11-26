@@ -1,0 +1,680 @@
+{
+  "job_id": "calibration:cal-creditspring",
+  "company": "Creditspring",
+  "title": "Data Scientist",
+  "family": "data_scientist",
+  "tier": 1,
+  "headline": "Data Scientist",
+  "keywords": [
+    {
+      "term": "machine learning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "explainability",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "feature engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "machine learning models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "monitoring performance",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "SME",
+      "weight": 2.0,
+      "required": true,
+      "alts": [
+        "retail lending"
+      ]
+    },
+    {
+      "term": "acquisition",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "alt-datasources",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "checking data",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "commercial awareness",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "communication",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "credit reference agencies",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "credit risk analytics",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "credit risk assessment",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data pipelines",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "external API feeds",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "gradient boosting techniques",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "infrastructure",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "jupyter",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "model deployment",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "model tuning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "numpy",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pandas",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "regression",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "Creditspring offers subscription-based short-term financial products to improve members' financial stability and resilience.",
+  "team": "Underwriting - Credit risk data science",
+  "ceiling": 0.32,
+  "genuine_gaps": [
+    "explainability",
+    "feature engineering",
+    "machine learning models",
+    "monitoring performance",
+    "SME",
+    "acquisition",
+    "alt-datasources",
+    "checking data",
+    "commercial awareness",
+    "credit reference agencies",
+    "credit risk analytics",
+    "credit risk assessment",
+    "external API feeds",
+    "gradient boosting techniques",
+    "infrastructure",
+    "jupyter",
+    "model tuning"
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.28,
+      "score_stemmed": 0.28,
+      "band": "below",
+      "pages": 1,
+      "shrinks": 0,
+      "reverted": [],
+      "violations": [],
+      "warnings": [
+        "az1: unrecognised name 'Python LLM'",
+        "az1: unrecognised name 'AWS Bedrock Claude Haiku'",
+        "fl1: unrecognised name 'Python FastAPI'"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "explainability",
+        "feature engineering",
+        "machine learning models",
+        "monitoring performance",
+        "SME",
+        "acquisition",
+        "alt-datasources",
+        "checking data",
+        "commercial awareness",
+        "credit reference agencies",
+        "credit risk analytics",
+        "credit risk assessment",
+        "external API feeds",
+        "gradient boosting techniques",
+        "infrastructure",
+        "jupyter",
+        "model deployment",
+        "model tuning"
+      ],
+      "rephrase": {
+        "eligible": 6,
+        "asked": 6,
+        "cached": 0,
+        "calls": 2,
+        "failed_calls": 0,
+        "proposed": 6,
+        "accepted": 6,
+        "blocked": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az2"
+            ],
+            "dc180": [
+              "dc1"
+            ],
+            "freelance": [
+              "fl1"
+            ],
+            "avasoft": [
+              "av4"
+            ]
+          },
+          "projects": [
+            "gtaigraph",
+            "churn"
+          ]
+        },
+        "rephrase": {
+          "az1": "Built a Python LLM agent using LangChain and AWS Bedrock Claude Haiku 4.5 for a multi-omics cancer platform, integrating gene alias resolution, scoring methodology explanation, and dataset provenance tools.",
+          "dc1": "Proposed and prototyped an MCP-based agentic tool in Python with FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, presenting it in a live stakeholder communication demo.",
+          "fl1": "Built machine learning pipelines with scikit-learn and deep learning models (LSTM, BiRNN, CNN) in TensorFlow/Keras, deploying them as Python FastAPI services in Docker.",
+          "av4": "Built a JavaScript web-scraping pipeline that automated manual data collection, creating data pipelines to surface market-trend signals for pricing decisions.",
+          "p_gg2": "Developed per-gene protein-prediction regression models for 11,459 genes using OLS and a GPU Random Forest ensemble, training resumably on a free T4.",
+          "p_ch1": "Built an XGBoost churn classifier in R using tidymodels, applied two-stage Bayesian hyperparameter tuning, incorporated SMOTE, and evaluated with MCC in a machine learning context."
+        },
+        "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl1"
+        ],
+        "avasoft": [
+          "av4"
+        ],
+        "gtaigraph": [
+          "p_gg1",
+          "p_gg2"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+      "rephrase_coverage": {
+        "eligible": 6,
+        "rephrased": 6,
+        "ratio": 1.0
+      }
+    }
+  ],
+  "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Creditspring_Data_Scientist_cal_creditspring",
+  "analysis_warnings": [
+    "keywords: frozen (2026-10-04 17:32), extract_keywords not called",
+    "extract_keywords: dropped keyword 'data drift' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'open banking data providers' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'product and lending strategies' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'supervised machine learning stack' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'manipulating data' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'merging data' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'cleaning data' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'communication skills' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped scikit-learn, sql, stakeholders, statistical inference, tooling, validation, production, testing, lending, open banking data, agentic, Agentic AI, aws, cloud data stacks, credit bureau, decisioning SaaS platforms, event driven architecture, fintech, github, regulated sectors, research, ruby on rails, web applications"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "final": {
+    "score": 0.28,
+    "score_stemmed": 0.28,
+    "band": "below",
+    "pages": 1,
+    "hits": [
+      "machine learning",
+      "python",
+      "communication",
+      "data pipelines",
+      "numpy",
+      "pandas",
+      "regression"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "explainability",
+      "feature engineering",
+      "machine learning models",
+      "monitoring performance",
+      "SME",
+      "acquisition",
+      "alt-datasources",
+      "checking data",
+      "commercial awareness",
+      "credit reference agencies",
+      "credit risk analytics",
+      "credit risk assessment",
+      "external API feeds",
+      "gradient boosting techniques",
+      "infrastructure",
+      "jupyter",
+      "model deployment",
+      "model tuning"
+    ],
+    "chosen_attempt": 1
+  },
+  "rephrase_coverage": {
+    "eligible": 6,
+    "rephrased": 6,
+    "ratio": 1.0
+  },
+  "rephrase": {
+    "eligible": 6,
+    "asked": 6,
+    "cached": 0,
+    "calls": 2,
+    "failed_calls": 0,
+    "proposed": 6,
+    "accepted": 6,
+    "blocked": 0
+  },
+  "letter": {
+    "paragraphs": [
+      "Creditspring's aim to strengthen financial stability through subscription products mirrors my focus on building reliable predictive models that directly impact user outcomes.",
+      "I built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deploying them as FastAPI services in Docker.",
+      "I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.",
+      "Could we find twenty minutes to talk about where I could contribute first on the Underwriting - Credit risk data science team at Creditspring?"
+    ],
+    "problems": [],
+    "score": 0.04,
+    "pages": 1,
+    "status": "ok",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "fl1",
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      },
+      {
+        "id": "dc1",
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "tailor_profile",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 600,
+        "est_input_tokens": 400,
+        "prompt_tokens": 460,
+        "completion_tokens": 80,
+        "reasoning_tokens": 16,
+        "total_tokens": 540,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 884,
+        "prompt_tokens": 882,
+        "completion_tokens": 850,
+        "reasoning_tokens": 630,
+        "total_tokens": 1732,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 500,
+        "prompt_tokens": 534,
+        "completion_tokens": 352,
+        "reasoning_tokens": 300,
+        "total_tokens": 886,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 895,
+        "prompt_tokens": 874,
+        "completion_tokens": 202,
+        "reasoning_tokens": 38,
+        "total_tokens": 1076,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 1004,
+        "prompt_tokens": 964,
+        "completion_tokens": 155,
+        "reasoning_tokens": 27,
+        "total_tokens": 1119,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 3714,
+    "completion_tokens": 1639,
+    "reasoning_tokens": 1011,
+    "total_tokens": 5353,
+    "by_task": {
+      "tailor_profile": {
+        "calls": 1,
+        "prompt_tokens": 460,
+        "completion_tokens": 80,
+        "reasoning_tokens": 16,
+        "total_tokens": 540,
+        "prompt_tokens_per_call": [
+          460
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 2,
+        "prompt_tokens": 1416,
+        "completion_tokens": 1202,
+        "reasoning_tokens": 930,
+        "total_tokens": 2618,
+        "prompt_tokens_per_call": [
+          882,
+          534
+        ]
+      },
+      "cover_letter": {
+        "calls": 2,
+        "prompt_tokens": 1838,
+        "completion_tokens": 357,
+        "reasoning_tokens": 65,
+        "total_tokens": 2195,
+        "prompt_tokens_per_call": [
+          874,
+          964
+        ]
+      }
+    }
+  },
+  "cv_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Creditspring_Data_Scientist_cal_creditspring/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Creditspring_Data_Scientist_cal_creditspring/Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Scientist",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "UK Graduate visa on completion (Dec 2026): no sponsorship needed for 2 years",
+        "Available from December 2026"
+      ]
+    },
+    "profile": "Data Scientist with production LLM agent experience on a multi-omics research platform and freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph.",
+    "skills": {
+      "Languages": [
+        "Python",
+        "SQL",
+        "R",
+        "TypeScript",
+        "JavaScript",
+        "Swift",
+        "Dart"
+      ],
+      "ML & Stats": [
+        "scikit-learn",
+        "XGBoost",
+        "PyTorch",
+        "TensorFlow",
+        "Keras",
+        "LSTM",
+        "Isolation Forest",
+        "Random Forest",
+        "hypothesis testing",
+        "ANOVA",
+        "bootstrap",
+        "PCA",
+        "statistics",
+        "maximum likelihood estimation",
+        "experimental design"
+      ],
+      "LLMs & Agents": [
+        "LangChain",
+        "LangGraph",
+        "Google ADK",
+        "AWS Bedrock",
+        "Claude API",
+        "OpenAI API",
+        "Gemini via LiteLLM",
+        "Hugging Face Transformers",
+        "Ollama",
+        "RAG",
+        "MCP",
+        "tool calling",
+        "LoRA fine-tuning",
+        "LLM evaluation"
+      ],
+      "Data & Cloud": [
+        "pandas",
+        "NumPy",
+        "NLTK",
+        "Matplotlib",
+        "Seaborn",
+        "PostgreSQL",
+        "ChromaDB",
+        "AWS Lambda",
+        "ECR",
+        "IAM",
+        "GCP Cloud Run",
+        "S3, SQS, DynamoDB (MSc coursework)",
+        "Databricks/PySpark (coursework)"
+      ],
+      "Engineering": [
+        "FastAPI",
+        "Docker",
+        "GitHub Actions",
+        "pytest",
+        "React",
+        "Git",
+        "MLflow",
+        "Streamlit",
+        "Tableau"
+      ]
+    },
+    "experience": [
+      {
+        "id": "az",
+        "title": "Data Scientist",
+        "org": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "bullets": [
+          "Built a Python LLM agent using LangChain and AWS Bedrock Claude Haiku 4.5 for a multi-omics cancer platform, integrating gene alias resolution, scoring methodology explanation, and dataset provenance tools.",
+          "Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az2"
+        ]
+      },
+      {
+        "id": "dc180",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python with FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, presenting it in a live stakeholder communication demo."
+        ],
+        "bullet_ids": [
+          "dc1"
+        ]
+      },
+      {
+        "id": "freelance",
+        "title": "Freelance AI/ML Engineer",
+        "org": "Self-employed, Chennai",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built machine learning pipelines with scikit-learn and deep learning models (LSTM, BiRNN, CNN) in TensorFlow/Keras, deploying them as Python FastAPI services in Docker."
+        ],
+        "bullet_ids": [
+          "fl1"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "title": "Software Engineer (SDE Trainee Jan\u2013Jun 2023)",
+        "org": "Avasoft",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Built a JavaScript web-scraping pipeline that automated manual data collection, creating data pipelines to surface market-trend signals for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av4"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Graph PoC \u2014 cancer cell-line omics graph",
+        "stack": "networkx, leidenalg, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "bullets": [
+          "networkx heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8M edges) with k-NN similarity and Leiden community detection (modularity 0.822).",
+          "Developed per-gene protein-prediction regression models for 11,459 genes using OLS and a GPU Random Forest ensemble, training resumably on a free T4."
+        ],
+        "bullet_ids": [
+          "p_gg1",
+          "p_gg2"
+        ]
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Built an XGBoost churn classifier in R using tidymodels, applied two-stage Bayesian hyperparameter tuning, incorporated SMOTE, and evaluated with MCC in a machine learning context."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "org": "University of Bristol",
+        "dates": "2025 \u2013 2026"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction"
+      }
+    ],
+    "certifications": [
+      "Anthropic MCP certifications (Introductory and Advanced), Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ]
+  }
+}

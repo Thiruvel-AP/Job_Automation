@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:18a4fea0a469",
+ "company": "AECOM",
+ "title": "Senior Machine Learning Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.6, ATS ceiling 54%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family ml_engineer matches senior ML engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large firm, stable, London location, clear hiring process"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks candidate for rating or unusual requests"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm salary range or compensation details",
+  "Verify company size and growth signals for culture fit",
+  "Check UK sponsorship eligibility and visa support"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "fc4d1f3ec571a070",
+ "jd_words": 539,
+ "tokens": 1930,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

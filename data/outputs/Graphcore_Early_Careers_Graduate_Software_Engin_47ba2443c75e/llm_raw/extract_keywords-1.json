@@ -1,0 +1,48 @@
+```json
+{
+  "required": [
+    "C++11",
+    "Python",
+    "matrix multiplication (GEMM)",
+    "convolutions",
+    "reductions",
+    "elementwise operations",
+    "fused kernels",
+    "profiling",
+    "microbenchmarks",
+    "threading",
+    "cache locality",
+    "memory layout",
+    "kernel launch efficiency",
+    "regression tests",
+    "numerical checks",
+    "linear algebra",
+    "numerical methods",
+    "scientific computing"
+  ],
+  "preferred": [
+    "machine learning frameworks",
+    "parallel programming",
+    "code optimisation",
+    "maths libraries",
+    "performance analysis"
+  ],
+  "context_terms": [
+    "AI Compute Libraries & Performance",
+    "high-performance compute libraries",
+    "machine learning",
+    "numerical computing",
+    "accelerator performance",
+    "performance engineering",
+    "low-level software",
+    "engineering problems",
+    "technical reviews",
+    "engineering judgement",
+    "hardware",
+    "Graphcore hardware",
+    "AI frontier"
+  ],
+  "company_hook": "Graphcore builds next‑generation AI compute, from semiconductors and software to datacenter‑scale systems, to help customers run AI models more efficiently.",
+  "team": "AI Compute Libraries & Performance"
+}
+```

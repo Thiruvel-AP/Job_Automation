@@ -1,0 +1,68 @@
+Company: Cambridge Consultants
+Title: Graduate Human-Centric AI Engineer (2027 start)
+URL: https://job-boards.eu.greenhouse.io/cambridgeconsultantslimited/jobs/4971959101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-10-01T09:55:10-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+Overview 
+
+Cambridge Consultants’ Human-Machine Understanding (HMU) group is looking for a graduate n engineer to work at the intersection of AI, cognitive science, and human-machine interaction. This is an exciting opportunity to take an active role in the group’s mission to build the next generation of intuitive human interactive technologies. 
+
+HMU is building the technical framework of Intelligent Interfaces for modern digital and physical AI: a dedicated layer of intelligence that enables machines to perceive, reason about, and adapt to human behaviour and intent in real time. We apply this approach to diverse use cases, from robotics and automation in industrial and consumer settings, to agentic coaches and AI assistants in sports and healthcare. This is an opportunity to contribute to technical ideas and help shape the development of an emerging capability. 
+
+Successful candidates can join us between May and October 2027. 
+
+There is no deadline for this role, as we recruit on a rolling basis. We encourage you to apply as soon as possible. 
+
+What we offer 
+
+ As part of an emerging capability, with support and guidance from your team, you will exploreand push the boundaries of the state-of-the-art in human-interactive AI. 
+
+You will contribute to the development of our HMU framework, supporting work across multi-modal human sensing and fusion, human-centric contextual modelling, and agentic workflows that can leverage this context to support human users proactively. You will have the opportunity to explore the art of the possible, drawing on ideas from fields such as Psychology and Cognitive Science, Affective Computing, Human-Robot Interaction, and Cognitive Robotics, and help turn emerging concepts into robust, real-world interactive AI pipelines. 
+
+We are a nurturing team. You will be supported to develop your career in the direction you want, with mentoring and training provided. Opportunities for development and progression are varied and will be tailored to your interests, experience, and skills, with scope to build your expertise and, over the course of your career, develop into areas of greater technical, commercial and/or programme, and leadership responsibility. 
+
+What you will do 
+
+- Deliver on diverse client projects, from supporting the design and running of human subjects’ studies for science-backed HMI/HRI design, to technical development of novel interfaces and interaction paradigms. 
+
+- Support technical research on understanding the art of the possible in human-machine understanding and translating it into robust industrial solutions through technical prototypes. 
+
+- Work with colleagues across Cambridge Consultants to translate deep technical insights into compelling narratives and functional systems for our clients, and academic audiences. 
+
+Examples of projects undertaken by the team: 
+
+- Building contextual understanding into Physical AI systems for adaptive human-robot interaction 
+
+- Developing human-centric AI to assist with curating personalised music playlists for people living with dementia through behavioural monitoring 
+
+- Mapping the current space and future potential of human-machine understanding with Capgemini 
+
+What you can bring
+
+- An excellent degree or PhD in Computer Science, Robotics, or a related field with emphasis on computational modelling or AI. 
+
+- High proficiency in Python and experience with AI/ML frameworks (e.g. PyTorch). You should be comfortable building and debugging complex, real-time systems. 
+
+- The ability to work independentlywith the wider team across multiple disciplines, driving your own curiosity with the curiosity and drive to explore new topics and proactively building prototypes that demonstrate your ideas. 
+
+In addition, any of the following is highly desired: Experience in at least one of these areas would be advantageous though not a necessity: 
+
+- Prior experience of human subject research; from experiment protocol and methodology development, to conducting experiments, analysis of data and synthesis of insights. Experience with ethics committees is highly valued. This can be gained through university projects, industry experience or personal projects. 
+
+- Experience in technical realization of HRI/HCI systems, such as cognitive architectures, multi-modal perception pipelines, or affective computing. 
+
+- Experience with agentic AI workflows, knowledge graphs, and complex state-machine architectures. 
+
+- Development of software for distributed real-time physical systems or robotics (e.g., ROS2). 
+
+Some projects at Cambridge Consultants are subject to security restrictions. This role requires you to obtain a Security Check (SC) level security clearance ( United Kingdom Security Vetting: Applicant ). You must be able to work in the UK without restrictions in accordance with UK National Law and be prepared to successfully undertake an appropriate level of UK National Security Vetting according to UK Government National Security Vetting criteria. 
+
+Please be aware that, for roles requiring Security Check clearance, applicants will typically need to have been continuously resident in the UK for a minimum of 5 years immediately prior to applying for this role in order to meet the requirements for Security Check (SC) clearance. 
+
+By submitting an application to Cambridge Consultants, you confirm that the information provided in this application, together with any supporting documentation, is true, complete, and accurate to the best of your knowledge and belief. You understand that any false statement, misleading information, or material omission may render you liable to disqualification from the recruitment process, withdrawal of any offer of employment, or dismissal without notice if discovered following appointment. You acknowledge that the organisation reserves the right to verify the information supplied.

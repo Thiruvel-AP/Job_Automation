@@ -1,0 +1,43 @@
+Company: WGSN
+Title: Director of Data Engineering
+URL: https://jobs.lever.co/wgsn/cc1f951e-c834-49f7-b9a3-b6d08d03e220
+Source: lever
+Apply kind: lever
+Location: London, UK, GB
+Posted: 2026-10-21T09:59:18.982000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-31
+Listed: yes
+
+Working at WGSN
+Together, we create tomorrow 
+
+A career with WGSN is fast-paced, exciting and full of opportunities to grow and develop. We're a team of consumer and design trend forecasters, content creators, designers, data analysts, advisory consultants and much more, united by a common goal: to create tomorrow. 
+
+WGSN's trusted consumer and design forecasts power outstanding product design, enabling our customers to create a better future. Our services cover consumer insights, beauty, consumer tech, fashion, interiors, lifestyle, food and drink forecasting, data analytics and expert advisory. If you are an expert in your field, we want to hear from you. 
+About the Role
+We're hiring a Director of Data Engineering to own WGSN's data platform: its architecture, its data models and how it runs day to day. You'll report to our Group Chief Data Officer, lead a team of five data engineers, and work closely with our Group Technology, Data Science and programme teams.
+At the heart of the role is the trend spine, the connected backbone that links trend signals, taxonomies, forecasts and content. Next year we launch an expanded social data product across TikTok, Reddit and Instagram, and after that we plan to rebuild the platform. You'll lead both, and lay the data foundations for the AI products that will sit on top.
+What You'll Do
+Own data architecture and modelling across the WGSN platform
+Design and build the trend spine
+Integrate structured, semi-structured and unstructured data, from social and search signals to runway imagery and proprietary research
+Lead, develop and set standards for a team of five engineers, plus agency and contractor partners
+Lead architecture discussions with our Group Technology team
+Shape the planned platform rebuild, including stack, cost and vendor decisions
+Introduce AI-assisted and agentic engineering practices and build AI-ready data foundations
+Make sure the platform is reliable, well governed, GDPR compliant and cost effective
+What We're Looking For
+Experience designing or substantially reshaping a data platform, with clear ownership of architecture and modelling decisions
+The technical depth and confidence to lead engineering and architecture conversations with senior technologists
+Data engineering leadership at a small to mid-size business, or at manager level in a larger organisation with real design ownership
+Hands-on experience with semi-structured and unstructured data alongside structured data
+A practical track record of using AI to change how your team builds
+Nice to Have
+Snowflake, Databricks and AWS
+Embeddings, vector search, feature stores or knowledge graphs
+Taxonomy or ontology design
+Social, web-scale or licensed third-party data
+A background in media, information services, SaaS or e-commerce
+Experience
+Around 10 or more years in data engineering, with at least four years leading engineers.

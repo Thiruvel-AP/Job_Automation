@@ -1,0 +1,1 @@
+disqualified, channel: the same role is already on record under another channel (OpenAI/Applied AI Engineer)

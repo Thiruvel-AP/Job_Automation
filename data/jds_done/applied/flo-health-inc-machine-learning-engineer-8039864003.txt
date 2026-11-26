@@ -1,0 +1,100 @@
+Company: Flo Health Inc.
+Title: Machine Learning Engineer
+URL: https://job-boards.greenhouse.io/flohealth/jobs/8039864003
+Source: greenhouse
+Apply kind: greenhouse
+Location: London
+Posted: 2026-10-22T04:17:29-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+500M+ downloads. 80M+ monthly users. A decade of building – and we’re still accelerating.
+
+Flo is the world’s #1 health & fitness app worldwide on a mission to build a better future for female health. Backed by a $200M investment led by General Atlantic, we became the first product of our kind to reach a $1B valuation in 2024 – and we’re not slowing down.
+
+With 7M paid subscribers and the highest-rated experience in the App Store’s health category, we’ve spent 10 years earning trust at scale. Now, we’re building the next generation of digital health – AI-powered, privacy-first, clinically backed – to help our users know their body better.
+
+The job
+We are looking for a Machine Learning Engineers to join Flo Health. You will be developing groundbreaking features that leverage our medical expertise, technical skills, rapid adoption of new technologies (like LLMs), product knowledge, and a deep understanding of our users’ needs. If you’re passionate about technology, especially advancements in generative AI, and driven by delivering value to users, we would love to hear from you!
+
+Your Experience
+
+Must have:
+
+- 4+ years of professional experience in the field of machine learning
+
+- Demonstrated success in building and deploying large-scale machine learning models; experience with large-scale LLM applications is a bonus
+
+- Ability to devise creative solutions to intricate technical challenges, including experience in systems design with the ability to architect and explain ML/LLM pipelines
+
+- Strong Python programming skills for efficient model development and deployment
+
+- Experience with both traditional ML and modern LLM frameworks
+
+- Understanding of the entire ML/LLM development process, including CI/CD, version control, testing, MLOps/LLMOps, and agile methodologies
+
+- Experience in building and managing data pipelines using tools like Apache Spark
+
+- Excellent communication skills and ability to collaborate with diverse teams
+
+- Commitment to responsible AI practices, including fairness, accountability, and transparency
+
+Nice to have:
+
+- Advanced degree in Computer Science, Mathematics, or a related field
+
+- Familiarity with statistical and measurement fundamentals and running and evaluating AB tests
+
+- Data visualisation skills
+
+- Experience in the MedTech domain
+
+What you'll be doing
+
+You'll be responsible for:
+
+- Explore, develop and test complex ML/AI systems to improve female health
+
+- Work with state-of-the-art technologies, such as most advanced LLMs and Generative AI approaches, to build solutions that are medically safe and work at scale
+
+- Work in a fast-paced environment to quickly build and validate product hypotheses, taking end-to-end ownership of ML/AI products
+
+- Build the future-proof infrastructure for serving Gen AI features at Flo, bringing our AI vision and strategy to life
+
+- Constantly improve our technical capabilities by researching and implementing best practices in the context of the fastly evolving space of LLMs
+
+- Work in a cross-functional setup alongside other engineering (ML, Backend, QA), product, and analytics teams
+
+Annual Salary Range (ranges may vary based on skills and experience)
+£130,000—£180,000 GBP
+
+How we work
+
+We’re a mission-led, product-driven team. We move fast, stay focused and take ownership – from brief to build to impact. Debate is encouraged. Decisions are shared. We care about craft, ship with purpose, and always raise the bar.
+
+You’ll be working with people who take their work seriously, not themselves. It takes commitment, resilience, and the drive to keep going when things get tough. Because better health outcomes are worth it. 
+
+What you'll get
+
+We support impact with meaningful reward. Here’s what that looks like:
+
+- Competitive salary and annual reviews
+
+- Opportunity to participate in Flo’s performance incentive scheme
+
+- Paid holiday, sick leave, and female health leave
+
+- Enhanced parental leave and pay for maternity, paternity, same-sex and adoptive parents
+
+- Accelerated professional growth through world-changing work and learning support
+
+- In-person collaboration and work in a hybrid model, with 3 days per week spent in the office
+
+- 5-week fully paid sabbatical at 5-year Floversary
+
+- Flo Premium for friends & family, plus more health, pension and wellbeing perks
+
+Diversity, equity and inclusion
+
+Our strength is in our differences. At Flo, hiring is based on merit, skill and what you bring to the role – nothing else. We’re proud to be an equal opportunity employer, and we welcome applicants from all backgrounds, communities and identities. Read our privacy notice for job applicants.

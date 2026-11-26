@@ -1,0 +1,48 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    Bristol, UK \\
+    \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \ $|$ \ +44 7741 016954 \\
+\href{https://www.linkedin.com/in/thiruvel-a-p/}{LinkedIn} \ $|$ \ \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{Portfolio}
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Dear Chattermill hiring team,
+
+Chattermill is hiring a Data Scientist, and my recent work maps directly onto it.
+
+Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
+
+Could we find twenty minutes next week to talk about where I could contribute first?
+
+\vspace{0.5cm}
+
+With regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

@@ -1,0 +1,66 @@
+Company: Artefact
+Title: Intern Data Engineer
+URL: https://job-boards.greenhouse.io/artefact/jobs/4593319002
+Source: greenhouse
+Apply kind: greenhouse
+Location: The Roof, Room 201, Building D, No. 458 Madang Road, Huangpu District, Shanghai 200002
+Country: China
+Status: listed_only
+Posted: 2021-02-07T21:13:24-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+What you will be doing:
+
+Key responsibilities
+
+As a Data Engineer Intern, your role will encompass:
+
+● Supporting to conduct ambitious projects in the transformation of clients through data
+
+● Collaborating with the consulting and data team to provide comprehensive services to clients
+
+● Using your technical abilities to assist in the transformation of clients’ marketing department
+
+Among your responsibilities as a Data Engineer Intern, you will be responsible for:
+
+● Help securing delivery on projects with Data Engineer
+
+● Communicating the success of projects among the company
+
+● Working closely with your Consulting counterpart to build and maintain strong relationships with your clients and best understand their needs
+
+● Ensuring that your solutions are bringing values to the client problematic
+
+● Being a good team player, knowing your role and responsibility in the global ambition
+
+● Caring for the happiness of the team, ensuring work is delivered to a high standard and providing feedback and mentoring
+
+Being a great tech person
+
+● Demonstrating the skill and credibility required to ensure the success of our clients’ initiatives
+
+● Researching and developing new technical approaches to address problems efficiently
+
+● Sharing best practices and contributing to Artefact’s institutional knowledge
+
+● Embodying Artefact’s values and inspiring others to do the same
+
+● Experience working with Big Data technologies such as Hadoop, Spark, Kafka...
+
+● Delivering Data Lake / Big Data projects including (data ingestion, machine learning model application, code deployment)
+
+● Being able to adapt your solutions and approaches to technical environment (security, access, tools)
+
+Qualifications :Education and Experience
+
+● Bachelor’s degree in Software Engineering, Computer Engineering, or related fields
+
+● Solid knowledge of computer science, data processing and data architecture
+
+● Intellectual curiosity and excellent problem-solving skills, including the ability to structure and prioritise an approach for maximum impact
+
+● Skills in Python, Linux, SQL, Spark, Hive
+
+● BigQuery/ Redshift, Devops and Javascript is a plus

@@ -1,0 +1,8 @@
+id,cv_false_claim(Y/N),cv_relevance(1-5),cv_readability(1-5),letter_false_claim(Y/N),letter_tone(1-5),would_send(Y/N),notes
+cal-chattermill,N,4,4,N,4,Y,"Run 152700, independent review. CV: fl3 keeps 'Contributed to a team'; core row present. Minor: 'deploying model serving via' wording. Letter (model): true, two evidence sentences, clean CTA."
+cal-creditspring,N,3,4,N,3,Y,"Run 152700. CV accurate; 'for regression' tacked on GTAI bullet. Letter (fallback template): truthful but reads 'at Self-employed, Chennai, I built...' - needs a freelance label."
+cal-heathrow,N,2,4,N,3,Y,"Run 152700. CV accurate; low fit (ceiling 35%). Lloyd's '3rd place' still printed twice. Letter (fallback): 'at Self-employed, Chennai' wording."
+cal-lendable,N,5,4,N,4,Y,Run 152700. CV accurate. Letter (model): true; 'mirrors my work on a Madrid-based product start-up client' slightly awkward.
+cal-quantcast,N,4,4,N,3,Y,Run 152700. CV accurate; in band (72%). Letter (model): hook and paragraph 2 use the same evidence bullet (repetition).
+cal-trainline,N,3,4,N,3,Y,"Run 152700. CV accurate. Letter (fallback): long org name 'AstraZeneca · GeneTraceAI, University of Bristol' inline; honest Power BI gap."
+cal-zoneco,N,4,3,N,4,Y,Run 152700. CV accurate; az3 reworded into passive 'Containerization of the agent involved deploying...'. Letter fell back because cover_letter hit max_tokens=1500; fallback text is clean.

@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["Exaggerates the scale of the projects and results", "Lacks a cover letter", "Overstates the impact of some projects without supporting evidence"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "e706f4d2f8f6c522588f1f30", "tokens": 3621, "note": "dropped 1 section(s) about the employer or process: Benefits"}

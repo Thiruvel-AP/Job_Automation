@@ -1,0 +1,1 @@
+{"p_cf1":"Built a deterministic comparable‑company matching API using Pandas, processing 221 profiles and 1,116 cover lines with a single LLM call, achieving ~£0.003 per query and under 3 s latency."}

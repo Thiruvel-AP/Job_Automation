@@ -1,0 +1,9 @@
+```json
+{
+  "az1": "Built a Python-based LLM agent using LangChain and AWS Bedrock to call Claude Haiku 4.5, providing gene alias resolution, scoring-methodology explanation, and dataset provenance for a multi-omics cancer platform.",
+  "az3": "Deployed the agent as a production Docker container on AWS Lambda using Lambda Web Adapter, ECR pipelines, IAM roles, and least-privilege policies.",
+  "dc1": "Proposed and prototyped an MCP-based agentic tool in Python with FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, presenting it in a live stakeholder demo for a Madrid-based startup.",
+  "fl2": "Built an LLM-powered NLP and agentic RAG workflow using Hugging Face Transformers, Ollama, LangChain, and LangGraph.",
+  "fl1": "Built Python-based machine learning pipelines with scikit-learn and deep learning models in TensorFlow/Keras, deploying them as FastAPI services in Docker."
+}
+```

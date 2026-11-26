@@ -1,0 +1,72 @@
+Company: Hasting Direct
+Title: Senior Data Analyst - Telematics
+URL: https://hastingsdirect.wd3.myworkdayjobs.com/external_careers/job/Leicester/Senior-Data-Analyst---Telematics_60014236-1
+Source: workday
+Apply kind: workday
+Location: Leicester; Bexhill; London, United Kingdom
+Posted: 2026-11-02
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+Welcome to Hastings Direct
+
+We’re a digital insurance provider with ambitious plans to become the best and biggest in the UK market. We’ve made huge investments in our pricing and data capabilities over the past few years, along with nurturing our 4Cs culture. 
+
+We provide insurance for over four million customers, but we know there’s even bigger opportunity out there – our Pricing, Data and Analytics community value curiosity, collaboration and constructive challenge. 
+
+We are always looking for new ideas and diverse perspectives to question established thinking and drive meaningful change. Great pricing is built on trust, innovation and precision, so our aim is to ensure customers receive a fair and accurate price based on their individual risk, supporting fair outcomes, while delivering sustainable and profitable growth for our company. 
+
+Pricing is more than just a number – it’s a strategic capability. At the heart of Hastings is deep risk insight – continually improving how we assess, segment and price risk through data and analytics. 
+
+Role overview:
+
+Working as part of the YouDrive pricing team, you will lead on complex pricing investigations and analytical projects, using a wide range of datasets to assess pricing and functional performance, as well as carry out root-cause analysis to support business decisions.
+
+We are looking for a curious and proactive Senior Analyst who can bring structure to complex problems, coordinate activity across teams and translate detailed and highly specific analysis clearly to technical and business stakeholders. Someone who is able to take ownership right the way through from initial ideas, analysis and implementation, to post-live validation.
+
+You will also be responsible for collaborating with developers in different areas of Hastings to build and embed new tools into the pricing team, helping analysts adopt them effectively and strengthening capability within the wider YouDrive analytics team.
+
+Hastings has a Pricing, Data and Analytics community of 200+ individuals with a huge breadth and depth of expertise. You’ll have the opportunity to lead meaningful change, strengthen the analytical capability of our team and shape the future of YouDrive pricing.
+
+Job details:
+
+- Investigate and lead on the resolution of complex pricing issues, incidents and complaints.
+- Build and enhance tooling that support pricing analysis, validation and decision-making.
+- Collaborate with developers to embed new tooling into the pricing team.
+- Communicate complex findings clearly across technical and business audiences.
+- Coordinate the implementation and post-live validation of pricing changes.
+
+ Essential skills/experience:
+
+- Strong Python and SQL skills.
+- Experience in data investigations and root-cause analysis.
+- Proven end-to-end delivery of projects and investigations.
+- Experience supporting and developing junior analysts.
+- Experience of UK insurance, motor or general would be advantageous. 
+
+ The interview process:
+Our interview process involves the below: 
+
+- 1st interview – Introduction call with hiring manager.
+- 2nd & 3rd interviews - Competency based, including a task based presentation.
+- 4th interview - Short call with YouDrive Director. 
+
+As a Disability Confident employer, we’re committed to ensuring our recruitment processes are fully inclusive – what this means to you is if you’re applying for a job with us, you’ll have fair access to support and adjustments throughout your recruitment journey. We also welcome applications through the Disability Confident Scheme (DCS).For more information on the DCS, please visit our inclusive business page on our careers website. 
+
+Regrettably, we are unable to offer sponsorship now or in the future for this role. 
+
+Benefits: In addition to a competitive salary you will also receive… 
+Flexible working – we champion a flexible hybrid working approach – please speak to your recruiter to discuss in more detail 
+Competitive bonus scheme - all colleagues are eligible for our annual 4Cs performance bonus 
+Financial wellbeing – as well as providing you with 4x your salary with our life assurance cover, income protection at no extra cost, and matched pension contributions up to 10%, we are proud to provide you with an award winning package which includes – discounts, cashback, free independent mortgage advice and free access to financial wellbeing support 
+Mental wellbeing programme – we have the thrive mental health app, our colleague assistance programme available 24/7, our own in-house mental health first aiders, support groups and a dedicated team to make sure we are covering your needs 
+There's more! – 25 days annual leave + bank holidays, with the option to buy or sell one of your weeks, access to our health care cash back plans, dental plans, discounted health assessments, Cycle to work and tech schemes, discounted and free onsite facilities, social events throughout the year and much more …. 
+
+Join us and you’ll find a different way of doing things. We call it the 4Cs. We focus on getting it right for our colleagues, customers, company and community. As one of our colleagues, you’ll be helping to drive our growth, so in return, we’ll give you all the support, training and development you need. Our 4Cs principles are simple: we believe by creating the right culture for our colleagues and giving them the right tools to do their job, we’ll deliver good outcomes for every customer, helping us to grow the company profitably and sustainably and allowing us to invest in the communities we serve. 
+
+Hastings Group is an equal opportunities employer which means we treat people fairly. We welcome applications from all suitably skilled persons regardless of their gender, age, race, disability, ethnic background, religion/belief, sexual orientation, gender reassignment or marital/family status. Please also note that we have a thorough referencing process, which includes credit and criminal record checks.
+
+At Hastings Direct, we’re committed to creating an inclusive environment where everyone has the opportunity to succeed. If you require any reasonable adjustments during the recruitment process, we encourage you to be open with us. Our recruitment team is here to provide the support you need to ensure a fair and accessible experience for all.
+
+Job posting end date:02/12/2026

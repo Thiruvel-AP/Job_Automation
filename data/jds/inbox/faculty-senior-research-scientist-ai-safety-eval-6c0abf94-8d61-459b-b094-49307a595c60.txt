@@ -1,0 +1,122 @@
+Company: Faculty
+Title: Senior Research Scientist - AI Safety Evaluations
+URL: https://jobs.ashbyhq.com/faculty/6c0abf94-8d61-459b-b094-49307a595c60
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-07-23T15:46:46.720+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+
+ABOUT THE TEAM
+
+
+
+We are the central research and development team within Faculty's broader AI safety charter. Our group focuses on fundamental and applied technical AI safety research, producing rigorous scientific outputs - publications, tooling, technical reports & evaluations - that advance the theory, practice and understanding of AI risks, and directly inform the work of frontier AI labs, government agencies, and national security institutes.
+
+
+
+Our research spans fundamental research using black-box and white-box approaches to understand and steer AI systems, to building and advancing safety evaluations which better understand and quantify risks in AI. We care deeply about mechanistic understanding and scientific rigour in measuring risks in AI systems. Current research threads include (but are not limited to) uncertainty calibration, goal drift, misinformation mitigation, steering vectors, robust safeguard measurement and the science of evaluations.
+
+
+
+We collaborate closely with the Faculty's wider AI safety team, a group with a well-established track record in capability evaluations and red-teaming for misuse risk across CBRN, cybersecurity, societal and psychosocial harms. That work has been conducted for several leading frontier model developers and national safety institutes, and has been featured in model cards and safety reports from Anthropic, GDM, Meta & OpenAI.
+
+
+
+
+ABOUT THE ROLE
+
+
+
+As a Senior Research Scientist at Faculty, you will lead the development of cutting-edge safety evaluations to quantify AI risks in critical domains like CBRN and Cyber. Joining our high-impact R&D team, you will drive original research that advances safety methodology while collaborating with delivery teams building evaluations and red-teaming for frontier labs. This is a high-agency opportunity to conduct technical AI safety research that produces scientific outputs shaping the future of safe real-world AI deployment.
+
+
+
+
+
+
+WHAT YOU'LL BE DOING
+
+
+
+ - Leading the development of novel safety evaluations in high-impact domains such as CBRN and Cyber to quantify emerging risks.
+
+ - Executing original technical research in AI safety evaluation methods, taking ideas from concept to publication.
+
+ - Shaping the R&D agenda by identifying strategic opportunities to advance safety evaluation methodology across Faculty and the broader ecosystem.
+
+ - Contributing thought leadership and deep technical expertise to client delivery projects, evaluation work, and red-teaming for frontier labs.
+
+ - Representing Faculty’s scientific leadership through active external engagement with the global research community, frontier labs, and government stakeholders.
+   
+   
+
+
+WHO WE'RE LOOKING FOR
+
+
+
+ - A track record of owning research end-to-end—from identifying novel problems to publication—driven by scientific curiosity and tenacity.
+
+ - Hands-on experience designing and building AI evaluations or benchmarks, alongside a strong ability to reason about construct validity and mitigate confounds.
+
+ - Expertise in red-teaming, adversarial testing, jailbreaking, indirect prompt injection, and assessing the robustness of model safeguards.
+
+ - Strong foundational skills in experimental design, statistical analysis, and uncertainty quantification, including Bayesian methods.
+
+ - Deep knowledge of language models, generative AI architectures, training methodologies, and safety mitigation techniques.
+
+ - Solid Python proficiency combined with the engineering discipline required to build robust, reproducible research.
+
+
+
+
+NICE TO HAVES
+
+
+
+ - Experience in threat and risk modelling.
+
+ - Background or knowledge in high-risk domains such as CBRN or Cybersecurity.
+
+ - A history of high-impact AI research, evidenced by top-tier publications or equivalent practical achievements.
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

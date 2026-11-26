@@ -1,0 +1,62 @@
+Company: DRW
+Title: Data Analyst, Stewardship
+URL: https://job-boards.greenhouse.io/drweng/jobs/8189730
+Source: greenhouse
+Apply kind: greenhouse
+Location: Chicago, Houston, Remote
+Posted: 2026-09-17T16:48:13-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+DRW is a diversified trading firm with over 3 decades of experience bringing sophisticated technology and exceptional people together to operate in markets around the world. We value autonomy and the ability to quickly pivot to capture opportunities, so we operate using our own capital and trading at our own risk.
+
+Headquartered in Chicago with offices throughout the U.S., Canada, Europe, and Asia, we trade a variety of asset classes including Fixed Income, ETFs, Equities, FX, Commodities and Energy across all major global markets. We have also leveraged our expertise and technology to expand into three non-traditional strategies: real estate, venture capital and cryptoassets.
+
+We operate with respect, curiosity and open minds. The people who thrive here share our belief that it’s not just what we do that matters–it's how we do it. DRW is a place of high expectations, integrity, innovation and a willingness to challenge consensus.
+
+As a Data Analyst, Stewardship you will play an integral role in all operational aspects of onboarding, managing and maintaining various datasets used by traders and quantitative researchers. You will work closely with a variety of stakeholders, including technology, front office, operations, research, and risk management. You should be comfortable investigating complex data support issues in a fast-paced environment
+
+About the Role
+
+This role is built around production support: Keeping EOD valuation data and reference data used for PnL production running correctly, and being the person who catches, diagnoses, and fixes data problems before they flow to downstream applications. You'll work across a global support queue, troubleshoot financial instrument reference and valuation data, and partner with engineering to turn recurring fixes into solutions.
+
+Location: Hybrid schedule. Can sit in our Chicago or Houston office. Remote may be possible for the right candidate.
+
+Hours: This role has non traditional hours. 10:30am-7:30pm Central time.
+
+What You'll Do
+
+- Monitor and support the production of EOD valuation data and reference data used for PnL, including coverage during evening hours to bridge global support windows.
+
+- Respond to global requests via Slack and email to create, update, and troubleshoot financial instrument reference data.
+
+- Investigate and explain why and how data appears the way it does — tracing issues back through source systems, feeds, and business logic.
+
+- Diagnose data problems quickly under pressure and build ad-hoc scripts or tooling to resolve them.
+
+- Work across reference data and valuation data stores and related reference data tooling.
+
+- Escalate and collaborate with engineering and other Data Management teams on systemic issues.
+
+What We're Looking For
+
+- Technical skills: Proficiency in SQL and Python, with hands-on experience troubleshooting data issues or writing ad-hoc scripts to fix problems quickly, standing up tactical fixes in a scheduling environment, building data quality metric reports, and comfortable accessing different types of data storage and file formats.
+
+- Data tooling: Familiarity with Oracle SQL, Python (requests, pandas, numpy, pyplot, and spark libraries), Bloomberg back-office-files, S3/Athena, Bloomberg Terminal and Bloomberg's Excel API plug-in is helpful; exposure to solving problems/workflows using AI CLI, Airflow scheduling, is a bonus.
+
+- Financial markets knowledge: You should be comfortable with financial instruments and markets well enough to understand what the data represents, particularly for futures, options, and crypto on all asset classes across global exchanges.
+
+- Soft Skills: Calm under pressure, with strong critical thinking — able to assess the real impact of a request or problem and respond with the right level of urgency and context to pull in the correct teams.
+
+- Communication: Comfortable fielding requests from a global, technical user base across Slack and email, and explaining data behavior clearly to non-technical and technical audiences alike.
+
+- Process and governance: Experience building data governance rules/controls and writing runbook procedures for resolving support issues.
+
+The annual base salary range for this position is $100,000 to $120,000 depending on the candidate’s experience, qualifications, and relevant skill set. The position is also eligible for an annual discretionary bonus. In addition, DRW offers a comprehensive suite of employee benefits including group medical, pharmacy, dental and vision insurance, 401k (with discretionary employer match), short and long-term disability, life and AD&D insurance, health savings accounts, and flexible spending accounts.
+
+For more information about DRW's processing activities and our use of job applicants' data, please view our Privacy Notice at https://drw.com/privacy-notice.
+
+ California residents, please review the California Privacy Notice for information about certain legal rights at https://drw.com/california-privacy-notice.
+
+[#LI-TL1]

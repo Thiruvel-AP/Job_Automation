@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "hosts": {
+    "api.ashbyhq.com": {
+      "status": 401,
+      "at": "2026-11-06T13:16:42+00:00",
+      "requests_before": 5,
+      "run_requests": 62,
+      "url": "https://api.ashbyhq.com/posting-api/job-board"
+    },
+    "apply.workable.com": {
+      "status": 429,
+      "at": "2026-11-05T11:31:52+00:00",
+      "requests_before": 53,
+      "run_requests": 430,
+      "until": "2026-11-06T11:31:52+00:00"
+    },
+    "jcdecaux.recruitee.com": {
+      "status": 403,
+      "at": "2026-11-05T11:53:26+00:00",
+      "requests_before": 1,
+      "run_requests": 1606
+    },
+    "ryansg.wd5.myworkdayjobs.com": {
+      "status": 403,
+      "at": "2026-11-06T12:56:53+00:00",
+      "requests_before": 1,
+      "run_requests": 35,
+      "url": "https://ryansg.wd5.myworkdayjobs.com/wday/cxs/ryansg/broadbean_external/jobs"
+    },
+    "livenation.wd503.myworkdayjobs.com": {
+      "status": 403,
+      "at": "2026-11-06T12:59:57+00:00",
+      "requests_before": 2,
+      "run_requests": 120,
+      "url": "https://livenation.wd503.myworkdayjobs.com/wday/cxs/livenation/TMExternalSite/job/Lead-Data---AI-Platform-Engineer--Remote--United-Kingdom-_JR-90837-4"
+    },
+    "ventas.wd503.myworkdayjobs.com": {
+      "status": 403,
+      "at": "2026-11-06T13:00:08+00:00",
+      "requests_before": 2,
+      "run_requests": 131,
+      "url": "https://ventas.wd503.myworkdayjobs.com/wday/cxs/ventas/ventas_careers/job/Machine-Learning-Engineer_R0001509"
+    },
+    "pru.wd5.myworkdayjobs.com": {
+      "status": 403,
+      "at": "2026-11-06T13:00:13+00:00",
+      "requests_before": 2,
+      "run_requests": 137,
+      "url": "https://pru.wd5.myworkdayjobs.com/wday/cxs/pru/Careers/job/Newark-NJ-USA/Lead--Machine-Learning-Engineer_R-124920-1"
+    },
+    "capitalone.wd12.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-18T07:19:50+00:00",
+      "requests_before": 0,
+      "run_requests": 64,
+      "url": "https://capitalone.wd12.myworkdayjobs.com/robots.txt"
+    },
+    "mgpru.wd3.myworkdayjobs.com": {
+      "status": 403,
+      "at": "2026-11-13T17:01:47+00:00",
+      "requests_before": 1,
+      "run_requests": 2,
+      "url": "https://mgpru.wd3.myworkdayjobs.com/wday/cxs/mgpru/mandgprudential/job/Stirling/Data-Engineer--Databricks-_R19908"
+    },
+    "trafigura.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-17T11:01:12+00:00",
+      "requests_before": 0,
+      "run_requests": 139,
+      "url": "https://trafigura.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "salesforce.wd12.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:06:03+00:00",
+      "requests_before": 0,
+      "run_requests": 308,
+      "url": "https://salesforce.wd12.myworkdayjobs.com/robots.txt"
+    },
+    "rsm.wd1.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-17T15:02:00+00:00",
+      "requests_before": 0,
+      "run_requests": 62,
+      "url": "https://rsm.wd1.myworkdayjobs.com/wday/cxs/rsm/rsmcareers/jobs"
+    },
+    "lseg.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-24T13:32:28+00:00",
+      "requests_before": 0,
+      "run_requests": 1,
+      "url": "https://lseg.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "aveva.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:40:12+00:00",
+      "requests_before": 0,
+      "run_requests": 351,
+      "url": "https://aveva.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "gresearch.wd103.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-24T18:19:58+00:00",
+      "requests_before": 0,
+      "run_requests": 1,
+      "url": "https://gresearch.wd103.myworkdayjobs.com/robots.txt"
+    },
+    "hastingsdirect.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:36:46+00:00",
+      "requests_before": 0,
+      "run_requests": 279,
+      "url": "https://hastingsdirect.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "nuffieldhealth.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:41:32+00:00",
+      "requests_before": 0,
+      "run_requests": 442,
+      "url": "https://nuffieldhealth.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "shi.wd12.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-24T18:08:15+00:00",
+      "requests_before": 0,
+      "run_requests": 1,
+      "url": "https://shi.wd12.myworkdayjobs.com/robots.txt"
+    },
+    "slihrms.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:42:32+00:00",
+      "requests_before": 0,
+      "run_requests": 470,
+      "url": "https://slihrms.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "roche.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:28:15+00:00",
+      "requests_before": 0,
+      "run_requests": 34,
+      "url": "https://roche.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "novartis.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-18T10:09:15+00:00",
+      "requests_before": 0,
+      "run_requests": 18,
+      "url": "https://novartis.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "cisco.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-18T07:19:54+00:00",
+      "requests_before": 0,
+      "run_requests": 69,
+      "url": "https://cisco.wd5.myworkdayjobs.com/robots.txt"
+    },
+    "pfizer.wd1.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:28:05+00:00",
+      "requests_before": 0,
+      "run_requests": 21,
+      "url": "https://pfizer.wd1.myworkdayjobs.com/robots.txt"
+    },
+    "pwc.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:27:49+00:00",
+      "requests_before": 0,
+      "run_requests": 6,
+      "url": "https://pwc.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "justeat.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:15+00:00",
+      "requests_before": 0,
+      "run_requests": 27,
+      "url": "https://justeat.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "gsk.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:05:57+00:00",
+      "requests_before": 0,
+      "run_requests": 305,
+      "url": "https://gsk.wd5.myworkdayjobs.com/robots.txt"
+    },
+    "thales.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:28:25+00:00",
+      "requests_before": 0,
+      "run_requests": 50,
+      "url": "https://thales.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "aviva.wd1.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-19T11:30:43+00:00",
+      "requests_before": 0,
+      "run_requests": 78,
+      "url": "https://aviva.wd1.myworkdayjobs.com/robots.txt"
+    },
+    "icf.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:03+00:00",
+      "requests_before": 0,
+      "run_requests": 12,
+      "url": "https://icf.wd5.myworkdayjobs.com/robots.txt"
+    },
+    "bloomberg.wd1.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:06+00:00",
+      "requests_before": 0,
+      "run_requests": 15,
+      "url": "https://bloomberg.wd1.myworkdayjobs.com/robots.txt"
+    },
+    "google.wd501.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:10+00:00",
+      "requests_before": 0,
+      "run_requests": 20,
+      "url": "https://google.wd501.myworkdayjobs.com/robots.txt"
+    },
+    "westernunion.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:16+00:00",
+      "requests_before": 0,
+      "run_requests": 29,
+      "url": "https://westernunion.wd5.myworkdayjobs.com/robots.txt"
+    },
+    "foresters.wd3.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:24+00:00",
+      "requests_before": 0,
+      "run_requests": 38,
+      "url": "https://foresters.wd3.myworkdayjobs.com/robots.txt"
+    },
+    "bakerhughes.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:01:27+00:00",
+      "requests_before": 0,
+      "run_requests": 42,
+      "url": "https://bakerhughes.wd5.myworkdayjobs.com/robots.txt"
+    },
+    "visa.wd5.myworkdayjobs.com": {
+      "status": 429,
+      "at": "2026-11-26T11:05:53+00:00",
+      "requests_before": 0,
+      "run_requests": 302,
+      "url": "https://visa.wd5.myworkdayjobs.com/robots.txt"
+    }
+  }
+}

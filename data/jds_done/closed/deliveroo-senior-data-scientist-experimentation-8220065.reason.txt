@@ -1,0 +1,1 @@
+disqualified, liveness: the posting is closed (not on the Greenhouse board of deliveroo any more (HTTP 404))

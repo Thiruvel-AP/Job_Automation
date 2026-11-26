@@ -1,0 +1,99 @@
+Company: hims & hers
+Title: Sr. Data Scientist
+URL: https://jobs.ashbyhq.com/hims-and-hers/959afd49-33fe-424d-8ed4-b6c7b24b3f3c
+Source: ashby
+Apply kind: ashby
+Location: London, England, United Kingdom
+Posted: 2026-09-11T21:45:14.877+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-17
+Listed: yes
+
+Hims & Hers is the leading health and wellness platform, on a mission to help the world feel great through the power of better health. We are redefining healthcare by putting the customer first and delivering access to care that is affordable, accessible, and personal, from diagnosis to treatment to delivery. No two people are the same, so we provide access to personalized care designed for results. By normalizing health & wellness challenges and innovating on their solutions, we’re making better health outcomes easier to achieve. 
+
+
+
+Hims & Hers is a public company, traded on the NYSE under the ticker symbol “HIMS.” To learn more about the brand and offerings, you can visit hims.com/about http://hims.com/about and hims.com/how-it-works http://hims.com/how-it-works . For information on the company’s outstanding benefits, culture, and its talent-first flexible/remote work approach, see below and visit www.hims.com/careers-professionals http://www.hims.com/careers-professionals.
+
+
+
+
+ABOUT THE ROLE:
+
+As a Senior Data Scientist at Hims & Hers, you are a core driver of technical execution and innovation within our data organization. You take complex business challenges and translate them into robust, scalable data products and machine learning models. You will be trusted to operate with high autonomy, owning your projects from the initial exploratory analysis through to production deployment.
+
+In this role, you will work closely with Product, Engineering, and Business stakeholders to deliver solutions that optimize our operations, refine our marketing efforts, and enhance the customer experience. You will not only build powerful models but also help uphold the engineering rigor and standards of our data team.
+
+
+
+
+YOU WILL:
+
+ - Build from Scratch: Thrive in a 0-to-1 environment. You are comfortable rolling up your sleeves to write complex SQL, engineer your own features, and deploy baseline models (heuristics or simple ML) quickly to prove value before iterating toward complex solutions.
+
+ - End-to-End Execution: Own the complete model lifecycle, from data extraction and feature engineering to deployment, A/B testing, and ongoing performance monitoring.
+
+ - Cross-Functional Collaboration: Partner closely with Engineering, Product, and Finance teams to define technical requirements and translate model outputs into clear, actionable business insights.
+
+ - Uphold Technical Standards: Write clean, modular, and production-ready code. Actively participate in peer code reviews and contribute to the team’s technical best practices.
+
+ - Drive Project Delivery: Navigate technical ambiguity within your domain, breaking down complex project requirements into manageable, executable milestones.
+
+ - Team Mentorship: Provide technical guidance and support to junior data scientists and analysts, helping them troubleshoot roadblocks and adopt best practices.
+
+
+
+
+EXPERIENCE & SKILLS:
+
+ - 5+ years of applied experience in Data Science or ML Engineering, with a track record of delivering production-ready models that drive measurable business value.
+
+ - Technical Proficiency: Strong expertise in Python and SQL. Deep familiarity with the Python data stack (pandas, NumPy, scikit-learn) and standard ML frameworks (such as PyTorch, XGBoost, or LightGBM).
+
+ - Engineering Rigor: Proven ability to build for production. Experience working in cloud-based environments (AWS or GCP) and familiarity with CI/CD workflows, version control (Git), and ML Ops principles.
+
+ - Analytical Problem Solving: Strong ability to connect technical metrics to business outcomes. You know how to choose the right algorithm for the right problem rather than just the most complex one.
+
+ - Communication: Excellent ability to explain technical concepts, model limitations, and analytical findings to non-technical stakeholders.
+
+ - Education: BS, MS, or equivalent experience in a quantitative field (Data Science, Statistics, Economics, CS, Applied Math, etc.).
+   
+   
+
+
+PREFERRED QUALIFICATIONS:
+
+ - 0-to-1 Execution: Experience taking the very first machine learning models in an organization from exploratory notebooks to reliable, automated production pipelines.
+
+ - Advanced Business ML (Experience in 1-2 of the following):
+   
+   - Customer Behavior & Propensity Modeling: Building predictive models for churn, propensity-to-buy, lead scoring, or lifetime value (LTV) to directly drive targeted marketing and product interventions.
+   
+   - Applied Forecasting: Time-series forecasting, anomaly detection, or handling non-stationary data for demand or revenue planning.
+   
+   - Optimization: Building engines for marketing spend, inventory management, or resource allocation.
+   
+   - Causal Inference: Designing robust experiments (e.g., quasi-experiments, difference-in-differences) to measure true business impact beyond standard A/B testing.
+
+
+
+
+
+
+We are committed to building a workforce that reflects diverse perspectives and prioritizes ethics, wellness, and a strong sense of belonging. If you're excited about this role, we encourage you to apply—even if you're not sure if your background or experience is a perfect match.
+
+
+
+Hims considers all qualified applicants for employment, including applicants with arrest or conviction records, in accordance with the San Francisco Fair Chance Ordinance, the Los Angeles County Fair Chance Ordinance, the California Fair Chance Act, and any similar state or local fair chance laws.
+
+
+
+It is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability.
+
+
+
+Hims & Hers is committed to providing reasonable accommodations for qualified individuals with disabilities and disabled veterans in our job application procedures. If you need assistance or an accommodation due to a disability, please contact us at accommodations@forhims.com and describe the needed accommodation. Your privacy is important to us, and any information you share will only be used for the legitimate purpose of considering your request for accommodation. Hims & Hers gives consideration to all qualified applicants without regard to any protected status, including disability. Please do not send resumes to this email address.
+
+
+
+To learn more about how we collect, use, retain, and disclose Personal Information, please visit our Global Candidate Privacy Statement https://www.hims.com/global-candidate-privacy-statement.

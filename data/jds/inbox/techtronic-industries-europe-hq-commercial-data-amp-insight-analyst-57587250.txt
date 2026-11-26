@@ -1,0 +1,72 @@
+Company: Techtronic Industries - Europe HQ
+Title: Commercial Data &amp; Insight Analyst
+URL: https://www.reed.co.uk/jobs/commercial-data-amp-insight-analyst/57587250
+Source: reed
+Location: Maidenhead, GB
+Posted: 2026-11-18
+Posted via: reed.date
+First seen: 2026-11-19
+
+Techtronic Industries (TTI) is a world leader in cordless technology spanning power tools, accessories, hand tools, outdoor power equipment, as well as floorcare & cleaning products. Our focus is on end-users that range from professionals in the industrial, construction and infrastructure sectors to DIYers in home improvement, repair, and maintenance. TTI’s powerful brand portfolio includes MILWAUKEE, RYOBI, AEG - recognized worldwide for their deep heritage and innovative product platforms of superior quality. 
+The company maintains a global manufacturing and product development footprint, with record world-wide sales of approximately US$15.2 billion and around 50,000 employees in 2026. Hiring exceptional people is a top focus at TTI. This drives a high-performance culture across all levels of our organization and helps to achieve our vision of being number one in the industries we serve. Our unique high-speed decision-making process supports our acute focus on developing superior products and meeting high customer expectations. We view our winning culture as a competitive advantage that powers our growth. 
+
+ABOUT THE ROLE: 
+
+- Reporting to the EMEA Commercial Finance Director, you will act as the operational engine for the EMEA Commercial Finance team and the first point of contact for routine data and reporting requirements.
+- Deliver reliable data, recurring reports, dashboards and process automation that enable Business stakeholders to focus on analysis, commercial challenge, influence and decision support.
+- Own standard reporting production, data validation, master-data maintenance and dashboard support.
+- Identify opportunities to simplify, standardise and automate recurring finance processes, improving the timeliness, accuracy and accessibility of commercial information.
+- Bring strong analytical capability, attention to detail, clear communication and effective collaboration across Commercial Finance and the wider EMEA business. 
+Key responsibilities 
+Reporting, data quality and dashboard delivery 
+
+- Prepare and deliver recurring EMEA, HK and US reporting submissions in line with agreed timetables.
+- Produce Brand packs, KPI reports, scorecards and quarterly dashboards.
+- Maintain standard reporting covering sales, margin, product, customer and market performance.
+- Support executive dashboards and leadership reports.
+- Manage routine reporting requests through clear, standardised and repeatable outputs.
+- Produce standard product, SKU and customer data extracts for Finance and business stakeholders.
+- Prepare datasets for recurring reporting, forecasting, budgeting and analytical requirements.
+- Maintain product and customer hierarchies, metadata and master-data validation.
+- Perform reconciliations and validation checks across source data, reports and dashboards.
+- Investigate discrepancies with relevant data owners and maintain controlled reporting documentation.
+- Maintain and refresh Qlik Sense dashboards within the agreed reporting portfolio.
+- Perform dashboard testing and validation following data, logic or design changes.
+- Deliver dashboard enhancements.
+- Provide first-line support for routine dashboard and data-access questions.
+- Maintain consistent KPI definitions and promote effective self-service reporting. 
+Process improvement and automation 
+
+- Identify recurring manual reports and processes that can be simplified or automated.
+- Develop sustainable solutions that reduce manual effort and spreadsheet dependency.
+- Streamline data uploads, report-refresh processes and recurring data preparation.
+- Standardise repetitive tasks, templates, controls and reporting routines.
+- Apply AI tools responsibly and practically to improve productivity, strengthen analysis and forecasting, automate routine activities and support better business decision-making.
+- Document processes and handovers to strengthen resilience and continuity. 
+Planning, product reporting and stakeholder support 
+
+- Support forecasting and budgeting cycles through data preparation, templates and database maintenance.
+- Provide timely technical reporting support during planning periods.
+- Act as the first point of contact for routine Commercial Finance data and reporting requests.
+- Clarify stakeholder requirements and translate them into repeatable outputs wherever possible.
+- Build effective relationships with Commercial Finance partners, BI Developers and report users across EMEA.
+- Prioritise work against agreed deadlines and business needs. 
+Candidate profile 
+Essential experience and capabilities 
+
+- Experience in a data, reporting, finance analyst, business-intelligence or management-information role.
+- Strong track record of preparing recurring business or financial reports.
+- Confidence working with large datasets and reconciling information from multiple sources.
+- Experience maintaining dashboards or reporting solutions and translating user requirements into clear, repeatable outputs.
+- Advanced Excel capability.
+- Working knowledge of at least one business-intelligence platform, preferably Qlik Sense and/or Power BI.
+- Ability to extract, manipulate and validate data from multiple sources.
+- Understanding of data structures, hierarchies, master data and KPI definitions.
+- Strong AI literacy, demonstrated through the practical and responsible use of AI tools to improve productivity, analysis, forecasting and business decision-making.
+- Strong documentation, testing and process-control discipline. 
+Desirable experience 
+
+- Experience within Commercial Finance, FP&A, sales finance or a related analytical function.
+- Exposure to P&L reporting and sales, gross margin, product, customer or market datasets.
+- Experience supporting budget and forecast cycles.
+- Experience in reporting automation, structured reporting environments or regional and multi-country stakeholder support.

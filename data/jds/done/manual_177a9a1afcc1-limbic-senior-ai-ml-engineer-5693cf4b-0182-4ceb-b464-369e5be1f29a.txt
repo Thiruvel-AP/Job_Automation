@@ -1,0 +1,100 @@
+Company: Limbic
+Title: Senior AI/ML Engineer
+URL: https://jobs.ashbyhq.com/limbic/5693cf4b-0182-4ceb-b464-369e5be1f29a
+Source: ashby
+Apply kind: ashby
+Location: UK
+Posted: 2026-10-20T18:36:05.413+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+Take ownership of the AI behind our clinical products in the US: an AI therapist delivering end-to-end care, and AI assessment used by healthcare providers.
+
+About Limbic
+
+Limbic’s vision is to ensure the highest quality therapy is accessible to everyone, everywhere.
+
+Limbic has supported more than 820,000 patients across the UK and the US. We are used in over 50% of NHS Talking Therapies services, which makes us the largest-ever deployment of generative AI for direct patient care, and our AI now delivers end-to-end therapy to patients in the US under the supervision of licensed clinicians.
+
+Safety and science come first. We are the only AI mental health chatbot with UKCA Class IIa medical device certification, and the first AI-led mental healthcare company selected for the FDA’s TEMPO pilot. Our results are published in leading scientific journals: in a randomised, double-blind trial published in Nature Medicine, our AI agents scored higher than licensed CBT therapists on a standard measure of therapy skill.
+
+The Role
+
+As a Senior AI/ML Engineer, you have demonstrated experience in AI product development and will take ownership of translating AI research into products that tangibly improve patients’ lives. You will join one of our two product teams building for the US market, and we will work with you to find the one where your strengths have the most impact:
+
+ - AI therapy: a voice agent delivering structured CBT over the phone to adults with depression and anxiety, with licensed clinicians overseeing care. It is live with Medicare patients and growing every week.
+
+ - AI assessment: a conversational agent that US healthcare organisations configure to assess patients, administer clinical questionnaires, detect risk and recommend the right treatment programme, so patients reach the right care faster.
+
+Both teams build on shared platforms for agents, evaluation and safety, so the systems you design are reused across the company, and you will be expected to bring your successes cross-product.
+
+What You’ll Do
+
+ - Own the AI quality of a live clinical product end to end, from framing problems with clinicians and product managers to shipping, monitoring and improving in production.
+
+ - Design and build agentic systems, including orchestration of specialised agents, tools and memory, that stay fast enough for real-time voice and text conversations.
+
+ - Build and improve the safety systems that screen every patient message and every AI reply, from real-time risk detection to guardrails against unsafe or clinically inappropriate responses.
+
+ - Lead eval-driven development: evaluation suites, simulated patients and LLM-as-judge autolabellers validated against clinician labels, so we ship with confidence and catch regressions before patients do.
+
+ - Productionise ML models that optimise product KPIs, such as triage accuracy, treatment completion and recovery rates, and identify the causal factors that drive them.
+
+ - Help turn our clinical AI into composable services that healthcare partners can integrate into their own patient journeys.
+
+ - Raise the engineering bar through architecture, code review and mentorship, while keeping our AI continuously compliant with strict regulatory requirements.
+
+What You’ll Bring
+
+ - You must meet one of the following educational and experience backgrounds:
+   
+   - A PhD in computational science or an AI-related field, plus 2 years of experience in an ML engineering role.
+   
+   - OR A BSc/MSc, plus 4 years of experience in an ML engineering role.
+
+ - Expertise in productising LLM features and a strong background in eval-driven development.
+
+ - Expert-level proficiency in Python and TypeScript/JavaScript.
+
+ - Proven experience building an LLM agent harness.
+
+ - Experience utilising reinforcement learning.
+
+ - Strong architectural skills with experience designing scalable, production-grade systems for machine learning applications.
+
+ - A solid understanding of statistical principles in the context of LLM evaluation and user activity analytics.
+
+ - Proficiency with version control systems (preferably Git) and databases (SQL or NoSQL).
+
+ - Hands-on experience with a major cloud platform and containerisation technologies.
+
+ - A track record of end-to-end ownership: you scope work you can ship quickly, measure its impact, and keep a sense of urgency when the stakes are high.
+
+ - A genuine interest in applying your technical skills to solve complex challenges in the mental healthcare space.
+
+ - Ideal but not required: Experience with real-time voice AI, or with healthcare organisations as customers.
+
+ - The ability to work from our London (Spitalfields) office on Tuesdays and Thursdays, with the flexibility to work remotely or from the office on other days of the week. As you will work on products for the US, expect some meetings in the late afternoon UK time.
+
+ - We can consider visa sponsorship for candidates relocating to London.
+
+Benefits & Wellbeing
+
+ - Competitive salary and equity share options.
+
+ - An amazing office in central London (Spitalfields) for our collaborative team days on Tuesdays and Thursdays, paired with a flexible/hybrid working model on Mondays, Wednesdays, and Fridays.
+
+ - 25 days PTO plus bank holidays.
+
+ - Company pension scheme (UK).
+
+ - Enhanced parental leave packages (UK).
+
+ - Support with purchasing work-related books and materials.
+
+ - Quarterly Life Days: Enjoy 4 paid days off per year (one each quarter) to use whenever you choose to relax, recharge, or take care of personal matters.
+
+ - Mental Health Support: Access to dedicated mental health support services.
+
+We encourage women and individuals from diverse backgrounds to apply and join our team. We believe in creating an inclusive and supportive work environment where everyone can contribute their best.

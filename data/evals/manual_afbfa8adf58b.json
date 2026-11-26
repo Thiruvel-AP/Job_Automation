@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:afbfa8adf58b",
+ "company": "Aveva",
+ "title": "Product Intelligence Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 2.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 3.2, ATS ceiling 42%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family data_scientist matches job title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "unknown",
+   "source": "Pay not stated"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large company, hybrid model, comprehensive benefits"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No unusual requests or contradictory statements"
+  }
+ },
+ "global_score": 3.6,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm salary range or compensation band",
+  "Clarify remote/hybrid expectations for Cambridge vs London office",
+  "Verify UK sponsorship eligibility despite fuzzy register score"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.6,
+ "model_confidence": "Medium",
+ "jd_hash": "f9c861f9177eb4c7",
+ "jd_words": 868,
+ "tokens": 2396,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

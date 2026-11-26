@@ -1,0 +1,233 @@
+{
+ "day": "2026-11-06",
+ "queries": [
+  {
+   "id": "alert:mandg",
+   "kind": "alert",
+   "text": "\"M&G\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "M&G",
+   "alerts": [
+    {
+     "title": "Data Scientist",
+     "location": "Reading (Hybrid)",
+     "link": "https://www.linkedin.com/jobs/view/4485527903"
+    }
+   ]
+  },
+  {
+   "id": "alert:informationtechconsultants",
+   "kind": "alert",
+   "text": "\"Information Tech Consultants\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Information Tech Consultants",
+   "alerts": [
+    {
+     "title": "Data Science Specialist",
+     "location": "England, United Kingdom (On-site)",
+     "link": "https://www.linkedin.com/jobs/view/4484678848"
+    }
+   ]
+  },
+  {
+   "id": "alert:jazzpharmaceuticals",
+   "kind": "alert",
+   "text": "\"Jazz Pharmaceuticals\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Jazz Pharmaceuticals",
+   "alerts": [
+    {
+     "title": "AI Data Science Analyst",
+     "location": "Cambridge",
+     "link": "https://uk.indeed.com/viewjob?jk=494543d9beb6c92c"
+    }
+   ]
+  },
+  {
+   "id": "alert:nexcadeai",
+   "kind": "alert",
+   "text": "\"Nexcade AI\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Nexcade AI",
+   "alerts": [
+    {
+     "title": "AI Engineer",
+     "location": "London",
+     "link": "https://uk.indeed.com/viewjob?jk=bbf6173f24f00021"
+    }
+   ]
+  },
+  {
+   "id": "alert:durlstonpartners",
+   "kind": "alert",
+   "text": "\"Durlston Partners\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Durlston Partners",
+   "alerts": [
+    {
+     "title": "AI Engineer",
+     "location": "London",
+     "link": "https://uk.indeed.com/viewjob?jk=fb3be45b3710ad67"
+    }
+   ]
+  },
+  {
+   "id": "alert:gazelleglobal",
+   "kind": "alert",
+   "text": "\"Gazelle Global\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Gazelle Global",
+   "alerts": [
+    {
+     "title": "AI Engineer",
+     "location": "United Kingdom (Remote)",
+     "link": "https://www.linkedin.com/jobs/view/4485084015"
+    }
+   ]
+  },
+  {
+   "id": "alert:oritain",
+   "kind": "alert",
+   "text": "\"Oritain\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Oritain",
+   "alerts": [
+    {
+     "title": "Statistical Data Scientist",
+     "location": "London (Hybrid)",
+     "link": "https://www.linkedin.com/jobs/view/4475029278"
+    }
+   ]
+  },
+  {
+   "id": "alert:verisk",
+   "kind": "alert",
+   "text": "\"Verisk\" careers (site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:myworkdayjobs.com OR site:workable.com OR site:teamtailor.com)",
+   "family": "",
+   "provider": "",
+   "company": "Verisk",
+   "alerts": [
+    {
+     "title": "Senior Data Scientist",
+     "location": "Newcastle upon Tyne",
+     "link": "https://uk.indeed.com/viewjob?jk=5583410d3c17de51"
+    }
+   ]
+  },
+  {
+   "id": "role:data_scientist:greenhouse",
+   "kind": "role",
+   "text": "(site:job-boards.greenhouse.io OR site:job-boards.eu.greenhouse.io) (\"Data Scientist\" OR \"Junior Data Scientist\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "data_scientist",
+   "provider": "greenhouse",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:data_scientist:lever",
+   "kind": "role",
+   "text": "(site:jobs.lever.co OR site:jobs.eu.lever.co) (\"Data Scientist\" OR \"Junior Data Scientist\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "data_scientist",
+   "provider": "lever",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:data_scientist:ashby",
+   "kind": "role",
+   "text": "site:jobs.ashbyhq.com (\"Data Scientist\" OR \"Junior Data Scientist\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "data_scientist",
+   "provider": "ashby",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:ai_engineer:greenhouse",
+   "kind": "role",
+   "text": "(site:job-boards.greenhouse.io OR site:job-boards.eu.greenhouse.io) (\"AI Engineer\" OR \"Applied AI Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "ai_engineer",
+   "provider": "greenhouse",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:ai_engineer:lever",
+   "kind": "role",
+   "text": "(site:jobs.lever.co OR site:jobs.eu.lever.co) (\"AI Engineer\" OR \"Applied AI Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "ai_engineer",
+   "provider": "lever",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:ai_engineer:ashby",
+   "kind": "role",
+   "text": "site:jobs.ashbyhq.com (\"AI Engineer\" OR \"Applied AI Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "ai_engineer",
+   "provider": "ashby",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:genai_engineer:greenhouse",
+   "kind": "role",
+   "text": "(site:job-boards.greenhouse.io OR site:job-boards.eu.greenhouse.io) (\"Generative AI Engineer\" OR \"LLM Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "genai_engineer",
+   "provider": "greenhouse",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:genai_engineer:lever",
+   "kind": "role",
+   "text": "(site:jobs.lever.co OR site:jobs.eu.lever.co) (\"Generative AI Engineer\" OR \"LLM Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "genai_engineer",
+   "provider": "lever",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:genai_engineer:ashby",
+   "kind": "role",
+   "text": "site:jobs.ashbyhq.com (\"Generative AI Engineer\" OR \"LLM Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "genai_engineer",
+   "provider": "ashby",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:ml_engineer:greenhouse",
+   "kind": "role",
+   "text": "(site:job-boards.greenhouse.io OR site:job-boards.eu.greenhouse.io) (\"Machine Learning Engineer\" OR \"ML Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "ml_engineer",
+   "provider": "greenhouse",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:ml_engineer:lever",
+   "kind": "role",
+   "text": "(site:jobs.lever.co OR site:jobs.eu.lever.co) (\"Machine Learning Engineer\" OR \"ML Engineer\") (\"London\" OR \"Bristol\" OR \"Manchester\" OR \"Cambridge\" OR \"Edinburgh\" OR \"United Kingdom\" OR \"UK\") -senior -lead -principal -staff -manager -chief -director -intern",
+   "family": "ml_engineer",
+   "provider": "lever",
+   "company": "",
+   "alerts": []
+  },
+  {
+   "id": "role:workday",
+   "kind": "workday",
+   "text": "site:myworkdayjobs.com (\"Data Scientist\" OR \"Machine Learning Engineer\") \"United Kingdom\"",
+   "family": "",
+   "provider": "",
+   "company": "",
+   "alerts": []
+  }
+ ]
+}

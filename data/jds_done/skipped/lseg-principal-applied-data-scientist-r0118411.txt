@@ -1,0 +1,68 @@
+Company: Lseg
+Title: Principal Applied Data Scientist
+URL: https://lseg.wd3.myworkdayjobs.com/Careers/job/GBR-London-10-Paternoster-Square/Principal-Applied-Data-Scientist_R0118411-1
+Source: workday
+Apply kind: workday
+Location: GBR-London-10 Paternoster Square, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+Are you a hands-on data scientist with deep expertise in NLP and LLMs, strong Python coding skills, and a track record of deploying models to production? Do you thrive in building real-world AI solutions that are used by actual customers? If so, we'd love to talk to you!
+
+ROLE SUMMARY: As a Principal Data Scientist (individual contributor), you will play a hands-on role in designing, building, and deploying scalable AI solutions that go beyond prototypes and are actively used in production. You'll work closely with collaborative teams to co-develop innovative products for financial markets and professionals.
+We're looking for someone who combines deep technical expertise in NLP and LLMs, strong Python engineering skills, and real-world experience shipping and supporting models in production. You should be comfortable owning delivery timelines and ensuring that solutions meet business needs and production-grade standards.
+
+WHAT YOU'LL BE DOING: This is a hands-on technical leadership role in a high-impact environment focused on delivering production-ready AI systems.
+You will be part of the LSEG Workspace team — LSEG's flagship platform that delivers personalised insights, news, and cutting-edge analytics to financial professionals worldwide. Your work will directly shape the AI capabilities embedded in a product that professionals rely on every day to make critical decisions. 
+
+- Lead the end-to-end development of AI solutions: design, build, test, and deploy models that are robust, scalable, and used by real users.
+- Apply NLP and LLM techniques to solve real-world problems, ensuring models are optimized for performance and reliability.
+- Continuously improve model quality through tuning, evaluation, and feedback from production usage.
+- Evaluate third-party AI solutions with a critical eye on performance, scalability, and integration into production environments.
+- Write and maintain production-grade Python code, adhering to best practices in software engineering and model development.
+- Collaborate with engineering and business partners to define requirements, shape roadmaps, and ensure successful delivery of AI products.
+WHAT YOU'LL BRING:
+ESSENTIAL SKILLS
+
+- Extensive hands-on experience applying NLP and LLMs to real-world problems, with a consistent track record of shipping models to production and supporting them post-deployment.
+- Strong Python programming skills, including object-oriented design and proficiency with key ML libraries (e.g., PyTorch, TensorFlow, Scikit-Learn).
+- Solid understanding of probability and statistical modeling to support robust model development and interpretation.
+- Experience with cloud platforms (especially Azure and/or AWS) and modern deployment practices for scalable AI delivery.
+- Proven ability to set and uphold coding and model evaluation standards for production environments.
+- Excellent communication skills to articulate technical decisions and trade-offs to both technical and non-technical audiences.
+DESIRABLE SKILLS
+
+- Familiarity with DevOps practices including CI/CD, version control, automated testing, and monitoring to support reliable model deployment and maintenance.
+- Experience with TypeScript, particularly for building or contributing to production services and APIs alongside ML systems.
+EDUCATION Bachelor's degree in Engineering, Computer Science, Data Science, Statistics, Mathematics, Physics or a related field, or equivalent practical experience.
+WHAT YOU'LL GET IN RETURN:
+
+- High-impact projects: Work on innovative AI products that solve complex, high-value challenges using rich datasets.
+- Competitive benefits: Strong compensation, comprehensive benefits, and investment in your career growth.
+- Industry leadership: Be a founding member of a team delivering novel products that democratize modeling and analytics.
+- Collaborative environment: Join a team of experienced engineers in a culture of continuous learning and development.
+
+We are proud to be an equal opportunities employer. This means that we do not discriminate on the basis of anyone's race, religion, colour, national origin, gender, sexual orientation, gender identity, gender expression, age, marital status, veteran status, pregnancy or disability, or any other basis protected under applicable law. Conforming with applicable law, we can reasonably accommodate applicants' and employees' religious practices and beliefs, as well as mental health or physical disability needs.
+
+Career Stage:Manager
+
+London Stock Exchange Group (LSEG) Information:
+Join us and be part of a team that values innovation, quality, and continuous improvement. If you're ready to take your career to the next level and make a significant impact, we'd love to hear from you.
+
+LSEG is a leading global financial markets infrastructure and data provider. Our purpose is driving financial stability, empowering economies and enabling customers to create sustainable growth.
+
+Our purpose is the foundation on which our culture is built. Our values of Integrity, Partnership, Excellence and Change underpin our purpose and set the standard for everything we do, every day. They go to the heart of who we are and guide our decision making and everyday actions.
+
+Working with us means that you will be part of a dynamic organisation of 25,000 people across 65 countries. However, we will value your individuality and enable you to bring your true self to work so you can help enrich our diverse workforce.
+
+We are proud to be an equal opportunities employer. This means that we do not discriminate on the basis of anyone’s race, religion, colour, national origin, gender, sexual orientation, gender identity, gender expression, age, marital status, veteran status, pregnancy or disability, or any other basis protected under applicable law. Conforming with applicable law, we can reasonably accommodate applicants' and employees' religious practices and beliefs, as well as mental health or physical disability needs.
+
+You will be part of a collaborative and creative culture where we encourage new ideas. We are committed to sustainability across our global business and we are proud to partner with our customers to help them meet their sustainability objectives. Our charity, the LSEG Foundation provides charitable grants to community groups that help people access economic opportunities and build a secure future with financial independence. Colleagues can get involved through fundraising and volunteering.
+
+LSEG offers a range of tailored benefits and support, including healthcare, retirement planning, paid volunteering days and wellbeing initiatives.
+
+Please take a moment to read this privacy notice carefully, as it describes what personal information London Stock Exchange Group (LSEG) (we) may hold about you, what it’s used for, and how it’s obtained, your rights and how to contact us as a data subject. 
+
+If you are submitting as a Recruitment Agency Partner, it is essential and your responsibility to ensure that candidates applying to LSEG are aware of this privacy notice.

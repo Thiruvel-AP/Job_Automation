@@ -1,0 +1,80 @@
+Company: Prolific
+Title: Data Analyst - Marketplace
+URL: https://job-boards.eu.greenhouse.io/prolific/jobs/5014007101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-10-22T13:01:49-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+Data Analyst, Marketplace
+
+ Prolific
+
+Prolific is not just another player in the AI space – we are the architects of the human data infrastructure that's reshaping the landscape of AI development. In a world where foundational AI technologies are increasingly commoditised, it's the quality and diversity of human-generated data that truly differentiates products and models.
+
+The role
+
+As Prolific scales, maintaining a healthy and sustainable marketplace will be critical to our ability to meet growing demand for high-quality human data. We are looking for a Data Analyst to help us understand how well our marketplace is working, identify where supply and demand are not connecting effectively, and measure whether product and algorithmic improvements are delivering better outcomes. You will work closely with Product, Engineering and Operations teams, using data to answer important marketplace questions and support better product decisions.
+
+What you’ll bring to the role
+
+- Strong Analytics Skills: Strong SQL skills and experience analysing complex datasets. Python experience for analysis and experimentation is beneficial.
+
+- Marketplace or Product Analytics: Experience working with marketplace, product or operational data and using metrics to understand user and business behaviour.
+
+- Marketplace Metrics: Ability to work with measures such as supply and demand, fill rate, time-to-fill, availability, quality and concentration to understand marketplace performance.
+
+- Experimentation: Experience analysing A/B tests or other experiments, including defining success metrics, interpreting results and communicating findings.
+
+- Product Thinking: Ability to turn product or marketplace questions into measurable hypotheses and structured analysis.
+
+- Analytical Curiosity: Comfortable exploring data to understand why something is happening, rather than only reporting what happened.
+
+- Commercial Awareness: Ability to understand how marketplace performance affects customer experience and wider business outcomes.
+
+- Collaboration: Comfortable working with Product, Engineering and Operations teams and contributing analytical thinking to cross-functional work.
+
+- Clear Communication: Ability to translate analysis into simple, actionable insights for both technical and non-technical stakeholders.
+
+What you'll be doing
+
+- Help define, monitor and improve the metrics we use to understand marketplace health, including supply-demand balance, fulfilment, quality and concentration.
+
+- Analyse marketplace performance and investigate changes in metrics such as fill rate, time-to-fill, participant availability and quality.
+
+- Work with product and engineering teams to define success metrics and measure the impact of product and algorithmic improvements.
+
+- Analyse experiments to understand whether changes to matching, ranking, recommendation or other marketplace experiences are improving outcomes.
+
+- Build and maintain dashboards and reporting that make marketplace performance visible and actionable.
+
+- Use SQL and other analytical tools to investigate marketplace behaviour, identify trends and surface opportunities or problems.
+
+- Explore how marketplace outcomes differ across customers, participants, use cases and segments.
+
+- Communicate findings clearly and help teams make data-informed product and operational decisions.
+
+Why Prolific is a great place to work
+
+We've built a unique platform that connects researchers and companies with a global pool of participants, enabling the collection of high-quality, ethically sourced human behavioural data and feedback. This data is the cornerstone of developing more accurate, nuanced, and aligned AI systems.
+
+We believe that the next leap in AI capabilities won't come solely from scaling existing models but from integrating diverse human perspectives and behaviours into AI development. By providing this crucial human data infrastructure, Prolific is positioning itself at the forefront of the next wave of AI innovation – one that reflects the breath and the best of humanity.
+
+Working for us will place you at the forefront of AI innovation, providing access to our unique human data platform and opportunities for groundbreaking research. Join us to enjoy a competitive salary, benefits, and remote working within our impactful, mission-driven culture.
+
+Links to more information on Prolific
+
+Benefits 
+
+External Handbook 
+
+Website 
+
+YouTube 
+
+Privacy Statement
+
+By submitting your application, you agree that Prolific may collect your personal data for recruiting and global organisation planning. Prolific's Candidate Privacy Notice explains what personal information Prolific may process, where Prolific may process your personal information, its purposes for processing your personal information, and the rights you can exercise over Prolific use of your personal information.

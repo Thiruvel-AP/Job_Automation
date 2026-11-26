@@ -1,0 +1,1 @@
+{"p_ch1":"Built an XGBoost churn classifier in R using tidymodels, performing two-stage Bayesian hyperparameter tuning, SMOTE preprocessing, and MCC evaluation for machine learning modeling of customer churn propensity."}

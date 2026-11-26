@@ -1,0 +1,1267 @@
+{
+  "job_id": "manual:fdde1fd48fa4",
+  "company": "OpenAI",
+  "title": "Applied AI Engineer, Startups (Codex)",
+  "family": "ai_engineer",
+  "tier": 1,
+  "headline": "AI Engineer",
+  "keywords": [
+    {
+      "term": "Codex",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "live demos",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "workshops",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "AI coding tools",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "integrations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "technical talks",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "automations",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "developer tools",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "guides",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "hackathons",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "reusable code examples",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "software engineering fundamentals",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "openai",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "research",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "communication",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "end-to-end",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "curiosity",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "developer empathy",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "early-stage startups",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "end-to-end ownership",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "founding",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "high agency",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "startup experience",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "technical judgment",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "OpenAI builds and deploys general-purpose artificial intelligence systems that benefit all of humanity.",
+  "team": "Applied AI Engineering",
+  "ceiling": 0.46835443037974683,
+  "genuine_gaps": [
+    "workshops",
+    "AI coding tools",
+    "technical talks",
+    "developer tools",
+    "guides",
+    "reusable code examples",
+    "software engineering fundamentals",
+    "curiosity",
+    "developer empathy",
+    "early-stage startups",
+    "end-to-end ownership",
+    "high agency",
+    "startup experience",
+    "technical judgment"
+  ],
+  "possible_evidence": {},
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.31645569620253167,
+      "score_stemmed": 0.34177215189873417,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9889909922196677,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.03
+      },
+      "shrinks": 6,
+      "reverted": [],
+      "wording": {
+        "terms": [
+          "founding"
+        ],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [
+          "founding"
+        ],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 7,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          },
+          {
+            "id": "dc6",
+            "lines": 5
+          },
+          {
+            "id": "fl7",
+            "lines": 4
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_ql2: adds the word 'identified', which the original bullet does not say",
+        "p_ql2: adds the word 'applied', which the original bullet does not say",
+        "p_ql2: adds the word 'embeddings', which the original bullet does not say",
+        "p_ql2: adds the word 'create', which the original bullet does not say",
+        "p_ql1: adds the word 'raising', which the original bullet does not say",
+        "p_ql1: dropped the number 384",
+        "p_ql1: dropped 'held-out'",
+        "p_ql1: dropped 'under'",
+        "p_ia1: dropped the word 'cause' of the result"
+      ],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: fl7 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: p_ql1 prints 4 lines (limit 3); it has no sentence or semicolon to split at and the model could not shorten it without losing a fact, so it is left as the fact bank has it",
+        "length: p_ql2 prints 4 lines (limit 3); it has no sentence or semicolon to split at and the model could not shorten it without losing a fact, so it is left as the fact bank has it",
+        "wording: no bullet carries the stem of founding (skills or profile only)"
+      ],
+      "wording_misses": [
+        "founding"
+      ],
+      "misses": [
+        "workshops",
+        "AI coding tools",
+        "technical talks",
+        "automations",
+        "developer tools",
+        "guides",
+        "reusable code examples",
+        "software engineering fundamentals",
+        "communication",
+        "end-to-end",
+        "curiosity",
+        "developer empathy",
+        "early-stage startups",
+        "end-to-end ownership",
+        "high agency",
+        "startup experience",
+        "technical judgment"
+      ],
+      "rephrase": {
+        "eligible": 3,
+        "asked": 3,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "workshops",
+          "AI coding tools",
+          "technical talks",
+          "automations",
+          "developer tools",
+          "guides",
+          "reusable code examples",
+          "software engineering fundamentals",
+          "communication",
+          "end-to-end",
+          "curiosity",
+          "developer empathy",
+          "early-stage startups",
+          "end-to-end ownership",
+          "founding",
+          "high agency",
+          "startup experience",
+          "technical judgment"
+        ],
+        "proposed": 3,
+        "accepted": 0,
+        "blocked": 3,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az9",
+              "az6",
+              "az10",
+              "az4"
+            ],
+            "dc180": [
+              "dc6",
+              "dc8",
+              "dc7"
+            ],
+            "freelance": [
+              "fl7",
+              "fl5"
+            ],
+            "avasoft": [
+              "av10",
+              "av8",
+              "av9"
+            ]
+          },
+          "projects": [
+            "churn",
+            "coverfit",
+            "qlora",
+            "gtaigraph",
+            "iata"
+          ],
+          "project_bullets": {
+            "churn": [
+              "p_ch1"
+            ],
+            "coverfit": [
+              "p_cf2"
+            ],
+            "qlora": [
+              "p_ql2",
+              "p_ql1"
+            ],
+            "gtaigraph": [
+              "p_gg5",
+              "p_gg3"
+            ],
+            "iata": [
+              "p_ia1",
+              "p_ia2"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_ql2": "Audited 859,494 training rows, identified 44,369 excess duplicates, hand-reviewed 181 flagged records, and applied MiniLM, KMeans, GMM embeddings to create topic-grouped training folds.",
+          "p_ql1": "Fine-tuned Llama 3.1 8B with QLoRA (4-bit, Unsloth, TRL) on a 15 GB GPU, training 0.52% of parameters, raising answer completion 32%\u219252% and exact-answer accuracy 16.2%\u219227.3% on 99 NuminaMath problems.",
+          "p_ia1": "Designed preprocessing and clustering pipelines (K-Means, HAC, DBSCAN) using BoW, TF-IDF, Skip-gram, SBERT, and traced silhouette <0.30 to repeated template vocabulary in tickets."
+        },
+        "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)."
+      },
+      "selection": {
+        "az": [
+          "az4",
+          "az6",
+          "az9",
+          "az10"
+        ],
+        "dc180": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ],
+        "freelance": [
+          "fl5",
+          "fl7"
+        ],
+        "avasoft": [
+          "av8",
+          "av9",
+          "av10"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "coverfit": [
+          "p_cf2"
+        ]
+      },
+      "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).",
+      "rephrase_coverage": {
+        "eligible": 1,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "workshops",
+          "AI coding tools",
+          "technical talks",
+          "automations",
+          "developer tools",
+          "guides",
+          "reusable code examples",
+          "software engineering fundamentals",
+          "communication",
+          "end-to-end",
+          "curiosity",
+          "developer empathy",
+          "early-stage startups",
+          "end-to-end ownership",
+          "founding",
+          "high agency",
+          "startup experience",
+          "technical judgment"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/OpenAI_Applied_AI_Engineer_Startups_Codex_fdde1fd48fa4",
+  "analysis_warnings": [
+    "extract_keywords: dropped keyword 'Codex workflows' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'customer feedback' (not verbatim, too long, generic or a degree)",
+    "skills: the 'ai_engineer' family's skill_lines do not mention pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, which the fact bank lists (the lines are used as written; add them to the lines if you want them on the CV)",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'AI Engineer' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 0: none))"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Agentic AI & LLM Applications",
+      "Software Engineering & Integrations",
+      "Cloud & Deployment"
+    ],
+    "dropped_groups": [],
+    "family": "ai_engineer"
+  },
+  "achievements": [
+    "lloyds"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 0: none)"
+  ],
+  "hook_family_headline": "AI Engineer",
+  "hook_family_profile": true,
+  "family_line": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+  "ats": {
+    "strict": 31.645569620253166,
+    "ceiling": 46.835443037974684,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "Codex",
+      "live demos",
+      "integrations",
+      "hackathons",
+      "openai",
+      "research",
+      "evaluation"
+    ],
+    "misses": [
+      "workshops",
+      "AI coding tools",
+      "technical talks",
+      "automations",
+      "developer tools",
+      "guides",
+      "reusable code examples",
+      "software engineering fundamentals",
+      "communication",
+      "end-to-end",
+      "curiosity",
+      "developer empathy",
+      "early-stage startups",
+      "end-to-end ownership",
+      "high agency",
+      "startup experience",
+      "technical judgment",
+      "founding"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "band": {
+    "outcome": "skip",
+    "strict": 31.645569620253166,
+    "ceiling": 46.835443037974684,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": "ATS S < 50"
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "Codex",
+    "live demos",
+    "integrations",
+    "automations",
+    "hackathons",
+    "openai",
+    "research",
+    "communication",
+    "end-to-end",
+    "evaluation",
+    "founding"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.31645569620253167,
+    "score_stemmed": 0.34177215189873417,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9889909922196677,
+    "hits": [
+      "Codex",
+      "live demos",
+      "integrations",
+      "hackathons",
+      "openai",
+      "research",
+      "evaluation"
+    ],
+    "wording_misses": [
+      "founding"
+    ],
+    "misses": [
+      "workshops",
+      "AI coding tools",
+      "technical talks",
+      "automations",
+      "developer tools",
+      "guides",
+      "reusable code examples",
+      "software engineering fundamentals",
+      "communication",
+      "end-to-end",
+      "curiosity",
+      "developer empathy",
+      "early-stage startups",
+      "end-to-end ownership",
+      "high agency",
+      "startup experience",
+      "technical judgment"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9889909922196677,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.03
+  },
+  "needs_result": [
+    {
+      "id": "az6",
+      "entry": "AstraZeneca",
+      "text": "Integrated the agent into a React front end with real-time gene alias enrichment."
+    },
+    {
+      "id": "az9",
+      "entry": "AstraZeneca",
+      "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "dc8",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+    },
+    {
+      "id": "fl7",
+      "entry": "Freelance",
+      "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+    },
+    {
+      "id": "av8",
+      "entry": "Avasoft",
+      "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+    },
+    {
+      "id": "av10",
+      "entry": "Avasoft",
+      "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn \u2014 propensity model",
+      "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 7,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      },
+      {
+        "id": "dc6",
+        "lines": 5
+      },
+      {
+        "id": "fl7",
+        "lines": 4
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 7,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "end-to-end",
+      "early-stage startups",
+      "early-stage",
+      "end-to-end ownership"
+    ],
+    "results_bold": 5,
+    "results_unmatched": [],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "az9",
+        "entry": "AstraZeneca",
+        "score": 4.5,
+        "keywords": 4.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+      },
+      {
+        "id": "p_gg5",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 4.17,
+        "keywords": 3.5,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash-randomisation bug to its root cause."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.17,
+        "keywords": 1.5,
+        "domain": 2.67,
+        "chosen": true,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      },
+      {
+        "id": "az4",
+        "entry": "AstraZeneca",
+        "score": 3.5,
+        "keywords": 3.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation."
+      },
+      {
+        "id": "az12",
+        "entry": "AstraZeneca",
+        "score": 3.5,
+        "keywords": 3.5,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+      },
+      {
+        "id": "p_gg1",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 2.67,
+        "keywords": 2.0,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Merged 14 public omics source files (crosswalk, median imputation, robust z-scoring with MAD) into a graph of 1,399 cell lines and 16,385 genes (~2.8M edges), and used Leiden community detection (19 clusters, modularity 0.822) to explore its structure."
+      },
+      {
+        "id": "p_gg3",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 2.67,
+        "keywords": 2.0,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Combined mRNA and protein evidence per gene with Stouffer's method."
+      },
+      {
+        "id": "p_ia1",
+        "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 2.67,
+        "keywords": 0.0,
+        "domain": 2.67,
+        "chosen": false,
+        "text": "Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets."
+      },
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 2.17,
+        "keywords": 1.5,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 2.17,
+        "keywords": 1.5,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 4.17,
+        "sum": 12.35,
+        "chosen": false
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.17,
+        "sum": 4.17,
+        "chosen": true
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 2.67,
+        "sum": 4.67,
+        "chosen": false
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": true
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 1.5,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 1.5,
+        "sum": 1.5,
+        "chosen": false
+      },
+      {
+        "id": "cnn",
+        "name": "Image Classification \u2014 CNN and Transfer Learning",
+        "score": 1.5,
+        "sum": 1.5,
+        "chosen": false
+      },
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "astrofreud",
+        "name": "AstroFreud \u2014 LangGraph interview agent",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 1,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 3,
+    "asked": 3,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "workshops",
+      "AI coding tools",
+      "technical talks",
+      "automations",
+      "developer tools",
+      "guides",
+      "reusable code examples",
+      "software engineering fundamentals",
+      "communication",
+      "end-to-end",
+      "curiosity",
+      "developer empathy",
+      "early-stage startups",
+      "end-to-end ownership",
+      "founding",
+      "high agency",
+      "startup experience",
+      "technical judgment"
+    ],
+    "proposed": 3,
+    "accepted": 0,
+    "blocked": 3,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "workshops",
+      "AI coding tools",
+      "technical talks",
+      "automations",
+      "developer tools",
+      "guides",
+      "reusable code examples",
+      "software engineering fundamentals",
+      "communication",
+      "end-to-end",
+      "curiosity",
+      "developer empathy",
+      "early-stage startups",
+      "end-to-end ownership",
+      "founding",
+      "high agency",
+      "startup experience",
+      "technical judgment"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "ATS S < 50: no letter was drafted",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az9",
+        "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+      },
+      {
+        "id": "p_ch1",
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2548,
+        "prompt_tokens": 1911,
+        "completion_tokens": 407,
+        "reasoning_tokens": 259,
+        "total_tokens": 2318,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 1060,
+        "prompt_tokens": 1037,
+        "completion_tokens": 890,
+        "reasoning_tokens": 695,
+        "total_tokens": 1927,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 735,
+        "prompt_tokens": 748,
+        "completion_tokens": 506,
+        "reasoning_tokens": 414,
+        "total_tokens": 1254,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 691,
+        "prompt_tokens": 662,
+        "completion_tokens": 523,
+        "reasoning_tokens": 474,
+        "total_tokens": 1185,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 4358,
+    "completion_tokens": 2326,
+    "reasoning_tokens": 1842,
+    "total_tokens": 6684,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1911,
+        "completion_tokens": 407,
+        "reasoning_tokens": 259,
+        "total_tokens": 2318,
+        "prompt_tokens_per_call": [
+          1911
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 3,
+        "prompt_tokens": 2447,
+        "completion_tokens": 1919,
+        "reasoning_tokens": 1583,
+        "total_tokens": 4366,
+        "prompt_tokens_per_call": [
+          1037,
+          748,
+          662
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 4,
+        "prompt_tokens": 4358,
+        "completion_tokens": 2326,
+        "reasoning_tokens": 1842,
+        "total_tokens": 6684,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "data/outputs/OpenAI_Applied_AI_Engineer_Startups_Codex_fdde1fd48fa4/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "AI Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).",
+    "skills": {
+      "Agentic AI & LLM Applications": "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)",
+      "Software Engineering & Integrations": "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis",
+      "Cloud & Deployment": "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "indirect contract",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.",
+          "Integrated the agent into a React front end with real-time gene alias enrichment.",
+          "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes.",
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+        ],
+        "bullet_ids": [
+          "az4",
+          "az6",
+          "az9",
+          "az10"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user.",
+          "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+        ],
+        "bullet_ids": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.",
+          "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+        ],
+        "bullet_ids": [
+          "fl5",
+          "fl7"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer (Jun 2023 \u2013 Sep 2024); Trainee (Jan 2023 \u2013 May 2023)",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "Delivered 10 reusable SwiftUI/UIKit component templates that accelerated the team across concurrent releases, so features shipped from shared, tested building blocks.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av8",
+          "av9",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "display_name": "Banking Customer Churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "coverfit",
+        "display_name": "CoverFit -- Insurance Benchmarking API",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "stack": "FastAPI, pandas, LiteLLM, Pydantic, pytest",
+        "github": "https://github.com/Thiruvel-AP/AIHackathon-Phoenix",
+        "bullets": [
+          "An insurance sponsor needed a fast, low-cost, explainable benchmark (hackathon brief): paired a deterministic matching engine (FastAPI, pandas, Pydantic) with a single LLM call (Gemini via LiteLLM) for the rationale, covered by pytest tests; responses arrive in under 3 seconds at ~\u00a30.003 per query."
+        ],
+        "bullet_ids": [
+          "p_cf2"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 May 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "av2": "10 reusable component templates",
+      "av9": "10 reusable component templates",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ll1": "3rd place; 200:1 class imbalance",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "achievements": [
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "award": "3rd place",
+        "bullet_id": "p_ll1",
+        "text": "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.",
+        "result": "200:1 class imbalance"
+      }
+    ],
+    "profile_head": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+    "linespread": 1.03
+  }
+}

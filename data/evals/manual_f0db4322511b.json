@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:f0db4322511b",
+ "company": "Lendables",
+ "title": "AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage of required keywords is 5.0"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family the title matched: ai_engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large unicorn, profitable since 2017, 800+ staff, flexible/hybrid work"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or suspicious instructions in ad"
+  }
+ },
+ "global_score": 4.4,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm actual compensation range and benefits package",
+  "Clarify remote vs hybrid expectations for the role",
+  "Ask about interview process duration and any assessment fees"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.4,
+ "model_confidence": "Medium",
+ "jd_hash": "cbebc7eefa90e20c",
+ "jd_words": 730,
+ "tokens": 2154,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

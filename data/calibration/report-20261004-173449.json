@@ -1,0 +1,1383 @@
+{
+  "meta": {
+    "stamp": "20261004-173449",
+    "keywords": {
+      "mode": "frozen",
+      "dates": [
+        "2026-10-04 17:32",
+        "2026-10-04 17:32",
+        "2026-10-04 17:32",
+        "2026-10-04 17:33",
+        "2026-10-04 17:33",
+        "2026-10-04 17:33",
+        "2026-10-04 17:33"
+      ]
+    },
+    "pinned": "groq",
+    "providers": [
+      "groq (openai/gpt-oss-20b)"
+    ],
+    "band": [
+      0.7,
+      0.85
+    ],
+    "temperature": 0,
+    "seed": 7,
+    "max_keywords": 25,
+    "models": [
+      "openai/gpt-oss-20b"
+    ],
+    "manifest": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/manifest.yaml"
+  },
+  "rows": [
+    {
+      "id": "cal-chattermill",
+      "company": "Chattermill",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 1.0
+      },
+      "keywords": {
+        "n": 25,
+        "required": 25,
+        "terms": [
+          "extraction",
+          "fine-tuning",
+          "retrieval",
+          "classification",
+          "reranking",
+          "search",
+          "agentic",
+          "classical ML",
+          "communication",
+          "custom models",
+          "embeddings",
+          "genai",
+          "instruction fine-tuning",
+          "LoRA",
+          "metrics",
+          "model serving",
+          "nlp",
+          "production",
+          "pytorch",
+          "real-world text data",
+          "semantic search",
+          "sentiment analysis",
+          "statistics",
+          "summarisation",
+          "training loops"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:32), extract_keywords not called",
+          "keywords: cut the benefits section 'Our Perks' (2851 characters) before extraction",
+          "extract_keywords: dropped keyword 'LLM-powered features' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'reranking systems' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'insight generation' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'evaluation frameworks' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'test sets' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'generative tasks' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'embedding-based approaches' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'NLP tasks' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'fine-tuning workflows' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'agentic patterns' (not verbatim, too long, generic or a degree)",
+          "keywords: dropped 'retrieval pipelines' (contains 'retrieval' plus only generic head words)",
+          "keywords: capped at 25; dropped transformer architectures, llm, data pipelines, evaluation, research, machine learning"
+        ],
+        "frozen": "2026-10-04 17:32"
+      },
+      "ceiling": 0.6,
+      "gaps": [
+        "extraction",
+        "reranking",
+        "custom models",
+        "instruction fine-tuning",
+        "metrics",
+        "real-world text data",
+        "semantic search",
+        "sentiment analysis",
+        "summarisation",
+        "training loops"
+      ],
+      "final": {
+        "literal": 0.44,
+        "stemmed": 0.44,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "extraction",
+          "retrieval",
+          "classification",
+          "reranking",
+          "communication",
+          "custom models",
+          "embeddings",
+          "instruction fine-tuning",
+          "metrics",
+          "real-world text data",
+          "semantic search",
+          "sentiment analysis",
+          "summarisation",
+          "training loops"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 6,
+        "accepted": 5,
+        "blocked": 1,
+        "calls": 2,
+        "coverage": {
+          "eligible": 6,
+          "rephrased": 5,
+          "ratio": 0.8333333333333334
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az3"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl2"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "bitcoin": [
+          "p_bt1"
+        ]
+      },
+      "violations": [
+        "fl2: keyword 'search' not evidenced by source"
+      ],
+      "profile": {
+        "facts": [
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+          "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "fallback",
+        "problems": [
+          "'at scale' (capability) is in neither the evidence nor the job description: 'Chattermill's mission to turn every customer touchpoint into'",
+          "used fallback letter"
+        ],
+        "reason": null,
+        "score": 0.12,
+        "pages": 1,
+        "evidence": [
+          "fl2",
+          "p_ch1"
+        ]
+      },
+      "usage": {
+        "calls": 5,
+        "total_tokens": 5101,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 3696,
+        "completion_tokens": 1405,
+        "max_prompt": 958,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 461,
+            "total_tokens": 541,
+            "max_prompt": 461,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 2,
+            "prompt_tokens": 1417,
+            "total_tokens": 2414,
+            "max_prompt": 896,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 2,
+            "prompt_tokens": 1818,
+            "total_tokens": 2146,
+            "max_prompt": 958,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 7.9,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": "interview",
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Chattermill_Data_Scientist_cal_chattermill"
+    },
+    {
+      "id": "cal-creditspring",
+      "company": "Creditspring",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 0.9333333333333333
+      },
+      "keywords": {
+        "n": 25,
+        "required": 25,
+        "terms": [
+          "machine learning",
+          "explainability",
+          "feature engineering",
+          "machine learning models",
+          "monitoring performance",
+          "python",
+          "SME",
+          "acquisition",
+          "alt-datasources",
+          "checking data",
+          "commercial awareness",
+          "communication",
+          "credit reference agencies",
+          "credit risk analytics",
+          "credit risk assessment",
+          "data pipelines",
+          "external API feeds",
+          "gradient boosting techniques",
+          "infrastructure",
+          "jupyter",
+          "model deployment",
+          "model tuning",
+          "numpy",
+          "pandas",
+          "regression"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:32), extract_keywords not called",
+          "extract_keywords: dropped keyword 'data drift' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'open banking data providers' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'product and lending strategies' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'supervised machine learning stack' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'manipulating data' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'merging data' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'cleaning data' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'communication skills' (not verbatim, too long, generic or a degree)",
+          "keywords: capped at 25; dropped scikit-learn, sql, stakeholders, statistical inference, tooling, validation, production, testing, lending, open banking data, agentic, Agentic AI, aws, cloud data stacks, credit bureau, decisioning SaaS platforms, event driven architecture, fintech, github, regulated sectors, research, ruby on rails, web applications"
+        ],
+        "frozen": "2026-10-04 17:32"
+      },
+      "ceiling": 0.32,
+      "gaps": [
+        "explainability",
+        "feature engineering",
+        "machine learning models",
+        "monitoring performance",
+        "SME",
+        "acquisition",
+        "alt-datasources",
+        "checking data",
+        "commercial awareness",
+        "credit reference agencies",
+        "credit risk analytics",
+        "credit risk assessment",
+        "external API feeds",
+        "gradient boosting techniques",
+        "infrastructure",
+        "jupyter",
+        "model tuning"
+      ],
+      "final": {
+        "literal": 0.28,
+        "stemmed": 0.28,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "explainability",
+          "feature engineering",
+          "machine learning models",
+          "monitoring performance",
+          "SME",
+          "acquisition",
+          "alt-datasources",
+          "checking data",
+          "commercial awareness",
+          "credit reference agencies",
+          "credit risk analytics",
+          "credit risk assessment",
+          "external API feeds",
+          "gradient boosting techniques",
+          "infrastructure",
+          "jupyter",
+          "model deployment",
+          "model tuning"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 6,
+        "accepted": 6,
+        "blocked": 0,
+        "calls": 2,
+        "coverage": {
+          "eligible": 6,
+          "rephrased": 6,
+          "ratio": 1.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl1"
+        ],
+        "avasoft": [
+          "av4"
+        ],
+        "gtaigraph": [
+          "p_gg1",
+          "p_gg2"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+          "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.04,
+        "pages": 1,
+        "evidence": [
+          "fl1",
+          "dc1"
+        ]
+      },
+      "usage": {
+        "calls": 5,
+        "total_tokens": 5353,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 3714,
+        "completion_tokens": 1639,
+        "max_prompt": 964,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 460,
+            "total_tokens": 540,
+            "max_prompt": 460,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 2,
+            "prompt_tokens": 1416,
+            "total_tokens": 2618,
+            "max_prompt": 882,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 2,
+            "prompt_tokens": 1838,
+            "total_tokens": 2195,
+            "max_prompt": 964,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 55.1,
+      "manual_ats": 0.708,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Creditspring_Data_Scientist_cal_creditspring"
+    },
+    {
+      "id": "cal-lendable",
+      "company": "Lendable",
+      "title": "AI Engineer",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "ai_engineer",
+        "tier": 1,
+        "ceiling_pre": 1.0
+      },
+      "keywords": {
+        "n": 10,
+        "required": 10,
+        "terms": [
+          "llms",
+          "business processes",
+          "communication",
+          "evaluations",
+          "production",
+          "prompts",
+          "retrieval",
+          "stakeholders",
+          "trade-offs",
+          "prototyping"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:32), extract_keywords not called",
+          "keywords: cut the benefits section 'Why join us' (90 characters) before extraction",
+          "extract_keywords: dropped keyword 'engineering skills' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'production systems' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'LLMs in real workflows' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'agent workflows' (not verbatim, too long, generic or a degree)",
+          "keywords: dropped 'retrieval pipelines' (contains 'retrieval' plus only generic head words)"
+        ],
+        "frozen": "2026-10-04 17:32"
+      },
+      "ceiling": 0.6923076923076923,
+      "gaps": [
+        "business processes",
+        "prompts",
+        "trade-offs"
+      ],
+      "final": {
+        "literal": 0.41025641025641024,
+        "stemmed": 0.5897435897435898,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "business processes",
+          "communication",
+          "prompts",
+          "trade-offs"
+        ],
+        "wording_misses": [
+          "evaluations",
+          "prototyping"
+        ]
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 3,
+        "accepted": 3,
+        "blocked": 0,
+        "calls": 1,
+        "coverage": {
+          "eligible": 3,
+          "rephrased": 3,
+          "ratio": 1.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az4",
+          "az1"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl4"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ],
+        "coverfit": [
+          "p_cf1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+          "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.10256410256410256,
+        "pages": 1,
+        "evidence": [
+          "dc1",
+          "az4"
+        ]
+      },
+      "usage": {
+        "calls": 4,
+        "total_tokens": 4079,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 3058,
+        "completion_tokens": 1021,
+        "max_prompt": 949,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 461,
+            "total_tokens": 539,
+            "max_prompt": 461,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 1,
+            "prompt_tokens": 746,
+            "total_tokens": 1352,
+            "max_prompt": 746,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 2,
+            "prompt_tokens": 1851,
+            "total_tokens": 2188,
+            "max_prompt": 949,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 7.6,
+      "manual_ats": 0.797,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Lendable_AI_Engineer_cal_lendable"
+    },
+    {
+      "id": "cal-zoneco",
+      "company": "Zone & Co",
+      "title": "AI Software Engineer",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "ai_engineer",
+        "tier": 1,
+        "ceiling_pre": 0.7258064516129032
+      },
+      "keywords": {
+        "n": 22,
+        "required": 22,
+        "terms": [
+          "azure",
+          "javascript",
+          "production",
+          "python",
+          "statically typed languages",
+          "agents",
+          "AutoGen",
+          "aws",
+          "communication",
+          "containerization",
+          "DSPy",
+          "langgraph",
+          "llms",
+          "non-relational databases",
+          "problem-solving",
+          "sql",
+          "data quality",
+          "end-to-end",
+          "experimentation",
+          "prototyping",
+          "research",
+          "scalable"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:33), extract_keywords not called",
+          "keywords: cut the benefits section 'Benefits' (9 characters) before extraction",
+          "extract_keywords: dropped keyword '2+ years of software engineering experie' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'relational (SQL) databases' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'deploying AI systems in production envir' (not verbatim, too long, generic or a degree)"
+        ],
+        "frozen": "2026-10-04 17:33"
+      },
+      "ceiling": 0.5975609756097561,
+      "gaps": [
+        "azure",
+        "statically typed languages",
+        "AutoGen",
+        "DSPy",
+        "non-relational databases",
+        "problem-solving",
+        "end-to-end",
+        "experimentation",
+        "scalable"
+      ],
+      "final": {
+        "literal": 0.5121951219512195,
+        "stemmed": 0.5487804878048781,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "azure",
+          "statically typed languages",
+          "AutoGen",
+          "communication",
+          "DSPy",
+          "non-relational databases",
+          "problem-solving",
+          "end-to-end",
+          "experimentation",
+          "scalable"
+        ],
+        "wording_misses": [
+          "prototyping"
+        ]
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 5,
+        "accepted": 5,
+        "blocked": 0,
+        "calls": 1,
+        "coverage": {
+          "eligible": 5,
+          "rephrased": 5,
+          "ratio": 1.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az3",
+          "az1",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl4"
+        ],
+        "avasoft": [
+          "av4"
+        ],
+        "agenticfriend": [
+          "p_af1",
+          "p_af2"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+          "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.14634146341463414,
+        "pages": 1,
+        "evidence": [
+          "az3",
+          "dc1"
+        ]
+      },
+      "usage": {
+        "calls": 3,
+        "total_tokens": 3264,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 2195,
+        "completion_tokens": 1069,
+        "max_prompt": 869,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 462,
+            "total_tokens": 540,
+            "max_prompt": 462,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 1,
+            "prompt_tokens": 869,
+            "total_tokens": 1678,
+            "max_prompt": 869,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 1,
+            "prompt_tokens": 864,
+            "total_tokens": 1046,
+            "max_prompt": 864,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 56.4,
+      "manual_ats": 0.833,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Zone_Co_AI_Software_Engineer_cal_zoneco"
+    },
+    {
+      "id": "cal-heathrow",
+      "company": "Heathrow Airport Holdings",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 0.8571428571428571
+      },
+      "keywords": {
+        "n": 25,
+        "required": 23,
+        "terms": [
+          "machine learning",
+          "airport operations",
+          "data governance",
+          "data science methods",
+          "data science solutions",
+          "analytical bias",
+          "business decisions",
+          "cloud-based analytics tools",
+          "data analysis",
+          "data protection",
+          "expected benefits",
+          "measurable outcomes",
+          "measures of success",
+          "model performance",
+          "model risk",
+          "predictive models",
+          "Python",
+          "security requirements",
+          "SQL",
+          "statistical methods",
+          "statistical modelling",
+          "data quality",
+          "mcp",
+          "complex organisation",
+          "specialist suppliers"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:33), extract_keywords not called",
+          "extract_keywords: dropped keyword 'statistical models' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'machine learning models' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'R' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'data science investment proposals' (not verbatim, too long, generic or a degree)"
+        ],
+        "frozen": "2026-10-04 17:33"
+      },
+      "ceiling": 0.23404255319148937,
+      "gaps": [
+        "airport operations",
+        "data governance",
+        "data science methods",
+        "data science solutions",
+        "analytical bias",
+        "business decisions",
+        "cloud-based analytics tools",
+        "data protection",
+        "expected benefits",
+        "measurable outcomes",
+        "measures of success",
+        "model performance",
+        "model risk",
+        "predictive models",
+        "security requirements",
+        "statistical methods",
+        "statistical modelling",
+        "complex organisation",
+        "specialist suppliers"
+      ],
+      "final": {
+        "literal": 0.23404255319148937,
+        "stemmed": 0.23404255319148937,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "airport operations",
+          "data governance",
+          "data science methods",
+          "data science solutions",
+          "analytical bias",
+          "business decisions",
+          "cloud-based analytics tools",
+          "data protection",
+          "expected benefits",
+          "measurable outcomes",
+          "measures of success",
+          "model performance",
+          "model risk",
+          "predictive models",
+          "security requirements",
+          "statistical methods",
+          "statistical modelling",
+          "complex organisation",
+          "specialist suppliers"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 4,
+        "accepted": 4,
+        "blocked": 0,
+        "calls": 1,
+        "coverage": {
+          "eligible": 4,
+          "rephrased": 4,
+          "ratio": 1.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az5",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl1"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "MSc Data Science, University of Bristol (completed 2026)",
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "fallback",
+        "problems": [
+          "'end-to-end' (capability) is in neither the evidence nor the job description: 'Heathrow Airport Holdings seeks data-driven insights to opti'",
+          "used fallback letter"
+        ],
+        "reason": null,
+        "score": 0.07446808510638298,
+        "pages": 1,
+        "evidence": [
+          "fl1",
+          "dc1"
+        ]
+      },
+      "usage": {
+        "calls": 4,
+        "total_tokens": 4030,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 2983,
+        "completion_tokens": 1047,
+        "max_prompt": 967,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 433,
+            "total_tokens": 503,
+            "max_prompt": 433,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 1,
+            "prompt_tokens": 735,
+            "total_tokens": 1363,
+            "max_prompt": 735,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 2,
+            "prompt_tokens": 1815,
+            "total_tokens": 2164,
+            "max_prompt": 967,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 6.4,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Heathrow_Airport_Holdings_Data_Scientist_cal_heathrow"
+    },
+    {
+      "id": "cal-quantcast",
+      "company": "Quantcast",
+      "title": "Machine Learning Engineer",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "ml_engineer",
+        "tier": 2,
+        "ceiling_pre": 0.9444444444444444
+      },
+      "keywords": {
+        "n": 24,
+        "required": 24,
+        "terms": [
+          "LLMs",
+          "NLP",
+          "clustering",
+          "Java",
+          "Python",
+          "statistics",
+          "classification",
+          "concurrent algorithms",
+          "data structures",
+          "distributed system",
+          "hypothesis testing",
+          "NumPy",
+          "Pandas",
+          "probability",
+          "PyTorch",
+          "ranking",
+          "regression",
+          "Scikit-learn",
+          "XGBoost",
+          "machine learning",
+          "production",
+          "research",
+          "scalable",
+          "testing"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:33), extract_keywords not called"
+        ],
+        "frozen": "2026-10-04 17:33"
+      },
+      "ceiling": 0.7032967032967034,
+      "gaps": [
+        "Java",
+        "concurrent algorithms",
+        "data structures",
+        "distributed system",
+        "probability",
+        "ranking",
+        "scalable"
+      ],
+      "final": {
+        "literal": 0.6593406593406593,
+        "stemmed": 0.6593406593406593,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "Java",
+          "classification",
+          "concurrent algorithms",
+          "data structures",
+          "distributed system",
+          "probability",
+          "ranking",
+          "scalable"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 2,
+      "rephrase": {
+        "proposed": 8,
+        "accepted": 7,
+        "blocked": 1,
+        "calls": 2,
+        "coverage": {
+          "eligible": 8,
+          "rephrased": 7,
+          "ratio": 0.875
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az3"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl2",
+          "fl1"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "gtaigraph": [
+          "p_gg1",
+          "p_gg2"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "violations": [
+        "p_ch1: text grew 1.6x \u2014 likely padding"
+      ],
+      "profile": {
+        "facts": [
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+          "Freelance AI/ML engineering across scikit-learn, TensorFlow/Keras, Hugging Face and LangChain/LangGraph"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.08791208791208792,
+        "pages": 1,
+        "evidence": [
+          "az1",
+          "fl1"
+        ]
+      },
+      "usage": {
+        "calls": 4,
+        "total_tokens": 4454,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 2816,
+        "completion_tokens": 1638,
+        "max_prompt": 868,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 434,
+            "total_tokens": 513,
+            "max_prompt": 434,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 2,
+            "prompt_tokens": 1532,
+            "total_tokens": 2964,
+            "max_prompt": 868,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 1,
+            "prompt_tokens": 850,
+            "total_tokens": 977,
+            "max_prompt": 850,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 56.5,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Quantcast_Machine_Learning_Engineer_cal_quantcast"
+    },
+    {
+      "id": "cal-trainline",
+      "company": "Trainline",
+      "title": "Data Analyst",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_analyst",
+        "tier": 3,
+        "ceiling_pre": 1.0
+      },
+      "keywords": {
+        "n": 10,
+        "required": 9,
+        "terms": [
+          "data visualisation",
+          "large datasets",
+          "Power BI",
+          "Python",
+          "SQL",
+          "structure analytical work",
+          "Tableau",
+          "healthcare",
+          "insurance",
+          "DBT"
+        ],
+        "notes": [
+          "keywords: frozen (2026-10-04 17:33), extract_keywords not called",
+          "extract_keywords: dropped keyword 'analytics to support business decisions' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'communicate insight' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'AI to responsibly accelerate coding' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'basic automation of day-to-day work proc' (not verbatim, too long, generic or a degree)",
+          "extract_keywords: dropped keyword 'modern data transformation workflows' (not verbatim, too long, generic or a degree)"
+        ],
+        "frozen": "2026-10-04 17:33"
+      },
+      "ceiling": 0.5,
+      "gaps": [
+        "data visualisation",
+        "large datasets",
+        "Power BI",
+        "structure analytical work",
+        "DBT"
+      ],
+      "final": {
+        "literal": 0.5,
+        "stemmed": 0.5,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "data visualisation",
+          "large datasets",
+          "Power BI",
+          "structure analytical work",
+          "DBT"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 1,
+      "rephrase": {
+        "proposed": 4,
+        "accepted": 4,
+        "blocked": 0,
+        "calls": 1,
+        "coverage": {
+          "eligible": 4,
+          "rephrased": 4,
+          "ratio": 1.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl1"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "coverfit": [
+          "p_cf1"
+        ],
+        "gtaigraph": [
+          "p_gg1",
+          "p_gg2"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "MSc Data Science, University of Bristol (completed 2026)",
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "reason": null,
+        "score": 0.2222222222222222,
+        "pages": 1,
+        "evidence": [
+          "az1",
+          "dc1"
+        ]
+      },
+      "usage": {
+        "calls": 4,
+        "total_tokens": 4382,
+        "served_by": [
+          "groq/openai/gpt-oss-20b"
+        ],
+        "prompt_tokens": 3045,
+        "completion_tokens": 1337,
+        "max_prompt": 972,
+        "by_task": {
+          "tailor_profile": {
+            "calls": 1,
+            "prompt_tokens": 432,
+            "total_tokens": 516,
+            "max_prompt": 432,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "rephrase_bullets": {
+            "calls": 1,
+            "prompt_tokens": 765,
+            "total_tokens": 1491,
+            "max_prompt": 765,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          },
+          "cover_letter": {
+            "calls": 2,
+            "prompt_tokens": 1848,
+            "total_tokens": 2375,
+            "max_prompt": 972,
+            "served_by": [
+              "groq/openai/gpt-oss-20b"
+            ]
+          }
+        }
+      },
+      "seconds": 7.7,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Trainline_Data_Analyst_cal_trainline"
+    }
+  ],
+  "aggregates": {
+    "jobs": 7,
+    "ok": 7,
+    "errors": 0,
+    "not_run": 0,
+    "guard": {
+      "proposed": 36,
+      "blocked": 2,
+      "rate": 0.05555555555555555,
+      "investigate": false
+    },
+    "band": {
+      "in_scope": 1,
+      "in_band": 0,
+      "rate": 0.0
+    },
+    "headroom": 0.04395604395604402,
+    "manual": {
+      "n": 3,
+      "mean_abs_diff": 0.3785161559307901,
+      "rho": 0.9999999999999998
+    },
+    "reference": {
+      "n": 0,
+      "mean_delta": null
+    },
+    "rank": {
+      "basis": "manual",
+      "n": 3,
+      "rho": 0.9999999999999998
+    },
+    "cost": {
+      "calls_per_job": 4.142857142857143,
+      "seconds_per_job": 28.228571428571428,
+      "tokens_per_job": 4380.428571428572,
+      "tokens_total": 30663,
+      "max_prompt": 972
+    },
+    "rephrase": {
+      "eligible": 36,
+      "rephrased": 34,
+      "ratio": 0.9444444444444444
+    },
+    "letters": {
+      "ok": 5,
+      "fallback": 2,
+      "pending": 0
+    },
+    "violations": 2,
+    "keywords_per_job": 20.142857142857142,
+    "mean_final": 0.4336906778199684,
+    "mean_ceiling": 0.5210297034865202
+  }
+}

@@ -1,0 +1,115 @@
+Company: Preply
+Title: Staff Data Scientist - Paid Marketing Optimization
+URL: https://jobs.ashbyhq.com/preply/64abe943-b897-4c31-93f1-90d4cb1b6ce0
+Source: ashby
+Location: London
+Posted: 2026-10-14
+First seen: 2026-10-15
+Listed: yes
+
+WE POWER PEOPLE’S PROGRESS.
+
+At Preply, we’re all about creating life-changing learning experiences. We help people discover the magic of the perfect tutor, craft a personalised learning journey, and stay motivated to keep growing. Our approach is human-led, tech-enabled - and it’s creating real impact.
+
+We’ve just reached unicorn status with a $150M Series D, accelerating our vision to transform education through human-led, AI-enhanced learning. Today, 100,000+ tutors teach 90+ languages to learners in 180 countries - and we’re only getting started. As a category-defining company, we’re shaping what the future of learning looks like at global scale.
+
+Every Preply lesson sparks change, fuels ambition, and drives progress that matters. Joining Preply means helping define the future of education at global scale, and building something that truly matters for millions of people, every day.
+
+
+MEET THE TEAM!
+
+At Preply, we're growing a talented Data Team https://www.linkedin.com/posts/preply_data-team-uncovered-activity-7232342101730971652-3ate?utm_source=share&utm_medium=member_desktop to empower top-notch decision-making across our organization. Our team collaborates closely with various other chapters - including product, business, and platform - leveraging analysis, experimentation, causal inference, and machine learning.
+
+ 
+
+You’ll be embedded in cross-functional teams, partnering with our MarTech Product Manager, Marketeers, Tech Leads, and the Data Strategy team. Check out our Tech Radar https://tech-radar.preply.com/ to see the tools and technologies we love using at Preply!
+
+ 
+
+
+ABOUT THIS ROLE:
+
+This role requires a real interest in the marketing bidding universe and the ability to work with a lot of ambiguity. You will go deep into each channel, understand its bidding and optimization behavior, and derive data driven solutions to increase each channel's ROI through bidding, audience and creative optimization. Marketing brings the business questions, you define the success metrics and the modeling approach to answer them. A lot of this is untapped territory and there is nothing off the shelf to buy, so inventing the approach and convincing your stakeholders of it is a big part of the job.
+
+
+
+
+
+WHAT YOU’LL BE DOING:
+
+ - Design our Creative Analytics framework (creative performance modeling) - Own, design and develop our Creative Analytics Framework. Drive its findings into decisions with the creative and media-buying teams, and automate detection, reporting and action with MarTech. Longer term, build models that separate what a creative actually causes from what the algorithm’s delivery decides for it, so we can predict the incremental drivers of creative efficiency.
+
+ - Cohort maturity prediction (conversion-lag prediction) - Minimize steering delay: predict how many of today’s clicks will convert, and connect today’s spend to conversions that haven’t happened yet.
+
+ - Bidding signal optimization (value-based bidding) - Work with our channel managers and Applied AI team to improve the predicted conversion value we send to Google and Meta, iterating through which funnel events we optimise on and what predictions we attach to them. Predict too early and the signal is noisy, too late and the algorithm doesn’t get enough data to learn from.
+
+ - Audience optimization (uplift modeling) - Create customer uplift models to identify incremental value and build audiences that improve marketing efficiency. Tell the networks who to look for and who to skip, and feed that back as prospecting seeds, remarketing audiences and exclusion lists.
+
+ - Work closely with the Data Engineering and Applied AI team on scalable data pipelines, the evolution of our ETL processes, and the adoption of new tools and frameworks.
+
+
+WHAT YOU NEED TO SUCCEED:
+
+ - Python, SQL and a distributed framework like Spark; we use Databricks.
+
+ - Experience with marketing or attribution data, and a working understanding of how bidding platforms consume the signal you send them. You don't need to have run campaigns, but you should find how they behave genuinely interesting.
+
+ - Advanced modelling. Propensity models to value earlier funnel events and refine targeting, and uplift models to identify incremental value.
+
+ - Causal inference and experiment design. Separating what a channel drives from what it takes credit for, and designing the test that settles it when the platform controls delivery.
+
+ - The instinct to turn a business hypothesis into something testable, and the honesty to say when the data can't answer it.
+
+ - Comfort working across teams you don't control. This role runs on close collaboration with Applied AI, marketing measurement, MarTech and tracking, and CRM.
+
+You might come from marketing DS, ads ML, recommender systems or any applied ML role where your model’s output fed another algorithm.
+
+
+
+
+WHY YOU’LL LOVE IT AT PREPLY:
+
+ - An open, collaborative, dynamic and diverse culture;
+
+ - A generous monthly allowance for lessons on  http://preply.comPreply.com http://Preply.com, Learning & Development budget and time off for your self-development;
+
+ - A competitive financial package with equity, leave allowance and health insurance;
+
+ - Not in Barcelona? We offer an attractive relocation package to join us in our Preply Barcelona Hub
+
+ - Access to free mental health support platforms;
+
+ - Access to Gympass-partnered wellness and gym centers throughout Spain to promote and support well-being and physical health;
+
+ - The opportunity to unlock the potential of learners and tutors through language learning and teaching in 175 countries (and counting!).
+
+
+
+
+
+OUR PRINCIPLES
+
+ - Care to change the world - We are passionate about our work and care deeply about its impact to be life changing.
+
+ - We do it for learners - For both Preply and tutors, learners are why we do what we do. Every day we focus on empowering tutors to deliver an exceptional learning experience.
+
+ - Keep perfecting - To create an outstanding customer experience, we focus on simplicity, smoothness, and enjoyment, continually perfecting it as every detail matters.
+
+ - Now is the time - In a fast-paced world, it matters how quickly we act. Now is the time to make great things happen.
+
+ - Disciplined execution - What makes us disciplined is the excellence in our execution. We set clear goals, focus on what matters, and utilize our resources efficiently.
+
+ - Dive deep - We leverage business acumen and curiosity to investigate disparities between numbers and stories, unlocking meaningful insights to guide our decisions.
+
+ - Growth mindset - We proactively seek growth opportunities and believe today's best performance becomes tomorrow's starting point. We humbly embrace feedback and learn from setbacks.
+
+ - Raise the bar - We raise our performance standards continuously, alongside each new hire and promotion. We build diverse and high-performing teams that can make a real difference.
+
+ - Challenge, disagree and commit - We value open and candid communication, even when we don’t fully agree. We speak our minds, challenge when necessary, and fully commit to decisions once made.
+
+ - One Preply - We prioritize collaboration, inclusion, and the success of our team over personal ambitions. Together, we support and celebrate each other's progress.
+
+
+DIVERSITY, EQUITY, AND INCLUSION
+
+Preply.com http://Preply.com is committed to creating an inclusive environment where people of diverse backgrounds can thrive. We believe that the presence of different opinions and viewpoints is a key ingredient for our success as a multicultural Ed-Tech company. That means that Preply will consider all applications for employment without regard to race, color, religion, gender identity or expression, sexual orientation, national origin, disability, age or veteran status.

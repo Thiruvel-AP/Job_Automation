@@ -1,0 +1,91 @@
+Company: Graphcore Early Careers
+Title: Graduate Machine Learning Engineer 2027
+URL: https://job-boards.greenhouse.io/graphcore-early-careers/jobs/8902058002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Bristol, UK
+Posted: 2026-10-20T06:18:04-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Location: Bristol, UK
+Start date: September 2027 
+Application deadline: Midnight, 29th November 2026 
+We encourage you to apply early, as we may close applications before the advertised deadline. 
+
+The Graduate Programme at Graphcore 
+
+Join Graphcore in a permanent role and start your career with two years of hands-on learning. From day one, you’ll be trusted to take ownership, share your ideas and help shape what we’re creating. You’ll tackle challenging problems alongside a team who support your development and are as excited about your success as you are. 
+
+What you’ll work on 
+
+Turn the models you’ve studied into AI systems that run at scale. 
+
+In Applied AI, you’ll help implement, train and optimise advanced models on Graphcore’s next generation hardware, connecting research ideas with systems running across thousands of accelerators. 
+
+You’ll benchmark models, use profiling to find performance bottlenecks, design experiments and contribute fixes across models, software and accelerator systems. 
+
+Working with Research, Software and Product teams, you’ll test ideas that could inform future hardware. Your experiments will help us understand what makes a model accurate, efficient and ready to scale. 
+
+Your team and support 
+
+The Applied AI team acts as a proxy for Graphcore’s customers. We understand current AI models, applications and software, then make sure Graphcore technology works at scale. You’ll work alongside people who write low-level kernels, train large language models and enjoy figuring out challenging AI problems together. 
+
+Work spans low-level kernel optimisation through to implementing research-level algorithms for new AI models. Engineers move between experiments, profiling, code reviews and technical debate – giving you a view of how different parts of an AI system fit together. 
+
+Decisions are driven by evidence, performance data and clear engineering judgement. You’ll be encouraged to ask questions, challenge existing approaches and share ideas for making things better. Take responsibility for your work and speak up when you spot a problem or need support. 
+
+How you’ll learn and grow 
+
+During the two-year programme, you’ll build technical range through hands-on work across AI models and accelerator systems. 
+
+With visibility across the full stack – from novel accelerator hardware and its software stack to state-of-the-art AI applications – you’ll identify opportunities to innovate and differentiate Graphcore’s technology. 
+
+What we’re looking for 
+
+- Bachelor/Master's degree in Machine Learning, Computer Science, Maths, Data Science, or related field 
+
+- Software development skills and proficiency with a deep learning framework such as PyTorch or JAX 
+
+- An understanding of deep learning architectures, optimisation, evaluation and scaling, with the ability to design, run and explain ML experiments 
+
+- A collaborative approach and willingness to work through unfamiliar technical problems, ask questions and take responsibility 
+
+You can demonstrate these skills through coursework, a dissertation, personal or team projects, research, or other relevant experience. Tell us what you built or investigated, how you approached it and what you learned. 
+
+Benefits
+
+- Flexible working: Balance your work and personal life with greater flexibility
+
+- Retirement planning support: Up to 5% matched pension
+
+- Phantom equity: Share in Graphcore’s success
+
+- Workplace experience: Enjoy thoughtfully designed office spaces for collaboration, with free food and an on-site barista to support your day
+
+- Peace of mind protection: Income protection and life assurance to provide financial security for you and your loved ones
+
+- Electric Vehicle Scheme: Choose an electric vehicle and lease it through salary sacrifice
+
+- Flexible benefits: Tailor your benefits package with a choice of additional options, including private medical insurance and dental cover
+
+- Optional benefits: Dental cover, health cash plan, private medical insurance, cycle to work scheme, give as you earn
+
+We welcome people from all backgrounds and experiences and are committed to building an inclusive environment where everyone can do their best work.
+
+We’re an equal opportunity employer and recognise that everyone brings different strengths and perspectives. If you need any adjustments during the interview process, just let us know - we’re happy to support you.
+
+Sponsorship
+
+Applicants must already have the right to work in the UK for the full duration of the programme, without requiring visa sponsorship. We are unable to sponsor work visas for our Early Careers opportunities.
+
+Introduction to Graphcore
+
+At Graphcore, we’re building next generation AI compute: from semiconductors and software to systems at datacenter scale. We are proud to be owned by SoftBank Group and work with other companies in the SoftBank family to deliver AI compute to customers working at the AI frontier. Starting your career here means working alongside people with different backgrounds and expertise, from AI researchers to chip designers and software engineers. You’ll learn from each other, bring fresh ideas and help solve challenging problems together.
+
+How to apply and what to expect 
+
+To apply, answer the application questions below and upload your CV and cover letter. We’ll let you know the outcome of your application by early December at the latest. If successful, you’ll be invited to complete a technical assessment. Candidates who reach the final stage will then be invited to attend in-person assessments in early spring.
+
+Ready to put your learning into practice? Start your career in a permanent Machine Learning Engineer role, with two years of hands-on learning through the Graphcore Graduate Programme. Apply now and help shape what comes next.

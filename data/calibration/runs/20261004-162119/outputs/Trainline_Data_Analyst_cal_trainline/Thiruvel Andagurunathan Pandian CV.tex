@@ -1,0 +1,97 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.55in, top=0.45in, bottom=0.45in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% headings 11pt on a 10.5pt body (the 10pt class would otherwise make them smaller than the text)
+\titleformat{\section}{\color{headernavy}\fontsize{11}{13}\selectfont\bfseries}{}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+\titlespacing{\section}{0pt}{6pt}{3pt}
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.2em, partopsep=0pt, parsep=0.5pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+
+% entry heading: org (left) dates (right) / role (left) location (right)
+\newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
+
+\begin{document}
+\fontsize{10.5}{12.6}\selectfont
+
+% ---------------- HEADER ----------------
+\begin{center}
+  {\LARGE\bfseries Thiruvel Andagurunathan Pandian}\\[3pt]
+  Bristol, UK \,$|$\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \,$|$\, \href{tel:+447741016954}{+44 7741 016954}\\[1pt]
+\href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p} \,$|$\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP} \,$|$\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{thiruvel-ap.github.io/PersonalPortfolio}\\[1pt]
+  UK Graduate visa on completion (Dec 2026): no sponsorship needed for 2 years \,$|$\, Available from December 2026
+\end{center}
+
+% ---------------- PROFILE ----------------
+\section{Profile}
+Data Analyst with experience in AI/ML engineering using scikit-learn, TensorFlow/Keras, Hugging Face, and LangChain/LangGraph. Contributed to an AstraZeneca-affiliated multi-omics research platform.
+
+% ---------------- EXPERIENCE ----------------
+\section{Experience}
+\entry{AstraZeneca · GeneTraceAI, University of Bristol}{May 2026 – Sep 2026}{Data Scientist}{}
+\begin{itemize}
+  \item Built an AI agent using LangChain, AWS Bedrock, and Claude Haiku 4.5 for a multi-omics cancer research platform, integrating three tools for gene alias resolution, scoring-methodology explanation, and dataset provenance.
+  \item Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers.
+\end{itemize}
+\vspace{3pt}
+\entry{180 Degrees Consulting Bristol}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}{}
+\begin{itemize}
+  \item Proposed and prototyped an MCP-based agentic tool in Python for a Madrid-based product start-up client, presented in a live stakeholder demo.
+\end{itemize}
+\vspace{3pt}
+\entry{Self-employed, Chennai}{Jan 2025 – Aug 2025}{Freelance AI/ML Engineer}{}
+\begin{itemize}
+  \item Developed scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.
+\end{itemize}
+\vspace{3pt}
+\entry{Avasoft}{Jan 2023 – Sep 2024}{Software Engineer (SDE Trainee Jan–Jun 2023)}{}
+\begin{itemize}
+  \item Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.
+\end{itemize}
+
+% ---------------- PROJECTS ----------------
+\section{Projects}
+\noindent\textbf{AgenticFriend — real-time voice assistant} -- \textit{FastAPI, Google ADK, React, faster-whisper, PyTorch, Docker/CUDA} \hfill \href{https://github.com/Thiruvel-AP/adk_multi-agent}{GitHub}
+\begin{itemize}
+  \item Created a real-time WebSocket voice agent with a rolling VAD state machine for streaming speech-to-text.
+  \item Text-to-speech on CUDA in float16 with start-up warm-up, packaged in an nvidia/cuda Docker image.
+\end{itemize}
+\noindent\textbf{mcp\_searchagent} -- \textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions} \hfill \href{https://github.com/Thiruvel-AP/mcp_searchagent}{GitHub}
+\begin{itemize}
+  \item MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
+\end{itemize}
+
+% ---------------- SKILLS ----------------
+\section{Skills}
+\textbf{Languages:} Python, SQL, R, TypeScript, JavaScript, Swift, Dart\\
+\textbf{ML \& Stats:} scikit-learn, XGBoost, PyTorch, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, hypothesis testing, ANOVA, bootstrap, PCA, statistics, maximum likelihood estimation, experimental design\\
+\textbf{LLMs \& Agents:} LangChain, LangGraph, Google ADK, AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, MCP, tool calling, LoRA fine-tuning, LLM evaluation\\
+\textbf{Data \& Cloud:} pandas, NumPy, NLTK, Matplotlib, Seaborn, PostgreSQL, ChromaDB, AWS Lambda, ECR, IAM, GCP Cloud Run, S3, SQS, DynamoDB (MSc coursework), Databricks/PySpark (coursework)\\
+\textbf{Engineering:} Tableau, FastAPI, Docker, GitHub Actions, pytest, React, Git, MLflow, Streamlit
+
+% ---------------- EDUCATION ----------------
+\section{Education}
+\textbf{MSc Data Science}, University of Bristol \hfill \textbf{2025 – 2026}\par
+\vspace{2pt}
+\textbf{B.E. Electrical and Electronics Engineering}, St. Joseph\textquotesingle{}s College of Engineering \hfill \textbf{Sep 2019 – Apr 2023}\\ \textit{First Class with Distinction}\par
+
+% ---------------- CERTIFICATIONS ----------------
+\section{Certifications \& Awards}
+Anthropic MCP certifications (Introductory and Advanced), Jun 2026 \,$|$\, AWS Academy Cloud Foundations, Nov 2025 \,$|$\, 180 Degrees Consulting Data Science Consultant Certificate, Dec 2025 \,$|$\, Bristol PLUS Award, Mar 2026
+
+\end{document}

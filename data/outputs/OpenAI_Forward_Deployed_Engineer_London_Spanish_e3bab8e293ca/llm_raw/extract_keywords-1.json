@@ -1,0 +1,42 @@
+```json
+{
+  "required": [
+    "Python",
+    "JavaScript",
+    "LLMs",
+    "generative models",
+    "production-grade code",
+    "frontend",
+    "backend",
+    "Spanish",
+    "English",
+    "customer-facing work",
+    "technical delivery",
+    "full-stack systems",
+    "technical scoping",
+    "system design",
+    "build",
+    "production rollout",
+    "model behaviour"
+  ],
+  "preferred": [
+    "travel up to 50%",
+    "hybrid work model",
+    "customer delivery",
+    "core platform development",
+    "product",
+    "research",
+    "partnerships",
+    "GRC",
+    "security",
+    "GTM"
+  ],
+  "context_terms": [
+    "Forward Deployed Engineering team",
+    "London",
+    "OpenAI"
+  ],
+  "company_hook": "OpenAI is an AI research and deployment company dedicated to ensuring that general‑purpose artificial intelligence benefits all of humanity.",
+  "team": "Forward Deployed Engineering team"
+}
+```

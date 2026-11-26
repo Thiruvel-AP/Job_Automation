@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:ffd2a67d131b",
+ "company": "Scale AI",
+ "title": "Senior Applied AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage of required keywords is 5.0"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family the title matched: ai_engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Company size: SME·small; recent posting age 3 days; clear growth signals"
+  },
+  "red_flags": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "Policy requires a 90‑day waiting period before reconsidering candidates for the same role"
+  }
+ },
+ "global_score": 4.2,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm if the 90‑day waiting period applies to the candidate and whether it blocks immediate application",
+  "Request clarification on compensation range since pay is not disclosed",
+  "Verify UK sponsor eligibility despite \"exact\" sponsor register note"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.2,
+ "model_confidence": "Medium",
+ "jd_hash": "3bf396b1009f86f1",
+ "jd_words": 724,
+ "tokens": 2091,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

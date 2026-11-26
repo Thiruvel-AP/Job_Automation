@@ -1,0 +1,13 @@
+Hi EDITED team,
+
+EDITED needs to deliver actionable insights and build data-driven solutions across EDITED. That is the kind of problem I have been working on. I check the data before I trust a model: I audited 859,494 training examples and found 44,369 duplicates, and for my AstraZeneca-affiliated MSc dissertation I combined 14 research datasets so the results rested on trusted data. When my gene models scored 0.807 on training data but only 0.545 on new data, I reported it plainly instead of hiding it.
+
+I placed 3rd at Lloyd's Banking Group's datathon by spotting rare suspicious transactions, about 1 in 200, and in my MSc I used proper statistics, planning the sample size first and then running ANOVA tests, to pick the best of 6 algorithm settings. At 180 Degrees Consulting I helped turn a startup's vague idea into a working tool that is now in live, day-to-day use; the client's founder called it "stable, production-ready". I also built a model that predicts which bank customers are likely to leave, and I have presented results live to client stakeholders who were not technical.
+
+Your ad asks for data science models and pipelines, and that is the part of this role I most want to grow into.
+
+Could we spend 20 minutes on how the team integrate data products into production systems?
+
+Regards,
+
+Thiruvel Andagurunathan Pandian

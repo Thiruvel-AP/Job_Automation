@@ -1,0 +1,60 @@
+Company: Cambridge Consultants
+Title: Graduate AI Engineer (2027 start)
+URL: https://job-boards.eu.greenhouse.io/cambridgeconsultantslimited/jobs/4995814101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-10-01T13:50:44-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+The Role
+
+We have an exciting opportunity for an engineer within our AI & Algorithms department. As an AI & Algorithms Engineer, you’ll work within our team of talented engineers and scientists on a diverse range of projects. Our projects span areas that include robotics and other autonomous systems, novel sensing systems such as radar and photonics, engineering biology, and many others. With cutting-edge labs and computing resources at your disposal, you'll use technology to solve problems in the real world.
+
+Successful candidates can join us between May-October 2027.  
+
+There is no deadline for this role, as we recruit on a rolling basis. Once the position is filled, we will close the advert. We encourage you to apply as soon as possible.   
+
+What you’ll be doing
+
+- Building intelligent systems, developing your skills through hands-on coding and training/testing models.
+
+- Working on projects for our clients to solve real-world problems.
+
+- Learning software development skills in mixed-discipline teams, attending stand-ups and contributing to planning sessions.
+
+- Contributing to our internal research and development programs, building on state-of-the-art literature to produce our own, market-leading solutions and compelling demonstrations that showcase our expertise to clients.
+
+- Communicating the results of your work to your colleagues and clients.
+
+What you can bring
+
+We are looking for someone with strong academic credentials, such as a degree/Master’s/PhD, in a relevant technical subject, such as AI/machine learning, computer science, mathematics, physics or theoretical physics.
+
+ You will also have:
+
+- Interest in applying AI and algorithmic techniques to real-world problems.
+
+- Strong Python programming skills and understanding of modern version control (e.g. Git)
+
+While not essential requirements, we would also be very interested if you have experience with any of the following:
+
+- Foundation models (LLM, VLMs)
+
+- Prompt engineering and agentic workflows
+
+- Signal processing
+
+- Bioinformatics
+
+- Reinforcement learning
+
+- Transformers and diffusion models
+
+- Robotics (including VLA models)
+
+- Edge compute
+
+By submitting an application to Cambridge Consultants, you confirm that the information provided in this application, together with any supporting documentation, is true, complete, and accurate to the best of your knowledge and belief. You understand that any false statement, misleading information, or material omission may render you liable to disqualification from the recruitment process, withdrawal of any offer of employment, or dismissal without notice if discovered following appointment. You acknowledge that the organisation reserves the right to verify the information supplied.

@@ -1,0 +1,107 @@
+Company: Faculty
+Title: Principal Research Scientist - AI Safety
+URL: https://jobs.ashbyhq.com/faculty/6ad13f20-8a65-454f-b7c7-4d5260f306bf
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-09-21T15:46:40.903+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+About the team
+
+Faculty conducts critical red teaming and builds evaluations for misuse capabilities in sensitive areas, such as CBRN, cybersecurity and international security, for several leading frontier model developers and national safety institutes; notably, our work has been featured in OpenAI's system card for o1.
+
+Our commitment also extends to conducting fundamental technical research on mitigation strategies, with our findings published in peer-reviewed conferences and delivered to national security institutes. Complementing this, we design evaluations for model developers across broader safety-relevant fields, including the societal impacts of increasingly capable frontier models, showcasing our expertise across the safety landscape.
+
+
+
+About the role
+
+The Principal Research Scientist for AI Safety will be the driving force behind Faculty's small, high-agency research team, shaping the future of safe AI systems. You will lead the scientific research agenda for AI safety, focusing on large language models and other critical systems. This role involves leading researchers, driving external publications, and ensuring alignment with Faculty’s commercial ambition to build trustworthy AI, giving you the opportunity to make a high-impact contribution in a rapidly evolving, critical field.
+
+
+
+What you'll be doing:
+
+ - Leading the AI safety team's ambitious research agenda, setting priorities aligned with long-term company goals.
+
+ - Conducting and overseeing cutting-edge AI safety research, specifically for large language models and safety-critical AI systems.
+
+ - Publishing high-impact research findings in leading academic conferences and journals.
+
+ - Shaping the research agenda by identifying impactful opportunities and balancing scientific and practical priorities.
+
+ - Helping to build and mentor a growing team of researchers, fostering an innovative and collaborative culture.
+
+ - Collaborating on delivery of evaluations and red-teaming projects in high-risk domains like CBRN and cybersecurity.
+
+ - Positioning Faculty as a thought leader in AI safety through research and strategic stakeholder engagement.
+   
+   
+
+Who we're looking for:
+
+ - You have a proven track record of high-impact AI research, demonstrated through top-tier academic publications or equivalent experience.
+
+ - You possess deep domain knowledge in language models and the evolving field of AI safety.
+
+ - You exhibit strong research judgment and extensive experience in AI safety, including generating and executing novel research directions.
+
+ - You have the ability to conduct and oversee complex technical research projects, with advanced programming skills (Python, standard data science stack) to review team work.
+
+ - You bring excellent verbal and written communication skills, capable of sharing complex ideas with diverse audiences.
+
+ - You have a deep understanding of the AI safety research landscape and the ability to build connections to secure resources for impactful work.
+   
+   
+   
+   Our Interview Process
+   
+   1.  Talent Team Screen (30 mins)
+   
+   2. Experience & Theory interview (45 mins)
+   
+   3. Research presentation and coding interview (75 mins)
+   
+   4. Leadership and Principles interview (60 mins)
+   
+   5. Final stage with our CEO (45 mins)
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

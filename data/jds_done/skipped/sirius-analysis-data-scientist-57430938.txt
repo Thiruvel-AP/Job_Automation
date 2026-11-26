@@ -1,0 +1,65 @@
+Company: Sirius Analysis
+Title: Data Scientist
+URL: https://www.reed.co.uk/jobs/data-scientist/57430938
+Source: reed
+Apply kind: aggregator_only
+Location: Portsmouth, GB
+Salary: GBP 60,000-60,000
+Posted: 2026-10-07
+Posted via: reed.date
+First seen: 2026-11-05
+
+Role: Data Scientist 
+Salary: from £60,000 
+Location: Portsmouth ( hybrid, 3 days onsite) 
+Intro 
+Sirius Analysis, we are a rapidly growing consultancy firm, renowned for our reputation and our keen ability to understand and meet customer requirements effectively. Our team is dedicated to delivering high-quality, end-to-end consultancy services, ranging from operational research and data analysis to P3M. We operate across multiple sectors, including defence, energy, and health. We are looking for a Senior Data Scientist to join our Operational Analysis & Data Science team as we go through our next phase of growth, 
+The Role: 
+As a Senior Data Science Consultant, your role will be crucial in delivering informed, client-focused decision support across a diverse range of industries, including the UK MOD. You'll participate in projects that demand a keen ability to assess, analyse, and meet client-specific needs. 
+You will play a major role in developing and implementing Machine Learning (ML) and Artificial Intelligence (AI) solutions for our clients, along with providing key advice around innovation and new techniques to stakeholders. You will be designing solutions for complex challenges and will integrate code with software engineers. 
+Responsibilities will include: 
+
+- Leading and delivering technical consulting projects.
+- Developing and delivering AI / ML solutions using a range of techniques (ML, NLP, LLMs, etc.) to tackle real world problems, applying tools and techniques, and developing novel approaches where required.
+- Building new relationships and maintaining current customer relationships. 
+
+Expertise Required: 
+We are looking for a range of experience: 
+
+- Senior Data Scientist: 5+ years’ experience, including taking AI/ML projects into production. 
+About You: 
+The successful candidate must be able to demonstrate the following attributes: 
+Essential 
+
+- Ability to understand, describe and apply a range of data science techniques to real world problems.
+- Experience in managing data and implementing data science processes.
+- Experience in translating customer requirements into technical requirements and development objectives.
+- Python expertise covering standard data science libraries (NumPy, pandas, matplotlib, Scikit-learn, PyTorch, etc…), web frameworks (Flask or FastAPI) and visualisation (Dash, Plotly, & Streamlit).
+- Proficient in SQL.
+- Working with unstructured data
+- Building customer and stakeholder relationships.
+- Supporting and leading authoring of technical reports and presenting to customers.
+- Be willing to travel across UK and comfortable to work away from home for periods of time.
+- Software engineering principles, git, docker, TTD 
+Desirable: 
+
+- Experience working with secure, air-gapped systems
+- We’d love you to bring a strong STEM / computing background.
+- Knowledge and understanding of UK Defence.
+- Experience in one or more of the following technical disciplines:
+- LLMs, RAG, Agentic AI (e.g. LangGraph).
+- Computer Vision.
+- AI for audio and speech. 
+What we offer 
+We offer a combination of mentoring and internal and external training opportunities, with specialist sector organisations and inhouse courses. You will have exposure to subject matter experts and additional online learning packages. 
+The role comes with a competitive benefits package including: 
+
+- pension (7% company contribution),
+- additional holiday purchase options,
+- private health care, life assurance,
+- electric vehicle scheme. 
+Other Requirements: 
+
+- Candidates must have an existing right to live and work in the UK.
+- Candidates must be willing to undergo an internal baseline personnel security standard check prior to starting their employment with the company.
+- Candidates must be willing and eligible to complete a United Kingdom Security Vetting (UKSV) security clearance application to the Security Check (SC) level upon starting their employment with the company. To gain SC Clearance you will normally need at least 5 years' UK residency.

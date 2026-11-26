@@ -1,0 +1,147 @@
+Company: M&G
+Title: Lead Data Engineer
+URL: https://mgpru.wd3.myworkdayjobs.com/mandgprudential/job/London/Lead-Data-Engineer_R20534-1
+Source: workday
+Apply kind: workday
+Location: London, United Kingdom
+Posted: 2026-10-27
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+At M&G, our purpose is to give everyone real confidence to put their money to work. With a heritage dating back more than 175 years, we have a long history of innovation in savings and investments, combining asset management and insurance expertise to offer a wide range of solutions. 
+
+Our two distinct operating segments, Asset Management and Life, work together to provide access to balanced, long-term investment and savings solutions.
+
+Through telling it like it is, owning it now and moving it forward together with care and integrity; we are creating an exceptional place to work for exceptional talent.
+
+We will consider flexible working arrangements for any of our roles and offer workplace adjustments to ensure you have the support you need to succeed in your role.
+
+The Opportunity:
+
+Data and AI are at the heart of how we plan to grow our Asset Management business. We are modernising how data is sourced, engineered and consumed across the firm. The goal is trusted, reusable data products that support investment decisions, client reporting, regulatory submissions and a growing range of AI use cases. 
+
+As Lead Data Engineer, you will report to the Head of Data Engineering and be the technical lead for designing and building data products on our Snowflake-centric platform. You will lead data engineers across London and India, turning our architecture and engineering standards into well-engineered, production-ready pipelines and data products. 
+
+This is a hands-on technical leadership role. We want an engineer who still builds, sets the bar for engineering quality and can guide others through complex design decisions. You will be the bridge between our data engineering standards and day-to-day delivery, making sure what we build is scalable, governed and delivers real business outcomes. 
+
+What You will Do:
+
+Design and build on a modern data platform 
+
+- Lead the hands-on design and build of ingestion, transformation and data provisioning pipelines on our Snowflake-centric platform. 
+
+- Apply the medallion architecture in practice, promoting data from raw to curated to consumption-ready layers in line with agreed standards. 
+
+- Translate business and data product requirements into robust technical designs, data models and delivery plans. 
+
+- Build and evolve reusable ingestion, transformation and consumption patterns, whether for BI, APIs, data sharing or AI. 
+
+- Help shape data engineering standards for ELT, orchestration, data modelling, testing, DataOps, CI/CD and observability, working with the Head of Data Engineering. 
+
+Engineer governed, trusted data products 
+
+- Build data quality checks, lineage, cataloguing and data observability into every pipeline and data product from the start, rather than adding them after delivery. 
+
+- Implement data contracts, metadata and certification standards so each data product is discoverable, trusted and auditable. 
+
+- Apply security and compliance by design, including role-based access control, secrets management, encryption, data classification, retention and privacy controls. 
+
+- Make sure pipelines are production-ready, with clear monitoring, alerting and runbooks, and lead root-cause analysis and resolution of data issues. 
+
+Lead and develop data engineers 
+
+- Provide day-to-day technical leadership to data engineers across the UK and India, setting clear priorities and removing blockers. 
+
+- Lead design reviews, code reviews and pairing to raise engineering quality and consistency across the team. 
+
+- Coach and mentor engineers, helping them grow their technical skills and shift from building individual pipelines to delivering reusable data products. 
+
+- Work with offshore engineers as one integrated team, with shared standards, ways of working and ownership. 
+
+Build AI-ready data and use AI in engineering 
+
+- Work with Data Product, Analytics and AI teams to implement semantic models, ensuring business definitions and relationships are consistently represented in the engineered data products. 
+
+- Use AI-assisted tools across the engineering lifecycle, from code generation and testing to documentation and data quality monitoring, with appropriate human oversight. 
+
+Simplify the estate and retire legacy platforms 
+
+- Lead the technical delivery of migrations from legacy data platforms and point-to-point data feeds onto the strategic platform, with data reconciliation and controlled cut-over. 
+
+- Consolidate duplicated pipelines into reusable data products and actively reduce technical debt. 
+
+- Design efficient pipelines and optimise compute and storage so cost efficiency is built into delivery. 
+
+What You will Bring:
+
+- Significant experience in data engineering, including experience as a technical lead within Asset Management or Financial Services. 
+
+- Strong hands-on experience building and optimising data pipelines and data products on Snowflake, ideally in an asset management setting. 
+
+- Solid knowledge of modern data platform architecture, including medallion and lakehouse patterns, ELT and dimensional or domain data modelling. 
+
+- Experience delivering data products end to end, including contributing to semantic layer implementation for analytics and AI use. 
+
+- Practical experience embedding data catalogue, data quality, lineage and data observability tooling into engineering delivery. 
+
+- Good understanding of cloud security, access management, data privacy and regulatory control requirements. 
+
+- Track record of collaborating and building effective relationships with colleagues across data and wider technology function. You should be able to share ownership, manage dependencies and agree joint priorities. 
+
+- Experience leading and mentoring offshore engineering teams as an integrated part of the function, through code reviews, coaching and technical direction and a one-team culture. 
+
+- Experience working in data mesh or hub-and-spoke data operating models. 
+
+- Experience delivering data platform migrations, including data reconciliation and the controlled retirement of legacy feeds while maintaining service continuity. 
+
+- Good understanding of investment data, such as instruments, portfolios, positions and performance, with deeper asset management experience a strong advantage. 
+
+Technical toolkit:
+
+- Snowflake, including Snowpipe, Streams and Tasks, Dynamic Tables and Snowpark 
+
+- Azure, with Databricks exposure an advantage 
+
+- Advanced SQL and Python 
+
+- Data transformation frameworks such as dbt 
+
+- Data pipeline orchestration, Git-based CI/CD and DataOps 
+
+- Streaming, CDC and event-driven integration 
+
+- API, data sharing and consumption patterns 
+
+- Performance tuning and cost optimisation (FinOps) 
+
+- Data catalogue, data quality, lineage and data observability tooling 
+
+- AI-assisted coding and data quality monitoring tools 
+
+Why Join Us:
+
+This is a chance to help build a modern data engineering practice at a pivotal moment for the business. You will be hands-on with the platform and data products at the centre of our data and AI ambitions, while growing your own technical leadership. 
+
+You will see the direct impact of your work on how we invest, serve our clients and operate. If you want to lead from the front, build great data products and help grow a strong team, this is the role. 
+
+Work Level: Manager/Expert 
+Location: London 
+
+What we offer:
+
+We’re dedicated to supporting your wellbeing and helping you thrive, both at work and beyond. Our benefits are designed to help you balance your professional and personal life, and financially plan for the future. Our UK benefits include:
+
+- A valuable pension scheme of up to 18% (13% made up of employer contributions and 5% employee contributions).
+- Access to our Share Save and Share Incentive Plan, alongside financial wellbeing and support services to help give you real confidence to put your money to work.
+- Enjoy 38 days annual leave (including bank holidays), with the opportunity to purchase up to five extra days. Our Time Off When You Need It policy gives you the flexibility - to balance work and personal commitments. 
+- Our market-leading Inspiring Families policy includes comprehensive support and paid parental leave covering maternity, adoption, surrogacy, and paternity leave - because supporting families is an important part of our inclusive culture.
+- Health & Protection cover includes Private Healthcare, Critical Illness cover and Life Assurance for you, with additional family options - for peace of mind.
+
+To explore more about life at M&G and our full benefits offering, visit Life at M&G
+
+At M&G we strive to have a diverse workforce and an inclusive culture, underpinned by our policies and employee-led networks that offer networking, support and development opportunities for the diverse communities our colleagues represent. We welcome applications from people of all backgrounds – across gender, ethnicity, age, disability, sexual orientation and more – including neurodivergent individuals, career returners and those with military service experience.
+
+M&G is proud to be Level 3: Disability Confident Leader under the UK Government Disability Confident employer scheme, and we welcome applications from candidates with disabilities and long-term health conditions. If you would like to participate in the initiative, you will have the opportunity to indicate this on your application.
+
+We are committed to providing an inclusive recruitment process. All candidates have the opportunity to request reasonable adjustments when applying. If you need any additional support at any stage, please contact us at: careers@mandg.com

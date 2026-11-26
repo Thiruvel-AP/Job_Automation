@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:1d576f2fd4a5",
+ "company": "Lseg",
+ "title": "Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.4 and required keywords present"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Candidate targets data_scientist; role is senior associate data scientist"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default floor score 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large, stable, global firm with growth signals"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks candidate to rate or give instructions"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm compensation range and benefits",
+  "Check if remote or hybrid work model is offered",
+  "Verify sponsorship eligibility for non-UK candidates"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "3cfc895bcbe35677",
+ "jd_words": 1252,
+ "tokens": 2746,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

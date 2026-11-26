@@ -1,0 +1,1 @@
+powershell.exe -noprofile -command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Clipboard" | tr -d '\r' > data/jds/inbox/live-004.txt

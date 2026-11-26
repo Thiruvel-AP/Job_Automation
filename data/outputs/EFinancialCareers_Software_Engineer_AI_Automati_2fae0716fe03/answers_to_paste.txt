@@ -1,0 +1,67 @@
+EFinancialCareers | Software Engineer - AI Automation London- Global Prime Brokerage & Financing Platform
+Apply: https://www.reed.co.uk/jobs/software-engineer-ai-automation-london-global-prime-brokerage-financing-platform/57574524
+Why this file exists: aggregator listing: no employer application page was found; the apply pack is ready and the listing is opened for you
+
+FILES
+  CV: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/EFinancialCareers_Software_Engineer_AI_Automati_2fae0716fe03/Thiruvel Andagurunathan Pandian CV - AI Engineer - EFinancialCareers.pdf
+  Letter: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/EFinancialCareers_Software_Engineer_AI_Automati_2fae0716fe03/Thiruvel Andagurunathan Pandian CoverLetter - AI Engineer - EFinancialCareers.pdf
+
+ABOUT YOU (applicant.yaml)
+  Full name: Thiruvel Andagurunathan Pandian
+  First name: Thiruvel
+  Last name: Andagurunathan Pandian
+  E-mail: apthiruvel@gmail.com
+  Phone: +44 7741016954
+  Location: Bristol, United Kingdom
+  LinkedIn: https://www.linkedin.com/in/thiruvel-a-p/
+  GitHub: https://github.com/thiruvel-AP
+  Website / portfolio: https://thiruvel-ap.github.io/PersonalPortfolio/
+
+QUICK ANSWERS (answers.yaml)
+  Salary expectation: I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture of the role's full scope and responsibilities.
+  Notice period: I have no notice period. I finished my MSc Data Science at the University of Bristol and am not in current employment, so I can start immediately, on whichever date suits the team.
+
+RIGHT TO WORK AND SPONSORSHIP (applicant.yaml visa block for this job's work country)
+  Visa answers (by_country.GB): right to work Yes · sponsorship now No · sponsorship in the future Yes
+  If a box wants words: I have completed my MSc in Data Science at the University of Bristol and am moving onto the UK Graduate visa (2 years), so I won't need sponsorship for the next 2 years. After that I'd welcome Skilled Worker sponsorship and am flexible on how we arrange it.
+
+EQUAL OPPORTUNITIES (applicant.yaml and the eo_* entries of answers.yaml; the first option on the form that equals one of these)
+  ethnicity: Asian - Indian  [options: Asian or Asian British - Indian | Asian, Asian British or Asian Welsh: Indian | Indian | Asian]
+  veteran: No  [options: I am not a protected veteran | I am not a veteran | No]
+  disability: No  [options: No, I do not have a disability and have not had one in the past | No, I do not have a disability | No, I don't have a disability | No]
+  inclusion_diversity: Asian - Indian  [options: Asian - Indian | Indian]
+  eo_gender: Male  [options: Male | Man]
+  eo_ethnicity: Asian or Asian British - Indian  [options: Asian or Asian British - Indian | Asian - Indian | Indian | Asian]
+  eo_disability: No  [options: No]
+  eo_veteran: No  [options: No | I am not a veteran | not a protected veteran]
+
+YOUR ANSWERS (answers.yaml, for this job)
+  notice period / earliest start: I have no notice period. I finished my MSc Data Science at the University of Bristol and am not in current employment, so I can start immediately, on whichever date suits the team.
+  notice period / earliest start: I have no notice period. I finished my MSc Data Science at the University of Bristol and am not in current employment, so I can start immediately, on whichever date suits the team.
+  willing to relocate / open to relocation: Yes
+  remote / hybrid: Yes, I am open to on-site, hybrid or remote work
+  current location / where are you based: Bristol, UK
+  salary expectation / salary expectations: I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture of the role's full scope and responsibilities.
+  current salary / current compensation: (blank in answers.yaml: yours to answer)
+  visa status / immigration status: I currently hold a UK Student visa and am completed an MSc in Data Science at the University of Bristol in September 2026. I would require Skilled Worker visa sponsorship following completion of my studies and am prepared to undertake the necessary visa application process upon receiving an offer.
+  type of visa / visa type: Graduate visa
+  highest level of education / highest degree: MSc Data Science, University of Bristol (Distinction expected; results 24 November 2026)
+  graduation date / when did you graduate: September 2026
+  portfolio / personal website: https://thiruvel-ap.github.io/PersonalPortfolio/
+  github: https://github.com/Thiruvel-AP
+  linkedin: https://www.linkedin.com/in/thiruvel-a-p/
+  how did you hear / where did you find: Reed
+  previously worked for / former employee: No
+  applied to / applied before: (blank in answers.yaml: yours to answer)
+  referred by / referral: No
+  privacy notice / data protection: (blank in answers.yaml: yours to answer)
+  ai policy / use of ai: (blank in answers.yaml: yours to answer)
+
+COVER LETTER TEXT
+Your team will design and deliver AI-driven automation solutions that streamline and enhance complex business processes across customer, operations, compliance, legal, finance, and other workflows. That is the kind of problem I have been working on. For my AstraZeneca-affiliated MSc dissertation I built an AI assistant that researchers could trust: it checks its answers against official databases, keeps working when those services go down, and is checked by about 65 automated tests. When the project switched AI providers, the same tests showed it still behaved, and I wrote up how often it got answers wrong so the team knew where it could be trusted.
+
+At 180 Degrees Consulting I led the design in a five-person team that turned a startup's vague idea into a working AI prototype in three months, which the client's engineers then put into everyday use. The client's founder later called it "stable, production-ready" and said it arrived "ahead of schedule". At a hackathon I built a tool that answers in under 3 seconds for about £0.003 per question, and as a freelancer I built a private client an AI finance assistant that runs on his own server to keep costs down. Before my MSc, at Avasoft, I helped ship the first release of a money-management app for a company's 10,000+ employees.
+
+Your ad's focus on production-grade automation with AI/ML integration into real business workflows is a big part of why I am applying.
+
+Could we spend 20 minutes on how the team builds scalable automation services?

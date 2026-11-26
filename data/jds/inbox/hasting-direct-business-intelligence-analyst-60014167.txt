@@ -1,0 +1,66 @@
+Company: Hasting Direct
+Title: Business Intelligence Analyst
+URL: https://hastingsdirect.wd3.myworkdayjobs.com/external_careers/job/London/Business-Intelligence-Analyst_60014167-1
+Source: workday
+Apply kind: workday
+Location: London; Bexhill; Cardiff; Leicester, United Kingdom
+Posted: 2026-10-23
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+Welcome to Hastings Direct.
+
+We’re a digital insurance provider with ambitious plans to become the best and biggest in the UK market. We’ve made huge investments in our pricing and data capabilities over the past few years, along with nurturing our 4Cs culture. 
+
+We provide insurance for over four million customers, but we know there’s even bigger opportunity out there – our Pricing, Data and Analytics community value curiosity, collaboration and constructive challenge. 
+
+We are always looking for new ideas and diverse perspectives to question established thinking and drive meaningful change. Great pricing is built on trust, innovation and precision, so our aim is to ensure customers receive a fair and accurate price based on their individual risk, supporting fair outcomes, while delivering sustainable and profitable growth for our company. 
+
+Pricing is more than just a number – it’s a strategic capability. At the heart of Hastings is deep risk insight – continually improving how we assess, segment and price risk through data and analytics. 
+
+ Job details:
+
+- Deliver accurate, timely and insightful analysis, reports and dashboards that support underwriting decisions across portfolio performance, profitability, risk and customer outcomes.
+- Monitor key performance indicators and profit drivers, identifying trends, risks, opportunities and emerging areas of focus.
+- Move beyond reporting the numbers by investigating potential drivers and translating findings into clear, actionable insight.
+- Develop, maintain and improve Power BI dashboards and recurring reporting, rationalising and automating outputs where appropriate so they remain relevant, reliable and easy to use.
+- Write well-structured SQL and analytical code with clear documentation, reproducible logic and appropriate validation.
+- Reconcile data sources and investigate discrepancies to support a consistent and trusted view of performance.
+- Work with stakeholders to define requirements and translate business questions into analytical solutions.
+- Present complex information in a clear and engaging way, using effective data visualisation and storytelling techniques.
+- Use AI and automation responsibly where they improve the quality, speed or accessibility of analysis, while applying appropriate review and validation.
+- Contribute to continuous improvement across data quality, reporting processes, analytical methods and team standards.
+- Own tasks and deliverables, working autonomously while aligning priorities with team and departmental objectives.
+- Collaborate with analysts, data engineers, BI specialists and business stakeholders to deliver effective outcomes.
+
+ Essential skills/experience:
+
+- Experience delivering analysis, management information, reporting or business intelligence outputs.
+- Strong analytical and problem-solving skills, with the curiosity to challenge assumptions and investigate why results have changed.
+- Experience writing SQL and working with structured data.
+- Experience using a BI or data visualisation tool, preferably Power BI.
+- The ability to plan and structure analysis, validate outputs and deliver reliable work independently, while seeking input when risks, assumptions or priorities need clarification.
+- An understanding of business KPIs and how analytical measures link to commercial or customer outcomes.
+- Clear written and verbal communication, with the ability to explain technical or complex findings to non-technical audiences.
+- Good judgement about when to work independently, when to collaborate and when to escalate risks or uncertainties.
+- An interest in using AI responsibly to improve analytical delivery; practical experience is beneficial but not essential.
+
+ As a Disability Confident employer, we’re committed to ensuring our recruitment processes are fully inclusive – what this means to you is if you’re applying for a job with us, you’ll have fair access to support and adjustments throughout your recruitment journey. We also welcome applications through the Disability Confident Scheme (DCS).For more information on the DCS, please visit our inclusive business page on our careers website. 
+
+Regrettably, we are unable to offer sponsorship now or in the future for this role. 
+
+Benefits: In addition to a competitive salary you will also receive… 
+Flexible working – we champion a flexible hybrid working approach – please speak to your recruiter to discuss in more detail 
+Competitive bonus scheme - all colleagues are eligible for our annual 4Cs performance bonus 
+Financial wellbeing – as well as providing you with 4x your salary with our life assurance cover, income protection at no extra cost, and matched pension contributions up to 10%, we are proud to provide you with an award winning package which includes – discounts, cashback, free independent mortgage advice and free access to financial wellbeing support 
+Mental wellbeing programme – we have the thrive mental health app, our colleague assistance programme available 24/7, our own in-house mental health first aiders, support groups and a dedicated team to make sure we are covering your needs 
+There's more! – 25 days annual leave + bank holidays, with the option to buy or sell one of your weeks, access to our health care cash back plans, dental plans, discounted health assessments, Cycle to work and tech schemes, discounted and free onsite facilities, social events throughout the year and much more …. 
+
+Join us and you’ll find a different way of doing things. We call it the 4Cs. We focus on getting it right for our colleagues, customers, company and community. As one of our colleagues, you’ll be helping to drive our growth, so in return, we’ll give you all the support, training and development you need. Our 4Cs principles are simple: we believe by creating the right culture for our colleagues and giving them the right tools to do their job, we’ll deliver good outcomes for every customer, helping us to grow the company profitably and sustainably and allowing us to invest in the communities we serve. 
+
+Hastings Group is an equal opportunities employer which means we treat people fairly. We welcome applications from all suitably skilled persons regardless of their gender, age, race, disability, ethnic background, religion/belief, sexual orientation, gender reassignment or marital/family status. Please also note that we have a thorough referencing process, which includes credit and criminal record checks.
+
+At Hastings Direct, we’re committed to creating an inclusive environment where everyone has the opportunity to succeed. If you require any reasonable adjustments during the recruitment process, we encourage you to be open with us. Our recruitment team is here to provide the support you need to ensure a fair and accessible experience for all.
+
+Job posting end date:22/11/2026

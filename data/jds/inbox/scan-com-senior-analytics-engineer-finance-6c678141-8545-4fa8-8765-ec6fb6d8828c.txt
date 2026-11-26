@@ -1,0 +1,121 @@
+Company: Scan.com
+Title: Senior Analytics Engineer – Finance
+URL: https://jobs.ashbyhq.com/scan-com/6c678141-8545-4fa8-8765-ec6fb6d8828c
+Source: ashby
+Apply kind: ashby
+Location: London Office, United Kingdom
+Posted: 2026-11-24T21:26:24.967+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-26
+Listed: yes
+
+We're Scan.com http://Scan.com.  We're building America's national imaging network: the infrastructure that connects patients, providers, and payers to faster, better-value diagnostic imaging.  Thousands of patients move through our platform every day, and each is a real person waiting for an answer to a healthcare concern. We exist to get them that answer faster.
+
+
+
+We manage the medical imaging pathway end-to-end.  Providers order through a single point of entry, and from there, we run the entire medical diagnostic pathway.  Managing the full pathway, rather than brokering pieces of it, is what lets us deliver imaging faster, at higher quality, and at a lower cost than the fragmented status quo.
+
+
+
+We're looking for a Senior Analytics Engineer, Finance at an exciting time. We've raised over $200m in funding to date, reached profitability, and are growing 100% year on year.
+
+Millions of people wait too long for a diagnosis. Come help us fix that.
+
+WHAT YOU WILL ACHIEVE IN THIS ROLE
+
+You will be the primary technical owner of Finance's data architecture, models and pipelines, building the infrastructure behind financial reporting, analytics and decision-making across the business.
+
+You'll sit within Finance, with a dotted-line relationship to our VP Data & AI, working where Finance, Data and Engineering meet. You'll have real autonomy to design and build scalable solutions, while staying aligned with our wider data architecture and engineering standards.
+
+Our core stack includes NetSuite, Fivetran, Snowflake and dbt, alongside internal operational platforms and external financial data sources.
+
+As a scale-up business, you can expect your role to develop over time. Here are some of the things you could be getting involved in:
+
+ - Own the design and development of Finance's data architecture and models, creating a single, trusted source of truth for financial reporting and analysis.
+
+ - Build and maintain automated pipelines and transformations across NetSuite, Snowflake, dbt and our operational systems.
+
+ - Develop scalable datasets covering revenue, costs, margins, receivables, collections and cash flow, giving FP&A, Accounting and Treasury self-serve access to data they can trust.
+
+ - Establish automated reconciliations, validation and monitoring so financial information is accurate, complete and auditable.
+
+ - Automate the data infrastructure behind collection curves, portfolio analytics, cash forecasting and lender reporting.
+
+ - Eliminate manual data preparation and spreadsheet-based workflows across Finance.
+
+ - Apply engineering best practices, including automated testing, version control, documentation and monitoring.
+
+ - Partner with Finance stakeholders and the central Data team to turn business requirements into practical technical solutions.
+
+WHAT YOU MIGHT BRING TO THE TABLE
+
+You don't need to tick all the boxes to apply for this role. Whether it's your first role or your fifth, we believe everyone can add value, learn, and grow. However, these might be some of the ways you are currently adding value:
+
+ - Strong experience in analytics engineering, data engineering or a similar technical role, with the ability to independently design, build and maintain production data solutions.
+
+ - Advanced SQL and experience developing complex data models and transformations.
+
+ - Hands-on experience with cloud data warehouses (ideally Snowflake) and dbt or similar transformation frameworks.
+
+ - Experience building automated data pipelines, validation and controls that keep information consistent across systems.
+
+ - Strong communication skills and the ability to work with both technical and non-technical stakeholders.
+
+Strongly preferred:
+
+ - Experience working with financial, accounting or transactional data, including how information flows between operational systems, financial systems and reporting.
+
+ - Understanding of accounting principles, financial reporting and reconciliations.
+
+Nice to have:
+
+ - Experience with NetSuite, Fivetran or similar ERP and integration platforms.
+
+ - Python for data processing and automation.
+
+ - Background in receivables, collections, lending or other transaction-heavy businesses.
+
+WHAT SUCCESS LOOKS LIKE
+
+ - Finance operates from a single, trusted source of financial data.
+
+ - Financial and operational datasets reconcile consistently across systems.
+
+ - Core reporting runs on reliable, automated pipelines.
+
+ - Manual data preparation and reconciliation work is significantly reduced.
+
+ - Finance has the data infrastructure it needs to keep scaling with the business.
+
+WHAT WE OFFER
+
+We go beyond the basics with our benefits package. Here's what you can expect from us:
+
+ - Salary range of £90,000 to £105,000
+
+ - Equity
+
+ - Dedicated personal development budget
+
+ - Paid parental leave
+
+ - Workplace pension scheme
+
+ - All the equipment you need to do your best work
+
+ - Inclusive, people-first policies designed by our team, for our team
+
+
+
+
+DIVERSITY AT SCAN.COM http://Scan.com
+
+Scan.com http://Scan.com is committed to eliminating discrimination and encouraging diversity within our team. We strive to provide equality and fairness for all job applicants and employees and never discriminate on the basis of gender, marital status, age, race, ethnicity, religion, or physical differences.
+
+We are opposed to all forms of unlawful treatment and discrimination.
+
+Our ambition is for our team to be representative of society's diversity, and for every employee to feel respected and able to bring their best selves to work.
+
+If you need an accommodation to apply or interview, contact us at people@scan.com.
+
+We look forward to receiving your application!

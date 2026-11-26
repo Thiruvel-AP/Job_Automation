@@ -1,0 +1,126 @@
+Company: Valarian
+Title: AI Engineer (Harness)
+URL: https://jobs.lever.co/valarian/55140de9-d3c0-48fb-bae3-41b16bcf7143
+Source: lever
+Location: London
+Posted: 2026-09-16
+First seen: 2026-10-15
+Listed: yes
+
+Valarian Technologies is a dual-use technology company building critical tools to safeguard the future in an era of evolving global security challenges. We're rethinking security beyond traditional military domains, addressing asymmetric threats that impact our technological advantage, economic strength, and democratic institutions.
+
+We build Acra – the platform foundation for everything we do as a dual-use technology company. The platform’s name, rooted in the Greek word for citadel (or, fortress), reflects the design and purpose of our infrastructure-agnostic secure enclaves: protecting critical data. Some of the government and commercial workflows include: increased operational resiliency for mission-critical systems and functions; enabling organisations to more quickly and widely adopt emerging technologies while ensuring the integrity of their intellectual property; information flow during disaster response scenarios, and zero-trust / least-privilege environments for M&A, attorney-client privileged communications, etc. And we’ve only scratched the surface.
+
+At our core, we're driven by a shared mission and a belief in making a tangible impact on our world. Whether you join our London HQ or the wider global organisation, you’ll be a part of collaborative, high-performing teams, creating cutting-edge software, platforms, and infrastructure.
+The Role
+
+As an AI Harness Engineer at Valarian, you will own the experimental design, evaluation methodologies, and benchmark infrastructure for our AI models and autonomous agentic workloads. In an emerging domain with no standard playbook, you will serve as the bridge between rigorous data science, statistical validation, and production agent scaffolding.
+
+You will design robust evaluation datasets, architect calibrated LLM-as-a-judge pipelines, and build metrics that accurately capture multi-step agent performance under non-deterministic conditions. Your insights and error analyses will directly drive iterative improvements to our harness scaffolding, tool orchestration, and system safety guardrails.
+What you’ll do:
+
+- 
+
+Architect Evaluation Runtimes & Harnesses: Design and maintain scalable Python evaluation harnesses that measure task completion, trajectory quality, tool-use correctness, cost, latency, and variance across multi-step agentic systems.
+
+- 
+
+Design Experiments & Validate Results: Apply rigorous statistical methods—including hypothesis testing, confidence intervals, bootstrapping, and power analysis—to determine whether performance changes are true system improvements or stochastic noise.
+
+- 
+
+Build & Calibrate LLM-as-a-Judge Pipelines: Develop automated judging systems validated against human ground truth. Measure alignment using agreement metrics (Cohen’s kappa, correlation, precision/recall) and systematically detect judge failure modes such as position bias, verbosity bias, self-preference, and prompt sensitivity.
+
+- 
+
+Curate Benchmark Datasets & Rubrics: Define sampling strategies, detailed annotation guidelines, and scoring rubrics. Measure inter-annotator agreement and manage label noise to ensure benchmark integrity over time.
+
+- 
+
+Deep Error & Trajectory Analysis: Conduct hands-on failure analysis on agent runs, cluster root causes into actionable error categories, and clearly communicate findings to both engineering teams and stakeholders.
+
+- 
+
+Drive Harness Scaffolding Iteration: Translate evaluation results directly into architectural improvements across agent scaffolding, prompt design, tool execution loops, context window compaction, retries, and safety guardrails.
+
+What we are looking for: 
+
+- 
+
+Grounding in Statistics & Experimental Design: Demonstrated expertise in hypothesis testing, bootstrapping, power analysis, and statistical significance within probabilistic machine learning systems.
+
+- 
+
+LLM-as-a-Judge Validation: Proven experience building, auditing, and validating LLM judge setups against human annotations, including tracking agreement metrics and mitigating judge biases.
+
+- 
+
+Evaluation Dataset Engineering: Strong track record designing evaluation datasets, crafting precise scoring rubrics, managing label noise, and measuring inter-annotator agreement.
+
+- 
+
+Evaluation of Non-Deterministic Multi-Step Systems: Deep comfort evaluating complex agent trajectories, tool execution sequences, latency, cost, and variance across repeated runs rather than relying solely on single-shot benchmarks.
+
+- 
+
+Metric Design & Integrity: Exceptional judgment in defining metrics tied to real-world outcomes, with a keen eye for detecting benchmark gaming, target drift, or shortcut learning.
+
+- 
+
+Rigor in Error Analysis: Ability to dissect complex execution logs, categorize failure modes, and synthesize clear, data-driven recommendations.
+
+- 
+
+Hands-On LLM Integration: Practical proficiency with LLM APIs, prompt engineering, structured outputs, function/tool calling, and retrieval systems in Python.
+
+- 
+
+Agent Architecture Awareness: Clear understanding of planning loops, tool orchestration, memory management, and multi-agent coordination, including their trade-offs and common failure modes.
+
+- 
+
+Harness & Scaffolding Contribution: Ability to write clean, maintainable Python code to iterate on harness components such as guardrails, retry logic, state handling, and context management.
+
+Nice to have:
+
+- 
+
+Experience with agent and evaluation frameworks (e.g., LangChain, LangGraph, AutoGen, lm-evaluation-harness, Promptfoo, or Ragas).
+
+- Exposure to running evaluation pipelines or agent workloads within secure, enclave, or Kubernetes environments.
+
+Benefits:
+
+Our benefits are designed to ensure our employees feel taken care of and are proud to be a part of the Valarian team. We are committed to consistently enhancing our benefit package, taking into account the overall well-being and needs of our teammates. Here are the key benefits accessible to all employees at Valarian Technologies:
+
+- 
+
+Equity – because you have the right to own what you’re building
+
+- 
+
+A competitive salary – because we value your unique skills
+
+- 
+
+Employer pension contributions – because you deserve a secure future
+
+- 
+
+Private health insurance - because your health is important to us
+
+- 
+
+Hybrid work setup – because everyone has different needs
+
+- 
+
+Rewarding company retreats and meetups that respect your work/life balance – because we love getting to know each other!
+
+Life at Valarian
+
+Our culture is built on inclusivity, compassion and flexibility – we want everyone to be empowered to achieve their goals at Valarian.
+
+The work we do is vital, but so are the connections that make it happen. We thrive on the shared energy, spontaneous conversations, and mutual trust built when we spend time together. We operate on a hybrid model, gathering in our London office 3 days a week to support one another and collaborate. 
+
+We may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analyzing resumes, or assessing responses and identifying potential inconsistencies or verification signals in application materials based on available information. These tools assist our recruitment team but do not replace human judgment. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us.

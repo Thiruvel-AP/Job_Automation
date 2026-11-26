@@ -1,0 +1,36 @@
+Company: JaneStreet
+Title: Machine Learning Research Engineer
+URL: https://www.janestreet.com/join-jane-street/apply/7437779002?gh_jid=7437779002
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, England, United Kingdom
+Posted: 2024-05-20T17:18:21-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+We are looking for a Research Engineer with robust experience in machine learning and strong mathematical foundations to join our growing ML team and to help drive the direction of our ML platform.
+
+Machine learning is a critical pillar of Jane Street's global business. Our ever-evolving trading environment serves as a unique, rapid-feedback platform for ML experimentation, allowing us to incorporate new ideas with relatively little friction. Our ML team is full of people with a shared love for the craft of software engineering, and for designing APIs and systems that are delightful to use. 
+
+We’ll rely on your in-depth knowledge of the ML ecosystem and understanding of varying approaches - whether it’s neural networks, random forests, gradient-boosted trees or sophisticated ensemble methods - to aid decision-making so we apply the right tool for the problem at hand. Your work will also focus on enhancing research workflows to tighten our feedback cycles. Successful ML Research Engineers will be able to understand the mechanics behind various modelling techniques, while also being able to break down the mathematics behind them. We’re looking for people who can be a true bridge between research and engineering, and can help us push forward the frontier of our model capabilities at all points of the stack. This could involve enabling a new scale in our technology stack, sitting on a team of Researchers to rapidly prototype a new research idea, or building workflow APIs that support a wide range of use cases.
+
+If you’ve never thought about a career in finance, you’re in good company. Many of us were in the same position before working here. While there isn’t a fixed list of qualifications we’re looking for, if you have a curious mind and a passion for solving interesting problems, we have a feeling you’ll fit right in. 
+
+We're looking for someone with:
+
+- Experience building and maintaining training and inference infrastructure, with an understanding of what it takes to move from concept to production
+
+- A strong mathematical background; Good candidates will be excited about things like optimisation theory, regularisation techniques, linear algebra and the like
+
+- A passion for keeping up with the state of the art, whether that means diving into academic papers, experimenting with the latest hardware or reading the source of a new machine learning package
+
+- A proven ability to create and maintain an organised research codebase that produces robust, reproducible results while maintaining ease of use
+
+- Expertise wrangling an ML framework – we're fans of PyTorch, but we'd also love to learn what you know about Jax, TensorFlow or others
+
+- An inventive approach and the willingness to ask hard questions about whether we're taking the right approaches and using the right tools
+
+- Fluency in English required
+
+If you're a recruiting agency and want to partner with us, please reach out to agency-partnerships@janestreet.com.

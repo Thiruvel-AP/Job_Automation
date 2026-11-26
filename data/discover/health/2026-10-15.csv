@@ -1,0 +1,25 @@
+ts,source,name,method,country,status,new_jobs,reachable,robots,credentials,alerts,postings,detail
+2026-10-15T13:43:04+00:00,linkedin,LinkedIn,gmail_alerts,multi,ok,3,yes,n/a,present,50,,
+2026-10-15T13:43:04+00:00,cv-library,CV-Library,gmail_alerts,GB,ok,0,yes,n/a,present,33,,
+2026-10-15T13:43:04+00:00,aiapply,AIApply,dedupe_only,multi,no_file,0,n/a,n/a,n/a,,,/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/aiapply_applied.csv not found: nothing to skip (export your applications there as a CSV with company and title columns)
+2026-10-15T13:43:04+00:00,greenhouse,Greenhouse boards,greenhouse,multi,ok,0,yes,allowed,n/a,,,the boards are found per company by `discover --ats`; this checks the API host only
+2026-10-15T13:43:04+00:00,indeed-uk,Indeed UK,gmail_alerts,GB,ok,3,yes,n/a,present,50,,
+2026-10-15T13:43:04+00:00,glassdoor-uk,Glassdoor UK,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from glassdoor.com, glassdoor.co.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,wttj,Welcome to the Jungle,gmail_alerts,multi,ok,0,yes,n/a,present,1,,
+2026-10-15T13:43:04+00:00,wellfound,Wellfound,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from wellfound.com, angel.co in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,yc-waas,YC Work at a Startup,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from workatastartup.com, ycombinator.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,eures,EURES,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from europa.eu in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,stepstone-de,StepStone DE,gmail_alerts,DE,quiet,0,yes,n/a,present,0,,"no alert email from stepstone.de in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,stepstone-nl,StepStone NL,gmail_alerts,NL,quiet,0,yes,n/a,present,0,,"no alert email from stepstone.nl in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,irishjobs,IrishJobs,gmail_alerts,IE,quiet,0,yes,n/a,present,0,,"no alert email from irishjobs.ie in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,jobbank-ca,Job Bank Canada,jobbank_csv,CA,ok,0,yes,allowed,n/a,,,newest file: September 2026 Job Postings Advertised on Canada's National Job Bank Website (not downloaded by the check)
+2026-10-15T13:43:04+00:00,seek-au,SEEK AU,gmail_alerts,AU,quiet,0,yes,n/a,present,0,,"no alert email from seek.com.au in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,seek-nz,SEEK NZ,gmail_alerts,NZ,quiet,0,yes,n/a,present,0,,"no alert email from seek.co.nz in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,mycareersfuture,MyCareersFuture,gmail_alerts,SG,quiet,0,yes,n/a,present,0,,"no alert email from mycareersfuture.gov.sg in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,govuk-fja,GOV.UK Find a Job,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from findajob.dwp.gov.uk, notifications.service.gov.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,nhs-jobs,NHS Jobs,gmail_alerts,GB,quiet,0,yes,n/a,present,0,,"no alert email from jobs.nhs.uk in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,openai,OpenAI,ashby,multi,ok,0,yes,allowed,n/a,,804,
+2026-10-15T13:43:04+00:00,google-deepmind,Google DeepMind,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from deepmind.google, greenhouse-mail.io, greenhouse.io in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,blackrock,BlackRock,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from blackrock.com, myworkday.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,jpmorgan,JPMorgan Chase,gmail_alerts,multi,quiet,0,yes,n/a,present,0,,"no alert email from jpmorgan.com, jpmchase.com in the last 7 days: set up an alert on the site, or this sender domain is not the one it uses (config/sources.yaml)"
+2026-10-15T13:43:04+00:00,reed,Reed,reed,GB,no_credentials,0,n/a,n/a,missing,,,REED_API_KEY is not set in .env

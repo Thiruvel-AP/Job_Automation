@@ -1,0 +1,53 @@
+Company: eFinancialCareers
+Title: Lead AI Engineer - Boutique Hedge Fund - Selby Jennings
+URL: https://www.reed.co.uk/jobs/lead-ai-engineer-boutique-hedge-fund-selby-jennings/57580544
+Source: reed
+Location: London, GB
+Posted: 2026-11-16
+Posted via: reed.date
+First seen: 2026-11-18
+
+Lead AI Engineer
+
+A recently launched, boutique multi-strategy hedge fund is looking for a Lead AI Engineer to become its first dedicated AI hire. 
+This is a highly visible and strategic position, working directly with portfolio managers, the COO and senior leadership to determine how AI can be applied across the investment business. The successful candidate will take ownership of identifying high-value opportunities, rapidly building solutions and helping shape the firm's broader approach to AI. 
+Rather than joining an established AI team, you will have the opportunity to build the capability from the ground up. The role combines hands-on engineering with significant front-office interaction, requiring someone who can understand real investment and operational problems, determine where AI can add value, and turn those ideas into practical production-ready solutions. [Lead AI | Word] 
+
+Key Responsibilities
+
+- Partner directly with portfolio managers and senior leadership to identify areas where AI can improve productivity, workflows and decision-making.
+- Lead the firm's adoption of AI, helping define strategy, priorities, use cases and best practices.
+- Identify high-impact opportunities and translate front-office requirements into practical technical solutions.
+- Design and build LLM applications, AI agents and agentic workflows, including tool/function calling and autonomous or semi-autonomous workflows.
+- Rapidly prototype new AI tools and take successful ideas through to robust, production-ready implementation.
+- Build solutions with appropriate error handling, controls and governance.
+- Work directly with users through workshops, demonstrations and one-to-one sessions to uncover problems and demonstrate what is possible with AI.
+- Help portfolio managers and other stakeholders think creatively about how AI can be incorporated into their existing workflows.
+- Promote responsible and effective use of AI across the organisation, including understanding where AI is not the appropriate solution.
+- Run multiple projects simultaneously, balancing speed of delivery with technical robustness and business impact. [Lead AI | Word] 
+
+Requirements
+
+- Strong hands-on experience building and implementing AI/ML solutions in a commercial environment.
+- Experience developing LLM-powered applications and taking them beyond proof-of-concept stage.
+- Strong understanding of agentic AI, including agent design, orchestration, tool/function calling, connectors and workflow automation.
+- Advanced knowledge of Python and modern AI/data engineering practices.
+- Experience working with cloud and deployment infrastructure such as Azure and Kubernetes.
+- Demonstrable ability to rapidly prototype solutions and subsequently productionise successful applications.
+- Strong understanding of the limitations and risks associated with LLMs and AI systems, including appropriate controls and governance.
+- Excellent communication and stakeholder-management skills, with an ability to communicate effectively with both technical and non-technical audiences.
+- Comfortable working directly with senior stakeholders and challenging existing ways of working.
+- Highly entrepreneurial and able to operate autonomously within a small, fast-moving investment environment.
+- A pragmatic approach to engineering, knowing when to iterate quickly rather than pursuing unnecessary technical perfection. [Lead AI | Word] 
+
+Desirable Experience
+
+- Previous experience within hedge funds, asset management, investment banking or broader financial markets would be advantageous but is not essential.
+- Familiarity with investment strategies such as convertible bond arbitrage, distressed credit or volatility would be beneficial.
+- Understanding of the financial-markets technology and data ecosystem, including platforms such as Bloomberg and broker/vendor data.
+- Experience with Enfusion would be helpful but is not required. [Lead AI | Word] 
+
+The Opportunity
+
+This is an opportunity for someone who wants significantly more ownership than they might have within a large technology or financial institution. As the first dedicated AI hire, you will have the scope to influence how AI is used across the business rather than owning one narrow component of a larger platform. 
+You will sit close to investment professionals and senior decision-makers, combining hands-on development with strategic responsibility. The role would suit someone who enjoys building, experimenting and moving quickly, but who is equally comfortable sitting with a portfolio manager, understanding their workflow and turning an idea into a solution that can have tangible impact on the investment process.

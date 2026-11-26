@@ -1,0 +1,70 @@
+Company: Artefact
+Title: Junior Data Consultant
+URL: https://job-boards.greenhouse.io/artefact/jobs/8844036002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Stationsplein 32, 3511 ED Utrecht
+Country: Netherlands
+Status: listed_only
+Posted: 2026-09-25T04:23:10-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Who We Are
+
+Artefact is an applied AI company. We build systems that run in production, in our clients' own cloud, and keep running after we leave. We are present in 27 countries across all continents with a team of 2,500 employees, offering a comprehensive set of AI & data solutions built on deep data science and cutting-edge AI technologies.
+
+From strategy to operations, we partner with 1,000+ clients, including some of the world’s top 300 brands such as Samsung, L’Oréal and Sanofi. Our work spans the full data and AI value chain, including data strategy, data quality and governance, data platforms, AI solutions, and data-driven customer experiences.
+
+What you will be doing:
+
+Our Data Consulting department leads the way in effectively exploiting data & AI in all its forms. Do you want to help our clients define best-in-class data & AI strategies, drive transformations and build data & AI solutions that have impact? Join our dynamic consulting team and contribute to developing our international client portfolio!
+
+As a Junior Data Consultant, you will support national and international clients across various industries in developing and implementing innovative data & AI strategies. Your role will encompass:
+
+- Client advisory: collaborate with clients alongside your (international) team to understand their business needs and goals, delivering data-driven recommendations that guide decision-making and strategy.
+
+- Data Collection and organization: collect, clean, and prepare data for analysis, correcting errors and formatting it for statistical software.
+
+- Ownership of project stream: drive individual workstreams, ensuring successful and timely delivery, in alignment with project goals.
+
+- Data analysis and interpretation: use tools like Excel, SQL, and Python to analyze data, apply statistical techniques to uncover trends and patterns, and present clear, actionable insights to clients, ensuring clarity for both technical and non-technical audiences.
+
+What we are looking for
+
+- Educational background: a completed Master’s degree, ideally focusing on Technology or (Business) Economics (MSc, MBA), with strong academic performance.
+
+- Language proficiency: you have strong verbal and written communication skills in English and are able to represent Artefact confidently in client-facing settings.
+
+- Technical proficiency: you have a strong interest in technology and some hands-on experience with programming or tools like Python or R (coding experience isn’t required). You’re also comfortable using Excel and PowerPoint to analyze and present data.
+
+- Work experience: 6–12 months in internships or student roles in consulting, data/analytics, marketing, advertising, finance, or tech is a plus but not required.
+
+- Business acumen: you possess a dual profile in ‘business’ and ‘data,’ with a keen eye for identifying business opportunities.
+
+- Analytical mindset: strong analytical abilities with attention to detail, comfortable working with large datasets.
+
+- Personal attributes: you are curious and passionate about data and technological evolution. You demonstrate rigour, proactivity, and enjoy problem-solving.
+
+Why you should join us:
+
+- Learning and development: we are a team of passionate Data Consultants who are always ready to help each other. Across our wide variety of projects, you will come across opportunities to learn and collaborate with some of the best in the field.
+
+- Career growth opportunities: we're committed to your professional development. With a focus on continuous learning and promotions, you'll have ample opportunities to advance your career at Artefact.
+
+- Culture of celebration: we take pride in our work and celebrate successes together. Expect regular team events, fun activities, and a collaborative spirit that makes coming to work enjoyable.
+
+- Competitive rewards: we offer a comprehensive benefits package including a competitive salary, phone & travel reimbursements, remote work allowance and a Onefit membership discount.
+
+- Work-Life balance: maintain a healthy balance with a hybrid work environment that allows flexibility.
+
+- Fuel your day: Enjoy a delicious and healthy lunch provided daily with an extensive organic buffet.
+
+- Weekly unwind: relieve stress and promote relaxation with a weekly massage session from our office physiotherapist.
+
+- Centrally located: our modern office is conveniently situated next to Utrecht’s central station - perfect for easy commuting!
+
+Join us now and be part of the future: Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+
+Apply today!

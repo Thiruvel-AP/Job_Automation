@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:b4161a42a0df",
+ "company": "Palantir",
+ "title": "Forward Deployed Infrastructure Engineer, New Grad - UK Government",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.2 and ATS ceiling 37%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family forward_deployed_engineer matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default floor score 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Palantir size/stability, hybrid work model, growth signals in description"
+  },
+  "red_flags": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Sole British National, lone‑worker requirement, security clearance eligibility"
+  }
+ },
+ "global_score": 3.8,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate meets sole British National and UK security clearance eligibility",
+  "Clarify salary range or compensation expectations",
+  "Verify remote/hybrid flexibility for the specific team"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.8,
+ "model_confidence": "High",
+ "jd_hash": "3160b65421546d39",
+ "jd_words": 845,
+ "tokens": 2303,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-19T11:42:48+00:00"
+}

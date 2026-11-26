@@ -1,0 +1,946 @@
+{
+  "coverage": 0.9718,
+  "requirements": [
+    {
+      "term": "data analysis",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "data quality",
+          "snippet": "Built a generative AI…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "data analysis",
+          "snippet": "Did the data analysis on…",
+          "via": "data analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "data quality",
+          "snippet": "Ran a data quality check…",
+          "via": "data quality"
+        }
+      ]
+    },
+    {
+      "term": "machine learning",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "machine learning",
+          "snippet": "For a private client,…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "machine learning",
+          "snippet": "Built repeatable…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ch1",
+          "quote": "machine learning",
+          "snippet": "Predicted which bank…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Machine Learning",
+          "snippet": "Machine Learning",
+          "via": "machine learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "machine learning",
+          "snippet": "machine learning concepts",
+          "via": "machine learning"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "machine learning",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "machine learning"
+        }
+      ]
+    },
+    {
+      "term": "python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "python"
+        }
+      ]
+    },
+    {
+      "term": "communication",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "communication",
+          "snippet": "Did the data analysis on…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholder",
+          "snippet": "Led the design in a…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "stakeholder",
+          "snippet": "Collaborated with the…",
+          "via": "stakeholder"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "communication",
+          "snippet": "The client's founder later…",
+          "via": "communication"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "communication",
+          "snippet": "Shipped features in a live…",
+          "via": "communication"
+        }
+      ]
+    },
+    {
+      "term": "data science models",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "classification",
+          "snippet": "Built repeatable…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "regression",
+          "snippet": "Linked 14 public…",
+          "via": "regression"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "classification",
+          "snippet": "Showed why airline support…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ch1",
+          "quote": "XGBoost",
+          "snippet": "Predicted which bank…",
+          "via": "xgboost"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt1",
+          "quote": "forecasting",
+          "snippet": "Trained a Bitcoin price…",
+          "via": "forecasting"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_bt2",
+          "quote": "forecasting",
+          "snippet": "Built a proof-of-concept…",
+          "via": "forecasting"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "XGBoost",
+          "snippet": "XGBoost",
+          "via": "xgboost"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "Random Forest",
+          "snippet": "Random Forest",
+          "via": "random forest"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "forecasting",
+          "snippet": "time-series forecasting",
+          "via": "forecasting"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_models",
+          "quote": "forecasting",
+          "snippet": "Builds the model a problem needs and says plainly where it…",
+          "via": "forecasting"
+        }
+      ]
+    },
+    {
+      "term": "exploration",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "exploration",
+          "snippet": "Did the data analysis on…",
+          "via": "exploration"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "eda",
+          "snippet": "Ran a data quality check…",
+          "via": "eda"
+        }
+      ]
+    },
+    {
+      "term": "machine learning concepts",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az8",
+          "quote": "clustering",
+          "snippet": "Studied graph neural…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "machine learning",
+          "snippet": "For a private client,…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "classification",
+          "snippet": "Built repeatable…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "clustering",
+          "snippet": "Linked 14 public…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "clustering",
+          "snippet": "Built the text-cleaning…",
+          "via": "clustering"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "classification",
+          "snippet": "Showed why airline support…",
+          "via": "classification"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ch1",
+          "quote": "machine learning",
+          "snippet": "Predicted which bank…",
+          "via": "machine learning"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "clustering",
+          "snippet": "Ran a data quality check…",
+          "via": "clustering"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Machine Learning",
+          "snippet": "Machine Learning",
+          "via": "machine learning"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "machine learning concepts",
+          "snippet": "machine learning concepts",
+          "via": "machine learning concepts"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "cross-validation",
+          "snippet": "model validation (cross-validation, MCC)",
+          "via": "cross-validation"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "clustering",
+          "snippet": "Leiden clustering",
+          "via": "clustering"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:1",
+          "quote": "machine learning",
+          "snippet": "Over a year of hands-on experience building and deploying…",
+          "via": "machine learning"
+        }
+      ]
+    },
+    {
+      "term": "numpy",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "NumPy",
+          "snippet": "NumPy",
+          "via": "numpy"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "NumPy",
+          "snippet": "NumPy",
+          "via": "numpy"
+        }
+      ]
+    },
+    {
+      "term": "pandas",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "pandas",
+          "snippet": "Did the data analysis on…",
+          "via": "pandas"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "pandas",
+          "snippet": "For an insurance hackathon…",
+          "via": "pandas"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "pandas",
+          "snippet": "pandas",
+          "via": "pandas"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Data & Visualisation",
+          "quote": "pandas",
+          "snippet": "pandas",
+          "via": "pandas"
+        }
+      ]
+    },
+    {
+      "term": "pipelines",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "pipelines",
+          "snippet": "Did the data analysis on…",
+          "via": "pipelines"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "pipelines",
+          "snippet": "For a private client,…",
+          "via": "pipelines"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "pipelines",
+          "snippet": "Built repeatable…",
+          "via": "pipelines"
+        },
+        {
+          "kind": "bullet",
+          "id": "av10",
+          "quote": "pipelines",
+          "snippet": "As a trainee, replaced a…",
+          "via": "pipelines"
+        }
+      ]
+    },
+    {
+      "term": "problem-solving",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "root cause analysis",
+          "snippet": "Found where the assistant…",
+          "via": "root cause analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "root cause analysis",
+          "snippet": "Linked 14 public…",
+          "via": "root cause analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "root cause analysis",
+          "snippet": "Built the text-cleaning…",
+          "via": "root cause analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "root cause analysis",
+          "snippet": "Showed why airline support…",
+          "via": "root cause analysis"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql3",
+          "quote": "root cause analysis",
+          "snippet": "Reported the limits…",
+          "via": "root cause analysis"
+        }
+      ]
+    },
+    {
+      "term": "scikit-learn",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "scikit-learn",
+          "snippet": "For a private client,…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl5",
+          "quote": "scikit-learn",
+          "snippet": "Built repeatable…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "scikit-learn",
+          "snippet": "Linked 14 public…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "scikit-learn",
+          "snippet": "Built the text-cleaning…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "scikit-learn",
+          "snippet": "Showed why airline support…",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "scikit-learn",
+          "snippet": "scikit-learn",
+          "via": "scikit-learn"
+        }
+      ]
+    },
+    {
+      "term": "statistical analyses",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "statistics",
+          "snippet": "Did the data analysis on…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "statistics",
+          "snippet": "Designed how a user's…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg3",
+          "quote": "Stouffer",
+          "snippet": "Combined mRNA and protein…",
+          "via": "stouffer"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Statistics",
+          "snippet": "Statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistical analysis",
+          "snippet": "statistical analysis",
+          "via": "statistical analysis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "descriptive statistics (mean, variance)",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "correlation analysis",
+          "snippet": "correlation analysis",
+          "via": "correlation analysis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "hypothesis testing",
+          "snippet": "hypothesis testing",
+          "via": "hypothesis testing"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "ANOVA",
+          "snippet": "ANOVA",
+          "via": "anova"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "post-hoc tests",
+          "snippet": "post-hoc tests (Tukey, Dunnett)",
+          "via": "post-hoc tests"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "power analysis",
+          "snippet": "power analysis",
+          "via": "power analysis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "bootstrap",
+          "snippet": "bootstrap",
+          "via": "bootstrap"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "statistics",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "statistics"
+        }
+      ]
+    },
+    {
+      "term": "statistics",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "statistics",
+          "snippet": "Did the data analysis on…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "statistics",
+          "snippet": "Designed how a user's…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg3",
+          "quote": "statistics",
+          "snippet": "Combined mRNA and protein…",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Statistics",
+          "snippet": "Statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "descriptive statistics (mean, variance)",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "statistics",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "statistics"
+        }
+      ]
+    },
+    {
+      "term": "collaboration",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "collaboration",
+          "snippet": "Collaborated with the…",
+          "via": "collaboration"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia2",
+          "quote": "collaboration",
+          "snippet": "In a five-person team,…",
+          "via": "collaboration"
+        }
+      ]
+    },
+    {
+      "term": "cross-functional",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "cross-functional",
+          "snippet": "Led the design in a…",
+          "via": "cross-functional"
+        }
+      ]
+    },
+    {
+      "term": "data quality",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "data quality",
+          "snippet": "Built a generative AI…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "data quality",
+          "snippet": "Did the data analysis on…",
+          "via": "data quality"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "data quality",
+          "snippet": "Ran a data quality check…",
+          "via": "data quality"
+        }
+      ]
+    },
+    {
+      "term": "production",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "production",
+          "snippet": "Did the data analysis on…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "production",
+          "snippet": "Collaborated with the…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "production",
+          "snippet": "Led the design in a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "production",
+          "snippet": "The client's founder later…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "production",
+          "snippet": "For a private client,…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av11",
+          "quote": "production",
+          "snippet": "Helped build a…",
+          "via": "production"
+        },
+        {
+          "kind": "bullet",
+          "id": "av8",
+          "quote": "production",
+          "snippet": "Shipped features in a live…",
+          "via": "production"
+        }
+      ]
+    },
+    {
+      "term": "stakeholders",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "stakeholders",
+          "snippet": "Led the design in a…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "stakeholders",
+          "snippet": "Collaborated with the…",
+          "via": "stakeholders"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc9",
+          "quote": "stakeholders",
+          "snippet": "The client's founder later…",
+          "via": "stakeholders"
+        }
+      ]
+    }
+  ]
+}

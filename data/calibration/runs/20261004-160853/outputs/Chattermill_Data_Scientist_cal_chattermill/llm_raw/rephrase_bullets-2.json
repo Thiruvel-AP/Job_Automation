@@ -1,0 +1,1 @@
+{"p_ia1":"Designed NLP preprocessing and clustering pipelines using K‑Means, HAC, DBSCAN on BoW, TF‑IDF, Skip‑gram, and SBERT embeddings, identifying silhouette scores below 0.30 as root cause of template vocabulary."}

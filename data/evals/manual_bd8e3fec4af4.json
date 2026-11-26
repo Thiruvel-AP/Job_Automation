@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:bd8e3fec4af4",
+ "company": "Virtru",
+ "title": "Forward Deployed Engineer - Security Clearance Required",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0 and required keywords all present"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family forward_deployed_engineer matches"
+  },
+  "comp": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Compensation £125k-160k exceeds typical market and candidate floor"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large, well‑funded, hybrid, UK presence, growth signals"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers or ad‑direct requests for rating"
+  }
+ },
+ "global_score": 4.6,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate holds or can obtain UK SC/DV clearance",
+  "Validate willingness/ability to work on‑site 50% of time in classified environments",
+  "Check candidate has recent production experience with Go/Python and AI coding agents"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.6,
+ "model_confidence": "High",
+ "jd_hash": "03924cb5d479ab50",
+ "jd_words": 1585,
+ "tokens": 2864,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

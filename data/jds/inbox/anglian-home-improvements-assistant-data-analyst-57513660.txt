@@ -1,0 +1,46 @@
+Company: Anglian Home Improvements
+Title: Assistant Data Analyst
+URL: https://www.reed.co.uk/jobs/assistant-data-analyst/57513660
+Source: reed
+Apply kind: aggregator_only
+Location: Norwich, GB
+Salary: GBP 30,000-35,000
+Posted: 2026-11-02
+Posted via: reed.date
+First seen: 2026-11-05
+
+Assistant Data Analyst - Office based role - Norwich, Norfolk 
+We are seeking a motivated and detail-oriented Assistant Data Analyst to join our team. This is an excellent opportunity for someone looking to begin or grow their career in data analytics within a supportive and forward-thinking environment. 
+About the Role 
+As a Junior Data Analyst, you will play a key role in transforming raw data into meaningful insights that support strategic decision-making across the business. You’ll work closely with experienced analysts and cross-functional teams to deliver accurate, timely, and actionable data. 
+Key Responsibilities 
+
+- Collect, clean, and validate data from various sources
+- Conduct exploratory data analysis to identify trends and opportunities
+- Develop reports and dashboards using tools such as Excel, Power BI, or Tableau
+- Write and optimize SQL queries to extract and manipulate data
+- Collaborate with stakeholders to understand data needs and deliver insights 
+What We’re Looking For 
+
+- Strong analytical and problem-solving skills
+- Proficiency in Excel and a foundational understanding of SQL
+- Familiarity with data visualization tools (e.g., Power BI, Tableau)
+- Excellent communication skills and a collaborative mindset
+- A degree in a relevant field (e.g., Data Science, Statistics, Business, or similar) is advantageous 
+Why Join Us? 
+
+- Competitive Salary
+- Pension
+- 31 days holiday, increasing with service, plus have your birthday off
+- Paid time off annually to volunteer
+- Comprehensive health & well-being benefits including cycle to work scheme, heavily discounted gym memberships and free access to mental health first aiders
+- Heavily discounted group discount scheme on all products
+- Group Perks and freebies on days out, cinema, theatre, eating in and out, mobiles phones, food shopping and most major high street retailers
+- Opportunity to work with a forward-thinking and supportive team.
+- Career development and continuous learning opportunities. 
+If you're eager to build a career in data and want to make a real impact from day one, we’d love to hear from you. 
+Apply today and take the first step in your data journey. 
+Important Information About Right to Work 
+We’re delighted that you’re considering joining our team. For this role, applications will only be accepted from individuals who already have the right to work in the UK, or who can independently secure this right. This position does not meet the Home Office requirements for employer visa sponsorship. 
+If you’re unsure about your eligibility, you can find helpful information on the UK government website . Thank you for your understanding 
+Our Company is committed to monitoring & aligning its Policies with up-to-date Government guidance on reducing the spread of respiratory infections in the workplace. Through the Company’s value of “Succeed Together” we are committed to Equality, Diversity and Inclusion. We recruit the ‘best person for the job’ regardless of any protected characteristics as defined by the Equality Act 2010 creating an inclusive working environment and culture for our employees.

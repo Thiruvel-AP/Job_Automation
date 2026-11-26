@@ -1,0 +1,104 @@
+Company: Moonpig
+Title: Lead Product Analyst
+URL: https://jobs.lever.co/moonpig/e7dac63e-eebc-49f4-a217-a7c9166b9662
+Source: lever
+Apply kind: lever
+Location: London, GB
+Posted: 2026-10-02T16:04:52.882000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-06
+Listed: yes
+
+We’re the Moonpig Group – home to Moonpig, Greetz, Red Letter Days and Buyagift – and we’re on a mission to make people feel loved, celebrated and remembered. Whether it’s a card that gets them laughing out loud or a gift that makes their day, we help people stay close, no matter the miles.
+ 
+We’re proud to be leading the online gifting revolution, with brilliant products, clever tech and a whole lot of heart. Our platform makes it easy to create moments that matter – packed with personal touches and delivered with care.
+ 
+We’re not just about selling cards or gifts – we’re here to spread joy, spark smiles and make every celebration feel extra special. And with values that guide how we work and support one another, we’ve built a place where people (and ideas) can truly thrive.
+ 
+If you’re looking to make an impact, bring your spark and be part of something meaningful – we’d love to have you on the team. 🌙🐷
+ 
+
+
+Lead Product Analyst | 📍London – Hybrid (1–2 days per week) | 💰Competitive Salary + Benefits
+About the Role
+Are you passionate about turning customer behaviour into better digital experiences? As our Lead Product Analyst, you'll help shape how millions of customers interact with Moonpig by uncovering insights that drive smarter product decisions.
+This is a senior individual contributor role where you'll partner closely with Product, Data and Engineering teams to understand customer behaviour, identify opportunities to improve the customer journey, and help teams measure the impact of the changes they make.
+You'll play a key role in building confidence in our product metrics, improving experimentation practices, and enabling teams to make evidence-based decisions. If you enjoy solving complex problems, translating data into clear recommendations and helping others learn from customer behaviour, we'd love to hear from you.
+
+
+Key Responsibilities:
+- Partner with Product teams to understand customer journeys, product questions and opportunities to improve the customer experience.
+
+- Conduct exploratory behavioural analysis using techniques including funnel, journey, cohort, segmentation and retention analysis.
+
+- Translate analytical findings into clear, practical recommendations that help teams prioritise what to improve next.
+
+- Define, maintain and govern product and behavioural metrics to ensure consistent, reliable measurement across teams.
+
+- Validate product tracking and data quality, working closely with Data and Engineering colleagues to resolve issues.
+
+- Provide guidance on experimentation best practice, including hypotheses, success metrics, test validity and interpretation of results.
+
+- Develop repeatable frameworks, documentation and resources that enable consistent measurement and learning across Product teams.
+
+- Build confidence across teams in using behavioural data to inform product decisions.
+
+- Collaborate with cross-functional partners to champion strong analytical thinking and customer-focused decision making.
+
+About You:
+- Significant experience in Product Analytics, Customer Analytics or a similar role within a digital product or e-commerce environment.
+
+- Strong hands-on SQL skills with the ability to investigate data, challenge assumptions and communicate findings clearly.
+
+- Experience exploring customer behaviour through funnel, journey, cohort, segmentation or retention analysis.
+
+- Proven ability to define, maintain and govern product metrics to improve the quality and consistency of measurement.
+
+- Experience supporting experimentation through structured testing, robust measurement and thoughtful interpretation of results.
+
+- Excellent communication skills with the ability to explain complex analysis in a clear and practical way.
+
+- Strong collaboration skills and experience partnering with Product and cross-functional teams.
+
+- Experience creating analytical frameworks, documentation or resources that help teams measure products consistently.
+
+- Comfortable working through ambiguity while remaining focused on customer behaviour and product outcomes.
+
+Nice to Have:
+- Working knowledge of Python.
+
+- Experience with product analytics platforms such as Mixpanel, Amplitude or similar.
+
+- Familiarity with Snowflake, Tableau or comparable data platforms.
+
+- Experience using causal inference techniques such as regression, matching, difference-in-differences or uplift modelling.
+
+- Experience evaluating recommendation, personalisation or AI-enabled product features.
+
+- Experience sharing analytical knowledge through coaching, documentation or communities of practice.
+
+What's in it for you?
+ 
+We believe in empowering our team to do their best work. Enjoy:
+💰 Competitive Pay & Bonuses: Plus, generous pension plans & staff discounts.
+💆🏽 Wellbeing First: Private healthcare (UK) and mental health support
+🏖️ Flexible Working & Time Off: Generous holidays, hybrid working (1-3 days in office, depending on role/team) & up to 20 days of international working.
+📈 Career Growth: Learning allowances, coaching & development programs.
+ 
+Want to know more?
+Explore our full benefits package: here
+Check out our podcast, tech blog and product blog to hear more about how we work and what we're building!
+ 
+Our Ways of Working:
+We trust our colleagues to do what’s right and offer flexibility to support a balance between work and life. At the same time, face-to-face office time is an important and expected part of working at Moonpig Group. We believe regular in-person working supports collaboration, alignment, and effective decision-making. Candidates will have regular and ongoing time working from the office as part of their role, which will be discussed during the recruitment process.
+ 
+Moonpig Group's Commitment to Equality, Diversity, and Inclusivity:
+At Moonpig Group, we’re all about creating a workplace where everyone feels they truly belong. We celebrate what makes each of us unique, whether that’s our background, how we work best, or what matters most to us.
+ 
+From working parents who need flexible hours to neurodiverse colleagues with specific working styles, we’re here to support our people in ways that work for them. Because when you feel valued and included, you can thrive, and so can we.
+ 
+We’re proud to have a number of employee-led groups driving this forward, including our LGBTQ+, Gender Balance, Neurodiversity and EMBRACE (Educating Myself for Better Racial Awareness and Cultural Enrichment) communities, plus our Group-wide EDI committee. These teams help make sure every voice is heard and every idea has a place.
+ 
+We know that diversity fuels creativity, innovation and connection, and that’s why we’ll keep pushing for progress. Together, we’re building a culture where everyone feels safe, supported, and free to be their brilliant, authentic selves.
+ 
+If you have a preferred name, please use it to apply and share your pronouns if you are comfortable to do so😊 - If you have any reasonable adjustment requests throughout the interview process please let us know on your application or speak to the Recruiter.

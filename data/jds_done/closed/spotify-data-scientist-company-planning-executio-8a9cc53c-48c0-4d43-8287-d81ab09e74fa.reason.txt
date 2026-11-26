@@ -1,0 +1,1 @@
+disqualified, liveness: the posting is closed (not on the Lever board of spotify any more (HTTP 404))

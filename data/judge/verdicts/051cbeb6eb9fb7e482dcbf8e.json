@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Lack of direct experience with Anthropic products", "No cover letter provided"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "051cbeb6eb9fb7e482dcbf8e", "tokens": 3863, "note": "dropped 2 section(s) about the employer or process: About Anthropic, Annual Salary"}

@@ -1,0 +1,9 @@
+```json
+{
+  "az3": "Deployed the agent as a Docker container on AWS Lambda with ECR pipelines, IAM roles, and least‑privilege policies, achieving production‑ready containerization.",
+  "az1": "Built a Python LLM agent using LangChain and AWS Bedrock Claude Haiku 4.5, calling three tools for gene alias resolution, scoring methodology explanation, and dataset provenance.",
+  "az2": "Designed a deterministic hallucination‑guard architecture with live Ensembl/HGNC APIs, a 19,213‑gene parquet fallback, and circuit breakers, ensuring data quality and fault tolerance.",
+  "dc1": "Prototyped an MCP‑based agentic tool in Python, integrating FastMCP, Ollama gpt‑oss:20b, PostgreSQL, and GitHub Actions CI, and communicated results in a live stakeholder demo.",
+  "fl1": "Built Python scikit‑learn pipelines and TensorFlow/Keras LSTM/BiRNN/CNN models, deploying them as FastAPI services in Docker."
+}
+```

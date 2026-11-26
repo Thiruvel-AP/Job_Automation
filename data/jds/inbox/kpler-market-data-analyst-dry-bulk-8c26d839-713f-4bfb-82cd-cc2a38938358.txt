@@ -1,0 +1,97 @@
+Company: Kpler
+Title: Market Data Analyst - Dry Bulk
+URL: https://jobs.lever.co/kpler/8c26d839-713f-4bfb-82cd-cc2a38938358
+Source: lever
+Location: United Kingdom
+Posted: 2026-05-12T11:36:49.444000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-20
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors.
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 700 experts from 35+ countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+
+
+Your future position:
+Kpler’s Dry Bulk business is expanding, and we are looking for a Market Data Analyst – Dry Bulk to take ownership of data quality and operational processes across assigned geographical regions and product groups.
+
+While the position is internally known as Market Data Analyst - Metals & Minerals, its scope extends across a broader range of dry bulk commodities, including ferrous and non-ferrous metals, solid fuels, and industrial minerals.
+
+This is a role for someone who wants to sit close to how global commodity markets actually move. You will combine strong SQL and Python skills with a curiosity about the real-world events shaping those movements - from shifting trade flows and supply chain disruptions to changes in industrial demand, policy, and pricing dynamics.
+
+You won’t just be processing data. You will play a key role in turning complex, high-volume datasets into reliable market intelligence used by clients to understand what is happening in global physical markets. Your work will directly influence how accurately we reflect real-world commodity flows.
+
+Your mission is to:
+- 
+
+Take charge of specific regions and product groups, ensuring the highest standard of data quality by reviewing internal constraints, validating automated outputs, and ingesting data from diverse external sources.
+
+- 
+
+Identify and implement technology and process improvements – including contributions to SQL queries, Python scripts, and pipeline tooling – to increase the efficiency and accuracy of our seaborne flow data.
+
+- 
+
+Track news, trade flows, and industry developments across metals and minerals markets. Extract meaningful patterns and ensure they are well reflected in our data product.
+
+- 
+
+Lead responses to ad-hoc client requests (email, video call, in-person) with rapid, well-structured analysis. Partner with Sales and Customer Success teams to address client data needs and feed insights back into internal systems.
+
+- 
+
+Engage proactively with the broader data architecture; understand how upstream data sources, internal systems, and client-facing solutions interact, and propose improvements that scale across the team.
+
+- 
+
+Act as a knowledgeable and self-directed team member capable of picking up complex technical tasks independently and driving them to completion with minimal supervision.
+
+You could be a match if you are or have:
+- Experience working with data products and complex datasets. You understand how data is collected, processed, validated, and delivered to end users. You can investigate data inconsistencies, identify root causes, and contribute to improving data quality, reliability, and the overall user experience.
+
+- 
+
+Strong proficiency in SQL and Python (PostgreSQL, MSSQL, or similar) is a core requirement. You use both to query databases, analyse data, and automate workflows, building and maintaining scripts to remove manual processes and improve efficiency. Strong Excel skills are required for analysis and commercial reporting.
+
+- A genuine interest in physical commodity markets. You are curious about how global trade works in practice and how commodities move around the world. You want to understand the forces shaping supply and demand, trade flows, production, shipping, and pricing, as well as the economic, political, and industrial developments behind market movements. You actively seek to understand not only what is happening, but why it matters. We are looking for someone who can articulate what interests them about these markets and is motivated to deepen their knowledge over time.
+
+- 
+
+Comfortable managing high-frequency datasets, identifying anomalies, and maintaining high standards of data quality under tight deadlines.
+
+- 
+
+Strong communicator, able to translate complex technical outputs into clear, actionable insights for both technical and non-technical stakeholders, and build effective relationships across teams.
+
+- 
+
+Proactive and self-directed: takes ownership, anticipates issues, and drives work independently to completion.
+
+- 
+
+Experience supporting or mentoring junior colleagues, or a clear interest in developing others as the team grows would be highly adventagous.
+
+Desirable:
+
+- 
+
+Experience working with seaborne commodity data (e.g. AIS, port or vessel data).
+
+- 
+
+Familiarity with data visualisation tools such as Tableau or similar.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+Our People Pledge
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.

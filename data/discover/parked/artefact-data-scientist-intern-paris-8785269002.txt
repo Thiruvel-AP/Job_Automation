@@ -1,0 +1,62 @@
+Company: Artefact
+Title: Data Scientist Intern - Paris
+URL: https://job-boards.greenhouse.io/artefact/jobs/8785269002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 9th arrondissement of Paris, 75009, Paris, France
+Country: France
+Status: listed_only
+Posted: 2026-09-07T08:23:33-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Qui sommes-nous ?
+
+Fondée en 2014, Artefact est une société française de services autour de la data, spécialisée dans le conseil en IA, transformation data et en data & digital marketing. L’approche unique d’Artefact, qui fait le pont entre la donnée et le business, permet à nos clients d’atteindre leurs objectifs business de façon dédiée et efficace. Nos 2500 collaborateurs répartis dans 27 bureaux à travers le monde allient leurs compétences pluridisciplinaires au profit de l’innovation business des entreprises. 
+
+La mission des Artefactors ? Transformer la data de nos clients en impact business. Dans ce sens, nous collaborons avec plus de 1000 clients, leaders de leurs industries (Orange, Carrefour, Samsung, AccorHotels, L’Oréal, LVMH, Decathlon) et sommes partenaires privilégiés de Google (GMP/GCP), AWS ainsi que Microsoft Azure. 
+
+En tant que stagiaire Data Scientist, tu seras responsable de : 
+
+- La réalisation de projets de données (sécurisation de la livraison de vos projets) 
+
+- La communication de ton travail et réalisations au sein de l’équipe
+
+- Travailler en étroite collaboration avec ton homologue conseil pour établir et entretenir des relations solides avec vos clients et mieux comprendre leurs besoins 
+
+- S’assurer que tes solutions apportent des valeurs à la problématique client 
+
+- Rechercher et développer de nouvelles approches techniques pour résoudre efficacement les problèmes
+
+- Partager les bonnes pratiques et contribuer aux connaissances institutionnelles d’Artefact
+
+ Tu es ? 
+
+- Tu es étudiant(e) en dernière année de cycle ingénieur, Master 2, ou équivalent, avec une spécialisation en Data Science, Intelligence Artificielle, Mathématiques appliquées, Statistiques ou Informatique.
+
+- Tu es à la recherche d'un stage de fin d'études de 6 mois à partir de janvier 2027.
+
+- Tu possèdes une bonne compréhension de l'écosystème numérique et data et de ses technologies : web analytique, programmatique, DMP, Datalake, dataviz, data science, etc.
+
+- Tu as un fort intérêt pour les problématiques business. 
+
+- Tu as un esprit pratique et analytique, et possèdes d’excellentes compétences en résolution de problèmes, y compris la capacité de désagréger les problèmes, d’identifier les causes profondes et de recommander des solutions. 
+
+- Maîtrise du français (écrit/oral) obligatoire pour le bureau de Paris pour travailler en équipe et de l’anglais professionnel pour communiquer avec nos clients internationaux 
+
+Le petit + : une première expérience (stage, projet scolaire, Junior Entreprise, etc.) en conseil et/ou écosystème de données est une valeur ajoutée ! 
+
+ Pourquoi nous rejoindre ? 
+
+- Développement professionnel : CDI à la clé (85% de conversion) ; socle de formation (onboarding, retex, café tech, deep dive de use cases tech...) développement des compétences via des outils internes innovants.
+
+- Développement personnel : collaborez avec les experts dans leur domaine, tu apprendras des meilleurs ; feedbacks réguliers via counsellor, managers, équipes et RH.
+
+- Environnement de travail unique : flexibilité télétravail; évènements d’équipe et d’entreprise ; localisation idéale dans le 9ème arrondissement !
+
+- Socle de formation (training day, Retex, café tech) développement des compétences via des outils internes innovants 
+
+Chez Artefact, nous recrutons nos collaborateurs uniquement en fonction de nos besoins et des qualités propres de chaque candidat. Nous assurons le développement de leurs compétences professionnelles et de leurs responsabilités sans discrimination d’aucune sorte. Le groupe s'engage à reconnaître et promouvoir tous les talents, quelles que soient leurs croyances, âge, handicap, parentalité, origine ethnique, nationalité, identité de genre, orientation sexuelle, appartenance à une organisation politique, religieuse, syndicale ou à une minorité, ou toute autre caractéristique qui pourrait faire l'objet d'une discrimination. 
+
+Rejoignez-nous !

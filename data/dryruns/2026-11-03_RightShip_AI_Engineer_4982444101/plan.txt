@@ -1,0 +1,24 @@
+  #  req  type      label (short)                          answer (<=60 chars)                                          source                   status
+  1  *    text      First Name                             Thiruvel                                                     applicant                READY
+  2  *    text      Last Name                              Andagurunathan Pandian                                       applicant                READY
+  3  *    text      Email                                  apthiruvel@gmail.com                                         applicant                READY
+  4  *    combo     Country                                United Kingdom +44                                           applicant:location       READY
+  5  *    tel       Phone                                  +44 7741016954                                               applicant                READY
+  6  *    combo     Location (City)                        Bristol -> Bristol, England, United Kingdom                  answers:current_location READY
+  7  *    file      Resume/CV                              Thiruvel Andagurunathan Pandian CV.pdf                       cv                       READY
+  8       file      Cover Letter                           Thiruvel Andagurunathan Pandian Cover Letter.pdf             letter                   READY
+  9  *    combo     What are your working rights in the c… Work Visa                                                    applicant:visa.by_country.GB READY
+ 10  *    text      If you answered 'Work Visa' in the pr… -                                                            answers:visa_type        NEEDS USER
+ 11  *    text      What is your notice period?            Immediately                                                  answers:notice_period    READY
+ 12  *    textarea  What motivated you to apply for this … (draft, 100 words)                                           freetext                 DRAFT
+ 13  *    text      Please provide your base salary expec… I'd welcome the opportunity to discuss salary expectation... answers:salary_expectation READY
+ 14  *    combo     How did you hear about us?             Corporate website                                            how-heard                READY
+ 15  *    text      Please include a link to your LinkedI… https://www.linkedin.com/in/thiruvel-a-p/                    applicant                READY
+ 16  *    combo     Inclusion and Diversity is very impor… -                                                            equal_opportunities      BLANK
+ 17       text      If you have answered 'Self-describe' … -                                                            freetext                 BLANK
+ 18  *    combo     I declare that the information provid… -                                                            attestation              NEEDS USER
+ 19  *    combo     Inclusion and Diversity is very impor… -                                                            equal_opportunities      BLANK
+ 20       combo     Gender                                 Male                                                         equal_opportunities:eo_gender READY
+ 21       combo     Are you Hispanic/Latino?               -                                                            never_fill               BLANK
+ 22       combo     Veteran Status                         -                                                            equal_opportunities:eo_veteran BLANK
+ 23  *    checkbox  By checking this box, I consent to Ri… -                                                            attestation              NEEDS USER

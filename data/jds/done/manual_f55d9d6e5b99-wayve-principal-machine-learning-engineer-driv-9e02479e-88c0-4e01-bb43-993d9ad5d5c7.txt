@@ -1,0 +1,126 @@
+Company: Wayve
+Title: Principal Machine Learning Engineer, Driving Product
+URL: https://jobs.ashbyhq.com/wayve/9e02479e-88c0-4e01-bb43-993d9ad5d5c7
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-15T13:32:09.184+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+Before the detail, here's the challenge you'd help us solve.
+
+
+
+We build the embodied intelligence that moves real vehicles safely, and the ecosystem a billion machines will run on in the future. Very few people in AI can say this. Every role here, whatever the team, plugs into that.
+
+
+
+Here’s what this particular role covers.
+
+
+🛠️ About our Driving Product Team
+
+
+The Driving Product team owns Wayve's core end to end driving model, the algorithm that directly shapes how our vehicles behave on the road. This model already underpins production agreements with Nissan and Mercedes, with further OEM partnerships in the works, so the team's output is tied directly to Wayve's near term commercial milestones. The team is highly iterative: it looks at the top issues we see on the road, root causes them, and drives them out through data, model and evaluation changes, working closely with other teams across the business to resolve issues that span the model and vehicle interface.
+
+
+🧠 Your day-to-day
+
+
+ - Lead the team iterating on L2 driving performance, balancing hands-on technical work with team leadership
+
+ - Diagnose the highest impact issues seen on the road, root cause them, and resolve them through data and model iteration
+
+ - Own changes to data recipes, model architecture, evaluation and release readiness for the driving model
+
+ - Partner with other teams to resolve cross-functional issues, including model and vehicle interface problems
+
+ - Act as one of the team's key hands-on developers, writing code and running experiments alongside directing the team's priorities
+   
+
+🧩 What you'll be working on:
+
+
+ - The end to end driving model that powers Wayve's L2 product and sits at the centre of our OEM partnerships with Nissan and Mercedes, with further partners in the pipeline
+
+ - Scaling the driving model's performance across different geographies and vehicle platforms while hitting performance and compliance KPIs
+
+ - Data led iteration cycles: using on road and off road evaluation to identify the biggest performance gaps and close them
+
+ - Cross-functional resolution of model and vehicle interface issues, working with specialists across the business
+
+ - Growing and shaping a small, high impact team (initially up to five people) as the driving model programme scales
+   
+
+👤 You should apply if:
+
+
+ - You're highly technical and hands-on, comfortable writing Python and doing model and data iteration yourself, not just directing others
+
+ - You've delivered deployed, production ML models, ideally in robotics or autonomous vehicles, with experience shipping and iterating on ML for embodied AI applications
+
+ - Alternatively, you've productionised ML models at another company and have experience delivering incremental improvements to a live system over time
+
+ - Your experience is production focused rather than primarily research or early stage exploration
+
+ - You want to keep doing deeply technical work, whether or not you've managed people before. We're looking for strong ICs or tech leads just as much as experienced managers, and are happy to ease the right person into managing a small team
+
+🌱 Not ticking every box? That's totally okay! If you're passionate about autonomy and keen to learn, we encourage you to apply even if you don't meet every requirement.
+
+
+More about Wayve:
+
+
+🚗 Wayve is building the leading AI platform for autonomous driving. We are pioneering an end to end AI approach that enables vehicles to learn directly from real world experience, developing the ability to adapt, generalise and improve at scale. Instead of relying on hand coded rules or pre mapped environments, our AI Driver learns to drive by understanding the world around it. The result is technology that navigates complex urban environments with intelligence, precision and natural flow, unlocking meaningful advances in both safety and efficiency. We believe autonomy represents a once in a generation transformation in how people and goods move, comparable to the shift from horses to cars, and from human driven vehicles to intelligent machines.
+
+Our ambition is to make autonomy universal. Wayve's mapless and hardware agnostic AI platform integrates with global OEM partners, enabling continuous software evolution and unlocking advanced levels of automation from L2 plus through to L4 as our core AI model scales. In a race increasingly defined by intelligence and real world learning, Wayve is taking a distinct approach, building a generalisable driving intelligence that can power any vehicle, anywhere. By combining embodied AI with scalable deployment, we are creating technology that can be shaped to each OEM brand and driver experience, accelerating the transition to a safer, more intelligent future of mobility.
+
+
+How we work 💻 — Locations & Flexible Working:
+
+Our main hubs are in London, Sunnyvale, Yokohama, Herzliya, Vancouver and Leonberg. We operate a hybrid working model that combines in-person collaboration in our dedicated office spaces with focused time working remotely. This gives our teams the connection and energy of working together, alongside the flexibility to do their best work in a way that fits their lives.
+
+
+📋 The Interview Process:
+
+Our process is clear and respectful of your time:
+
+ - Initial call / recruiter screen (20 mins)
+
+ - Competency technical interviews (programming and system design; 2 hours)
+
+ - Deep-dive interviews (domain and technical leadership; 2 hours)
+
+ - Final interview: mission & values alignment (1 hour)
+
+We'll always explain the format and work around your availability.
+
+
+
+What's in it for you (Location dependent):
+
+💰 Salaries benchmarked against the market annually
+ 📈 Meaningful equity, sharing in the ownership and long term success of Wayve
+ ✈️ Relocation support and visa sponsorship where applicable
+ ✅ Hybrid working, core hours and the chance to work hands on in vehicle workshops and labs
+ 📚 Learning and development budgets with support for training, conferences and growth
+ 🩺 Comprehensive benefits including health insurance, dental, enhanced maternity and paternity leave, retirement or pension where applicable, access to therapists, wellbeing partner discounts and more
+
+
+
+A quick, honest note before you apply.
+
+Wayve is not a mature, fully-structured place with the playbook already written. Much of how we work is still being written, and if you join, you’ll help write it. That suits people who want real ownership more than people who need a settled structure from day one.
+
+
+
+If that sounds like the kind of problem you want to spend your time on, we’d really like to hear from you.
+
+At Wayve we're committed to creating a diverse, fair and respectful culture that is inclusive of everyone based on their unique skills and perspectives, and regardless of sex, race, religion or belief, ethnic or national origin, disability, age, citizenship, marital, domestic or civil partnership status, sexual orientation, gender identity, veteran status, pregnancy or related condition (including breastfeeding) or any other basis as protected by applicable law.
+
+
+For more information visit Careers at Wayve. https://wayve.ai/careers/ To learn more about what drives us, visit Values at Wayve https://wayve.ai/careers/
+
+DISCLAIMER: We will not ask about marriage or pregnancy, care responsibilities or disabilities in any of our job adverts or interviews. However, we do look to capture information about care responsibilities, and disabilities among other diversity information as part of an optional DEI Monitoring form to help us identify areas of improvement in our hiring process and ensure that the process is inclusive and non-discriminatory.

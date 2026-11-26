@@ -1,0 +1,106 @@
+Company: Faculty
+Title: Senior Data Scientist
+URL: https://jobs.ashbyhq.com/faculty/61c1d7d5-6bb1-4a22-a950-bbf26e59d675
+Source: ashby
+Location: London
+Posted: 2026-10-09T08:31:51.829+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-20
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+ABOUT THE TEAM
+
+
+
+Faculty’s Retail & Consumer team builds AI that re-engineers how retail and consumer businesses make decisions, from personalised promotions and pricing to range, inventory and customer acquisition. We combine deep sector expertise with outstanding scientific and technical capability to solve hard problems and embed the solutions in our clients’ core business processes.
+
+
+
+
+ABOUT THE ROLE
+
+As a Senior Data Scientist, you will lead high-impact AI projects and shape the technical direction of bespoke solutions for some of the most recognisable names in retail and consumer.
+
+You will define the data science approach for each engagement, design robust software architectures, mentor colleagues and ensure delivery rigour across projects. You will also build deep client relationships and strengthen our reputation as a leader in practical, measurable AI.
+
+
+
+
+WHAT YOU’LL BE DOING
+
+ - Leading project teams that deliver bespoke algorithms and high-stakes AI solutions to clients across the retail and consumer sector
+
+ - Translating complex business problems into the right data science solutions, and mapping the end-to-end approach so it meets client needs and is technically feasible
+
+ - Designing the software architecture for data science solutions, working alongside engineering colleagues
+
+ - Partnering with our commercial teams to build client relationships and shape project scope for technical success
+
+ - Owning the technical side of the client relationship on projects and in business development, helping to secure successful outcomes
+
+ - Estimating delivery timelines and leading your team to deliver to a demanding schedule
+
+ - Supporting the professional growth of data scientists on your projects through mentorship, coaching and feedback
+
+ - Upholding best practice throughout the project lifecycle, including embedding responsible AI thinking in how problems are framed, not only in how models are evaluated
+
+ - Contributing to hiring at Faculty
+
+
+
+
+WHAT WE’RE LOOKING FOR
+
+ - You have senior experience in a professional data science position or a quantitative academic field
+
+ - You have broad knowledge of state-of-the-art ML and AI, and can apply it, along with novel ideas, to build algorithms for complex data science problems
+
+ - You hold yourself to rigorous validation standards, ensuring models perform reliably in real-world conditions and edge cases
+
+ - You can scope projects by assessing technical feasibility and breaking complex workstreams into clear delivery milestones
+
+ - You have mastery of Python and relevant frameworks, and can architect production-grade infrastructure for sophisticated models and agentic AI systems
+
+ - You communicate clearly, translating sophisticated models and quantitative findings into actionable strategy for client stakeholders
+
+ - You care about accountability, transparency and responsible AI, and nurture those habits in the people around you
+
+ - You enjoy mentoring and developing other data scientists
+
+
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

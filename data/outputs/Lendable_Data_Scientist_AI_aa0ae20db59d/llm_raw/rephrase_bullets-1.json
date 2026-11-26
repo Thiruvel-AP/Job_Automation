@@ -1,0 +1,6 @@
+```json
+{
+  "p_ql1": "Fine‑tuned an 8B Llama 3.1 model with QLoRA (4‑bit, Unsloth, TRL) on a 15 GB GPU, training 0.52% of parameters, raising answer completion from 32% to 52% and exact‑answer accuracy from 16.2% to 27.3% on 99 held‑out NuminaMath problems.",
+  "p_ql3": "Reported that accuracy on completed answers barely improved (50% vs 52%), attributing gains to finishing answers within the token budget, and traced out‑of‑memory errors to multiple models loaded in one runtime rather than the KV cache."
+}
+```

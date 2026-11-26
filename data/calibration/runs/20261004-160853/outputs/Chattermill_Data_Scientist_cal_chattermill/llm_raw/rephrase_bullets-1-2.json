@@ -1,0 +1,1 @@
+{"p_ch1":"Built an XGBoost churn classification model in R using tidymodels, performing two-stage Bayesian hyperparameter tuning, SMOTE preprocessing, and MCC evaluation, a classical ML approach.","p_bt1":"Deployed an LSTM forecaster with cyclic date encoding and time-series cross-validated grid search, performing model serving through a TensorFlow Serving REST API."}

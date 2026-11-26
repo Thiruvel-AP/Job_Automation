@@ -1,0 +1,85 @@
+{
+  "job": {
+    "id": "manual:ff68fffd015a",
+    "company": "RightShip",
+    "title": "AI Engineer",
+    "url": "https://job-boards.eu.greenhouse.io/rightship/jobs/4982444101"
+  },
+  "ats": {
+    "strict": 63.44086021505376,
+    "ceiling": 75.26881720430107,
+    "claimable_only": 75.26881720430107
+  },
+  "hook": {
+    "id": "h_prod_tests",
+    "headline": "LLM agent shipped to AWS Lambda behind ~65 automated tests",
+    "proof": "az4"
+  },
+  "required_blocking": [
+    {
+      "label": "If you answered 'Work Visa' in the previous question, please specify the type of visa that you are currently holding. If you do not hold any valid visa currently, please answer 'N.A.'.",
+      "key": "question_9689581101",
+      "kind": "text",
+      "required": true,
+      "status": "NEEDS USER",
+      "value": "",
+      "source": "answers:visa_type",
+      "reason": "answers.yaml has no `visa_type` entry (a few words: your visa type, or 'N.A.')"
+    },
+    {
+      "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+      "key": "question_9689587101",
+      "kind": "combobox",
+      "required": true,
+      "status": "EMPTY",
+      "value": "",
+      "source": "equal_opportunities",
+      "reason": "not listed in equal_opportunities: left blank"
+    },
+    {
+      "label": "I declare that the information provided by me is true and accurate. Furthermore, I willingly consent to being contacted by the company for any relevant matters pertaining to my application. I also give my unequivocal agreement for the company to retain my information (for as long as the respective c",
+      "key": "question_9689589101",
+      "kind": "combobox",
+      "required": true,
+      "status": "NEEDS USER",
+      "value": "",
+      "source": "attestation",
+      "reason": "attestation: you tick it yourself, code never does"
+    },
+    {
+      "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+      "key": "4005559101",
+      "kind": "combobox",
+      "required": true,
+      "status": "EMPTY",
+      "value": "",
+      "source": "equal_opportunities",
+      "reason": "not listed in equal_opportunities: left blank"
+    },
+    {
+      "label": "By checking this box, I consent to RightShip collecting, storing, and processing my responses to the demographic data surveys above.",
+      "key": "gdpr_demographic_data_consent_given",
+      "kind": "checkbox",
+      "required": true,
+      "status": "NEEDS USER",
+      "value": "",
+      "source": "attestation",
+      "reason": "attestation: you tick it yourself, code never does"
+    }
+  ],
+  "letter_status": "ok",
+  "motivation": [
+    {
+      "question": "What motivated you to apply for this position?",
+      "text": "I am applying for the AI Engineer role at RightShip. What draws me to this role is RightShip is the maritime industry's leading safety and risk intelligence platform. At AstraZeneca, I needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+      "words": 100,
+      "sources": [
+        "ad",
+        "letter"
+      ],
+      "guard": "passed",
+      "overlap": "0.00 (no earlier motivation answer)",
+      "assembled": true
+    }
+  ]
+}

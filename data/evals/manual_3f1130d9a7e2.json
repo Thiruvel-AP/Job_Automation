@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:3f1130d9a7e2",
+ "company": "Nexcade AI",
+ "title": "AI Engineer",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0 matches required keywords"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family ai_engineer aligns with title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default floor used"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "SME micro size, in‑person 4+ days, fast‑pace startup"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No ad text asks candidate to rate or give instructions"
+  }
+ },
+ "global_score": 4.4,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm equity package and vesting schedule",
+  "Verify UK sponsorship eligibility despite UK sponsor register being exact",
+  "Clarify remote work flexibility beyond 4+ days in‑office requirement"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.4,
+ "model_confidence": "High",
+ "jd_hash": "e91196e464965d45",
+ "jd_words": 740,
+ "tokens": 2094,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

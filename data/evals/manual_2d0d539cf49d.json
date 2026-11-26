@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:2d0d539cf49d",
+ "company": "Capgemini",
+ "title": "Forward Deployed Engineer AI-Managing Consultant-AI and Digital Factory",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.1 and ATS ceiling 68% indicate strong keyword match"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family forward_deployed_engineer aligns exactly with title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to floor score 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Capgemini Invent is large, award‑winning, offers training, stable, hybrid/on‑site model"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No disqualifiers; only missing pay which is noted but not a blocker"
+  }
+ },
+ "global_score": 4.2,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm salary range or compensation package",
+  "Verify candidate has AWS (or Azure/GCP) experience as required",
+  "Check candidate holds or can obtain SC clearance if needed"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.2,
+ "model_confidence": "High",
+ "jd_hash": "74354f0835837e66",
+ "jd_words": 942,
+ "tokens": 2502,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

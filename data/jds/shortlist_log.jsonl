@@ -1,0 +1,144 @@
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "deliveroo|senior data scientist", "company": "Deliveroo", "title": "Senior Data Scientist", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "wayve|senior machine learning engineer av core", "company": "Wayve", "title": "Senior Machine Learning Engineer, AV Core", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|partner applied ai engineer", "company": "OpenAI", "title": "Partner Applied AI Engineer", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|applied ai engineer government", "company": "OpenAI", "title": "Applied AI Engineer, Government", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|applied ai engineer codex tokyo", "company": "OpenAI", "title": "Applied AI Engineer, Codex | Tokyo", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|applied ai engineer cyber government", "company": "OpenAI", "title": "Applied AI Engineer, Cyber, Government", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|data scientist fineng", "company": "OpenAI", "title": "Data Scientist, FinEng", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "shown", "key": "openai|machine learning engineer implicit signals", "company": "OpenAI", "title": "Machine Learning Engineer, Implicit Signals", "times_shown": 1}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "deliveroo|senior data scientist", "company": "Deliveroo", "title": "Senior Data Scientist"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "wayve|senior machine learning engineer av core", "company": "Wayve", "title": "Senior Machine Learning Engineer, AV Core"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|partner applied ai engineer", "company": "OpenAI", "title": "Partner Applied AI Engineer"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|applied ai engineer government", "company": "OpenAI", "title": "Applied AI Engineer, Government"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|applied ai engineer codex tokyo", "company": "OpenAI", "title": "Applied AI Engineer, Codex | Tokyo"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|applied ai engineer cyber government", "company": "OpenAI", "title": "Applied AI Engineer, Cyber, Government"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|data scientist fineng", "company": "OpenAI", "title": "Data Scientist, FinEng"}
+{"ts": "2026-10-29T16:55:53+00:00", "event": "skipped", "key": "openai|machine learning engineer implicit signals", "company": "OpenAI", "title": "Machine Learning Engineer, Implicit Signals"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "openai|forward deployed engineer paris", "company": "OpenAI", "title": "Forward Deployed Engineer - Paris", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "openai|forward deployed engineer zurich", "company": "OpenAI", "title": "Forward Deployed Engineer - Zurich", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "openai|forward deployed engineer munich", "company": "OpenAI", "title": "Forward Deployed Engineer - Munich", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "databricks|senior forward deployed engineer", "company": "Databricks", "title": "Senior Forward Deployed Engineer (Technical Data Architect)", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "databricks|forward deployed engineering architect", "company": "Databricks", "title": "Forward Deployed Engineering - Architect", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "anaplan|senior ml engineer", "company": "Anaplan", "title": "Senior ML Engineer", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "wayve|software engineer ai libraries", "company": "Wayve", "title": "Software Engineer, AI Libraries", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "shown", "key": "trainline|data analyst", "company": "Trainline", "title": "Data Analyst", "times_shown": 1}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "openai|forward deployed engineer paris", "company": "OpenAI", "title": "Forward Deployed Engineer - Paris"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "openai|forward deployed engineer zurich", "company": "OpenAI", "title": "Forward Deployed Engineer - Zurich"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "openai|forward deployed engineer munich", "company": "OpenAI", "title": "Forward Deployed Engineer - Munich"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "databricks|senior forward deployed engineer", "company": "Databricks", "title": "Senior Forward Deployed Engineer (Technical Data Architect)"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "databricks|forward deployed engineering architect", "company": "Databricks", "title": "Forward Deployed Engineering - Architect"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "anaplan|senior ml engineer", "company": "Anaplan", "title": "Senior ML Engineer"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "wayve|software engineer ai libraries", "company": "Wayve", "title": "Software Engineer, AI Libraries"}
+{"ts": "2026-10-29T16:57:30+00:00", "event": "skipped", "key": "trainline|data analyst", "company": "Trainline", "title": "Data Analyst"}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "shown", "key": "openai|forward deployed engineer uae", "company": "OpenAI", "title": "Forward Deployed Engineer - UAE", "times_shown": 1}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "shown", "key": "openai|forward deployed engineer seattle", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - Seattle", "times_shown": 1}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "shown", "key": "openai|forward deployed engineer sf", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - SF", "times_shown": 1}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "shown", "key": "openai|machine learning engineer core experimentation", "company": "OpenAI", "title": "Machine Learning Engineer, Core Experimentation", "times_shown": 1}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "shown", "key": "deliveroo|senior machine learning engineer growth personalisation", "company": "Deliveroo", "title": "Senior Machine Learning Engineer - Growth & Personalisation", "times_shown": 1}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "skipped", "key": "openai|forward deployed engineer uae", "company": "OpenAI", "title": "Forward Deployed Engineer - UAE"}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "skipped", "key": "openai|forward deployed engineer seattle", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - Seattle"}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "skipped", "key": "openai|forward deployed engineer sf", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - SF"}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "skipped", "key": "openai|machine learning engineer core experimentation", "company": "OpenAI", "title": "Machine Learning Engineer, Core Experimentation"}
+{"ts": "2026-10-29T16:58:37+00:00", "event": "skipped", "key": "deliveroo|senior machine learning engineer growth personalisation", "company": "Deliveroo", "title": "Senior Machine Learning Engineer - Growth & Personalisation"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "spotify|data scientist business analytics", "company": "Spotify", "title": "Data Scientist - Business Analytics", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "spotify|machine learning engineer subscriptions", "company": "Spotify", "title": "Machine Learning Engineer - Subscriptions", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "databricks|forward deployed engineer", "company": "Databricks", "title": "Forward Deployed Engineer", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "trainline|senior mlops engineer", "company": "Trainline", "title": "Senior MLOps Engineer", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "openai|partner applied ai engineer latam", "company": "OpenAI", "title": "Partner Applied AI Engineer - LATAM", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "shown", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives", "times_shown": 1}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "spotify|data scientist business analytics", "company": "Spotify", "title": "Data Scientist - Business Analytics"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "spotify|machine learning engineer subscriptions", "company": "Spotify", "title": "Machine Learning Engineer - Subscriptions"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "databricks|forward deployed engineer", "company": "Databricks", "title": "Forward Deployed Engineer"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "trainline|senior mlops engineer", "company": "Trainline", "title": "Senior MLOps Engineer"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "openai|partner applied ai engineer latam", "company": "OpenAI", "title": "Partner Applied AI Engineer - LATAM"}
+{"ts": "2026-10-29T18:11:44+00:00", "event": "skipped", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives"}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "shown", "key": "openai|forward deployed engineer ai infra sf", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - AI Infra - SF", "times_shown": 1}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "shown", "key": "openai|machine learning engineer growth", "company": "OpenAI", "title": "Machine Learning Engineer, Growth", "times_shown": 1}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "shown", "key": "kpler|senior data engineer financial flows", "company": "Kpler", "title": "Senior Data Engineer - Financial Flows", "times_shown": 1}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "shown", "key": "openai|forward deployed engineer financial services nyc", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE), Financial Services- NYC", "times_shown": 1}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "shown", "key": "openai|forward deployed engineer madrid", "company": "OpenAI", "title": "Forward Deployed Engineer - Madrid (Spanish-speaking)", "times_shown": 1}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "skipped", "key": "openai|forward deployed engineer ai infra sf", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE) - AI Infra - SF"}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "skipped", "key": "openai|machine learning engineer growth", "company": "OpenAI", "title": "Machine Learning Engineer, Growth"}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "skipped", "key": "kpler|senior data engineer financial flows", "company": "Kpler", "title": "Senior Data Engineer - Financial Flows"}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "skipped", "key": "openai|forward deployed engineer financial services nyc", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE), Financial Services- NYC"}
+{"ts": "2026-10-29T18:14:00+00:00", "event": "skipped", "key": "openai|forward deployed engineer madrid", "company": "OpenAI", "title": "Forward Deployed Engineer - Madrid (Spanish-speaking)"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "rightship|ai engineer", "company": "RightShip", "title": "AI Engineer", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "juro|ai engineer", "company": "Juro", "title": "AI Engineer", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "ekimetrics|partner data science marketing effectiveness london", "company": "Ekimetrics", "title": "Partner - Data Science & Marketing Effectiveness, London", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "wayve|machine learning engineer synthetic data", "company": "Wayve", "title": "Machine Learning Engineer, Synthetic Data", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "isembard|computer vision ml engineer", "company": "Isembard", "title": "Computer Vision / ML Engineer", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "flohealth|senior machine learning engineer", "company": "Flo Health Inc", "title": "Senior Machine Learning Engineer", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "shown", "key": "hawk|data scientist", "company": "Hawk", "title": "Data Scientist", "times_shown": 1}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "rightship|ai engineer", "company": "RightShip", "title": "AI Engineer"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "juro|ai engineer", "company": "Juro", "title": "AI Engineer"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "ekimetrics|partner data science marketing effectiveness london", "company": "Ekimetrics", "title": "Partner - Data Science & Marketing Effectiveness, London"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "wayve|machine learning engineer synthetic data", "company": "Wayve", "title": "Machine Learning Engineer, Synthetic Data"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "isembard|computer vision ml engineer", "company": "Isembard", "title": "Computer Vision / ML Engineer"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "flohealth|senior machine learning engineer", "company": "Flo Health Inc", "title": "Senior Machine Learning Engineer"}
+{"ts": "2026-10-31T16:43:19+00:00", "event": "approved", "key": "hawk|data scientist", "company": "Hawk", "title": "Data Scientist"}
+{"ts": "2026-11-02T18:52:00+00:00", "event": "shown", "key": "marshmallow|data scientist car finance", "company": "Marshmallow", "title": "Data Scientist (Credit) - Car Finance", "times_shown": 1}
+{"ts": "2026-11-02T18:52:00+00:00", "event": "shown", "key": "wpp|forward deployed engineer", "company": "WPP", "title": "Forward Deployed Engineer (Agentic & Eco-System)", "times_shown": 1}
+{"ts": "2026-11-02T18:52:00+00:00", "event": "approved", "key": "marshmallow|data scientist car finance", "company": "Marshmallow", "title": "Data Scientist (Credit) - Car Finance"}
+{"ts": "2026-11-02T18:52:00+00:00", "event": "approved", "key": "wpp|forward deployed engineer", "company": "WPP", "title": "Forward Deployed Engineer (Agentic & Eco-System)"}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "shown", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives", "times_shown": 4}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "shown", "key": "deliveroo|senior data scientist", "company": "Deliveroo", "title": "Senior Data Scientist (Economist)", "times_shown": 2}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "shown", "key": "faculty|senior data scientist", "company": "Faculty", "title": "Senior Data Scientist", "times_shown": 1}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "shown", "key": "databricks|senior forward deployed engineer", "company": "Databricks", "title": "Senior Forward Deployed Engineer", "times_shown": 2}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "approved", "key": "openai|applied ai engineer digital natives", "company": "OpenAI", "title": "Applied AI Engineer, Digital Natives"}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "approved", "key": "deliveroo|senior data scientist", "company": "Deliveroo", "title": "Senior Data Scientist (Economist)"}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "approved", "key": "faculty|senior data scientist", "company": "Faculty", "title": "Senior Data Scientist"}
+{"ts": "2026-11-03T12:19:01+00:00", "event": "approved", "key": "databricks|senior forward deployed engineer", "company": "Databricks", "title": "Senior Forward Deployed Engineer"}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "shown", "key": "kong|forward deployed engineer ai gateway emea", "company": "Kong", "title": "Forward Deployed Engineer AI Gateway EMEA", "times_shown": 1}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "shown", "key": "edited|junior data scientist", "company": "EDITED", "title": "Junior Data Scientist", "times_shown": 1}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "shown", "key": "databricks|ai forward deployed engineer", "company": "Databricks", "title": "AI Forward Deployed Engineer", "times_shown": 1}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "shown", "key": "writer|ai engineer", "company": "WRITER", "title": "AI engineer (UK)", "times_shown": 1}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "approved", "key": "kong|forward deployed engineer ai gateway emea", "company": "Kong", "title": "Forward Deployed Engineer AI Gateway EMEA"}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "approved", "key": "edited|junior data scientist", "company": "EDITED", "title": "Junior Data Scientist"}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "approved", "key": "databricks|ai forward deployed engineer", "company": "Databricks", "title": "AI Forward Deployed Engineer"}
+{"ts": "2026-11-05T11:58:26+00:00", "event": "approved", "key": "writer|ai engineer", "company": "WRITER", "title": "AI engineer (UK)"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "nortonrosefulbright|ai engineer", "company": "Norton Rose Fulbright LLP", "title": "AI Engineer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "siriusanalysis|data scientist", "company": "Sirius Analysis", "title": "Data Scientist", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "chambersandpartners|chief ai engineer", "company": "Chambers and Partners", "title": "Chief AI Engineer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "itolrecruit|data science trainee", "company": "ITOL Recruit", "title": "Data Science Trainee", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "shown", "key": "itolrecruit|junior ai developer", "company": "ITOL Recruit", "title": "Junior AI Developer", "times_shown": 1}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "nortonrosefulbright|ai engineer", "company": "Norton Rose Fulbright LLP", "title": "AI Engineer"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "siriusanalysis|data scientist", "company": "Sirius Analysis", "title": "Data Scientist"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "chambersandpartners|chief ai engineer", "company": "Chambers and Partners", "title": "Chief AI Engineer"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "itolrecruit|data science trainee", "company": "ITOL Recruit", "title": "Data Science Trainee"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "itolrecruit|trainee ai engineer", "company": "ITOL Recruit", "title": "Trainee AI Engineer"}
+{"ts": "2026-11-05T21:00:10+00:00", "event": "approved", "key": "itolrecruit|junior ai developer", "company": "ITOL Recruit", "title": "Junior AI Developer"}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "iwoca|data scientist credit risk modelling", "company": "Iwoca", "title": "Data Scientist - Credit Risk Modelling", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "nexcadeai|ai engineer", "company": "Nexcade AI", "title": "AI Engineer", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "scaleai|senior applied ai engineer", "company": "Scale AI", "title": "Senior Applied AI Engineer", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "cambridgeconsultants|graduate ai engineer", "company": "Cambridge Consultants", "title": "Graduate AI Engineer (2027 start)", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "cambridgeconsultants|graduate human centric ai engineer", "company": "Cambridge Consultants", "title": "Graduate Human-Centric AI Engineer (2027 start)", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "payuk|ai engineer", "company": "Pay.UK", "title": "AI Engineer", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "mandg|data scientist", "company": "M&G", "title": "Data Scientist", "times_shown": 1}
+{"ts": "2026-11-07T14:15:03+00:00", "event": "shown", "key": "blenheimchalcot|data scientist", "company": "Blenheim Chalcot", "title": "Data Scientist", "times_shown": 1}
+{"ts": "2026-11-07T15:23:19+00:00", "event": "approved", "key": "lseg|core ai engineer", "company": "Lseg", "title": "Core AI Engineer", "by": "agent"}
+{"ts": "2026-11-07T15:23:19+00:00", "event": "approved", "key": "iwoca|data scientist credit risk modelling", "company": "Iwoca", "title": "Data Scientist - Credit Risk Modelling", "by": "agent"}
+{"ts": "2026-11-07T15:23:19+00:00", "event": "approved", "key": "nexcadeai|ai engineer", "company": "Nexcade AI", "title": "AI Engineer", "by": "agent"}
+{"ts": "2026-11-07T15:23:19+00:00", "event": "approved", "key": "scaleai|senior applied ai engineer", "company": "Scale AI", "title": "Senior Applied AI Engineer", "by": "agent"}
+{"ts": "2026-11-07T15:23:19+00:00", "event": "approved", "key": "mandg|data scientist", "company": "M&G", "title": "Data Scientist", "by": "agent"}
+{"ts": "2026-11-18T07:25:31+00:00", "event": "approved", "key": "virtru|forward deployed engineer security clearance required", "company": "Virtru", "title": "Forward Deployed Engineer - Security Clearance Required", "by": "agent"}
+{"ts": "2026-11-18T07:25:31+00:00", "event": "approved", "key": "codat|senior ai engineer", "company": "Codat", "title": "Senior AI Engineer", "by": "agent"}
+{"ts": "2026-11-18T07:25:31+00:00", "event": "approved", "key": "healthhero|senior ai engineer", "company": "HealthHero", "title": "Senior AI Engineer", "by": "agent"}
+{"ts": "2026-11-18T07:25:31+00:00", "event": "approved", "key": "capgemini|forward deployed engineer ai managing consultant ai and digital factory", "company": "Capgemini", "title": "Forward Deployed Engineer AI-Managing Consultant-AI and Digital Factory", "by": "agent"}
+{"ts": "2026-11-18T07:25:31+00:00", "event": "approved", "key": "efinancialcareers|software engineer ai automation london global prime brokerage financing platform", "company": "eFinancialCareers", "title": "Software Engineer - AI Automation London- Global Prime Brokerage & Financing Platform", "by": "agent"}
+{"ts": "2026-11-18T08:56:08+00:00", "event": "approved", "key": "anthropic|applied ai architect partnerships", "company": "Anthropic", "title": "[London] Applied AI Architect, Partnerships", "by": "user promote"}
+{"ts": "2026-11-18T08:56:17+00:00", "event": "approved", "key": "lovable|data scientist growth", "company": "Lovable", "title": "Data Scientist, Growth", "by": "user promote"}
+{"ts": "2026-11-19T11:42:48+00:00", "event": "approved", "key": "gitlab|backend engineer ai engineering ai catalog", "company": "GitLab", "title": "Backend Engineer (Ruby), AI Engineering: AI Catalog", "by": "agent"}
+{"ts": "2026-11-19T11:42:48+00:00", "event": "approved", "key": "ultralytics|llm engineer", "company": "Ultralytics", "title": "LLM Engineer", "by": "agent"}
+{"ts": "2026-11-19T11:42:48+00:00", "event": "approved", "key": "gresearch|applied ai engineer", "company": "G-Research", "title": "Applied AI Engineer", "by": "agent"}
+{"ts": "2026-11-19T11:42:48+00:00", "event": "approved", "key": "lseg|data scientist", "company": "Lseg", "title": "Data Scientist", "by": "agent"}
+{"ts": "2026-11-19T11:42:48+00:00", "event": "approved", "key": "shi|data scientist", "company": "Shi", "title": "Data Scientist", "by": "agent"}
+{"ts": "2026-11-21T12:25:30+00:00", "event": "skipped", "key": "gitlab|backend engineer ai engineering ai catalog", "company": "GitLab", "title": "Backend Engineer (Ruby), AI Engineering: AI Catalog", "by": "user veto"}

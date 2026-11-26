@@ -1,0 +1,1423 @@
+{
+  "job_id": "manual:69406a1aef2d",
+  "company": "Anthropic",
+  "title": "Forward Deployed Engineer",
+  "family": "forward_deployed_engineer",
+  "tier": 2,
+  "headline": "Forward Deployed Engineer",
+  "keywords": [
+    {
+      "term": "LLMs",
+      "weight": 2.0,
+      "required": true,
+      "alts": [
+        "llm"
+      ]
+    },
+    {
+      "term": "advanced prompt engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "agent development",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Claude models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "deployment at scale",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Java",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "MCP servers",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "sub-agents",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "TypeScript",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "research",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "production",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "communication",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "agents",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "collaboration",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "evaluation",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "mcp",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "prompt engineering",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "stakeholders",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "financial services",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "healthcare",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "LLM capabilities",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    },
+    {
+      "term": "technical founders",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "Anthropic builds reliable, interpretable, and steerable AI systems to make AI safe and beneficial for users and society.",
+  "team": "Applied AI",
+  "ceiling": 0.6266666666666666,
+  "genuine_gaps": [
+    "advanced prompt engineering",
+    "agent development",
+    "Claude models",
+    "Java",
+    "sub-agents",
+    "LLM capabilities",
+    "technical founders"
+  ],
+  "possible_evidence": {
+    "deployment at scale": [
+      {
+        "via": "model deployment",
+        "where": [
+          "bullet fl1"
+        ]
+      },
+      {
+        "via": "model serving",
+        "where": [
+          "bullet p_bt1"
+        ]
+      },
+      {
+        "via": "mlops",
+        "where": [
+          "bullet az3",
+          "bullet az12"
+        ]
+      },
+      {
+        "via": "ci/cd",
+        "where": [
+          "profile facts"
+        ]
+      }
+    ]
+  },
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.52,
+      "score_stemmed": 0.52,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9624417449245997,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.03
+      },
+      "shrinks": 2,
+      "reverted": [],
+      "wording": {
+        "terms": [],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 3,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it"
+      ],
+      "wording_misses": [],
+      "misses": [
+        "advanced prompt engineering",
+        "agent development",
+        "Claude models",
+        "deployment at scale",
+        "Java",
+        "sub-agents",
+        "communication",
+        "collaboration",
+        "healthcare",
+        "LLM capabilities",
+        "technical founders"
+      ],
+      "rephrase": {
+        "eligible": 0,
+        "asked": 0,
+        "cached": 0,
+        "calls": 0,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "advanced prompt engineering",
+          "agent development",
+          "Claude models",
+          "deployment at scale",
+          "Java",
+          "sub-agents",
+          "communication",
+          "collaboration",
+          "financial services",
+          "healthcare",
+          "LLM capabilities",
+          "technical founders"
+        ],
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az10",
+              "az12",
+              "az4",
+              "az6"
+            ],
+            "dc180": [
+              "dc4",
+              "dc8",
+              "dc1"
+            ],
+            "freelance": [
+              "fl1",
+              "fl2",
+              "fl3"
+            ],
+            "avasoft": [
+              "av8",
+              "av10",
+              "av5"
+            ]
+          },
+          "projects": [
+            "churn",
+            "gtaigraph",
+            "mcpsearch"
+          ],
+          "project_bullets": {
+            "churn": [
+              "p_ch1"
+            ],
+            "gtaigraph": [
+              "p_gg5",
+              "p_gg3"
+            ],
+            "mcpsearch": [
+              "p_ms1"
+            ]
+          }
+        },
+        "rephrase": {},
+        "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking. Over a year of hands-on experience building and deploying machine learning and LLM systems. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)."
+      },
+      "selection": {
+        "az": [
+          "az4",
+          "az6",
+          "az10",
+          "az12"
+        ],
+        "dc180": [
+          "dc1",
+          "dc4",
+          "dc8"
+        ],
+        "freelance": [
+          "fl1",
+          "fl2",
+          "fl3"
+        ],
+        "avasoft": [
+          "av5",
+          "av8",
+          "av10"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ]
+      },
+      "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking. Over a year of hands-on experience building and deploying machine learning and LLM systems. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).",
+      "rephrase_coverage": {
+        "eligible": 6,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "advanced prompt engineering",
+          "agent development",
+          "Claude models",
+          "deployment at scale",
+          "Java",
+          "sub-agents",
+          "communication",
+          "collaboration",
+          "financial services",
+          "healthcare",
+          "LLM capabilities",
+          "technical founders"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/Anthropic_Forward_Deployed_Engineer_69406a1aef2d",
+  "analysis_warnings": [
+    "keywords: frozen (2026-10-24), extract_keywords not called",
+    "extract_keywords: dropped keyword 'agent skills' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'evaluation frameworks' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'enterprise IT systems' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'AI deployment patterns' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'customer workflows' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'AI product development stacks' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'implementation patterns' (not verbatim, too long, generic or a degree)",
+    "skills: the 'ai_engineer' family's skill_lines do not mention pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, TensorFlow, which the fact bank lists (the lines are used as written; add them to the lines if you want them on the CV)",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'Forward Deployed Engineer' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'TypeScript' (2)))"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Agentic AI & LLM Applications",
+      "Software Engineering & Integrations",
+      "Cloud & Deployment"
+    ],
+    "dropped_groups": [],
+    "family": "ai_engineer"
+  },
+  "achievements": [
+    "lloyds"
+  ],
+  "profile": {
+    "facts": [
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform",
+      "Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking",
+      "Over a year of hands-on experience building and deploying machine learning and LLM systems",
+      "Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN)"
+    ],
+    "retried": false,
+    "fallback": false,
+    "words": 118,
+    "shortfall": ""
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_agent_harness' with 1: 'TypeScript' (2))"
+  ],
+  "hook_family_headline": "Forward Deployed Engineer",
+  "hook_family_profile": true,
+  "family_line": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+  "ats": {
+    "strict": 52.0,
+    "ceiling": 62.666666666666664,
+    "combined": 82.66666666666667,
+    "letter": 76.0,
+    "gate": "stretch",
+    "hits": [
+      "LLMs",
+      "MCP servers",
+      "Python",
+      "TypeScript",
+      "research",
+      "production",
+      "agents",
+      "evaluation",
+      "mcp",
+      "prompt engineering",
+      "stakeholders",
+      "financial services"
+    ],
+    "misses": [
+      "advanced prompt engineering",
+      "agent development",
+      "Claude models",
+      "deployment at scale",
+      "Java",
+      "sub-agents",
+      "communication",
+      "collaboration",
+      "healthcare",
+      "LLM capabilities",
+      "technical founders"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "band": {
+    "outcome": "review",
+    "strict": 52.0,
+    "ceiling": 62.666666666666664,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": ""
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "LLMs",
+    "MCP servers",
+    "Python",
+    "TypeScript",
+    "research",
+    "production",
+    "communication",
+    "agents",
+    "collaboration",
+    "evaluation",
+    "mcp",
+    "prompt engineering",
+    "stakeholders",
+    "financial services",
+    "healthcare"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.52,
+    "score_stemmed": 0.52,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9624417449245997,
+    "hits": [
+      "LLMs",
+      "MCP servers",
+      "Python",
+      "TypeScript",
+      "research",
+      "production",
+      "agents",
+      "evaluation",
+      "mcp",
+      "prompt engineering",
+      "stakeholders",
+      "financial services"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "advanced prompt engineering",
+      "agent development",
+      "Claude models",
+      "deployment at scale",
+      "Java",
+      "sub-agents",
+      "communication",
+      "collaboration",
+      "healthcare",
+      "LLM capabilities",
+      "technical founders"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9624417449245997,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.03
+  },
+  "fill_shortfall": "",
+  "needs_result": [
+    {
+      "id": "az6",
+      "entry": "AstraZeneca",
+      "text": "Integrated the agent into a React front end with real-time gene alias enrichment."
+    },
+    {
+      "id": "dc1",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+    },
+    {
+      "id": "dc4",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Translated ambiguous business requirements into a production-ready technical blueprint and owned the solution within a cross-functional consulting team, from architecture design through stakeholder presentation."
+    },
+    {
+      "id": "dc8",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+    },
+    {
+      "id": "fl1",
+      "entry": "Freelance",
+      "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+    },
+    {
+      "id": "fl2",
+      "entry": "Freelance",
+      "text": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph."
+    },
+    {
+      "id": "fl3",
+      "entry": "Freelance",
+      "text": "Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+    },
+    {
+      "id": "av8",
+      "entry": "Avasoft",
+      "text": "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO."
+    },
+    {
+      "id": "av10",
+      "entry": "Avasoft",
+      "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn \u2014 propensity model",
+      "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+    },
+    {
+      "id": "p_ms1",
+      "entry": "mcp_searchagent",
+      "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 3,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 9,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "sub-agents"
+    ],
+    "results_bold": 3,
+    "results_unmatched": [],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "dc1",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 10.0,
+        "keywords": 10.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+      },
+      {
+        "id": "dc7",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 8.5,
+        "keywords": 8.5,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+      },
+      {
+        "id": "dc8",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 8.5,
+        "keywords": 8.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+      },
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 7.67,
+        "keywords": 7.0,
+        "domain": 0.67,
+        "chosen": false,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "p_ms1",
+        "entry": "mcp_searchagent",
+        "score": 7.5,
+        "keywords": 7.5,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+      },
+      {
+        "id": "az10",
+        "entry": "AstraZeneca",
+        "score": 7.17,
+        "keywords": 6.5,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable."
+      },
+      {
+        "id": "dc2",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 7.0,
+        "keywords": 7.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live day-to-day use; engagement received a 5-star commendation from senior leadership."
+      },
+      {
+        "id": "dc6",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 6.5,
+        "keywords": 6.5,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement."
+      },
+      {
+        "id": "az9",
+        "entry": "AstraZeneca",
+        "score": 6.0,
+        "keywords": 6.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Wrote the dissertation's AI-agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test-case outcomes."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 5.5,
+        "keywords": 1.5,
+        "domain": 4.0,
+        "chosen": true,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      }
+    ],
+    "projects": [
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 7.5,
+        "sum": 7.5,
+        "chosen": true
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 5.5,
+        "sum": 5.5,
+        "chosen": true
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 4.0,
+        "sum": 8.0,
+        "chosen": false
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 3.5,
+        "sum": 7.0,
+        "chosen": false
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 3.5,
+        "sum": 5.5,
+        "chosen": false
+      },
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "score": 3.0,
+        "sum": 3.0,
+        "chosen": false
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 2.17,
+        "sum": 7.35,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 1.5,
+        "sum": 3.0,
+        "chosen": false
+      },
+      {
+        "id": "cnn",
+        "name": "Image Classification \u2014 CNN and Transfer Learning",
+        "score": 1.5,
+        "sum": 1.5,
+        "chosen": false
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 6,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 0,
+    "asked": 0,
+    "cached": 0,
+    "calls": 0,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "advanced prompt engineering",
+      "agent development",
+      "Claude models",
+      "deployment at scale",
+      "Java",
+      "sub-agents",
+      "communication",
+      "collaboration",
+      "financial services",
+      "healthcare",
+      "LLM capabilities",
+      "technical founders"
+    ],
+    "proposed": 0,
+    "accepted": 0,
+    "blocked": 0,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "advanced prompt engineering",
+      "agent development",
+      "Claude models",
+      "deployment at scale",
+      "Java",
+      "sub-agents",
+      "communication",
+      "collaboration",
+      "financial services",
+      "healthcare",
+      "LLM capabilities",
+      "technical founders"
+    ]
+  },
+  "letter": {
+    "paragraphs": [
+      "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo, the kind of work your ad describes: \"Production experience with LLMs including advanced prompt engineering, agent development, evaluation frameworks, and deployment at scale\". At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+      "Anthropic's mission is to create reliable, interpretable, and steerable AI systems, and you want AI to be safe and beneficial for users and for society as a whole. As a member of the Applied AI team you will be a Forward Deployed Engineer who embeds directly with strategic customers to drive transformational AI adoption. You will work within customer systems to build production applications with Claude models, ensuring those products meet customer requirements, and you will deliver technical artifacts such as MCP servers, sub-agents, and agent skills for production workflows. You will provide white-glove deployment support in enterprise environments and travel to customer sites to build solutions in person, acting as a champion for Anthropic's mission in the field.",
+      "I built an agentic system using Python and PostgreSQL, employing continuous integration and collaborating closely with stakeholders. I also delivered MCP services that combined search, GraphQL and open-weight models on a PostgreSQL back-end, again using continuous integration. Both initiatives involved LLMs, advanced prompt engineering and agent development, and produced technical artifacts ready for deployment at scale, directly addressing the LLMs requirement.",
+      "I created a data pipeline in Python, containerised with Docker and deployed on AWS Lambda with appropriate IAM roles, integrating fourteen source datasets into a unified service. I also built FastAPI applications that incorporated scikit-learn and Keras models, packaging them with Docker for consistent production deployment. These projects demonstrate deep Python expertise, deployment at scale and clear communication with technical and non-technical stakeholders, satisfying the Python requirement.",
+      "Could we take 20 minutes to talk about LLMs and MCP servers?"
+    ],
+    "problems": [],
+    "score": 0.76,
+    "pages": 1,
+    "words": 358,
+    "status": "ok",
+    "mode": "company",
+    "notes": [
+      "cover_letter: draft 1 rejected (links 'have delivered data pipelines' to 'python', but no one bullet says both (the object is in av2, av9, the tool in az12, dc1, dc6): 'I have delivered data pipelines using Python, Docker and AWS'); redrafting (2 of 3)",
+      "cover_letter: draft 2 rejected (P3: 'LLM-driven' (name) is in neither the evidence nor the job description: 'A engagement involved designing a stakeholder-focused agenti'; P4: 'TensorFlow' (name) is in neither the evidence nor the j); redrafting (3 of 3)"
+    ],
+    "retry": {
+      "count": 2,
+      "rejected_words": [],
+      "first_problems": [
+        "links 'have delivered data pipelines' to 'python', but no one bullet says both (the object is in av2, av9, the tool in az12, dc1, dc6): 'I have delivered data pipelines using Python, Docker and AWS'"
+      ],
+      "failures": [
+        {
+          "attempt": 1,
+          "problems": [
+            "links 'have delivered data pipelines' to 'python', but no one bullet says both (the object is in av2, av9, the tool in az12, dc1, dc6): 'I have delivered data pipelines using Python, Docker and AWS'"
+          ]
+        },
+        {
+          "attempt": 2,
+          "problems": [
+            "P3: 'LLM-driven' (name) is in neither the evidence nor the job description: 'A engagement involved designing a stakeholder-focused agenti'",
+            "P4: 'TensorFlow' (name) is in neither the evidence nor the job description: 'In addition I implemented an evaluation pipeline that used P'",
+            "vague filler 'leverage' is not in the evidence",
+            "'LLM-driven' (a name) is not in the ad or the fact bank: 'A engagement involved designing a stakeholder-focused agenti'",
+            "links 'agentic solution in python' to 'postgresql', but no one bullet says both (the object is in dc4, the tool in dc1, dc3, dc6): 'I built an agentic solution in Python with PostgreSQL, emplo'",
+            "links 'to run batch inference' to 'tensorflow', but no one bullet says both (the object is in p_af3, the tool in fl1, p_bt1): 'In addition I implemented an evaluation pipeline that used P'",
+            "links 'batch inference on tensorflow' to 'python', but no one bullet says both (the object is in p_af3, the tool in az12, dc1, dc6): 'In addition I implemented an evaluation pipeline that used P'"
+          ]
+        }
+      ],
+      "removed": [],
+      "outcome": "ok after redraft",
+      "feedback": "Please add some more hooks apart from the role name, add one more project (always sticks with the 3 projects for every CV)"
+    },
+    "evidence": [
+      {
+        "id": "dc1",
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+      },
+      {
+        "id": "p_ms1",
+        "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+      },
+      {
+        "id": "az12",
+        "text": "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+      },
+      {
+        "id": "fl1",
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      }
+    ],
+    "p2_sources": [
+      {
+        "claim": "Anthropic's mission is to create reliable, interpretable, and steerable AI systems, and you want AI to be safe and beneficial for users and for society as a whole.",
+        "ad": [
+          "Anthropic\u2019s mission is to create reliable, interpretable, and steerable AI systems.",
+          "We want AI to be safe and beneficial for our users and for society as a whole."
+        ]
+      },
+      {
+        "claim": "As a member of the Applied AI team you will be a Forward Deployed Engineer who embeds directly with strategic customers to drive transformational AI adoption.",
+        "ad": [
+          "As a member of the Applied AI team at Anthropic, you will be a Forward Deployed Engineer (FDE) who embeds directly with our most strategic customers to drive transformational AI adoption."
+        ]
+      },
+      {
+        "claim": "You will work within customer systems to build production applications with Claude models, ensuring those products meet customer requirements, and you will deliver technical artifacts such as MCP servers, sub-agents, and agent skills for production workflows.",
+        "ad": [
+          "Work within customer systems to build production applications with Claude models, ensuring that these products meet customer requirements.",
+          "Deliver technical artifacts for customers like MCP servers, sub-agents, and agent skills that will be used in production workflows."
+        ]
+      },
+      {
+        "claim": "You will provide white-glove deployment support in enterprise environments and travel to customer sites to build solutions in person, acting as a champion for Anthropic's mission in the field.",
+        "ad": [
+          "Provide white glove deployment support for Anthropic products in enterprise environments.",
+          "Travel frequently (25-50%) to customer sites to build in person with customers.",
+          "Be a champion for Anthropic\u2019s mission in the field."
+        ]
+      }
+    ],
+    "p2_used": [
+      "Anthropic\u2019s mission is to create reliable, interpretable, and steerable AI systems.",
+      "We want AI to be safe and beneficial for our users and for society as a whole.",
+      "As a member of the Applied AI team at Anthropic, you will be a Forward Deployed Engineer (FDE) who embeds directly with our most strategic customers to drive transformational AI adoption.",
+      "Work within customer systems to build production applications with Claude models, ensuring that these products meet customer requirements.",
+      "Deliver technical artifacts for customers like MCP servers, sub-agents, and agent skills that will be used in production workflows.",
+      "Provide white glove deployment support for Anthropic products in enterprise environments.",
+      "Be a champion for Anthropic\u2019s mission in the field."
+    ],
+    "requirements": [
+      [
+        "LLMs"
+      ],
+      [
+        "Python"
+      ]
+    ],
+    "accepted": [
+      300,
+      500
+    ],
+    "target_words": 400,
+    "hook_source": "family profile line",
+    "reuse": {
+      "score": 0.002,
+      "against": "Costa Coffee/Associate Data Science Analyst",
+      "redrafted": false
+    },
+    "cites": [
+      {
+        "para": "P2",
+        "sentence": "Anthropic's mission is to create reliable, interpretable, and steerable AI systems, and you want AI to be safe and beneficial for users and for society as a whole.",
+        "ids": []
+      },
+      {
+        "para": "P2",
+        "sentence": "As a member of the Applied AI team you will be a Forward Deployed Engineer who embeds directly with strategic customers to drive transformational AI adoption.",
+        "ids": []
+      },
+      {
+        "para": "P2",
+        "sentence": "You will work within customer systems to build production applications with Claude models, ensuring those products meet customer requirements, and you will deliver technical artifacts such as MCP servers, sub-agents, and agent skills for production workflows.",
+        "ids": []
+      },
+      {
+        "para": "P2",
+        "sentence": "You will provide white-glove deployment support in enterprise environments and travel to customer sites to build solutions in person, acting as a champion for Anthropic's mission in the field.",
+        "ids": []
+      },
+      {
+        "para": "P3",
+        "sentence": "I built an agentic system using Python and PostgreSQL, employing continuous integration and collaborating closely with stakeholders.",
+        "ids": [
+          "dc1",
+          "p_ms1"
+        ]
+      },
+      {
+        "para": "P3",
+        "sentence": "I also delivered MCP services that combined search, GraphQL and open-weight models on a PostgreSQL back-end, again using continuous integration.",
+        "ids": [
+          "dc1",
+          "p_ms1"
+        ]
+      },
+      {
+        "para": "P3",
+        "sentence": "Both initiatives involved LLMs, advanced prompt engineering and agent development, and produced technical artifacts ready for deployment at scale, directly addressing the LLMs requirement.",
+        "ids": [
+          "dc1",
+          "p_ms1"
+        ]
+      },
+      {
+        "para": "P4",
+        "sentence": "I created a data pipeline in Python, containerised with Docker and deployed on AWS Lambda with appropriate IAM roles, integrating fourteen source datasets into a unified service.",
+        "ids": [
+          "az12",
+          "fl1"
+        ]
+      },
+      {
+        "para": "P4",
+        "sentence": "I also built FastAPI applications that incorporated scikit-learn and Keras models, packaging them with Docker for consistent production deployment.",
+        "ids": [
+          "az12",
+          "fl1"
+        ]
+      },
+      {
+        "para": "P4",
+        "sentence": "These projects demonstrate deep Python expertise, deployment at scale and clear communication with technical and non-technical stakeholders, satisfying the Python requirement.",
+        "ids": [
+          "az12",
+          "fl1"
+        ]
+      }
+    ],
+    "opening": {
+      "fact": "bullet",
+      "hook_id": "",
+      "bullet_id": "dc1",
+      "number": "20",
+      "problem": "Production experience with LLMs including advanced prompt engineering, agent development, evaluation frameworks, and deployment at scale",
+      "source": "ad"
+    }
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 3983,
+        "prompt_tokens": 3040,
+        "completion_tokens": 1896,
+        "reasoning_tokens": 1529,
+        "total_tokens": 4936,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4865,
+        "prompt_tokens": 3675,
+        "completion_tokens": 1954,
+        "reasoning_tokens": 1585,
+        "total_tokens": 5629,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4752,
+        "prompt_tokens": 3561,
+        "completion_tokens": 446,
+        "reasoning_tokens": 121,
+        "total_tokens": 4007,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4646,
+        "prompt_tokens": 3489,
+        "completion_tokens": 526,
+        "reasoning_tokens": 204,
+        "total_tokens": 4015,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4652,
+        "prompt_tokens": 3496,
+        "completion_tokens": 2142,
+        "reasoning_tokens": 1760,
+        "total_tokens": 5638,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "max_tokens": 3000,
+        "est_input_tokens": 4919,
+        "prompt_tokens": 3724,
+        "completion_tokens": 665,
+        "reasoning_tokens": 342,
+        "total_tokens": 4389,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 20985,
+    "completion_tokens": 7629,
+    "reasoning_tokens": 5541,
+    "total_tokens": 28614,
+    "by_task": {
+      "cover_letter": {
+        "calls": 6,
+        "prompt_tokens": 20985,
+        "completion_tokens": 7629,
+        "reasoning_tokens": 5541,
+        "total_tokens": 28614,
+        "prompt_tokens_per_call": [
+          3040,
+          3675,
+          3561,
+          3489,
+          3496,
+          3724
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-120b": {
+        "calls": 6,
+        "prompt_tokens": 20985,
+        "completion_tokens": 7629,
+        "reasoning_tokens": 5541,
+        "total_tokens": 28614,
+        "tasks": [
+          "cover_letter"
+        ]
+      }
+    }
+  },
+  "cv_pdf": "data/outputs/Anthropic_Forward_Deployed_Engineer_69406a1aef2d/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": "data/outputs/Anthropic_Forward_Deployed_Engineer_69406a1aef2d/Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Forward Deployed Engineer",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily. Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform. Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking. Over a year of hands-on experience building and deploying machine learning and LLM systems. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).",
+    "skills": {
+      "Agentic AI & LLM Applications": "Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)",
+      "Software Engineering & Integrations": "TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root-cause analysis",
+      "Cloud & Deployment": "AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "indirect contract (MSc Dissertation)",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Wrote a three-tier test framework (tool-level, API/integration, live agent) of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation.",
+          "Integrated the agent into a React front end with real-time gene alias enrichment.",
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+          "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+        ],
+        "bullet_ids": [
+          "az4",
+          "az6",
+          "az10",
+          "az12"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo.",
+          "Translated ambiguous business requirements into a production-ready technical blueprint and owned the solution within a cross-functional consulting team, from architecture design through stakeholder presentation.",
+          "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+        ],
+        "bullet_ids": [
+          "dc1",
+          "dc4",
+          "dc8"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.",
+          "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.",
+          "Contributed to a team LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task."
+        ],
+        "bullet_ids": [
+          "fl1",
+          "fl2",
+          "fl3"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer (Jun 2023 \u2013 Sep 2024); Software Development Engineer Trainee (Jan 2023 \u2013 May 2023)",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.",
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "bullet_ids": [
+          "av5",
+          "av8",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "churn",
+        "display_name": "Banking Customer Churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "bullets": [
+          "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+        ],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "stack": "FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions",
+        "github": "https://github.com/Thiruvel-AP/mcp_searchagent",
+        "bullets": [
+          "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+        ],
+        "bullet_ids": [
+          "p_ms1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 April 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "av2": "10 reusable component templates",
+      "av9": "10 reusable component templates",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ll1": "3rd place; 200:1 class imbalance",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "achievements": [
+      {
+        "id": "lloyds",
+        "name": "Lloyd's Banking Group Datathon",
+        "award": "3rd place",
+        "bullet_id": "p_ll1",
+        "text": "Detected outliers in financial-services data under 200:1 class imbalance, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.",
+        "result": "200:1 class imbalance"
+      }
+    ],
+    "profile_head": "At 180 Degrees Consulting, led the architecture for a product-startup client's hierarchical agent workflows (PostgreSQL for persistent storage and retrieval across agent sessions), demoed it live (5-star rating from senior leadership) and contributed to the client's production TypeScript/Node.js MCP server (OpenAI-based query generation), now in live use. Uses Claude Code, Cursor and Codex daily.",
+    "linespread": 1.03,
+    "profile_min_words": 100
+  }
+}

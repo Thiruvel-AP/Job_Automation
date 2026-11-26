@@ -1,0 +1,39 @@
+Company: Bauer Media Outdoor
+Title: Lead AI Engineer
+URL: https://apply.workable.com/j/6A5F3FD1A3
+Source: workable
+Apply kind: employer_other
+Location: London, United Kingdom
+Posted: 2026-11-24
+Posted via: workable.published_on
+First seen: 2026-11-26
+Listed: yes
+
+🚀Our mission is to create tech that makes a difference, empowers teams, delights customers, and shapes the media world of tomorrow
+
+We're one of the leading media advertising companies with over 33,000 advertising sites across the UK and EU. As part of the global Bauer Media Group, we're committed to being both a platform for brands and a platform for good. From Netflix, Disney, The National Lottery, Heineken and many more, we advertise for some of the best brands which reach millions of people every day! We don't just sell space, we deliver impact for our clients and value for the communities we serve.
+📍London - 2 days a week | 💰 Salary for this role is dependant on your experience, you'll also receive bonus + benefits
+
+About The Role
+You'll join our AI Enablement team at Bauer Media Outdoor. This role is focused on designing, building and deploying AI enabled software solutions that are used across the organisation. You'll work closely with Product Leads to shape and deliver real solutions, including building custom AI Assistants within our internal generative AI platform, Bauer AI Chat. You'll be accountable for technical problem solving, system design, AI integration and delivering production quality code that creates clear business value. You can explore and experiment with new and emerging AI technology, building, shipping and owning practical, technical solutions to real business problems that are used in practice.
+
+What You'll Be Doing
+- Identifying opportunities where AI products could be built and released in various teams across Bauer.
+- Building and deploying greenfield products across the company used internally and externally.
+- You'll have alot of freedom here, the team will run with your ideas!
+- Communicate technical decisions clearly to non-technical stakeholders and ensure smooth user experiences.
+
+What You'll Bring To The Team
+- Strong backend expertise preferably in Python with solid understanding of istributed systems, APIs, microservices, and secure software design.
+- Proven experience integrating AI/LLM-based services into production; experience in ML or computer vision is beneficial but not essential.
+- Comfortable owning projects end to end, and bringing non technical stakeholders on the journey with you.
+
+What's In It For You
+🏖️ 25 paid holidays including bank holidays
+🏠 Company Pension Scheme paid up to 8%
+🩺 Healthcare Cash Plan
+🛡️ Life Insurance and group income protection scheme
+🚲 Cycle to work scheme
+🤱🏻 Enhanced Maternity & Paternity Cover
+
+We believe in fairness and as an equal opportunities employer we work hard to foster an inclusive environment, a place where you can truly be yourself and be treated fairly. We're interested in what you can do, not just what you've done. Even if you don't meet every requirement listed, we'd still love to hear from you! If you need this job description in another format or need any adjustments for your application/interview process, please let us know at careers@bauermediaoutdoor.com

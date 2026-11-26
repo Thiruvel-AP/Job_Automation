@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:44ed8ee2cdf1",
+ "company": "Sagacity",
+ "title": "Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage of required keywords is 5.0"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family the title matched: data_scientist"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none"
+  },
+  "culture": {
+   "score": 3.0,
+   "status": "partial",
+   "source": "Company size: unknown; posting age 93 days, appears stable"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Ad contains no recruiter requests or rating prompts"
+  }
+ },
+ "global_score": 3.8,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm Sagacity's employee count to better assess culture fit",
+  "Obtain salary range or compensation details before applying",
+  "Verify candidate has right‑to‑work status and willingness to travel across the UK"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.8,
+ "model_confidence": "Medium",
+ "jd_hash": "b5c0a500538d3a27",
+ "jd_words": 486,
+ "tokens": 1844,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-18T07:25:31+00:00"
+}

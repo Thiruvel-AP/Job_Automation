@@ -1,0 +1,170 @@
+Company: Wayve
+Title: Staff Machine Learning Engineer - Ops
+URL: https://jobs.ashbyhq.com/wayve/929b2cb4-a3da-4038-ab3c-62cf6f220adb
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-02T15:40:40.603+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+Before the detail, here's the challenge you'd help us solve.
+
+
+
+We build the embodied intelligence that moves real vehicles safely, and the ecosystem a billion machines will run on in the future. Very few people in AI can say this. Every role here, whatever the team, plugs into that.
+
+
+
+Here’s what this particular role covers.
+
+
+
+🛠️ About our Model Integration and Release Team 
+
+Our Model Integration and Release team owns the engineering release process for Wayve’s driving models. When research and engineering teams develop new architectures, features, or data changes, we validate that they meet our quality, safety, and performance standards before they reach customers. The team works across ML engineering, AI Platform, evaluation, and CI/CD to protect the model baseline while continually improving how reliably and efficiently we deliver models.⁠
+
+ 
+
+🧠 Your day-to-day
+
+ - Define and evolve Wayve’s model development and release processes, including branching strategies, release cadence, configuration management, and quality gates.
+   
+    
+
+ - Review proposed model, architecture, code, and metric changes to ensure the implementation matches its intended outcome.
+   
+    
+
+ - Assess evaluation results and determine whether releases meet Wayve’s quality and safety standards.
+   
+    
+
+ - Identify delivery bottlenecks and work across teams to address their root causes.
+   
+    
+
+ - Balance speed and rigour, making informed decisions about when to accelerate delivery and when a release needs further validation.
+
+ 
+
+🧩 What you’ll be working on
+
+ - Release pipelines covering the full ML training and delivery lifecycle.
+   
+    
+
+ - Automated checks and tooling that identify issues earlier in development.
+   
+    
+
+ - Reliable evaluation methods for assessing model changes and release readiness.
+   
+    
+
+ - CI/CD workflows that streamline model integration and delivery.
+   
+    
+
+ - Monitoring and observability that improve confidence in production releases.
+   
+    
+
+ - Engineering standards and operational processes that enable teams to deliver high-quality ML systems at scale.
+
+ 
+
+🙌 You should apply if
+
+ - You have significant software integration and release experience, including branching strategies, release cadences, and configuration management.
+   
+    
+
+ - You understand ML training, model lifecycles, and the infrastructure required to deliver models reliably.
+   
+    
+
+ - You can review someone else’s model, architecture, or code changes and challenge decisions that do not align with their stated intent.
+   
+    
+
+ - You have experience with ML tooling and technologies such as PyTorch, TensorRT, model registries, quantisation, or model deployment.
+   
+    
+
+ - You are comfortable working with CI/CD systems and GitHub Actions.
+   
+    
+
+ - You take ownership of ambiguous, cross-team problems and prefer fixing underlying processes rather than repeatedly patching individual releases.
+   
+    
+
+ - You combine a strong quality mindset with the judgement to recognise when speed genuinely matters.
+   
+    
+
+ - You communicate clearly and collaborate effectively across research, engineering, platform, evaluation, and product teams.
+
+ 
+
+🌱 Not ticking every box? That’s totally okay! If you’re passionate about autonomy and keen to learn, we encourage you to apply even if you don’t meet every requirement.
+
+ 
+
+More about Wayve:
+
+🚀 Wayve is building the leading AI platform for autonomous driving. We are pioneering an end to end AI approach that enables vehicles to learn directly from real world experience, developing the ability to adapt, generalise and improve at scale. Instead of relying on hand coded rules or pre mapped environments, our AI Driver learns to drive by understanding the world around it. The result is technology that navigates complex urban environments with intelligence, precision and natural flow, unlocking meaningful advances in both safety and efficiency. We believe autonomy represents a once in a generation transformation in how people and goods move, comparable to the shift from horses to cars, and from human driven vehicles to intelligent machines.
+
+Our ambition is to make autonomy universal. Wayve’s mapless and hardware agnostic AI platform integrates with global OEM partners, enabling continuous software evolution and unlocking advanced levels of automation from L2 plus through to L4 as our core AI model scales. In a race increasingly defined by intelligence and real world learning, Wayve is taking a distinct approach, building a generalisable driving intelligence that can power any vehicle, anywhere. By combining embodied AI with scalable deployment, we are creating technology that can be shaped to each OEM brand and driver experience, accelerating the transition to a safer, more intelligent future of mobility.
+
+ 
+
+How we work 💻- Locations & Flexible Working:
+
+Our main hubs are in London, Sunnyvale, Yokohama, Herzliya, Vancouver and Leonberg. We operate a hybrid working model that combines in-person collaboration in our dedicated office spaces with focused time working remotely. This gives our teams the connection and energy of working together, alongside the flexibility to do their best work in a way that fits their lives.
+
+ 
+
+🔍 The Interview Process:
+
+Our process is clear and respectful of your time:
+
+ - Initial call / recruiter screen: 30mins with Talent Partner.
+
+ - Competency Interviews: 30mins with Hiring Manager.
+
+ - Deep-dive technical interviews: ML Deep Dive, PyTorch Debugging and Tech Leadership; 3 hours total.
+
+ - Final interview: Mission & Values Alignment, 1 hour. 
+
+We’ll always explain the format and work around your availability.
+
+ 
+
+What’s in it for you (Location dependant):
+
+💰 Salaries benchmarked against the market annually
+📈 Meaningful equity, sharing in the ownership and long term success of Wayve
+✈️ Relocation support and visa sponsorship where applicable
+✅ Hybrid working, core hours and the chance to work hands on in vehicle workshops and labs
+📚 Learning and development budgets with support for training, conferences and growth
+🩺 Comprehensive benefits including health insurance, dental, enhanced maternity and paternity leave, retirement or pension where applicable, access to therapists, wellbeing partnerships, team socials and more.
+
+
+
+A quick, honest note before you apply.
+
+Wayve is not a mature, fully-structured place with the playbook already written. Much of how we work is still being written, and if you join, you’ll help write it. That suits people who want real ownership more than people who need a settled structure from day one.
+
+
+
+If that sounds like the kind of problem you want to spend your time on, we’d really like to hear from you.
+
+At Wayve we're committed to creating a diverse, fair and respectful culture that is inclusive of everyone based on their unique skills and perspectives, and regardless of sex, race, religion or belief, ethnic or national origin, disability, age, citizenship, marital, domestic or civil partnership status, sexual orientation, gender identity, veteran status, pregnancy or related condition (including breastfeeding) or any other basis as protected by applicable law.
+
+
+For more information visit Careers at Wayve. https://wayve.ai/careers/ To learn more about what drives us, visit Values at Wayve https://wayve.ai/careers/
+
+DISCLAIMER: We will not ask about marriage or pregnancy, care responsibilities or disabilities in any of our job adverts or interviews. However, we do look to capture information about care responsibilities, and disabilities among other diversity information as part of an optional DEI Monitoring form to help us identify areas of improvement in our hiring process and ensure that the process is inclusive and non-discriminatory.

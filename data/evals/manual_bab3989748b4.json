@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:bab3989748b4",
+ "company": "M&G",
+ "title": "Data Scientist",
+ "dimensions": {
+  "cv_match": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 4.1 and required keywords match"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family data_scientist aligns with ad"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay not stated, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Large, stable firm with flexible working and strong benefits"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No contradictory or suspicious text in ad"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm actual compensation range with recruiter",
+  "Verify candidate has Azure Databricks and Spark experience as required",
+  "Check sponsor registration status for UK work visa"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "3354e186ee237634",
+ "jd_words": 1012,
+ "tokens": 2430,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

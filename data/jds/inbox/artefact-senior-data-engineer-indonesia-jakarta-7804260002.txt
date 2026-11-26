@@ -1,0 +1,64 @@
+Company: Artefact
+Title: Senior Data Engineer (Indonesia, Jakarta)
+URL: https://job-boards.greenhouse.io/artefact/jobs/7804260002
+Source: greenhouse
+Apply kind: greenhouse
+Location: APAC
+Posted: 2025-01-08T21:48:12-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-31
+Listed: yes
+
+Who we are
+
+Artefact is a new generation of data service provider, specialising in data consulting and data-driven digital marketing, dedicated to transforming data into business impact across the entire value chain of organisations. We are proud to say we’re enjoying skyrocketing growth.
+
+Our broad range of data-driven solutions in data consulting and digital marketing are designed to meet our clients’ specific needs, always conceived with a business-centric approach and delivered with tangible results. Our data-driven services are built upon the deep AI expertise we’ve acquired with our 1000+ client base around the globe.
+
+We have over 1500 employees across 20 offices who are focused on accelerating digital transformation. Thanks to a unique mix of company assets: State of the art data technologies, lean AI agile methodologies for fast delivery, and cohesive teams of the finest business consultants, data analysts, data scientists, data engineers, and digital experts, all dedicated to bringing extra value to every client.
+
+Job Summary
+
+We are looking for a Senior Data Engineer to join our dynamic team. This role is ideal for someone with a deep understanding of data engineering and a proven track record of leading data projects in a fast-paced environment. 
+
+Key Responsibilities
+
+- Design, build, and maintain scalable and robust data pipelines using SQL, Python, Databricks, Snowflake, Azure Data Factory, AWS Glue, Apache Airflow and Pyspark.
+
+- Lead the integration of complex data systems and ensure consistency and accuracy of data across multiple platforms.
+
+- Implement continuous integration and continuous deployment (CI/CD) practices for data pipelines to improve efficiency and quality of data processing.
+
+- Work closely with data architects, analysts, and other stakeholders to understand business requirements and translate them into technical implementations.
+
+- Oversee and manage a team of data engineers, providing guidance and mentorship to ensure high-quality project deliverables.
+
+- Develop and enforce best practices in data governance, security, and compliance within the organisation.
+
+- Optimise data retrieval and develop dashboards and reports for business teams.
+
+- Continuously evaluate new technologies and tools to enhance the capabilities of the data engineering function.
+
+Qualifications
+
+- Bachelor's or Master’s degree in Computer Science, Engineering, or a related field.
+
+- 6+ years of industry experience in data engineering with a strong technical proficiency in SQL, Python, and big data technologies.
+
+- Certification in AWS and/or GCP
+
+- Demonstrated experience with Databricks and Snowflake.
+
+- Solid understanding of CI/CD principles and DevOps practices.
+
+- Proven leadership skills and experience managing data engineering teams.
+
+- Strong project management skills and the ability to lead multiple projects simultaneously.
+
+- Excellent problem-solving skills and the ability to work under tight deadlines.
+
+- Strong communication and interpersonal skills.
+
+- Experience in the leading large scale data engineering projects
+
+- Excellent understanding of data architecture including data mesh, data lake and data warehouse.

@@ -1,0 +1,108 @@
+Company: Artefact
+Title: Junior Data & Analytics Consultant
+URL: https://job-boards.greenhouse.io/artefact/jobs/8908627002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Stationsplein 32, 3511 ED Utrecht
+Country: Netherlands
+Status: listed_only
+Posted: 2026-10-22T08:22:37-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Junior Data & Analytics Consultant
+
+Who We Are
+
+Artefact is an applied AI company. We build systems that run in production, in our clients' own cloud, and keep running after we leave. We are present in 27 countries across all continents with a team of 2,500 employees, offering a comprehensive set of AI & data solutions built on deep data science and cutting-edge AI technologies.
+
+From strategy to operations, we partner with 1,000+ clients, including some of the world’s top 300 brands such as Samsung, L’Oréal and Sanofi. Our work spans the full data and AI value chain, including data strategy, data quality and governance, data platforms, AI solutions, and data-driven customer experiences.
+
+About the role
+
+As a Junior Data & Analytics Consultant, you’ll help our clients unlock the value of their data by ensuring it is collected, processed and activated effectively. You'll work directly with clients to understand their challenges, advise them on best practices and implement solutions that enable better decision-making, improve digital experiences and drive business growth.
+
+You'll collaborate closely with experts from across Artefact, including Media & Activation, Creation, Consultancy, Data Science and Technology, to deliver integrated data and AI solutions. Working on projects for leading international brands, you'll gain hands-on experience with a wide range of technologies and business challenges. As one of Google's leading partners, we also benefit from early access to the latest developments and insights across Google's products.
+
+In this role, you'll have the opportunity to work on a variety of projects, develop your skills and learn from experienced colleagues. You'll gain hands-on experience in areas such as:
+
+Analytics & Tracking Implementation
+
+- Implement and optimise digital analytics solutions across websites, apps and marketing platforms.
+
+- Work with tag management systems, data layers, server-side tracking and consent management platforms.
+
+- Conduct tracking audits, troubleshoot implementations and ensure accurate, reliable data collection.
+
+Data Collection & Activation
+
+- Help clients design and improve their data collection architecture across digital touchpoints.
+
+- Support integrations between analytics platforms, marketing technologies and data platforms.
+
+- Work with technologies such as Google Analytics 4, Google Tag Manager, Amplitude, AppsFlyer, Firebase and marketing APIs to enable data-driven decision-making and activation.
+
+Analytics Consulting & Data Quality
+
+- Work directly with clients to understand their measurement challenges and translate business requirements into technical solutions.
+
+- Support the development of measurement frameworks, tracking plans and analytics governance standards.
+
+- Analyse data quality, identify opportunities for improvement and help clients maximise the value of their analytics investments.
+
+- Collaborate with colleagues across Artefact to deliver integrated data and AI solutions.
+
+AI & Automation
+
+- Explore opportunities to leverage AI and automation to improve analytics implementations, data quality and operational efficiency.
+
+- Support the development of AI-powered solutions and automated workflows that help clients streamline processes and maximise the value of their data.
+
+- Experiment with emerging AI technologies, tools and agents to solve client challenges and improve the way we work.
+
+- Collaborate with Artefact's Data Science, Technology and AI teams to integrate AI-driven capabilities into client solutions.
+
+What we’re looking for
+
+- A Master’s degree in Marketing Analytics or Management, Business Administration, Information Science or a related field
+
+- Experience: Preferably 1–2 years in digital analytics, preferably at an agency or consultancy
+
+- Analytics tools: Hands-on experience with analytics platforms (e.g. Google Analytics, Amplitude or AppsFlyer) and tag management systems (e.g. Google Tag Manager).
+
+- Technical understanding: A good understanding of how websites, browsers and mobile apps work, including basic concepts such as HTML, JavaScript, cookies, APIs and network requests.
+
+- You don't need to be a developer, but you should be comfortable understanding and troubleshooting technical implementations.
+
+- Consent management: Understanding of consent principles, CMPs and Google Consent Mode; OneTrust experience is a strong advantage
+
+- Communication: Strong written and spoken English, with confidence in client-facing settings
+
+- Mindset: Analytical, detail-oriented and curious. You take ownership, learn new tools independently and aren’t afraid to challenge existing ways of working
+
+- A big plus: Interest in automation and AI, and familiarity with Python or R, AI tools or building AI agents
+
+Why you should join us:
+
+- Learning and development: we are a team of passionate Data & Analytics Consultant who are always ready to help each other. 
+
+- Across our wide variety of projects, you will come across opportunities to learn and collaborate with some of the best in the field.
+
+- Career growth opportunities: we’re committed to your professional development. With a focus on continuous learning and promotions, you’ll have ample opportunities to advance your career at Artefact.
+
+- Culture of celebration: we take pride in our work and celebrate successes together. Expect regular team events, fun activities, and a collaborative spirit that makes coming to work enjoyable.
+
+- Competitive rewards: we offer a comprehensive benefits package including a competitive salary, phone & travel reimbursements, remote work allowance and a Onefit membership discount.
+
+- Work-Life balance: maintain a healthy balance with a hybrid work environment that allows flexibility.
+
+- Fuel your day: Enjoy a delicious and healthy lunch provided daily with an extensive organic buffet.
+
+- Weekly unwind: relieve stress and promote relaxation with a weekly massage session from our office physiotherapist.
+
+- Centrally located: our modern office is conveniently situated next to Utrecht’s central station - perfect for easy commuting!
+
+Join us now and be part of the future: Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+
+Apply today!

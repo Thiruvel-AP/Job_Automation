@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:7888a7739cc0",
+ "company": "Cambridge Consultants",
+ "title": "Graduate Human-Centric AI Engineer (2027 start)",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage of required keywords is 5.0, ATS ceiling 100%"
+  },
+  "north_star": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "Target role family ai_engineer matches Graduate Human-Centric AI Engineer"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none, default to 3"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "partial",
+   "source": "Company is an established consultancy with rolling recruitment, but size is unspecified"
+  },
+  "red_flags": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Security Check clearance requires 5 years UK residency; no salary disclosed"
+  }
+ },
+ "global_score": 3.8,
+ "confidence": "Medium",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate meets 5‑year UK residency requirement for Security Check clearance",
+  "Ask for salary range or compensation band",
+  "Find out Cambridge Consultants' employee count to better assess culture"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 3.8,
+ "model_confidence": "Medium",
+ "jd_hash": "09420b10d4d7fd78",
+ "jd_words": 876,
+ "tokens": 2321,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

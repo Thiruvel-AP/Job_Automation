@@ -1,0 +1,20 @@
+Company: eFinancialCareers
+Title: Forward Deployed Engineer - Global Leading MNC - Meliora
+URL: https://www.reed.co.uk/jobs/forward-deployed-engineer-global-leading-mnc-meliora/57593644
+Source: reed
+Location: London, GB
+Posted: 2026-11-19
+Posted via: reed.date
+First seen: 2026-11-24
+
+Role Responsibilities: 
+
+- Designing, developing, and delivering custom applications from concept to function, production-ready software using AI-assisted development tools, including continuing maintenance.
+- Collaborating closely with business stakeholders to identify issues, develop and test requirements, verify solutions, and ensure strong adoption.
+- Keeping up with the most recent developments in GenAI, AI-assisted development, and application frameworks, suggesting relevant improvements, and bringing useful concepts to the company.
+- Fostering a culture of construction by showcasing what is achievable when practical technical skills are applied to business challenges. 
+Requirements: 
+
+- Hands on knowledge on building and shipping applications, with a portfolio of working software. Having practical knowledge of GenAI application development and AI-assisted development tools, including a methodical approach to testing and code review (Python, Copilot, Replit, etc).
+- Outstanding communication abilities and the self-assurance to deal closely with non-technical business leads, including managing requirements resistance.
+- Able to work autonomously, resourceful and genuinely passionate about building and continuous learning.

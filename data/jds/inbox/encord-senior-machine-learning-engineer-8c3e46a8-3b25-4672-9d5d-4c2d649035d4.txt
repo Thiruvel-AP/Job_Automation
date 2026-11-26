@@ -1,0 +1,113 @@
+Company: Encord
+Title: Senior Machine Learning Engineer
+URL: https://jobs.ashbyhq.com/encord/8c3e46a8-3b25-4672-9d5d-4c2d649035d4
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-11-02T14:47:38.529+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-06
+Listed: yes
+
+About us
+
+Encord is the universal data layer for AI that helps 300+ AI teams train and run models on the right data. Our platform indexes, curates, annotates, and evaluates data across the full AI lifecycle, from development through production. Trusted by Woven by Toyota, AXA, UiPath, Zipline, and more.
+
+ 
+
+We're an ambitious team of 100+ working at the frontier of AI and have raised $60M in Series C funding from Wellington Management, CRV, Next47 and Y Combinator.
+
+ 
+
+The role
+
+We're looking for a Senior ML Systems Engineer to join Encord's in-house ML team. This is a software-engineering-first role for someone with real machine learning deployment experience: you'll design, build and run the infrastructure that serves our computer vision and multimodal models in production.
+
+ 
+
+Our platform is moving from manual, GUI-heavy annotation towards ML-driven workflows, where models do more of the work and learn from annotator feedback. Your job is to make that possible by turning our models into fast, dependable product features.
+
+ 
+
+Our ML team covers both research and engineering, and this role sits firmly on the engineering side. You'll own architecture, implementation, deployment and production operations, while teammates on the research side focus on longer-horizon experiments and prototypes. Day-to-day, you'll work closely with them, as well as with our Product Engineering and Human Data teams.
+
+ 
+
+Problems you'll work on
+
+ - Interactive inference in the annotation editor. Serving heavy vision and multimodal models fast enough that annotators get model suggestions in real time, with their corrections flowing back as feedback.
+
+ - Inference at very large scale. Pre-computing model outputs across millions of hours of egocentric video for robotics customers, where throughput, GPU cost and reliability all matter.
+
+ - Taking agentic QC to production. Turning quality-control agents that check multimodal outputs against a customer's ontology from a research prototype into a dependable platform feature.
+
+ - One integration, many workflows. Building model integrations that hold up across customers' custom, fast-changing ontologies and task templates, instead of one-off implementations.
+
+
+What you'll do
+
+ - Design, build and operate model-serving and inference infrastructure for transformer-based vision and multimodal models
+
+ - Own the serving architecture behind our ML features, justifying trade-offs in latency, throughput, reliability and GPU cost
+
+ - Optimise models and pipelines for production through batching, KV caching, GPU utilisation and orchestration
+
+ - Integrate models into Encord's product and annotation workflows together with Product Engineering
+
+ - Build reusable abstractions that work across models, data types, customers and changing task templates
+
+ - Set up monitoring and observability, and own performance and reliability once features are live
+
+ - Take prototypes from your research-focused teammates and turn them into shipped features
+
+ - Contribute to platform design decisions, take part in design reviews and help us hire
+
+ - Work with Python, PyTorch, CUDA, Kubernetes and GCP/AWS
+   
+    
+
+Who we're looking for
+
+ - An owner. You take ambiguous product needs, make the architecture calls and carry the work all the way into production.
+
+ - A systems thinker. You design for scale and reuse, and you know when a simple, solid baseline beats a clever solution.
+
+ - A great collaborator. You enjoy working across research, product and engineering, and you make it easier for everyone to ship.
+
+ - A bridge between research and production. You speak both languages, help researchers get their work shipped, and feed production lessons back into how models are built.
+
+ 
+
+Experience requirements
+
+ - 5+ years of software engineering experience, including meaningful time building and operating ML systems or model-backed products in production at scale
+
+ - Strong software engineering and system design fundamentals
+
+ - Hands-on experience deploying modern deep learning models in production, with a strong understanding of model serving, inference optimisation, GPU utilisation and performance trade-offs.
+
+ - Experience designing and operating scalable, distributed production systems, ideally involving GPU workloads, high-throughput data processing or low-latency inference.
+
+ - The ability to reason through an ML system end to end, from data and model choices to offline and online evaluation, deployment, monitoring and retraining
+
+ - A track record of personally owning complex systems from design through to production
+
+ - Bonus: computer vision or multimodal deployment experience (not required), model-serving frameworks, or experience with video, 3D or other complex data types
+
+ 
+
+Why Encord
+
+ - Competitive salary and meaningful equity in a high-growth startup
+
+ - Strong in-person culture — most of the team works from our London office 4+ days/week
+
+ - 25 days annual leave + UK public holidays
+
+ - Annual learning & development budget
+
+ - Travel for customer visits, events, and conferences across the UK and Europe
+
+ - Daily company lunches
+
+ - Monthly socials & bi-annual team offsites

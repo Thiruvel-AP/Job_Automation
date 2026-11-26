@@ -1,0 +1,34 @@
+Company: Valarian
+Title: MLOps Engineer
+URL: https://jobs.lever.co/valarian/abc
+Location: London, UK
+
+About Northwind Health AI
+Northwind Health AI builds clinical decision-support tools that help oncology researchers find the right cancer cell-line models faster, using large language models over multi-omics data.
+
+The role
+We are hiring an AI Engineer to build and evaluate LLM agents that sit on top of our research data platform. You will work end-to-end, from prototyping to production deployment on AWS, alongside scientists and product stakeholders.
+
+What you'll do
+- Design and build LLM agents with tool calling using LangChain or LangGraph
+- Build retrieval (RAG) pipelines and guardrails that reduce hallucination
+- Deploy services with Docker on AWS Lambda and maintain CI/CD with GitHub Actions
+- Write evaluation suites (pytest, LLM evaluation) and monitor quality in production
+- Explore and integrate heterogeneous datasets (exploratory data analysis, data quality checks)
+- Communicate results to scientists and non-technical stakeholders
+
+Requirements
+- Strong Python and SQL
+- Hands-on experience with LLMs, prompt engineering and agentic workflows
+- Experience with AWS (Lambda, S3, IAM) and Docker
+- Machine learning fundamentals with scikit-learn or PyTorch
+- Experience building REST APIs with FastAPI
+- 1+ years of experience in a data or ML role
+
+Nice to have
+- Bioinformatics or healthcare domain experience
+- Kubernetes
+- Fine-tuning (LoRA)
+- Experience with MLflow or experiment tracking
+
+We are a licensed sponsor and welcome applicants who need visa sponsorship. The role is hybrid in Bristol.

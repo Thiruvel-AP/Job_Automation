@@ -1,0 +1,114 @@
+Company: Artefact
+Title: Intern Data Analyst - Paris
+URL: https://job-boards.greenhouse.io/artefact/jobs/8795537002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 9th arrondissement of Paris, 75009, Paris, France
+Country: France
+Status: listed_only
+Posted: 2026-09-10T11:42:21-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Qui sommes-nous ?
+
+Fondée en 2014, Artefact est une société française de services autour de la data, spécialisée dans le conseil en IA, transformation data et en data & digital marketing. L’approche unique d’Artefact, qui fait le pont entre la donnée et le business, permet à nos clients d’atteindre leurs objectifs business de façon dédiée et efficace. Nos 2500 collaborateurs répartis dans 27 bureaux à travers le monde allient leurs compétences pluridisciplinaires au profit de l’innovation business des entreprises.
+
+La mission des Artefactors ? Transformer la data de nos clients en impact business. Dans ce sens, nous collaborons avec plus de 1000 clients, leaders de leurs industries (Orange, Carrefour, Samsung, AccorHotels, L’Oréal, LVMH, Decathlon) et sommes partenaires privilégiés de Google (GMP/GCP), AWS ainsi que Microsoft Azure.
+
+En tant que stagiaire Data Analyst, tu seras intégré(e) à une équipe travaillant étroitement avec des consultants / data scientists et tu participeras à des missions ayant un impact réel pour les clients. Tes missions pourront inclure :
+
+- 
+
+Collecter, nettoyer, préparer les données à partir de sources diverses (bases de données internes, API, logs, etc.).
+
+- 
+
+Explorer et analyser les données pour identifier tendances, anomalies, corrélations, patterns utiles.
+
+- 
+
+Participer à la conception et réalisation de dashboards / reportings sous outils de data visualisation (ex. Tableau, PowerBI, ou outils internes) pour présenter les résultats aux équipes ou aux clients.
+
+- 
+
+Contribuer à la définition de KPI pertinents selon les objectifs métier.
+
+- 
+
+Travailler en collaboration avec les équipes métier (marketing, produit, etc.) pour bien comprendre leurs besoins et transformer ces besoins en analyses exploitables.
+
+- 
+
+Aider à automatiser certains processus de reporting ou analyses simples.
+
+- 
+
+Documenter tes travaux, partager les résultats et les apprentissages au sein de l’équipe, proposer des améliorations ou de nouvelles approches quand c’est possible.
+
+Profil recherché
+
+- Étudiant(e) en dernière année de cycle ingénieur, Master 2, ou équivalent, avec une spécialisation en Data, Intelligence Artificielle, Mathématiques appliquées, Statistiques ou Informatique et recherche un stage de fin d'études à partir de Janvier 2027.
+
+- 
+
+Maîtrise de SQL pour extraire / manipuler les données.
+
+- 
+
+Connaissances en langage de programmation pour l’analyse de données, typiquement Python (avec pandas, numpy, etc.).
+
+- 
+
+Bonne compréhension des principes statistiques de base (moyennes, distributions, tests, corrélations, variance, etc.).
+
+- 
+
+Capacité à créer des visualisations / dashboards (Tableau, PowerBI, ou outil équivalent).
+
+- 
+
+Connaissance minimale de l’écosystème numérique et data (web analytics, datalake, dataviz, etc.) est un plus.
+
+Compétences personnelles / soft skills :
+
+- 
+
+Esprit logique et analytique, souci du détail.
+
+- 
+
+Sens de la communication orale et écrite : savoir expliquer ses résultats à des non-experts.
+
+- 
+
+Capacité à travailler en équipe, à écouter et à comprendre les besoins métier.
+
+- 
+
+Proactivité, curiosité, et capacité à proposer des idées ou des approches nouvelles.
+
+- 
+
+Autonomie, tout en étant à l’aise avec le suivi et les retours.
+
+- 
+
+Bon niveau en français (oral et écrit) ; l’anglais professionnel est un plus, notamment pour échanges ou documentations. 
+
+Ce que nous offrons
+
+- Un stage de 6 mois basé à Paris dans le 9ème arrondissement 
+
+- Un accompagnement par un tuteur expérimenté et l'opportunité de travailler avec des équipes reconnues 
+
+- La possibilité d'être embauché(e) en CDI à l'issue du stage 
+
+- Socle de formation (training day, Retex, café tech) développement des compétences via des outils internes innovants 
+
+Prêt à rejoindre l'aventure ?
+
+Si tu te reconnais dans cette description et que tu souhaites mettre tes compétences au service de projets concrets et impactants, envoie-nous ta candidature !
+
+Chez Artefact, nous recrutons nos collaborateurs uniquement en fonction de nos besoins et des qualités propres de chaque candidat. Nous assurons le développement de leurs compétences professionnelles et de leurs responsabilités sans discrimination d’aucune sorte. Le groupe s'engage à reconnaître et promouvoir tous les talents, quels que soient leurs croyances, âge, handicap, parentalité, origine ethnique, nationalité, identité de genre, orientation sexuelle, appartenance à une organisation politique, religieuse, syndicale ou à une minorité, ou toute autre caractéristique qui pourrait faire l'objet d'une discrimination.

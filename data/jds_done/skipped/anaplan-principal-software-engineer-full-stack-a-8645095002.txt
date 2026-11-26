@@ -1,0 +1,85 @@
+Company: Anaplan
+Title: Principal Software Engineer - Full Stack - AI
+URL: https://job-boards.greenhouse.io/anaplan/jobs/8645095002
+Source: greenhouse
+Apply kind: greenhouse
+Location: York, United Kingdom
+Posted: 2026-07-22T11:17:11-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+At Anaplan, we are a team of innovators focused on optimizing business decision-making through our leading AI-infused scenario planning and analysis platform so our customers can outpace their competition and the market.
+
+What unites Anaplanners across teams and geographies is our collective commitment to our customers’ success and to our Winning Culture.
+
+Our customers rank among the who’s who in the Fortune 50. Coca-Cola, LinkedIn, Adobe, LVMH and Bayer are just a few of the 2,400+ global companies who rely on our best-in-class platform.
+
+Our Winning Culture is the engine that drives our teams of innovators. We champion diversity of thought and ideas, we behave like leaders regardless of title, we are committed to achieving ambitious goals, and we love celebrating our wins – big and small.
+
+Supported by operating principles of being strategy-led, values-based and disciplined in execution, you’ll be inspired, connected, developed and rewarded here. Everything that makes you unique is welcome; join us and let’s build what’s next - together!
+We are seeking a versatile and highly skilled Principal Software Engineer who can work seamlessly across our frontend and backend services—from designing highly performant, intuitive modern user interfaces to building robust API services, Model Context Protocol (MCP) services, and autonomous AI agents. In this role, you will lead the architecture, design, and deployment of scalable Generative AI solutions, ensuring seamless integration into our core planning workflows.
+
+This is a unique role requiring deep software engineering expertise across both frontend and backend development, combined with hands-on experience building production-ready GenAI features. You will bridge the gap between backend APIs, custom MCP services, agentic workflows, and responsive modern user interfaces to deliver intelligent, automated planning experiences for our global customers.
+
+Your Impact
+
+- Technical Leadership & System Architecture: Architect, design, and deploy scalable Generative AI solutions, autonomous AI agents, and full-stack services (frontends and backend services) into production environments.
+
+- End-to-End GenAI Development: Build comprehensive GenAI features including backend API services, custom tools, LLM model integration, and evaluation harnesses.
+
+- AI Agents & MCP Integration: Design, build, and maintain Model Context Protocol (MCP) servers and services that securely expose backend data and enterprise tools to agentic AI workflows. Implement robust orchestration, tool-calling capabilities, and multi-agent coordination.
+
+- Full-Stack Engineering: Drive best practices across our full stack, guiding the development of responsive frontend applications (React/TypeScript) and robust, scalable backend services (Python, Java, Kotlin, or Node.js).
+
+- LLM Observability & Reliability: Establish robust LLM observability, evaluations, and caching, implementing latency optimisations and comprehensive monitoring (logging, usage tracking, agent behaviour).
+
+- Operational Excellence: Champion high availability, performance optimisation, and observability across frontends and backend microservices, focusing on practices that maintain platform reliability and optimise MTTD and MTTR.
+
+- Mentorship & Collaboration: Elevate the engineering organisation by mentoring senior and junior engineers, conducting rigorous code and system design reviews, and partnering with product managers to translate product visions into actionable technical roadmaps.
+
+Qualifications
+
+- Experience: Extensive professional software engineering experience, with a proven track record of delivering complex, high-quality technical projects in a senior or principal role.
+
+- AI & Agentic Production Exposure: Deep hands-on experience designing, deploying, and scaling agentic AI workflows, tool integrations, and GenAI features in production environments.
+
+- Full-Stack Expertise: High proficiency in modern frontend frameworks (specifically React and TypeScript) and robust backend development languages (Python, Java/Kotlin, or Node.js).
+
+- GenAI & MCP Knowledge: Deep understanding of LLM APIs, prompt engineering, agentic/multi-agent architectures, and building/consuming Model Context Protocol (MCP) services.
+
+- System Observability & Quality: Strong experience with application observability, logging, and performance monitoring across distributed backend systems and frontend applications.
+
+- Communication & Collaboration: Exceptional communication skills with a demonstrated ability to collaborate across engineering, product, and design teams to take ideas from prototype to production.
+
+Desirable Skills
+
+- Agentic Tools & Frameworks: Hands-on experience with agent orchestration frameworks and integrating AI agents with enterprise platforms.
+
+- Observability Tooling: Experience with GenAI observability and evaluation tools.
+
+- Industry Domain: Previous experience in Enterprise Performance Management (EPM), financial planning, business analytics, or related enterprise SaaS environments.
+
+- Community Contributions: Contributions to open-source agent frameworks, MCP servers, or published research in distributed systems or Generative AI.
+
+Our Commitment to Diversity, Equity, Inclusion and Belonging (DEIB) 
+
+We believe attracting and retaining the best talent and fostering an inclusive culture strengthens our business. DEIB improves our workforce, enhances trust with our partners and customers, and drives business success. Build your career in a place where diversity, equity, inclusion and belonging aren’t just words on paper – this is what drives our innovation, it’s how we connect, and it contributes to what makes us a market leader. We believe in a hiring and working environment where all people are respected and valued, regardless of gender identity or expression, sexual orientation, religion, ethnicity, age, neurodiversity, disability status, citizenship, or any other aspect which makes people unique. We hire you for who you are, and we want you to bring your authentic self to work every day! 
+
+We will ensure that individuals with disabilities are provided reasonable accommodation to participate in the job application or interview process, perform essential job functions, and receive equitable benefits and all privileges of employment. Please contact us to request accommodation.  
+
+Fraud Recruitment Disclaimer  
+
+It has come to our attention that fraudulent and fictitious job opportunities are being circulated on the Internet. Prospective candidates are being contacted by certain individuals, mainly through telephone calls, emails and correspondence, claiming they are representatives of Anaplan. The main purpose of these correspondences and announcements is to obtain privileged information from individuals.  
+
+Anaplan does not:  
+
+- Extend offers to candidates without an extensive interview process with a member of our recruitment team and a hiring manager via video or in person.   
+
+- Send job offers via email. All offers are first extended verbally by a member of our internal recruitment team whenever possible and then followed up via written communication.  
+
+All emails from Anaplan would come from an @anaplan.com email address. Should you have any doubts about the authenticity of an email, letter or telephone communication purportedly from, for, or on behalf of Anaplan, please send an email to people@anaplan.com before taking any further action in relation to the correspondence.   
+
+Privacy & AI Notice
+
+Candidate data processed during our recruitment activities is handled in accordance with our Candidate Privacy Notice. This may include the use of artificial intelligence or automated tools to assist our team in evaluating qualifications.

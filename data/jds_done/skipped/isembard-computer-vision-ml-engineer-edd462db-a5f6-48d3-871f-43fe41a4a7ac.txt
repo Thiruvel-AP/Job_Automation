@@ -1,0 +1,67 @@
+Company: Isembard
+Title: Computer Vision / ML Engineer
+URL: https://jobs.ashbyhq.com/isembard/edd462db-a5f6-48d3-871f-43fe41a4a7ac
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-29T14:55:57.030+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-31
+Listed: yes
+
+ABOUT ISEMBARD
+
+Isembard is building a network of high-performance factories for critical industries. We combine advanced machine tools, robotics and our own software, MasonOS, to make precision components for aerospace, defence, energy and frontier technology companies, with factories across the UK, US, Germany and France. Our mission is to forge industrial acceleration.
+
+
+THE ROLE
+
+Every part we make has to be inspected before it ships, and in precision manufacturing inspection is slow, skilled work. Our robotics team is building a computer vision inspection cell for the shop floor, and this role leads that work.
+
+You will be one of the first engineers in the team, taking vision-based inspection from prototype to a system that runs in production and can be deployed at many sites.
+
+
+WHAT YOU'LL DO
+
+ - Design and build the vision inspection cell: cameras, optics, lighting, fixturing and software.
+
+ - Develop computer vision and machine learning models to inspect machined parts.
+
+ - Build the data pipeline behind them: capture, labelling, training and evaluation.
+
+ - Validate results against conventional measurement, and agree with the quality team where vision can be trusted.
+
+ - Integrate the cell with MasonOS so results feed the factory's records.
+
+ - Deploy and maintain the system in production, designed for repeat deployment.
+
+
+WHAT WE'RE LOOKING FOR
+
+ - Strong computer vision and machine learning engineering experience, with models deployed in the real world rather than only in research.
+
+ - Proficiency in Python; C++ is useful.
+
+ - Hands-on experience with cameras, optics or imaging hardware.
+
+ - An engineer's approach: comfortable building hardware and software together.
+
+ - Comfort working on a live factory floor, close to the machinists and inspectors who will use what you build.
+
+
+NICE TO HAVE
+
+ - Industrial inspection or metrology.
+
+ - Robotics.
+
+ - Experience in a manufacturing environment or a startup.
+
+
+WHY ISEMBARD
+
+ - Lead the first in-house project of a new robotics team.
+
+ - See your work running on a live factory floor.
+
+Location: On-site at our Southwark factory in London.

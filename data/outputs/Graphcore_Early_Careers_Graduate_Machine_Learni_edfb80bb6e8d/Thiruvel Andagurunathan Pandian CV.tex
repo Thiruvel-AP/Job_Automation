@@ -1,0 +1,148 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{microtype}
+\usepackage{ragged2e}
+\usepackage{needspace}
+
+% ---- palette: one accent, one ink, one muted grey ----
+\definecolor{navy}{RGB}{12, 83, 166}
+\definecolor{ink}{RGB}{33, 37, 41}
+\definecolor{muted}{RGB}{96, 102, 110}
+\hypersetup{urlcolor=navy, linkcolor=navy}
+\color{ink}
+
+% ---- ragged right, no hyphenation: even word spacing, no split words ----
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\linespread{1.03}
+\AtBeginDocument{\RaggedRight}
+
+% ---- type scale (ratio ~1.2): body 11 -> headline 12 -> section 13 -> name 22 ----
+\titleformat{\section}
+  {\color{navy}\fontsize{13}{15}\selectfont\bfseries\addfontfeature{LetterSpace=6}}
+  {}{0em}{\MakeUppercase}[{\color{navy}\vspace{1pt}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+
+\setlist[itemize]{label={\color{navy}\small\textbullet}, leftmargin=1.1em, labelsep=0.45em,
+  itemsep=1.5pt, parsep=0pt, topsep=2pt, partopsep=0pt}
+
+% ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
+  \textit{#4}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\hfill{\color{muted}#2}\\ \textit{#3}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag
+  \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{navy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{navy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\fontsize{22}{26}\selectfont\bfseries\color{navy} Thiruvel Andagurunathan Pandian}\\[4pt]
+  {\fontsize{12}{14}\selectfont\color{navy} 11,459 per gene models on one GPU, RAM cut from \num{8.2} to 5.5 GB}\\[4pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textperiodcentered\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textperiodcentered\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textperiodcentered\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p}\nobreak\ \,\textperiodcentered\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}\nobreak\ \,\textperiodcentered\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{Portfolio}}\\[3pt]
+  {\small\itshape\color{muted} Right to Work in UK\nobreak\ \,\textperiodcentered\, Available to join Immediately}
+
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+Data scientist who scales modelling and reports its limits: trained 11,459 per gene models on a single T4 GPU, cut RAM from 8.2 to 5.5 GB, and caught overfitting on held out data. Production LLM agent work on an AstraZeneca affiliated multiomics research platform. Over a year of hands on experience building and deploying machine learning and LLM systems.
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillgroup{Agentic AI \& LLM Applications}{Tool calling and failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open weight models via Ollama), LLM evaluation (three tier tests, hallucination rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)}
+\skillgroup{Software Engineering \& Integrations}{TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, Git (pull requests, code review), debugging and root cause analysis}
+\skillgroup{Cloud \& Deployment}{AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), GCP (Cloud Run), Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist}
+\begin{itemize}
+  \item Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph formation strategy, and designed a bipartite/heterogeneous graph approach with Leiden clustering for similarity detection and KNN for gene to cell line association.
+  \item Wrote the dissertation\textquotesingle{}s AI agent sections covering architecture, implementation and evaluation, including a documented hallucination rate analysis and test case outcomes.
+  \item Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a \num{19,213 gene parquet fallback} for when the external APIs are unavailable.
+  \item Diagnosed where it struggled with a three tier, \textasciitilde{}65 test evaluation harness (tool level → API → live) and hallucination rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate limit evaluation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}
+\begin{itemize}
+  \item A product startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five person cross functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders \num{(five star rating from senior leadership)} within the three month engagement.
+  \item Proposed the request flow: a user\textquotesingle{}s text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client\textquotesingle{}s Convex database and a second instance runs the statistical analysis before the result returns to the user.
+  \item Carried it into production with the client\textquotesingle{}s engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI based query generation, Convex), now in live use, and reviewed pull requests in the client\textquotesingle{}s production repository alongside their CTO.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.
+  \item Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+  \item Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross validation and hyperparameter tuning across classification and regression tasks.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)}
+\begin{itemize}
+  \item Implemented offline first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low connectivity conditions.
+  \item Shipped features in a production fintech (financial services) application as part of a team: integrated Twelve Data (real time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.
+  \item As a trainee, modelled user profile, transaction history and event booking data in Core Data schemas with CRUD and session state management, and automated a manual data collection process with a JavaScript web scraping pipeline that surfaced market trend signals used for pricing decisions.
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{GTAI Cell Line Finder: multiomics graph for cancer cell line selection (PoC)}\hspace{1em}\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}%
+\setbox2=\hbox{{\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{GTAI Cell Line Finder: multiomics graph for cancer cell line selection (PoC)}\\ {\color{muted}\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\\ \hfill{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}\par
+\else
+\textbf{GTAI Cell Line Finder: multiomics graph for cancer cell line selection (PoC)}\\ {\color{muted}\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\hfill{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}\par
+\fi
+\else
+\project{GTAI Cell Line Finder: multiomics graph for cancer cell line selection (PoC)}{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}{\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}
+\fi
+\begin{itemize}
+  \item Integrated 14 public omics source files into one graph of 1,399 cell lines and 16,385 genes, cut RAM from 8.2 to 5.5 GB on a free T4 GPU, reported the weak results openly (train Pearson 0.807 vs test 0.545) and debugged a hash randomisation bug to its root cause.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Auto scaled word frequency pipeline on AWS}{EC2, SQS, S3, DynamoDB, CloudWatch, Auto Scaling}{\badge{MSc Coursework}}
+\begin{itemize}
+  \item Built an SQS driven word frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on CloudWatch queue alarms, and benchmarked instance configurations.
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\needspace{3\baselineskip}
+\roleNoLoc{University of Bristol}{Sep 2025 – Sep 2026}{MSc Data Science, Distinction \textit{(Expected)}}
+{\color{muted}\small Large scale Data Engineering, Statistical Computing \& Empirical Methods, AI \& Text Analytics, Visual Analytics, Data Science Methods \& Practices, Technology, Innovation, Business \& Society}\par
+\gap
+\needspace{3\baselineskip}
+\roleNoLoc{St. Joseph\textquotesingle{}s College of Engineering}{Aug 2019 – May 2023}{B.E. Electrical and Electronics Engineering, 91\%, First Class with Distinction}
+
+% ================= CERTIFICATIONS & ACHIEVEMENTS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item \textbf{Lloyd\textquotesingle{}s Banking Group Datathon, 3rd place}: Detected outliers in financial services data under \num{200:1 class imbalance}, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, AWS Academy Cloud Foundations, \textit{Nov 2025}\nobreak\ \,\textperiodcentered\, 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}\nobreak\ \,\textperiodcentered\, Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

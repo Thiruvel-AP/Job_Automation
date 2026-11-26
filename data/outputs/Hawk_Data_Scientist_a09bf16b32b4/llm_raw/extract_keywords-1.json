@@ -1,0 +1,39 @@
+```json
+{
+  "required": [
+    "5-7 years as a data scientist in a customer-facing role",
+    "AML",
+    "fraud detection",
+    "transaction monitoring",
+    "typologies",
+    "false positive cost",
+    "Python",
+    "SQL",
+    "ML tooling",
+    "model tuning",
+    "threshold tuning",
+    "backtesting",
+    "sample review",
+    "sign-off discipline",
+    "regulatory defensibility"
+  ],
+  "preferred": [
+    "transaction monitoring or payments fraud detection at a bank, payment provider, or a vendor serving them",
+    "explainable AI",
+    "rules-based hybrid detection approaches"
+  ],
+  "context_terms": [
+    "regional customer team",
+    "Customer Value Partners",
+    "live accounts",
+    "customer-facing narrative",
+    "investigator productivity gains",
+    "false positive cost reduction",
+    "detection effectiveness improvements",
+    "audit or regulator review",
+    "compliance posture"
+  ],
+  "company_hook": "Hawk provides AI-supported anti-money laundering and fraud detection technology that combines traditional rules with explainable AI to help banks and payment providers reduce false positives while catching more financial crime.",
+  "team": "regional customer team"
+}
+```

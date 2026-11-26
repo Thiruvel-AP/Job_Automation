@@ -1,0 +1,113 @@
+Company: Artefact
+Title: Manager, Forward Deployed Engineering
+URL: https://job-boards.greenhouse.io/artefact/jobs/8754757002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Stationsplein 32, 3511 ED Utrecht
+Country: Netherlands
+Status: listed_only
+Posted: 2026-08-27T06:26:42-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+Who We Are
+
+Artefact is an applied AI company. We build systems that run in production, in our clients' own cloud, and keep running after we leave. We are present in 27 countries across all continents with a team of 2,500 employees and offer the most comprehensive set of AI & data solutions per industry, built on deep data science and cutting-edge AI technologies, delivering AI projects at scale in all industry sectors. From strategy to operations, we partner with 1000+ clients, including some of the world’s top 300 brands.
+
+The Role
+
+Artefact is looking for a Manager, Forward Deployed Engineering, specialized in Gemini Enterprise and the Google AI stack: a hands-on technical leader who owns the delivery of AI products for our clients, from architecture through production, while building and leading the team of engineers who build them.
+
+You will split your time between technical leadership and people leadership. You set the technical direction for one or more client engagements, stay close enough to the code and architecture to make good calls under pressure, and are the senior escalation point when things get hard — technically or with the client. At the same time, you manage a team of Deployed AI Engineers: their staffing, their growth, their day-to-day delivery, and their development into the next generation of technical leads.
+
+This role combines deep, certified expertise in Google's enterprise AI stack (Gemini models, Vertex AI, and the Gemini Enterprise agent platform) with the leadership skills to run a delivery team and manage senior client relationships.
+
+What You'll Do
+
+Lead Delivery of Full-Stack AI Applications
+
+- Own technical delivery across one or more client engagements: architecture decisions, technical risk, and quality bar.
+
+- Set direction on interface design (TypeScript/React), backend services (Python or Node), and the agentic and retrieval systems underneath.
+
+- Review and unblock your team's work on orchestration, tool/function calling, memory, guardrails, and RAG pipelines.
+
+- Make the build-vs-buy and platform calls that shape how a client's AI systems connect to their data and applications.
+
+Be the Team's Senior Reference on Gemini Enterprise and the Google AI Stack
+
+- Set technical standards for how the team builds with Gemini models, Vertex AI, ADK, and Agent Engine.
+
+- Guide the team's implementation and configuration of Gemini Enterprise: Agent Designer, Inbox, agent sandboxes, and connector governance.
+
+- Make architecture calls on Vertex AI Search, RAG Engine, grounding with Google Search, and BigQuery as the data backbone.
+
+- Track Google's roadmap and releases, and decide when and how new capabilities get adopted into client work.
+
+Own Production Quality and Delivery Standards
+
+- Set and enforce the bar for evaluation suites, regression testing, and production monitoring (cost, latency, quality) across your team's engagements.
+
+- Establish engineering practice across your team: version control, code review, CI/CD, observability.
+
+- Make infrastructure and deployment decisions across GCP, Azure, or AWS.
+
+- Own the health of the data pipelines feeding your team's AI systems.
+
+Lead the Team and the Client Relationship
+
+- Manage a team of Deployed AI Engineers: staffing, workload, performance, and career development.
+
+- Hire, onboard, and grow engineers into strong Gemini Enterprise specialists.
+
+- Be the senior client-facing voice for your engagements — communicating trade-offs, risk, and progress to client stakeholders and Artefact leadership.
+
+- Support pre-sales at a senior level: scope solutions, size teams, and estimate delivery effort with partnership and consulting teams.
+
+- Set and scale internal accelerators, reusable components, and engineering standards across engagements, not just within one team.
+
+Required Experience
+
+- 6-9 years of experience in software or data engineering, including recent, substantial hands-on delivery with AI/LLM-based systems, plus prior experience leading or managing engineers.
+
+- Strong hands-on experience with the Google AI stack (Gemini models, Vertex AI, Gemini Enterprise, ADK), including having taken multiple solutions to production on GCP.
+
+- Strong programming background in Python and TypeScript/JavaScript, with enough depth to review architecture and code, not just manage from a distance.
+
+- Experience building and consuming APIs, front-end development (React or similar), and at least one backend framework.
+
+- Hands-on experience with RAG, embeddings, and vector search, and with at least one agentic framework (Google ADK, LangGraph/LangChain).
+
+- Proven experience managing or leading a team of engineers — staffing, performance, and development.
+
+- Experience owning client relationships at a senior level: scoping, expectation-setting, and escalation management.
+
+- Strong working experience with GCP; Azure or AWS is a plus.
+
+- Fluency with agentic coding tools such as Claude Code, Gemini CLI, Codex, or Cursor.
+
+- Bachelor's/ Master's degree in computer science, engineering, or a related field, or equivalent practical experience.
+
+Why you should join us:
+
+- Learning and Development: Join a team of passionate Consultants always ready to help each other, providing opportunities to learn and collaborate with some of the best in the field.
+
+- Culture of Celebration: We pride ourselves on creating a collaborative and fun work environment with regular team events and activities.
+
+- Competitive Rewards: Enjoy a comprehensive benefits package, including a competitive salary, phone & travel reimbursements, remote work allowance, and a Onefit membership discount.
+
+- Work-Life Balance: We offer flexibility with a hybrid working environment that lets you balance personal and professional commitments.
+
+- Fuel Your Day: Enjoy a healthy and delicious daily lunch from our extensive organic buffet.
+
+- Weekly Unwind: Take advantage of our weekly massage sessions to de-stress and relax.
+
+- Centrally Located: Our office is conveniently situated near the station for easy commuting.
+
+- Career Growth Opportunities: We’re committed to your professional development, offering continuous learning and internal promotion opportunities.
+
+Join Us Now and Be Part of the Future:
+
+Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+Come join us!

@@ -1,0 +1,86 @@
+Company: Artefact
+Title: Data Scientist
+URL: https://job-boards.greenhouse.io/artefact/jobs/8530912002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Stationsplein 32, 3511 ED Utrecht
+Country: Netherlands
+Status: listed_only
+Posted: 2026-04-30T05:41:11-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Who We Are
+Artefact is a leading global consulting company dedicated to accelerating the adoption of data and AI to positively impact people and organizations. We specialize in data transformation and data marketing to drive tangible business results across the entire enterprise value chain.
+
+Artefact offers the most comprehensive set of data-driven solutions per industry, built on deep data science and cutting-edge AI technologies, delivering AI projects at scale in all industry sectors. From strategy to operations, we offer an end-to-end approach and solutions: data strategy, data quality and governance, data platforms, AI Factory, data-driven customer experience and marketing ROI.
+
+Our 2000+ employees operate in 27 countries (Europe, Asia, Americas, Middle East, Africa) and we partner with 1000 clients, including some of the world's top 300 brands such as Samsung, L'Oréal and Sanofi.
+
+What You Will Be Doing:
+
+As a Data Scientist, you will lead and conduct ambitious projects aimed at transforming clients through data. Your day-to-day responsibilities will include:
+
+- Leading Transformational Projects: Spearheading ambitious projects that utilize data to transform our clients’ operations and strategies.
+
+- Developing Data Science Solutions: Creating innovative data science products and solutions for both clients and our internal data science team.
+
+- Building Client Relationships: Collaborating closely with your Consulting counterpart to understand client needs and strengthen relationships.
+
+- Upskilling the Team: Contributing to the development of our data science team by sharing knowledge, mentoring junior Data Scientists, and promoting our work within other data departments.
+
+- Ensuring Quality Deliverables: Caring for team morale and ensuring that all missions are delivered to a high standard, providing feedback and support to less experienced team members.
+
+- Optimising Code: Writing highly optimized code to advance Artefact’s internal toolbox and knowledge base.
+
+What You Will Learn With Us:
+
+- Real-World Impact: Deliver impactful projects by developing end-to-end machine learning pipelines to solve real-world problems across various industries.
+
+- Collaborative Solutions: Work in feature teams alongside other data scientists, ML engineers, data engineers, software engineers, and product owners to build complex solutions.
+
+- Software Engineering Improvement: Enhance your software engineering skills by applying ML Ops best practices while working with machine learning teams.
+
+- Expertise Development: Become an expert in one of our data science practices: Time Series Forecasting, MLOps, NLP, Computer Vision, Optimization, or Customer Intelligence.
+
+- Algorithm Discovery: Discover state-of-the-art algorithms and test them on real-world data during client projects.
+
+What We Are Looking For:
+
+We’re seeking someone who has:
+
+- Educational Background: A completed Master’s degree in a relevant field (e.g., computer science, machine learning, mathematics, or related subjects).
+
+- Hands-On Experience: 1-3 years of experience in data science, analytics, or consulting, preferably within a marketing or digital context.
+
+- Technical Skills: Strong knowledge of data processing, algorithms, and data architecture, along with proficiency in tools like Python, SQL, and R.
+
+- Analytical Mindset: A passion for working with data to derive actionable insights and solve complex problems.
+
+- Communication Skills: Excellent verbal and written communication skills, with the ability to discuss both technical and non-technical topics with clients and team members.
+
+- Curiosity and Passion: A genuine interest in continuous learning and exploring new technologies and tools in data and AI.
+
+Why You Should Join Us:
+
+- Learning and Development: Join a team of passionate Data Scientists and Engineers who will support your growth and provide ample learning opportunities.
+
+- Culture of Celebration: We pride ourselves on creating a collaborative and fun work environment with regular team events and activities.
+
+- Competitive Rewards: Enjoy a comprehensive benefits package, including a competitive salary, phone & travel reimbursements, remote work allowance, and a Onefit membership discount.
+
+- Work-Life Balance: We offer flexibility with a hybrid working environment that lets you balance personal and professional commitments.
+
+- Fuel Your Day: Enjoy a healthy and delicious daily lunch from our extensive organic buffet.
+
+- Weekly Unwind: Take advantage of our weekly massage sessions to de-stress and relax.
+
+- Centrally Located: Our office is conveniently situated near the station for easy commuting.
+
+- Career Growth Opportunities: We’re committed to your professional development, offering continuous learning and internal promotion opportunities.
+
+Join Us Now and Be Part of the Future:
+
+Artefact is experiencing exciting growth, and this is the perfect time to join our dynamic team and contribute to our success story.
+Come join us!

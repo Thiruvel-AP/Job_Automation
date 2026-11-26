@@ -1,0 +1,9 @@
+```json
+{
+  "az1": "Built a genai tool‑calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi‑omics cancer research platform, providing gene alias resolution, scoring methodology explanation, and dataset provenance.",
+  "dc1": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt‑oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid‑based product start‑up client, communicating results in a live stakeholder demo.",
+  "fl2": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph, enabling retrieval‑augmented generation for contextualized responses.",
+  "fl1": "Built machine learning pipelines with scikit‑learn and deep learning models (LSTM, BiRNN, CNN) in TensorFlow/Keras, deploying them as FastAPI services in Docker.",
+  "av4": "Built a JavaScript web‑scraping pipeline that automated manual data collection, creating data pipelines that surfaced market‑trend signals for pricing decisions."
+}
+```

@@ -1,0 +1,478 @@
+{
+  "coverage": 0.4098,
+  "requirements": [
+    {
+      "term": "agents",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "agents",
+          "snippet": "Built a generative AI…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "agents",
+          "snippet": "Did the data analysis on…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "az6",
+          "quote": "agents",
+          "snippet": "Integrated the agent into…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "agents",
+          "snippet": "Led the design in a…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "agents",
+          "snippet": "Designed how a user's…",
+          "via": "agents"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_af3",
+          "quote": "agents",
+          "snippet": "Built a voice assistant…",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "ReAct agent loops",
+          "via": "agents"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:LLMs & Agents",
+          "quote": "agents",
+          "snippet": "agent memory",
+          "via": "agents"
+        }
+      ]
+    },
+    {
+      "term": "experimentation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "hypothesis testing",
+          "snippet": "hypothesis testing",
+          "via": "hypothesis testing"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "ANOVA",
+          "snippet": "ANOVA",
+          "via": "anova"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "power analysis",
+          "snippet": "power analysis",
+          "via": "power analysis"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "experimental design",
+          "snippet": "experimental design (MSc coursework)",
+          "via": "experimental design"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "ANOVA",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "anova"
+        }
+      ]
+    },
+    {
+      "term": "python",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az10",
+          "quote": "python",
+          "snippet": "Built a generative AI…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "Python",
+          "snippet": "Did the data analysis on…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "Python",
+          "snippet": "Led the design in a…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "fl7",
+          "quote": "python",
+          "snippet": "For a private client,…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "Python",
+          "snippet": "Linked 14 public…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia1",
+          "quote": "Python",
+          "snippet": "Built the text-cleaning…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia3",
+          "quote": "Python",
+          "snippet": "Showed why airline support…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ms1",
+          "quote": "Python",
+          "snippet": "Built a search assistant…",
+          "via": "python"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ql2",
+          "quote": "Python",
+          "snippet": "Ran a data quality check…",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "Python",
+          "snippet": "Python",
+          "via": "python"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "Python",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "python"
+        }
+      ]
+    },
+    {
+      "term": "sql",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "supported",
+      "evidence": [
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "sql"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Languages",
+          "quote": "SQL",
+          "snippet": "SQL",
+          "via": "sql"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "SQL",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "sql"
+        }
+      ]
+    },
+    {
+      "term": "applied statistics",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "BigQuery",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "GCP",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "heavy experimentation",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Hex",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "Lovable Apps",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "PubSub",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "statistics",
+      "alts": [],
+      "weight": 2.0,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "statistics",
+          "snippet": "Did the data analysis on…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "dc7",
+          "quote": "statistics",
+          "snippet": "Designed how a user's…",
+          "via": "statistics"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg3",
+          "quote": "statistics",
+          "snippet": "Combined mRNA and protein…",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:core",
+          "quote": "Statistics",
+          "snippet": "Statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "descriptive statistics (mean, variance)",
+          "via": "statistics"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "statistics",
+          "snippet": "statistics",
+          "via": "statistics"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "statistics",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "statistics"
+        }
+      ]
+    },
+    {
+      "term": "collaboration",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc8",
+          "quote": "collaboration",
+          "snippet": "Collaborated with the…",
+          "via": "collaboration"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_ia2",
+          "quote": "collaboration",
+          "snippet": "In a five-person team,…",
+          "via": "collaboration"
+        }
+      ]
+    },
+    {
+      "term": "cross-functional",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "dc6",
+          "quote": "cross-functional",
+          "snippet": "Led the design in a…",
+          "via": "cross-functional"
+        }
+      ]
+    },
+    {
+      "term": "testing",
+      "alts": [],
+      "weight": 1.5,
+      "importance": "stated",
+      "bucket": "existing",
+      "evidence": [
+        {
+          "kind": "bullet",
+          "id": "az11",
+          "quote": "tests",
+          "snippet": "Found where the assistant…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "az12",
+          "quote": "tests",
+          "snippet": "Did the data analysis on…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_gg5",
+          "quote": "tests",
+          "snippet": "Linked 14 public…",
+          "via": "tests"
+        },
+        {
+          "kind": "bullet",
+          "id": "p_cf2",
+          "quote": "pytest",
+          "snippet": "For an insurance hackathon…",
+          "via": "pytest"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "testing",
+          "snippet": "hypothesis testing",
+          "via": "testing"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:ML & Statistics",
+          "quote": "tests",
+          "snippet": "post-hoc tests (Tukey, Dunnett)",
+          "via": "tests"
+        },
+        {
+          "kind": "skills",
+          "id": "skills:Cloud & MLOps",
+          "quote": "pytest",
+          "snippet": "pytest",
+          "via": "pytest"
+        },
+        {
+          "kind": "profile_facts",
+          "id": "profile_facts:2",
+          "quote": "testing",
+          "snippet": "Handles the whole data workflow in Python and SQL, from…",
+          "via": "testing"
+        },
+        {
+          "kind": "fragment",
+          "id": "pf_stats",
+          "quote": "tests",
+          "snippet": "Uses statistics before drawing conclusions: averages, spread…",
+          "via": "tests"
+        }
+      ]
+    },
+    {
+      "term": "growth experiments",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    },
+    {
+      "term": "growth funnel metrics",
+      "alts": [],
+      "weight": 1.0,
+      "importance": "inferred",
+      "bucket": "gap",
+      "evidence": []
+    }
+  ]
+}

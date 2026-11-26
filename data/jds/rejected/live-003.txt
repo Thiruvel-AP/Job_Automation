@@ -1,0 +1,5 @@
+Company: <real company name>
+Title: <real job title>
+URL: <application link>
+
+<the FULL job ad, every section>

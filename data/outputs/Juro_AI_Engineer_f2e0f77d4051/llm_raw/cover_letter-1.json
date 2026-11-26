@@ -1,0 +1,7 @@
+{
+  "paragraphs": [
+    "I have built production‑grade AI services on AWS, deploying them with Docker containers, AWS Lambda functions and IAM policies. I designed agent‑centric architectures that let LLM‑driven agents interact safely with external APIs. My work includes creating robust evaluation pipelines that continuously measure agent performance, ensuring each release meets strict production standards while remaining fully observable on the cloud platform.",
+    "At AstraZeneca I owned the evaluation and debugging pipeline, delivering a suite of roughly 65 tests that validated tool resilience. At 180 Degrees Consulting Bristol I owned the client‑facing agentic prototype architecture, coordinating cross‑functional teams and achieving a 5‑star rating from senior leadership.",
+    "As the Agentic team, Juro builds the AI foundations the rest of engineering ships on — starting with Operator, the agent that works across contracts inside Juro."
+  ]
+}

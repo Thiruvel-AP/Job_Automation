@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Lack of cover letter", "Overstated experience in some areas", "No specific mention of Graphcore or AI hardware"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "edfc1f3abf0fbce3c32aa53b", "tokens": 3796, "note": "dropped 1 section(s) about the employer or process: Benefits"}

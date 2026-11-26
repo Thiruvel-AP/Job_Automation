@@ -1,0 +1,70 @@
+Company: Cambridge Consultants
+Title: AI Engineering Internship (2027 start)
+URL: https://job-boards.eu.greenhouse.io/cambridgeconsultantslimited/jobs/4995820101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-11-02T11:44:18-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+The Role
+
+We have an exciting opportunity for a paid internship within our AI & Algorithms department. This is a 12-month placement and is suitable for undergraduate students who will have completed two years of study.
+
+As an AI & Algorithms Engineerring Intern, you’ll have the opportunity to get involved with a range of diverse projects working and supported by a talented team of experts and mentors. You'll engage in hands-on tasks such as modelling, training, testing, and data-wrangling. With cutting-edge labs and computing resources at your disposal, you'll use technology to solve problems in the real world.
+
+Successful candidates can join us between May- September 2027.      
+
+There is no deadline for this role, as we recruit on a rolling basis. Once the position is filled, we will close the advert. We encourage you to apply as soon as possible.    
+
+What you’ll be doing
+
+- Working alongside our engineers building intelligent systems, developing your skills through hands-on coding and training/testing models.
+
+- Supporting projects for our clients to solve real-world problems
+
+- Learning software development skills in mixed-discipline teams, attending stand-ups and contributing to planning sessions.
+
+- Contributing to our internal research and development programs, building on state-of-the-art AI literature to produce our own, market-leading solutions and compelling demonstrations that showcase our expertise to clients.
+
+- Communicating the results of your work to your colleagues and clients.
+
+ What you can bring
+
+We are looking for someone currently studying towards a degree in a relevant subject, such as AI/machine learning, computer science, mathematics, physics or theoretical physics.
+
+ You will also have:
+
+- Interest in applying AI and algorithmic techniques to real-world problems.
+
+- Strong Python programming skills and understanding of modern version control (e.g. Git)
+
+While not essential requirements, we would also be very interested if you have experience with any of the following:
+
+- Foundation models (LLM, VLMs)
+
+- Prompt engineering and agentic workflows
+
+- Bioinformatics
+
+- Reinforcement learning
+
+- Transformers and diffusion models
+
+- Robotics (including VLA models)
+
+- Edge compute
+
+Please ensure your CV includes your A Level (or equivalent) subjects and grades, as well as any relevant university modules 
+
+Why Cambridge Consultants?
+
+Cambridge Consultants creates exciting and novel breakthroughs in technology and products. Our work on intelligent systems area has helped create world-first and market-changing technologies including real-time AI-enhanced medical imaging, autonomous defence systems against cyberattacks, and edge algorithms to help visually impaired people navigate indoor spaces. We combine our research output with engineering rigour to create innovative and robust solutions to solve complex problems presented to us by our clients. We help clients across a diverse range of markets, including defence/security, healthcare, biotech, industrial and energy, so there is no shortage of variety.
+
+At the heart of what we do are talented and motivated multi-disciplinary teams empowered to create cutting edge technologies and systems to solve difficult problems for our clients. We offer a diverse, fun, and challenging work environment where you'll have the chance to work on a wide variety of projects that deliver real value using technology. 
+
+We recognise and celebrate individual talent and we understand the importance of letting individuals be just that. Our people are here to do the best work of their lives and our job is to provide the platform for them to do it.
+
+By submitting an application to Cambridge Consultants, you confirm that the information provided in this application, together with any supporting documentation, is true, complete, and accurate to the best of your knowledge and belief. You understand that any false statement, misleading information, or material omission may render you liable to disqualification from the recruitment process, withdrawal of any offer of employment, or dismissal without notice if discovered following appointment. You acknowledge that the organisation reserves the right to verify the information supplied.

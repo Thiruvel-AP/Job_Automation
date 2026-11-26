@@ -1,0 +1,2079 @@
+{
+  "job_id": "manual:2b18795affde",
+  "company": "SHI",
+  "title": "Data Scientist",
+  "family": "data_scientist",
+  "tier": 1,
+  "headline": "Data Scientist",
+  "requirements": {
+    "coverage": 0.3,
+    "requirements": [
+      {
+        "term": "deal scoring",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "A/B testing",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "business experimentation",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "classification",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "fl5",
+            "quote": "classification",
+            "snippet": "Built repeatable\u2026",
+            "via": "classification"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia3",
+            "quote": "classification",
+            "snippet": "Showed why airline support\u2026",
+            "via": "classification"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ch1",
+            "quote": "classification",
+            "snippet": "Predicted which bank\u2026",
+            "via": "classification"
+          }
+        ]
+      },
+      {
+        "term": "clustering",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "az8",
+            "quote": "clustering",
+            "snippet": "Studied graph neural\u2026",
+            "via": "clustering"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_gg5",
+            "quote": "clustering",
+            "snippet": "Linked 14 public\u2026",
+            "via": "clustering"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia1",
+            "quote": "clustering",
+            "snippet": "Built the text-cleaning\u2026",
+            "via": "clustering"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia3",
+            "quote": "clustering",
+            "snippet": "Showed why airline support\u2026",
+            "via": "clustering"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ql2",
+            "quote": "clustering",
+            "snippet": "Ran a data quality check\u2026",
+            "via": "clustering"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:Data & Visualisation",
+            "quote": "clustering",
+            "snippet": "Leiden clustering",
+            "via": "clustering"
+          }
+        ]
+      },
+      {
+        "term": "cost data",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "customer segmentation",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "supported",
+        "evidence": [
+          {
+            "kind": "skills",
+            "id": "skills:ML & Statistics",
+            "quote": "customer segmentation",
+            "snippet": "customer segmentation (k-means, HAC, DBSCAN)",
+            "via": "customer segmentation"
+          }
+        ]
+      },
+      {
+        "term": "dashboards",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "historical pricing",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "machine learning models",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "margin prediction",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "pilot deployments",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "Power BI",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "pricing optimisation",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "prioritisation models",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "Python",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "az10",
+            "quote": "python",
+            "snippet": "Built a generative AI\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "az12",
+            "quote": "Python",
+            "snippet": "Did the data analysis on\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "dc6",
+            "quote": "Python",
+            "snippet": "Led the design in a\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "fl7",
+            "quote": "python",
+            "snippet": "For a private client,\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_gg5",
+            "quote": "Python",
+            "snippet": "Linked 14 public\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia1",
+            "quote": "Python",
+            "snippet": "Built the text-cleaning\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia3",
+            "quote": "Python",
+            "snippet": "Showed why airline support\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ms1",
+            "quote": "Python",
+            "snippet": "Built a search assistant\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ql2",
+            "quote": "Python",
+            "snippet": "Ran a data quality check\u2026",
+            "via": "Python"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:core",
+            "quote": "Python",
+            "snippet": "Python",
+            "via": "Python"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:Languages",
+            "quote": "Python",
+            "snippet": "Python",
+            "via": "Python"
+          },
+          {
+            "kind": "profile_facts",
+            "id": "profile_facts:2",
+            "quote": "Python",
+            "snippet": "Handles the whole data workflow in Python and SQL, from\u2026",
+            "via": "Python"
+          }
+        ]
+      },
+      {
+        "term": "regression",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "fl5",
+            "quote": "regression",
+            "snippet": "Built repeatable\u2026",
+            "via": "regression"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_gg5",
+            "quote": "regression",
+            "snippet": "Linked 14 public\u2026",
+            "via": "regression"
+          }
+        ]
+      },
+      {
+        "term": "scikit-learn",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "fl7",
+            "quote": "scikit-learn",
+            "snippet": "For a private client,\u2026",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "bullet",
+            "id": "fl5",
+            "quote": "scikit-learn",
+            "snippet": "Built repeatable\u2026",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_gg5",
+            "quote": "scikit-learn",
+            "snippet": "Linked 14 public\u2026",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia1",
+            "quote": "scikit-learn",
+            "snippet": "Built the text-cleaning\u2026",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_ia3",
+            "quote": "scikit-learn",
+            "snippet": "Showed why airline support\u2026",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:core",
+            "quote": "scikit-learn",
+            "snippet": "scikit-learn",
+            "via": "scikit-learn"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:ML & Statistics",
+            "quote": "scikit-learn",
+            "snippet": "scikit-learn",
+            "via": "scikit-learn"
+          }
+        ]
+      },
+      {
+        "term": "SQL",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "supported",
+        "evidence": [
+          {
+            "kind": "skills",
+            "id": "skills:core",
+            "quote": "SQL",
+            "snippet": "SQL",
+            "via": "SQL"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:Languages",
+            "quote": "SQL",
+            "snippet": "SQL",
+            "via": "SQL"
+          },
+          {
+            "kind": "profile_facts",
+            "id": "profile_facts:2",
+            "quote": "SQL",
+            "snippet": "Handles the whole data workflow in Python and SQL, from\u2026",
+            "via": "SQL"
+          }
+        ]
+      },
+      {
+        "term": "statistical methods",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "supervised/unsupervised learning",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "Tableau",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "supported",
+        "evidence": [
+          {
+            "kind": "skills",
+            "id": "skills:core",
+            "quote": "Tableau",
+            "snippet": "Tableau",
+            "via": "Tableau"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:Data & Visualisation",
+            "quote": "Tableau",
+            "snippet": "Tableau",
+            "via": "Tableau"
+          }
+        ]
+      },
+      {
+        "term": "TensorFlow",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "existing",
+        "evidence": [
+          {
+            "kind": "bullet",
+            "id": "fl7",
+            "quote": "TensorFlow",
+            "snippet": "For a private client,\u2026",
+            "via": "TensorFlow"
+          },
+          {
+            "kind": "bullet",
+            "id": "p_bt1",
+            "quote": "TensorFlow",
+            "snippet": "Trained a Bitcoin price\u2026",
+            "via": "TensorFlow"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:core",
+            "quote": "TensorFlow",
+            "snippet": "TensorFlow",
+            "via": "TensorFlow"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:ML & Statistics",
+            "quote": "TensorFlow",
+            "snippet": "TensorFlow",
+            "via": "TensorFlow"
+          },
+          {
+            "kind": "skills",
+            "id": "skills:Cloud & MLOps",
+            "quote": "TensorFlow",
+            "snippet": "TensorFlow Serving",
+            "via": "TensorFlow"
+          }
+        ]
+      },
+      {
+        "term": "time series forecasting",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      },
+      {
+        "term": "vendor incentive",
+        "alts": [],
+        "weight": 2.0,
+        "importance": "stated",
+        "bucket": "gap",
+        "evidence": []
+      }
+    ]
+  },
+  "profile_fragments": [],
+  "profile_fragments_skipped": [],
+  "profile_proof_line": "",
+  "keywords": [
+    {
+      "term": "deal scoring",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "A/B testing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "business experimentation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "classification",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "clustering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "cost data",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "customer segmentation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "dashboards",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "historical pricing",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "machine learning models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "margin prediction",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pilot deployments",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Power BI",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pricing optimisation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "prioritisation models",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "regression",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "scikit-learn",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "SQL",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "statistical methods",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "supervised/unsupervised learning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Tableau",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "TensorFlow",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "time series forecasting",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "vendor incentive",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "SHI is a $16 billion global provider of IT solutions and services that helps organizations change the world through technology.",
+  "team": "Growth Strategy & Deal Operations",
+  "ceiling": 0.4,
+  "genuine_gaps": [
+    "deal scoring",
+    "cost data",
+    "historical pricing",
+    "margin prediction",
+    "pricing optimisation",
+    "prioritisation models",
+    "statistical methods",
+    "vendor incentive"
+  ],
+  "possible_evidence": {
+    "A/B testing": [
+      {
+        "via": "experimentation",
+        "where": [
+          "skills: Cloud & MLOps"
+        ]
+      },
+      {
+        "via": "hypothesis testing",
+        "where": [
+          "skills: ML & Statistics"
+        ]
+      },
+      {
+        "via": "experimental design",
+        "where": [
+          "skills: ML & Statistics"
+        ]
+      }
+    ],
+    "business experimentation": [
+      {
+        "via": "hypothesis testing",
+        "where": [
+          "skills: ML & Statistics"
+        ]
+      },
+      {
+        "via": "experimental design",
+        "where": [
+          "skills: ML & Statistics"
+        ]
+      }
+    ],
+    "dashboards": [
+      {
+        "via": "reporting",
+        "where": [
+          "bullet p_gg4",
+          "bullet p_gg5",
+          "bullet p_bt2",
+          "bullet p_ql3"
+        ]
+      },
+      {
+        "via": "tableau",
+        "where": [
+          "skills: core",
+          "skills: Data & Visualisation"
+        ]
+      }
+    ],
+    "machine learning models": [
+      {
+        "via": "supervised learning",
+        "where": [
+          "bullet p_ia3"
+        ]
+      },
+      {
+        "via": "classification",
+        "where": [
+          "bullet fl5",
+          "bullet p_ia3",
+          "bullet p_ch1"
+        ]
+      },
+      {
+        "via": "regression",
+        "where": [
+          "bullet fl5",
+          "bullet p_gg2"
+        ]
+      }
+    ],
+    "pilot deployments": [
+      {
+        "via": "model deployment",
+        "where": [
+          "bullet fl1"
+        ]
+      },
+      {
+        "via": "model serving",
+        "where": [
+          "bullet fl8",
+          "bullet p_bt1"
+        ]
+      },
+      {
+        "via": "mlops",
+        "where": [
+          "skills: Cloud & MLOps",
+          "bullet az3",
+          "bullet az12"
+        ]
+      },
+      {
+        "via": "ci/cd",
+        "where": [
+          "skills: Cloud & MLOps"
+        ]
+      }
+    ],
+    "Power BI": [
+      {
+        "via": "reporting",
+        "where": [
+          "bullet p_gg4",
+          "bullet p_gg5",
+          "bullet p_bt2",
+          "bullet p_ql3"
+        ]
+      },
+      {
+        "via": "tableau",
+        "where": [
+          "skills: core",
+          "skills: Data & Visualisation"
+        ]
+      }
+    ],
+    "supervised/unsupervised learning": [
+      {
+        "via": "exploratory data analysis",
+        "where": [
+          "bullet az5",
+          "bullet p_ql2"
+        ]
+      },
+      {
+        "via": "clustering",
+        "where": [
+          "skills: Data & Visualisation",
+          "bullet az8",
+          "bullet p_gg1",
+          "bullet p_gg4"
+        ]
+      },
+      {
+        "via": "feature engineering",
+        "where": [
+          "bullet fl5"
+        ]
+      }
+    ]
+  },
+  "context_terms": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.28,
+      "score_stemmed": 0.36,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.974864298795932,
+      "fill": {
+        "added": [
+          "p_ia2"
+        ],
+        "rejected_overflow": [],
+        "renders": 10,
+        "reached": true,
+        "sections": [],
+        "linespread": 1.08
+      },
+      "shrinks": 0,
+      "reverted": [],
+      "wording": {
+        "terms": [
+          "machine learning models",
+          "time series forecasting"
+        ],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [
+          "machine learning models",
+          "time series forecasting"
+        ],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 12,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [],
+        "unmeasured": false
+      },
+      "violations": [
+        "p_gg2: adds the word 'enabled', which the original bullet does not say",
+        "p_gg2: adds the word 'scikit', which the original bullet does not say",
+        "p_gg2: adds the word 'learn', which the original bullet does not say",
+        "p_gg2: adds the word 'reducing', which the original bullet does not say",
+        "p_gg2: adds the word 'revealing', which the original bullet does not say",
+        "p_gg2: dropped the number 11459",
+        "p_gg2: dropped 'held-out'"
+      ],
+      "warnings": [
+        "replaces: p_gg5 left off (it replaces the hook's proof bullet p_gg2, which stays)",
+        "selection: left off, they match nothing in the ad: az6, dc8",
+        "wording: no bullet carries the stem of machine learning models, time series forecasting (skills or profile only)"
+      ],
+      "wording_misses": [
+        "machine learning models",
+        "time series forecasting"
+      ],
+      "misses": [
+        "deal scoring",
+        "A/B testing",
+        "business experimentation",
+        "cost data",
+        "customer segmentation",
+        "dashboards",
+        "historical pricing",
+        "margin prediction",
+        "pilot deployments",
+        "Power BI",
+        "pricing optimisation",
+        "prioritisation models",
+        "statistical methods",
+        "supervised/unsupervised learning",
+        "Tableau",
+        "vendor incentive"
+      ],
+      "rephrase": {
+        "eligible": 1,
+        "asked": 1,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "deal scoring",
+          "A/B testing",
+          "business experimentation",
+          "cost data",
+          "customer segmentation",
+          "dashboards",
+          "historical pricing",
+          "machine learning models",
+          "margin prediction",
+          "pilot deployments",
+          "Power BI",
+          "pricing optimisation",
+          "prioritisation models",
+          "statistical methods",
+          "supervised/unsupervised learning",
+          "Tableau",
+          "time series forecasting",
+          "vendor incentive"
+        ],
+        "proposed": 1,
+        "accepted": 0,
+        "blocked": 1,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az8",
+              "az10",
+              "az12",
+              "az6"
+            ],
+            "dc180": [
+              "dc7",
+              "dc6",
+              "dc8"
+            ],
+            "freelance": [
+              "fl5",
+              "fl8",
+              "fl7"
+            ],
+            "avasoft": [
+              "av5",
+              "av11",
+              "av8"
+            ]
+          },
+          "projects": [
+            "gtaigraph",
+            "iata",
+            "churn"
+          ],
+          "project_bullets": {
+            "gtaigraph": [
+              "p_gg3",
+              "p_gg2"
+            ],
+            "iata": [
+              "p_ia1",
+              "p_ia3"
+            ],
+            "churn": [
+              "p_ch1"
+            ]
+          }
+        },
+        "rephrase": {
+          "p_gg2": "Trained per-gene regression models using GPU-enabled random forest and scikit-learn, reducing RAM from 8.2 to 5.5 GB, and validated them, revealing overfitting (train Pearson 0.807 vs test 0.545)."
+        },
+        "profile": "Data scientist who tests models honestly: trained separate models for 11,459 genes on one GPU, and showed on data they had not seen that they were overfitting. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking."
+      },
+      "selection": {
+        "az": [
+          "az10",
+          "az12",
+          "az8"
+        ],
+        "dc180": [
+          "dc6",
+          "dc7"
+        ],
+        "freelance": [
+          "fl8",
+          "fl5",
+          "fl7"
+        ],
+        "avasoft": [
+          "av11",
+          "av8",
+          "av5"
+        ],
+        "gtaigraph": [
+          "p_gg2",
+          "p_gg3"
+        ],
+        "iata": [
+          "p_ia3",
+          "p_ia1",
+          "p_ia2"
+        ],
+        "churn": [
+          "p_ch1"
+        ]
+      },
+      "profile": "Data scientist who tests models honestly: trained separate models for 11,459 genes on one GPU, and showed on data they had not seen that they were overfitting. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking.",
+      "rephrase_coverage": {
+        "eligible": 4,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "deal scoring",
+          "A/B testing",
+          "business experimentation",
+          "cost data",
+          "customer segmentation",
+          "dashboards",
+          "historical pricing",
+          "machine learning models",
+          "margin prediction",
+          "pilot deployments",
+          "Power BI",
+          "pricing optimisation",
+          "prioritisation models",
+          "statistical methods",
+          "supervised/unsupervised learning",
+          "Tableau",
+          "time series forecasting",
+          "vendor incentive"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/SHI_Data_Scientist_2b18795affde",
+  "analysis_warnings": [
+    "extract_keywords: dropped keyword 'R' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'CRM Salesforce' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'Q2C systems' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped visualisations, win/loss, XGBoost, machine learning, communication, data analysis, forecasting, cross-functional, data engineering, data pipelines, data visualization, experimentation, problem-solving, recommendation, stakeholders, testing, time series, finance, B2B enterprise sales, behavioural economics, negotiation science, pricing models, SaaS/commercial optimization",
+    "section order: graduate order (Education, then Skills, before Work Experience): the ad says 'early-career'",
+    "plain style: plain version missing for p_gg2, p_gg3 (their original wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)",
+    "layout: the first Work Experience bullet starts at 85% of page 1 (at most 55%); nothing is taken out of Education for it"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Machine Learning, Deep Learning & Statistics",
+      "Python, Data Quality & Cloud",
+      "NLP, LLMs, Embeddings & Evaluation",
+      "Client Delivery & Communication"
+    ],
+    "dropped_groups": [],
+    "family": "data_scientist",
+    "source": "family"
+  },
+  "achievements": [],
+  "profile": {
+    "facts": [],
+    "retried": false,
+    "fallback": false,
+    "words": 103,
+    "shortfall": ""
+  },
+  "hook": {
+    "problem": "regression",
+    "proof_bullet_id": "p_gg2",
+    "number": "8.2",
+    "headline": "Per-gene models for 11,459 genes, validated on held-out data",
+    "profile_line": "Data scientist who tests models honestly: trained separate models for 11,459 genes on one GPU, and showed on data they had not seen that they were overfitting.",
+    "letter_sentence": "I trained separate models for 11,459 genes on one GPU and tested them on data they had not seen, which showed they were overfitting (0.807 on training data, 0.545 on new data).",
+    "entry_id": "gtaigraph",
+    "entry_kind": "project",
+    "org": "GTAI Cell Line Finder",
+    "relevant_role_id": "freelance",
+    "score": 8.0,
+    "flags": [],
+    "source": "library",
+    "notes": [],
+    "hook_id": "h_scale_gpu",
+    "overlap": [
+      [
+        "clustering",
+        2.0
+      ],
+      [
+        "Python",
+        2.0
+      ],
+      [
+        "regression",
+        2.0
+      ],
+      [
+        "scikit-learn",
+        2.0
+      ]
+    ],
+    "reason": "h_scale_gpu won: its proof bullets are evidence of 4 existing requirements of the ad, 'clustering' (2), 'Python' (2), 'regression' (2), 'scikit-learn' (2) (weight 8)"
+  },
+  "hook_notes": [],
+  "hook_family_headline": "",
+  "hook_family_profile": true,
+  "family_line": "Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking.",
+  "family_opening": "",
+  "letter_families": [
+    "data_scientist"
+  ],
+  "pages_over": false,
+  "ats": {
+    "strict": 28.000000000000004,
+    "ceiling": 40.0,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "classification",
+      "clustering",
+      "Python",
+      "regression",
+      "scikit-learn",
+      "SQL",
+      "TensorFlow"
+    ],
+    "misses": [
+      "deal scoring",
+      "A/B testing",
+      "business experimentation",
+      "cost data",
+      "customer segmentation",
+      "dashboards",
+      "historical pricing",
+      "margin prediction",
+      "pilot deployments",
+      "Power BI",
+      "pricing optimisation",
+      "prioritisation models",
+      "statistical methods",
+      "supervised/unsupervised learning",
+      "Tableau",
+      "vendor incentive",
+      "machine learning models",
+      "time series forecasting"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {},
+    "strict_plain": 28.000000000000004,
+    "strict_full": 28.000000000000004
+  },
+  "lints": [
+    {
+      "code": "bullet-no-number",
+      "severity": "info",
+      "ids": [
+        "az8",
+        "dc7",
+        "fl5",
+        "fl7",
+        "av5",
+        "p_gg3",
+        "p_ia2",
+        "p_ch1"
+      ],
+      "fix": "add a number to the fact bank",
+      "message": "bullet(s) with no number and no result: az8, dc7, fl5, fl7, av5, p_gg3, p_ia2, p_ch1"
+    }
+  ],
+  "style_fallback": [],
+  "stretch": true,
+  "band": {
+    "outcome": "skip",
+    "strict": 28.000000000000004,
+    "ceiling": 40.0,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": "ATS S < 50"
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "classification",
+    "clustering",
+    "customer segmentation",
+    "Python",
+    "regression",
+    "scikit-learn",
+    "SQL",
+    "Tableau",
+    "TensorFlow",
+    "time series forecasting"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.28,
+    "score_stemmed": 0.36,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.974864298795932,
+    "hits": [
+      "classification",
+      "clustering",
+      "Python",
+      "regression",
+      "scikit-learn",
+      "SQL",
+      "TensorFlow"
+    ],
+    "wording_misses": [
+      "machine learning models",
+      "time series forecasting"
+    ],
+    "misses": [
+      "deal scoring",
+      "A/B testing",
+      "business experimentation",
+      "cost data",
+      "customer segmentation",
+      "dashboards",
+      "historical pricing",
+      "margin prediction",
+      "pilot deployments",
+      "Power BI",
+      "pricing optimisation",
+      "prioritisation models",
+      "statistical methods",
+      "supervised/unsupervised learning",
+      "Tableau",
+      "vendor incentive"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.974864298795932,
+  "fill": {
+    "added": [
+      "p_ia2"
+    ],
+    "rejected_overflow": [],
+    "renders": 10,
+    "reached": true,
+    "sections": [],
+    "linespread": 1.08
+  },
+  "fill_shortfall": "",
+  "left_out": [],
+  "needs_result": [
+    {
+      "id": "az8",
+      "entry": "AstraZeneca",
+      "text": "Studied graph neural network research and designed how genes and cell lines are linked in one graph, with clustering to find similar ones (Leiden, KNN)."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Designed how a user's question reaches the AI server: one AI model writes the database query and a second runs the statistics before the answer returns (MCP, GraphQL)."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Built repeatable machine-learning pipelines that create features, compare models and tune the best one, for both classification and regression tasks (scikit-learn)."
+    },
+    {
+      "id": "fl7",
+      "entry": "Freelance",
+      "text": "For a private client, built AI chat and document-search (RAG) tools, served machine-learning models as web APIs, and contributed to a team fine-tune of a Llama model (LangChain, FastAPI)."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Made the finance app keep working without a signal by saving records on the phone and syncing them in the background (Flutter, Isar)."
+    },
+    {
+      "id": "p_gg3",
+      "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+      "text": "Combined mRNA and protein evidence per gene with Stouffer's method."
+    },
+    {
+      "id": "p_ia2",
+      "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+      "text": "In a five-person team, kept everyone's work on separate Git branches merged through reviewed pull requests, and ran the team's task board (Git, Trello)."
+    },
+    {
+      "id": "p_ch1",
+      "entry": "Banking Customer Churn \u2014 propensity model",
+      "text": "Predicted which bank customers were likely to leave, tuning the model in two rounds and scoring it with a measure that is fair to uneven groups (R, XGBoost)."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 12,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 6,
+      "longest_bullet": 3
+    },
+    "links": []
+  },
+  "hook_placed": {
+    "headline": true,
+    "profile": true,
+    "bullet": true,
+    "number_in_pdf": true
+  },
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "scikit-learn"
+    ],
+    "results_bold": 0,
+    "results_unmatched": [
+      "az10",
+      "az12",
+      "dc6",
+      "fl8",
+      "av11",
+      "av8",
+      "p_gg2",
+      "p_ia3",
+      "p_ia1"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "p_ia1",
+        "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 8.67,
+        "keywords": 6.0,
+        "domain": 2.67,
+        "chosen": true,
+        "text": "Built the text-cleaning and grouping steps for airline support tickets, and traced weak groupings (scores below 0.30) to repeated template wording (Python, scikit-learn)."
+      },
+      {
+        "id": "p_ia3",
+        "entry": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 8.67,
+        "keywords": 8.0,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Showed why airline support tickets would not group by topic (the wording was too similar) but could be sorted well with supervised models; our team project scored 79/100 (Python, scikit-learn)."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 8.67,
+        "keywords": 4.0,
+        "domain": 4.67,
+        "chosen": true,
+        "text": "Predicted which bank customers were likely to leave, tuning the model in two rounds and scoring it with a measure that is fair to uneven groups (R, XGBoost)."
+      },
+      {
+        "id": "fl1",
+        "entry": "Freelance",
+        "score": 8.0,
+        "keywords": 8.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      },
+      {
+        "id": "fl5",
+        "entry": "Freelance",
+        "score": 8.0,
+        "keywords": 8.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Built repeatable machine-learning pipelines that create features, compare models and tune the best one, for both classification and regression tasks (scikit-learn)."
+      },
+      {
+        "id": "p_gg2",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 4.67,
+        "keywords": 4.0,
+        "domain": 0.67,
+        "chosen": true,
+        "text": "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545).",
+        "plain_skipped": "no `plain:` line in fact_bank.yaml (careerops plain-draft --id p_gg2 drafts one for you to approve)"
+      },
+      {
+        "id": "az5",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Explored 14 research datasets with basic statistics (averages, spread and correlations) and set clear rules on which data later models could use (Python, pandas)."
+      },
+      {
+        "id": "fl7",
+        "entry": "Freelance",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "For a private client, built AI chat and document-search (RAG) tools, served machine-learning models as web APIs, and contributed to a team fine-tune of a Llama model (LangChain, FastAPI)."
+      },
+      {
+        "id": "p_bt1",
+        "entry": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Trained a Bitcoin price forecaster, tested it only on data later than what it learned from, and served it through a web API (TensorFlow)."
+      },
+      {
+        "id": "p_ql2",
+        "entry": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Ran a data quality check on all 859,494 training examples, found 44,369 extra duplicates and hand-reviewed 181 suspect records before training (Python)."
+      }
+    ],
+    "projects": [
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 8.67,
+        "sum": 18.01,
+        "chosen": true
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 8.67,
+        "sum": 8.67,
+        "chosen": true
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 4.67,
+        "sum": 15.35,
+        "chosen": true
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 4.0,
+        "sum": 6.0,
+        "chosen": false
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 4.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 2.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 2.0,
+        "sum": 2.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "astrofreud",
+        "name": "AstroFreud \u2014 LangGraph interview agent",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 4,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 1,
+    "asked": 1,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "deal scoring",
+      "A/B testing",
+      "business experimentation",
+      "cost data",
+      "customer segmentation",
+      "dashboards",
+      "historical pricing",
+      "machine learning models",
+      "margin prediction",
+      "pilot deployments",
+      "Power BI",
+      "pricing optimisation",
+      "prioritisation models",
+      "statistical methods",
+      "supervised/unsupervised learning",
+      "Tableau",
+      "time series forecasting",
+      "vendor incentive"
+    ],
+    "proposed": 1,
+    "accepted": 0,
+    "blocked": 1,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "deal scoring",
+      "A/B testing",
+      "business experimentation",
+      "cost data",
+      "customer segmentation",
+      "dashboards",
+      "historical pricing",
+      "machine learning models",
+      "margin prediction",
+      "pilot deployments",
+      "Power BI",
+      "pricing optimisation",
+      "prioritisation models",
+      "statistical methods",
+      "supervised/unsupervised learning",
+      "Tableau",
+      "time series forecasting",
+      "vendor incentive"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "ATS S < 50: no letter was drafted",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "p_ia3",
+        "text": "Showed why airline support tickets would not group by topic (the wording was too similar) but could be sorted well with supervised models; our team project scored 79/100 (Python, scikit-learn)."
+      },
+      {
+        "id": "fl5",
+        "text": "Built repeatable machine-learning pipelines that create features, compare models and tune the best one, for both classification and regression tasks (scikit-learn)."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2172,
+        "prompt_tokens": 1678,
+        "completion_tokens": 494,
+        "reasoning_tokens": 280,
+        "total_tokens": 2172,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 671,
+        "prompt_tokens": 698,
+        "completion_tokens": 267,
+        "reasoning_tokens": 196,
+        "total_tokens": 965,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 2376,
+    "completion_tokens": 761,
+    "reasoning_tokens": 476,
+    "total_tokens": 3137,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1678,
+        "completion_tokens": 494,
+        "reasoning_tokens": 280,
+        "total_tokens": 2172,
+        "prompt_tokens_per_call": [
+          1678
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 1,
+        "prompt_tokens": 698,
+        "completion_tokens": 267,
+        "reasoning_tokens": 196,
+        "total_tokens": 965,
+        "prompt_tokens_per_call": [
+          698
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 2,
+        "prompt_tokens": 2376,
+        "completion_tokens": 761,
+        "reasoning_tokens": 476,
+        "total_tokens": 3137,
+        "tasks": [
+          "extract_keywords",
+          "rephrase_bullets"
+        ]
+      }
+    }
+  },
+  "style": {
+    "style": "plain",
+    "strict_plain": 28.000000000000004,
+    "strict_technical": 28.000000000000004,
+    "strict_full": 28.000000000000004,
+    "style_fallback": [],
+    "topped_up": [],
+    "plain_skipped": {
+      "p_gg2": "no `plain:` line in fact_bank.yaml (careerops plain-draft --id p_gg2 drafts one for you to approve)",
+      "p_gg3": "no `plain:` line in fact_bank.yaml (careerops plain-draft --id p_gg3 drafts one for you to approve)"
+    },
+    "plain_refused": {},
+    "brackets": {},
+    "readability": {
+      "az8": 59.6,
+      "az10": 36.2,
+      "az12": 19.6,
+      "dc6": 41.0,
+      "dc7": 36.4,
+      "fl8": 47.8,
+      "fl5": 20.3,
+      "fl7": 25.7,
+      "av5": 62.1,
+      "av11": 43.2,
+      "av8": 60.4,
+      "p_ia1": 43.7,
+      "p_ia3": 49.5,
+      "p_ia2": 59.1,
+      "p_ch1": 57.6
+    },
+    "plain_on_cv": [
+      "az10",
+      "az12",
+      "az8",
+      "dc6",
+      "dc7",
+      "fl8",
+      "fl5",
+      "fl7",
+      "av11",
+      "av8",
+      "av5",
+      "p_ia3",
+      "p_ia1",
+      "p_ia2",
+      "p_ch1"
+    ],
+    "plain_missing": [
+      "p_gg2",
+      "p_gg3"
+    ],
+    "additional_experience": [],
+    "section_order": [
+      "profile",
+      "education",
+      "skills",
+      "experience",
+      "projects",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "section_order_reason": "graduate order (Education, then Skills, before Work Experience): the ad says 'early-career'",
+    "first_bullet_at": 0.848
+  },
+  "cv_pdf": "data/outputs/SHI_Data_Scientist_2b18795affde/Thiruvel Andagurunathan Pandian CV - Data Scientist - SHI.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Scientist",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "Data scientist who tests models honestly: trained separate models for 11,459 genes on one GPU, and showed on data they had not seen that they were overfitting. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking.",
+    "skills": {
+      "Machine Learning, Deep Learning & Statistics": "Machine learning concepts, statistical analysis (descriptive statistics, correlation analysis), predictive modelling (gradient boosting with XGBoost, random forest, scikit-learn), clustering (K-Means, HAC, DBSCAN, Leiden), deep learning (PyTorch, TensorFlow/Keras, LSTM, BiRNN, CNN), time-series forecasting (cyclic time encoding, TimeSeriesSplit), anomaly detection (Isolation Forest), class-imbalance handling (SMOTE), hyper-parameter tuning (grid search, two-stage Bayesian), model evaluation (held-out, cross-validation, Pearson, MCC), statistical inference and experimental design (confidence intervals, bootstrap, hypothesis testing; MSc coursework), MLflow experiment tracking",
+      "Python, Data Quality & Cloud": "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS, Docker, Kubernetes (AWS EKS), serverless deployment (AWS Lambda), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git",
+      "NLP, LLMs, Embeddings & Evaluation": "NLP (text preprocessing, TF-IDF, SBERT embeddings, text clustering), Hugging Face Transformers, large language models (Claude, OpenAI, open-weight via Ollama), prompt engineering, RAG with embeddings (ChromaDB), agents (LangChain, LangGraph), team LoRA fine-tune of Llama, LLM evaluation (hallucination-rate analysis, deterministic guardrails)",
+      "Client Delivery & Communication": "Scoping ambiguous problems with clients, stakeholder demos, working with client engineering teams, code review, transparent reporting of model limitations, root-cause analysis, technical documentation"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist, MSc Dissertation Project",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "MSc dissertation (industry-affiliated)",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Built a generative AI assistant researchers could trust: it checks gene names against official databases and falls back to a local list of 19,213 genes if they go down (LangChain, AWS).",
+          "Did the data analysis on 14 research datasets and combined them so the assistant only used trusted data, then put it online on AWS (Python, AWS Lambda).",
+          "Studied graph neural network research and designed how genes and cell lines are linked in one graph, with clustering to find similar ones (Leiden, KNN)."
+        ],
+        "situation_owner": [
+          "az1",
+          "az10"
+        ],
+        "bullet_ids": [
+          "az10",
+          "az12",
+          "az8"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "AI Engineer",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Led the design in a five-person team that turned a startup client's vague idea into a working AI prototype in three months; senior leadership rated it 5 stars (Python, MCP).",
+          "Designed how a user's question reaches the AI server: one AI model writes the database query and a second runs the statistics before the answer returns (MCP, GraphQL)."
+        ],
+        "situation_owner": [
+          "dc1",
+          "dc6"
+        ],
+        "bullet_ids": [
+          "dc6",
+          "dc7"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built a private client an AI finance assistant that reads his income, spending, loans and investments and suggests next steps, self-hosted to keep costs low (Llama, Ollama).",
+          "Built repeatable machine-learning pipelines that create features, compare models and tune the best one, for both classification and regression tasks (scikit-learn).",
+          "For a private client, built AI chat and document-search (RAG) tools, served machine-learning models as web APIs, and contributed to a team fine-tune of a Llama model (LangChain, FastAPI)."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "fl8",
+          "fl5",
+          "fl7"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer Trainee, then Software Development Engineer",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Helped build a money-management app for a company's 10,000+ employees, linking live stock prices and bank accounts to a backend of 200+ endpoints; shipped the first release (Flutter, AWS).",
+          "Shipped features in a live finance app as part of a team, connecting live market data and bank accounts through APIs with secure sign-in (Twelve Data, Plaid).",
+          "Made the finance app keep working without a signal by saving records on the phone and syncing them in the background (Flutter, Isar)."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "av11",
+          "av8",
+          "av5"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "display_name": "GTAI Graph PoC -- Cancer Cell-Line Omics Graph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "stack": "Python, networkx, Leiden, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "public": true,
+        "situation": "Needed to find which cell lines behave unusually for a gene",
+        "bullets": [
+          "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545).",
+          "Combined mRNA and protein evidence per gene with Stouffer's method."
+        ],
+        "situation_owner": [
+          "p_gg1",
+          "p_gg5"
+        ],
+        "bullet_ids": [
+          "p_gg2",
+          "p_gg3"
+        ]
+      },
+      {
+        "id": "iata",
+        "display_name": "IATA Customer-Feedback Text Analytics",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "stack": "Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN",
+        "situation": "Needed structure in unstructured airline support tickets",
+        "github": "https://github.com/Thiruvel-AP/TextAnalytics",
+        "public": true,
+        "bullets": [
+          "Showed why airline support tickets would not group by topic (the wording was too similar) but could be sorted well with supervised models; our team project scored 79/100 (Python, scikit-learn).",
+          "Built the text-cleaning and grouping steps for airline support tickets, and traced weak groupings (scores below 0.30) to repeated template wording (Python, scikit-learn).",
+          "In a five-person team, kept everyone's work on separate Git branches merged through reviewed pull requests, and ran the team's task board (Git, Trello)."
+        ],
+        "situation_owner": [
+          "p_ia1"
+        ],
+        "bullet_ids": [
+          "p_ia3",
+          "p_ia1",
+          "p_ia2"
+        ]
+      },
+      {
+        "id": "churn",
+        "display_name": "Banking Customer Churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "stack": "R, tidymodels, XGBoost",
+        "github": "https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction",
+        "public": true,
+        "bullets": [
+          "Predicted which bank customers were likely to leave, tuning the model in two rounds and scoring it with a measure that is fair to uneven groups (R, XGBoost)."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "p_ch1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "dc8": "now in live use",
+      "dc9": "delivered ahead of schedule (client founder's written recommendation)",
+      "fl8": "self-hosted on the client's own server to keep running costs down",
+      "av2": "10 reusable component templates",
+      "av11": "first release (MVP) for a company's 10,000+ employees; backend of 200+ API endpoints",
+      "av8": "shipped in a production fintech application",
+      "av9": "10 reusable component templates",
+      "av10": "market-trend signals used for pricing decisions",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_ia3": "team project graded 79/100",
+      "p_bt2": "not deployed: too many false signals on live prices",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "plain": [
+      "av11",
+      "av5",
+      "av8",
+      "az10",
+      "az12",
+      "az8",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl5",
+      "fl7",
+      "fl8",
+      "p_ch1",
+      "p_ia1",
+      "p_ia3"
+    ],
+    "hook_headline": "Per-gene models for 11,459 genes, validated on held-out data",
+    "hook_number": "8.2",
+    "headline_title": "Data Scientist",
+    "profile_head": "Data scientist who tests models honestly: trained separate models for 11,459 genes on one GPU, and showed on data they had not seen that they were overfitting. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking.",
+    "section_order": [
+      "profile",
+      "education",
+      "skills",
+      "experience",
+      "projects",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "education_compact": [
+      {
+        "kind": "degree",
+        "head": "MSc Data Science",
+        "school": "University of Bristol, UK",
+        "cls": "",
+        "tail": "University of Bristol, UK",
+        "dates": "Sep 2025 \u2013 Sep 2026"
+      },
+      {
+        "kind": "dissertation",
+        "text": "Dissertation with AstraZeneca affiliation (GeneTraceAI)"
+      },
+      {
+        "kind": "degree",
+        "head": "B.E. Electrical & Electronics Engineering",
+        "school": "St. Joseph's College of Engineering",
+        "cls": "First Class with Distinction",
+        "tail": "St. Joseph's College of Engineering, First Class with Distinction",
+        "dates": "Sep 2019 \u2013 Apr 2023"
+      }
+    ],
+    "linespread": 1.08,
+    "profile_min_words": 100
+  },
+  "attempt": 0,
+  "current_attempt": 0
+}

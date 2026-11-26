@@ -1,0 +1,56 @@
+Company: Nimble Gravity
+Title: Data Engineer
+URL: https://job-boards.greenhouse.io/nimblegravity/jobs/4740955005
+Source: greenhouse
+Apply kind: greenhouse
+Location: LATAM (Remote)
+Posted: 2026-11-15T15:56:31-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-18
+Listed: yes
+
+We are looking for a Data Engineer in LATAM to build and scale robust data solutions that support critical business needs. This role focuses on developing high-performance pipelines, enabling reliable data transformation, and delivering production-ready systems. The ideal candidate brings strong experience in Python, SQL, Databricks/PySpark, and modern data engineering practices.
+
+Primary Responsibilities 
+
+- Build, scale, and maintain robust data solutions.
+
+- Implement and optimize high-performance data pipelines: extraction, loading, transformation, and orchestration – that are designed for scalability, reliability, maintainability, and speed.
+
+- Champion modern software engineering practices as CI/CD, infrastructure-as-code, containerization, and cloud-native deployments
+
+- Collaborate closely with business stakeholders to transform use cases into production-ready services and solutions, owning the system from concept to production.
+
+- Implement rigorous testing and monitoring practices to maintain superior data quality and integrity.
+
+Requirements 
+
+Education & Certificates 
+
+- A bachelor's degree or higher in a STEM field, required
+
+- Concentration in Computer Science, Math, Physics or other engineering related field, preferred 
+
+Professional Experience 
+
+- 5+ years of experience in data engineering or a related discipline, with a proven track record of success.
+
+Competencies & Attributes 
+
+- Expertise in Python and SQL, with a strong foundation in data manipulation and analysis.
+
+- Proficient with Databricks/PySpark and dbt for data warehousing and data transformation tasks.
+
+- Experience with workflow orchestration tools e.g. Airflow, Dagster
+
+- Experience working with large language models (LLMs) especially prompt engineering, retrieval-augmented generation (RAG)s, and/or vector databases are pluses.
+
+- Knowledge of fundamental principles of machine learning, feature engineering, and knowledge graphs are pluses.
+
+- Demonstrated experience in designing and implementing complex data systems from the ground up.
+
+- Proficient in handling large-scale data projects, including data cleaning, ETL, and information retrieval.
+
+- Excellent communication skills required, both verbal and written. 
+
+Nimble Gravity is an Equal Opportunity Employer and considers applicants for employment without regard to race, color, religion, sex, orientation, national origin, age, disability, genetics or any other basis forbidden under federal, state, or local law. Nimble Gravity considers all qualified applicants.

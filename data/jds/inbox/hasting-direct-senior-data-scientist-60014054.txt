@@ -1,0 +1,92 @@
+Company: Hasting Direct
+Title: Senior Data Scientist
+URL: https://hastingsdirect.wd3.myworkdayjobs.com/external_careers/job/London/Senior-Data-Scientist_60014054-1
+Source: workday
+Apply kind: workday
+Location: London; Bexhill; Leicester, United Kingdom
+Posted: 2026-11-04
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+We’re a digital insurance provider with ambitious plans to become the best and biggest in the UK market. We’ve made huge investments in our pricing and data capabilities over the past few years, along with nurturing our 4Cs culture.
+
+We provide insurance for over four million customers, but we know there’s even bigger opportunity out there – our Pricing, Data and Analytics community value curiosity, collaboration and constructive challenge.
+
+We are always looking for new ideas and diverse perspectives to question established thinking and drive meaningful change. Great pricing is built on trust, innovation and precision, so our aim is to ensure customers receive a fair and accurate price based on their individual risk, supporting fair outcomes, while delivering sustainable and profitable growth for our company.
+Pricing is more than just a number – it’s a strategic capability. At the heart of Hastings is deep risk insight – continually improving how we assess, segment and price risk through data and analytics
+
+Job Title: Senior Data Scientist
+Location: Bexhill/Leicester/London – Hybrid
+
+Role Purpose 
+The Senior Data Scientist/Data Science Manager will combine their knowledge and understanding of data science concepts with Hastings’ domain knowledge and processes to develop advanced solutions to help Hastings become the top digital insurer in the UK. They will lead a team of data scientists, who will assist them in the creation of data science solutions. 
+
+Accountabilities 
+Your responsibilities will include:
+
+- Lead the delivery of predictive modelling projects from problem definition through development, validation, production integration and ongoing monitoring.
+- Mastering Hastings’ systems, processes, and technology to maximise the effectiveness of your team. 
+- Identify, assess and prepare new data features, evaluating their predictive value, stability, interpretability and potential impact on customer pricing outcomes.
+- Build and promote reusable, maintainable and reproducible modelling tools, pipelines and development practices.
+- Lead a small team of data scientists, supporting their technical development and helping them deliver high-quality work.
+- Work with senior leaders to help shape the team’s data science strategy and identify opportunities to improve modelling capability, processes and ways of working.
+- Contribute to and help establish best-practice standards for modelling, software development, testing, documentation and deployment.
+
+Skills, Knowledge & Experience 
+Essential 
+
+- Deep understanding of predictive modelling and machine learning techniques, including linear and gradient boosted models. 
+- Demonstrable experience delivering data science solutions that have influenced business decisions and generated measurable commercial value.
+- Strong SQL skills, including experience extracting, transforming and preparing data for predictive modelling.
+- Proficiency and experience using Python and ML libraries to build and integrate data science products. 
+- Experience using Git for version control and collaborative software development.
+- Ability to lead technical discussions, influence senior stakeholders and explain complex analytical concepts clearly.
+- Experience working collaboratively across multi-disciplinary teams.
+- Experience reviewing the technical work of other data scientists.
+
+- Desirable 
+- Experience using Azure Machine Learning Studio or similar cloud-based ML platforms. 
+- Experience using Snowflake or similar cloud-based data platforms.
+- Experience leading, supporting, and mentoring junior colleagues.
+- Experience applying data science or predictive modelling within general insurance.
+
+Personal Attributes 
+
+- Natural problem solver who loves building quality solutions to complex real-world challenges. 
+- Dynamic, flexible, and delivery focussed. 
+- Takes ownership and accountability. 
+
+Recruitment Process:
+Recruitment screening call
+1st Round Intro with the hiring leader 
+Case Study round – a mix of Technical and Competency
+
+As a Disability Confident employer, we’re committed to ensuring our recruitment processes are fully inclusive – what this means to you is if you’re applying for a job with us, you’ll have fair access to support and adjustments throughout your recruitment journey. We also welcome applications through the Disability Confident Scheme (DCS).For more information on the DCS, please visit our inclusive business page on our careers website
+
+What we offer
+Join us and you’ll find a different way of doing things. We call it the 4Cs. We focus on getting it right for our colleagues, customers, company and community. As one of our colleagues, you’ll be helping to drive our growth, so in return, we’ll give you all the support, training and development you need. Not to mention plenty of recognition and rewards, and the scope to voice your ideas and put them into practice.
+
+Reward
+Salary – Attractive salary based on experience + car allowance (pay reviews also completed each year)
+
+Flexible Working – We champion a flexible and hybrid working approach so please speak to your recruiter to discuss in more detail, including days in the office and at home. 
+
+Competitive Bonus Scheme - All colleagues are eligible for our annual 4Cs performance bonus, which is usually paid in March. The scheme is based on Hastings’ performance against our business goals and your own personal performance.
+
+Physical Wellbeing – as a Band 4 colleague, Hastings pay for you to receive private medical Insurance (also known as PMI) This gives you flexibility and convenience to see a specialist or consultant and allows you to decide when and where you will be seen.
+
+Financial Wellbeing – As well as providing you with 4x your salary with our life assurance cover and income protection at no extra cost, pension contribution match up to 10%, we are proud to provide you with an AWARD WINNING package which includes – discounts and cashback at everyday retailers and on our own products, fee free independent mortgage advice, and free access to financial wellbeing support.
+
+Mental Wellbeing programme – At Hastings Direct we understand that mental health cannot not be scheduled, that’s why we have a range of support to help you keep yourself well. We have the thrive mental health app, our colleague assistance programme available 24/7, our own, in-house mental health first aiders, support groups and a dedicated team to make sure we are covering your needs
+
+There's more! – 27 days annual leave + bank holidays, with the option to buy or sell one of your contracted weeks, access to our health care cash back plans, dental plans, discounted health assessments, Cycle to work and tech schemes, discounted and free onsite facilities, social events throughout the year and much more ….
+
+Our 4Cs principles are simple: we believe by creating the right culture for our colleagues and giving them the right tools to do their job, we’ll deliver good outcomes for every customer, helping us to grow the company profitably and sustainably and allowing us to invest in the communities we serve
+
+We deliver good outcomes for our customers every time by providing great products at the right price with our simple and straightforward service. We treat customers like we want to be treated - fairly, respectfully and with their best interests at heart
+Hastings Group is an equal opportunities employer which means we treat people fairly. We welcome applications from all suitably skilled persons regardless of their gender, age, race, disability, ethnic background, religion/belief, sexual orientation, gender reassignment or marital/family status. Please also note that we have a thorough referencing process, which includes credit and criminal record checks.
+
+At Hastings Direct, we’re committed to creating an inclusive environment where everyone has the opportunity to succeed. If you require any reasonable adjustments during the recruitment process, we encourage you to be open with us. Our recruitment team is here to provide the support you need to ensure a fair and accessible experience for all.
+
+Job posting end date:18/11/2026

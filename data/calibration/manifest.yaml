@@ -1,0 +1,57 @@
+# Calibration set for M5. One entry per JD. Fields:
+#   id, company, title, jd_file           required
+#   manual_ats / manual_letter_ats        your old hand-tailored scores (different scorer — rank comparison only)
+#   reference_cv                          the CV you actually submitted (scored with the SAME scorer as the pipeline)
+#   outcome                               rejected | no_response | screen_passed | interview | offer
+- id: cal-chattermill
+  company: Chattermill
+  title: Data Scientist
+  jd_file: data/calibration/jds/chattermill.txt
+  outcome: interview
+  # reference_cv: data/calibration/reference/cal-chattermill.pdf   # uncomment once the PDF is saved there
+
+- id: cal-creditspring
+  company: Creditspring
+  title: Data Scientist
+  jd_file: data/calibration/jds/creditspring.txt
+  manual_ats: 0.708
+  # reference_cv: data/calibration/reference/cal-creditspring.pdf
+  # outcome: ...
+
+- id: cal-lendable
+  company: Lendable
+  title: AI Engineer
+  jd_file: data/calibration/jds/lendable.txt
+  manual_ats: 0.797
+  # reference_cv: data/calibration/reference/cal-lendable.pdf
+  # outcome: ...
+
+- id: cal-zoneco
+  company: Zone & Co
+  title: AI Software Engineer
+  jd_file: data/calibration/jds/zoneco.txt
+  manual_ats: 0.833
+  manual_letter_ats: 0.774
+  # reference_cv: data/calibration/reference/cal-zoneco.pdf
+  # outcome: ...
+
+- id: cal-heathrow
+  company: Heathrow Airport Holdings
+  title: Data Scientist
+  jd_file: data/calibration/jds/Heathrow.txt     # file name keeps its capital H
+  # reference_cv: data/calibration/reference/cal-heathrow.pdf
+  # outcome: ...
+
+- id: cal-quantcast                              # fills the tier-2 slot (Machine Learning Engineer, junior)
+  company: Quantcast
+  title: Machine Learning Engineer
+  jd_file: data/calibration/jds/quantcast.txt
+  # reference_cv: data/calibration/reference/cal-quantcast.pdf
+  # outcome: ...
+
+- id: cal-trainline                              # fills the tier-3 slot (Data Analyst)
+  company: Trainline
+  title: Data Analyst
+  jd_file: data/calibration/jds/trainline.txt
+  # reference_cv: data/calibration/reference/cal-trainline.pdf
+  # outcome: ...

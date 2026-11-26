@@ -1,0 +1,7 @@
+facts:
+- keyword: Claude models
+  text: In the header,, change the design of dot to | to separate the items & add more hooks to prove the FDE, rather then just the role. If this role is FDE, add the relevant projects !!
+  target: avasoft
+  job_id: manual:69406a1aef2d
+  date: '2026-10-27'
+  status: provisional

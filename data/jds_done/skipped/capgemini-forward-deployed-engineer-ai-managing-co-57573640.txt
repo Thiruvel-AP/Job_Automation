@@ -1,0 +1,65 @@
+Company: Capgemini
+Title: Forward Deployed Engineer AI-Managing Consultant-AI and Digital Factory
+URL: https://www.reed.co.uk/jobs/forward-deployed-engineer-ai-managing-consultant-ai-and-digital-factory/57573640
+Source: reed
+Location: Bristol, GB
+Posted: 2026-11-16
+Posted via: reed.date
+First seen: 2026-11-18
+
+Forward Deployed Engineers (FDEs) 
+At Capgemini Invent, we believe difference drives change. As inventive transformation consultants, we blend our strategic, creative and scientific capabilities, collaborating closely with clients to deliver cutting-edge solutions. This role sits within our Applied AI Practice, at the sharp end of that mission: embedded directly with client teams, turning ambiguous problems into shipped, production-grade AI systems. 
+We're looking for Forward Deployed Engineers (FDEs), senior technologists who combine deep hands-on engineering with the judgement and presence to operate as a trusted advisor at client sites. This isn't a traditional consulting or traditional engineering role. It's both, at once. You'll be the person a client CTO calls when something needs to be architected, built, and defended in the same week. 
+In this role, you will: 
+
+- Embed directly within client environments (often on-site or hybrid) to design and build bespoke AI and agentic solutions against live, high-stakes business problems.
+- Own technical architecture end to end: from initial discovery and stakeholder workshops through to production deployment, taking personal accountability for delivery quality.
+- Move fluidly between hands-on coding (backend, frontend, infrastructure) and senior stakeholder engagement, including presenting architecture, trade-offs, and roadmap directly to Director and C-suite audiences.
+- Rapidly prototype solutions in ambiguous, fast-moving environments, then harden them into robust, scalable, secure production systems.
+- Build and run evaluation frameworks that give clients confidence in model and system behaviour, treating evals as a first-class part of the delivery lifecycle rather than an afterthought.
+- Act as a technical anchor for delivery teams, setting engineering standards, unblocking hard problems, and mentoring engineers around evaluation-driven development and agentic best practice.
+- Shape commercial conversations: sizing effort, identifying scope risk, and contributing to how engagements are structured and priced.
+- Build and protect trust with client technical leadership, acting as the credible link between what's technically possible and what the business actually needs. 
+Additional Opportunities 
+Business Development 
+Lead technical work streams on proposals, RFPs, and client pitches, and act as a technical authority in sales conversations. 
+Shape new propositions around agentic AI and forward-deployed delivery models. 
+Internal Initiatives 
+Define engineering standards and reusable patterns for agentic delivery across accounts. 
+Contribute to practice-building, recruitment, and capability development for the wider AI engineering community. 
+Learning and Development 
+Access training and certifications aligned to emerging cloud, AI, and architecture domains. 
+Contribute to thought leadership on forward-deployed engineering as a delivery model. 
+Your Profile 
+Seniority and Experience 
+
+- Significant experience as a senior or principal-level software engineer or architect, with a track record of owning systems end to end in production.
+- Demonstrated experience operating client-facing or customer-facing in a consulting, professional services, or startup environment, comfortable being judged on both code and client outcomes.
+- Experience working directly with senior stakeholders (CTO, VP Engineering, Director level), including running workshops and presenting technical strategy to non-technical audiences. 
+Technical Expertise 
+
+- Backend Development: Deep experience building production microservices, ideally Python or TypeScript.
+- Frontend Development: Strong experience with React and TypeScript, using frameworks such as Next.js or Vite.
+- AI and Agentic Systems: Hands-on experience designing and deploying agentic architectures using frameworks such as LangChain, LangGraph, CrewAI, or the Anthropic Agent SDK, including tool use, MCP servers, and multi-agent orchestration.
+- LLM Experience: Practical, production experience with LLM providers (Anthropic, OpenAI, Mistral, Llama) and an informed view on model selection trade-offs.
+- Cloud Platforms: Strong proficiency in AWS or Azure or GCP, including designing for scale, security, and cost.
+- Containerisation and Orchestration: Hands-on experience with Docker, Kubernetes, and Docker Compose.
+- Infrastructure as Code: Proficiency with Terraform or equivalent.
+- Evaluation and Monitoring: Experience with evaluation-driven development and LLM observability tooling such as Langsmith, Langfuse, Braintrust, or similar.
+- CI/CD: Comfortable owning pipelines end to end (GitHub Actions, GitLab CI, Jenkins).
+- Database Management: Experience with vector databases (ChromaDB, Pinecone, PGVector, Qdrant, MongoDB Vector Search); familiarity with NoSQL (MongoDB preferred) and SQL (PostgreSQL) databases. 
+Commercial and Stakeholder Skills 
+
+- Commercial awareness: able to reason about effort, scope, and value trade-offs, and contribute to how work is priced and structured.
+- Excellent written and verbal communication, able to adapt technical depth for engineering, delivery, and executive audiences.
+- Comfortable holding a room: presenting architecture decisions and defending technical positions to senior, sometimes skeptical, stakeholders. 
+Work Methodology 
+Experience working in agile teams, with the maturity to operate independently when embedded on client sites. 
+Clearance 
+Eligibility for SC (Security Check) Clearance is a bonus, but not required; already holding active SC clearance is a further bonus. What You'll Love About Working Here? 
+We are delighted to have received the "Glassdoor Best Places to work in the UK" accolade for 4 consecutive years. To see what it's like to work at Capgemini Invent, visit our Glassdoor page. Capgemini Invent offers Consultants a culture of learning, ownership, and focus on value. 
+
+- You'll gain exposure to high-profile transformations and gain hands-on exposure to leading technologies.
+- Our consultants are formally trained by industry experts in consulting and client delivery. Consultants have access to a vast array for different training and certifications in a variety of areas: Cybersecurity (CISSP, CISM), cloud technologies (AWS, Azure, GCP), and Agile delivery (Scrum Master, Product Owner, Scaled Agile Framework). Capgemini Invent offers you the flexibility to develop various areas of knowledge in technical domains aligned both to your interests and our client's outcomes.
+- Les Fontaines: Capgemini Invent has a unique training environment just outside of Paris, where we can immerse ourselves in thought-leadership, share knowledge and build capabilities that will help us and our clients to succeed.
+- We hold monthly showcases of our digital transformation initiatives, sharing knowledge and showing off...

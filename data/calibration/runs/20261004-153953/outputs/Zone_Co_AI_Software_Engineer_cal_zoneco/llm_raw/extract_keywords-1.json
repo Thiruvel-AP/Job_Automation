@@ -1,0 +1,36 @@
+{
+  "required": [
+    "AI systems",
+    "ML pipelines",
+    "Python",
+    "JavaScript",
+    "SQL",
+    "non-relational databases",
+    "LLMs",
+    "AutoGen",
+    "DSPy",
+    "code reviews",
+    "cloud platforms",
+    "containerization",
+    "data quality",
+    "ethical AI",
+    "experimentation",
+    "prototyping"
+  ],
+  "preferred": [
+    "AI/ML applications",
+    "Bachelor’s degree",
+    "Master’s degree",
+    "LangGraph",
+    "statically typed languages",
+    "production environments",
+    "cross-functional collaboration",
+    "data-driven decisions",
+    "frameworks",
+    "methodologies",
+    "remote work",
+    "global impact"
+  ],
+  "company_hook": "Zone & Co is the ERP-native AI platform for financial operations, purpose-built for organizations running on Oracle NetSuite, redefining how finance teams operate by delivering an AI-powered system that automates, connects, and scales financial workflows directly within the ERP.",
+  "team": "AI Accelerator"
+}

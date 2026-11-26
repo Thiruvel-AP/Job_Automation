@@ -1,0 +1,51 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\newcommand{\num}[1]{\textbf{#1}}   % the hook's number in the headline, as on the CV
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER (the CV's) ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    {\color{headernavy}\small\textbf{Data Scientist | Audited \num{859,494} training rows for quality and duplicates}}\\[0.2cm]
+    {\small Bristol, UK\nobreak\ \,\textbar\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textbar\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textbar\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/}\nobreak\ \,\textbar\, \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP}\nobreak\ \,\textbar\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}}
+
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Hi Lseg team,
+
+Your team is developing and deploying enterprise-scale AI and Machine Learning solutions to improve operational efficiency, service resilience and customer outcomes. That is the kind of problem I have been working on. I check the data before I trust a model: I audited 859,494 training examples and found 44,369 duplicates, and for my AstraZeneca-affiliated MSc dissertation I combined 14 research datasets so the results rested on trusted data. When my gene models scored 0.807 on training data but only 0.545 on new data, I reported it plainly instead of hiding it.
+
+I placed 3rd at Lloyd\textquotesingle{}s Banking Group\textquotesingle{}s datathon by spotting rare suspicious transactions, about 1 in 200, and in my MSc I used proper statistics, planning the sample size first and then running ANOVA tests, to pick the best of 6 algorithm settings. At 180 Degrees Consulting I helped turn a startup\textquotesingle{}s vague idea into a working tool that is now in live, day-to-day use; the client\textquotesingle{}s founder called it \textquotedbl{}stable, production-ready\textquotedbl{}. I also built a model that predicts which bank customers are likely to leave, and I have presented results to the client\textquotesingle{}s stakeholders in a live demo.
+
+Your ad\textquotesingle{}s focus on enterprise-scale AI and Machine Learning solutions is a big part of why I am applying.
+
+Could we spend 20 minutes on how the team evaluates emerging AI technologies for practical applications?
+
+\vspace{0.5cm}
+
+Regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

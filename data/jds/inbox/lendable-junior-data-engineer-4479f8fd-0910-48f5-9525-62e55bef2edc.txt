@@ -1,0 +1,158 @@
+Company: Lendable
+Title: Junior Data Engineer
+URL: https://jobs.ashbyhq.com/lendable/4479f8fd-0910-48f5-9525-62e55bef2edc
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-09-15T08:27:41.586+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+ABOUT LENDABLE
+
+Lendable is on a mission to build the world's best technology to help people get credit and save money. We're building one of the world’s leading fintech companies and are off to a strong start:
+
+
+
+ - One of the UK’s most exciting unicorns with a team of over 800 people
+
+ - Among the fastest-growing tech companies in the UK
+
+ - Profitable since 2017
+
+ - Backed by top investors including Balderton Capital and Goldman Sachs
+
+ - Loved by customers with the best reviews in the market (4.9 across 10,000s of reviews on Trustpilot https://uk.trustpilot.com/review/lendable.co.uk)
+
+
+
+So far, we’ve rebuilt the Big Three consumer finance products from scratch: loans, credit cards and car finance. We get money into our customers’ hands in minutes instead of days.
+
+
+
+We’re growing fast, and there’s a lot more to do: we’re going after the two biggest Western markets (UK and US) where trillions worth of financial products are held by big banks with dated systems and painful processes.
+
+
+
+
+JOIN US IF YOU WANT TO
+
+ 1. Take ownership: you are trusted to make decisions that drive a material impact on the direction and success of Lendable from day 1
+
+ 2. Work in small teams of exceptional people: Lendies are relentlessly resourceful. We challenge the status quo to solve problems and find smarter solutions
+
+ 3. Build the best technology in-house: we use new data sources, machine learning and AI to make machines do the heavy lifting
+
+
+
+
+ABOUT THE ROLE
+
+As a Junior Data Platform Engineer, you'll work alongside senior team members to tackle complex challenges, while taking ownership of your own areas of the problem, in a fast-paced environment where no two days look the same. The role is fundamentally about problem solving: understanding business challenges, breaking them down, and delivering pragmatic, scalable solutions.
+
+You’ll work closely with product, analytics, and engineering teams, operating with a high degree of autonomy. That means proactively gathering context, aligning stakeholders, and ensuring work lands effectively.
+
+Data Platform sits at the centre of the business, with a real opportunity to shape how teams interact with data. The focus is on enabling fast, iterative analytics, moving from idea to insight quickly, while maintaining strong foundations around reliability, cost, and security.
+
+
+
+
+OUR MODERN TECH STACK
+
+You’ll work across a broad set of technologies as we evolve the platform. Experience is helpful, but not essential:
+
+ - Languages: Python, SQL, Terragrunt, JavaScript
+
+ - Cloud: AWS (primary), some GCP
+
+ - Warehouse & Storage: Snowflake, S3/Parquet
+
+ - Data & ETL: dbt, Fivetran
+
+ - Platform & Infra: Kubernetes, Kafka, RabbitMQ, Argo, GitHub Actions, HashiCorp Vault
+
+ - Observability: Datadog, Grafana
+
+ - Dashboarding: Preset
+
+ - Other: Claude
+
+
+
+
+WHAT WE’RE LOOKING FOR
+
+Strong fundamentals and the ability to apply them pragmatically:
+
+ - Solid programming ability (Python or similar)
+
+ - Strong experience with Snowflake (or similar warehouses)
+
+ - Good understanding of software engineering patterns and architectures
+
+ - Experience building data-intensive systems
+
+ - Cloud experience (AWS preferred)
+
+ - Infrastructure as code (Terraform ideally)
+
+ - CI/CD best practices
+
+ - Familiarity with modern data architectures (Lambda/Kappa)
+
+Just as importantly, how you work:
+
+ - A self-starter who takes ownership and drives work forward
+
+ - Strong problem solver who focuses on understanding before building
+
+ - Good judgement on build vs buy decisions
+
+ - Comfortable working in ambiguity and shaping direction
+
+ - Clear communicator across technical and non-technical audiences
+
+ - Able to manage multiple streams of work without losing momentum
+
+ - Pragmatic, balancing speed with scalability and reliability
+
+ - Actively looks to improve ways of working, including leveraging AI tooling
+
+
+
+
+INTERVIEW PROCESS
+
+ - Initial call with Talent team
+
+ - Hiring manager call
+
+ - Technical interview 
+
+ - Final interview with VP of Platform
+
+
+
+
+LIFE AT LENDABLE
+
+ - Winning team: the opportunity to scale up one of the world’s most successful fintech companies
+
+ - Flexible working: flexible approach tailored to each role. Hybrid roles require three days in-office weekly; fully remote roles include regular opportunities for in-person connection through socials and off-sites
+
+ - Socials & connection: opportunities and events to come together, socialise, and get to know each other beyond the office walls
+
+ - Health coverage: support for your physical and mental wellbeing, including private health cover
+
+ - Retirement & savings: long-term financial wellbeing through retirement savings plans
+
+ - Employee referral programme: earn a competitive bonus when you refer successful new team members
+
+ - Office meals & snacks: enjoy a fully stocked kitchen, plus complimentary lunches prepared by in-house chefs on in-office days at select locations
+
+ - Sustainable commuting: cycle-to-work and electric vehicle salary sacrifice schemes available in select locations
+
+Please note: The availability and details of specific benefits vary by location and role. For more information, please speak to your Talent Partner.
+
+Check out our blog https://blog.lendable.co.uk/!

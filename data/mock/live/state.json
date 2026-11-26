@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "jobs": {
+    "893077cde3718c014fb8ad6964eac874e2350cc94b28811dd41ae47ad039d088": {
+      "file": "mock1.txt",
+      "job_id": "manual:fde969c23cb8",
+      "done": false,
+      "company": "Northwind Health AI",
+      "title": "AI Engineer",
+      "url": "https://job-boards.greenhouse.io/northwind/jobs/1",
+      "location": "Bristol, UK"
+    },
+    "591f556c30d66784668896a118a313e3ed995855b4c7006522bc41ba8adc30cb": {
+      "file": "mock2.txt",
+      "job_id": "manual:5c8b12fa8384",
+      "done": false,
+      "company": "Valarian",
+      "title": "Senior Data Scientist",
+      "url": "https://jobs.lever.co/valarian/abc",
+      "location": "Bristol, UK"
+    },
+    "2f306741373f6b8f49d7ed89ae38e17fa4b754a70f0c9c050771005faec6d247": {
+      "file": "mock3.txt",
+      "job_id": "manual:5b9a650f3bd0",
+      "done": false,
+      "company": "Acme Corp",
+      "title": "Applied AI Architect",
+      "url": "https://acme.wd3.myworkdayjobs.com/en-US/careers/job/London/Applied-AI-Architect_R1",
+      "location": "Bristol, UK"
+    },
+    "b987aade9b586208c1e87cac2c90e871d3f3d9677047af27f46acf94567f18f3": {
+      "file": "valarian.txt",
+      "job_id": "manual:42470a12bd61",
+      "done": false,
+      "company": "Valarian",
+      "title": "MLOps Engineer",
+      "url": "https://jobs.lever.co/valarian/abc",
+      "location": "London, UK"
+    },
+    "c7c8af6475b28006a93e8b71f894cc88352a4f2b7f0b9793b20419eaf18e3859": {
+      "file": "gapdemo.txt",
+      "job_id": "manual:767f21126759",
+      "done": false,
+      "company": "Gapdemo Analytics",
+      "title": "Data Scientist",
+      "url": "https://gapdemo.example/jobs/ds-1",
+      "location": "Bristol, UK"
+    },
+    "38d02f1b474592110a8248d2896d2ecd562209c2f8631dff547703ae4eaa28c3": {
+      "file": "gapdemo2.txt",
+      "job_id": "manual:84fecb2c6c50",
+      "done": false,
+      "company": "Gapdemo Analytics",
+      "title": "Data Scientist (Retail)",
+      "url": "https://gapdemo.example/jobs/ds-2",
+      "location": "Bristol, UK"
+    }
+  }
+}

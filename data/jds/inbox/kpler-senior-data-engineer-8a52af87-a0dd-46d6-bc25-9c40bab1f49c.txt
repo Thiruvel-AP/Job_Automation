@@ -1,0 +1,105 @@
+Company: Kpler
+Title: Senior Data Engineer
+URL: https://jobs.lever.co/kpler/8a52af87-a0dd-46d6-bc25-9c40bab1f49c
+Source: lever
+Apply kind: lever
+Location: United Kingdom
+Posted: 2026-10-02T17:39:56.319000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-22
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors. 
+ 
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 850 experts from 69 countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+ 
+
+
+About the Role 
+
+As a Senior Data Engineer joining our new Marine Insurance initiative, you will play a central role in shaping the systems that power Kpler’s global market intelligence platform. You will lead the end-to-end design and delivery of complex data pipelines and cloud infrastructure, ingesting, processing, and serving large-scale data to our global customers. Acting as a technical leader, you will set data architecture directions and mentor peer engineers, ensuring our platform reliably scales as our datasets and product offerings expand.
+
+
+Key Responsibilities
+- 
+
+Design and own end-to-end data pipelines: Build, deploy, and operate production-grade data pipelines and infrastructure from initial architecture through deployment, monitoring, and maintenance. 
+
+- 
+
+Deploy containerized AWS services: Develop and containerize applications within AWS using Python, Docker, Kubernetes, Airflow, and Infrastructure as Code (Terraform). 
+
+- 
+
+Ensure data integrity and event streaming: Architect robust PostgreSQL database structures and event-streaming flows (Kafka/Flink) to guarantee seamless data flow and integrity. 
+
+- 
+
+Set technical direction and standards: Lead complex pipeline design, peer reviews, and logging, monitoring, and alerting frameworks to maintain pipeline resilience. 
+
+- 
+
+Partner cross-functionally and mentor peers: Collaborate closely with engineers, product managers, and data scientists while mentoring engineers to elevate team craft and technical development. 
+
+- 
+
+Evaluate emerging data tools: Research and implement modern data infrastructure improvements and frameworks to continuously elevate Kpler's platform capabilities.
+
+Experience & Background
+What you'll need (Must-haves)
+
+- 
+
+Data engineering experience at scale: 5+ years of experience designing, operating, and owning production-grade data pipelines and infrastructure. 
+
+- 
+
+Core tech stack depth: Strong Python skills with hands-on experience in Docker, Kubernetes, AWS, Airflow, and relational databases like PostgreSQL. 
+
+- 
+
+Streaming, IaC, and observability: Practical experience with event streaming (Kafka/Flink), Infrastructure as Code (Terraform), CI/CD practices, and production logging/monitoring systems. 
+
+- 
+
+Technical leadership & AI coding tools: Demonstrated ability to lead architectural discussions, mentor engineers, and leverage AI-assisted coding tools (Copilot, Cursor, Claude) with strong technical judgment. 
+
+- 
+
+Methodologies & communication: Experience working in Agile environments with strong collaboration skills and fluency in written and spoken English. 
+
+Nice-to-haves
+
+- 
+
+Large-scale analytics platforms: Experience building large-scale data processing systems or analytics platforms. 
+
+- 
+
+Cross-team initiatives: Track record of leading technical initiatives across multiple teams. 
+
+- 
+
+Domain knowledge: Familiarity with commodities, shipping, energy, or marine insurance market data.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+ 
+Our People Pledge
+ 
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+ 
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.
+ 
+ 
+ 
+By applying, I confirm that I have read and accept the Staff Privacy Notice

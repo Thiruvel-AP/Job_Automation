@@ -1,0 +1,64 @@
+Answers for RightShip - AI Engineer
+Form: https://job-boards.eu.greenhouse.io/rightship/jobs/4982444101
+CV: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/RightShip_AI_Engineer_ff68fffd015a/Thiruvel Andagurunathan Pandian CV.pdf
+Cover letter: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/outputs/RightShip_AI_Engineer_ff68fffd015a/Thiruvel Andagurunathan Pandian Cover Letter.pdf
+
+1. First Name *  [READY; applicant]
+Thiruvel
+
+2. Last Name *  [READY; applicant]
+Andagurunathan Pandian
+
+3. Email *  [READY; applicant]
+apthiruvel@gmail.com
+
+4. Phone *  [READY; applicant]
++44 7741016954
+
+5. Resume/CV *  [READY; cv]
+Thiruvel Andagurunathan Pandian CV.pdf
+
+6. Cover Letter  [READY; letter]
+Thiruvel Andagurunathan Pandian Cover Letter.pdf
+
+7. What are your working rights in the country where this role is advertised for? *  [READY; applicant:visa.by_country.GB]
+Work Visa
+
+8. If you answered 'Work Visa' in the previous question, please specify the type of visa that you are currently holding. If you do not hold any valid visa currently, please answer 'N.A.'. *  [READY; answers:visa_type]
+Graduate visa
+
+9. What is your notice period? *  [READY; answers:notice_period]
+Immediately
+
+10. What motivated you to apply for this position? *  [READY; freetext (approved)]
+The AI Engineer role at RightShip stands out to me for its focus on safety and risk intelligence. At AstraZeneca, I wrote a three-tier test framework of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation. I want to build AI systems that are trustworthy in production, not just demos: tested, measured and safe when their dependencies fail. I enjoy taking a loosely defined problem from prototype to something a team uses in production.
+
+11. Please provide your base salary expectations (in local currency, excluding bonus and commission). *  [READY; answers:salary_expectation]
+I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture of the role's full scope and responsibilities.
+
+12. How did you hear about us? *  [READY; how-heard]
+Corporate website
+
+13. Please include a link to your LinkedIn profile. *  [READY; applicant]
+https://www.linkedin.com/in/thiruvel-a-p/
+
+14. Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you? *  [BLANK; equal_opportunities]
+(you answer: not listed in equal_opportunities: left blank)
+
+15. If you have answered 'Self-describe' in the previous question, please specify:  [BLANK; -]
+(you answer: no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it))
+
+16. I declare that the information provided by me is true and accurate. Furthermore, I willingly consent to being contacted by the company for any relevant matters pertaining to my application. I also give my unequivocal agreement for the company to retain my information (for as long as the respective country laws in which I am seeking employment allow) for potential future employment opportunities. *  [NEEDS USER; attestation]
+(you answer: attestation: you tick it yourself, code never does)
+
+17. Location *  [READY; answers:current_location]
+Bristol
+
+18. VeteranStatus  [BLANK; equal_opportunities]
+(you answer: not listed in equal_opportunities: left blank)
+
+19. Race  [READY; equal_opportunities:ethnicity]
+Asian
+
+20. Gender  [READY; equal_opportunities:eo_gender]
+Male

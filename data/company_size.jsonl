@@ -1,0 +1,922 @@
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-10-31"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-10-31"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-10-31"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-10-31"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-10-31"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-01"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-01"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-01"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-01"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-01"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-01"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-01"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-01"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-01"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-01"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-01"}
+{"norm": "marshmallow", "company": "Marshmallow", "size": "large", "size_label": "large", "size_evidence": "ad: \"3 to 700+ people\" (upper value of the range)", "checked": "2026-11-01"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-01"}
+{"norm": "marshmallow", "company": "Marshmallow", "size": "large", "size_label": "large", "size_evidence": "ad: \"3 to 700+ people\" (upper value of the range)", "checked": "2026-11-01"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "marshmallow", "company": "Marshmallow", "size": "large", "size_label": "large", "size_evidence": "ad: \"3 to 700+ people\" (upper value of the range)", "checked": "2026-11-02"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-02"}
+{"norm": "marshmallow", "company": "Marshmallow", "size": "large", "size_label": "large", "size_evidence": "ad: \"3 to 700+ people\" (upper value of the range)", "checked": "2026-11-02"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-02"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-02"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-02"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-02"}
+{"norm": "marshmallow", "company": "Marshmallow", "size": "large", "size_label": "large", "size_evidence": "ad: \"3 to 700+ people\" (upper value of the range)", "checked": "2026-11-02"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-03"}
+{"norm": "9fin", "company": "9fin", "size": "large", "size_label": "large", "size_evidence": "Companies House: 9FIN LIMITED: accounts type group", "checked": "2026-11-03"}
+{"norm": "anaplan", "company": "Anaplan", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: ANAPLAN LIMITED: accounts type full (large?)", "checked": "2026-11-03"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-03"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-03"}
+{"norm": "creditspring", "company": "CreditSpring", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: CREDITSPRING LIMITED: accounts type dormant", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-03"}
+{"norm": "deliveroo", "company": "Deliveroo", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: DELIVEROO LIMITED: accounts type full (large?)", "checked": "2026-11-03"}
+{"norm": "faculty", "company": "Faculty", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Faculty'", "checked": "2026-11-03"}
+{"norm": "flo health inc", "company": "Flo Health Inc", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Flo Health Inc'", "checked": "2026-11-03"}
+{"norm": "graphcore", "company": "Graphcore", "size": "large", "size_label": "large", "size_evidence": "Companies House: GRAPHCORE LIMITED: accounts type group", "checked": "2026-11-03"}
+{"norm": "janestreet", "company": "JaneStreet", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'JaneStreet'", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-03"}
+{"norm": "lovable", "company": "Lovable", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: LOVABLE LTD: accounts type micro-entity", "checked": "2026-11-03"}
+{"norm": "moneybox", "company": "MoneyBox", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'MoneyBox'", "checked": "2026-11-03"}
+{"norm": "openai", "company": "OpenAI", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: OPENAI UK LTD: accounts type full (large?)", "checked": "2026-11-03"}
+{"norm": "prima", "company": "Prima", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Prima'", "checked": "2026-11-03"}
+{"norm": "prolific", "company": "Prolific", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Prolific'", "checked": "2026-11-03"}
+{"norm": "spotify", "company": "Spotify", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: SPOTIFY LIMITED: accounts type full (large?)", "checked": "2026-11-03"}
+{"norm": "stackadapt", "company": "StackAdapt", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: STACKADAPT UK LIMITED: accounts type full (large?)", "checked": "2026-11-03"}
+{"norm": "trainline", "company": "Trainline", "size": "large", "size_label": "large", "size_evidence": "Companies House: TRAINLINE PLC: accounts type group", "checked": "2026-11-03"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-03"}
+{"norm": "wayve", "company": "Wayve", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Wayve'", "checked": "2026-11-03"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-04"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-04"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-04"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-04"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-04"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-04"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-04"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-04"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-04"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-04"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-04"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-04"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "edited", "company": "EDITED", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'EDITED'", "checked": "2026-11-05"}
+{"norm": "kong", "company": "Kong", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "kong", "company": "Kong", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "anglian home improvements", "company": "Anglian Home Improvements", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: ANGLIAN HOME IMPROVEMENTS LIMITED: accounts type dormant", "checked": "2026-11-05"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-05"}
+{"norm": "bimm university", "company": "BIMM University", "size": "large", "size_label": "large", "size_evidence": "Companies House: BIMM UNIVERSITY LIMITED: accounts type group", "checked": "2026-11-05"}
+{"norm": "chambers and partners", "company": "Chambers and Partners", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Chambers and Partners'", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-05"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-05"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-05"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-05"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-05"}
+{"norm": "fsp consulting", "company": "FSP Consulting", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'FSP Consulting'", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"65,000+\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "norton rose fulbright llp", "company": "Norton Rose Fulbright LLP", "size": "large", "size_label": "large", "size_evidence": "ad: \"7,000 employees\"", "checked": "2026-11-05"}
+{"norm": "sagacity", "company": "Sagacity", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: SAGACITY LTD: accounts type not given", "checked": "2026-11-05"}
+{"norm": "sirius analysis", "company": "Sirius Analysis", "size": "sme", "size_label": "small", "size_evidence": "Companies House: SIRIUS ANALYSIS LIMITED: accounts type total-exemption-full", "checked": "2026-11-05"}
+{"norm": "sopra steria", "company": "Sopra Steria", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: SOPRA STERIA LIMITED: accounts type full (large?)", "checked": "2026-11-05"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2,000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-05"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-05"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-05"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-05"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-05"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"65,000+\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-05"}
+{"norm": "norton rose fulbright llp", "company": "Norton Rose Fulbright LLP", "size": "large", "size_label": "large", "size_evidence": "ad: \"7,000 employees\"", "checked": "2026-11-05"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-05"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "norton rose fulbright llp", "company": "Norton Rose Fulbright LLP", "size": "large", "size_label": "large", "size_evidence": "ad: \"7,000 employees\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"65,000+\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-05"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-05"}
+{"norm": "addepar", "company": "Addepar", "size": "sme", "size_label": "medium", "size_evidence": "Companies House: ADDEPAR UK LTD.: accounts type medium", "checked": "2026-11-06"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-06"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-06"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-06"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-06"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-06"}
+{"norm": "cambridge consultants", "company": "Cambridge Consultants", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: CAMBRIDGE CONSULTANTS LIMITED: accounts type full (large?)", "checked": "2026-11-06"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "drw", "company": "DRW", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'DRW'", "checked": "2026-11-06"}
+{"norm": "dwelly", "company": "Dwelly", "size": "sme", "size_label": "small", "size_evidence": "Companies House: DWELLY LTD: accounts type unaudited-abridged", "checked": "2026-11-06"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-06"}
+{"norm": "eloquentai", "company": "Eloquentai", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Eloquentai'", "checked": "2026-11-06"}
+{"norm": "encord", "company": "Encord", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Encord'", "checked": "2026-11-06"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-06"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-06"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-06"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-06"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-06"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-06"}
+{"norm": "future", "company": "Future", "size": "large", "size_label": "large", "size_evidence": "Companies House: FUTURE PLC: accounts type group", "checked": "2026-11-06"}
+{"norm": "gopuff", "company": "Gopuff", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Gopuff'", "checked": "2026-11-06"}
+{"norm": "imc", "company": "IMC", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'IMC'", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-06"}
+{"norm": "iwoca", "company": "Iwoca", "size": "large", "size_label": "large", "size_evidence": "Companies House: IWOCA LTD: accounts type group", "checked": "2026-11-06"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-06"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-06"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-06"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-06"}
+{"norm": "livescore group", "company": "LiveScore Group", "size": "large", "size_label": "large", "size_evidence": "Companies House: LIVESCORE GROUP LIMITED: accounts type group", "checked": "2026-11-06"}
+{"norm": "m g", "company": "M&G", "size": "large", "size_label": "large", "size_evidence": "Companies House: M&G PLC: accounts type group", "checked": "2026-11-06"}
+{"norm": "moonpig", "company": "Moonpig", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Moonpig'", "checked": "2026-11-06"}
+{"norm": "nebius", "company": "Nebius", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 1,500+ includes\"", "checked": "2026-11-06"}
+{"norm": "nexcade ai", "company": "Nexcade AI", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: NEXCADE AI LTD: accounts type micro-entity", "checked": "2026-11-06"}
+{"norm": "nimble gravity", "company": "Nimble Gravity", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Nimble Gravity'", "checked": "2026-11-06"}
+{"norm": "octoenergy", "company": "Octoenergy", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Octoenergy'", "checked": "2026-11-06"}
+{"norm": "octoenergy", "company": "Octoenergy", "size": "large", "size_label": "large", "size_evidence": "ad: \"10,000+\"", "checked": "2026-11-06"}
+{"norm": "palantir", "company": "Palantir", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: PALANTIR UK LIMITED: accounts type full (large?)", "checked": "2026-11-06"}
+{"norm": "pay", "company": "Pay.UK", "size": "large", "size_label": "large", "size_evidence": "Companies House: PAY.UK LIMITED: accounts type group", "checked": "2026-11-06"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "Companies House: SCALE AI LIMITED: accounts type total-exemption-full", "checked": "2026-11-06"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-06"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-06"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-06"}
+{"norm": "shi", "company": "Shi", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Shi'", "checked": "2026-11-06"}
+{"norm": "slihrms", "company": "Slihrms", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Slihrms'", "checked": "2026-11-06"}
+{"norm": "smartsheet", "company": "Smartsheet", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: SMARTSHEET UK LIMITED: accounts type full (large?)", "checked": "2026-11-06"}
+{"norm": "ultralytics", "company": "Ultralytics", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: ULTRALYTICS LTD: accounts type micro-entity", "checked": "2026-11-06"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-06"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-06"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-06"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-07"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "blenheim chalcot", "company": "Blenheim Chalcot", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Blenheim Chalcot'", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-07"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-07"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-07"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-07"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-07"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-07"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-07"}
+{"norm": "g research", "company": "G-Research", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'G-Research'", "checked": "2026-11-07"}
+{"norm": "hasting direct", "company": "Hasting Direct", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Hasting Direct'", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-07"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "nuffield health", "company": "Nuffield Health", "size": "large", "size_label": "large", "size_evidence": "Companies House: NUFFIELD HEALTH: accounts type group", "checked": "2026-11-07"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-07"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-07"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-07"}
+{"norm": "workwave", "company": "WorkWave", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: WORKWAVE UK LIMITED: accounts type full (large?)", "checked": "2026-11-07"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-07"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-07"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-07"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-07"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-07"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-07"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-07"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-07"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-07"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-07"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "loveable", "company": "Loveable", "size": "sme", "size_label": "small", "size_evidence": "ad: \"early-stage startup\"", "checked": "2026-11-07"}
+{"norm": "loveable", "company": "Loveable", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "perplexity", "company": "Perplexity", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Perplexity'", "checked": "2026-11-07"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-07"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-07"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-07"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-07"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-07"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-07"}
+{"norm": "rightship", "company": "RightShip", "size": "sme", "size_label": "small", "size_evidence": "Companies House: RIGHTSHIP UK LIMITED: accounts type small", "checked": "2026-11-09"}
+{"norm": "norton rose fulbright llp", "company": "Norton Rose Fulbright LLP", "size": "large", "size_label": "large", "size_evidence": "ad: \"7,000 employees\"", "checked": "2026-11-13"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-13"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-13"}
+{"norm": "kong", "company": "Kong", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-13"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-13"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-17"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-17"}
+{"norm": "dunnhumby", "company": "dunnhumby", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: DUNNHUMBY LIMITED: accounts type full (large?)", "checked": "2026-11-17"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-17"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-17"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-17"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-17"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-17"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "tem", "company": "tem", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "kong", "company": "Kong", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-17"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-17"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-17"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-17"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-17"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-17"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-17"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "tem", "company": "tem", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-17"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-17"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-17"}
+{"norm": "codat", "company": "Codat", "size": "large", "size_label": "large", "size_evidence": "Companies House: CODAT LIMITED: accounts type group", "checked": "2026-11-17"}
+{"norm": "compass group ireland", "company": "Compass Group UK & Ireland Ltd", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'Compass Group UK & Ireland Ltd'", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-17"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-17"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-17"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-17"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-17"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-17"}
+{"norm": "healthhero", "company": "HealthHero", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'HealthHero'", "checked": "2026-11-17"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-17"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-17"}
+{"norm": "recruitmentrevolution com", "company": "RecruitmentRevolution.com", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'RecruitmentRevolution.com'", "checked": "2026-11-17"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-17"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "tem", "company": "tem", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-17"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-17"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-17"}
+{"norm": "aecom", "company": "AECOM", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: AECOM LIMITED: accounts type full (large?)", "checked": "2026-11-18"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-18"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "capgemini", "company": "Capgemini", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: CAPGEMINI UK PLC: accounts type full (large?)", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-18"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-18"}
+{"norm": "efinancialcareers", "company": "eFinancialCareers", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: EFINANCIALCAREERS LIMITED: accounts type full (large?)", "checked": "2026-11-18"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-18"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-18"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-18"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-18"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-18"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-18"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-18"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "itol recruit", "company": "ITOL Recruit", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 5,000 people\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "multiverse", "company": "Multiverse", "size": "large", "size_label": "large", "size_evidence": "ad: \"800+ employees\"", "checked": "2026-11-18"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-18"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "tem", "company": "tem", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-18"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "virtru", "company": "Virtru", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "virtru", "company": "Virtru", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-18"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-18"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-18"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-18"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-18"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-18"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-18"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-18"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-18"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-18"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-18"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "openai", "company": "OpenAI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"early-stage startup\"", "checked": "2026-11-18"}
+{"norm": "openai", "company": "OpenAI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"early-stage startup\"", "checked": "2026-11-18"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-18"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-18"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-18"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-18"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-18"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-19"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-19"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-19"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-19"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-19"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-19"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-19"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-19"}
+{"norm": "camunda", "company": "Camunda", "size": "sme", "size_label": "small", "size_evidence": "Companies House: CAMUNDA LTD: accounts type small", "checked": "2026-11-19"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-19"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-19"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-19"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-19"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-19"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-19"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-19"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-19"}
+{"norm": "gitlab", "company": "GitLab", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-19"}
+{"norm": "kensington mortgage company", "company": "Kensington Mortgage Company", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: KENSINGTON MORTGAGE COMPANY LIMITED: accounts type full (large?)", "checked": "2026-11-19"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-19"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-19"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-19"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-19"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-19"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-19"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-19"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-19"}
+{"norm": "techtronic industries europe hq", "company": "Techtronic Industries - Europe HQ", "size": "large", "size_label": "large", "size_evidence": "ad: \"50,000 employees\"", "checked": "2026-11-19"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-19"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "gitlab", "company": "GitLab", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-19"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-19"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-19"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-19"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-20"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-20"}
+{"norm": "lseg", "company": "LSEG", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-24"}
+{"norm": "lseg", "company": "LSEG", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-24"}
+{"norm": "juro", "company": "Juro", "size": "sme", "size_label": "micro", "size_evidence": "Companies House: JURO LIMITED: accounts type micro-entity", "checked": "2026-11-24"}
+{"norm": "wpp", "company": "WPP", "size": "unknown", "size_label": "?", "size_evidence": "Companies House: 0 active companies are called 'WPP'", "checked": "2026-11-24"}
+{"norm": "aircall io inc", "company": "Aircall.io, Inc.", "size": "large", "size_label": "large", "size_evidence": "ad: \"We’re 600+ people\"", "checked": "2026-11-25"}
+{"norm": "anthropic", "company": "Anthropic", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding engineer\"", "checked": "2026-11-25"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-25"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"2000 employees\"", "checked": "2026-11-25"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1500 employees\"", "checked": "2026-11-25"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-25"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-25"}
+{"norm": "aveva", "company": "Aveva", "size": "large", "size_label": "large", "size_evidence": "ad: \"6,500 employees\"", "checked": "2026-11-25"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}
+{"norm": "distyl", "company": "Distyl", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}
+{"norm": "duckduckgo", "company": "DuckDuckGo", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 400+ on\"", "checked": "2026-11-25"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-25"}
+{"norm": "encord", "company": "Encord", "size": "sme", "size_label": "medium", "size_evidence": "ad: \"team of 100+ working\"", "checked": "2026-11-25"}
+{"norm": "exl service", "company": "EXL Service (UK) Ltd", "size": "large", "size_label": "large", "size_evidence": "ad: \"NASDAQ\"", "checked": "2026-11-25"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-25"}
+{"norm": "fdm group", "company": "FDM Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"2500 employees\"", "checked": "2026-11-25"}
+{"norm": "forter", "company": "Forter", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of 500+ people\"", "checked": "2026-11-25"}
+{"norm": "frp group", "company": "FRP Group", "size": "large", "size_label": "large", "size_evidence": "ad: \"over 950 team members\"", "checked": "2026-11-25"}
+{"norm": "hims hers", "company": "hims & hers", "size": "large", "size_label": "large", "size_evidence": "ad: \"NYSE\"", "checked": "2026-11-25"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-25"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 700 experts\"", "checked": "2026-11-25"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-25"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-25"}
+{"norm": "kpler", "company": "Kpler", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 850 experts\"", "checked": "2026-11-25"}
+{"norm": "lawhive", "company": "Lawhive", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series B\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendable", "company": "Lendable", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lendables", "company": "Lendables", "size": "large", "size_label": "large", "size_evidence": "ad: \"team of over 800 people\"", "checked": "2026-11-25"}
+{"norm": "lseg", "company": "Lseg", "size": "large", "size_label": "large", "size_evidence": "ad: \"25,000 people\"", "checked": "2026-11-25"}
+{"norm": "scale ai", "company": "Scale AI", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding member\"", "checked": "2026-11-25"}
+{"norm": "sequence", "company": "Sequence", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-25"}
+{"norm": "techtronic industries europe hq", "company": "Techtronic Industries - Europe HQ", "size": "large", "size_label": "large", "size_evidence": "ad: \"50,000 employees\"", "checked": "2026-11-25"}
+{"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-25"}
+{"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}

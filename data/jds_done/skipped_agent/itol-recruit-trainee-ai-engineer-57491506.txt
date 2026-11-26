@@ -1,0 +1,44 @@
+Company: ITOL Recruit
+Title: Trainee AI Engineer
+URL: https://www.reed.co.uk/jobs/trainee-ai-engineer/57491506
+Source: reed
+Apply kind: aggregator_only
+Location: Croydon, GB
+Salary: GBP 30,000-45,000
+Posted: 2026-10-26
+Posted via: reed.date
+First seen: 2026-11-05
+
+This is a self-funded programme that leads to employment; fees apply. 
+
+Job Guarantee 
+Complete the programme and get a job or get your course fees back. 
+
+Looking to start a career in AI Engineering? 
+We are offering a structured pathway into AI Engineering, designed to help you enter one of the fastest-growing sectors in tech with no prior experience. This opportunity includes training, support, and access to our specialised recruitment support for job roles across the UK. 
+No prior experience required. 
+Train online at your own pace and become job-ready in as little as a few weeks. 
+
+Our programme includes: 
+• Official AWS Certified Cloud Practitioner certification 
+• Training in Python, Machine Learning, and AI systems 
+• Hands-on projects using real-world AI tools and technologies 
+• Professional CV and LinkedIn support 
+• Interview preparation 
+• Dedicated recruitment support until placed 
+• Personalised 1-1 tutor support 
+• Hands-on projects to build your AI portfolio 
+
+Flexible, affordable, achievable 
+To make things easier, we offer flexible payment options, allowing you to spread the cost of your training over 12 months so you can get qualified without financial pressure. 
+
+Salary expectations: 
+• AI Engineer: £45,000 – £60,000 
+• Machine Learning Engineer: £60,000 – £75,000 
+• Progression into senior AI roles with higher earning potential 
+
+We support you into employment 
+We focus on outcomes, not just training. ITOL Recruit has over 15 years of experience supporting candidates into roles across AI, machine learning, and data science roles. 
+From the beginning of your journey to the end, you are supported by qualified tutors, and at the end, our specialised recruitment team helps you secure your first job role. 
+
+Apply now to get started.

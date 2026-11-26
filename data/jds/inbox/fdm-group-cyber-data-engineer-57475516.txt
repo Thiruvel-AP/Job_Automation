@@ -1,0 +1,55 @@
+Company: FDM Group
+Title: Cyber Data Engineer
+URL: https://www.reed.co.uk/jobs/cyber-data-engineer/57475516
+Source: reed
+Apply kind: aggregator_only
+Location: Glasgow, GB
+Posted: 2026-10-20
+Posted via: reed.date
+First seen: 2026-11-05
+
+About The Role 
+FDM is a global business and technology consultancy seeking a Cyber Data Engineer to work for our client within the Financial Services sector. This is initially a 6-12 month contract with the potential to extend and will be a hybrid role that will be based in Glasgow. 
+
+Our client is seeking a Cyber Data Engineer to join its globally distributed security analytics team. 
+
+The team is responsible for developing and supporting platforms used by cyber functions including security response, investigations and insider-threat teams. A key focus of the position will be supporting the migration of the firm’s cyber data lake from Splunk to CyberELK, an Elasticsearch-based security analytics platform. 
+
+This role would suit an engineer with a strong grounding in Python, infrastructure automation, Linux and data pipelines who is interested in developing deeper expertise in Elasticsearch and cybersecurity engineering. 
+
+Responsibilities 
+
+A successful applicant will contribute to several important initiatives including: 
+
+- Developing automation tools that integrate with in-house developed configuration management frameworks and APIs, including our AI-assisted onboarding tooling
+- Onboarding data sources into CyberELK with appropriate field extractions and Elastic Common Schema (ECS) mapping
+- Tuning and optimising Elasticsearch cluster performance, including sharding, index lifecycle management (ILM) and ingest pipelines
+- Providing consultancy to internal clients and stakeholders
+- Working as an escalation point to perform complex troubleshooting, working with other infrastructure teams to resolve issues About You 
+
+- Infrastructure automation and integration experience, ideally using Python and Ansible
+- A solid understanding of Operating Systems and Networking concepts: Linux/Unix system administration, HTTP and encryption.
+- Interest in using AI-assisted engineering tools (e.g. GitHub Copilot, Claude Code) to accelerate delivery
+- Good understanding of software version control, deployment & build tools using DevOps SDLC practices (Git, Jenkins, Jira)
+- Strong analytical and troubleshooting skills
+- Excellent verbal & written communication skills
+- Appreciation of Agile methodologies, specifically Kanban 
+Desired Skills 
+
+- Prior experience deploying and managing large-scale Elasticsearch platforms in production; Splunk experience is valuable given our ongoing migration
+- Experience with Elastic Stack ingest and pipeline tooling (e.g. Logstash, Beats or equivalent) 
+- Elastic Certified Engineer or equivalent Elasticsearch/Elastic Stack certification; Splunk certification is a plus given our ongoing migration
+- Experience with data pipelines on a major Cloud Service Provider like GCP, Azure or AWS Data engineering and configuration experience including writing and testing field extractions/parsers using regular expressions
+- Familiarity with cybersecurity concepts, event types, and monitoring requirements. About Us 
+FDM is an award-winning global leader in tech and business talent solutions, backed by more than 35 years of industry experience. We have centres across Europe, North America, and Asia-Pacific, and a global workforce of over 2500 employees. FDM has shown exponential growth throughout the years, firmly establishing itself as an award-winning employer, currently listed on the FTSE4Good Index and as a 2026 Financial Times UK ‘Best Employer’. 
+
+Diversity and Inclusion 
+
+FDM Group is an equal opportunity employer, and all qualified applicants will receive consideration for employment without regard to race, colour, religion, sex, sexual orientation, national origin, age, disability, veteran status or any other status protected by federal, provincial or local laws. 
+
+Why join us 
+
+- Career coaching, mentoring and access to upskilling throughout your entire FDM career
+- Assignments with global companies and opportunities to work abroad
+- Opportunity to re-skill and up-skill into new areas, develop non-linear career paths and build a skillset within your field
+- Annual leave and work-place pension

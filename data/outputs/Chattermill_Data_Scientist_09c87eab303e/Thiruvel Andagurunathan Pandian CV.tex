@@ -1,0 +1,94 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.55in, top=0.45in, bottom=0.45in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% headings 11pt on a 10.5pt body (the 10pt class would otherwise make them smaller than the text)
+\titleformat{\section}{\color{headernavy}\fontsize{11}{13}\selectfont\bfseries}{}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+\titlespacing{\section}{0pt}{6pt}{3pt}
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.2em, partopsep=0pt, parsep=0.5pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+
+% entry heading: org (left) dates (right) / role (left) location (right)
+\newcommand{\entry}[4]{\noindent\textbf{#1}\hfill\textbf{#2}\\ \textit{#3}\hfill\textit{#4}\par}
+
+\begin{document}
+\fontsize{10.5}{12.6}\selectfont
+
+% ---------------- HEADER ----------------
+\begin{center}
+  {\LARGE\bfseries Thiruvel Andagurunathan Pandian}\\[3pt]
+  Bristol, UK \,$|$\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \,$|$\, \href{tel:+447741016954}{+44 7741 016954}\\[1pt]
+\href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p} \,$|$\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP} \,$|$\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{thiruvel-ap.github.io/PersonalPortfolio}
+\end{center}
+
+% ---------------- PROFILE ----------------
+\section{Profile}
+Data Scientist with expertise in LLM agents, LangChain, and production ML pipelines
+
+% ---------------- EXPERIENCE ----------------
+\section{Experience}
+\entry{AstraZeneca · GeneTraceAI, University of Bristol}{May 2026 – Sep 2026}{Data Scientist}{}
+\begin{itemize}
+  \item Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
+\end{itemize}
+\vspace{3pt}
+\entry{180 Degrees Consulting Bristol}{Sep 2025 – Dec 2025}{Data Consultant}{}
+\begin{itemize}
+  \item Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.
+\end{itemize}
+\vspace{3pt}
+\entry{Self-employed, Chennai}{Jan 2025 – Aug 2025}{Freelance AI/ML Engineer}{}
+\begin{itemize}
+  \item Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.
+\end{itemize}
+\vspace{3pt}
+\entry{Avasoft}{Jan 2023 – Sep 2024}{Software Engineer (SDE Trainee Jan–Jun 2023)}{}
+\begin{itemize}
+  \item Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.
+\end{itemize}
+
+% ---------------- PROJECTS ----------------
+\section{Projects}
+\noindent\textbf{Banking Customer Churn} -- \textit{R, tidymodels, XGBoost} \hfill \href{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}{GitHub}
+\begin{itemize}
+  \item XGBoost churn classifier in R (tidymodels) with two-stage Bayesian hyperparameter search, SMOTE inside the recipe and MCC evaluation.
+\end{itemize}
+\noindent\textbf{Lloyd\textquotesingle{}s Banking Group Datathon — 3rd place} -- \textit{Isolation Forest, ensemble classifiers, MLflow} \hfill 
+\begin{itemize}
+  \item Anomaly detection on 200:1 class-imbalanced data with Isolation Forest and ensemble classifiers, tracked in MLflow.
+\end{itemize}
+
+% ---------------- SKILLS ----------------
+\section{Skills}
+\textbf{Languages:} Python, SQL, R, TypeScript, JavaScript, Swift\\
+\textbf{ML \& Stats:} PyTorch, statistics, scikit-learn, XGBoost, TensorFlow, Keras, LSTM, Isolation Forest, Random Forest, hypothesis testing, ANOVA, bootstrap, PCA, hypothesis testing, maximum likelihood estimation, bootstrap, ANOVA, experimental design\\
+\textbf{LLMs \& Agents:} LangChain, LangGraph, Google ADK, AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, RAG, MCP, tool calling, LoRA fine-tuning, LLM evaluation\\
+\textbf{Data \& Cloud:} pandas, NumPy, NLTK, Matplotlib, Seaborn, PostgreSQL, ChromaDB, AWS Lambda, ECR, IAM, GCP Cloud Run, S3, SQS, DynamoDB (MSc coursework), Databricks/PySpark (coursework)\\
+\textbf{Engineering:} FastAPI, Docker, GitHub Actions, pytest, React, Git, MLflow, Streamlit, Tableau
+
+% ---------------- EDUCATION ----------------
+\section{Education}
+\textbf{MSc Data Science}, University of Bristol \hfill \textbf{2025 – 2026}\par
+\vspace{2pt}
+\textbf{B.E. Electrical and Electronics Engineering}, St. Joseph\textquotesingle{}s College of Engineering \hfill \textbf{Sep 2019 – Apr 2023}\\ \textit{First Class with Distinction}\par
+
+% ---------------- CERTIFICATIONS ----------------
+\section{Certifications \& Awards}
+Anthropic MCP certifications (Introductory and Advanced), Jun 2026 \,$|$\, AWS Academy Cloud Foundations, Nov 2025 \,$|$\, 180 Degrees Consulting Data Science Consultant Certificate, Dec 2025 \,$|$\, Bristol PLUS Award, Mar 2026
+
+\end{document}

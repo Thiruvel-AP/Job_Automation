@@ -1,0 +1,9 @@
+```json
+{
+  "az4": "Wrote a three-tier test framework of ~65 tests across 8 files, conducting evaluations during LLM provider migration from Groq to AWS Bedrock after rate-limit assessment.",
+  "az3": "Deployed the agent as a Docker container on AWS Lambda with ECR pipelines, IAM roles, and least-privilege policies, achieving production readiness.",
+  "dc1": "Proposed and prototyped an MCP-based agentic tool in Python using Ollama gpt-oss:20b and PostgreSQL, presenting the llm solution to stakeholders during a live communication demo.",
+  "fl2": "Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain, and LangGraph, enabling llm-powered retrieval.",
+  "fl3": "Contributed to a LoRA fine-tune of an instruction-tuned Llama model for a maths-focused task, enhancing llm performance."
+}
+```

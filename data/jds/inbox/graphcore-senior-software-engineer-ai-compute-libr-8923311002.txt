@@ -1,0 +1,87 @@
+Company: Graphcore
+Title: Senior Software Engineer - AI Compute Libraries
+URL: https://job-boards.greenhouse.io/graphcore/jobs/8923311002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Bristol, UK
+Posted: 2026-10-29T09:21:37-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+About the job
+
+As a Senior Software Engineer, you’ll develop, maintain and release the C++ libraries and runtime APIs that engineers use to build and execute workloads on Graphcore’s AI hardware.
+Your work will focus on developer-facing libraries, runtime components or a combination of both. You’ll design clear abstractions for low-level hardware capabilities, improve reliability and performance, and support developers integrating these libraries into the wider software stack.
+
+You will take ownership of library changes from design and implementation through review, integration, release and ongoing maintenance. Deliver dependable library releases through packaging, dependency validation, release notes and the maintenance fixes developers need.
+
+You’ll write API documentation, usage examples and migration guidance to help developers adopt changes confidently. Work with library users across the software stack to understand requirements, resolve integration issues and guide API improvements.
+
+The team and culture
+
+The AI Compute Libraries team develops high-performance compute libraries and the software infrastructure that helps engineers make effective use of Graphcore’s AI hardware.
+
+You’ll work alongside specialists in accelerator software, runtime systems and performance engineering. Together, you’ll turn hardware capabilities and developer requirements into practical, well-tested APIs, with clear documentation and dependable releases.
+
+What we’re looking for
+
+Essential skills:
+
+- Strong modern C++ skills and a commitment to producing reliable, maintainable code.
+
+- The ability to turn complex, low-level concepts into clear APIs and abstractions.
+
+- Strong debugging and automated testing skills, including diagnosing issues in existing codebases.
+
+- Confidence owning substantial engineering tasks independently and working effectively across teams.
+
+- Clear written and spoken communication, with a willingness to share knowledge and support colleagues.
+
+Desirable experience:
+
+- Experience with hardware accelerators, heterogeneous computing or architecture-specific software.
+
+- Experience with embedded DSLs, graph representations, descriptor generation or compiler infrastructure.
+
+- Familiarity with CMake, C++ library packaging, API/ABI compatibility, versioning or dependency management.
+
+- Experience integrating C++ libraries with Python or ML frameworks such as PyTorch.
+
+- Experience improving release automation, compatibility testing or developer tooling.
+
+Benefits
+
+- Flexible working: Balance your work and personal life with greater flexibility
+
+- Generous leave: Take time to rest, recharge and enjoy life outside of work
+
+- Retirement planning support: Up to 5% matched pension
+
+- Phantom equity: Share in Graphcore’s success
+
+- Workplace experience: Enjoy thoughtfully designed office spaces for collaboration, with free food and an on-site barista to support your day
+
+- Peace of mind protection: Income protection and life assurance to provide financial security for you and your loved ones
+
+- Electric Vehicle Scheme: Choose an electric vehicle and lease it through salary sacrifice
+
+- Flexible benefits: Tailor your benefits package with a choice of additional options, including private medical insurance, cycle to work scheme and dental cover
+
+We welcome people from all backgrounds and experiences and are committed to building an inclusive environment where everyone can do their best work.
+
+We’re an equal opportunity employer and recognise that everyone brings different strengths and perspectives. If you need any adjustments during the interview process, just let us know - we’re happy to support you.
+
+Sponsorship
+
+Applicants must have the legal right to work in the UK. Unfortunately, we are unable to provide visa sponsorship or support visa applications for this role.
+
+Join the Team at Graphcore
+
+Graphcore is one of the world’s leading innovators in Artificial Intelligence compute. It is developing hardware, software and systems infrastructure that will unlock the next generation of AI breakthroughs and power the widespread adoption of AI solutions across every industry.
+
+As part of the SoftBank Group, Graphcore is a member of an elite family of companies responsible for some of the world’s most transformative technologies. Together, they share a bold vision: to enable Artificial Super Intelligence and ensure its benefits are accessible to everyone.
+
+Graphcore’s teams are drawn from diverse backgrounds and bring a broad range of skills and perspectives. A melting pot of AI research specialists, silicon designers, software engineers and systems architects, Graphcore brings together deep expertise to solve complex problems and deliver meaningful progress in AI compute.
+
+Ready to shape the libraries developers use to build and run accelerator workloads? Apply to join Graphcore’s AI Compute Libraries team in Bristol.

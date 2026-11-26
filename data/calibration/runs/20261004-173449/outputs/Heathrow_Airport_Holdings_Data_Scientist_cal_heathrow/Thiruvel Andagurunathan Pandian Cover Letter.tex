@@ -1,0 +1,48 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[paperwidth=210mm, paperheight=297mm, margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{parskip}
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\raggedright
+\pagestyle{empty}
+
+% --- HEADER ---
+\begin{center}
+    {\LARGE \color{linkblue} \textbf{Thiruvel Andagurunathan Pandian}}\\[0.2cm]
+    Bristol, UK \\
+    \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com} \ $|$ \ +44 7741 016954 \\
+\href{https://www.linkedin.com/in/thiruvel-a-p/}{LinkedIn} \ $|$ \ \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{Portfolio}
+\end{center}
+
+\vspace{0.4cm}
+
+\noindent
+Dear Heathrow Airport Holdings hiring team,
+
+Heathrow Airport Holdings\textquotesingle{}s Data Scientist role sits close to the work I have been doing most recently.
+
+Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker. Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo.
+
+Could we find twenty minutes to talk about where I could contribute first at Heathrow Airport Holdings?
+
+\vspace{0.5cm}
+
+With regards,
+
+Thiruvel Andagurunathan Pandian
+
+\end{document}

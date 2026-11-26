@@ -1,0 +1,89 @@
+Company: Aveva
+Title: Software Engineer, Core AI Services
+URL: https://aveva.wd3.myworkdayjobs.com/AVEVA_careers/job/Cambridge-United-Kingdom/Software-Engineer--Core-AI-Services_R015306-1
+Source: workday
+Apply kind: workday
+Location: Cambridge, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+AVEVA is creating software trusted by over 90% of leading industrial companies.
+
+Job Title: R&D Member of Technical Staff II, Core AI Services 
+Location: Cambridge, United Kingdom (Hybrid) 
+Employment Type: full-time 
+
+The job   
+We are looking for a passionate Software Engineer to join our Core AI Services team. In this role, you will help design, develop, and scale AI-enabling platform services and public APIs that are secure, reliable, and cloud-native. These services will act as foundational building blocks for AI adoption across AVEVA’s product portfolio and partner ecosystem.  
+
+If you are a motivated engineer who is energized by the challenge of building scalable platform services and clean APIs for modern AI workloads, we want to talk to you.  
+
+Working at the forefront of agentic systems and harness engineering, you will join an agile Scrum team with a true builder mindset—delivering innovative, secure, and production-grade AI capabilities with the agility of a startup. This role is ideal for an engineer with a genuine passion for keeping up with the latest AI engineering patterns and practices, eager to translate emerging tech into reliable, enterprise-ready software. 
+
+Key responsibilities  
+
+- Build scalable, fault-tolerant cloud-native services on Microsoft Azure, ensuring high performance and reliability.  
+
+- Develop and refine secure, well-documented public APIs and SDKs for consumption by internal and external developers using ASP.NET Core and C#.  
+
+- Collaborate with cross-functional teams to deliver end-to-end solutions across data pipelines, orchestration, and service APIs.  
+
+- Embed robust security controls to protect sensitive data and ensure secure access to AI services.  
+
+- Participate in design reviews, code reviews, and implementation discussions to ensure engineering excellence.  
+
+Essential requirements 
+
+- Minimum of 2 years professional experience in software engineering, preferably in platform or cloud-native service development, Microsoft and .NET technologies a plus.  
+
+- Solid understanding of RESTful API design, versioning, testing, and lifecycle management.  
+
+- Proficient in securing APIs, managing authentication/authorization and data privacy practices.  
+
+- Practical experience deploying and debugging scalable cloud-native services using PaaS, Docker, and Kubernetes.  
+
+- Excellent problem-solving skills, with the ability to analyse complex technical challenges and propose scalable solutions.  
+
+Desired skills and competencies 
+
+- Interest or exposure to Large Language Models (LLMs), Retrieval-Augmented Generation (RAG), agent orchestration, prompt engineering, and tool calling.  
+
+- Familiarity with AI standards such as Model Context Protocol (MCP) and Agent2Agent (A2A).   
+
+- Experience with tools for automated testing and evaluation of AI outputs  
+
+- Experience working in Agile teams and collaborating across global R&D locations  
+R&D at AVEVA 
+Our global team of 2000+ developers work on an incredibly diverse portfolio of over 75 industrial automation and engineering products, which cover everything from data management to 3D design. AI and cloud are at the centre of our strategy, and we have over 150 patents to our name.
+
+Our track record of innovation is no fluke – it’s the result of a structured and deliberate focus on learning, collaboration and inclusivity. If you want to build applications that solve big problems, join us.
+
+Find out more: aveva.com/en/about/careers/r-and-d-careers/
+
+UK Benefits include: 
+Flexible benefits fund, emergency leave days, adoption leave, 28 days annual leave (plus bank holidays), pension, life cover, private medical insurance, parental leave, education assistance program.
+
+It’s possible we’re hiring for this position in multiple countries, in which case the above benefits apply to the primary location. Specific benefits vary by country, but our packages are similarly comprehensive.
+
+Find out more: aveva.com/en/about/careers/benefits/
+
+Hybrid working
+We work in a hybrid way at AVEVA. Most roles are based at a local AVEVA office, with an expectation of being on-site 50% of your working hours to support collaboration and connection. Some positions are fully office-based depending on the nature of the work, and certain roles that support specific customers or markets may be remote. The working arrangement for this position will be confirmed during the hiring process.
+
+Hiring process
+Interested? Great! Get started by submitting your cover letter and CV through our application portal. AVEVA is committed to recruiting and retaining people with disabilities. Please let us know in advance if you need reasonable support during your application process.
+
+Find out more: aveva.com/en/about/careers/hiring-process
+
+About AVEVA
+AVEVA is a global leader in industrial software with more than 6,500 employees in over 40 countries. Our cutting-edge solutions are used by thousands of enterprises to deliver the essentials of life – such as energy, infrastructure, chemicals, and minerals – safely, efficiently, and more sustainably.
+
+We are committed to embedding sustainability and inclusion into our operations, our culture, and our core business strategy. Learn more about how we are progressing against our ambitious 2030 targets: sustainability-report.aveva.com/
+
+Find out more: aveva.com/en/about/careers/
+
+AVEVA requires all successful applicants to undergo and pass a drug screening and comprehensive background check before they start employment. Background checks will be conducted in accordance with local laws and may, subject to those laws, include proof of educational attainment, employment history verification, proof of work authorization, criminal records, identity verification, credit check. Certain positions dealing with sensitive and/or third-party personal data may involve additional background check criteria.
+
+AVEVA is an Equal Opportunity Employer. We are committed to being an exemplary employer with an inclusive culture, developing a workplace environment where all our employees are treated with dignity and respect. We value diversity and the expertise that people from different backgrounds bring to our business. AVEVA provides reasonable accommodation to applicants with disabilities where appropriate. If you need reasonable accommodation for any part of the application and hiring process, please notify your recruiter. Determinations on requests for reasonable accommodation will be made on a case-by-case basis.

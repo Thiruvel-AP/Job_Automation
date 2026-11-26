@@ -1,0 +1,62 @@
+Company: G-Research
+Title: Machine Learning Engineer
+URL: https://gresearch.wd103.myworkdayjobs.com/G-Research/job/London-UK/Machine-Learning-Engineer_R2550
+Source: workday
+Apply kind: workday
+Location: London, UK, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+We tackle the most complex problems in quantitative finance, by bringing scientific clarity to financial complexity.
+
+From our London HQ, we unite world-class researchers and engineers in an environment that values deep exploration and methodical execution - because the best ideas take time to evolve. Together we’re building a world-class platform to amplify our teams’ most powerful ideas.
+
+As part of our engineering team, you’ll shape the platforms and tools that drive high-impact research - designing systems that scale, accelerate discovery and support innovation across the firm.
+
+Take the next step in your career.
+
+The role
+
+We are looking for exceptional machine learning engineers to work alongside our quantitative researchers on cutting-edge machine learning problems. 
+
+As a member of the Core Technical Machine Learning team, you will be engaged in a mixture of individual and collaborative work to tackle some of the toughest research questions. 
+
+In this role, you will use a combination of off-the-shelf tools and custom solutions written from scratch to drive the latest advances in quantitative research.
+
+Past projects have included:
+
+- Implementing ideas from a recently published research paper
+- Writing custom libraries for efficiently training on petabytes of data
+- Reducing model training times by hand optimising machine learning operations
+- Profiling custom ML architectures to identify performance bottlenecks
+- Evaluating the latest hardware and software in the machine learning ecosystem
+
+Who are we looking for?
+
+Candidates will be comfortable working both independently and in small teams on a variety of engineering challenges, with a particular focus on machine learning and scientific computing.
+
+The ideal candidate will have the following skills and experience:
+
+- Either a post-graduate degree in machine learning or a related discipline, or commercial experience working on machine learning models at scale. We will also consider exceptional candidates with a proven record of success in online data science competitions, such as Kaggle
+- Strong object-oriented programming skills and experience working with Python, PyTorch and NumPy are desirable
+- Experience in one or more advanced optimisation methods, modern ML techniques, HPC, profiling, model inference; you don’t need to have all of the above
+- Excellent ML reasoning and communication skills are crucial: off-the-shelf methods don’t always work on our data so you will need to understand how to develop your own models in a collaborative environment working in a team with complementary skills
+
+Finance experience is not necessary for this role and candidates from non-financial backgrounds are encouraged to apply.
+
+Why should you apply?
+
+- Highly competitive compensation plus annual discretionary bonus
+- Lunch provided (via Just Eat for Business) and dedicated barista bar
+- 35 days’ annual leave
+- 9% company pension contributions
+- Informal dress code and excellent work/life balance
+- Comprehensive healthcare and life assurance
+- Cycle-to-work scheme
+- Monthly company events
+
+G-Research is committed to cultivating and preserving an inclusive work environment. We are an ideas-driven business and we place great value on diversity of experience and opinions. 
+
+We want to ensure that applicants receive a recruitment experience that enables them to perform at their best. If you have a disability or special need that requires accommodation please let us know in the relevant section

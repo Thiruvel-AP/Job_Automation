@@ -1,0 +1,220 @@
+careerops live: inbox /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/jds/inbox (max 5, dry run)
+Inbox order by freshness tier, then the ESTIMATE of P = F x S x L (before tailoring; the review order uses the final P):
+  T2     6 d  estimate P 0.86 = F 0.96 x S 0.90 x L 1.00  valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt
+  T2     7 d  estimate P 0.86 = F 0.86 x S 1.00 x L 1.00  anthropic-applied-ai-engineer-beneficial-deploymen-5440821008.txt
+  T2     5 d  estimate P 0.79 = F 0.88 x S 0.90 x L 1.00  lendable-data-analyst-strategic-projects-77e2a14b-f8c2-4b7c-b889-f98c20334e92.txt
+  T2     6 d  estimate P 0.79 = F 0.88 x S 0.90 x L 1.00  trainline-junior-machine-learning-engineer-529e124d-d65d-4aa2-bde3-be81750cc521.txt
+  T2     6 d  estimate P 0.77 = F 0.77 x S 1.00 x L 1.00  anaplan-data-scientist-8654662002.txt
+  T2     6 d  estimate P 0.75 = F 1.00 x S 0.75 x L 1.00  loveholidays-applied-ai-engineer-10ba54b7-8c04-455b-b7e9-287202e448e9.txt
+  T2     5 d  estimate P 0.30 = F 1.00 x S 1.00 x L 0.30  LEVEL: manager  anthropic-manager-applied-ai-architects-digital-na-5424305008.txt
+  T2     6 d  estimate P 0.22 = F 0.62 x S 0.90 x L 0.40  LEVEL: lead  preply-staff-data-scientist-paid-marketing-opti-64abe943-b897-4c31-93f1-90d4cb1b6ce0.txt
+  T2     5 d  estimate P 0.12 = F 0.62 x S 0.65 x L 0.30  LEVEL: manager  moneybox-data-product-analytics-engineering-senio-a59a8872-00d5-46da-abcd-0a80aba19853.txt
+  T3    22 d  estimate P 1.00 = F 1.00 x S 1.00 x L 1.00  anthropic-applied-ai-engineer-enterprise-5354765008.txt
+  T3   161 d  estimate P 1.00 = F 1.00 x S 1.00 x L 1.00  kpler-market-data-analyst-dry-bulk-8c26d839-713f-4bfb-82cd-cc2a38938358.txt
+  T3    40 d  estimate P 1.00 = F 1.00 x S 1.00 x L 1.00  openai-applied-ai-engineer-codex-32425ea6-a64b-408d-ae54-38342b83c875.txt
+  T3    36 d  estimate P 1.00 = F 1.00 x S 1.00 x L 1.00  openai-applied-ai-engineer-government-internati-6c01266f-6ddb-42d1-a529-84736ae8587a.txt
+  T3    26 d  estimate P 1.00 = F 1.00 x S 1.00 x L 1.00  openai-applied-ai-engineer-startups-codex-840963bb-7b1a-4021-91a0-40baf71b7e20.txt
+  T3    70 d  estimate P 0.92 = F 0.92 x S 1.00 x L 1.00  epic-games-machine-learning-engineer-memory-6141143004.txt
+  T3    18 d  estimate P 0.90 = F 1.00 x S 0.90 x L 1.00  lendable-data-scientist-ai-502163b8-ddd4-48dc-9464-68b24056baac.txt
+  T3    28 d  estimate P 0.89 = F 0.89 x S 1.00 x L 1.00  anthropic-applied-ai-engineer-startups-5432575008.txt
+  T3    26 d  estimate P 0.84 = F 0.84 x S 1.00 x L 1.00  anaplan-avp-data-analytics-ai-engineering-8819344002.txt
+  T3    26 d  estimate P 0.84 = F 0.84 x S 1.00 x L 1.00  anaplan-avp-data-analytics-ai-engineering-8842888002.txt
+  T3    79 d  estimate P 0.75 = F 1.00 x S 0.75 x L 1.00  janestreet-machine-learning-engineer-8648474002.txt
+  T3    76 d  estimate P 0.65 = F 0.73 x S 0.90 x L 1.00  lendable-analytics-engineer-0b377a5f-240f-46ac-a807-9a780258e73a.txt
+  T3    76 d  estimate P 0.65 = F 0.73 x S 0.90 x L 1.00  lendable-python-analytics-engineer-44df0ce7-1274-4d10-844b-ecd138e136c1.txt
+  T3    28 d  estimate P 0.64 = F 0.64 x S 1.00 x L 1.00  deliveroo-analytics-engineer-bi-platform-8206461.txt
+  T3    13 d  estimate P 0.60 = F 1.00 x S 1.00 x L 0.60  LEVEL: senior  deliveroo-senior-machine-learning-engineer-recomme-8261231.txt
+  T3   237 d  estimate P 0.54 = F 1.00 x S 0.90 x L 0.60  LEVEL: senior  lendable-senior-strategy-and-data-analyst-fdfbe01f-4e33-48c7-a03a-e4e1e217f8e9.txt
+  T3    28 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-codex-566a5565-925c-4367-9912-6b64841beba2.txt
+  T3    28 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-codex-6a7cedbd-0a7c-4f3e-8389-55357ad444b3.txt
+  T3    49 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-cyber-government-be7b1bf5-37ab-40f7-9ec1-e9732244f12a.txt
+  T3   141 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-startups-71e7252f-abb1-4b74-8e69-318413042357.txt
+  T3    26 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-startups-codex-d801f26e-951e-452c-9924-9449b55edc5a.txt
+  T3    26 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-startups-codex-e522c734-6e4e-4d69-80c1-d09d5144eab4.txt
+  T3   210 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-applied-ai-engineer-tokyo-4762783e-61e1-4d36-af1d-8dee3c5f70e2.txt
+  T3   456 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-data-scientist-infrastructure-e71cf565-4b21-4b0d-bf45-b22e58ca95eb.txt
+  T3   385 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-data-scientist-platform-and-b2b-products-f1567543-4de1-468e-9054-bc5fd21a55e2.txt
+  T3   635 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-data-scientist-product-579e2994-ec43-4869-8ad1-8cda8088f74b.txt
+  T3    40 d  estimate P 0.50 = F 1.00 x S 0.50 x L 1.00  openai-partner-applied-ai-engineer-552396f4-dc83-43de-9230-6301e5f461bd.txt
+  T3    32 d  estimate P 0.48 = F 0.80 x S 1.00 x L 0.60  LEVEL: senior  deliveroo-senior-data-scientist-8202372.txt
+  T3    33 d  estimate P 0.47 = F 0.79 x S 1.00 x L 0.60  LEVEL: senior  kpler-senior-data-analyst-revenue-intelligence-f96acb17-fbd1-4ed5-a4db-d7ac53466d66.txt
+  T3    12 d  estimate P 0.45 = F 1.00 x S 0.75 x L 0.60  LEVEL: senior  faculty-senior-data-scientist-61c1d7d5-6bb1-4a22-a950-bbf26e59d675.txt
+  T3    19 d  estimate P 0.44 = F 0.73 x S 1.00 x L 0.60  LEVEL: senior  deliveroo-senior-product-data-scientist-8220072.txt
+  T3   385 d  estimate P 0.44 = F 0.88 x S 0.50 x L 1.00  openai-data-scientist-codex-994bf78e-55ec-4c02-9326-6f90c08bcebe.txt
+  T3    47 d  estimate P 0.41 = F 0.69 x S 1.00 x L 0.60  LEVEL: senior  anaplan-senior-ml-engineer-8744352002.txt
+  T3    28 d  estimate P 0.40 = F 1.00 x S 1.00 x L 0.40  LEVEL: lead  anthropic-applied-ai-architect-startups-5432573008.txt
+  T3    55 d  estimate P 0.40 = F 0.80 x S 0.50 x L 1.00  openai-analytics-engineer-gtm-bc0d4a9f-235f-4a4b-a854-c6cb0322ccaa.txt
+  T3   334 d  estimate P 0.40 = F 0.80 x S 0.50 x L 1.00  openai-applied-ai-engineer-codex-ca7e4019-bf93-42fd-8f15-fac59c6e237c.txt
+  T3   385 d  estimate P 0.40 = F 0.80 x S 0.50 x L 1.00  openai-data-scientist-financial-engineering-898a87fb-4cb8-450e-9840-ee5dc710a57d.txt
+  T3    32 d  estimate P 0.39 = F 0.65 x S 1.00 x L 0.60  LEVEL: senior  deliveroo-senior-machine-learning-engineer-growth-8202532.txt
+  T3   432 d  estimate P 0.39 = F 0.86 x S 0.75 x L 0.60  LEVEL: senior  faculty-senior-machine-learning-engineer-27e13461-0792-4c98-94e5-a989cf4b8701.txt
+  T3    49 d  estimate P 0.37 = F 0.92 x S 1.00 x L 0.40  LEVEL: lead  openai-applied-ai-architect-education-98bffd0e-05cf-4748-93f1-b115c84e37b4.txt
+  T3    27 d  estimate P 0.37 = F 0.92 x S 1.00 x L 0.40  LEVEL: lead  openai-applied-ai-architect-large-enterprise-557dd2ec-db6c-49b1-a0aa-193007ebd5b6.txt
+  T3    23 d  estimate P 0.36 = F 0.90 x S 1.00 x L 0.40  LEVEL: lead  anthropic-london-applied-ai-architect-partnerships-5432583008.txt
+  T3   152 d  estimate P 0.36 = F 0.90 x S 1.00 x L 0.40  LEVEL: lead  anaplan-principal-data-scientist-ai-8548014002.txt
+  T3    62 d  estimate P 0.36 = F 0.89 x S 1.00 x L 0.40  LEVEL: lead  anthropic-applied-ai-architect-industries-5390765008.txt
+  T3     7 d  estimate P 0.30 = F 1.00 x S 1.00 x L 0.30  LEVEL: manager  deliveroo-machine-learning-engineering-manager-per-8276181.txt
+  T3    30 d  estimate P 0.28 = F 0.93 x S 0.75 x L 0.40  LEVEL: lead  faculty-lead-machine-learning-engineer-dab2e626-4bdc-4aa1-931d-52c742c92852.txt
+  T3    29 d  estimate P 0.27 = F 0.90 x S 1.00 x L 0.30  LEVEL: manager  openai-manager-applied-ai-architects-f794c64d-bc5c-430b-b645-bff8c202b80e.txt
+  T3   232 d  estimate P 0.25 = F 0.83 x S 0.75 x L 0.40  LEVEL: lead  faculty-lead-data-scientist-92c892cd-1f6c-443d-9cd8-e4902f9b7fb6.txt
+  T3    32 d  estimate P 0.25 = F 0.83 x S 1.00 x L 0.30  LEVEL: manager  deliveroo-analytics-engineering-manager-8206309.txt
+  T3   329 d  estimate P 0.23 = F 0.78 x S 0.75 x L 0.40  LEVEL: lead  faculty-principal-data-scientist-efa8d13e-5166-4ae2-bf10-b1392afd3528.txt
+  T3   225 d  estimate P 0.23 = F 0.75 x S 0.75 x L 0.40  LEVEL: lead  faculty-principal-machine-learning-engineer-a8ad6158-52b2-46b6-889b-7112d0f3b952.txt
+  T3    32 d  estimate P 0.22 = F 0.75 x S 1.00 x L 0.30  LEVEL: manager  deliveroo-data-science-manager-8202485.txt
+  T3   338 d  estimate P 0.18 = F 0.92 x S 0.50 x L 0.40  LEVEL: lead  openai-applied-ai-architect-28cd6fe2-4096-426b-8b08-52a66458e2c6.txt
+  T3   428 d  estimate P 0.18 = F 0.92 x S 0.50 x L 0.40  LEVEL: lead  openai-applied-ai-architect-98a36c10-3497-4955-9cc0-a6f211e4dc1b.txt
+  T3    20 d  estimate P 0.18 = F 0.92 x S 0.50 x L 0.40  LEVEL: lead  openai-applied-ai-architect-b47aae11-78e1-4321-947a-94a2fa3e83b4.txt
+  T3   159 d  estimate P 0.18 = F 0.92 x S 0.50 x L 0.40  LEVEL: lead  openai-applied-ai-architect-tokyo-57cfe1d3-27b6-4761-909c-fec7829e9227.txt
+  T3    55 d  estimate P 0.15 = F 1.00 x S 0.50 x L 0.30  LEVEL: manager  openai-manager-applied-ai-engineering-digital-n-ba2ead69-d118-4a91-a4d7-c880d17fa7f9.txt
+
+== Valarian | AI Engineer (Harness)  [manual:af9d3404e414]  (valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt)
+
+== Anthropic | Applied AI Engineer, Beneficial Deployments (Lab Automation)  [manual:b1f0216ae474]  (anthropic-applied-ai-engineer-beneficial-deploymen-5440821008.txt)
+
+== Lendable | Data Analyst (Strategic Projects)  [manual:e5c216a56af2]  (lendable-data-analyst-strategic-projects-77e2a14b-f8c2-4b7c-b889-f98c20334e92.txt)
+Tailoring 1 job(s).
+- Lendable | Data Analyst (Strategic Projects)
+  ATS strict CV 35.7% | claimable ceiling 38.1% | STRETCH
+  ATS 36% (stemmed 36%, ceiling 38%) → below band | CV 2 page(s), page 2 98% full, letter off (letter.mode: off)
+  LLM tokens: 3,525 (prompt 2,511, completion 1,014, of which reasoning 776) in 2 calls
+    extract_keywords: 1 call(s), prompt tokens 1,828, total 2,607
+    rephrase_bullets: 1 call(s), prompt tokens 683, total 918
+
+== Trainline | Junior Machine Learning Engineer  [manual:ad31cb75bf32]  (trainline-junior-machine-learning-engineer-529e124d-d65d-4aa2-bde3-be81750cc521.txt)
+Tailoring 1 job(s).
+- Trainline | Junior Machine Learning Engineer
+  ATS strict CV 58.1% | claimable ceiling 65.6% | STRETCH
+  ATS 58% (stemmed 62%, ceiling 66%) → below band | CV 2 page(s), page 2 93% full (the fact bank has no more content to add), letter off (letter.mode: off)
+  LLM tokens: 3,593 (prompt 2,698, completion 895, of which reasoning 680) in 2 calls
+    extract_keywords: 1 call(s), prompt tokens 2,051, total 2,765
+    rephrase_bullets: 1 call(s), prompt tokens 647, total 828
+
+== Anaplan | Data Scientist  [manual:0511e7ae7ebb]  (anaplan-data-scientist-8654662002.txt)
+--max 5 reached; 61 file(s) left in the inbox.
+Review queue by freshness tier, then final P (P = F x S x L; F is the ATS ceiling after tailoring, not the estimate):
+     company | role | age | tier | level | ATS ceiling | P
+  1. Anaplan | Data Scientist | 6 d | T2 | - | ATS ceiling 0.64 | P 0.64
+     Apply: greenhouse https://job-boards.greenhouse.io/anaplan/jobs/8654662002
+  2. Trainline | Junior Machine Learning Engineer | 6 d | T2 | - | ATS ceiling 0.66 | P 0.59
+     Apply: ashby https://jobs.ashbyhq.com/trainline/529e124d-d65d-4aa2-bde3-be81750cc521
+  3. Lendable | Data Analyst (Strategic Projects) | 5 d | T2 | - | ATS ceiling 0.38 | P 0.34
+     Apply: ashby https://jobs.ashbyhq.com/lendable/77e2a14b-f8c2-4b7c-b889-f98c20334e92
+  4. Anthropic | Applied AI Engineer, Beneficial Deployments (Lab Automation) | 7 d | T2 | - | ATS ceiling 0.31 | P 0.31
+     Apply: greenhouse https://job-boards.greenhouse.io/anthropic/jobs/5440821008
+  5. Valarian | AI Engineer (Harness) | 6 d | T2 | - | ATS ceiling 0.28 | P 0.25
+     Apply: lever https://jobs.lever.co/valarian/55140de9-d3c0-48fb-bae3-41b16bcf7143
+
+== Anaplan | Data Scientist  [manual:0511e7ae7ebb]  (anaplan-data-scientist-8654662002.txt)
+==============================================================================
+Anaplan — Data Scientist  [London, United Kingdom]
+T1 · Data Scientist
+https://job-boards.greenhouse.io/anaplan/jobs/8654662002
+Apply: greenhouse https://job-boards.greenhouse.io/anaplan/jobs/8654662002
+Sponsor: Anaplan Limited (1.00)
+Priority P=0.64 = F 0.64 (ATS ceiling) x S 1.00 (exact register match) x L 1.00 (other) | age 6 d (tier 2, <= 7 d, first seen)
+Posted: posted 142 h ago (6 d) (first seen by discover: the source gave no trusted posting time), tier 2 (<= 7 d)
+Work location: United Kingdom (GB), onsite — evidence: "Location: London, United Kingdom"
+Visa answers (by_country.GB): right to work Yes · sponsorship now No · sponsorship in the future Yes
+ATS literal 56% | stemmed 56% | honest ceiling 64% | band: below | pages 2 | attempts 1
+ATS strict CV 56.0% | claimable ceiling 64.0%
+STRETCH: the honest ceiling (64%) is under the 70% band. Kept, never dropped: expect a lower interview rate; the fact bank, not the CV, is what stops it.
+Hook h_prod_tests: production, testing and MLOps | proof az4 (AstraZeneca) | number ~65 [library]
+  headline: LLM agent shipped to AWS Lambda behind ~65 automated tests
+  profile sentence 1: Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests.
+  letter sentence 1: At AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three tier framework of ~65 tests.
+Fill: page 2 99% full (target 96%) | 2 projects
+Typography: no em dashes | 6 result(s) in bold
+Ranking, top bullets (score = keyword + domain; * = on the CV):
+   1.   6.0 (6.0+0.0)   az3        Deployed the agent as a Docker container on AWS Lambda …
+   2.   6.0 (6.0+0.0) * az12       Built the Python data pipeline: reconciled 14 heterogen…
+   3.   4.7 (4.0+0.7) * av8        Shipped features in a production fintech (financial-ser…
+   4.   4.7 (4.0+0.7) * p_cf2      An insurance sponsor needed a fast, low-cost, explainab…
+   5.   4.0 (4.0+0.0)   az1        Built a tool-calling LLM agent (LangChain, AWS Bedrock,…
+   6.   4.0 (4.0+0.0) * az4        Wrote a three-tier test framework (tool-level, API/inte…
+   7.   4.0 (4.0+0.0) * az10       Needed an agent that researchers could trust on a cance…
+   8.   4.0 (4.0+0.0)   fl1        Built scikit-learn pipelines and LSTM/BiRNN/CNN models …
+   9.   4.0 (4.0+0.0) * fl4        Built a production RAG and agentic retrieval system (Cl…
+  10.   4.0 (4.0+0.0) * av9        Delivered 10 reusable SwiftUI/UIKit component templates…
+Ranking, projects:
+   1.   4.7 (all bullets 7.3) * CoverFit — insurance benchmarking API (Bristol × UWE AI Hackathon)
+   2.   4.0 (all bullets 4.0) * Image Classification — CNN and Transfer Learning
+   3.   2.7 (all bullets 2.7)   Banking Customer Churn — propensity model
+   4.   2.7 (all bullets 2.7)   Lloyd's Banking Group Datathon
+   5.   2.0 (all bullets 4.7)   GTAI Cell Line Finder — multi-omics graph for cancer cell-line selection (PoC)
+   6.   2.0 (all bullets 4.0)   Mining Insights from Customer Feedback — NLP & unsupervised analytics (MSc team project)
+   7.   2.0 (all bullets 2.0)   Bitcoin Forecasting — LSTM time-series service
+   8.   2.0 (all bullets 2.0)   AgenticFriend — real-time voice assistant
+   9.   2.0 (all bullets 2.0)   mcp_searchagent
+  10.   2.0 (all bullets 2.0)   Auto-scaled word-frequency pipeline on AWS
+Letter: off (letter.mode: off; write your own, or apply without)
+Letter evidence: az12, av8
+FLAGS: Stretch: honest ceiling 64% is under the 70% band
+Needs a result (yours to supply in fact_bank.yaml, never invented): az7, dc8, fl4, fl5, av8, p_cn1
+Possible evidence — you decide (nothing is claimed; add the word to the fact bank if it is true):
+  dbt <- sql (profile facts, skills: core); data modelling (bullet av3, bullet av10)
+  LightGBM <- xgboost (profile facts, skills: ML & Statistics); random forest (skills: ML & Statistics, bullet p_gg2)
+  timeseries forecasting <- time-series forecasting (skills: ML & Statistics); time series (profile facts, skills: ML & Statistics)
+Genuine gaps (no evidence, left out): scalable, Optuna, snowflake, airflow, azure, Prefect
+Warnings: length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it; length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it
+Profile: Data scientist who takes models from prototype to production: at AstraZeneca I shipped an LLM agent to AWS Lambda, validated by a three tier framework of ~65 tests. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda). Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).
+CV: /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/outputs/Anaplan_Data_Scientist_0511e7ae7ebb/Thiruvel Andagurunathan Pandian CV.pdf (created 2026-10-20 13:20:42)
+Letter: (none)
+letter: off
+  Judge (ollama/qwen2.5-7b-8k): WOULD NOT SEND 2/5 [shadow]
+  Judge input: 3,994 prompt tokens (dropped 1 section(s) about the employer or process: Privacy & AI Notice)
+    - CV does not lead with what the JD asks for
+    - Lack of a cover letter
+    - Some claims are not supported by SOURCE FACTS
+[a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [w] open apply page  [s]kip  [q]uit > [a]pprove  [e]dit  [l]etter regenerate  [n]ote  [o]pen PDFs  [w] open apply page  [s]kip  [q]uit > 
+STOPPED at stage 'review' of anaplan-data-scientist-8654662002.txt (job manual:0511e7ae7ebb, status 'needs_review').
+The JD is still in inbox/ and the job keeps the status it reached; nothing was submitted by this command.
+Resume with:  careerops live --max 5 --dry-run
+# careerops live — 2026-10-20 23:34 (dry run)
+
+## valarian-ai-engineer-harness-55140de9-d3c0-48fb-bae3-41b16bcf7143.txt
+- id: manual:af9d3404e414
+- company: Valarian
+- role: AI Engineer (Harness)
+- status: needs_review
+- sponsor register: fuzzy(0.90) (Valarian Technologies Limited)
+- archive check: ok (unchanged)
+- visa lines: none
+
+## anthropic-applied-ai-engineer-beneficial-deploymen-5440821008.txt
+- id: manual:b1f0216ae474
+- company: Anthropic
+- role: Applied AI Engineer, Beneficial Deployments (Lab Automation)
+- status: needs_review
+- sponsor register: exact (Anthropic Limited)
+- archive check: ok (unchanged)
+- visa lines: none
+
+## lendable-data-analyst-strategic-projects-77e2a14b-f8c2-4b7c-b889-f98c20334e92.txt
+- id: manual:e5c216a56af2
+- company: Lendable
+- role: Data Analyst (Strategic Projects)
+- status: needs_review
+- sponsor register: fuzzy(0.90) (Lendable Operations Ltd)
+- archive check: ok (unchanged)
+- visa lines: none
+
+## trainline-junior-machine-learning-engineer-529e124d-d65d-4aa2-bde3-be81750cc521.txt
+- id: manual:ad31cb75bf32
+- company: Trainline
+- role: Junior Machine Learning Engineer
+- status: needs_review
+- sponsor register: fuzzy(0.90) (Trainline.com Ltd)
+- archive check: ok (unchanged)
+- visa lines: none
+
+## anaplan-data-scientist-8654662002.txt
+- id: manual:0511e7ae7ebb
+- company: Anaplan
+- role: Data Scientist
+- status: needs_review
+- sponsor register: exact (Anaplan Limited)
+- archive check: ok (unchanged)
+- visa lines: none
+
+Stopped: you chose quit at the review prompt; the job stays 'needs_review'
+Summary written to /mnt/d/VS_Codes/DataScience/Projects/career-ops/data/live/20261020-233442.md

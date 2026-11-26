@@ -1,0 +1,50 @@
+{
+ "job_id": "manual:1fb47ec41a7c",
+ "company": "Lovable",
+ "title": "Data Scientist, Growth",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0, ATS ceiling 91%"
+  },
+  "north_star": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Target role family data_scientist matches title"
+  },
+  "comp": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "Pay stated: none"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "SME·micro size, fast‑moving, growth focus, recognized awards"
+  },
+  "red_flags": {
+   "score": 3.0,
+   "status": "supported",
+   "source": "No compensation info, posting age 93 days"
+  }
+ },
+ "global_score": 4.0,
+ "confidence": "High",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm salary/compensation range",
+  "Verify the role is still actively hiring (93‑day old posting)",
+  "Check visa sponsorship eligibility (UK sponsor fuzzy 0.90)"
+ ],
+ "adjustments": [],
+ "anomalies": [],
+ "model_global": 4.0,
+ "model_confidence": "High",
+ "jd_hash": "59b9ee162b3e45bb",
+ "jd_words": 582,
+ "tokens": 2072,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

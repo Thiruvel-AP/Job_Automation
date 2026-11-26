@@ -1,0 +1,17 @@
+Hi RightShip Product team,
+
+RightShip is hiring for "Demonstrated experience building agentic systems and RAG pipelines with LangGraph (and LangChain or similar)"; at AstraZeneca I took an LLM agent from prototype to production on AWS Lambda, validated by a three-tier framework of ~65 tests.
+
+The result, as measured: ~65 tests across 8 files.
+
+I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo.
+
+At AstraZeneca, I needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable. At 180 Degrees Consulting Bristol, I proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo.
+
+What draws me to this role is RightShip is the maritime industry's leading safety and risk intelligence platform.
+
+Could we spend 20 minutes on the first problem the AI Engineer would own, around production, testing and CI/CD, and what the assessment covers?
+
+Regards,
+
+Thiruvel Andagurunathan Pandian

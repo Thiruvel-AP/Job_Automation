@@ -1,0 +1,48 @@
+Company: Artefact
+Title: Data Analyst - India (2026)
+URL: https://job-boards.greenhouse.io/artefact/jobs/8360407002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Pune, Maharashtra, India
+Country: India
+Status: listed_only
+Posted: 2026-01-06T07:54:13-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+Job Description - Data Analyst
+Artefact is a new generation of data service providers specialising in data consulting and data-driven digital marketing. It is dedicated to transforming data into business impact across the entire value chain of organisations. We are proud to say we’re
+enjoying skyrocketing growth.
+
+The backbone of our consulting missions, today our Data consulting team has more than 400 consultants covering all Artefact's offers (and more): data marketing, data governance, strategy consulting, product owner…
+
+1. What you will be doing?
+
+As a Data Analyst, your key responsibilities revolve around utilizing Python and SQL
+for data manipulation and analysis, coupled with leveraging visualization tools such
+as Tableau, PowerBI, and Web Applications to present insights effectively. Your
+primary duties include:
+
+Data Analysis: Employing Python and SQL to extract, clean, and analyze data to derive actionable insights.
+Visualization Techniques: Using Tableau, PowerBI, and Web Applications to create intuitive and insightful visual representations of data for effective
+communication.
+
+Statistical Understanding: Applying statistical concepts and understanding data structures to interpret data patterns and trends accurately.
+
+2. What we are looking for?
+
+Technical Expertise:
+
+- Proficiency in Python, SQL, and data manipulation for analysis purposes.
+
+- Experience in data visualization tools such as Tableau, PowerBI, and Web Applications for creating interactive and informative dashboards.
+
+- Solid understanding of statistics and data structures for accurate data interpretationProven problem-solving skills and a solution-oriented mindset.
+
+Attitude & Soft Skills:
+
+Excellent communication skills to collaborate effectively within teams and with stakeholders.
+Strong business acumen with an interest in business-facing roles.
+
+Adaptability and a start-up mentality to thrive in a dynamic environment.

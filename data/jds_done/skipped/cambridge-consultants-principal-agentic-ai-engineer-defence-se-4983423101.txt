@@ -1,0 +1,90 @@
+Company: Cambridge Consultants
+Title: Principal Agentic AI Engineer (Defence & Security)
+URL: https://job-boards.eu.greenhouse.io/cambridgeconsultantslimited/jobs/4983423101
+Source: greenhouse
+Apply kind: greenhouse
+Location: United Kingdom
+Posted: 2026-09-23T03:40:35-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+Overview 
+
+We have an opportunity for a Principal Engineer in our AI & Algorithms department, working with a particular focus on our defence and security clients. You’ll join a team of talented engineers and scientists designing, building and testing intelligent systems that require cutting edge algorithms. As one of the senior technical voices in the team, you’ll be architecting the AI approach on projects, setting the technical bar for others, and helping shape the work we deliver. As well as hands-on engineering, you’ll spend time with clients, using your expertise to win new projects as well as deliver them. You’ll work in multidisciplinary teams that use our labs and computing resources to enable us to deliver ambitious projects. Cambridge Consultants creates exciting and novel breakthroughs in technology and products. Our work on intelligent systems area has helped create world-first and market-changing technologies including real-time AI-enhanced medical imaging, autonomous defence systems against cyberattacks, and edge algorithms to help visually impaired people navigate indoor spaces.
+
+Much of our defence and security work requires security clearance, so we ask for it up front. You won’t work exclusively in that sector, but a genuine interest in it matters to us. 
+
+What you’ll be doing: 
+
+- Designing and implementing cutting-edge AI solutions to our clients’ problems, such as agentic AI that can search for, interpret and analyse information as well as plan and act to achieve a goal. 
+
+- Acting as technical lead and architect on our larger, more complex projects, owning the technical solution and the value it delivers to the client. 
+
+- Setting technical direction and acting as technical reviewer across the department, with your opinion sought by colleagues. 
+
+- Leading the development of proposals and costed work programmes, turning client problems into work we can win and deliver. 
+
+- Driving internal capability and demonstrators that keep us at the leading edge and open up new conversations with clients. 
+
+- Mentoring engineers and conducting technical interviews to help us recruit and grow strong people. 
+
+- Contributing to how the department works, improving our processes and technical standards. 
+
+What you need to succeed: 
+
+- 5+ years’ experience designing and delivering cutting edge AI solutions, including experience delivering agentic AI systems. 
+
+- Experience in assuring the quality of the output of AI systems and the technologies that help to achieve this. 
+
+- Experience collaborating with subject matter experts to create systems that are built on deep and specialist domain understanding. 
+
+- A strong undergraduate degree in a relevant technical subject, such as AI/machine learning, computer science, mathematics or physics. 
+
+- Strong Python and software engineering judgement. 
+
+- The ability to architect the technical approach on complex projects and to review the work of others, including working autonomously as the technical authority. 
+
+- Experience mentoring and developing engineers. 
+
+- Experience working with non-technical stakeholders for your work. 
+
+- Interest in working directly with clients and contributing to proposals and sales conversations. 
+
+- A genuine affinity for working in the defence and security sector. 
+
+Some projects at Cambridge Consultants are subject to security restrictions. This role requires you to obtain a Security Check (SC) level security clearance ( United Kingdom Security Vetting: Applicant ). You must be able to work in the UK without restrictions in accordance with UK National Law and be prepared to successfully undertake an appropriate level of UK National Security Vetting according to UK Government National Security Vetting criteria. Please be aware that, for roles requiring Security Check clearance, applicants will typically need to have been continuously resident in the UK for a minimum of 5 years immediately prior to applying for this role in order to meet the requirements for Security Check (SC) clearance.
+
+What we offer:
+
+- 25 days annual leave plus bank holidays (with the option to buy 10 more a year)
+
+- Company bonus (profit share)
+
+- Flexible working patterns and hybrid working
+
+- Medical insurance and group income protection
+
+- Employee assistance programme and mental health support group
+
+- Enhanced maternity/paternity leave
+
+- Sabbatical leave
+
+- Travel insurance (business and leisure)
+
+- Generous company pension plan
+
+- Personalised career development and training plans
+
+- Free breakfast and two-course lunch in the office every day
+
+- Free onsite parking and we are close to public transport links
+
+- A variety of events organised by our social committee, ranging from summer and Christmas parties to board game nights and socials at our own rooftop bar!
+
+Why Cambridge Consultants? 
+
+At Cambridge Consultants, you'll contribute to radical, new-to-the-world innovation that transforms business, society and the planet. Joining our multidisciplinary teams means helping to turn bold ideas into reality, harnessing the power of deep tech to create products, services and experiences that have never existed before. Whether you're advancing technologies, shaping strategy, supporting operations or driving commercial growth, it's an opportunity to make a real impact and help create the future.
+
+By submitting an application to Cambridge Consultants, you confirm that the information provided in this application, together with any supporting documentation, is true, complete, and accurate to the best of your knowledge and belief. You understand that any false statement, misleading information, or material omission may render you liable to disqualification from the recruitment process, withdrawal of any offer of employment, or dismissal without notice if discovered following appointment. You acknowledge that the organisation reserves the right to verify the information supplied.

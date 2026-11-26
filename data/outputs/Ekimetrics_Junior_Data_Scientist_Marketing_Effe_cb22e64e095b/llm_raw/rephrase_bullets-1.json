@@ -1,0 +1,8 @@
+```json
+{
+  "az5": "Surveyed 14 heterogeneous source datasets, owning identity-spine datasets and setting metadata boundaries for downstream modelling, yielding 14 source datasets.",
+  "p_gg1": "Merged 14 public omics source files into a graph of 1,399 cell lines and 16,385 genes (~2.8M edges), then applied Leiden community detection to identify 19 clusters with modularity 0.822.",
+  "p_ql2": "Audited 859,494 training rows for completeness, structure and duplicates, identified 44,369 excess duplicate rows, hand‑reviewed 181 flagged records, and built topic‑grouped training folds using embedding‑based clustering.",
+  "p_ql1": "Fine‑tuned QLoRA‑fined Llama 3.1 8B on a 15 GB GPU, training 0.52% of parameters, which raised answer completion from 32% to 52% and exact‑answer accuracy from 16.2% to 27.3% on 99 held‑out NuminaMath problems."
+}
+```

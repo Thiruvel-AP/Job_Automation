@@ -1,0 +1,32 @@
+{
+  "required": [
+    "Python",
+    "Java",
+    "PyTorch",
+    "Scikit-learn",
+    "XGBoost",
+    "NLP",
+    "LLM",
+    "real-time ML systems",
+    "machine learning fundamentals",
+    "classification",
+    "regression",
+    "clustering",
+    "ranking",
+    "data processing libraries",
+    "Pandas",
+    "NumPy",
+    "ML frameworks",
+    "distributed system",
+    "concurrent algorithms",
+    "data structures"
+  ],
+  "preferred": [
+    "ML experiments",
+    "code reviews",
+    "performance bottlenecks",
+    "scalable real-time production systems"
+  ],
+  "company_hook": "Quantcast revolutionizes digital advertising by connecting marketers with their ideal audiences using AI-powered technology.",
+  "team": "Modeling team"
+}

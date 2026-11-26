@@ -1,0 +1,121 @@
+Company: Kpler
+Title: Senior Data Engineer - Financial Flows
+URL: https://jobs.lever.co/kpler/645258a8-e421-4ef9-b466-2d4a4fa303bd
+Source: lever
+Apply kind: lever
+Location: United Kingdom
+Posted: 2026-10-29T16:21:38.485000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-29
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors. 
+ 
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 850 experts from 69 countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+ 
+
+
+About the Role
+As a Senior Data Engineer on the Financial Flows team, you will take full technical ownership of the end-to-end data pipelines, predictive models, and cloud infrastructure powering Kpler’s commodity finance analytics. You will lead the modernization of our data foundation, spearheading the migration of production services to AWS and re-architecting legacy calculation engines into clean, performant Python services. Operating at the crossroads of quantitative research and cloud infrastructure, your work will directly ensure that market participants receive real-time, mission-critical insights across global commodities markets.
+
+
+
+Key Responsibilities
+- 
+
+Design, build, and operate resilient batch and real-time streaming data ingestion pipelines connecting to external financial market data providers via APIs and WebSockets. 
+
+- 
+
+Lead the architectural migration of legacy backend infrastructure to modern cloud-native environments on AWS, establishing high standards for system reliability and scalability. 
+
+- 
+
+Drive the refactoring and rewrite of the CTA positioning indicator calculation blocks from PHP to Python, ensuring strict mathematical output parity, comprehensive test coverage, and optimized latency. 
+
+- 
+
+Ingest and model complex financial datasets—including futures pricing, open interest, and trading volumes—across time-series stores and search engines like QuestDB and Elasticsearch. 
+
+- 
+
+Implement automated data validation, proactive alerting, and system monitoring to ensure market data feeds remain accurate, continuous, and fault-tolerant. 
+
+- 
+
+Deploy, maintain, and scale containerized services across Docker and Kubernetes environments using automated CI/CD pipelines and GitOps workflows. 
+
+- 
+
+Partner closely with quantitative researchers, commodity analysts, and product managers to translate complex trading models into high-performance production pipelines. 
+
+- 
+
+Provide technical mentorship to peer engineers, raising team-wide engineering rigor through thoughtful code reviews, system design guidance, and architectural documentation.
+
+Experience & Background
+What you'll need (Must-haves)
+
+- 
+
+5+ years of professional experience building, operating, and scaling production-grade data pipelines and backend infrastructure. 
+
+- 
+
+Advanced expertise in Python, with a strong background refactoring and rewriting production-critical code for performance and testability. 
+
+- 
+
+Proven hands-on experience building and maintaining real-time or streaming API ingestion pipelines (REST, WebSockets) handling time-series datasets. 
+
+- 
+
+Solid production experience deploying and managing containerized applications on AWS using Docker, Kubernetes, and modern CI/CD practices. 
+
+- 
+
+Strong database fundamentals in SQL and experience working with distributed search or time-series databases (e.g., Elasticsearch, QuestDB, ClickHouse). 
+
+- 
+
+Deep experience establishing automated data quality frameworks, observability (monitoring/alerting), and root-cause troubleshooting for production systems. 
+
+Nice-to-haves
+
+- 
+
+Domain knowledge of financial market structures, futures contracts, open interest, and commodities trading symbology. 
+
+- 
+
+Experience integrating data from major financial market vendors (e.g., Bloomberg, LSEG, Enverus, Trading Technologies). 
+
+- 
+
+Familiarity with legacy PHP codebase migration or reading PHP algorithms to translate into Python. 
+
+- 
+
+Practical familiarity with GitOps frameworks and infrastructure-as-code tooling.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+ 
+Our People Pledge
+ 
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+ 
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.
+ 
+ 
+ 
+By applying, I confirm that I have read and accept the Staff Privacy Notice

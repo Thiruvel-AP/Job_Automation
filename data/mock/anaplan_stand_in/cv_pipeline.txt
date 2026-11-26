@@ -1,0 +1,100 @@
+                      Thiruvel Andagurunathan Pandian
+               Data Scientist · Deep Learning and code review: 19,213 gene parquet fallback
+     Bristol, UK · apthiruvel@gmail.com · +44 7741 016954 · linkedin.com/in/thiruvel-a-p · github.com/Thiruvel-AP ·
+                                          thiruvel-ap.github.io/PersonalPortfolio
+                         Right to work in UK under Graduate visa · Available to join immediately
+
+
+PROFILE
+Data Scientist focused on Deep Learning and code review, including 19,213 gene parquet fallback at AstraZeneca.
+Data Scientist with Builds deployable ML models: forecasting (an LSTM time series service), propensity modelling
+(an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and
+DBSCAN). Owns data workflows end to end in Python and SQL, from merging.
+
+SKILLS
+Core: Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas,
+  NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git
+ML & Statistics: Time series forecasting, XGBoost, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML,
+ customer segmentation (k-means, HAC, DBSCAN), class imbalance handling (SMOTE), model validation (cross
+ validation, MCC), hypothesis testing, ANOVA, bootstrap, PCA, maximum likelihood estimation, experimental
+ design (MSc coursework)
+LLMs & Agents: AWS Bedrock, LangGraph, Google ADK, MCP (FastMCP, MCP SDK), Claude API, OpenAI API, Gemini
+  via LiteLLM, Hugging Face Transformers, Ollama, ChromaDB, tool calling, LoRA fine tuning, LLM evaluation,
+  prompt design
+Data & Visualisation: Databricks/PySpark (coursework), ggplot2, Streamlit, tidyverse, tidymodels, NLTK, networkx,
+  Leiden clustering
+Databases: PostgreSQL, MongoDB, DynamoDB
+Cloud & MLOps: AWS Lambda, GCP Cloud Run, MLflow, AWS ECS, Kubernetes (AWS EKS), ECR, IAM, EC2, S3, SQS,
+  GitHub Actions, pytest, FastAPI, REST APIs, WebSockets, TensorFlow Serving
+
+WORK EXPERIENCE
+AstraZeneca · Bristol, UK (Remote)                                                              May 2026 – Sep 2026
+Data Scientist
+• Designed a deterministic hallucination guard architecture and fail safe data resolution via live Ensembl/HGNC
+  APIs with a local 19,213 gene parquet fallback and circuit breakers.
+• Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines,
+  IAM execution roles and least privilege policies.
+• Wrote a three tier test framework (tool level, API/integration, live agent) of ~65 tests across 8 files, validated
+  across the LLM provider migration from Groq to AWS Bedrock after a rate limit evaluation.
+• Managed AWS account governance for the project, including root user isolation, IAM user and group
+  management and least privilege policies.
+180 Degrees Consulting Bristol · Bristol, UK (Remote)                                          Sep 2025 – Dec 2025
+Data Consultant (AI Engineering & AI System)
+• Proposed and prototyped an MCP based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL,
+  GitHub Actions CI) for a Madrid based product startup client, presented in a live stakeholder demo.
+• Contributed the MCP implementation to the client's production repository (TypeScript/Node.js MCP
+  server, OpenAI query generation, Convex database), now in live daily use; engagement received a five star
+  commendation from senior leadership.
+• Translated ambiguous business requirements into a production ready technical blueprint and owned the
+  solution within a cross functional consulting team, from architecture design through stakeholder presentation.
+Freelance · Chennai, India                                                                     Jan 2025 – Aug 2025
+AI/ML Engineer
+• Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served
+   through a FastAPI REST API in Docker on GCP Cloud Run.
+• Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms,
+   target encoding), model selection, cross validation and hyperparameter tuning across classification and
+   regression tasks.
+Avasoft · Chennai, India                                                                        Jan 2023 – Sep 2024
+Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)
+• Built a JavaScript web scraping pipeline that automated a manual collection process and surfaced market trend
+  signals used for pricing decisions.
+• Secured backend communication with SSL pinning and integrated AWS Cognito for user authentication with
+  single sign on in the FinTech app.
+• Built ecommerce and ticketing UIs in Swift/SwiftUI with product search, cart logic, order tracking and booking
+  management.
+
+PROJECTS
+Banking Customer Churn: propensity model                                                                                GitHub
+R, tidymodels, XGBoost
+• Predicted bank customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two stage
+   Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation.
+Lloyd's Banking Group Datathon                                                                                       3rd place
+scikit-learn, Isolation Forest, SciPy, MLflow
+• Detected outliers in financial services data under 200:1 class imbalance, comparing Isolation Forest against
+   ensemble classifiers and tracking experiments in MLflow.
+Bitcoin Forecasting: LSTM time series service                                                                           GitHub
+Python, TensorFlow, TF Serving
+• Trained a forecasting LSTM with cyclic date encoding and TimeSeriesSplit grid search tuning, then deployed it
+   behind a TensorFlow Serving REST API.
+Auto scaled word frequency pipeline on AWS                                                                    MSc Coursework
+EC2, SQS, S3, DynamoDB, CloudWatch, Auto Scaling
+• Built an SQS driven word frequency pipeline on EC2 with S3 and DynamoDB, scaled by an Auto Scaling group on
+   CloudWatch queue alarms, and benchmarked instance configurations.
+mcp_searchagent                                                                                                         GitHub
+FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions
+• MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local
+   open weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
+
+EDUCATION
+University of Bristol                                                                                   Sep 2025 – Sep 2026
+MSc Data Science, Distinction (Expected)
+Large scale Data Engineering, Statistical Computing & Empirical Methods, AI & Text Analytics, Visual Analytics, Data Science
+Methods & Practices, Technology, Innovation, Business & Society
+St. Joseph's College of Engineering                                                                    Aug 2019 – May 2023
+B.E. Electrical and Electronics Engineering, 91%, First Class with Distinction
+
+CERTIFICATIONS & ACHIEVEMENTS
+• Model Context Protocol: Advanced Topics, Anthropic, Jun 2026 · Introduction to Model Context Protocol,
+   Anthropic, Jun 2026 · AWS Academy Cloud Foundations, Nov 2025 · 180 Degrees Consulting Data Science
+   Consultant Certificate, Dec 2025 · Bristol PLUS Award, Mar 2026
+

@@ -1,0 +1,323 @@
+{
+  "meta": {
+    "stamp": "20261004-012727",
+    "band": [
+      0.7,
+      0.85
+    ],
+    "temperature": 0,
+    "seed": 7,
+    "max_keywords": 25,
+    "models": [
+      "MockLLM"
+    ],
+    "manifest": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/manifest.yaml"
+  },
+  "rows": [
+    {
+      "id": "cal-chattermill",
+      "company": "Chattermill",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 1.0
+      },
+      "keywords": {
+        "n": 17,
+        "required": 15,
+        "terms": [
+          "fine-tuning",
+          "classification",
+          "pytorch",
+          "nlp",
+          "embeddings",
+          "statistics",
+          "genai",
+          "agentic",
+          "production",
+          "communication",
+          "llm",
+          "retrieval",
+          "evaluation",
+          "data pipelines",
+          "research",
+          "lora",
+          "machine learning"
+        ]
+      },
+      "ceiling": 1.0,
+      "gaps": [],
+      "final": {
+        "literal": 0.6440677966101694,
+        "stemmed": 0.6440677966101694,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "classification",
+          "embeddings",
+          "genai",
+          "communication",
+          "data pipelines",
+          "machine learning"
+        ],
+        "wording_misses": []
+      },
+      "attempts": 2,
+      "rephrase": {
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "calls": 2,
+        "coverage": {
+          "eligible": 7,
+          "rephrased": 0,
+          "ratio": 0.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az4",
+          "az3"
+        ],
+        "dc180": [
+          "dc1",
+          "dc2"
+        ],
+        "freelance": [
+          "fl2",
+          "fl4"
+        ],
+        "avasoft": [
+          "av4"
+        ],
+        "churn": [
+          "p_ch1"
+        ],
+        "astrofreud": [
+          "p_as1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "MSc Data Science, University of Bristol (completed 2026)",
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "score": 0.1016949152542373,
+        "pages": 1,
+        "evidence": [
+          "az1",
+          "fl2"
+        ]
+      },
+      "usage": {
+        "calls": 0,
+        "total_tokens": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": null,
+        "by_task": {}
+      },
+      "seconds": 7.6,
+      "manual_ats": null,
+      "reference": null,
+      "outcome": "interview",
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/mock/calibration/runs/20261004-012727/outputs/Chattermill_Data_Scientist_cal_chattermill"
+    },
+    {
+      "id": "cal-creditspring",
+      "company": "Creditspring",
+      "title": "Data Scientist",
+      "status": "ok",
+      "triage": {
+        "passed": true,
+        "reasons": [],
+        "flags": [
+          "Sponsor register not loaded \u2014 sponsorship unchecked"
+        ],
+        "family": "data_scientist",
+        "tier": 1,
+        "ceiling_pre": 0.9333333333333333
+      },
+      "keywords": {
+        "n": 18,
+        "required": 14,
+        "terms": [
+          "machine learning",
+          "feature engineering",
+          "python",
+          "regression",
+          "pandas",
+          "numpy",
+          "scikit-learn",
+          "sql",
+          "stakeholders",
+          "communication",
+          "production",
+          "model deployment",
+          "testing",
+          "data pipelines",
+          "fintech",
+          "aws",
+          "agentic",
+          "research"
+        ]
+      },
+      "ceiling": 0.9333333333333333,
+      "gaps": [
+        "feature engineering"
+      ],
+      "final": {
+        "literal": 0.5666666666666667,
+        "stemmed": 0.6333333333333333,
+        "band": "below",
+        "pages": 1,
+        "misses": [
+          "machine learning",
+          "feature engineering",
+          "regression",
+          "communication",
+          "model deployment",
+          "data pipelines"
+        ],
+        "wording_misses": [
+          "stakeholders"
+        ]
+      },
+      "attempts": 2,
+      "rephrase": {
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "calls": 2,
+        "coverage": {
+          "eligible": 6,
+          "rephrased": 0,
+          "ratio": 0.0
+        }
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az4",
+          "az7"
+        ],
+        "dc180": [
+          "dc1",
+          "dc2"
+        ],
+        "freelance": [
+          "fl1",
+          "fl4"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "gtaigraph": [
+          "p_gg2"
+        ],
+        "lsde": [
+          "p_ls1"
+        ]
+      },
+      "violations": [],
+      "profile": {
+        "facts": [
+          "MSc Data Science, University of Bristol (completed 2026)",
+          "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+        ],
+        "retried": false,
+        "fallback": false
+      },
+      "letter": {
+        "status": "ok",
+        "problems": [],
+        "score": 0.06666666666666667,
+        "pages": 1,
+        "evidence": [
+          "fl1",
+          "dc1"
+        ]
+      },
+      "usage": {
+        "calls": 0,
+        "total_tokens": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": null,
+        "by_task": {}
+      },
+      "seconds": 15.0,
+      "manual_ats": 0.708,
+      "reference": null,
+      "outcome": null,
+      "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/mock/calibration/runs/20261004-012727/outputs/Creditspring_Data_Scientist_cal_creditspring"
+    }
+  ],
+  "aggregates": {
+    "jobs": 2,
+    "ok": 2,
+    "errors": 0,
+    "not_run": 0,
+    "guard": {
+      "proposed": 0,
+      "blocked": 0,
+      "rate": null,
+      "investigate": false
+    },
+    "band": {
+      "in_scope": 2,
+      "in_band": 0,
+      "rate": 0.0
+    },
+    "headroom": 0.36129943502824863,
+    "manual": {
+      "n": 1,
+      "mean_abs_diff": 0.1413333333333333,
+      "rho": null
+    },
+    "reference": {
+      "n": 0,
+      "mean_delta": null
+    },
+    "rank": {
+      "basis": null,
+      "n": 0,
+      "rho": null
+    },
+    "cost": {
+      "calls_per_job": 0.0,
+      "seconds_per_job": 11.3,
+      "tokens_per_job": 0.0,
+      "tokens_total": 0,
+      "max_prompt": null
+    },
+    "rephrase": {
+      "eligible": 13,
+      "rephrased": 0,
+      "ratio": 0.0
+    },
+    "letters": {
+      "ok": 2,
+      "fallback": 0
+    },
+    "violations": 0,
+    "keywords_per_job": 17.5,
+    "mean_final": 0.605367231638418,
+    "mean_ceiling": 0.9666666666666667
+  }
+}

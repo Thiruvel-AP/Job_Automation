@@ -1,0 +1,62 @@
+Company: Eclipse
+Title: Data Scientist (AI Data & LLM Specialist)
+URL: https://job-boards.greenhouse.io/eclipse/jobs/4981191008
+Source: greenhouse
+Apply kind: greenhouse
+Location: Remote
+Posted: 2025-11-07T12:54:53-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-06
+Listed: yes
+
+Join the core team at Eclipse, where we’re building an AI agent-first marketplace that connects intelligence with real-world tasks, starting with data collection and labeling. We are seeking a Data Scientist to establish the foundation for how our data is labeled, processed, and prepared for consumption by next-generation Large Language Models (LLMs). Your work will be critical in transforming our raw data collections into valuable, AI-ready datasets.
+
+Qualifications 
+
+- Proven experience as a Data Scientist or Machine Learning Engineer with a focus on data quality and preparation.
+
+- Strong understanding of data labeling methodologies and hands-on experience with data annotation platforms and workflows.
+
+- Demonstrated experience preparing datasets for training and fine-tuning Large Language Models (LLMs), including knowledge of techniques like tokenization, embeddings, and NER.
+
+- Proficiency in Python and common data science libraries (e.g., Pandas, NumPy, Scikit-learn, spaCy, Hugging Face).
+
+- Experience using APIs/SDKs to automate data annotation and active learning loops.
+
+- Excellent communication skills, with an ability to create clear documentation for technical and non-technical audiences.
+
+Responsibilities 
+
+- Develop Data Labeling Strategies: Design and document a formal data annotation strategy, including clear, scalable, and efficient guidelines for labeling our data. Define and enforce quality metrics, including inter-annotator agreement.
+
+- Optimize for LLM Consumption: Research, define, and prototype the optimal data formats, structures, and pre-processing steps required for fine-tuning and training LLMs on our datasets.
+
+- Data Quality Analysis: Establish automated processes and metrics to analyze the quality of both raw and labeled data, providing feedback to improve our data collection and labeling workflows.
+
+- Collaborate with Engineering: Work closely with the engineering team to guide the implementation of data processing pipelines and ensure the data infrastructure meets the needs of ML applications.
+
+Nice-to-Haves
+
+- Experience with audio data processing and relevant libraries.
+
+- Familiarity with data annotation platforms and tools.
+
+- Knowledge of modern MLOps principles and practices.
+
+- Experience with large language model data curation and Reinforcement Learning from Human Feedback (RLHF) pipelines.
+
+Join the Eclipse team!
+
+Eclipse is building the fastest Ethereum Layer 2, powered by the Solana VM. Our general-purpose L2 combines the best of the modular stack without sacrificing UX or fragmenting liquidity. On top of this foundation, we’re building apps in-house and iterating quickly to find breakout consumer and AI experiences. We’re backed by top investors including Polychain, Tribe Capital, Placeholder, and DBA.
+
+- Opportunity. We believe blockchains should be fast AND highly usable. You’ll do high-impact work to enhance Ethereum’s scalability, shaping the future of crypto
+
+- Flexibility. We collaborate synchronously and asynchronously, across weekly all-hands meetings, Slack messaging, and quarterly in-person meetups
+
+- Team. Our founding team has experience launching and scaling blue-chip projects such as dYdX, Uniswap, and zkSync. We’re backed by leading funds and leaders including Polychain, Tribe, Placeholder, DBA, Mustafa Al-Bassam, Tarun Chitra, Meltem Demirors, and others
+
+- Culture. As an early member of our team, you’ll have a unique opportunity to help shape our culture. We value intellectual honesty, bias towards action, and believe every member plays a key role in achieving our ambitious goals
+
+- Compensation. You’ll receive a competitive salary + equity + benefits package.
+
+Eclipse Laboratories is an equal opportunity employer. We do not discriminate on the basis of race, color, religion, sex (including pregnancy, gender identity, and sexual orientation), national origin, age, disability, genetic information, veteran status, or any other status protected by applicable laws or regulations. All employment decisions are based on qualifications, merit, and business need.

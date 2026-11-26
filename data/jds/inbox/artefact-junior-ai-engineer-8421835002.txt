@@ -1,0 +1,54 @@
+Company: Artefact
+Title: Junior AI Engineer
+URL: https://job-boards.greenhouse.io/artefact/jobs/8421835002
+Source: greenhouse
+Apply kind: greenhouse
+Location: 17th Floor, 5 Aldermanbury Square, London, EC2V 7HR
+Posted: 2026-02-13T12:00:52-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-26
+Listed: yes
+
+Who we are
+
+- Artefact is a leading global consulting firm dedicated to accelerating the adoption of data and AI. We work with a variety of businesses, from supermarket chains, to private equity firms and telecoms; including Nissan, L'Oréal, Carrefour, WHSmith, Orange, Beiersdorf, BNP Paribas, and Samsung.
+
+- Our success stems from combining advanced data technologies, agile methods for quick delivery, and dedicated teams of data scientists, data engineers, business consultants, and data analysts.
+
+- Our 1,700 employees operate in 25 countries (Americas, Europe, Asia, Middle East, India, Africa) and we partner with 1,000+ clients.
+
+What you will be doing
+
+As a Junior Software Engineer in our London office, your role will encompass:
+
+- working on engineering projects together with senior team members
+
+- training and certification to enhance your skills in software engineering, data science, and data architecture.
+
+Qualifications
+
+Necessary education and experience
+
+- Education: A Bachelor's or Master’s degree in Computer Science, Mathematics, Statistics, Physics, Engineering, or a related quantitative field.
+
+- Programming Proficiency: Strong programming skills in Python and a solid understanding of data structures and algorithms.
+
+- Software Engineering Fundamentals: A demonstrable understanding of version control and repository tools (Git, CI/CD) and a commitment to writing clean, well-documented code.
+
+- Data Skills: Experience with SQL for querying relational databases.
+
+- Problem-Solving Skills: An analytical mindset with the ability to break down complex problems into manageable steps.
+
+- Eagerness to Learn: A genuine passion for technology and a proactive attitude towards self-development and learning new skills, as demonstrated through projects or coursework.
+
+- Communication & Collaboration: Strong verbal and written communication skills, with the ability to work effectively in a team environment and learn from senior members.
+
+Desirable experience
+
+- Cloud & MLOps Exposure: Basic familiarity with a cloud platform (AWS, GCP, or Azure) and an awareness of concepts like containerization (Docker).
+
+- Core ML Knowledge: A good grasp of fundamental machine learning concepts, including supervised/unsupervised learning, model evaluation techniques, and feature engineering.
+
+- Advanced Education: A Master's degree or PhD in a relevant field is a strong plus.
+
+Hybrid working pattern

@@ -1,0 +1,118 @@
+Company: tem
+Title: Senior Staff Machine Learning Engineer - Pricing
+URL: https://jobs.ashbyhq.com/tem/7a447b12-48df-4113-96fa-0fe479c8033f
+Source: ashby
+Apply kind: ashby
+Location: United Kingdom
+Posted: 2026-09-11T15:05:03.149+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-17
+Listed: yes
+Found via: linkedin_email
+LinkedIn job id: 4394935457
+
+📈 Who We Are:
+
+We are rebuilding the energy transaction, making it transparent and fair.
+
+We're rebuilding how energy is bought and sold. That means cutting out middlemen, connecting businesses directly with renewable generators, and ensuring every transaction is traceable and transparent.
+
+We're a 160+ person team - operators, data scientists, engineers, customer champions and energy experts - backed by top-tier investors including Lightspeed Venture Partners, Hitachi Ventures, Allianz, AlbionVC and Atomico. We closed a $75M Series B round in early 2026, taking our total funding to $94M, and we now power energy for over 4,000 UK businesses across 8,500+ sites, with over £75m in value returned to businesses and generators so far.
+
+We're a technology company solving the energy industry, not an energy company. Some people call us a neo-utility, the neo-bank idea, applied to energy.
+
+The industry is noticing. We were crowned Europe's Most Exciting Tech Company at the GP Bullhound Allstars awards https://www.gpbullhound.com/articles/allstars-awards-2026-winners-announced/, came in at #6 on LinkedIn's Top Startups 2026 https://www.linkedin.com/pulse/linkedin-top-startups-2026-20-uk-companies-rise-linkedin-news-uk-xoffc in the UK, #7 on the Scaling Europe 50 https://scalingeurope.co.uk/ of Europe's fastest-growing companies, and #14 on Sifted's AI 100 https://lnkd.in/p/ehxWgJyc.
+
+Learn more about us on our website https://www.tem.energy/.
+
+
+
+🏅 The Role:
+
+Rosso is tem's core IP, the transaction infrastructure that prices electricity for thousands of businesses, balances portfolios in real time, and sits on the critical path for every deal tem closes. Machine learning is at the heart of Rosso, combining forecasting, optimisation and classical ML to process billions of data points and drive thousands of automated decisions a day. Every inference shapes the prices our customers see, so you can immediately see the impact of your work.
+
+We have proved the concept with MVPs and POCs to grow to 2% of the UK market. Now we want to take it to the next level and build towards a state of the art solution, to fuel our expansion in the UK and take Rosso international.
+
+We're looking for a Senior Staff Machine Learning Engineer to lead pricing ML within Rosso, building a platform that proactively drives growth by targeting the right customers to sign at the right time. Your primary focus will be the pricing engine, which sets the fees added to every quote tem serves, carefully balancing growth and margin. You will also contribute to the systems which manage both short and long-term imbalance decisions to determine how tem deals with its exposure across its portfolio.
+
+
+
+This is a hands-on, senior individual contributor role. You own the technical direction of pricing by building it: most of your week is writing and shipping production code. It is not a people leadership role, and not an architecture role where others do the implementing.
+
+The right person is energised by the greenfield environment: comfortable taking on ambiguity and able to make progress before the path is fully defined. They have built pricing, trading or optimisation systems that worked, ideally in energy or another market-driven domain, and have learned from the times they haven't. They'll bring that hard-won judgment to a system where the foundations are still being laid, and where early decisions compound. Success will be turning our current reactive system into a pricing engine which proactively drives growth by targeting the right customers to sign at the right time.
+
+
+
+🚀 Responsibilities:
+
+ - Own the technical direction for pricing ML: Define what to build and how within the pricing engine, setting the strategy and roadmap for pricing machine learning as a core piece of tem's IP.
+
+ - Build ML systems for price optimisation: Design and implement models that dynamically set prices, balancing the trade-off between signing probability, portfolio balance and margin maximisation.
+
+ - Solve imbalance problems: Develop probabilistic models to optimise risk management and short-term balancing decisions in a highly dynamic environment.
+
+ - Bridge modelling and production: Own the modelling and data layer while working closely with software engineers and MLOps to ensure models are architected for production, contributing to system design decisions that affect performance and reliability.
+
+ - Communicate pricing decisions clearly: Articulate model behaviour, assumptions, and trade-offs to other technical stakeholders so that pricing decisions are understood across the teams that depend on them.
+
+
+
+🎯 Requirements:
+
+Must-haves:
+
+ - Deep experience building ML systems for pricing, revenue optimisation, or decision-making under uncertainty, with a track record of models that went from concept to production and delivered measurable commercial impact.
+
+ - A quantitative background in a domain where prices, forecasts and risk interact: energy markets, power trading, batteries and flexibility, market making, or similar. Energy is strongly preferred and where our strongest fits have come from.
+
+ - Strong foundation in stochastic optimisation and probabilistic modelling, with the judgement to formulate ambiguous business problems as the right mathematical approach rather than reaching for familiar tools.
+
+ - Proven first-principles reasoning: you choose between stochastic programming, classical ML, reinforcement learning, or a simple heuristic based on the problem, not the technique you know best.
+
+ - The engineering craft to match your modelling depth: production-grade Python, a high bar for code quality and system design, and the ability to work alongside software engineers as a technical peer across the full ML lifecycle.
+
+ - Breadth across the full lifecycle: you carry the modelling and quant work and the productionising (deploying, monitoring, reasoning about the software systems around your models), and you would rather ship the whole thing to a good standard and iterate than perfect one component. You reason at the level of the outcome, the portfolio and its levers, not a single model.
+
+Bonus points:
+
+ - Experience with reinforcement learning or causal inference in applied, commercial settings.
+
+ - PhD or equivalent research depth in a quantitative discipline (statistics, applied mathematics, physics, operations research, or similar).
+
+ - Ability to reason about the trade-offs between optimisation solvers (Gurobi etc) and gradient-based ML methods (PyTorch etc), and the judgement to know when to reach for each.
+
+ - Experience working with high data throughput systems in production.
+
+✨ Benefits & Perks:
+
+ - Salary: Competitive. We are looking to pay £127,000 or equivalent in local currency.
+
+ - Stock Options: everyone on the team has ownership in our mission.
+
+ - 25 days holiday + public holidays. Swap public holidays for ones that matter most to you. Plus, get an extra day off for your birthday 🎉.
+
+ - Remote working: we're fully remote, distributed across Europe
+
+ - Home working & wellbeing budgets:
+   
+   - Up to £1,200 / €1,200 annually to upgrade your remote setup (co-working passes, equipment, etc.).
+   
+   - Up to £150 / €150 monthly on anything that supports your wellbeing, from therapy to gym memberships to meditation apps.
+     
+     
+     
+     🗣️ Interview Process:
+
+Our processes normally take around 2-3 weeks from first call to offer. Please let us know about any adjustments to timelines that may be required.
+
+ 1. First call with our Talent Team (30 mins). This is to understand your experience, motivations, and discuss the role in more detail.
+
+ 2. Behavioural interview with our ML Leader, hiring manager for this role (30 mins). This is your chance to really understand the role, the expectations, and ensure alignment on ways of working.
+
+ 3. Technical interview with the Team (90 mins). You'll meet with potential peers in this session and work through a live technical exercise.
+
+ 4. Bar Raiser interview with Stakeholders 30 mins). The final session will be with two cross-functional stakeholders.
+
+
+
+We welcome applications from people of all backgrounds, experiences, and identities, including those that are traditionally underrepresented in the tech and energy sectors. If you’re excited about this role but not sure you meet every requirement, we’d still love to hear from you. Your unique perspective could be exactly what we’re looking for.

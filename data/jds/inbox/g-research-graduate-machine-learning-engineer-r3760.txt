@@ -1,0 +1,66 @@
+Company: G-Research
+Title: Graduate Machine Learning Engineer
+URL: https://gresearch.wd103.myworkdayjobs.com/G-Research/job/London-UK/Graduate-Machine-Learning-Engineer_R3760
+Source: workday
+Apply kind: workday
+Location: London, UK, United Kingdom
+Posted: 2026-10-08
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+We tackle the most complex problems in quantitative finance, by bringing scientific clarity to financial complexity.
+
+From our London HQ, we unite world-class researchers and engineers in an environment that values deep exploration and methodical execution - because the best ideas take time to evolve. Together we’re building a world-class platform to amplify our teams’ most powerful ideas.
+
+As part of our engineering team, you’ll shape the platforms and tools that drive high-impact research - designing systems that scale, accelerate discovery and support innovation across the firm.
+
+Take the next step in your career.
+
+Role purpose
+Start date: Tuesday 31st August 2027
+
+We are looking for exceptional graduate machine learning engineers to work alongside our quantitative researchers on cutting-edge machine learning problems.
+
+As a graduate within the Technical Machine Learning team, you will be engaged in a mixture of individual and collaborative work to tackle some of the toughest research questions.
+
+You will also use a combination of off-the-shelf tools and custom solutions written from scratch to drive the latest advances in quantitative research.
+
+Key Responsibilities of the role include
+
+What does the technical machine learning team work on?
+
+- Implementing ideas from published research papers
+- Writing custom libraries to efficiently train models on petabytes of data
+- Reducing model training times by hand optimising machine learning operations
+- Profiling custom ML architectures to identify performance bottlenecks
+- Evaluating the latest hardware and software in the machine learning ecosystem
+
+Who are we looking for?
+
+We are looking for graduates that will be comfortable working both independently and in small teams on a variety of engineering challenges, with a particular focus on machine learning and scientific computing.
+
+The ideal candidate will have the following skills and experience:
+
+- A current undergraduate, master's or PhD student in machine learning or a related discipline
+- Strong object-oriented programming skills and experience working with Python, PyTorch and NumPy are desirable
+- Experience in one or more advanced optimisation methods, modern ML techniques, HPC, profiling, model inference; you don’t need to have all of the above
+- Excellent machine learning reasoning skills, with the ability to develop your own models when standard approaches are insufficient
+- Strong communication and collaboration skills, with the ability to work effectively in a team with complementary expertise
+
+Finance experience is not necessary for this role and candidates from non-financial backgrounds are encouraged to apply.
+
+Why join us? 
+
+- Highly competitive compensation plus annual discretionary bonus
+- Lunch provided (via Just Eat for Business) and dedicated barista bar
+- 30 days’ annual leave
+- 9% company pension contributions
+- Informal dress code and excellent work/life balance
+- Comprehensive healthcare and life assurance
+- Cycle-to-work scheme
+- Monthly company events
+
+G-Research is committed to cultivating and preserving an inclusive work environment. We are an ideas-driven business and we place great value on diversity of experience and opinions. 
+
+We want to ensure that applicants receive a recruitment experience that enables them to perform at their best. If you have a disability or special need that requires accommodation please let us know in the relevant section

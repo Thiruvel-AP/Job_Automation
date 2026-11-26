@@ -1,0 +1,61 @@
+Company: Datatech
+Title: Data Scientist - Consumer Behaviour
+URL: https://www.cv-library.co.uk/job/apply/225704704
+
+Data Scientist - Consumer Behaviour
+
+Posted by Datatech
+
+Data Scientist - Consumer Behaviour
+London
+Permanent
+Data Scientist - Consumer Behaviour
+Central London / Hybrid - 3 days per week in the office (Tuesday to Thursday)
+Salary range £45,000 - £60,000 depending on skills & experience
+Ref: J13181
+
+A fantastic opportunity for a Data Scientist looking for the opportunity to work on genuinely interesting problems, apply rigorous statistical thinking to large-scale behavioural data and have a real impact. This is a chance to join a small, high-performing Data Science team where you'll have significant exposure to interesting projects, experienced colleagues and real client challenges.
+
+Working for one of the world's largest consumer behavioural data companies, providing deterministic behavioural data to many of the world's leading brands and platforms, including Google, Meta, Netflix and the BBC.
+
+The Data Science team works with billions of consented consumer events across search, browsing, AI, social, retail, web, app and purchase activity, turning complex data into findings that clients can act on.
+
+You'll be defining cohorts, choose appropriate statistical approaches, investigate potential sources of bias and communicate your conclusions clearly. You'll also have the opportunity to contribute to the data products and pipelines that underpin the organisation's behavioural datasets and client reporting.
+
+The Role:
+
+• Work with large-scale behavioural datasets covering consumer activity across multiple platforms
+• Define cohorts and datasets using SQL, including complex aggregations, CTEs and window functions
+• Apply statistical methods including hypothesis testing, confidence intervals and experimental analysis
+• Work with causal inference techniques such as A/B testing, difference-in-differences and matching
+• Investigate selection bias, confounding and other factors that could affect the validity of results
+• Develop and maintain data aggregation pipelines and datasets used across the business
+• Contribute to PII detection and client reporting processes
+• Validate analytical results against source data and investigate unexpected findings
+• Write clear, maintainable Python code that can be understood and reused by others
+• Work collaboratively through GitHub, pull requests and code reviews
+• Present findings, methodologies and caveats clearly to clients and internal stakeholders
+• Use AI and coding assistants effectively while taking full responsibility for reviewing and validating their output
+• Contribute to the development of analytical and data products as the team evolves
+
+Skills & Experience:
+
+• 1-3 years' Data Science experience, or equivalent demonstrated experience through graduate work, projects or competitions
+• Strong Python skills, particularly pandas and NumPy
+• Strong SQL skills, including CTEs, window functions and aggregation
+• A solid understanding of applied statistics, including hypothesis testing and confidence intervals
+• MMM (Marketing Mix Modelling) experience, or have worked in this environment
+• An understanding of selection bias, confounding and the assumptions behind statistical methods
+• Some knowledge of causal inference techniques such as A/B testing, difference-in-differences or matching
+• A habit of validating results against the underlying data rather than simply trusting that code has executed successfully
+• Strong written and verbal communication skills, with the ability to explain technical concepts clearly
+• A curious and sceptical mindset, with the instinct to investigate results that don't look right
+• Experience using AI or coding assistants, alongside the judgement to verify their output before using it
+
+Apply today for a confidential conversation and find out more.
+
+Candidates must have the right to work in the UK without sponsorship requirements.
+
+Alternatively, you can refer a friend or colleague through our excellent referral scheme. For every suitable candidate you introduce who is successfully placed, you'll be eligible for our standard gift/voucher reward - with no limit on the number of referrals you can make.
+
+Datatech is one of the UK's leading specialist recruitment agencies, focusing exclusively on analytics and data. We are also the team behind the critically acclaimed Women in Data event.

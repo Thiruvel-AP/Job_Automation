@@ -1,0 +1,8 @@
+QUESTION: What motivated you to apply for this position?
+WORDS: 85
+GUARD: passed
+SOURCES: ad, letter, az4, m1, m2
+REUSE OVERLAP (5-word shingles, limit 0.30): 0.00 (no earlier motivation answer)
+MOTIVATIONS LEFT OUT: I am drawn to applied AI in domains where correctness matter (names health; the company is not); Longer term I want to grow towards research-oriented work in (research ambition, industry role)
+
+The AI Engineer role at RightShip stands out to me for its focus on safety and risk intelligence. At AstraZeneca, I wrote a three-tier test framework of ~65 tests across 8 files, validated across the LLM provider migration from Groq to AWS Bedrock after a rate-limit evaluation. I want to build AI systems that are trustworthy in production, not just demos: tested, measured and safe when their dependencies fail. I enjoy taking a loosely defined problem from prototype to something a team uses in production.

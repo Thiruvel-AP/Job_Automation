@@ -1,0 +1,71 @@
+Company: Gopuff
+Title: Lead Data Analyst
+URL: https://jobs.lever.co/gopuff/781c7f24-f97a-4828-a52b-e3c249059302
+Source: lever
+Apply kind: lever
+Location: London, England, GB
+Posted: 2026-03-02T09:10:47.067000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-06
+Listed: yes
+
+You will:
+- 
+
+Advanced Analytics: Develop innovative measurement and analytical approaches that build an understanding of performance and customers, embedding these learnings into day-to-day decision-making across the organisation.
+
+- 
+
+Quantitative Analysis: Answer complex business questions through detailed quantitative analysis and experimentation, extracting meaningful and actionable insights.
+
+- 
+
+Strategic Influence: Influence both strategic and tactical decision-making among leadership and cross-functional teams through strong communication and by proactively identifying opportunities for improvement.
+
+- 
+
+Data Infrastructure: Act as the primary partner for central Analytics & Data Engineering teams to implement reliable and scalable data pipelines that manage and transform essential information.
+
+- 
+
+Commercial Modeling: Build the necessary models and tools to inform pricing strategies, helping stakeholders maintain a competitive position versus competitors while maximizing margin opportunity.
+
+- 
+
+Insight Integration: Partner with Customer Insights teams, supporting customer and competitor research projects and helping to embed those learnings into operational workflows.
+
+- 
+
+Data Culture: Proactively build and nurture a culture of data-driven decision-making by coaching and supporting teams to increase their data literacy and confidence.
+
+- 
+
+Mentorship: Support and mentor other analysts in the team to help them develop their skills and deliver high-quality results.
+
+You have:
+- 5+ years of experience in analytics or data science - preferably in fields related to grocery, trading, marketing, or consumer product.
+
+- A strong understanding of statistical analysis and experiment design.
+
+- A Bachelor's Degree in Business, Mathematics, Statistics, or other quantitative discipline is beneficial, but not essential.
+
+- Expert skills in SQL and databases, able to write structured and efficient queries on large data sets.
+
+- Experience with dbt is a strong plus, along with Python or R and Github.
+
+- Development experience with BI platforms such as Looker, Tableau, Power BI. Experience with Looker and LookML in particular is strongly preferred.
+
+- A strong and confident communication style, with good knowledge of data visualisation and storytelling.
+
+- A high degree of curiosity, comfortable gathering and analysing large amounts of data across a variety of business dimensions.
+
+- The role will be London-based, with the candidate ideally based in/around London or able to come to the office on a regular basis.
+
+Benefits:
+- We offer comprehensive medical, dental, vision and Mental health support to all eligible employees.
+
+- Company RSUs (Restricted Stock Units).
+
+- Gopuff employee rewards (including some great brand partnership deals).
+
+- Annual performance appraisal and bonus.

@@ -1,0 +1,91 @@
+Company: Kpler
+Title: Senior Data Analyst – Revenue Intelligence
+URL: https://jobs.lever.co/kpler/f96acb17-fbd1-4ed5-a4db-d7ac53466d66
+Source: lever
+Location: London
+Posted: 2026-09-17T15:52:50.179000+00:00
+Posted via: lever.createdAt
+First seen: 2026-10-20
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors. 
+ 
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 850 experts from 69 countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+ 
+
+
+Responsibilities 
+- Own and maintain governed revenue datasets in BigQuery, powering ARR, GRR, NRR, pipeline, churn, and renewal reporting across Sales, Customer Success, RevOps, and Finance.
+
+- Model data from Salesforce and subscription billing systems into clean, documented reporting tables, with clear data grain, deduplication rules, and metric definitions.
+
+- Build and maintain LookML models, Explores, and dashboards used for revenue reporting, ensuring consistent naming, definitions, documentation, and data quality standards.
+
+- Own analytics delivery end to end, from understanding stakeholder requirements and modelling data through to dashboard development, testing, and documentation.
+
+- Contribute to Kpler’s internal AI revenue analytics tools by curating governed datasets, maintaining reference documentation, and testing outputs against trusted source data.
+
+- Build monitoring and data quality checks to identify issues such as duplicates, mixed-grain fan-out, missing filters, and reconciliation gaps before they impact stakeholders.
+
+- Investigate and resolve revenue data escalations, addressing root causes and improving the underlying data processes to prevent recurring issues.
+
+- Apply software engineering practices to the BI codebase, including version control, peer review, testing, and documentation.
+
+- Work directly with Sales, Customer Success, RevOps, SalesOps, IT, Product, and Finance to turn business questions into clearly defined metrics and analytical deliverables.
+
+- Explain revenue metrics and analytical outputs clearly to non-technical stakeholders, helping teams understand and self-serve their data.
+
+- Use AI tools to accelerate query writing, documentation, analysis, and quality checks, and share effective approaches with the wider team.
+
+
+Essential:
+
+- 5+ years of experience in analytics, Business Intelligence, data analysis, or a related data role, with at least 2 years owning a data domain end to end.
+
+- Strong experience with SQL and hands-on experience with BigQuery or an equivalent cloud data warehouse.
+
+- Strong understanding of data modelling concepts, including data grain, dimensional modelling, deduplication, and slowly changing dimensions.
+
+- Production experience with Looker and LookML, including building and maintaining data models, Explores, and dashboards.
+
+- Experience working with B2B SaaS data, ideally including CRM data such as Salesforce and/or subscription billing data such as Stripe or similar platforms.
+
+- Experience working with revenue metrics such as ARR, NRR, GRR, churn, pipeline, and renewals.
+
+- Comfortable working with Git workflows and treating BI code and data models as production software.
+
+- Strong communication skills, with the ability to explain technical concepts and data clearly to non-technical stakeholders.
+
+- Professional-level English, written and spoken.
+
+Desirable:
+
+- Experience with Python for data wrangling or automation.
+
+- Experience with dbt or similar data transformation tools.
+
+- Experience working with AI-assisted analytics or AI tools in a data environment.
+
+- Experience working in an async and remote environment across multiple time zones.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+ 
+Our People Pledge
+ 
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+ 
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.
+ 
+ 
+ 
+By applying, I confirm that I have read and accept the Staff Privacy Notice

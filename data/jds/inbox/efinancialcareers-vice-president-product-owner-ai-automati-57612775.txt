@@ -1,0 +1,75 @@
+Company: eFinancialCareers
+Title: Vice President, Product Owner - AI Automation & Intelligent Data Platforms - Citi
+URL: https://www.reed.co.uk/jobs/vice-president-product-owner-ai-automation-intelligent-data-platforms-citi/57612775
+Source: reed
+Location: London, GB
+Posted: 2026-11-25
+Posted via: reed.date
+First seen: 2026-11-26
+
+Job Overview
+Are you looking for a career move that will put you at the heart of a global financial institution? Then bring your skills in analysis, problem solving and communication to Citi's Investor Services Data, Client Reporting team.
+
+By Joining Citi, you will become part of a global organization whose mission is to serve as a trusted partner to our clients by responsibly providing financial services that enable growth and economic progress.
+
+Team/Role Overview:
+
+As part of Citi's Services Line of Business, Investor Services is a global business that provides Custody, Fund Services, Issuer Services and Execution Services to global asset managers, pension funds, insurance companies, banks, and financial intermediaries.
+
+Within Investor Services, the Data & Client Platform team runs the data and reporting products and is responsible for building the future of data for Investor Services which includes cloud technologies. This team seeks an experienced Vice President Product Manager (Product Developer) to join our Tampa team to manage client requests.
+
+What you'll do:
+
+A visionary product leader responsible for defining and executing the strategy for our next-generation, AI-first data platform. This role will own the product lifecycle from concept to launch, driving the transition from manual data operations to intelligent, autonomous systems. The ultimate goal is to deliver Data as a Product, enabling scalable, real-time, and frictionless client data delivery through innovative APIs and cloud ecosystems like Snowflake.
+
+Strategic Objectives:
+
+Product Vision & Strategy: 
+
+- Develop and champion a compelling product vision for an autonomous, self-service data platform. Define the product roadmap by identifying high-value market opportunities, conducting competitive analysis, and ensuring tight alignment with overarching business goals. Intelligent Data Products: 
+
+- Lead the ideation, development, and launch of innovative "Data as a Product" offerings. This includes creating intelligent APIs that anticipate client needs and leveraging cloud data platforms like Snowflake for secure, on-demand data sharing. AI-Driven Platform Automation: 
+
+- Drive the architectural vision for a self-optimizing data ecosystem. Champion the strategic application of AI/ML to enhance data quality, automate operational workflows (e.g., ingestion, reconciliation, validation), and create a resilient, low-touch environment. Client & Developer Experience: 
+
+- Obsess over the end-user experience for both external clients and internal developers. Define requirements for AI-powered tools, such as copilots and chatbots, to simplify data discovery, enhance support, and accelerate development cycles. Key Responsibilities:
+
+Product Lifecycle Management: 
+
+- Own the end-to-end product lifecycle, from market analysis and requirements gathering through to go-to-market strategy, launch, and iteration. Establish a framework for continuous user feedback and improvement to achieve product-market fit. Strategic Road mapping: 
+
+- Define and communicate a clear product roadmap that prioritizes high-impact automation and data product opportunities. Articulate the "why" behind product decisions and effectively balance long-term strategic initiatives with short-term deliverables. Cross-Functional Leadership: 
+
+- Partner closely with Engineering, Data Science, Sales, and Marketing to deliver a cohesive and market-leading product experience. Foster a culture of innovation and automation, influencing stakeholders across the organization to adopt an AI-first, product-led mindset. Data Intelligence & Value Proposition: 
+
+- Leverage AI to generate actionable insights into client behaviour and predict future data demand. Develop strategies for data productization and clearly define the value proposition and potential monetization models for new data offerings. Required Skills & Experience:
+
+Product Management Leadership: 
+
+- Significant experience in product management, with a proven track record of launching and scaling technical, data-intensive products. Deep experience in product strategy, roadmap definition, user-centric design, and go-to-market execution. AI & Data Acumen: 
+
+- Strong strategic understanding of how AI/ML can be applied to solve business problems, particularly in automation, anomaly detection, and forecasting. Deep expertise in modern data architectures, including cloud platforms (Snowflake, AWS), streaming technologies, and API-first design. Executive Influence: 
+
+- Exceptional communication and storytelling skills, with the ability to articulate a complex technical vision to both executive and technical audiences. Proven ability to lead and influence large cross-functional teams and drive significant organizational change. Key Performance Indicators (KPIs) 
+
+- Client adoption and engagement with data APIs and self-service tools.
+- Reduction in time-to-value for new clients and data sources.
+- Reduction in operational overhead and the frequency of manual interventions.
+- Product-driven revenue or value contribution from new data offerings.
+- Improvements in platform stability and a reduction in data quality incidents. What we can offer you:
+
+This is a role that'll offer you a wide range of career growth opportunities, both in technical and leadership paths. You will get opportunity to build an in-depth knowledge of financial services operations. Every day there will be new business challenges that will help you develop new skills that can drive your career
+
+We work hard to have a positive financial and social impact on the communities we serve. In turn, we put our employees first and provide the best-in-class benefits they need to be well, live well and save well.
+
+By joining Citi London, you will not only be part of a business casual workplace with a hybrid working model (up to 2 days working at home per week), but also receive a competitive base salary (which is annually reviewed), and enjoy a whole host of additional benefits such as: 
+
+- Generous holiday allowance starting at 27 days plus bank holidays; increasing with tenure 
+
+- A discretional annual performance related bonus 
+- Private medical insurance packages to suit your personal circumstances
+- Employee Assistance Program 
+- Pension Plan 
+- Paid Parental Leave 
+- Special discounts for employees, family, and friends 
+- Access to an array of learning and development resources Alongside these benefits Citi is committed to ensuring our workpl

@@ -1,0 +1,526 @@
+{
+  "job_id": "calibration:cal-trainline",
+  "company": "Trainline",
+  "title": "Data Analyst",
+  "family": "data_analyst",
+  "tier": 3,
+  "headline": "Data Analyst",
+  "keywords": [
+    {
+      "term": "data visualisation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "large datasets",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Power BI",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "SQL",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "structure analytical work",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Tableau",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "healthcare",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "insurance",
+      "weight": 1.5,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "DBT",
+      "weight": 1.0,
+      "required": false,
+      "alts": []
+    }
+  ],
+  "company_hook": "Trainline empowers greener travel choices by connecting millions of travellers to the best-value rail and coach journeys through its mobile app, website and B2B partner channels.",
+  "team": "",
+  "ceiling": 0.5,
+  "genuine_gaps": [
+    "data visualisation",
+    "large datasets",
+    "Power BI",
+    "structure analytical work",
+    "DBT"
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.5,
+      "score_stemmed": 0.5,
+      "band": "below",
+      "pages": 1,
+      "shrinks": 0,
+      "reverted": [],
+      "violations": [],
+      "warnings": [],
+      "wording_misses": [],
+      "misses": [
+        "data visualisation",
+        "large datasets",
+        "Power BI",
+        "structure analytical work",
+        "DBT"
+      ],
+      "rephrase": {
+        "eligible": 4,
+        "asked": 4,
+        "cached": 0,
+        "calls": 1,
+        "failed_calls": 0,
+        "proposed": 4,
+        "accepted": 4,
+        "blocked": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az1",
+              "az2"
+            ],
+            "dc180": [
+              "dc1"
+            ],
+            "freelance": [
+              "fl1"
+            ],
+            "avasoft": [
+              "av1"
+            ]
+          },
+          "projects": [
+            "coverfit",
+            "gtaigraph"
+          ]
+        },
+        "rephrase": {
+          "az1": "Built a Python-based LLM agent using LangChain and AWS Bedrock to call Claude Haiku 4.5, enabling gene alias resolution, scoring-methodology explanation, and dataset provenance for a multi-omics cancer platform.",
+          "fl1": "Built Python scikit-learn pipelines and TensorFlow/Keras LSTM, BiRNN, and CNN models, deploying them as FastAPI services within Docker containers.",
+          "p_cf1": "Built an insurance-focused deterministic comparable-company matcher over 221 profiles and 1,116 cover lines, using a single LLM call for rationale at ~\u00a30.003 per query and under 3 s.",
+          "p_gg1": "Built a healthcare-oriented heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8 M edges) with k-NN similarity and Leiden community detection (modularity 0.822)."
+        },
+        "profile": "Data Analyst with an MSc in Data Science from the University of Bristol and hands-on experience building production LLM agents for a multi-omics research platform at AstraZeneca."
+      },
+      "selection": {
+        "az": [
+          "az1",
+          "az2"
+        ],
+        "dc180": [
+          "dc1"
+        ],
+        "freelance": [
+          "fl1"
+        ],
+        "avasoft": [
+          "av1"
+        ],
+        "coverfit": [
+          "p_cf1"
+        ],
+        "gtaigraph": [
+          "p_gg1",
+          "p_gg2"
+        ]
+      },
+      "profile": "Data Analyst with an MSc in Data Science from the University of Bristol and hands-on experience building production LLM agents for a multi-omics research platform at AstraZeneca.",
+      "rephrase_coverage": {
+        "eligible": 4,
+        "rephrased": 4,
+        "ratio": 1.0
+      }
+    }
+  ],
+  "out_dir": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Trainline_Data_Analyst_cal_trainline",
+  "analysis_warnings": [
+    "keywords: frozen (2026-10-04 17:33), extract_keywords not called",
+    "extract_keywords: dropped keyword 'analytics to support business decisions' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'communicate insight' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'AI to responsibly accelerate coding' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'basic automation of day-to-day work proc' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'modern data transformation workflows' (not verbatim, too long, generic or a degree)"
+  ],
+  "profile": {
+    "facts": [
+      "MSc Data Science, University of Bristol (completed 2026)",
+      "Production LLM agent work on an AstraZeneca-affiliated multi-omics research platform"
+    ],
+    "retried": false,
+    "fallback": false
+  },
+  "final": {
+    "score": 0.5,
+    "score_stemmed": 0.5,
+    "band": "below",
+    "pages": 1,
+    "hits": [
+      "Python",
+      "SQL",
+      "Tableau",
+      "healthcare",
+      "insurance"
+    ],
+    "wording_misses": [],
+    "misses": [
+      "data visualisation",
+      "large datasets",
+      "Power BI",
+      "structure analytical work",
+      "DBT"
+    ],
+    "chosen_attempt": 1
+  },
+  "rephrase_coverage": {
+    "eligible": 4,
+    "rephrased": 4,
+    "ratio": 1.0
+  },
+  "rephrase": {
+    "eligible": 4,
+    "asked": 4,
+    "cached": 0,
+    "calls": 1,
+    "failed_calls": 0,
+    "proposed": 4,
+    "accepted": 4,
+    "blocked": 0
+  },
+  "letter": {
+    "paragraphs": [
+      "Trainline's mission to link millions of travellers to greener journeys mirrors my passion for building tools that unlock hidden value in complex data sets. I thrive on turning intricate problems into actionable insights that drive real-world impact.",
+      "Built a tool-calling LLM agent on AWS Bedrock, using Claude Haiku 4.5, with three specialised tools for gene alias resolution, scoring-methodology explanation and dataset provenance for a multi-omics cancer research platform.",
+      "Proposed and prototyped an MCP-based agentic tool in Python, leveraging FastMCP, Ollama gpt-oss:20b, PostgreSQL and GitHub Actions CI, for a Madrid-based product start-up client, presented in a live stakeholder demo.",
+      "I have not used Power BI yet.",
+      "Could we find twenty minutes to talk about where I could contribute first at Trainline?"
+    ],
+    "problems": [],
+    "score": 0.2222222222222222,
+    "pages": 1,
+    "status": "ok",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az1",
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "dc1",
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "tailor_profile",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 600,
+        "est_input_tokens": 398,
+        "prompt_tokens": 432,
+        "completion_tokens": 84,
+        "reasoning_tokens": 28,
+        "total_tokens": 516,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "rephrase_bullets",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1200,
+        "est_input_tokens": 756,
+        "prompt_tokens": 765,
+        "completion_tokens": 726,
+        "reasoning_tokens": 518,
+        "total_tokens": 1491,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 935,
+        "prompt_tokens": 876,
+        "completion_tokens": 294,
+        "reasoning_tokens": 91,
+        "total_tokens": 1170,
+        "finish_reason": "stop"
+      },
+      {
+        "task": "cover_letter",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 1500,
+        "est_input_tokens": 1045,
+        "prompt_tokens": 972,
+        "completion_tokens": 233,
+        "reasoning_tokens": 58,
+        "total_tokens": 1205,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 3045,
+    "completion_tokens": 1337,
+    "reasoning_tokens": 695,
+    "total_tokens": 4382,
+    "by_task": {
+      "tailor_profile": {
+        "calls": 1,
+        "prompt_tokens": 432,
+        "completion_tokens": 84,
+        "reasoning_tokens": 28,
+        "total_tokens": 516,
+        "prompt_tokens_per_call": [
+          432
+        ]
+      },
+      "rephrase_bullets": {
+        "calls": 1,
+        "prompt_tokens": 765,
+        "completion_tokens": 726,
+        "reasoning_tokens": 518,
+        "total_tokens": 1491,
+        "prompt_tokens_per_call": [
+          765
+        ]
+      },
+      "cover_letter": {
+        "calls": 2,
+        "prompt_tokens": 1848,
+        "completion_tokens": 527,
+        "reasoning_tokens": 149,
+        "total_tokens": 2375,
+        "prompt_tokens_per_call": [
+          876,
+          972
+        ]
+      }
+    }
+  },
+  "cv_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Trainline_Data_Analyst_cal_trainline/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": "/mnt/d/VS_Codes/DataScience/Projects/career-ops/data/calibration/runs/20261004-173449/outputs/Trainline_Data_Analyst_cal_trainline/Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Analyst",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "UK Graduate visa on completion (Dec 2026): no sponsorship needed for 2 years",
+        "Available from December 2026"
+      ]
+    },
+    "profile": "Data Analyst with an MSc in Data Science from the University of Bristol and hands-on experience building production LLM agents for a multi-omics research platform at AstraZeneca.",
+    "skills": {
+      "Languages": [
+        "Python",
+        "SQL",
+        "R",
+        "TypeScript",
+        "JavaScript",
+        "Swift",
+        "Dart"
+      ],
+      "ML & Stats": [
+        "scikit-learn",
+        "XGBoost",
+        "PyTorch",
+        "TensorFlow",
+        "Keras",
+        "LSTM",
+        "Isolation Forest",
+        "Random Forest",
+        "hypothesis testing",
+        "ANOVA",
+        "bootstrap",
+        "PCA",
+        "statistics",
+        "maximum likelihood estimation",
+        "experimental design"
+      ],
+      "LLMs & Agents": [
+        "LangChain",
+        "LangGraph",
+        "Google ADK",
+        "AWS Bedrock",
+        "Claude API",
+        "OpenAI API",
+        "Gemini via LiteLLM",
+        "Hugging Face Transformers",
+        "Ollama",
+        "RAG",
+        "MCP",
+        "tool calling",
+        "LoRA fine-tuning",
+        "LLM evaluation"
+      ],
+      "Data & Cloud": [
+        "pandas",
+        "NumPy",
+        "NLTK",
+        "Matplotlib",
+        "Seaborn",
+        "PostgreSQL",
+        "ChromaDB",
+        "AWS Lambda",
+        "ECR",
+        "IAM",
+        "GCP Cloud Run",
+        "S3, SQS, DynamoDB (MSc coursework)",
+        "Databricks/PySpark (coursework)"
+      ],
+      "Engineering": [
+        "Tableau",
+        "FastAPI",
+        "Docker",
+        "GitHub Actions",
+        "pytest",
+        "React",
+        "Git",
+        "MLflow",
+        "Streamlit"
+      ]
+    },
+    "experience": [
+      {
+        "id": "az",
+        "title": "Data Scientist",
+        "org": "AstraZeneca \u00b7 GeneTraceAI, University of Bristol",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "bullets": [
+          "Built a Python-based LLM agent using LangChain and AWS Bedrock to call Claude Haiku 4.5, enabling gene alias resolution, scoring-methodology explanation, and dataset provenance for a multi-omics cancer platform.",
+          "Designed a deterministic hallucination-guard architecture and fail-safe data resolution via live Ensembl/HGNC APIs with a local 19,213-gene parquet fallback and circuit breakers."
+        ],
+        "bullet_ids": [
+          "az1",
+          "az2"
+        ]
+      },
+      {
+        "id": "dc180",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid-based product start-up client, presented in a live stakeholder demo."
+        ],
+        "bullet_ids": [
+          "dc1"
+        ]
+      },
+      {
+        "id": "freelance",
+        "title": "Freelance AI/ML Engineer",
+        "org": "Self-employed, Chennai",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Built Python scikit-learn pipelines and TensorFlow/Keras LSTM, BiRNN, and CNN models, deploying them as FastAPI services within Docker containers."
+        ],
+        "bullet_ids": [
+          "fl1"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "title": "Software Engineer (SDE Trainee Jan\u2013Jun 2023)",
+        "org": "Avasoft",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+        ],
+        "bullet_ids": [
+          "av1"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "stack": "FastAPI, pandas, LiteLLM, Pydantic, pytest",
+        "github": "https://github.com/Thiruvel-AP/AIHackathon-Phoenix",
+        "bullets": [
+          "Built an insurance-focused deterministic comparable-company matcher over 221 profiles and 1,116 cover lines, using a single LLM call for rationale at ~\u00a30.003 per query and under 3 s."
+        ],
+        "bullet_ids": [
+          "p_cf1"
+        ]
+      },
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Graph PoC \u2014 cancer cell-line omics graph",
+        "stack": "networkx, leidenalg, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "bullets": [
+          "Built a healthcare-oriented heterogeneous graph of 1,399 cell lines and 16,385 genes (~2.8 M edges) with k-NN similarity and Leiden community detection (modularity 0.822).",
+          "Per-gene protein-prediction models for 11,459 genes (OLS + GPU Random Forest ensemble), with resumable chunked GPU training on a free T4."
+        ],
+        "bullet_ids": [
+          "p_gg1",
+          "p_gg2"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "org": "University of Bristol",
+        "dates": "2025 \u2013 2026"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Sep 2019 \u2013 Apr 2023",
+        "note": "First Class with Distinction"
+      }
+    ],
+    "certifications": [
+      "Anthropic MCP certifications (Introductory and Advanced), Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ]
+  }
+}

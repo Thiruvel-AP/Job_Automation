@@ -1,0 +1,688 @@
+== 2026-11-25T10:31:05+00:00 discover.sh start
+== 2026-11-25T17:45:08+00:00 discover.sh start
+region: uk (saved in .env; change with careerops prefs)
+discover: gmail ...
+  ! gmail: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  nothing found
+discover: gmail_label ...
+  ! gmail_label: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  nothing found
+discover: reed ...
+  nothing found
+discover: ats ...
+ats: 20/270 companies looked at ...
+ats: 40/270 companies looked at ...
+ats: 60/270 companies looked at ...
+ats: 80/270 companies looked at ...
+ats: 100/270 companies looked at ...
+ats: 120/270 companies looked at ...
+ats: 140/270 companies looked at ...
+ats: 160/270 companies looked at ...
+ats: 180/270 companies looked at ...
+ats: 200/270 companies looked at ...
+ats: 220/270 companies looked at ...
+ats: 240/270 companies looked at ...
+ats: 260/270 companies looked at ...
+  board_unverified 30
+board: none  240 of 322 companies before the v2.6 providers (Workable, SmartRecruiters, Teamtailor, Recruitee, Personio) -> 185 of 322 after
+ats: 322 company(ies) looked at · 137 with a board · 185 without · 0 job(s) matched the role and place
+ats: 30 board(s) rejected by the board-name check (board_unverified); no ad was read from them. If one is the right company, name it under sources: in config/settings.yaml:
+  board_unverified: workable/9fins for 9Fins: the workable board '9fins' is called 'Total Eclipse', not '9Fins' (needs a 0.90 match)
+  board_unverified: workable/applied for Applied AI Engineer - Direct Acquisition: the workable board 'applied' is called 'applied', not 'Applied AI Engineer - Direct Acquisition' (needs a 0.90 match)
+  board_unverified: workable/applied for Applied Scientist: the workable board 'applied' is called 'applied', not 'Applied Scientist' (needs a 0.90 match)
+  board_unverified: workable/arch for Arch Capital Group: the workable board 'arch' is called 'Arch', not 'Arch Capital Group' (needs a 0.90 match)
+  board_unverified: workable/bcg for BCG X: the workable board 'bcg' is called 'BCG', not 'BCG X' (needs a 0.90 match)
+  board_unverified: workable/bowers for Bowers Partnership: the workable board 'bowers' is called 'Bowers', not 'Bowers Partnership' (needs a 0.90 match)
+  board_unverified: workable/british for British Heart Foundation: the workable board 'british' is called 'British Software Development', not 'British Heart Foundation' (needs a 0.90 match)
+  board_unverified: workable/build for Build Technologies: the workable board 'build' is called 'build', not 'Build Technologies' (needs a 0.90 match)
+  board_unverified: workable/capitalone for CapitalOne: the workable board 'capitalone' is called 'Capital One Bank working for JLL', not 'CapitalOne' (needs a 0.90 match)
+  board_unverified: workable/commercial for Commercial Services: the workable board 'commercial' is called 'Commercial', not 'Commercial Services' (needs a 0.90 match)
+  board_unverified: workable/concept for Concept AI Ltd: the workable board 'concept' is called 'concept+', not 'Concept AI Ltd' (needs a 0.90 match)
+  board_unverified: workable/cru for CRU International: the workable board 'cru' is called 'Cru', not 'CRU International' (needs a 0.90 match)
+  board_unverified: workable/curve for Curve Analysis: the workable board 'curve' is called 'Curve', not 'Curve Analysis' (needs a 0.90 match)
+  board_unverified: workable/data for Data Scientist: the workable board 'data' is called 'Data', not 'Data Scientist' (needs a 0.90 match)
+  board_unverified: workable/dcv for DCV Technologies: the workable board 'dcv' is called 'dcv', not 'DCV Technologies' (needs a 0.90 match)
+  board_unverified: workable/ecotricity for Ecotricity Group Limited: the workable board 'ecotricity' is called 'Ecotricity', not 'Ecotricity Group Limited' (needs a 0.90 match)
+  board_unverified: workable/expedia for Expedia Group: the workable board 'expedia' is called 'Expedia', not 'Expedia Group' (needs a 0.90 match)
+  board_unverified: workable/flo for Flo Health Inc: the workable board 'flo' is called 'Flo's I.T. Solutions', not 'Flo Health Inc' (needs a 0.90 match)
+  board_unverified: workable/focus for Focus Group: the workable board 'focus' is called 'FOCUS', not 'Focus Group' (needs a 0.90 match)
+  board_unverified: workable/forge for Forge Holiday Group Limited: the workable board 'forge' is called 'Forge', not 'Forge Holiday Group Limited' (needs a 0.90 match)
+  board_unverified: workable/frontier for Frontier Economics: the workable board 'frontier' is called 'Frontier', not 'Frontier Economics' (needs a 0.90 match)
+  board_unverified: workable/global for Global Job Hunter: the workable board 'global' is called 'Global', not 'Global Job Hunter' (needs a 0.90 match)
+  board_unverified: recruitee/globaldata for GlobalData UK Ltd: the recruitee board 'globaldata' is called 'Caseking Iberia', not 'GlobalData UK Ltd' (needs a 0.90 match)
+  board_unverified: workable/gold for Gold Group: the workable board 'gold' is called 'GOld', not 'Gold Group' (needs a 0.90 match)
+  board_unverified: workable/handelsbanken for Handelsbanken Logo: the workable board 'handelsbanken' is called 'Handelsbanken UK', not 'Handelsbanken Logo' (needs a 0.90 match)
+  board_unverified: workable/hays for Hays Technology: the workable board 'hays' is called 'Hays', not 'Hays Technology' (needs a 0.90 match)
+  board_unverified: ashby/quantum for Quantum Black: ashby/quantum gives no company name, so the shortened slug 'quantum' cannot be checked against 'Quantum Black'
+  board_unverified: teamtailor/spark for Spark Box: the teamtailor board 'spark' is called 'Spark', not 'Spark Box' (needs a 0.90 match)
+  board_unverified: greenhouse/spencer for Spencer Rose: the greenhouse board 'spencer' is called 'Spencer Animal Hospital', not 'Spencer Rose' (needs a 0.90 match)
+  board_unverified: teamtailor/wave for Wave Mobile Money: the teamtailor board 'wave' is called 'Wave', not 'Wave Mobile Money' (needs a 0.90 match)
+  Distyl [sources] | tried: - | board: ashby/Distyl | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Eloquentai [sources] | tried: - | board: ashby/eloquentai | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Encord [sources] | tried: - | board: ashby/encord | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Iwoca [sources] | tried: - | board: ashby/iwoca.co.uk | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Junior [sources] | tried: - | board: ashby/junior | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Partly [sources] | tried: - | board: ashby/partly.com | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Plaid [sources] | tried: - | board: ashby/plaid | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Scribdinc [sources] | tried: - | board: ashby/scribdinc | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Sequence [sources] | tried: - | board: ashby/sequence | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Ultralytics [sources] | tried: - | board: ashby/ultralytics | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Addepar [sources] | tried: - | board: greenhouse/addepar1 | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Aircall.io, Inc. [sources] | tried: - | board: greenhouse/aircallioinc | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Cambridge Consultants [sources] | tried: - | board: greenhouse/cambridgeconsultantslimited | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CoVar [sources] | tried: - | board: greenhouse/covar | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  DRW [sources] | tried: - | board: greenhouse/drweng | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Dwelly [sources] | tried: - | board: greenhouse/dwelly | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Eclipse [sources] | tried: - | board: greenhouse/eclipse | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  EnergyHub [sources] | tried: - | board: greenhouse/energyhub | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Future [sources] | tried: - | board: greenhouse/future | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Glean [sources] | tried: - | board: greenhouse/gleanwork | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  IMC [sources] | tried: - | board: greenhouse/imc | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Lightning AI [sources] | tried: - | board: greenhouse/lightningai | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  LiveScore Group [sources] | tried: - | board: greenhouse/livescore9 | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  MrBeast [sources] | tried: - | board: greenhouse/mrbeastyoutube | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Nimble Gravity [sources] | tried: - | board: greenhouse/nimblegravity | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Pay.UK [sources] | tried: - | board: greenhouse/payuk | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Scale AI [sources] | tried: - | board: greenhouse/scaleai | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Smartsheet [sources] | tried: - | board: greenhouse/smartsheet | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  spektr [sources] | tried: - | board: greenhouse/spektr | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  STR [sources] | tried: - | board: greenhouse/systemstechnologyresearch | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Tebra [sources] | tried: - | board: greenhouse/tebra | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Tripadvisor [sources] | tried: - | board: greenhouse/tripadvisor | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Twitch [sources] | tried: - | board: greenhouse/twitch | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Bpmcpa [sources] | tried: - | board: lever/bpmcpa | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Brillio [sources] | tried: - | board: lever/brillio-2 | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Gopuff [sources] | tried: - | board: lever/gopuff | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Kitmanlabs [sources] | tried: - | board: lever/kitmanlabs | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Moonpig [sources] | tried: - | board: lever/moonpig | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Octoenergy [sources] | tried: - | board: lever/octoenergy | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Palantir [sources] | tried: - | board: lever/palantir | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Theodo [sources] | tried: - | board: lever/theodo | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Zerorisc [sources] | tried: - | board: lever/zerorisc | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Capitalone [sources] | tried: - | board: workday/capitalone.wd12.myworkdayjobs.com~capitalone~Capital_One~-~j | 0 matched | 1 error(s): Workday Capitalone (capitalone.wd12.myworkdayjobs.com): skipped, capitalone.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether capitalone.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Jdpa [sources] | tried: - | board: workday/jdpa.wd501.myworkdayjobs.com~jdpa~JDPower~-~j | 0 matched | 1 error(s): Workday Jdpa (jdpa.wd501.myworkdayjobs.com): skipped, jdpa.wd501.myworkdayjobs.com/robots.txt could not be fetched, so whether jdpa.wd501.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Livenation [sources] | tried: - | board: workday/livenation.wd503.myworkdayjobs.com~livenation~TMExternalSite~-~j | 0 matched | 1 error(s): Workday Livenation (livenation.wd503.myworkdayjobs.com): skipped, livenation.wd503.myworkdayjobs.com/robots.txt could not be fetched, so whether livenation.wd503.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Lseg [sources] | tried: - | board: workday/lseg.wd3.myworkdayjobs.com~lseg~Careers~-~j | 0 matched | 1 error(s): Workday Lseg (lseg.wd3.myworkdayjobs.com): skipped, lseg.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether lseg.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  M&G [sources] | tried: - | board: workday/mgpru.wd3.myworkdayjobs.com~mgpru~mandgprudential~-~j | 0 matched | 1 error(s): Workday M&G (mgpru.wd3.myworkdayjobs.com): skipped, mgpru.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether mgpru.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Pru [sources] | tried: - | board: workday/pru.wd5.myworkdayjobs.com~pru~Careers~-~j | 0 matched | 1 error(s): Workday Pru (pru.wd5.myworkdayjobs.com): skipped, pru.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether pru.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Shi [sources] | tried: - | board: workday/shi.wd12.myworkdayjobs.com~shi~shicareers~-~j | 0 matched | 1 error(s): Workday Shi (shi.wd12.myworkdayjobs.com): skipped, shi.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether shi.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Slihrms [sources] | tried: - | board: workday/slihrms.wd3.myworkdayjobs.com~slihrms~Careers~-~j | 0 matched | 1 error(s): Workday Slihrms (slihrms.wd3.myworkdayjobs.com): skipped, slihrms.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether slihrms.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Ventas [sources] | tried: - | board: workday/ventas.wd503.myworkdayjobs.com~ventas~ventas_careers~-~j | 0 matched | 1 error(s): Workday Ventas (ventas.wd503.myworkdayjobs.com): skipped, ventas.wd503.myworkdayjobs.com/robots.txt could not be fetched, so whether ventas.wd503.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  OpenAI [sources] | tried: - | board: ashby/openai | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  83zero Ltd [archive] | tried: 83zero (cached) | board: workable/83zero | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  9fin [archive, register] | tried: 9fin (cached) | board: ashby/9fin, workable/9fin | 0 matched | 2 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Accenture [archive, register] | tried: accenture (cached) | board: workable/accenture | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Ada Meher [archive] | tried: adameher (cached), ada-meher (cached) | board: workable/ada-meher | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  ADECCO [archive, register] | tried: adecco (cached) | board: workable/adecco | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Amazon [archive, register] | tried: amazon (cached) | board: workable/amazon | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Anaplan [archive, register] | tried: anaplan (cached) | board: greenhouse/anaplan, workable/anaplan | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  ANDE [archive] | tried: ande (cached) | board: workable/ande | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Anthropic [archive, register] | tried: anthropic (cached) | board: greenhouse/anthropic | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse, lever
+  Apple [archive] | tried: apple (cached) | board: workable/apple | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Artefact [archive, register] | tried: artefact | board: workable/artefact | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Arup [archive] | tried: arup (cached) | board: workable/arup | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  AtkinsRéalis [archive] | tried: atkinsrealis (cached) | board: workable/atkinsrealis | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Avanti Recruitment [archive] | tried: avantirecruitment (cached), avanti-recruitment (cached) | board: workable/avanti-recruitment | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Aveva [archive, register] | tried: aveva (cached) | board: workday/aveva.wd3.myworkdayjobs.com~aveva~aveva_careers~-~j | 0 matched | 1 error(s): Workday Aveva (aveva.wd3.myworkdayjobs.com): skipped, aveva.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether aveva.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  BAE Systems [archive, register] | tried: baesystems (cached), bae-systems (cached) | board: workable/bae-systems | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Barclays [archive] | tried: barclays (cached) | board: workable/barclays | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Bauer Media Outdoor [archive, register] | tried: bauermediaoutdoor (cached) | board: workable/bauermediaoutdoor | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  BDO LLP [archive, register] | tried: bdollp (cached), bdo-llp (cached) | board: workable/bdo-llp | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  bet365 [archive] | tried: bet365 (cached) | board: workable/bet365 | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Blackrock [archive] | tried: blackrock (cached) | board: workable/blackrock | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Boehringer Ingelheim Ltd [archive, register] | tried: boehringeringelheim (cached), boehringer-ingelheim (cached) | board: workable/boehringer-ingelheim | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  BrainLabs [archive] | tried: brainlabs | board: workable/brainlabs | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Bridewell [archive, register] | tried: bridewell (cached) | board: workable/bridewell | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  C4S Search Ltd [archive] | tried: c4ssearch (cached), c4s-search (cached) | board: workable/c4s-search | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Capgemini [archive, register] | tried: capgemini (cached) | board: workable/capgemini | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CapitalOne [archive, register] | tried: capitalone (cached) | board: workday/capitalone.wd12.myworkdayjobs.com~capitalone~capital_one~-~j | 0 matched | board_unverified: workable/capitalone | 1 error(s): Workday CapitalOne (capitalone.wd12.myworkdayjobs.com): skipped, capitalone.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether capitalone.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CERN [archive] | tried: cern (cached) | board: workable/cern | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CGI [archive, register] | tried: cgi (cached) | board: workable/cgi | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Charlotte Tilbury Beauty [archive] | tried: charlottetilburybeauty (cached), charlotte-tilbury-beauty (cached) | board: workable/charlotte-tilbury-beauty | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Chattermill [archive, register] | tried: chattermill | board: workable/chattermill | 0 matched | 2 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, greenhouse
+  Checkout.com [archive] | tried: checkoutcom (cached), checkout-com (cached) | board: workable/checkout-com | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CITI [archive] | tried: citi (cached) | board: workable/citi | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Client Server [archive] | tried: clientserver (cached), client-server (cached) | board: workable/client-server | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Cognizant [archive] | tried: cognizant (cached) | board: workable/cognizant | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Compare the Market [archive] | tried: comparethemarket (cached) | board: workable/comparethemarket | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  COOP [archive] | tried: coop | board: workable/coop | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Costa Coffee [archive, register] | tried: costacoffee (cached), costa-coffee (cached) | board: workable/costa-coffee | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  CreditSpring [archive] | tried: creditspring (cached) | board: teamtailor/creditspring | 0 matched | 1 error(s): creditspring.teamtailor.com/robots.txt could not be fetched, so whether creditspring.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  DAINTTA [archive] | tried: daintta (cached) | board: workable/daintta | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Data Idols [archive] | tried: dataidols (cached) | board: workable/dataidols | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Deliveroo [archive, register] | tried: deliveroo | board: workable/deliveroo | 0 matched | 3 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, greenhouse
+  Deloitte [archive, register] | tried: deloitte (cached) | board: workable/deloitte | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  Doit [archive] | tried: doit (cached) | board: workable/doit | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  EDITED [archive] | tried: edited (cached) | board: ashby/edited | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Entain [archive, register] | tried: entain (cached) | board: workable/entain | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  EPAM Systems [archive, register] | tried: epamsystems (cached), epam-systems (cached) | board: workable/epam-systems | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Experis [archive] | tried: experis (cached) | board: workable/experis | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  EY [archive] | tried: ey (cached) | board: workable/ey | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Faculty [archive] | tried: faculty | board: workable/faculty | 0 matched | 2 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  FCA [archive] | tried: fca (cached) | board: workable/fca | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Frazer-Nash [archive, register] | tried: frazernash (cached) | board: workable/frazernash | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Frontier Economics [archive, register] | tried: frontiereconomics (cached), frontier-economics (cached), frontier (cached) | board: workday/frontiereconomics.wd3.myworkdayjobs.com~frontiereconomics~frontier_economics_careers~-~j | 0 matched | board_unverified: workable/frontier | 1 error(s): Workday Frontier Economics (frontiereconomics.wd3.myworkdayjobs.com): skipped, frontiereconomics.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether frontiereconomics.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  G-Research [archive] | tried: gresearch (cached), g-research (cached) | board: workday/gresearch.wd103.myworkdayjobs.com~gresearch~g-research~-~j | 0 matched | 1 error(s): Workday G-Research (gresearch.wd103.myworkdayjobs.com): skipped, gresearch.wd103.myworkdayjobs.com/robots.txt could not be fetched, so whether gresearch.wd103.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Gerrard White [archive] | tried: gerrardwhite (cached), gerrard-white (cached) | board: workable/gerrard-white | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  GlobalData UK Ltd [archive, register] | tried: globaldata (cached) | board: workable/globaldata | 0 matched | board_unverified: recruitee/globaldata | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  GMass [archive] | tried: gmass (cached) | board: workable/gmass | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Goldman Sachs [archive] | tried: goldmansachs (cached), goldman-sachs (cached) | board: workable/goldman-sachs | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Google [archive, register] | tried: google (cached) | board: workday/google.wd501.myworkdayjobs.com~google~gocjobs~-~j | 0 matched | 1 error(s): Workday Google (google.wd501.myworkdayjobs.com): skipped, google.wd501.myworkdayjobs.com/robots.txt could not be fetched, so whether google.wd501.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Hackajob [archive, register] | tried: hackajob (cached) | board: workable/hackajob | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Hadean [archive, register] | tried: hadean (cached) | board: workable/hadean, teamtailor/hadean | 0 matched | 2 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Hasting Direct [archive] | tried: hastingdirect (cached), hasting-direct (cached), hasting (cached) | board: workday/hastingsdirect.wd3.myworkdayjobs.com~hastingsdirect~external_careers~-~j | 0 matched | 2 error(s): hastingsdirect.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether hastingsdirect.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Hitachi [archive] | tried: hitachi (cached) | board: workable/hitachi | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Huxley Associates [archive] | tried: huxleyassociates (cached), huxley-associates (cached) | board: workable/huxley-associates | 0 matched | 1 error(s): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Juro [archive] | tried: juro | board: ashby/juro | 0 matched | 2 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, lever
+  Kyndryl [archive, register] | tried: kyndryl (cached) | board: workday/kyndryl.wd5.myworkdayjobs.com~kyndryl~ismcareers~-~j | 0 matched | 1 error(s): Workday Kyndryl (kyndryl.wd5.myworkdayjobs.com): skipped, kyndryl.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether kyndryl.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Lloyds [archive] | tried: lloyds (cached) | board: workday/lloyds.wd3.myworkdayjobs.com~lloyds~early-careers~-~j | 0 matched | 1 error(s): Workday Lloyds (lloyds.wd3.myworkdayjobs.com): skipped, lloyds.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether lloyds.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Loveable [archive] | tried: lovable (cached) | board: greenhouse/lovable, ashby/lovable | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, greenhouse
+  loveholidays [archive] | tried: loveholidays (cached) | board: ashby/loveholidays | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Mantic [archive] | tried: matic (cached) | board: greenhouse/matic | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Nvidia [archive, register] | tried: nvidia (cached) | board: workday/nvidia.wd5.myworkdayjobs.com~nvidia~nvidiaexternalcareersite~-~j | 0 matched | 1 error(s): Workday Nvidia (nvidia.wd5.myworkdayjobs.com): skipped, nvidia.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether nvidia.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Ocado Retail [archive, register] | tried: ocadoretail (cached) | board: teamtailor/ocadoretail | 0 matched | 1 error(s): ocadoretail.teamtailor.com/robots.txt could not be fetched, so whether ocadoretail.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  PWC [archive] | tried: pwc (cached) | board: workday/pwc.wd3.myworkdayjobs.com~pwc~catalyst~-~j | 0 matched | 1 error(s): Workday PWC (pwc.wd3.myworkdayjobs.com): skipped, pwc.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether pwc.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  RightShip [archive, register] | tried: rightship (cached) | board: greenhouse/rightship | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Robert Half [archive, register] | tried: roberthalf (cached), robert-half (cached), robert (cached) | board: workday/roberthalf.wd1.myworkdayjobs.com~roberthalf~protivitiapac~-~j | 0 matched | 1 error(s): Workday Robert Half (roberthalf.wd1.myworkdayjobs.com): skipped, roberthalf.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether roberthalf.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Salesforce [archive, register] | tried: salesforce (cached) | board: workday/salesforce.wd12.myworkdayjobs.com~salesforce~external_career_site~-~j | 0 matched | 1 error(s): Workday Salesforce (salesforce.wd12.myworkdayjobs.com): skipped, salesforce.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether salesforce.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Sky [archive, register] | tried: sky (cached) | board: workday/sky.wd3.myworkdayjobs.com~sky~sky_careers~-~j | 0 matched | 1 error(s): Workday Sky (sky.wd3.myworkdayjobs.com): skipped, sky.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether sky.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Snapchat [archive] | tried: snapchat (cached) | board: workday/snapchat.wd1.myworkdayjobs.com~snapchat~referral19~-~j | 0 matched | 1 error(s): Workday Snapchat (snapchat.wd1.myworkdayjobs.com): skipped, snapchat.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether snapchat.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Spotlight [archive, register] | tried: spotlight (cached) | board: greenhouse/spotlight, ashby/spotlight | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Tencent [archive] | tried: tencent (cached) | board: workday/tencent.wd1.myworkdayjobs.com~tencent~lightspeed~-~j | 0 matched | 1 error(s): Workday Tencent (tencent.wd1.myworkdayjobs.com): skipped, tencent.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether tencent.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Trainline [archive, register] | tried: trainline (cached) | board: ashby/trainline | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Ultralytics [archive, register] | tried: ultralytics (cached) | board: ashby/ultralytics | 0 matched | in the public board list: ashby
+  Valarian [archive, register] | tried: valarian (cached) | board: lever/valarian | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  Vanguard [archive] | tried: vanguard (cached) | board: workday/vanguard.wd5.myworkdayjobs.com~vanguard~contractors_restricted~-~j | 0 matched | 1 error(s): Workday Vanguard (vanguard.wd5.myworkdayjobs.com): skipped, vanguard.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether vanguard.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Zoom [archive] | tried: zoom (cached) | board: workday/zoom.wd5.myworkdayjobs.com~zoom~zoom~-~j | 0 matched | 1 error(s): Workday Zoom (zoom.wd5.myworkdayjobs.com): skipped, zoom.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether zoom.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  9Fins [archive] | tried: 9fins (cached) | board: none | 0 matched | board_unverified: workable/9fins | not in the public board list: nothing guessed
+  Accelaro [archive] | tried: accelaro (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Adria Solution LTD [archive] | tried: adriasolution (cached), adria-solution (cached), adria (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Ageas Insurance Ltd [archive, register] | tried: ageasinsurance (cached), ageas-insurance (cached), ageas (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  AI Engineer [archive] | tried: aiengineer (cached), ai-engineer (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  AI Enginner [archive] | tried: aienginner (cached), ai-enginner (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  AI Hardware [archive] | tried: aihardware (cached), ai-hardware (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Applied AI Engineer - Direct Acquisition [archive] | tried: applied (cached), appliedai (cached) | board: none | 0 matched | board_unverified: workable/applied | rejected: appliedaiengineerdirectacquisition (34 characters is longer than 30: not a company name), applied-ai-engineer-direct-acquisition (38 characters is longer than 30: not a company name) | not in the public board list: nothing guessed
+  Applied Scientist [archive] | tried: appliedscientist (cached), applied-scientist (cached), applied (cached) | board: none | 0 matched | board_unverified: workable/applied | not in the public board list: nothing guessed
+  AQEMIA [archive] | tried: aqemia (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Arch Capital Group [archive] | tried: archcapital (cached), arch-capital (cached), arch (cached) | board: none | 0 matched | board_unverified: workable/arch | not in the public board list: nothing guessed
+  Arvora ltd [archive] | tried: arvora (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  BCG X [archive] | tried: bcgx (cached), bcg-x (cached), bcg (cached) | board: none | 0 matched | board_unverified: workable/bcg | not in the public board list: nothing guessed
+  Betway Group [archive] | tried: betway (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Blending Spoons [archive] | tried: blendingspoons (cached), blending-spoons (cached), blending (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Bowers Partnership [archive] | tried: bowerspartnership (cached), bowers-partnership (cached), bowers (cached) | board: none | 0 matched | board_unverified: workable/bowers | not in the public board list: nothing guessed
+  BrightBox Group [archive] | tried: brightbox (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  British Heart Foundation [archive, register] | tried: britishheartfoundation (cached), british-heart-foundation (cached), british (cached), britishheart (cached) | board: none | 0 matched | board_unverified: workable/british | not in the public board list: nothing guessed
+  Build Technologies [archive] | tried: build (cached) | board: none | 0 matched | board_unverified: workable/build | not in the public board list: nothing guessed
+  Cathcart Technology [archive] | tried: cathcarttechnology (cached), cathcart-technology (cached), cathcart (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Cohore [archive] | tried: cohore (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Commercial Services [archive, register] | tried: commercialservices (cached), commercial-services (cached), commercial (cached) | board: none | 0 matched | board_unverified: workable/commercial | not in the public board list: nothing guessed
+  Concept AI Ltd [archive] | tried: conceptai (cached), concept-ai (cached), concept (cached) | board: none | 0 matched | board_unverified: workable/concept | not in the public board list: nothing guessed
+  Corriculo [archive] | tried: corriculo (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  CRU International [archive, register] | tried: cruinternational (cached), cru-international (cached), cru (cached) | board: none | 0 matched | board_unverified: workable/cru | not in the public board list: nothing guessed
+  Curve Analysis [archive] | tried: curveanalysis (cached), curve-analysis (cached), curve (cached) | board: none | 0 matched | board_unverified: workable/curve | not in the public board list: nothing guessed
+  Damia Group Ltd [archive, register] | tried: damia (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Data Scientist [archive] | tried: datascientist (cached), data-scientist (cached), data (cached) | board: none | 0 matched | board_unverified: workable/data | not in the public board list: nothing guessed
+  Databricks [archive, register] | tried: databricks | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse, lever
+  DataTech [archive] | tried: datatech (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  DCV Technologies [archive, register] | tried: dcv (cached) | board: none | 0 matched | board_unverified: workable/dcv | not in the public board list: nothing guessed
+  Deerfoot [archive] | tried: deerfoot (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Deerfoot Recruitment Solutions Limited [archive] | tried: deerfootrecruitmentsolutions (cached), deerfoot-recruitment-solutions (cached), deerfoot (cached), deerfootrecruitment (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Digica [archive] | tried: digica (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Ecotricity Group Limited [archive, register] | tried: ecotricity (cached) | board: none | 0 matched | board_unverified: workable/ecotricity | not in the public board list: nothing guessed
+  Ededge Group [archive] | tried: ededge (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Elsevir [archive] | tried: elsevir (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  EMBS Engineering [archive] | tried: embsengineering (cached), embs-engineering (cached), embs (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Enablis [archive] | tried: enablis (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Epic Games [archive, register] | tried: epicgames, epic-games (cached), epic (cached) | board: none | 0 matched | 3 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Expedia Group [archive] | tried: expedia (cached) | board: none | 0 matched | board_unverified: workable/expedia | not in the public board list: nothing guessed
+  Extrac [archive] | tried: extra (cached), extrac (cached) | board: none | 0 matched | in the public board list: greenhouse
+  F1 [archive] | tried: f1 (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Facility [archive, register] | tried: facility (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Fintelligent Search [archive] | tried: fintelligentsearch (cached), fintelligent-search (cached), fintelligent (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  FitchGroup [archive] | tried: fitchgroup (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Flo Health Inc [archive, register] | tried: flohealth, flohealthinc (cached), flo-health-inc (cached), flo (cached) | board: none | 0 matched | board_unverified: workable/flo | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Focus Group [archive] | tried: focus (cached) | board: none | 0 matched | board_unverified: workable/focus | not in the public board list: nothing guessed
+  Forge Holiday Group Limited [archive, register] | tried: forgeholiday (cached), forge-holiday (cached), forge (cached) | board: none | 0 matched | board_unverified: workable/forge | not in the public board list: nothing guessed
+  Forits [archive] | tried: forits (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Gigaton [archive, register] | tried: gigaton (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Global Job Hunter [archive] | tried: globaljobhunter (cached), global-job-hunter (cached), global (cached), globaljob (cached) | board: none | 0 matched | board_unverified: workable/global | not in the public board list: nothing guessed
+  Gold Group [archive] | tried: gold (cached) | board: none | 0 matched | board_unverified: workable/gold | not in the public board list: nothing guessed
+  Granola [archive, register] | tried: granola | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Graphcore [archive, register] | tried: graphcore | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  GuidentGlobal [archive] | tried: guidentglobal (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Handelsbanken Logo [archive] | tried: handelsbankenlogo (cached), handelsbanken-logo (cached), handelsbanken (cached) | board: none | 0 matched | board_unverified: workable/handelsbanken | not in the public board list: nothing guessed
+  Hays Technology [archive] | tried: haystechnology (cached), hays-technology (cached), hays (cached) | board: none | 0 matched | board_unverified: workable/hays | not in the public board list: nothing guessed
+  Heidi [archive] | tried: heidi (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Hexwired Recruitment Limited [archive] | tried: hexwiredrecruitment (cached), hexwired-recruitment (cached), hexwired (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Hireshire [archive] | tried: hireshire (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Hyre AI Limited [archive] | tried: hyreai (cached), hyre-ai (cached), hyre (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  IBM [archive, register] | tried: ibm (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Improbable [archive, register] | tried: improbable | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, lever
+  Informed Solutions [archive, register] | tried: informedsolutions (cached), informed-solutions (cached), informed (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Innova Solutions [archive] | tried: innovasolutions (cached), innova-solutions (cached), innova (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Intec Select Ltd [archive] | tried: intecselect (cached), intec-select (cached), intec (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Intellect Group [archive] | tried: intellect (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Intellium AI [archive, register] | tried: intelliumai (cached), intellium-ai (cached), intellium (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Iwoca [archive, register] | tried: iwoca (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  J O Hambro [archive, register] | tried: johambro (cached), j-o-hambro (cached), jo (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  JaneStreet [archive] | tried: janestreet | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  JCDecaux UK [archive, register] | tried: jcdecaux | board: none | 0 matched | 3 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  JLA Resourcing Ltd [archive] | tried: jlaresourcing (cached), jla-resourcing (cached), jla (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  JobGether [archive] | tried: jobgether | board: none | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  JP Morgan Chase [archive] | tried: jpmorganchase (cached), jp-morgan-chase (cached), jpmorgan (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Jumping River [archive] | tried: jumpingriver (cached), jumping-river (cached), jumping (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  KI [archive] | tried: ki (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Kpler [archive, register] | tried: kpler | board: none | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  Kubrick [archive, register] | tried: kubrick (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  L&G [archive] | tried: lg (cached), l-g (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Leisure Employment Service [archive, register] | tried: leisureemploymentservice (cached), leisure-employment-service (cached), leisure (cached), leisureemployment (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Lendable [archive, register] | tried: lendable | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Lendables [archive] | tried: lendable, lendables (cached) | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Leonardo [archive, register] | tried: leonardo (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Limbic [archive, register] | tried: limbic | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Linux Recruit [archive] | tried: linuxrecruit (cached), linux-recruit (cached), linux (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Luxoft [archive, register] | tried: luxoft (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Lynx Recruitment Ltd [archive] | tried: lynxrecruitment (cached), lynx-recruitment (cached), lynx (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Machnet Medical Robotic [archive, register] | tried: machnetmedicalrobotic (cached), machnet-medical-robotic (cached), machnet (cached), machnetmedical (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Maxwell Bond [archive] | tried: maxwellbond (cached), maxwell-bond (cached), maxwell (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Maze [archive] | tried: maze (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  McKinsey & Company [archive, register] | tried: mckinsey (cached), mckinseycompany (cached), mckinsey-company (cached) | board: none | 0 matched | in the public board list: greenhouse
+  Melotech [archive] | tried: melotech | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Meta [archive] | tried: meta (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Michael Page [archive, register] | tried: michaelpage (cached), michael-page (cached), michael (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  microTECH Global LTD [archive] | tried: microtechglobal (cached), microtech-global (cached), microtech (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Mintel [archive, register] | tried: mintel | board: none | 0 matched | 2 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Mistral AI [archive, register] | tried: mistralai (cached), mistral-ai (cached), mistral (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  ML Engineer [archive] | tried: mlengineer (cached), ml-engineer (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Moloco [archive, register] | tried: moloco | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  MoneyBox [archive] | tried: moneybox (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Moneyhub [archive, register] | tried: moneyhub (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  MRJ Recruitment [archive] | tried: mrjrecruitment (cached), mrj-recruitment (cached), mrj (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Narwhal Labs [archive] | tried: narwhallabs (cached), narwhal-labs (cached), narwhal (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Nasdaq [archive, register] | tried: nasdaq (cached) | board: none | 0 matched | 2 error(s): nasdaq.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether nasdaq.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  NationalGrid [archive] | tried: nationalgrid (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  NetMind AI [archive, register] | tried: netmindai (cached), netmind-ai (cached), netmind (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  New folder [archive] | tried: newfolder (cached), new-folder (cached), new (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Newpage [archive] | tried: newpage (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Nexus [archive, register] | tried: nexus (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  NMS Recruit Ltd ta Russell Taylor Group [archive] | tried: nmsrecruittarusselltaylor (cached), nms-recruit-ta-russell-taylor (cached), nms (cached), nmsrecruit (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Nomad Digital [archive, register] | tried: nomaddigital (cached), nomad-digital (cached), nomad (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Novo Nordisk [archive, register] | tried: novonordisk (cached), novo-nordisk (cached), novo (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  NXA Talent LTD [archive] | tried: nxatalent (cached), nxa-talent (cached), nxa (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  OC&C [archive, register] | tried: occ (cached), oc-c (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Octagon Group [archive] | tried: octagon (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  ONYX Insights [archive] | tried: onyxinsights (cached), onyx-insights (cached), onyx (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  OpenAI [archive, register] | tried: openai | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, greenhouse, lever
+  Opus Recruitment Solutions [archive] | tried: opusrecruitmentsolutions (cached), opus-recruitment-solutions (cached), opus (cached), opusrecruitment (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Owen Thomas [archive] | tried: owenthomas (cached), owen-thomas (cached), owen (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Oxford Nanopore Technology [archive, register] | tried: oxfordnanoporetechnology (cached), oxford-nanopore-technology (cached), oxford (cached), oxfordnanopore (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Oxxi [archive] | tried: oxxi (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Parkside [archive] | tried: parkside (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Perplexity [archive, register] | tried: perplexity, perplexityai | board: none | 0 matched | 2 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby, greenhouse
+  Photon Talent Grp [archive] | tried: photontalentgrp (cached), photon-talent-grp (cached), photon (cached), photontalent (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Pimlico Enterprices [archive] | tried: pimlicoenterprices (cached), pimlico-enterprices (cached), pimlico (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Platform Recruitment [archive] | tried: platformrecruitment (cached), platform-recruitment (cached), platform (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Playstation [archive] | tried: playstation (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Prolific [archive] | tried: prolific | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse
+  Provenir [archive, register] | tried: provenir (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Pure Resourcing Solutions Limited [archive] | tried: pureresourcingsolutions (cached), pure-resourcing-solutions (cached), pure (cached), pureresourcing (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Quantum Black [archive] | tried: quantumblack (cached), quantum-black (cached), quantum (cached) | board: none | 0 matched | board_unverified: ashby/quantum | not in the public board list: nothing guessed
+  Queens Mary London [archive] | tried: queensmarylondon (cached), queens-mary-london (cached), queens (cached), queensmary (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Qureight Ltd [archive] | tried: qureight (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Randstad Technologies Recruitment [archive] | tried: randstadrecruitment (cached), randstad-recruitment (cached), randstad (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Rank Group [archive] | tried: rank (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Rantstad [archive] | tried: rantstad (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Redis [archive, register] | tried: redis (cached) | board: none | 0 matched | in the public board list: greenhouse
+  Reply [archive, register] | tried: reply | board: none | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  Research Engineer, Machine Learning [archive] | tried: research (cached), researchengineer (cached) | board: none | 0 matched | rejected: researchengineermachinelearning (31 characters is longer than 30: not a company name), research-engineer-machine-learning (34 characters is longer than 30: not a company name) | not in the public board list: nothing guessed
+  Rise Technical Recruitment [archive] | tried: risetechnicalrecruitment (cached), rise-technical-recruitment (cached), rise (cached), risetechnical (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Roke [archive] | tried: roke (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Rosenxt Creation [archive] | tried: rosenxtcreation (cached), rosenxt-creation (cached), rosenxt (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Rowden [archive] | tried: rowden (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  RS UK [archive] | tried: rs (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Sabio Group [archive] | tried: sabio (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Scarlet [archive] | tried: scarlet | board: none | 0 matched | 1 error(s): api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: ashby
+  Senior AI Engineer [archive] | tried: senioraiengineer (cached), senior-ai-engineer (cached), senior (cached), seniorai (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Senior Data & Insights Consultant [archive] | tried: seniordatainsightsconsultant (cached), senior (cached), seniordata (cached) | board: none | 0 matched | rejected: senior-data-insights-consultant (31 characters is longer than 30: not a company name) | not in the public board list: nothing guessed
+  Senior Data Scientist [archive] | tried: seniordatascientist (cached), senior-data-scientist (cached), senior (cached), seniordata (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Simply Business [archive, register] | tried: simplybusiness (cached), simply-business (cached), simply (cached) | board: none | 0 matched | in the public board list: lever
+  SkillCorner [archive] | tried: skillcorner (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  SoCode Limited [archive] | tried: socode (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Spark Box [archive] | tried: sparkbox (cached), spark-box (cached), spark (cached) | board: none | 0 matched | board_unverified: teamtailor/spark | not in the public board list: nothing guessed
+  Spencer Rose [archive] | tried: spencerrose (cached), spencer-rose (cached), spencer (cached) | board: none | 0 matched | board_unverified: greenhouse/spencer | not in the public board list: nothing guessed
+  Spotify [archive, register] | tried: spotify | board: none | 0 matched | 1 error(s): api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: lever
+  StackAdapt [archive, register] | tried: stackadapt | board: none | 0 matched | 1 error(s): boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard | in the public board list: greenhouse, lever
+  Strip [archive, register] | tried: strip (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Super.ai [archive] | tried: superai (cached), super-ai (cached), super (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  TCS [archive] | tried: tcs (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Tec Partners Recruitment Ltd [archive] | tried: tecpartnersrecruitment (cached), tec-partners-recruitment (cached), tec (cached), tecpartners (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Tech Recruitment UK Ltd [archive] | tried: techrecruitment (cached), tech-recruitment (cached), tech (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Tesla [archive] | tried: tesla (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  The Fragrance Shop [archive] | tried: fragranceshop (cached), fragrance-shop (cached), fragrance (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  The Portfolio Group [archive] | tried: portfolio (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  TicTok [archive] | tried: tictok (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Time Recruitment Solutions Ltd [archive] | tried: timerecruitmentsolutions (cached), time-recruitment-solutions (cached), time (cached), timerecruitment (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Trivago [archive] | tried: trivago (cached) | board: none | 0 matched | 1 error(s): trivago.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether trivago.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Verisk [archive, register] | tried: verisk (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Vermillion Analytics [archive] | tried: vermillionanalytics (cached), vermillion-analytics (cached), vermillion (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Viber [archive, register] | tried: viber (cached) | board: none | 0 matched | in the public board list: greenhouse
+  Vinarchy [archive] | tried: vinarchy (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Wave Mobile Money [archive] | tried: wavemobilemoney (cached), wave-mobile-money (cached), wave (cached), wavemobile (cached) | board: none | 0 matched | board_unverified: teamtailor/wave | not in the public board list: nothing guessed
+  Wayve [archive, register] | tried: wayve (cached) | board: none | 0 matched | in the public board list: greenhouse
+  WeDoTech [archive] | tried: wedotech (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  WellSafeSolution [archive] | tried: wellsafesolution (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  WGSN [archive, register] | tried: wgsn (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Wise [archive] | tried: wise (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  WSP [archive] | tried: wsp (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Xauntra [archive] | tried: xauntra (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Xelix [archive] | tried: xelix (cached) | board: none | 0 matched | in the public board list: ashby
+  YourRecruit [archive] | tried: yourrecruit (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Zero100 [archive] | tried: zero100 (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  Zone [archive] | tried: zone (cached) | board: none | 0 matched | not in the public board list: nothing guessed
+  note: aiapply_applied.csv: no company and title columns (found: none); nothing was skipped because of it
+  note: gmail: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  note: gmail_label: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  note: Reed (data scientist, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (machine learning engineer, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (ai engineer, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (applied scientist, direct): Reed search: could not be fetched (ConnectionError)
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Capitalone (capitalone.wd12.myworkdayjobs.com): skipped, capitalone.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether capitalone.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Jdpa (jdpa.wd501.myworkdayjobs.com): skipped, jdpa.wd501.myworkdayjobs.com/robots.txt could not be fetched, so whether jdpa.wd501.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Livenation (livenation.wd503.myworkdayjobs.com): skipped, livenation.wd503.myworkdayjobs.com/robots.txt could not be fetched, so whether livenation.wd503.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Lseg (lseg.wd3.myworkdayjobs.com): skipped, lseg.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether lseg.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday M&G (mgpru.wd3.myworkdayjobs.com): skipped, mgpru.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether mgpru.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Pru (pru.wd5.myworkdayjobs.com): skipped, pru.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether pru.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Shi (shi.wd12.myworkdayjobs.com): skipped, shi.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether shi.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Slihrms (slihrms.wd3.myworkdayjobs.com): skipped, slihrms.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether slihrms.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Ventas (ventas.wd503.myworkdayjobs.com): skipped, ventas.wd503.myworkdayjobs.com/robots.txt could not be fetched, so whether ventas.wd503.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Aveva (aveva.wd3.myworkdayjobs.com): skipped, aveva.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether aveva.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday CapitalOne (capitalone.wd12.myworkdayjobs.com): skipped, capitalone.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether capitalone.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: creditspring.teamtailor.com/robots.txt could not be fetched, so whether creditspring.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Frontier Economics (frontiereconomics.wd3.myworkdayjobs.com): skipped, frontiereconomics.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether frontiereconomics.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday G-Research (gresearch.wd103.myworkdayjobs.com): skipped, gresearch.wd103.myworkdayjobs.com/robots.txt could not be fetched, so whether gresearch.wd103.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Google (google.wd501.myworkdayjobs.com): skipped, google.wd501.myworkdayjobs.com/robots.txt could not be fetched, so whether google.wd501.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: hadean.teamtailor.com/robots.txt could not be fetched, so whether hadean.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Hasting Direct (hastingsdirect.wd3.myworkdayjobs.com): skipped, hastingsdirect.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether hastingsdirect.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Kyndryl (kyndryl.wd5.myworkdayjobs.com): skipped, kyndryl.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether kyndryl.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Lloyds (lloyds.wd3.myworkdayjobs.com): skipped, lloyds.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether lloyds.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Nvidia (nvidia.wd5.myworkdayjobs.com): skipped, nvidia.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether nvidia.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: ocadoretail.teamtailor.com/robots.txt could not be fetched, so whether ocadoretail.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday PWC (pwc.wd3.myworkdayjobs.com): skipped, pwc.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether pwc.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Robert Half (roberthalf.wd1.myworkdayjobs.com): skipped, roberthalf.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether roberthalf.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Salesforce (salesforce.wd12.myworkdayjobs.com): skipped, salesforce.wd12.myworkdayjobs.com/robots.txt could not be fetched, so whether salesforce.wd12.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Sky (sky.wd3.myworkdayjobs.com): skipped, sky.wd3.myworkdayjobs.com/robots.txt could not be fetched, so whether sky.wd3.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Snapchat (snapchat.wd1.myworkdayjobs.com): skipped, snapchat.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether snapchat.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Tencent (tencent.wd1.myworkdayjobs.com): skipped, tencent.wd1.myworkdayjobs.com/robots.txt could not be fetched, so whether tencent.wd1.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Vanguard (vanguard.wd5.myworkdayjobs.com): skipped, vanguard.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether vanguard.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: Workday Zoom (zoom.wd5.myworkdayjobs.com): skipped, zoom.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether zoom.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: ats: teamtailor refused 3 request(s) (not asked again where it said no): creditspring.teamtailor.com/robots.txt could not be fetched, so whether creditspring.teamtailor.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: ats: workable refused 55 request(s) (not asked again where it said no): apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: ats: workday refused 9 request(s) (not asked again where it said no): epicgames.wd5.myworkdayjobs.com/robots.txt could not be fetched, so whether epicgames.wd5.myworkdayjobs.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  note: ats: teamtailor, recruitee in discover.ats.providers are no longer guessed (one host per company: an unknown name is a host that does not exist); a board you know goes in careers_urls.yaml or under sources:, and one an alert links to is found from the link
+  note: ats: from the public board list: ashby 20 matched, 0 verified, 12 failed · greenhouse 29 matched, 0 verified, 15 failed · lever 13 matched, 0 verified, 5 failed · workday 22 matched, 0 verified, 9 failed; nothing was guessed (discover.ats.blind_guesses is off)
+  note: dataset: 8331 Greenhouse, 4368 Lever, 3161 Ashby board names, 11944 Workday sites; 1 request(s) this run; source github.com/Feashliaa/job-board-aggregator (data/), CC BY-NC 4.0
+  note: dataset: stopped for this run: raw.githubusercontent.com/robots.txt could not be fetched, so whether raw.githubusercontent.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+
+Gmail label cards (the emails carry title, company, location and a LinkedIn link only; the ad comes from the employer's board or `add-jd`):
+no new job cards
+
+emails by type: none new
+cards by result: none
+cards by age: <= 24 h 0, <= 72 h 0, <= 7 d 0, older 0
+Refused requests per provider, before -> after: ashby 0 -> 12 · greenhouse 0 -> 15 · lever 0 -> 5 · teamtailor 0 -> 3 · workable 0 -> 55 · workday 13 -> 9
+Slug guesses per provider this run (limit - each): ashby 0 guess(es), 0 request(s), 10 cached, 12 checked from the public list · greenhouse 0 guess(es), 0 request(s), 19 cached, 15 checked from the public list · lever 0 guess(es), 0 request(s), 10 cached, 5 checked from the public list · recruitee 0 guess(es), 0 request(s), 1 cached · teamtailor 0 guess(es), 0 request(s), 5 cached · workable 0 guess(es), 0 request(s), 80 cached · workday 0 guess(es), 6 request(s), 17 cached, 9 checked from the public list
+Matched from the public board list (v3.1, no blind guesses): ashby 20 matched, 0 verified, 12 failed · greenhouse 29 matched, 0 verified, 15 failed · lever 13 matched, 0 verified, 5 failed · workday 22 matched, 0 verified, 9 failed
+Slugs not asked because they are not company names: 5 (appliedaiengineerdirectacquisition (for 'Applied AI Engineer - Direct Acquisition'): 34 characters is longer than 30: not a company name; applied-ai-engineer-direct-acquisition (for 'Applied AI Engineer - Direct Acquisition'): 38 characters is longer than 30: not a company name; researchengineermach)
+
+Source health:
+health: 8/29 sources checked ...
+health: 16/29 sources checked ...
+health: 24/29 sources checked ...
+source                         method           status          alerts  jobs parsed  new jobs
+-----------------------------  ---------------  --------------  ------  -----------  --------
+LinkedIn                       gmail_alerts     no_credentials       -            -         0
+CV-Library                     gmail_alerts     no_credentials       -            -         0
+AIApply                        dedupe_only      disabled             -            -         0
+Greenhouse boards              greenhouse       blocked              -            -         0
+Indeed UK                      gmail_alerts     no_credentials       -            -         0
+Glassdoor UK                   gmail_alerts     disabled             -            -         0
+Welcome to the Jungle          gmail_alerts     no_credentials       -            -         0
+Wellfound                      gmail_alerts     no_credentials       -            -         0
+YC Work at a Startup           gmail_alerts     disabled             -            -         0
+EURES                          gmail_alerts     disabled             -            -         0
+GOV.UK Find a Job              gmail_alerts     no_credentials       -            -         0
+NHS Jobs                       gmail_alerts     disabled             -            -         0
+OpenAI                         ashby            blocked              -            -         0
+Google DeepMind                gmail_alerts     disabled             -            -         0
+Reed                           reed             unreachable          -            -         0
+EuroTechJobs                   gmail_alerts     disabled             -            -         0
+Totaljobs                      gmail_alerts     disabled             -            -         0
+Lever boards                   lever            blocked              -            -         0
+Ashby boards                   ashby            blocked              -            -         0
+Workable boards                workable         blocked              -            -         0
+SmartRecruiters boards         smartrecruiters  disabled             -            -         0
+Teamtailor boards              teamtailor       ok                   -            -         0
+Pinpoint boards                pinpoint         ok                   -            -         0
+Recruitee boards               recruitee        ok                   -            -         0
+Personio boards                personio         ok                   -            -         0
+Workday boards                 workday          ok                   -            -         0
+Atomico portfolio jobs         getro            disabled             -            -         0
+Balderton portfolio jobs       consider         disabled             -            -         0
+Notion Capital portfolio jobs  consider         disabled             -            -         0
+
+  LinkedIn: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  CV-Library: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  Greenhouse boards: blocked: boards-api.greenhouse.io/robots.txt could not be fetched, so whether boards-api.greenhouse.io allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Indeed UK: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  Welcome to the Jungle: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  Wellfound: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  GOV.UK Find a Job: no_credentials: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  OpenAI: blocked: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Reed: unreachable: Reed search: could not be fetched (ConnectionError)
+  Lever boards: blocked: api.lever.co/robots.txt could not be fetched, so whether api.lever.co allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Ashby boards: blocked: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+  Workable boards: blocked: apply.workable.com/robots.txt could not be fetched, so whether apply.workable.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+FAILED: gmail: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")); gmail_label: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+
+saved to /mnt/d/VS_Code/DataScience/Projects/career-ops/data/discover/health/2026-11-25.csv
+
+0 new ad(s) written to /mnt/d/VS_Code/DataScience/Projects/career-ops/data/jds/inbox.
+
+
+Last run (2026-11-25T17:45:28+00:00):
+  ats      board_unverified 30, board_none_after 185, board_none_before 240, companies 322
+All 31 run(s):
+  ats      seen 117352, role_filtered 103429, place_filtered 1039, already_decided 2265, duplicate 4864, written 582, listed_only 482, listed_parked 182, listed_capped 4985, board_unverified 623, possible_repost 42, board_none_after 1666, board_none_before 2033, companies 2859
+  gmail    alerts 3797, seen 65, role_filtered 2098, place_filtered 3, already_decided 22, duplicate 118, written 50, listed_capped 1, resolved 65, to_manual_queue 177, to_manual_queue_overflow 621, alerts_cvlibrary 663, alerts_indeed 2340, alerts_linkedin 794, alerts_unparsed 1, resolved_via_board_guessed 50, resolved_via_board_known 1
+  gmail_label role_filtered 136, place_filtered 25, to_manual_queue 1, cards 1205, mail_job_alert 182, mail_job_recommendation 1, mail_other 163, mails_without_cards 1, message_already_read 681, message_reread 229, result_duplicate 875, result_filtered 161, result_needs_jd 169, unparsed 6, unparsed_mails 1
+  reed     seen 890, role_filtered 374, closed 1, already_decided 37, blacklisted 216, duplicate 143, written 117, possible_repost 15, details_read 165, direct_employer 890, results 890, with_external_url 48
+  note: aiapply_applied.csv: no company and title columns (found: none); nothing was skipped because of it
+  note: gmail: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  note: gmail_label: ConnectionError: HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable"))
+  note: Reed (data scientist, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (machine learning engineer, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (ai engineer, direct): Reed search: could not be fetched (ConnectionError)
+  note: Reed (applied scientist, direct): Reed search: could not be fetched (ConnectionError)
+  note: api.ashbyhq.com/robots.txt could not be fetched, so whether api.ashbyhq.com allows automated access cannot be checked: this site blocks automated access, copy the job text and use --clipboard
+Freshness of the ads the last run wrote: tier 0 (<= 24 h): 0 · tier 1 (<= 72 h): 0 · tier 2 (<= 7 d): 0 · tier 3 (older): 0
+Waiting in the inbox for `careerops live` (`live --fresh` takes tier 0): tier 0 (<= 24 h): 0 · tier 1 (<= 72 h): 1 · tier 2 (<= 7 d): 1 · tier 3 (older): 160
+Resolved to a full ad: 65 · in the manual queue: 188 (cvlibrary 17, indeed 75, linkedin 85, linkedin_email 11)
+  manual queue by where to apply: aggregator_only 168, unknown 20
+  manual queue: /mnt/d/VS_Code/DataScience/Projects/career-ops/data/jds/manual_queue.csv — for each row, copy the ad and run `careerops live --clipboard`
+  727 more in /mnt/d/VS_Code/DataScience/Projects/career-ops/data/jds/manual_queue_overflow.csv (below the best 10 of their run)
+Alerts resolved, all 31 run(s):
+  cv-library       0 of 276 (0%)
+  indeed-uk        38 of 745 (5%)
+  linkedin         27 of 668 (4%)
+Companies without a job board (the last `discover --ats` run):
+  board: none  240 of 322 companies before the v2.6 providers (Workable, SmartRecruiters, Teamtailor, Recruitee, Personio) -> 185 of 322 after
+Alerts resolved by step, all 31 run(s): reed 0 · board_link 0 · board_known 1 · board_guessed 50
+
+Liveness of the inbox (162 ad(s); answers kept 6 h; LinkedIn, Indeed and CV-Library are never fetched): open 0 · closed 0 · uncertain 150 · 12 not checked (the cap is 150 a run)
+Repost / ghost signals (information only, never a score): 1 possible repost(s) (3 listings), 51 evergreen? of 230 listings
+  9fin | Senior AI Engineer: evergreen?
+  9fin | Senior AI Engineer - Legal AI: evergreen?
+  9fin | Senior Data Analyst - Content: evergreen?
+  Anthropic | Research Engineer, Machine Learning (Reinforcement Learning): evergreen?
+  Artefact | Senior Data Consultant: evergreen?
+  Artefact | Senior Data Consultant (US): evergreen?
+  Artefact | Senior Data Engineer: evergreen?
+  Artefact | Senior Data Engineer (Indonesia, Jakarta): evergreen?
+  CreditSpring | Applied Data Scientist – Fraud Prevention: evergreen?
+  Databricks | AI Forward Deployed Engineer - London: evergreen?
+  Databricks | Forward Deployed Engineer - Emerging Enterprise & DNB: evergreen?
+  Eclipse | Data Scientist (AI Data & LLM Specialist): evergreen?
+  Eloquentai | AI Engineer, London: evergreen?
+  Faculty | Senior Machine Learning Engineer: evergreen?
+  Faculty | Senior Research Scientist - AI Safety Evaluations: evergreen?
+  Faculty | Senior Research Scientist - AI Safety: evergreen?
+  FDM Group | Data Engineer: evergreen?
+  Flo Health Inc | Senior AI/ML engineer: evergreen?
+  Graphcore | Infrastructure and MLOps Engineer: evergreen?
+  Graphcore | Infrastructure and MLOps Engineer: evergreen?
+  Graphcore | Infrastructure and MLOps Engineer: evergreen?
+  Graphcore | Senior Software Engineer (ML QA): possible repost (3 listings since 2026-10-24)
+  Graphcore | Senior Software Engineer (ML QA): possible repost (3 listings since 2026-10-24)
+  IMC | Machine Learning Engineer: evergreen?
+  Iwoca | FP&A & Data Analyst: evergreen?
+  JaneStreet | Data Engineer: evergreen?
+  JaneStreet | Machine Learning Research Engineer: evergreen?
+  Kpler | Market Data Analyst - Dry Bulk: evergreen?
+  Lendable | Senior Strategy and Data Analyst: evergreen?
+  Palantir | Forward Deployed AI Engineer: evergreen?
+  Palantir | Forward Deployed Enablement Engineer - Customer Success: evergreen?
+  Palantir | Forward Deployed Infrastructure Engineer - UK Government: evergreen?
+  Palantir | Forward Deployed Reliability Engineer: evergreen?
+  Palantir | Forward Deployed Software Engineer: evergreen?
+  Palantir | Forward Deployed Software Engineer, New Grad - Commercial: evergreen?
+  Palantir | Forward Deployed Software Engineer, New Grad - UK Government: evergreen?
+  Palantir | Forward Deployed Software Engineer - UK Government: evergreen?
+  Prima | Software / Machine Learning Engineer: evergreen?
+  Prolific | Analytics Engineer: evergreen?
+  Prolific | Data Engineer: evergreen?
+  Prolific | Senior Applied Scientist, Supply: evergreen?
+  Scale AI | Product Leadership, Forward Deployed & Strategy: evergreen?
+  Scale AI | Senior Full-Stack Software Engineer, (Forward Deployed), GPS: evergreen?
+  Sequence | AI Engineer - London: evergreen?
+  Smartsheet | Sr. Forward Deployed AI Engineer (Remote Eligible in the UK): evergreen?
+  Spotify | Senior Machine Learning Engineer - Content Intelligence: evergreen?
+  Spotify | Senior Machine Learning Engineer - Messaging Platform: evergreen?
+  Spotify | Senior Machine Learning Engineer - Policy & Safety: evergreen?
+  StackAdapt | Machine Learning Engineer (Remote): evergreen?
+  Trainline | Machine Learning Engineer: evergreen?
+in region 153 · out 3 (parked) · unknown 6 | SME 20 · Large 65 · size? 74
+
+reply watch: not run (HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError("HTTPSConnection(host='oauth2.googleapis.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")))
+== 2026-11-25T18:33:46+00:00 discover.sh end, exit 1

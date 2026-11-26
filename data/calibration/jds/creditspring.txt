@@ -1,0 +1,55 @@
+We are Creditspring, a new way of borrowing that focuses on its members and provides them with safe and efficient short-term financial products.
+
+We're a fast-growing FCA-regulated consumer credit company. We have members, not customers and we take a lot of pride in that!
+
+As one of the UK’s only subscription finance company in the market, we truly have a unique value proposition. Our mission is very clear; to improve the financial stability and resilience of our members. We do this through the products we provide, the partnerships we have, and our educational content. We want our members, and everyone in the UK to be able to better manage their finances and steer them away from high-cost, unregulated credit options.
+
+About the role
+
+We are seeking an experienced and detail-oriented Data Scientist to join our Underwriting - Credit risk data science team in either our London office or Bengaluru office. This is a mid-level individual contributor role, ideal for someone who thrives on solving complex problems, driving innovation, and applying advanced analytics and machine learning to real-world business challenges.
+
+You will be instrumental in shaping company’s credit risk models, monitoring performance, optimising product offerings and contributing to the development of production solutions that directly impact our members’ financial wellbeing.
+
+Sitting at the intersection of Data, Engineering, Operations, Product and Marketing, the role is critical to support further platform growth and credit product innovation.
+
+The role is suited to a well-rounded candidate, with strong project management skills and experience of acting upon produced insights. It offers an opportunity to develop and deepen data science, business and system analytics skills.
+
+This is a full stack data science and analytics role – where a lot of time and effort will be spent on data extraction, wrangling, mining and feature engineering. The team has a strong focus on Consumer Duty/regulatory compliance and delivering measurable impact on the commercial objectives of the company.
+
+Responsibilities
+
+Ideate and build robust machine learning models for credit risk assessment and adjacent use cases – collection initiatives, identity resolution, affordability assessment, macro-resilience and decision explainability
+
+Supervise model deployment, by testing, monitoring performance and ensuring timely redevelopment and recalibrations. Identifying data and model drift.
+
+Contribute to the development and optimization of our data pipelines, tooling, and infrastructure
+
+Coordinating change processes related to credit lifecycle - from idea generation, proposing solution to project management, deployment and monitoring
+
+Become an expert on the external API feeds used in decisioning – credit reference agencies, open banking data providers and alt-datasources
+
+Partnering with other teams to assess feasibility and support various growth initiatives, designing and implementing acquisition, product and lending strategies.
+
+What you'll need to succeed
+
+Quantitative degree with 3-5 years of prior experience in in credit risk analytics, preferably within an SME or retail lending environment
+
+Experience developing and deploying machine learning models in a local and cloud environment. Familiary with regression and gradient boosting techniques, model development best practices for model tuning, feature engineering, validation and explainability
+
+Strong command of statistical inference and supervised machine learning stack (scikit-learn, pandas, numpy, jupyter). Solid knowledge of Python for data extraction, transformation and analysis
+
+SQL proficiency in manipulating, merging, and cleaning or checking data from multiple sources including internal data and external feeds
+
+Commercial awareness with strong communication skills and the ability to influence stakeholders via analytics delivery
+
+Desirable experience:
+
+Lending, fintech and regulated sectors work experience
+
+Working with web applications, cloud data stacks and event driven architecture (we run on ruby on rails, python, aws, github)
+
+Hands-on working with credit bureau and open banking data. First-hand experience with decisioning SaaS platforms and Agentic AI
+
+Don’t meet all the listed requirements? Research shows that women and people of underrepresented groups often don't apply for jobs unless they're 100% qualified. As an equal opportunities employer, we know that diversity is a key part of our teams' successes - so if your experience doesn’t fit perfectly but this role excites you, we’d love for you to apply. We’re committed to Creditspring being an inclusive environment where employees feel welcomed, valued and listened to; we want you to thrive as your true self.
+
+Please note that the People Team is contactable only via people@creditspring.co. Unsolicited emails to other team members will not be actioned

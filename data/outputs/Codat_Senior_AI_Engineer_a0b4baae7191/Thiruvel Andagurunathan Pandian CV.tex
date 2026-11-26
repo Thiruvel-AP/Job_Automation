@@ -1,0 +1,173 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{needspace}
+
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\definecolor{muted}{RGB}{96, 102, 110}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+\titleformat{\section}
+  {\color{headernavy}\normalsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\linespread{1.02}
+
+% ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+% v3.5.3 (10 Nov 2026): employer (and place) on line 1, the title then the dates on line 2, so that `pdftotext -raw` reads every role as
+% employer -> title -> dates -> bullets (ats_structure.role_order_problems). The dates were on line 1 before, read before the title.
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\\
+  \textit{#4}\hfill{\color{muted}#3}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\\ \textit{#3}\hfill{\color{muted}#2}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag
+  \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{headernavy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{headernavy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\LARGE\bfseries Thiruvel Andagurunathan Pandian} \\[3pt]
+  {\color{headernavy}\small\textbf{AI Engineer | LLM agent that recovers from tool failure, \textasciitilde{}65-test evals}} \\[3pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textbar\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textbar\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textbar\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/}\nobreak\ \,\textbar\, \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP}\nobreak\ \,\textbar\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}}\par\vspace{4pt}
+  \noindent{} Right to Work in UK \,\textbar\, Available to join Immediately
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+AI engineer who builds the checks around the model: for my AstraZeneca-affiliated MSc dissertation I built an AI assistant that keeps working when its tools fail, tested by about 65 automated checks. Deploys on AWS (Lambda) with CI/CD and MLflow experiment tracking. Owns data workflows end-to-end in Python and SQL, from merging structured, API and web-scraped data through feature creation, tuning, validation and deployment (Docker, GitHub Actions CI/CD, MLflow, AWS Lambda). Deployed an LLM agent on AWS for an AstraZeneca-affiliated multi-omics research platform (MSc dissertation). Shipped production fintech features integrating Twelve Data market feeds and Plaid bank linking. Builds deployable ML models: forecasting (an LSTM time-series service), propensity modelling (an XGBoost churn classifier with Bayesian tuning and SMOTE) and customer segmentation (k-means, HAC and DBSCAN).
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillgroup{Agentic AI \& LLM-based Applications}{Tool use and tool calling with failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation and testing (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)}
+\skillgroup{Software Engineering \& Integrations}{TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, version control with Git (pull requests, code review), debugging and root-cause analysis, stakeholder communication, live client demos, pull-request reviews with a client CTO}
+\skillgroup{Cloud \& Deployment}{AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), Google OAuth sign-in, Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist, MSc Dissertation Project}
+\begin{itemize}
+  \item Built an AI assistant researchers could trust: it checks gene names against official databases and falls back to a local list of 19,213 genes if they go down (LangChain, AWS).
+  \item Did the data analysis on 14 research datasets and combined them so the assistant only used trusted data, then put it online on AWS (Python, AWS Lambda).
+  \item Found where the assistant went wrong with about 65 automated checks at three levels, fixed failures layer by layer, and reused the checks after changing AI provider (pytest).
+  \item Integrated the agent into a React front end with real-time gene alias enrichment.
+  \item Researched GNN literature (GAT, MOGONET, GNNRAI) to inform graph-formation strategy, and designed a bipartite/heterogeneous graph approach with Leiden clustering for similarity detection and KNN for gene-to-cell-line association.
+  \item Accounted for AWS governance, accounting for root-user isolation, IAM group management, and least-privilege policies.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}
+\begin{itemize}
+  \item Led the design in a five-person team that turned a startup client\textquotesingle{}s vague idea into a working AI prototype in three months; senior leadership rated it 5 stars (Python, MCP).
+  \item Proposed the request flow: a user\textquotesingle{}s text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client\textquotesingle{}s Convex database and a second instance runs the statistical analysis before the result returns to the user.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built a private client an AI finance assistant that reads his income, spending, loans and investments and suggests next steps, self-hosted to keep costs low (Llama, Ollama).
+  \item For a private client, built AI chat and document-search tools, served machine-learning models as web APIs, and contributed to a team fine-tune of a Llama model (LangChain, FastAPI).
+  \item Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer Trainee, then Software Development Engineer}
+\begin{itemize}
+  \item Helped build a money-management app for a company\textquotesingle{}s 10,000+ employees, linking live stock prices and bank accounts to a backend of 200+ endpoints; shipped the first release (Flutter, AWS).
+  \item \num{Shipped features in a production fintech (financial-services) application} as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.
+  \item Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{Banking Customer Churn: propensity model}\hspace{1em}\url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}%
+\setbox2=\hbox{{\small\textit{R, tidymodels, XGBoost}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{Banking Customer Churn: propensity model}\\ {\color{muted}\small\textit{R, tidymodels, XGBoost}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}\par
+\else
+\textbf{Banking Customer Churn: propensity model}\\ {\color{muted}\small\textit{R, tidymodels, XGBoost}}\hfill{\small\url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}\par
+\fi
+\else
+\project{Banking Customer Churn: propensity model}{R, tidymodels, XGBoost}{\url{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}
+\fi
+\begin{itemize}
+  \item Predicted which bank customers were likely to leave, tuning the model in two rounds and scoring it with a measure that is fair to uneven groups (R, XGBoost).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{mcp\_searchagent}\hspace{1em}\url{https://github.com/Thiruvel-AP/mcp_searchagent}}%
+\setbox2=\hbox{{\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{mcp\_searchagent}\\ {\color{muted}\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}\par
+\else
+\textbf{mcp\_searchagent}\\ {\color{muted}\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\hfill{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}\par
+\fi
+\else
+\project{mcp\_searchagent}{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}{\url{https://github.com/Thiruvel-AP/mcp_searchagent}}
+\fi
+\begin{itemize}
+  \item Built a search assistant that combines web search with a database and runs on a free local AI model, tested automatically on Python 3.9 to 3.11 (MCP, PostgreSQL).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}\hspace{1em}\url{https://github.com/Thiruvel-AP/TextAnalytics}}%
+\setbox2=\hbox{{\small\textit{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/TextAnalytics}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}\\ {\color{muted}\small\textit{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/TextAnalytics}}\par
+\else
+\textbf{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}\\ {\color{muted}\small\textit{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}}\hfill{\small\url{https://github.com/Thiruvel-AP/TextAnalytics}}\par
+\fi
+\else
+\project{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}{\url{https://github.com/Thiruvel-AP/TextAnalytics}}
+\fi
+\begin{itemize}
+  \item Showed why airline support tickets would not group by topic (the wording was too similar) but could be sorted well with supervised models; our team project scored 79/100 (Python, scikit-learn).
+  \item Built the text-cleaning and grouping steps for airline support tickets, and traced weak groupings (scores below 0.30) to repeated template wording (Python, scikit-learn).
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\noindent\textit{MSc Data Science}, \textbf{University of Bristol, UK}\unskip\nobreak\hfill\penalty50\hskip1em\null\nobreak\hfill\mbox{Sep 2025 – Sep 2026}\par
+\noindent{\small Dissertation with AstraZeneca affiliation (GeneTraceAI)}\par
+\noindent\textit{B.E. Electrical \& Electronics Engineering}, \textbf{St. Joseph\textquotesingle{}s College of Engineering}, First Class with Distinction\unskip\nobreak\hfill\penalty50\hskip1em\null\nobreak\hfill\mbox{Aug 2019 – Apr 2023}\par
+
+% ================= CERTIFICATIONS & ACHIEVEMENTS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}
+  \item Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}
+  \item AWS Academy Cloud Foundations, \textit{Nov 2025}
+  \item 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}
+  \item Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

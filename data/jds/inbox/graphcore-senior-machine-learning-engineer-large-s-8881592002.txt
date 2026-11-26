@@ -1,0 +1,130 @@
+Company: Graphcore
+Title: Senior Machine Learning Engineer (Large Systems)
+URL: https://job-boards.greenhouse.io/graphcore/jobs/8881592002
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, UK
+Posted: 2026-10-09T11:24:23-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-29
+Listed: yes
+
+Location: Bristol, London or Cambridge, UK 
+
+About the job 
+
+Help scale state-of-the art AI models across thousands of accelerators. 
+
+As a Senior Machine Learning Engineer in the Applied AI team, you will contribute to advancing AI technology by developing and optimising new and existing AI models for our specialised hardware. You will work on large scale systems where performance is critical to the success of our projects. 
+
+Having visibility of the entire pipeline from novel accelerator hardware to state-of-the-art AI applications, and the software stack in-between, you will play a critical role in identifying opportunities to innovate and differentiate Graphcore’s technology. 
+
+Furthermore, you’ll work closely with researchers in a rapidly-evolving field, where even the most senior engineers are constantly learning and adapting to exciting new challenges. 
+
+We seek engineers with strong technical foundations who are curious and eager to understand and advance AI model implementation, at scale. 
+
+We currently have multiple opportunities available in the team at Senior, Staff and Principal level and offer flexibility through a hybrid working model, from any of our UK offices. 
+
+If you're excited about advancing the next generation of AI models on cutting-edge hardware, we’d love to hear from you! 
+
+The team and culture 
+
+The Applied AI team’s role is to be proxies for our customers, we need to understand the latest AI models, applications, and software, as well as our own hardware and software stack, to ensure that Graphcore’s technology works seamlessly with the AI ecosystem and at scale. 
+
+Our work spans from low-level kernel development and optimisation for novel hardware through to implementing and scaling research-level algorithms for the latest AI models. 
+
+We collaborate with the Research team to develop and publish novel ideas in domains such as efficient compute, model scaling and distributed training and inference of AI models for multiple modalities and applications. 
+
+Responsibilities 
+
+- Implement and train state-of-the-art machine learning models and optimise for performance, accuracy and scalability across systems comprising 1000s of accelerators. 
+
+- Benchmark and profile ML models to identify performance bottlenecks. 
+
+- Develop deep understanding across the software stack in order to optimise kernel implementations. 
+
+- Test and evaluate new internal software releases, provide feedback to software engineering teams, make necessary code fixes, and conduct code reviews. 
+
+- Design and conduct experiments on novel AI methods and evaluate results. 
+
+- Collaborate with Research, Software, and Product teams to define, build, and test Graphcore’s next generation of AI hardware.
+
+- Engage with AI community and keep in touch with the latest developments in AI.
+
+What we’re looking for 
+
+Essential: 
+
+- Bachelor/Master's/PhD or equivalent experience in Machine Learning, Computer Science, Maths, Data Science, or related field. 
+
+- Proficiency in deep learning frameworks like PyTorch/JAX. 
+
+- Strong Python or C++ software development skills. 
+
+- Expertise in hardware-accelerated deep learning from model training to optimisation and evaluation. 
+
+- Capable of designing, executing and reporting from ML experiments. 
+
+- Well-developed understanding of performance bottlenecks and how to overcome them. 
+
+- Ability to move quickly in a fast-moving field. 
+
+- Enjoy cross-functional work collaborating with other teams. 
+
+- Strong communicator - able to explain complex technical concepts to different audiences. 
+
+Desirable: 
+
+- Experience in one or more of: 
+
+- MLOps for Kubernetes-based clusters 
+
+- Building production systems with large language models 
+
+- Efficient computing based on low-precision arithmetic. 
+
+- Experience writing C++/Triton/CUDA kernels for performance optimisation of ML models. 
+
+- Experience in distributed training or inference of ML models across 64+ accelerators. 
+
+- Familiarity with HPC systems and networking including Infiniband, NVLink, RoCE technologies, and cloud computing platforms. 
+
+- Have contributed to open-source projects or published research papers in relevant fields. 
+
+- Keen to present, publish and deliver talks in the AI community. 
+
+Benefits 
+
+- Flexible working: Balance your work and personal life with greater flexibility 
+
+- Generous leave: Take time to rest, recharge and enjoy life outside of work 
+
+- Retirement planning support: Up to 5% matched pension 
+
+- Phantom equity: Share in Graphcore’s success 
+
+- Workplace experience: Enjoy thoughtfully designed office spaces for collaboration, with free food and drinks to support your day 
+
+- Peace of mind protection: Income protection and life assurance to provide financial security for you and your loved ones 
+
+- Electric Vehicle Scheme: Choose an electric vehicle and lease it through salary sacrifice 
+
+- Flexible benefits: Tailor your benefits package with a choice of additional options, including private medical insurance and dental cover 
+
+- Optional benefits: Dental cover, health cash plan, private medical insurance, cycle to work scheme, give as you earn 
+
+We welcome people from all backgrounds and experiences and are committed to building an inclusive environment where everyone can do their best work. 
+
+We’re an equal opportunity employer and recognise that everyone brings different strengths and perspectives. If you need any adjustments during the interview process, just let us know - we’re happy to support you. 
+
+Join the Team at Graphcore 
+
+Graphcore is one of the world’s leading innovators in Artificial Intelligence compute. It is developing hardware, software and systems infrastructure that will unlock the next generation of AI breakthroughs and power the widespread adoption of AI solutions across every industry. 
+
+As part of the SoftBank Group, Graphcore is a member of an elite family of companies responsible for some of the world’s most transformative technologies. Together, they share a bold vision: to enable Artificial Intelligence and ensure its benefits are accessible to everyone. 
+
+Graphcore’s teams are drawn from diverse backgrounds and bring a broad range of skills and perspectives. A melting pot of AI research specialists, silicon designers, software engineers and systems architects, Graphcore brings together deep expertise to solve complex problems and deliver meaningful progress in AI compute. 
+
+Sponsorship 
+
+Applicants must have the legal right to work in the UK. Unfortunately, we are unable to provide visa sponsorship for this role.

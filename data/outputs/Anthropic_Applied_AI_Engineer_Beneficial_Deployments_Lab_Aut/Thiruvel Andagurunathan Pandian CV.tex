@@ -1,0 +1,166 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{microtype}
+\usepackage{ragged2e}
+\usepackage{needspace}
+
+% ---- palette: one accent colour, one text colour, one muted grey ----
+\definecolor{navy}{RGB}{12, 83, 166}
+\definecolor{ink}{RGB}{33, 37, 41}
+\definecolor{muted}{RGB}{96, 102, 110}
+\hypersetup{urlcolor=navy, linkcolor=navy}
+\color{ink}
+
+% ---- no hyphenation at line ends; ragged right reads faster than justified ----
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\linespread{1.03}
+\AtBeginDocument{\RaggedRight}
+
+% ---- type scale, ratio ~1.2 on an 11pt body: 11 -> 13 -> 22 (name) ----
+\titleformat{\section}
+  {\color{navy}\fontsize{13}{15}\selectfont\bfseries\addfontfeature{LetterSpace=6}}
+  {}{0em}{\MakeUppercase}[{\color{navy}\vspace{1pt}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{5pt}
+
+% ---- bullets: small navy dot, tight but breathable ----
+\setlist[itemize]{label={\color{navy}\small\textbullet}, leftmargin=1.1em, labelsep=0.45em,
+  itemsep=1.5pt, parsep=0pt, topsep=2pt, partopsep=0pt}
+
+% ---- building blocks: bold = names, italic = roles/places/stacks, grey = metadata ----
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\hfill{\color{muted}#3}\\
+  \textit{#4}\par}
+\newcommand{\roleNoLoc}[3]{% org, dates, title
+  \textbf{#1}\hfill{\color{muted}#2}\\
+  \textit{#3}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag (link or badge)
+  \textbf{#1}\hfill#3\\
+  {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{navy}\small\textbf{#1}}}
+\newcommand{\skillrow}[2]{\hangindent=1em\hangafter=1{\color{navy}\textbf{#1:}}~#2\par\vspace{2.5pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\fontsize{22}{26}\selectfont\bfseries\color{navy} Thiruvel Andagurunathan Pandian}\\[5pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textperiodcentered\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textperiodcentered\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textperiodcentered\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p}\nobreak\ \,\textperiodcentered\, \href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}\nobreak\ \,\textperiodcentered\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{thiruvel-ap.github.io/PersonalPortfolio}\par}
+  \vspace{3pt}
+  {\small\itshape\color{muted} Right to work in UK under Graduate visa\nobreak\ \,\textperiodcentered\, Available to join immediately\par}
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+AI Engineer with production LLM agent experience on a multiomics research platform and fintech feature shipping integrating market feeds and bank linking.
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillrow{Core}{Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git}
+\skillrow{Languages}{TypeScript, JavaScript, Swift, Dart}
+\skillrow{ML \& Statistics}{XGBoost, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time series forecasting, customer segmentation (k-means, HAC, DBSCAN), class-imbalance handling (SMOTE), model validation (cross-validation, MCC), hypothesis testing, ANOVA, bootstrap, PCA, maximum likelihood estimation, experimental design \textit{(MSc coursework)}}
+\skillrow{LLMs \& Agents}{LLM evaluation, LangGraph, Google ADK, MCP (FastMCP, MCP SDK), AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, ChromaDB, tool calling, LoRA fine tuning, prompt design}
+\skillrow{Data \& Visualisation}{Ggplot2, Streamlit, tidyverse, tidymodels, NLTK, networkx, Leiden clustering, Databricks/PySpark \textit{(coursework)}}
+\skillrow{Databases}{PostgreSQL, MongoDB, DynamoDB}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist}
+\begin{itemize}
+  \item Built a tool calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multiomics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
+  \item Deployed the agent as a Docker container on AWS Lambda (Lambda Web Adapter) with ECR image pipelines, IAM execution roles and least privilege policies.
+  \item Wrote a three tier test framework (tool level, API/integration, live agent) of \num{\textasciitilde{}65 tests across 8 files}, validated across the LLM provider migration from Groq to AWS Bedrock after a rate limit evaluation.
+  \item Authored dissertation AI agent sections, documenting architecture, implementation, evaluation, and hallucination-rate analysis with test case outcomes.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{Data Consultant (AI Engineering \& AI System)}
+\begin{itemize}
+  \item Prototyped an MCP-based agentic tool in Python with FastMCP, Ollama gpt-oss:20b, PostgreSQL, and GitHub Actions CI, presenting live to stakeholders.
+  \item Contributed the MCP implementation to the client\textquotesingle{}s production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live daily use; engagement received a \num{5-star commendation from senior leadership}.
+  \item Translated ambiguous business requirements into a production-ready technical blueprint and owned the solution within a cross functional consulting team, from architecture design through stakeholder presentation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+  \item Contributed to a team LoRA fine tune of an instruction-tuned Llama model for a maths-focused task.
+  \item Built a production RAG and agentic retrieval system (Claude API, LangChain, LangGraph, ChromaDB) served through a FastAPI REST API in Docker on GCP Cloud Run.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)}
+\begin{itemize}
+  \item Integrated Twelve Data (real time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.
+  \item Built a JavaScript web-scraping pipeline that automated manual data collection, surfacing market-trend signals for pricing decisions.
+  \item Secured backend communication with SSL pinning and integrated AWS Cognito for user authentication with single sign-on in the FinTech app.
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\project{Banking Customer Churn: propensity model}{R, tidymodels, XGBoost}{\gh{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}}
+\begin{itemize}
+  \item Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}{FastAPI, pandas, LiteLLM, Pydantic, pytest}{\gh{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}}
+\begin{itemize}
+  \item Performed deterministic comparable-company matching over 221 profiles and 1,116 cover lines with a single LLM call, costing \textasciitilde{}£0.003 per query and completing in under 3 s.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{mcp\_searchagent}{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}{\gh{https://github.com/Thiruvel-AP/mcp_searchagent}}
+\begin{itemize}
+  \item MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Lloyd\textquotesingle{}s Banking Group Datathon}{scikit-learn, Isolation Forest, SciPy, MLflow}{\badge{3rd place}}
+\begin{itemize}
+  \item Detected outliers in financial-services data under \num{200:1 class imbalance}, comparing Isolation Forest against ensemble classifiers and tracking experiments in MLflow.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{GTAI Cell Line Finder: multiomics graph for cancer cell-line selection (PoC)}{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}{\gh{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}
+\begin{itemize}
+  \item Merged 14 public omics files into a graph of 1,399 cell lines and 16,385 genes (\textasciitilde{}2.8 M edges), then applied Leiden clustering to identify 19 communities with modularity 0.822.
+  \item Trained per-gene regression models using GPU-enabled random forest and scikit-learn, reducing RAM from 8.2 to 5.5 GB, and validated them, revealing overfitting (train Pearson 0.807 vs test 0.545).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\project{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}{\gh{https://github.com/Thiruvel-AP/TextAnalytics}}
+\begin{itemize}
+  \item Designed the preprocessing pipeline and the clustering pipeline (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in the tickets.
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\needspace{3\baselineskip}
+\roleNoLoc{University of Bristol}{Sep 2025 – Sep 2026}{MSc Data Science, Distinction \textit{(Expected)}}
+{\color{muted}\small Large scale Data Engineering, Statistical Computing \& Empirical Methods, AI \& Text Analytics, Visual Analytics, Data Science Methods \& Practices, Technology, Innovation, Business \& Society}\par
+\gap
+\needspace{3\baselineskip}
+\roleNoLoc{St. Joseph\textquotesingle{}s College of Engineering}{Aug 2019 – May 2023}{B.E. Electrical and Electronics Engineering, 91\%, First Class with Distinction}
+
+% ================= CERTIFICATIONS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}\nobreak\ \,\textperiodcentered\, AWS Academy Cloud Foundations, \textit{Nov 2025}\nobreak\ \,\textperiodcentered\, 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}\nobreak\ \,\textperiodcentered\, Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

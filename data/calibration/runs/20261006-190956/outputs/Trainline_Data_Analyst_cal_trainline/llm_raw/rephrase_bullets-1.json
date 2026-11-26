@@ -1,0 +1,1 @@
+{"az1":"Built a Python tool‑calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi‑omics cancer research platform, featuring gene alias resolution, scoring‑methodology explanation, and dataset provenance tools.","fl1":"Built Python scikit‑learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deploying them as FastAPI services in Docker."}

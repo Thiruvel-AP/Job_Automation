@@ -1,0 +1,52 @@
+{
+ "job_id": "manual:c50da93d053f",
+ "company": "Anthropic",
+ "title": "Applied AI Architect, Startups",
+ "dimensions": {
+  "cv_match": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Fact-bank coverage 5.0, required keywords all present"
+  },
+  "north_star": {
+   "score": 3.0,
+   "status": "unknown",
+   "source": "Candidate target role family not provided"
+  },
+  "comp": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "Pay £165k‑£190k exceeds typical floor"
+  },
+  "culture": {
+   "score": 4.0,
+   "status": "supported",
+   "source": "SME size, growth signals, hybrid policy, visa sponsorship"
+  },
+  "red_flags": {
+   "score": 5.0,
+   "status": "supported",
+   "source": "No problematic language; safety disclaimer is standard"
+  }
+ },
+ "global_score": 4.4,
+ "confidence": "Low",
+ "red_flags": [],
+ "legitimacy": "high",
+ "top3_checks": [
+  "Confirm candidate has 5+ years in technical customer‑facing roles with startup experience",
+  "Verify visa sponsorship aligns with candidate's immigration needs",
+  "Check candidate's compensation expectations match the £165k‑£190k range"
+ ],
+ "adjustments": [
+  "confidence Medium -> Low: the career-ops tier rules on the statuses"
+ ],
+ "anomalies": [],
+ "model_global": 4.4,
+ "model_confidence": "Medium",
+ "jd_hash": "01f6ab20d6bb2d14",
+ "jd_words": 1098,
+ "tokens": 2504,
+ "model": "openai/gpt-oss-120b",
+ "ts": "2026-11-07T15:23:19+00:00"
+}

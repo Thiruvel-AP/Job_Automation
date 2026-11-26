@@ -1,0 +1,58 @@
+Company: Artefact
+Title: Data Scientist (m/f/d)
+URL: https://job-boards.greenhouse.io/artefact/jobs/5444829002
+Source: greenhouse
+Apply kind: greenhouse
+Location: Avenida das Nações Unidas, 12901,11° andar São Paulo
+Country: Brazil
+Status: listed_only
+Posted: 2021-08-05T12:34:02-04:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-20
+Listed: yes
+
+tl;dr
+
+- You like to be up to the collection, analyse, and visualisation of data in a business context.
+
+- Our working language is in English, but it's always easier when you speak the local language(s) ;)
+
+The team
+
+The DS team is a melting pot of around 100 Data Scientists with various backgrounds, previous experience and affinities. Some have been here since their graduations, others did work in startups, consulting firms or other companies before. Some had an engineering background from the start, others did first a business major before specializing in Data Science. Some studied statistics, others engineering systems.
+
+Every day is an opportunity to excel, to learn more and to face new challenges. Thanks to a tailor-made skills development program, you will be able to become a Swiss Army knife in data, all while developing very precise skills in our different expertise.
+
+Mission
+
+You design and deliver data solutions to and with our clients, which means developing data preparation pipelines, training algorithms, deploying them in infrastructures, and interacting with clients.
+
+You contribute to Artefact's internal and knowledge growth as well, by working on internal projects, recruitment interviews, coaching juniors, animations of knowledge-sharing events.
+
+Desirable skills
+
+- 
+
+If you are an aspiring data and machine learning expert, or if you are already there;
+
+- 
+
+If you want to understand our clients' businesses: you are a problem solver, curious, open-minded, and willing to discover the subtleties of different sectors;
+
+- 
+
+If you embrace the One-Team spirit;
+
+... contact us!
+
+Why should you join us
+
+- Artefact is the place to be: come and build the future of data and marketing
+
+- Innovation: We have a passion for creating impacting projects, and believe innovation can come from anyone.
+
+- Action: We make things rather than telling people how to make them.
+
+- Collaboration: We believe in bringing talented people together, in winning together, and in learning from each other.
+
+Come join us!

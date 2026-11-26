@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Lack of direct experience with Azure and Databricks", "No cover letter provided"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "20dde0e95bb8a296b4d46059", "tokens": 4056, "note": "dropped 1 section(s) about the employer or process: What we offer"}

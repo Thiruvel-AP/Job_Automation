@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Cover letter is missing", "Exaggerated claims without supporting evidence"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "4b6a2bb7d4ab36b53855dc8b", "tokens": 3601, "note": "dropped 1 section(s) about the employer or process: Benefits"}

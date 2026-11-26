@@ -1,0 +1,1295 @@
+{
+  "job_id": "manual:bab3989748b4",
+  "company": "M&G",
+  "title": "Data Scientist",
+  "family": "data_scientist",
+  "tier": 1,
+  "headline": "Data Scientist",
+  "keywords": [
+    {
+      "term": "spark",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "actuarial modelling",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "continuous improvement",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "databricks",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "machine learning",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "assumption setting",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "azure",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Azure Databricks",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "communication",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data governance",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data pipelines",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data quality",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "financial services",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "innovation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "optimisation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "problem-solving",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "pyspark",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "python",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "Spark SQL",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "sql",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "audit evidence",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data modelling",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "data preparation",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "feature engineering",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    },
+    {
+      "term": "healthcare",
+      "weight": 2.0,
+      "required": true,
+      "alts": []
+    }
+  ],
+  "company_hook": "M&G provides a wide range of savings and investment solutions by combining asset management and insurance expertise.",
+  "team": "",
+  "ceiling": 0.52,
+  "genuine_gaps": [
+    "spark",
+    "actuarial modelling",
+    "continuous improvement",
+    "assumption setting",
+    "azure",
+    "Azure Databricks",
+    "data governance",
+    "innovation",
+    "problem-solving",
+    "audit evidence",
+    "data preparation"
+  ],
+  "possible_evidence": {
+    "Spark SQL": [
+      {
+        "via": "data modelling",
+        "where": [
+          "bullet av3",
+          "bullet av10"
+        ]
+      }
+    ]
+  },
+  "context_terms": [
+    {
+      "term": "analytical thinking",
+      "weight": 2.0,
+      "required": true,
+      "why": "generic head word 'thinking' (how the company works, not a skill)"
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "score": 0.28,
+      "score_stemmed": 0.32,
+      "band": "below",
+      "pages": 2,
+      "page2_fill": 0.9821068918936472,
+      "fill": {
+        "added": [],
+        "rejected_overflow": [],
+        "renders": 0,
+        "reached": null,
+        "sections": [],
+        "linespread": 1.02
+      },
+      "shrinks": 2,
+      "reverted": [],
+      "wording": {
+        "terms": [
+          "financial services"
+        ],
+        "asked": 0,
+        "calls": 0,
+        "accepted": [],
+        "blocked": [],
+        "unplaced": [
+          "financial services"
+        ],
+        "kept": null
+      },
+      "lengths": {
+        "rounds": 3,
+        "headline": [],
+        "profile_sentences_dropped": 0,
+        "reverted": [],
+        "split": [],
+        "shortened": [],
+        "unfit": [
+          {
+            "id": "az10",
+            "lines": 5
+          },
+          {
+            "id": "dc6",
+            "lines": 5
+          },
+          {
+            "id": "fl7",
+            "lines": 4
+          }
+        ],
+        "unmeasured": false
+      },
+      "violations": [],
+      "warnings": [
+        "length: az10 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: dc6 prints 5 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "length: fl7 prints 4 lines (limit 3); it is a verbatim bullet, so it is never split or reworded and is left as the fact bank has it",
+        "wording: no bullet carries the stem of financial services (skills or profile only)"
+      ],
+      "wording_misses": [
+        "financial services"
+      ],
+      "misses": [
+        "spark",
+        "actuarial modelling",
+        "continuous improvement",
+        "databricks",
+        "assumption setting",
+        "azure",
+        "Azure Databricks",
+        "data governance",
+        "innovation",
+        "optimisation",
+        "problem-solving",
+        "pyspark",
+        "Spark SQL",
+        "audit evidence",
+        "data modelling",
+        "data preparation",
+        "healthcare"
+      ],
+      "rephrase": {
+        "eligible": 0,
+        "asked": 0,
+        "cached": 0,
+        "calls": 0,
+        "failed_calls": 0,
+        "offered": {},
+        "unoffered": [
+          "spark",
+          "actuarial modelling",
+          "continuous improvement",
+          "databricks",
+          "machine learning",
+          "assumption setting",
+          "azure",
+          "Azure Databricks",
+          "communication",
+          "data governance",
+          "data quality",
+          "financial services",
+          "innovation",
+          "optimisation",
+          "problem-solving",
+          "pyspark",
+          "Spark SQL",
+          "audit evidence",
+          "data modelling",
+          "data preparation",
+          "healthcare"
+        ],
+        "proposed": 0,
+        "accepted": 0,
+        "blocked": 0,
+        "regressed": 0
+      },
+      "proposal": {
+        "selection": {
+          "experience": {
+            "az": [
+              "az12",
+              "az10",
+              "az11",
+              "az6"
+            ],
+            "dc180": [
+              "dc6",
+              "dc8",
+              "dc7"
+            ],
+            "freelance": [
+              "fl5",
+              "fl7"
+            ],
+            "avasoft": [
+              "av10",
+              "av8",
+              "av5"
+            ]
+          },
+          "projects": [
+            "gtaigraph",
+            "churn",
+            "mcpsearch"
+          ],
+          "project_bullets": {
+            "gtaigraph": [
+              "p_gg5",
+              "p_gg3"
+            ],
+            "churn": [
+              "p_ch1"
+            ],
+            "mcpsearch": [
+              "p_ms1"
+            ]
+          }
+        },
+        "rephrase": {},
+        "profile": "Data scientist with an MSc in Data Science from the University of Bristol who builds models end to end in Python and SQL and reports their limits plainly. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking."
+      },
+      "selection": {
+        "az": [
+          "az6",
+          "az10",
+          "az11",
+          "az12"
+        ],
+        "dc180": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ],
+        "freelance": [
+          "fl5",
+          "fl7"
+        ],
+        "avasoft": [
+          "av5",
+          "av8",
+          "av10"
+        ],
+        "gtaigraph": [
+          "p_gg3"
+        ],
+        "mcpsearch": [
+          "p_ms1"
+        ]
+      },
+      "profile": "Data scientist with an MSc in Data Science from the University of Bristol who builds models end to end in Python and SQL and reports their limits plainly. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking.",
+      "rephrase_coverage": {
+        "eligible": 1,
+        "rephrased": 0,
+        "ratio": 0.0
+      },
+      "placement": {
+        "placed": [],
+        "not_placed": [],
+        "blocked": [],
+        "unoffered": [
+          "spark",
+          "actuarial modelling",
+          "continuous improvement",
+          "databricks",
+          "machine learning",
+          "assumption setting",
+          "azure",
+          "Azure Databricks",
+          "communication",
+          "data governance",
+          "data quality",
+          "financial services",
+          "innovation",
+          "optimisation",
+          "problem-solving",
+          "pyspark",
+          "Spark SQL",
+          "audit evidence",
+          "data modelling",
+          "data preparation",
+          "healthcare"
+        ]
+      }
+    }
+  ],
+  "out_dir": "data/outputs/M_G_Data_Scientist_bab3989748b4",
+  "analysis_warnings": [
+    "keywords: cut the benefits section 'What we offer' (15 characters) before extraction",
+    "extract_keywords: dropped keyword 'data quality' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'data integration' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'data validation' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'data science approaches' (not verbatim, too long, generic or a degree)",
+    "extract_keywords: dropped keyword 'frameworks' (not verbatim, too long, generic or a degree)",
+    "keywords: capped at 25; dropped monitoring, operating controls, performance tuning, Python/pyspark, stakeholder engagement, technical communication, scalable, insurance, stakeholders, best practices, data platforms, engineering standards",
+    "keywords: 'analytical thinking' is context (generic head word 'thinking' (how the company works, not a skill)), not scored",
+    "hook: no library hook qualifies, so the CV headline is the role family's 'Data Scientist' with no number, and there is no hook line, no proof bullet first and no hook letter (no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_client' with 1: 'communication' (2)))",
+    "plain style: plain version missing for az6, az10, az11, az12, dc6, dc7, dc8, fl5, fl7, av5, av8, av10, p_gg3, p_ms1 (their original wording is on the CV; careerops plain-draft --id ... drafts one for you to approve)"
+  ],
+  "one_page": false,
+  "skills": {
+    "core": [
+      "Python",
+      "SQL",
+      "R",
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Statistics",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "pandas",
+      "NumPy",
+      "SciPy",
+      "LLMs",
+      "RAG",
+      "LangChain",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Git"
+    ],
+    "rows": [
+      "Machine Learning, Deep Learning & Statistics",
+      "Python, Data Quality & Cloud",
+      "NLP, LLMs, Embeddings & Evaluation",
+      "Client Delivery & Communication"
+    ],
+    "dropped_groups": [],
+    "family": "data_scientist"
+  },
+  "achievements": [],
+  "profile": {
+    "facts": [],
+    "retried": false,
+    "fallback": false,
+    "words": 108,
+    "shortfall": ""
+  },
+  "hook": null,
+  "hook_notes": [
+    "no hook_library entry hits at least 2 of the ad's top 10 keywords (closest: 'h_client' with 1: 'communication' (2))"
+  ],
+  "hook_family_headline": "Data Scientist",
+  "hook_family_profile": true,
+  "family_line": "Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking.",
+  "family_opening": "Data scientist with an MSc in Data Science from the University of Bristol who builds models end to end in Python and SQL and reports their limits plainly.",
+  "letter_families": [
+    "data_scientist"
+  ],
+  "ats": {
+    "strict": 28.000000000000004,
+    "ceiling": 52.0,
+    "combined": null,
+    "letter": null,
+    "gate": "stretch",
+    "hits": [
+      "machine learning",
+      "communication",
+      "data pipelines",
+      "data quality",
+      "python",
+      "sql",
+      "feature engineering"
+    ],
+    "misses": [
+      "spark",
+      "actuarial modelling",
+      "continuous improvement",
+      "databricks",
+      "assumption setting",
+      "azure",
+      "Azure Databricks",
+      "data governance",
+      "innovation",
+      "optimisation",
+      "problem-solving",
+      "pyspark",
+      "Spark SQL",
+      "audit evidence",
+      "data modelling",
+      "data preparation",
+      "healthcare",
+      "financial services"
+    ],
+    "negated": [],
+    "letter_negated": [],
+    "variants": {}
+  },
+  "stretch": true,
+  "band": {
+    "outcome": "skip",
+    "strict": 28.000000000000004,
+    "ceiling": 52.0,
+    "auto": 70.0,
+    "review": 50.0,
+    "rescue_ceiling": 60.0,
+    "flag": "",
+    "reason": "ATS S < 50"
+  },
+  "letters": null,
+  "letter_choice": null,
+  "claimable": [
+    "databricks",
+    "machine learning",
+    "communication",
+    "data pipelines",
+    "data quality",
+    "financial services",
+    "optimisation",
+    "pyspark",
+    "python",
+    "sql",
+    "data modelling",
+    "feature engineering",
+    "healthcare"
+  ],
+  "band_pct": [
+    70.0,
+    85.0
+  ],
+  "final": {
+    "score": 0.28,
+    "score_stemmed": 0.32,
+    "band": "below",
+    "pages": 2,
+    "page2_fill": 0.9821068918936472,
+    "hits": [
+      "machine learning",
+      "communication",
+      "data pipelines",
+      "data quality",
+      "python",
+      "sql",
+      "feature engineering"
+    ],
+    "wording_misses": [
+      "financial services"
+    ],
+    "misses": [
+      "spark",
+      "actuarial modelling",
+      "continuous improvement",
+      "databricks",
+      "assumption setting",
+      "azure",
+      "Azure Databricks",
+      "data governance",
+      "innovation",
+      "optimisation",
+      "problem-solving",
+      "pyspark",
+      "Spark SQL",
+      "audit evidence",
+      "data modelling",
+      "data preparation",
+      "healthcare"
+    ],
+    "chosen_attempt": 1
+  },
+  "cv_pages": 2,
+  "page2_fill": 0.9821068918936472,
+  "fill": {
+    "added": [],
+    "rejected_overflow": [],
+    "renders": 0,
+    "reached": null,
+    "sections": [],
+    "linespread": 1.02
+  },
+  "fill_shortfall": "",
+  "needs_result": [
+    {
+      "id": "az6",
+      "entry": "AstraZeneca",
+      "text": "Integrated the agent into a React front end with real-time gene alias enrichment."
+    },
+    {
+      "id": "dc7",
+      "entry": "180 Degrees Consulting Bristol",
+      "text": "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user."
+    },
+    {
+      "id": "fl5",
+      "entry": "Freelance",
+      "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+    },
+    {
+      "id": "fl7",
+      "entry": "Freelance",
+      "text": "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+    },
+    {
+      "id": "av5",
+      "entry": "Avasoft",
+      "text": "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions."
+    },
+    {
+      "id": "p_gg3",
+      "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+      "text": "Combined mRNA and protein evidence per gene with Stouffer's method."
+    },
+    {
+      "id": "p_ms1",
+      "entry": "mcp_searchagent",
+      "text": "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+    }
+  ],
+  "boosted": [],
+  "provisional": [],
+  "lengths": {
+    "rounds": 3,
+    "headline": [],
+    "profile_sentences_dropped": 0,
+    "reverted": [],
+    "split": [],
+    "shortened": [],
+    "unfit": [
+      {
+        "id": "az10",
+        "lines": 5
+      },
+      {
+        "id": "dc6",
+        "lines": 5
+      },
+      {
+        "id": "fl7",
+        "lines": 4
+      }
+    ],
+    "unmeasured": false,
+    "final": {
+      "headline_lines": 1,
+      "profile_lines": 7,
+      "longest_bullet": 5
+    },
+    "links": []
+  },
+  "hook_placed": {},
+  "typography": {
+    "em_dashes": 0,
+    "prose_en_dashes": [],
+    "hyphens": {},
+    "kept": [],
+    "date_separator": " \u2013 ",
+    "keep": [
+      "problem-solving"
+    ],
+    "results_bold": 6,
+    "results_unmatched": [
+      "az11"
+    ],
+    "award_repeats": []
+  },
+  "ranking": {
+    "bullets": [
+      {
+        "id": "az12",
+        "entry": "AstraZeneca",
+        "score": 6.0,
+        "keywords": 6.0,
+        "domain": 0.0,
+        "chosen": true,
+        "text": "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+      },
+      {
+        "id": "av10",
+        "entry": "Avasoft",
+        "score": 6.0,
+        "keywords": 4.0,
+        "domain": 2.0,
+        "chosen": true,
+        "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+      },
+      {
+        "id": "fl5",
+        "entry": "Freelance",
+        "score": 5.33,
+        "keywords": 4.0,
+        "domain": 1.33,
+        "chosen": true,
+        "text": "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks."
+      },
+      {
+        "id": "p_gg2",
+        "entry": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 5.33,
+        "keywords": 2.0,
+        "domain": 3.33,
+        "chosen": false,
+        "text": "Trained per-gene regression models for 11,459 genes (OLS and GPU random forest) with resumable chunked training, cutting RAM from 8.2 to 5.5 GB, and validated them on held-out data, surfacing overfitting (train Pearson 0.807 vs test 0.545)."
+      },
+      {
+        "id": "p_ch1",
+        "entry": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.67,
+        "keywords": 2.0,
+        "domain": 2.67,
+        "chosen": false,
+        "text": "Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two-stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation."
+      },
+      {
+        "id": "az1",
+        "entry": "AstraZeneca",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Built a tool-calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi-omics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance."
+      },
+      {
+        "id": "dc1",
+        "entry": "180 Degrees Consulting Bristol",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI), presented in a live stakeholder demo."
+      },
+      {
+        "id": "fl1",
+        "entry": "Freelance",
+        "score": 4.0,
+        "keywords": 4.0,
+        "domain": 0.0,
+        "chosen": false,
+        "text": "Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker."
+      },
+      {
+        "id": "av1",
+        "entry": "Avasoft",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Integrated Twelve Data (real-time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app."
+      },
+      {
+        "id": "av3",
+        "entry": "Avasoft",
+        "score": 4.0,
+        "keywords": 2.0,
+        "domain": 2.0,
+        "chosen": false,
+        "text": "Designed Core Data schemas for user profiles, transaction histories and event bookings with CRUD and session-state management."
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "score": 5.33,
+        "sum": 17.33,
+        "chosen": true
+      },
+      {
+        "id": "churn",
+        "name": "Banking Customer Churn \u2014 propensity model",
+        "score": 4.67,
+        "sum": 4.67,
+        "chosen": false
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "score": 4.0,
+        "sum": 4.0,
+        "chosen": true
+      },
+      {
+        "id": "qlora",
+        "name": "llama3-8b-qlora-math-t4 \u2014 QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget",
+        "score": 3.33,
+        "sum": 5.33,
+        "chosen": false
+      },
+      {
+        "id": "coverfit",
+        "name": "CoverFit \u2014 insurance benchmarking API (Bristol \u00d7 UWE AI Hackathon)",
+        "score": 2.0,
+        "sum": 4.0,
+        "chosen": false
+      },
+      {
+        "id": "iata",
+        "name": "Mining Insights from Customer Feedback \u2014 NLP & unsupervised analytics (MSc team project)",
+        "score": 0.67,
+        "sum": 0.67,
+        "chosen": false
+      },
+      {
+        "id": "bitcoin",
+        "name": "Bitcoin Forecasting \u2014 LSTM time-series service",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "agenticfriend",
+        "name": "AgenticFriend \u2014 real-time voice assistant",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      },
+      {
+        "id": "astrofreud",
+        "name": "AstroFreud \u2014 LangGraph interview agent",
+        "score": 0.0,
+        "sum": 0.0,
+        "chosen": false
+      }
+    ]
+  },
+  "rephrase_coverage": {
+    "eligible": 1,
+    "rephrased": 0,
+    "ratio": 0.0
+  },
+  "rephrase": {
+    "eligible": 0,
+    "asked": 0,
+    "cached": 0,
+    "calls": 0,
+    "failed_calls": 0,
+    "offered": {},
+    "unoffered": [
+      "spark",
+      "actuarial modelling",
+      "continuous improvement",
+      "databricks",
+      "machine learning",
+      "assumption setting",
+      "azure",
+      "Azure Databricks",
+      "communication",
+      "data governance",
+      "data quality",
+      "financial services",
+      "innovation",
+      "optimisation",
+      "problem-solving",
+      "pyspark",
+      "Spark SQL",
+      "audit evidence",
+      "data modelling",
+      "data preparation",
+      "healthcare"
+    ],
+    "proposed": 0,
+    "accepted": 0,
+    "blocked": 0,
+    "regressed": 0
+  },
+  "placement": {
+    "placed": [],
+    "not_placed": [],
+    "blocked": [],
+    "unoffered": [
+      "spark",
+      "actuarial modelling",
+      "continuous improvement",
+      "databricks",
+      "machine learning",
+      "assumption setting",
+      "azure",
+      "Azure Databricks",
+      "communication",
+      "data governance",
+      "data quality",
+      "financial services",
+      "innovation",
+      "optimisation",
+      "problem-solving",
+      "pyspark",
+      "Spark SQL",
+      "audit evidence",
+      "data modelling",
+      "data preparation",
+      "healthcare"
+    ]
+  },
+  "letter": {
+    "paragraphs": [],
+    "problems": [],
+    "score": null,
+    "pages": 0,
+    "status": "off",
+    "reason": "ATS S < 50: no letter was drafted",
+    "notes": [],
+    "evidence": [
+      {
+        "id": "az12",
+        "text": "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+      },
+      {
+        "id": "av10",
+        "text": "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+      }
+    ]
+  },
+  "llm_usage": {
+    "calls": [
+      {
+        "task": "extract_keywords",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "max_tokens": 2000,
+        "est_input_tokens": 2647,
+        "prompt_tokens": 1917,
+        "completion_tokens": 442,
+        "reasoning_tokens": 289,
+        "total_tokens": 2359,
+        "finish_reason": "stop"
+      }
+    ],
+    "prompt_tokens": 1917,
+    "completion_tokens": 442,
+    "reasoning_tokens": 289,
+    "total_tokens": 2359,
+    "by_task": {
+      "extract_keywords": {
+        "calls": 1,
+        "prompt_tokens": 1917,
+        "completion_tokens": 442,
+        "reasoning_tokens": 289,
+        "total_tokens": 2359,
+        "prompt_tokens_per_call": [
+          1917
+        ]
+      }
+    },
+    "by_model": {
+      "groq/openai/gpt-oss-20b": {
+        "calls": 1,
+        "prompt_tokens": 1917,
+        "completion_tokens": 442,
+        "reasoning_tokens": 289,
+        "total_tokens": 2359,
+        "tasks": [
+          "extract_keywords"
+        ]
+      }
+    }
+  },
+  "style": {
+    "style": "plain",
+    "strict_plain": 28.000000000000004,
+    "strict_technical": 28.000000000000004,
+    "topped_up": [],
+    "plain_refused": {},
+    "brackets": {},
+    "readability": {},
+    "plain_on_cv": [],
+    "plain_missing": [
+      "az6",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl5",
+      "fl7",
+      "av5",
+      "av8",
+      "av10",
+      "p_gg3",
+      "p_ms1"
+    ],
+    "additional_experience": [],
+    "section_order": [
+      "profile",
+      "skills",
+      "experience",
+      "projects",
+      "education",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "section_order_reason": "standard order (Skills, Work Experience, Projects, then Education): not a graduate, junior or scheme ad",
+    "first_bullet_at": 0.717
+  },
+  "cv_pdf": "data/outputs/M_G_Data_Scientist_bab3989748b4/Thiruvel Andagurunathan Pandian CV.pdf",
+  "letter_pdf": null,
+  "context": {
+    "id": {
+      "name": "Thiruvel Andagurunathan Pandian",
+      "headline": "Data Scientist",
+      "email": "apthiruvel@gmail.com",
+      "phone": "+44 7741 016954",
+      "location": "Bristol, UK",
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/thiruvel-a-p/",
+        "github": "https://github.com/Thiruvel-AP",
+        "portfolio": "https://thiruvel-ap.github.io/PersonalPortfolio/"
+      },
+      "status_line": [
+        "Right to Work in UK",
+        "Available to join Immediately"
+      ]
+    },
+    "profile": "Data scientist with an MSc in Data Science from the University of Bristol who builds models end to end in Python and SQL and reports their limits plainly. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking.",
+    "skills": {
+      "Machine Learning, Deep Learning & Statistics": "Predictive modelling (gradient boosting with XGBoost, random forest, scikit-learn), clustering (K-Means, HAC, DBSCAN, Leiden), deep learning (PyTorch, TensorFlow/Keras, LSTM, GRU, BiRNN, CNN), time-series forecasting (cyclic time encoding, TimeSeriesSplit), anomaly detection (Isolation Forest), class-imbalance handling (SMOTE), hyper-parameter tuning (grid search, two-stage Bayesian), model evaluation (held-out, cross-validation, Pearson, MCC), statistical inference and experimental design (confidence intervals, bootstrap, hypothesis testing; MSc coursework), MLflow experiment tracking",
+      "Python, Data Quality & Cloud": "Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Plotly, SQL, PostgreSQL, R (tidymodels), identifier crosswalks, parquet, reproducible pipelines, AWS, GCP, Docker, Kubernetes (AWS EKS), serverless deployment (Lambda, Cloud Run), containerisation, GitHub Actions CI/CD, FastAPI, TensorFlow Serving, pytest, Git",
+      "NLP, LLMs, Embeddings & Evaluation": "NLP (text preprocessing, TF-IDF, SBERT embeddings, text clustering), Hugging Face Transformers, large language models (Claude, OpenAI, open-weight via Ollama), prompt engineering, RAG with embeddings (ChromaDB), agents (LangChain, LangGraph), team LoRA fine-tune of Llama, LLM evaluation (hallucination-rate analysis, deterministic guardrails)",
+      "Client Delivery & Communication": "Scoping ambiguous problems with clients, stakeholder demos, working with client engineering teams, code review, transparent reporting of model limitations, root-cause analysis, technical documentation"
+    },
+    "experience": [
+      {
+        "id": "az",
+        "display_org": "AstraZeneca, United Kingdom",
+        "title": "Data Scientist, MSc Dissertation Project",
+        "org": "AstraZeneca",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "MSc dissertation (industry-affiliated)",
+        "dates": "May 2026 \u2013 Sep 2026",
+        "situation": "Needed an LLM a research team could trust before it shipped",
+        "bullets": [
+          "Integrated the agent into a React front end with real-time gene alias enrichment.",
+          "Needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+          "Diagnosed where it struggled with a three-tier, ~65-test evaluation harness (tool-level \u2192 API \u2192 live) and hallucination-rate analysis, debugging failures layer by layer, and used the same harness to validate the Groq to Bedrock migration after a rate-limit evaluation.",
+          "Built the Python data pipeline: reconciled 14 heterogeneous source datasets through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation."
+        ],
+        "situation_owner": [
+          "az1",
+          "az10"
+        ],
+        "bullet_ids": [
+          "az6",
+          "az10",
+          "az11",
+          "az12"
+        ]
+      },
+      {
+        "id": "dc180",
+        "display_org": "180 Degrees Consulting",
+        "title": "Data Consultant (AI Engineering & AI System)",
+        "org": "180 Degrees Consulting Bristol",
+        "location": "Bristol, UK (Remote)",
+        "employment_type": "internship",
+        "situation": "Faced a loosely defined problem from a Madrid based startup client",
+        "dates": "Sep 2025 \u2013 Dec 2025",
+        "bullets": [
+          "A product-startup client needed an agentic AI prototype turned into software their team could use: led the architecture for a five-person cross-functional team, designed hierarchical agent workflows (MCP, Exograph GraphQL, PostgreSQL for persistent storage and retrieval across agent sessions) and built the Python prototype (FastMCP, Ollama, GitHub Actions CI), then ran a live demo with client stakeholders (5-star rating from senior leadership) within the three-month engagement.",
+          "Proposed the request flow: a user's text goes through the API and a customised prompt to the MCP server, where one LLM instance writes GraphQL queries against the client's Convex database and a second instance runs the statistical analysis before the result returns to the user.",
+          "Carried it into production with the client's engineering team: contributed to their production TypeScript/Node.js MCP server (OpenAI-based query generation, Convex), now in live use, and reviewed pull requests in the client's production repository alongside their CTO."
+        ],
+        "situation_owner": [
+          "dc1",
+          "dc6"
+        ],
+        "bullet_ids": [
+          "dc6",
+          "dc7",
+          "dc8"
+        ]
+      },
+      {
+        "id": "freelance",
+        "display_org": "Freelance",
+        "title": "AI/ML Engineer",
+        "org": "Freelance",
+        "location": "Chennai, India",
+        "employment_type": "freelance",
+        "dates": "Jan 2025 \u2013 Aug 2025",
+        "bullets": [
+          "Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.",
+          "Working independently for India-based startups and individual clients, built agentic RAG workflows (LangChain, LangGraph, ChromaDB) on GCP Cloud Run, NLP pipelines (Hugging Face Transformers, Ollama) and scikit-learn pipelines, served ML models as REST APIs (FastAPI, Docker), and contributed to a team LoRA fine-tune of a Llama model."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "fl5",
+          "fl7"
+        ]
+      },
+      {
+        "id": "avasoft",
+        "display_org": "Avasoft LTD., Chennai, India",
+        "title": "Software Development Engineer Trainee, then Software Development Engineer",
+        "org": "Avasoft",
+        "location": "Chennai, India",
+        "employment_type": "full-time",
+        "dates": "Jan 2023 \u2013 Sep 2024",
+        "bullets": [
+          "Implemented offline-first data persistence (Isar) with background synchronisation in the Flutter FinTech app, keeping financial records available in low-connectivity conditions.",
+          "Shipped features in a production fintech (financial-services) application as part of a team: integrated Twelve Data (real-time market feeds) and Plaid (bank linking, transaction imports) via REST APIs, with SSL pinning and AWS Cognito SSO.",
+          "As a trainee, modelled user-profile, transaction-history and event-booking data in Core Data schemas with CRUD and session-state management, and automated a manual data-collection process with a JavaScript web-scraping pipeline that surfaced market-trend signals used for pricing decisions."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "av5",
+          "av8",
+          "av10"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "gtaigraph",
+        "display_name": "GTAI Graph PoC -- Cancer Cell-Line Omics Graph",
+        "name": "GTAI Cell Line Finder \u2014 multi-omics graph for cancer cell-line selection (PoC)",
+        "stack": "Python, networkx, Leiden, scikit-learn, RAPIDS cuML",
+        "github": "https://github.com/Thiruvel-AP/GTAI-GraphPOC",
+        "public": true,
+        "situation": "Needed to find which cell lines behave unusually for a gene",
+        "bullets": [
+          "Combined mRNA and protein evidence per gene with Stouffer's method."
+        ],
+        "situation_owner": [
+          "p_gg1",
+          "p_gg5"
+        ],
+        "bullet_ids": [
+          "p_gg3"
+        ]
+      },
+      {
+        "id": "mcpsearch",
+        "name": "mcp_searchagent",
+        "stack": "FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions",
+        "github": "https://github.com/Thiruvel-AP/mcp_searchagent",
+        "public": true,
+        "bullets": [
+          "MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9\u20133.11."
+        ],
+        "situation_owner": [],
+        "bullet_ids": [
+          "p_ms1"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Data Science",
+        "display_org": "University of Bristol, UK",
+        "display_line": "MSc Data Science (Large-Scale Data Engineering, AI & Text Analytics, AI ethics and responsible deployment); dissertation with AstraZeneca affiliation (GeneTraceAI)",
+        "org": "University of Bristol",
+        "dates": "Sep 2025 \u2013 Sep 2026",
+        "note": "Distinction (Expected)",
+        "modules": [
+          "Large-Scale Data Engineering",
+          "Statistical Computing & Empirical Methods",
+          "AI & Text Analytics",
+          "Visual Analytics",
+          "Data Science Methods & Practices",
+          "Technology, Innovation, Business & Society"
+        ],
+        "research_focus": "GNN-based multi-omics integration for drug target prediction: learnable, data-driven adjacency via scaled dot-product attention; per-omics GAT, multi-head cross-omics GAT fusion and a per-node MLP classifier ranking disease-association probability"
+      },
+      {
+        "degree": "B.E. Electrical and Electronics Engineering",
+        "display_line": "B.E. Electrical & Electronics Engineering, First Class with Distinction",
+        "org": "St. Joseph's College of Engineering",
+        "dates": "Aug 2019 \u2013 April 2023",
+        "note": "First Class with Distinction",
+        "grade": "91%"
+      }
+    ],
+    "certifications": [
+      "Model Context Protocol: Advanced Topics \u2014 Anthropic, Jun 2026",
+      "Introduction to Model Context Protocol \u2014 Anthropic, Jun 2026",
+      "AWS Academy Cloud Foundations, Nov 2025",
+      "180 Degrees Consulting Data Science Consultant Certificate, Dec 2025",
+      "Bristol PLUS Award, Mar 2026"
+    ],
+    "results": {
+      "az2": "19,213-gene parquet fallback",
+      "az4": "~65 tests across 8 files",
+      "az5": "14 source datasets",
+      "az10": "19,213-gene parquet fallback",
+      "az11": "~65 tests",
+      "az12": "14 source datasets",
+      "dc2": "5-star commendation from senior leadership",
+      "dc6": "5-star rating from senior leadership",
+      "dc8": "now in live use",
+      "av2": "10 reusable component templates",
+      "av8": "shipped in a production fintech application",
+      "av9": "10 reusable component templates",
+      "av10": "market-trend signals used for pricing decisions",
+      "p_gg1": "1,399 cell lines \u00d7 16,385 genes, ~2.8M edges; 19 clusters, modularity 0.822",
+      "p_gg2": "RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_gg4": "19 clusters; did not beat a lineage baseline",
+      "p_gg5": "1,399 cell lines \u00d7 16,385 genes; RAM 8.2 \u2192 5.5 GB; train Pearson 0.807 vs test 0.545",
+      "p_ia1": "silhouette < 0.30 traced to its cause",
+      "p_cf1": "~\u00a30.003 per query, under 3 s",
+      "p_cf2": "under 3 seconds at ~\u00a30.003 per query",
+      "p_ql1": "answer completion 32% \u2192 52%; exact-answer accuracy 16.2% \u2192 27.3% (n=99); 0.52% of parameters trained",
+      "p_ql2": "859,494 rows audited; 44,369 excess duplicates; 181 records hand-reviewed",
+      "p_ql3": "accuracy on completed answers 50% vs 52%"
+    },
+    "verbatim": [
+      "av10",
+      "av8",
+      "av9",
+      "az10",
+      "az11",
+      "az12",
+      "dc6",
+      "dc7",
+      "dc8",
+      "fl7",
+      "p_af3",
+      "p_cf2",
+      "p_gg5"
+    ],
+    "situated": [
+      "az10",
+      "dc6",
+      "p_af3",
+      "p_cf2",
+      "p_ql1"
+    ],
+    "profile_head": "Data scientist with an MSc in Data Science from the University of Bristol who builds models end to end in Python and SQL and reports their limits plainly. Builds the modelling a brief needs and reports its limits plainly: gradient boosting (XGBoost churn), LSTM time-series forecasting with time-ordered validation, text clustering (SBERT, K-Means, DBSCAN) and 11,459 per-gene models (train Pearson 0.807 vs test 0.545). Works with clients: scoped a loosely defined brief at 180 Degrees Consulting into a stakeholder demo (5-star rating) and contributed to the client's production MCP server, now in live use. Deploys on AWS and GCP (Lambda, Cloud Run) with CI/CD and MLflow experiment tracking.",
+    "section_order": [
+      "profile",
+      "skills",
+      "experience",
+      "projects",
+      "education",
+      "certifications",
+      "research_focus",
+      "publications",
+      "languages"
+    ],
+    "education_compact": [
+      {
+        "kind": "degree",
+        "head": "MSc Data Science",
+        "school": "University of Bristol, UK",
+        "cls": "",
+        "tail": "University of Bristol, UK",
+        "dates": "Sep 2025 \u2013 Sep 2026"
+      },
+      {
+        "kind": "dissertation",
+        "text": "Dissertation with AstraZeneca affiliation (GeneTraceAI)"
+      },
+      {
+        "kind": "degree",
+        "head": "B.E. Electrical & Electronics Engineering",
+        "school": "St. Joseph's College of Engineering",
+        "cls": "First Class with Distinction",
+        "tail": "St. Joseph's College of Engineering, First Class with Distinction",
+        "dates": "Aug 2019 \u2013 April 2023"
+      }
+    ],
+    "linespread": 1.02,
+    "profile_min_words": 100
+  }
+}

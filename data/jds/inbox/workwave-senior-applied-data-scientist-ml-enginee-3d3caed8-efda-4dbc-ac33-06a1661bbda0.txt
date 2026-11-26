@@ -1,0 +1,123 @@
+Company: WorkWave
+Title: Senior Applied Data Scientist / ML Engineer
+URL: https://jobs.lever.co/workwave/3d3caed8-efda-4dbc-ac33-06a1661bbda0
+Source: lever
+Apply kind: lever
+Location: United Kingdom, Remote, GB
+Posted: 2026-10-29T15:48:22.602000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-06
+Listed: yes
+
+We are looking for a product-minded applied data scientist or engineer to turn raw operational data into products that measurably improve how our customers make decisions and run their businesses. Which label you carry matters less to us than whether customers end up better off.
+
+This is not a research-only role, nor a service-oriented internal analytics position—and it is not a role for a model builder alone. We want an owner: someone who frames the problem, learns the domain, builds the data when it doesn't exist, ships the model, and stays with it until customers are acting on it and can measure the reward. The road runs through data engineering; deployment and testing are part of delivery, not a handoff. You understand that great models are not just accurate in notebooks—they are usable, explainable, and measurable inside a real product.
+
+Whether you came to this work through statistics, software, analytics, or data engineering, you have a strong bias toward shipping.
+
+What You'll Do 
+From Raw Data to Better Decisions
+
+- 
+
+Own the Outcome: Take an ambiguous customer problem, decide whether ML is even the right answer, build it, and stay with it until customers are acting on it.
+
+- 
+
+Learn the Domain: Get fluent in the semantics of how our customers operate—what a route, a crew, or a service history actually means. A model that is accurate but wrong about the domain creates nothing.
+
+- 
+
+Build the Data You Need: When the features don't exist, create them in Snowflake and dbt rather than waiting for someone else to.
+
+Prove It and Make It Felt
+
+- 
+
+Make the Value Legible: Decide how a prediction reaches the customer so they understand it, trust it, and act on it—then report realised impact back to Product and the business in numbers that hold up.
+
+- 
+
+Measure Honestly: Define offline and online evaluation for model quality, drift, and reliability, and design the A/B tests or causal analyses that prove a feature improved customer outcomes.
+
+Deliver
+
+- 
+
+Ship and Operate: Deployment, testing, versioning, monitoring, and drift detection. Delivery is part of the job, not a handoff.
+
+- 
+
+Embed with Product: Partner with Product Managers and Software Engineers to put ML inside real product workflows—and say clearly when ML isn't the answer.
+
+Who We Are 
+- 
+
+The Owner: You measure your work by whether customers made better decisions, not by whether the model shipped.
+
+- 
+
+Closer to the Data and the Customer: You'd rather spend a week understanding what the data means than a week tuning a model. You know the domain is the hard part.
+
+- 
+
+A Multi-Disciplinary Operator: You'll chase down the data yourself when it isn't ready, and build the pipeline if that's what delivery requires. You prioritise usability, "Time to Insight," and customer trust as much as you do code efficiency.
+
+We know that great talent comes from many backgrounds. If you have shipped a model you are proud of, we want to hear from you!
+
+HOW WE WORK
+
+We build with coding agents. You set direction and targets, review output critically, and build the harnesses—scaffolding, context, tests, review loops—that make the next model faster to ship. The leverage is in the verification: the backtests, eval scaffolding, and data checks that make generated work safe to trust.
+
+What You'll Bring 
+- 
+
+Experience: 5+ years in applied data science, ML engineering, or data engineering that included owning models in production—including at least one model you built and shipped into a real product. B2B SaaS experience is a strong plus.
+
+- 
+
+Technical Core: Strong Python and applied ML libraries for tabular problems (scikit-learn, XGBoost or LightGBM, statsmodels or Prophet). Solid SQL expertise is required.
+
+- 
+
+ML & Modeling Depth: Depth in supervised learning, forecasting, ranking, recommendation, or optimisation. You have modelled messy operational data, not benchmark datasets.
+
+- 
+
+Data & Delivery: You build the data you need and ship what you build—dbt and Snowflake modelling, feature pipelines, deployment, monitoring, and drift detection. We're on AWS.
+
+- 
+
+Measurement & Narrative: You've quantified the business impact of a model you shipped—adoption, outcome, ROI—and presented it to people who were never going to read your notebook.
+
+- 
+
+Communication & Collaboration: Excellent communication skills with the ability to explain complex technical trade-offs clearly to product, engineering, and non-technical business stakeholders.
+
+Bonus Points For:
+
+- 
+
+Working With Agents: You've used coding agents on real modelling or engineering work, you can tell correct output from merely plausible output, and you invest in the scaffolding that makes the next model faster to ship.
+
+- 
+
+Decision Intelligence: Experience with decision intelligence, forecasting, customer behaviour modelling, workforce/route optimisation, or operational intelligence products.
+
+- 
+
+Leadership: Prior experience as a senior or lead scientist or engineer responsible for guiding technical direction.
+
+- 
+
+LLM / Agentic AI: LLM or agentic workflows shipped into a product.
+
+LOCATION & RIGHT TO WORK
+
+- 
+
+Location: Remote (UK-based) with flexible working options.
+
+- 
+
+Right to Work: Applicants must currently have the legal right to work in the UK. We are unable to offer visa sponsorship now or in the future for this position.

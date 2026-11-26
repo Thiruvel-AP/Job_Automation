@@ -1,0 +1,56 @@
+```json
+{
+  "required": [
+    "Claude Developer Platform",
+    "deep technical engagements",
+    "pair programming",
+    "architecture reviews",
+    "code contributions",
+    "evaluation suites",
+    "AI engineering techniques",
+    "architecture diagrams",
+    "Python",
+    "LLM-powered applications",
+    "prompting",
+    "context engineering",
+    "agent architectures",
+    "evaluation frameworks",
+    "deployment at scale",
+    "customer engineering teams",
+    "forward deployed engineer",
+    "technical founder",
+    "customer-facing",
+    "pre-sales technical role",
+    "technical workshops",
+    "hackathons",
+    "developer-focused events"
+  ],
+  "preferred": [
+    "technical content",
+    "documentation",
+    "tutorials",
+    "sample code",
+    "webinars",
+    "technical office hours",
+    "high-growth",
+    "tech-forward companies",
+    "healthcare",
+    "fintech"
+  ],
+  "context_terms": [
+    "Anthropic",
+    "Applied AI Engineers",
+    "Applied AI Architects",
+    "Account Executives",
+    "Product and Engineering teams",
+    "high-growth, tech-forward companies",
+    "customer sites",
+    "workshops",
+    "implementation support",
+    "relationship building",
+    "developer audiences"
+  ],
+  "company_hook": "Anthropic builds reliable, interpretable, and steerable AI systems to make AI safe and beneficial for users and society.",
+  "team": "Applied AI Engineers"
+}
+```

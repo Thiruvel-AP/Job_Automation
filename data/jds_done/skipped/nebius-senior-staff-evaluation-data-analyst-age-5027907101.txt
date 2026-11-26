@@ -1,0 +1,69 @@
+Company: Nebius
+Title: Senior/Staff Evaluation Data Analyst (Agentic Search)
+URL: https://careers.nebius.com/?gh_jid=5027907101
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, United Kingdom
+Posted: 2026-11-05T12:32:48-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-11-05
+Listed: yes
+
+About Nebius:
+
+Nebius is leading a new era in cloud infrastructure for the global AI economy. We are building a full-stack AI cloud platform that supports developers and enterprises from data and model training through to production deployment, without the cost and complexity of building large in-house AI/ML infrastructure.
+
+Built by engineers, for engineers. From large-scale GPU orchestration to inference optimization, we own the hard problems across compute, storage, networking and applied AI.
+
+Listed on Nasdaq (NBIS) and headquartered in Amsterdam, we have a global footprint with R&D hubs across Europe, the UK, North America and Israel. Our team of 1,500+ includes hundreds of engineers with deep expertise across hardware, software and AI R&D.
+
+- 
+
+In a rapidly evolving world, trust in AI depends on agents being grounded in fresh, verified real-world data. Search is the foundation that makes this possible.
+We’re looking for an experienced Data Analyst who has built evaluation systems for complex technology products and is excited to take end-to-end ownership of quality in search built for AI agents.
+This role combines hands-on engineering, analytical judgment, and mathematical rigor, with the scope and influence to shape both technical decisions and product direction. We move at a startup pace, with plenty of open questions and difficult problems to solve.
+
+In this position, you will:
+
+• Own the quality measurement and improvement cycle end-to-end: identify user needs, define success, build evaluations, diagnose failures, and work with engineers and product managers to improve outcomes..
+• Design, build, and evolve evaluation systems, including datasets, benchmarks, metrics, and automated pipelines that support development and launch decisions..
+• Evaluate response quality across multiple dimensions, including relevance, completeness, freshness, factual accuracy, and usefulness to downstream agents..
+• Investigate quality regressions and metric anomalies, uncover root causes, and identify the improvements with the greatest potential impact..
+• Help prioritize the product and engineering roadmap, making quality trade-offs explicit and assessing whether changes deliver meaningful improvements for users..
+
+We expect you to have:
+
+• Substantial hands-on experience designing and building evaluation or quality measurement systems for complex technology products, such as search, AI agents, voice technologies, autonomous driving, recommendation systems, advertising, or other similar complex systems..
+• A track record of owning ambiguous problems from initial framing through implementation, diagnosis, and measurable product improvement..
+• Strong Python skills and an engineering mindset: you can turn analytical ideas into reliable, maintainable pipelines and tools..
+• A solid foundation in mathematical statistics and practical experience with experimental design, sampling, uncertainty, and measurement bias..
+• Strong analytical judgment: you understand what a metric captures, what it misses, and whether an observed improvement matters to users..
+• The ability to reason across user needs, product behavior, and technical systems, and to translate that understanding into actionable evaluations..
+• Strong communication and collaboration skills, with the ability to influence technical and product decisions..
+• The independence to make progress in a fast-moving environment where requirements, methods, and definitions of success are still evolving.
+
+Benefits & Perks:
+
+- Competitive compensation
+
+- Career growth and learning opportunities
+
+- Flexibility and ownership
+
+- Collaborative and innovative culture
+
+- Opportunity to work on impactful AI projects
+
+- International environment and talented teams
+
+What's it like to work at Nebius:
+
+Fast moving - Bold thinking - Constant growth - Meaningful impact - Trust and real ownership - Opportunity to shape the future of AI 
+
+Equal Opportunity Statement:
+
+Nebius is an equal opportunity employer. We are committed to fostering an inclusive and diverse workplace and to providing equal employment opportunities in all aspects of employment. We do not discriminate on the basis of race, color, religion, sex (including pregnancy), national origin, ancestry, age, disability, genetic information, marital status, veteran status, sexual orientation, gender identity or expression, or any other characteristic protected by applicable law.
+
+Applicants must be authorized to work in the country in which they apply and will be required to provide proof of employment eligibility as a condition of hire. 
+
+If you need accommodations during the application process, please let us know.

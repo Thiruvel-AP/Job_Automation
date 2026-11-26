@@ -1,0 +1,101 @@
+Company: Trainline
+Title: Senior Data Scientist
+URL: https://jobs.ashbyhq.com/trainline/2757aa18-5e60-45cf-ac9d-be11dee1afe2
+Source: ashby
+Apply kind: ashby
+Location: London
+Posted: 2026-10-06T15:12:29.300+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-21
+Listed: yes
+
+About us
+
+At Trainline, our purpose is to empower greener travel choices, connecting people and places. https://www.thetrainline.com/terms/sustainability-faqs Trainline enables millions of travellers to find and book the best value tickets across carriers, fares, and journey options through our highly rated mobile app, website, and B2B partner channels. 
+
+Great journeys start with Trainline 🚄 
+
+We’re Europe’s leading independent rail platform, helping millions of travellers find and book the best-value rail and coach journeys across our app, website and partner channels.
+
+Our job is to make the green travel choice the best choice. By building a better train travel experience, we help more people choose rail - creating a positive impact for customers, our business and the planet.
+
+We’re a team of more than 1,000 Trainliners from over 50 nationalities, working across London, Paris, Barcelona, Milan, Edinburgh and Madrid. Now is a brilliant time to join us and help shape the future of travel.
+
+
+INTRODUCING DATA SCIENCE & ANALYTICS AT TRAINLINE👋   
+
+Data Science & Analytics (DSA) is central to how we build products, delight our customers and grow our business. Our Data Scientists are embedded alongside Data Analysts in cross-functional teams which exist across product and marketing.  Data Scientists have a high degree of autonomy and are empowered to drive the success of their teams, using all data and techniques at their disposal.       
+
+As a Data Scientist, you will be involved in driving insights and strategy for the product team, creating and measuring value through experimentation, creating focus through metrics and goals, and building deep learning about what is most impactful for each team.  You will be able to determine the underlying dynamics of our complex ecosystem and use this to deliver insights and strategic direction, but your main focus will be a complete obsession with driving impact within the product team, drawing on whatever analytical and statistical techniques that will unlock the most benefits.    
+
+Data Science and Analytics at Trainline exists within the wider data organisation as part of the tech org, and is complemented by data engineering teams, data platform teams, and ML teams for when deep ML and AI techniques are required. Our autonomous model creates a huge opportunity for personal influence and impact – as the data scientist on the team you will be actively driving innovation on the team by contributing to strategy, execution and continuous learning.   
+
+
+
+
+AS A SENIOR DATA SCIENTIST AT TRAINLINE, YOU WILL... 🚄   
+
+As a Senior Data Scientist, you will be embedded within Trainline Partner Solutions https://tps.thetrainline.com/ (TPS), which is the B2B arm of Trainline that provides seamless rail travel solutions for businesses, travel retailers, and rail carriers across the UK and Europe. TPS also works to develop new technologies / products and is at the forefront of the rail industry, presenting opportunities to launch new products, work to develop product market fit and go deep with techniques like geospatial and graph analyses.  
+
+With a team of over a hundred technologists delivering daily data-driven product releases and platform updates, TPS prioritises scalability, security and above all else innovation. As sustainability becomes a key focus in travel, TPS is dedicated to making rail a more accessible and efficient choice for businesses and travellers alike. 
+
+As a Senior Data Scientist, you will be responsible for influencing product and business outcomes, have the autonomy to make things happen and must obsess about having business impact. More specifically you will:  
+
+ - Develop deep understanding of our product experiences and opportunities for growth. 
+
+ - Actively contribute to roadmap and goals for the product team. 
+
+ - Drive regular cross functional team reviews to measure progress toward goals.   
+
+ - Discover and articulate new product opportunities helping shape the team's direction.   
+
+ - Support product experiments, launches, growth through data-driven decision making while keeping the team accountable and impactful   
+
+ - Define focus through metrics to enable a broad spectrum of learning from experimentation/release cycles.    
+
+
+
+
+WE'D LOVE TO HEAR FROM YOU IF YOU HAVE... 🔍   
+
+ - 5+ years commercial experience using data science and analytics to drive business decisions. 
+
+ - Ability to distil and communicate results of complex analysis clearly and effectively to all levels including senior management. 
+
+ - Experience of product engagement evaluation and measurement of success. For example, running A/B tests to evaluate product effectiveness or using front-end data to quantify the effectiveness of new features and how it changes user engagement. 
+
+ - Ability to navigate data sets of varying complexity/ambiguity and conduct analysis to derive clear insights and actionable results.  
+
+ - Experience using AI to responsibly accelerate your coding for analysis, as well as basic automation of day-to-day work processes. 
+
+ - Strong PowerPoint and presentation/communication skills.   
+
+ - Strong data visualisation skills using tools like Tableau, Spotfire, Power BI etc.   
+
+ - Expertise in predictive modelling, including both parametric (e.g. logit/probit) and non-parametric (e.g. random forest, neural net) techniques as well as wider ML techniques like clustering / random forest (desirable).   
+
+ - Tech Stack: SQL, Python, R, Tableau, AWS Athena + More! 
+
+
+
+More information:
+
+Enjoy fantastic perks like private healthcare & dental insurance, a generous work from abroad policy, 2-for-1 share purchase plans, an EV Scheme to further reduce carbon emissions, extra festive time off, and excellent family-friendly benefits. 
+
+We prioritise career growth with clear career paths, transparent pay bands, personal learning budgets, and regular learning days. Jump on board and supercharge your career from day one! 
+
+We're operating a hybrid model and ask that Trainliners work from the office a minimum of 60% of their time over a 12-week period. We also have a 28-day Work from Abroad policy.
+
+Our values represent the things that matter most to us and what we live and breathe everyday, in everything we do: 
+
+ - 💭 Think Big - We're building the future of rail 
+
+ - ✔️ Own It - We focus on every customer, partner and journey 
+
+ - 🤝  Travel Together - We're one team 
+
+ - ♻️ Do Good - We make a positive impact 
+
+We know that having a diverse team makes us better and helps us succeed. And we mean all forms of diversity - gender, ethnicity, sexuality, disability, nationality and diversity of thought. That's why we're committed to creating inclusive places to work, where everyone belongs and differences are valued and celebrated.
+
+Interested in finding out more about what it's like to work at Trainline? Why not check us out on LinkedIn https://www.linkedin.com/company/trainline/, Instagram https://www.instagram.com/lifeattrainline/ and Glassdoor https://www.glassdoor.co.uk/Overview/Working-at-Trainline-EI_IE249203.11,20.htm!

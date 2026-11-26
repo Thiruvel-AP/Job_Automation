@@ -1,0 +1,76 @@
+Company: Aveva
+Title: Product Intelligence Data Scientist
+URL: https://aveva.wd3.myworkdayjobs.com/AVEVA_careers/job/Cambridge-United-Kingdom/Product-Intelligence-Data-Scientist_R014501
+Source: workday
+Apply kind: workday
+Location: Cambridge, United Kingdom; London Cannon Street
+Posted: 2026-11-05
+Posted via: workday.postedOn
+First seen: 2026-11-07
+Listed: yes
+
+AVEVA is creating software trusted by over 90% of leading industrial companies.
+
+Job Title: Product Intelligence Data Scientist
+Location: Cambridge/London, United Kingdom (Hybrid)
+Employment Type: full-time 
+
+The Job 
+We are looking for a Product Intelligence Data Scientist to build a unified intelligence layer that transforms raw usage signals, behavioral data, and lifecycle events into predictive, prescriptive insights — enabling teams to act on what the product is telling us, not just what gets reported.
+You will own the analytical models and frameworks that connect product behavior to business outcomes across acquisition, activation, adoption, expansion, and renewal.
+
+Key Responsibilities
+
+- Partner with Product to define and validate hypotheses around feature adoption, friction points, and growth levers using experimentation methods
+- Translate complex product signals into lifecycle intelligence that drives prioritization — surfacing what to build, fix, or sunset
+- Build and own predictive models that quantify adoption maturity, churn risk, expansion propensity, and feature-market fit from product telemetry
+- Design behavioral segmentation and cohort frameworks that reveal how users derive value — and where they don’t
+- Develop causal and inferential analyses that connect product interactions to revenue outcomes (NRR, LTV, expansion)
+- Create automated scoring systems (product-qualified leads, customer health, engagement intensity) that feed into GTM, Customer Success, and in-product workflows
+- Build early-warning detection models that identify at-risk accounts from behavioral shifts before lagging indicators appear
+- Communicate findings to senior leadership as clear, actionable business narratives, and democratise intelligence findings for the wider team
+
+Essential Requirements
+
+- 5+ years in data science or advanced analytics, with experience in a hybrid product-led growth (PLG) and sales-led SaaS environment required.
+- Strong Python and SQL; experience with data modelling and pipeline tools (dbt, Airflow, Dagster)
+- Deep expertise in predictive modelling, causal inference, survival analysis, and experimentation (A/B, diff-in-diff, instrumental variables)
+- Experience working directly with product telemetry and event-stream data at scale
+- Solid understanding of SaaS lifecycle mechanics (ARR, NRR, LTV, PQLs, activation funnels)
+- Ability to translate statistical findings into product and commercial strategy for non-technical stakeholders
+- Degree in a quantitative discipline (Statistics, Computer Science, Mathematics, Physics, Economics, or equivalent)
+
+Desired Skills and Competencies
+
+- Master’s or PhD in a quantitative field
+- Cloud data platforms (Snowflake, Databricks, BigQuery, or Azure Synapse)
+- Product analytics instrumentation experience (Amplitude, Mixpanel, Pendo, or custom event pipelines)
+- MLOps — model deployment, monitoring, and retraining in production
+- Experience building propensity or scoring models that integrate into CRM/CS platforms
+- Familiarity with industrial software or enterprise SaaS contexts
+
+UK Benefits include: 
+Flexible benefits fund, emergency leave days, adoption leave, 28 days annual leave (plus bank holidays), pension, life cover, private medical insurance, parental leave, education assistance program.
+
+It’s possible we’re hiring for this position in multiple countries, in which case the above benefits apply to the primary location. Specific benefits vary by country, but our packages are similarly comprehensive.
+
+Find out more: aveva.com/en/about/careers/benefits/
+
+Hybrid working
+We work in a hybrid way at AVEVA. Most roles are based at a local AVEVA office, with an expectation of being on-site 50% of your working hours to support collaboration and connection. Some positions are fully office-based depending on the nature of the work, and certain roles that support specific customers or markets may be remote. The working arrangement for this position will be confirmed during the hiring process.
+
+Hiring process
+Interested? Great! Get started by submitting your cover letter and CV through our application portal. AVEVA is committed to recruiting and retaining people with disabilities. Please let us know in advance if you need reasonable support during your application process.
+
+Find out more: aveva.com/en/about/careers/hiring-process
+
+About AVEVA
+AVEVA is a global leader in industrial software with more than 6,500 employees in over 40 countries. Our cutting-edge solutions are used by thousands of enterprises to deliver the essentials of life – such as energy, infrastructure, chemicals, and minerals – safely, efficiently, and more sustainably.
+
+We are committed to embedding sustainability and inclusion into our operations, our culture, and our core business strategy. Learn more about how we are progressing against our ambitious 2030 targets: sustainability-report.aveva.com/
+
+Find out more: aveva.com/en/about/careers/
+
+AVEVA requires all successful applicants to undergo and pass a drug screening and comprehensive background check before they start employment. Background checks will be conducted in accordance with local laws and may, subject to those laws, include proof of educational attainment, employment history verification, proof of work authorization, criminal records, identity verification, credit check. Certain positions dealing with sensitive and/or third-party personal data may involve additional background check criteria.
+
+AVEVA is an Equal Opportunity Employer. We are committed to being an exemplary employer with an inclusive culture, developing a workplace environment where all our employees are treated with dignity and respect. We value diversity and the expertise that people from different backgrounds bring to our business. AVEVA provides reasonable accommodation to applicants with disabilities where appropriate. If you need reasonable accommodation for any part of the application and hiring process, please notify your recruiter. Determinations on requests for reasonable accommodation will be made on a case-by-case basis.

@@ -1,0 +1,60 @@
+Company: Kensington Mortgage Company
+Title: Data Engineer
+URL: https://www.reed.co.uk/jobs/data-engineer/57589697
+Source: reed
+Location: London, GB
+Posted: 2026-11-18
+Posted via: reed.date
+First seen: 2026-11-19
+
+We're Hiring: Data Engineer 
+Location: Hybrid - adhoc travel to London or Marlow may be required 
+Department: Data Services 
+Monday-Friday Full Time 
+
+We are looking for an experienced Data Engineer to join our growing Data Engineering team. 
+You will work with Microsoft technologies to design, develop and support enterprise-scale data solutions that improve customer experiences and help colleagues make informed, data-driven decisions. 
+Working closely with Architects, Senior Engineers and business stakeholders, you will take ownership of solutions from initial concept through to implementation. You will translate business requirements into effective technical solutions, resolve complex data challenges and identify opportunities to improve processes, data quality and business outcomes. 
+
+ What you’ll be doing 
+
+- Designing and delivering scalable data solutions using Microsoft technologies
+- Developing data integration solutions and pipelines using ETL and ELT approaches
+- Working with stakeholders to understand, challenge and refine requirements
+- Translating business needs into sustainable technical solutions
+- Investigating complex data issues and recommending practical solutions
+- Collaborating with Data Science, Digital, Core Systems and other technical teams
+- Contributing to Agile ceremonies, code reviews, testing and quality assurance
+- Producing clear technical documentation, release notes and support materials
+- Ensuring solutions meet data governance, security, privacy and regulatory requirements
+- Identifying delivery risks, dependencies and opportunities for improvement
+- Supporting the continuous improvement of engineering practices, processes and tooling
+- 
+ What we’re looking for 
+
+- At least five years’ experience in Data Engineering and Business Intelligence delivery
+- Strong experience with SQL Server, SSIS, SSAS and SSRS
+- Strong SQL skills, including experience with T-SQL and DAX
+- Experience designing and developing ETL and ELT data pipelines
+- A solid understanding of data warehousing, data modelling, dimensional modelling and data architecture
+- Strong analytical and problem-solving skills
+- Experience gathering, analysing and refining requirements with business stakeholders
+- The ability to manage competing priorities and deliver outcomes independently
+- Strong communication and stakeholder management skills
+- Experience working within an Agile delivery environment
+- Experience with Power BI, including dashboards, reporting and semantic models 
+It would be an advantage if you have 
+
+- Experience within mortgages, financial services or another regulated environment
+- Knowledge of Microsoft Azure technologies such as Azure Data Factory, Azure Data Lake, Azure SQL Database, Azure Synapse Analytics and Azure Functions
+- Experience consuming APIs and working with JSON or XML
+- Knowledge of Python, C# or PowerShell
+- Experience with Git repositories and branching strategies
+- Knowledge of Infrastructure as Code and DevOps tooling, including Bicep, YAML and CI/CD pipelines
+- Knowledge of Power Platform technologies
+- Relevant Microsoft or Azure Data Platform certifications 
+Why join us? 
+You will join a collaborative, high-performing team where you can take ownership of meaningful data initiatives, work across a broad Microsoft technology stack and contribute to the continued development of our data platform. 
+If you are a proactive Data Engineer who enjoys solving complex problems, working with stakeholders and delivering reliable, high-quality solutions, we would like to hear from you. 
+Key skills 
+Data Engineering, SQL Server, SSIS, SSAS, SSRS, T-SQL, DAX, ETL, ELT, Data Warehousing, Data Modelling, Dimensional Modelling, Power BI, Python, C#, PowerShell, Git, Bicep, YAML, CI/CD, Agile

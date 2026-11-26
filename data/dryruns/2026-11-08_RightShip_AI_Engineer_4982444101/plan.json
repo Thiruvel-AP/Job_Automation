@@ -1,0 +1,434 @@
+{
+  "origin": "schema",
+  "url": "https://job-boards.eu.greenhouse.io/rightship/jobs/4982444101",
+  "rows": [
+    {
+      "n": 1,
+      "q": {
+        "key": "first_name",
+        "type": "text",
+        "label": "First Name",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Thiruvel",
+      "source": "applicant",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 2,
+      "q": {
+        "key": "last_name",
+        "type": "text",
+        "label": "Last Name",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Andagurunathan Pandian",
+      "source": "applicant",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 3,
+      "q": {
+        "key": "email",
+        "type": "text",
+        "label": "Email",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "apthiruvel@gmail.com",
+      "source": "applicant",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 4,
+      "q": {
+        "key": "phone",
+        "type": "text",
+        "label": "Phone",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "+44 7741016954",
+      "source": "applicant",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 5,
+      "q": {
+        "key": "resume",
+        "type": "file",
+        "label": "Resume/CV",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Thiruvel Andagurunathan Pandian CV.pdf",
+      "source": "cv",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 6,
+      "q": {
+        "key": "cover_letter",
+        "type": "file",
+        "label": "Cover Letter",
+        "required": false,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Thiruvel Andagurunathan Pandian Cover Letter.pdf",
+      "source": "letter",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 7,
+      "q": {
+        "key": "question_9689580101",
+        "type": "combobox",
+        "label": "What are your working rights in the country where this role is advertised for?",
+        "required": true,
+        "options": [
+          "Citizen",
+          "Resident",
+          "Work Visa"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Work Visa",
+      "source": "applicant:visa.by_country.GB",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 8,
+      "q": {
+        "key": "question_9689581101",
+        "type": "text",
+        "label": "If you answered 'Work Visa' in the previous question, please specify the type of visa that you are currently holding. If you do not hold any valid visa currently, please answer 'N.A.'.",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "",
+      "source": "answers:visa_type",
+      "status": "NEEDS USER",
+      "why": "answers.yaml has no `visa_type` entry (a few words: your visa type, or 'N.A.')",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 9,
+      "q": {
+        "key": "question_9689582101",
+        "type": "text",
+        "label": "What is your notice period?",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Immediately",
+      "source": "answers:notice_period",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 10,
+      "q": {
+        "key": "question_9689583101",
+        "type": "textarea",
+        "label": "What motivated you to apply for this position?",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "I am applying for the AI Engineer role at RightShip. What draws me to this role is RightShip is the maritime industry's leading safety and risk intelligence platform. At AstraZeneca, I needed an agent that researchers could trust on a cancer research platform, including when its tools fail: built a tool-calling agent (LangChain, Claude Haiku 4.5 on AWS Bedrock) for three use cases (gene alias resolution, prompt-engineered explanations of a fixed scoring pipeline, validated dataset descriptions), with deterministic Ensembl and HGNC calls, deterministic hallucination guards, and circuit breakers with a 19,213-gene parquet fallback for when the external APIs are unavailable.",
+      "source": "freetext",
+      "status": "DRAFT",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 11,
+      "q": {
+        "key": "question_9689584101",
+        "type": "text",
+        "label": "Please provide your base salary expectations (in local currency, excluding bonus and commission).",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "I'd welcome the opportunity to discuss salary expectations during the interview process, once there's a clearer picture of the role's full scope and responsibilities.",
+      "source": "answers:salary_expectation",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 12,
+      "q": {
+        "key": "question_9689585101[]",
+        "type": "combobox",
+        "label": "How did you hear about us?",
+        "required": true,
+        "options": [
+          "Career Builder",
+          "College",
+          "Connection in the company",
+          "Corporate website",
+          "Employee emailed me the job",
+          "Event",
+          "Facebook",
+          "Glassdoor",
+          "Google",
+          "Graduate Recruitment Fair",
+          "Indeed",
+          "Instagram",
+          "LinkedIn",
+          "Market referral",
+          "Monster",
+          "Staff referral",
+          "Twitter",
+          "University"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Corporate website",
+      "source": "how-heard",
+      "status": "READY",
+      "why": "board -> 'Corporate website'",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 13,
+      "q": {
+        "key": "question_9689586101",
+        "type": "text",
+        "label": "Please include a link to your LinkedIn profile.",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "https://www.linkedin.com/in/thiruvel-a-p/",
+      "source": "applicant",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 14,
+      "q": {
+        "key": "question_9689587101",
+        "type": "combobox",
+        "label": "Inclusion and Diversity is very important to us and we'd like to know what would be your preferred pronoun for us to refer to you?",
+        "required": true,
+        "options": [
+          "She / Her / Hers",
+          "He / Him / His",
+          "They / Them / Theirs",
+          "Self-describe, please specify in the next question"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "",
+      "source": "equal_opportunities",
+      "status": "BLANK",
+      "why": "not listed in equal_opportunities: left blank",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 15,
+      "q": {
+        "key": "question_9689588101",
+        "type": "text",
+        "label": "If you have answered 'Self-describe' in the previous question, please specify:",
+        "required": false,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "",
+      "source": "",
+      "status": "BLANK",
+      "why": "no answer in applicant.yaml or answers.yaml (type it with [e N], `save` stores it)",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 16,
+      "q": {
+        "key": "question_9689589101",
+        "type": "combobox",
+        "label": "I declare that the information provided by me is true and accurate. Furthermore, I willingly consent to being contacted by the company for any relevant matters pertaining to my application. I also give my unequivocal agreement for the company to retain my information (for as long as the respective country laws in which I am seeking employment allow) for potential future employment opportunities.",
+        "required": true,
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "",
+      "source": "attestation",
+      "status": "NEEDS USER",
+      "why": "attestation: you tick it yourself, code never does",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 17,
+      "q": {
+        "key": "location",
+        "type": "text",
+        "label": "Location",
+        "required": true,
+        "options": [],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Bristol",
+      "source": "answers:current_location",
+      "status": "READY",
+      "why": "",
+      "typed": "Bristol",
+      "pick": "city"
+    },
+    {
+      "n": 18,
+      "q": {
+        "key": "veteran_status",
+        "type": "combobox",
+        "label": "VeteranStatus",
+        "required": false,
+        "options": [
+          "I don't wish to answer",
+          "I identify as one or more of the classifications of a protected veteran",
+          "I am not a protected veteran"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "",
+      "source": "equal_opportunities",
+      "status": "BLANK",
+      "why": "not listed in equal_opportunities: left blank",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 19,
+      "q": {
+        "key": "race",
+        "type": "combobox",
+        "label": "Race",
+        "required": false,
+        "options": [
+          "Decline To Self Identify",
+          "Two or More Races",
+          "Native Hawaiian or Other Pacific Islander",
+          "White",
+          "Hispanic or Latino",
+          "Black or African American",
+          "Asian",
+          "American Indian or Alaskan Native"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Asian",
+      "source": "equal_opportunities:ethnicity",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    },
+    {
+      "n": 20,
+      "q": {
+        "key": "gender",
+        "type": "combobox",
+        "label": "Gender",
+        "required": false,
+        "options": [
+          "Decline To Self Identify",
+          "Female",
+          "Male"
+        ],
+        "max_length": null,
+        "dom_id": "",
+        "origin": "schema"
+      },
+      "answer": "Male",
+      "source": "equal_opportunities:eo_gender",
+      "status": "READY",
+      "why": "",
+      "typed": "",
+      "pick": ""
+    }
+  ]
+}

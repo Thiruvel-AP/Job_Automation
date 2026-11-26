@@ -1,0 +1,39 @@
+QUANTCAST - Machine Learning Engineer (junior, 0-2 yrs), London
+Source: freehire.me mirror of the employer's Ashby/ATS listing: https://freehire.me/jobs/machine-learning-engineer-quantcast-uxhzqjai
+Fetched 2026-10-02 (posted 2026-09-29, valid to 2026-11-01). Page chrome removed; JD wording untouched.
+======================================================================
+
+Summary
+Junior ML engineer (0-2 years experience) on Quantcast's Modeling team in London, building and maintaining large-scale real-time ML systems that price millions of ad auctions per second for the company's AI-powered DSP, using Python/Java, ML frameworks, and NLP/LLM techniques.
+At Quantcast, we don't just build advertising technology, we revolutionize how it works. Our AI-powered Demand Side Platform (DSP) connects the world's most ambitious marketers with their ideal audiences across the open internet, delivering results that actually move the needle. Since 2006, we've been the industry's trailblazer, launching the first AI-powered measurement platform for publishers and the first AI-driven DSP. Our AI doesn't just optimize—it delivers the measurable outcomes that matter most to our clients, giving them the competitive edge they need in a crowded marketplace. Ready to join the team that's defining the future of digital advertising?
+The Modeling team is responsible for Machine Learning (ML) systems at Quantcast. We build and maintain high-frequency ML infrastructure that prices millions of advertising opportunities per second in a real-time auction environment to maximise advertiser outcomes. In less than 100 milliseconds, our models predict age, gender, viewability, fraud, advertiser relevance and many more characteristics of internet users. Using NLP, clustering and LLMs we build topics in multiple languages to help our advertisers target customers interested in their products.
+As a Machine Learning Engineer you care about the health and maintainability of our systems and the velocity of the engineering teams. You explore data, research new algorithms, experiment with proof of concepts, and build out scalable real-time production systems to tackle challenges the company faces.
+What you'll do:
+Design, code, test, and debug ML applications and constantly improve large-scale global systems that respond to millions of real-time requests per second, efficiently.
+Run Machine Learning experiments to test new modeling ideas.
+Collaborate with senior scientists and engineers to iterate on ML models and learn industry best practices for high-quality ML products and large-scale systems.
+Write clean, efficient, and maintainable code using industry best practices.
+Participate in code reviews and provide constructive feedback to team members.
+Identify performance bottlenecks and optimise system components for enhanced scalability.
+Keep up to date with developments in machine learning outside the company.
+Receive hands-on mentorship from senior scientists and engineers to help bridge academic concepts with industrial scale.
+Who you are:
+Experience:
+ 0-2 years of experience (including internships or significant academic projects) in machine learning or applied statistics.
+Academic Background:
+ A degree in Computer Science, Mathematics, Software Engineering, or an adjacent field.
+Technical Foundation:
+ Fluency in Python, Java, or similar programming languages.
+Analytical Rigor:
+ Strong foundation in mathematics, specifically: probability, statistics, hypothesis testing.
+ML Knowledge:
+ Practical understanding of machine learning fundamentals (classification, regression, clustering, ranking, NLP, or LLMs).
+Data & ML Ecosystem:
+ Familiarity with data processing libraries (e.g. Pandas, NumPy) and ML frameworks (e.g. PyTorch, Scikit-learn or XGBoost).
+Growth Mindset:
+ A genuine interest in distributed system and software design, concurrent algorithms, data structures, and software engineering.
+At Quantcast, we craft offers that reflect your unique skills, expertise, and geographic location. On top of a competitive salary, this position includes a performance bonus, equity, and a comprehensive benefits package. For more details, visit our 
+Careers Page
+ and see how we support our team. We are headquartered in San Francisco with offices around the world. Quantcast is an Equal Opportunity Employer. Please see the 
+Applicant Privacy Notice
+ for details on our applicant privacy policy. Join the team that unlocks potential.

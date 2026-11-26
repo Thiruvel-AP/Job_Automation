@@ -1,0 +1,80 @@
+Company: M&G
+Title: Data Scientist
+URL: https://mgpru.wd3.myworkdayjobs.com/mandgprudential/job/Stirling/Data-Engineer--Databricks-_R19908
+Source: workday
+Apply kind: workday
+Location: Stirling; Reading; Edinburgh, United Kingdom
+Posted: 2026-11-04
+Posted via: workday.postedOn
+First seen: 2026-11-06
+Listed: yes
+
+At M&G, our purpose is to give everyone real confidence to put their money to work. With a heritage dating back more than 175 years, we have a long history of innovation in savings and investments, combining asset management and insurance expertise to offer a wide range of solutions. 
+
+Our two distinct operating segments, Asset Management and Life, work together to provide access to balanced, long-term investment and savings solutions.
+
+Through telling it like it is, owning it now and moving it forward together with care and integrity; we are creating an exceptional place to work for exceptional talent.
+
+We will consider flexible working arrangements for any of our roles and offer workplace adjustments to ensure you have the support you need to succeed in your role.
+
+The Role:
+This role is responsible for designing, building, and optimising data solutions that enable reliable and efficient access to data for use in actuarial modelling and assumption setting.
+Operating at an Experienced Colleague level, the role provides specialist expertise in data science, ensuring scalable, high-quality data pipelines and processes are in place to support the use of policyholder data for actuarial modelling and assumption setting.
+They will use their technical depth, financial domain awareness and delivery experience to lead the design and build of data workflows, drive process reengineering and transformation as well as embed the surrounding controls required for audit and risk assurance. They will apply machine learning and advanced analytics where they add measurable value. They will work to high standards for documentation and development in the team enabling proactive identification of inefficiencies in existing processes.
+The role contributes to shaping standards and best practices, ensuring data is accessible, governed, and aligned with business priorities. They will, alongside their own delivery, guide and develop junior team members — reviewing their analysis and code, providing technical advice, coaching them on controls and documentation. The role contributes to the continuous improvement of data processes, ensuring accuracy, consistency, and clarity in outputs while working within defined guidelines. Communication of findings is clear, structured
+
+Key Responsibilities:
+
+- Design, build, and maintain scalable data pipelines to validate and transform data to meet actuarial modelling needs.
+- Ensure data quality, integrity, and consistency through robust validation, monitoring, and governance practices.
+- Collaborate with stakeholders to understand data requirements and translate them into efficient and effective technical solutions.
+- Optimise data systems and processes to improve performance, reliability, and scalability.
+- Provide technical expertise and guidance on data science approaches, tools, and best practices.
+- Support integration of multiple data sources to create cohesive, accessible, and trusted datasets.
+- Contribute to the continuous improvement of data platforms, frameworks, and engineering standards.
+
+Key Knowledge, Skills and Experience:
+
+- Strong expertise in data science techniques, including machine learning and their application in financial services.
+- Proficiency in data tools, programming languages, and database technologies, in particular in Azure Databricks, Spark, Spark SQL and Python/pyspark.
+- Understanding of data governance, security, and data quality management principles.
+- Experience working with large, complex datasets and performing feature engineering and data preparation.
+- Proven ability to translate business problems into data science solutions and deliver measurable outcomes.
+- Strong problem-solving capability with a focus on accuracy and performance.
+- Ability to communicate technical concepts clearly to both technical and non-technical audiences.
+- Collaborative approach with the ability to influence decisions and guide others.
+- Experience working in Financial Services or a similar heavily audited environment with an understanding of operating controls and producing audit evidence
+
+Essential Skills:
+
+- Data pipeline development and optimisation
+- Data modelling and architecture (in Azure Databricks)
+- Programming and scripting for data processing (Spark, Spark SQL, Python, pyspark)
+- Data science and machine learning
+- Data governance and quality assurance
+- Problem-solving and analytical thinking
+- Stakeholder engagement and technical communication, including at design forums where relevant
+- Continuous improvement and innovation
+- Performance tuning and optimisation
+- People management
+
+Recruiter: Hollie Doran
+Role Level: Experienced Colleague
+Location: Kildean, Edinburgh, Reading
+What we offer:
+
+We’re dedicated to supporting your wellbeing and helping you thrive, both at work and beyond. Our benefits are designed to help you balance your professional and personal life, and financially plan for the future. Our UK benefits include:
+
+- A valuable pension scheme of up to 18% (13% made up of employer contributions and 5% employee contributions).
+- Access to our Share Save and Share Incentive Plan, alongside financial wellbeing and support services to help give you real confidence to put your money to work.
+- Enjoy 38 days annual leave (including bank holidays), with the opportunity to purchase up to five extra days. Our Time Off When You Need It policy gives you the flexibility - to balance work and personal commitments. 
+- Our market-leading Inspiring Families policy includes comprehensive support and paid parental leave covering maternity, adoption, surrogacy, and paternity leave - because supporting families is an important part of our inclusive culture.
+- Health & Protection cover includes Private Healthcare, Critical Illness cover and Life Assurance for you, with additional family options - for peace of mind.
+
+To explore more about life at M&G and our full benefits offering, visit Life at M&G
+
+At M&G we strive to have a diverse workforce and an inclusive culture, underpinned by our policies and employee-led networks that offer networking, support and development opportunities for the diverse communities our colleagues represent. We welcome applications from people of all backgrounds – across gender, ethnicity, age, disability, sexual orientation and more – including neurodivergent individuals, career returners and those with military service experience.
+
+M&G is proud to be Level 3: Disability Confident Leader under the UK Government Disability Confident employer scheme, and we welcome applications from candidates with disabilities and long-term health conditions. If you would like to participate in the initiative, you will have the opportunity to indicate this on your application.
+
+We are committed to providing an inclusive recruitment process. All candidates have the opportunity to request reasonable adjustments when applying. If you need any additional support at any stage, please contact us at: careers@mandg.com

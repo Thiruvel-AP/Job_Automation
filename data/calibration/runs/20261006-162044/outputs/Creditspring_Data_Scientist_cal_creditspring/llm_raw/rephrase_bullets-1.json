@@ -1,0 +1,9 @@
+```json
+{
+  "az1": "Built a Python tool‑calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multi‑omics cancer research platform, integrating gene alias resolution, scoring‑methodology explanation, and dataset provenance tools.",
+  "dc1": "Proposed and prototyped an MCP‑based agentic tool in Python (FastMCP, Ollama gpt‑oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid‑based product start‑up client, delivering stakeholder communication in a live demo.",
+  "fl1": "Built machine learning pipelines with scikit‑learn and deep learning models (LSTM, BiRNN, CNN) in TensorFlow/Keras, deploying them as Python FastAPI services in Docker.",
+  "av4": "Built a JavaScript web‑scraping pipeline that automated manual data collection, creating data pipelines that surfaced market‑trend signals for pricing decisions.",
+  "p_gg2": "Built per‑gene protein‑prediction regression models for 11,459 genes (OLS + GPU Random Forest ensemble), training resumable chunked GPU models on a free T4."
+}
+```

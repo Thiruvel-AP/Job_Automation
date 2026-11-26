@@ -1,0 +1,96 @@
+Company: Kpler
+Title: Machine Learning Engineering Manager (Power)
+URL: https://jobs.lever.co/kpler/d0b15eec-6865-4e5a-9d73-a20ef069bf8e
+Source: lever
+Apply kind: lever
+Location: United Kingdom, GB
+Posted: 2026-11-08T20:40:10.852000+00:00
+Posted via: lever.createdAt
+First seen: 2026-11-18
+Listed: yes
+
+At Kpler, we are dedicated to helping our clients navigate complex markets with ease. By simplifying global trade information and providing valuable insights, we empower organisations to make informed decisions in commodities, energy, and maritime sectors. 
+ 
+Since our founding in 2014, we have focused on delivering top-tier intelligence through user-friendly platforms. Our team of over 850 experts from 69 countries works tirelessly to transform intricate data into actionable strategies, ensuring our clients stay ahead in a dynamic market landscape. Join us to leverage cutting-edge innovation for impactful results and experience unparalleled support on your journey to success.
+ 
+
+
+Key Responsibilities
+- 
+
+Lead, coach, and support a high-performing squad of Machine Learning Engineers, fostering psychological safety, professional growth, and a culture of continuous delivery.
+
+- 
+
+Drive the end-to-end technical direction and operational excellence for ML infrastructure, automated training, model evaluation, and low-latency inference pipelines.
+
+- 
+
+Partner with Product Managers, Data Scientists, and Data Engineering leads to align roadmaps, scope technical initiatives, and deliver high-impact features predictably.
+
+- 
+
+Define and champion engineering best practices across MLOps, system observability, data quality monitoring, and automated testing to ensure high reliability.
+
+- 
+
+Provide architectural guidance and participate in technical design reviews, helping the team evaluate trade-offs between speed, scalability, and long-term maintainability.
+
+- 
+
+Champion technical hiring and interview calibration to attract, evaluate, and onboard diverse engineering talent.
+
+Experience & Background
+What you'll need (Must-haves)
+
+- 
+
+Proven experience in technical leadership or engineering people management, guiding small-to-medium squads through complex software delivery cycles.
+
+- 
+
+Strong software engineering background with hands-on experience deploying and operating machine learning pipelines in production environments (e.g., Python, Docker, Kubernetes).
+
+- 
+
+Deep understanding of MLOps lifecycle tools, workflow orchestration, model serving, and cloud infrastructure (AWS or equivalent).
+
+- 
+
+Demonstrated ability to build strong cross-functional alignment between engineering, data science, and product management.
+
+Nice-to-haves
+
+- 
+
+Experience designing or scaling streaming ML systems handling high-frequency time-series data or spatial-temporal models.
+
+- 
+
+Exposure to modern ML platforms, feature stores, and distributed compute frameworks.
+
+- 
+
+Familiarity with commodity, maritime, energy, or financial market domains.
+
+We are a dynamic company dedicated to nurturing connections and innovating solutions to tackle market challenges head-on. If you thrive on customer satisfaction and turning ideas into reality, then you’ve found your ideal destination. Are you ready to embark on this exciting journey with us?
+ 
+We make things happen
+We act decisively and with purpose, going the extra mile.
+ 
+We build together
+We foster relationships and develop creative solutions to address market challenges.
+ 
+We are here to help
+We are accessible and supportive to colleagues and clients with a friendly approach.
+ 
+ 
+Our People Pledge
+ 
+Don’t meet every single requirement? Research shows that women and people of color are less likely than others to apply if they feel like they don’t match 100% of the job requirements. Don’t let the confidence gap stand in your way, we’d love to hear from you! We understand that experience comes in many different forms and are dedicated to adding new perspectives to the team.
+ 
+Kpler is committed to providing a fair, inclusive and diverse work-environment. We believe that different perspectives lead to better ideas, and better ideas allow us to better understand the needs and interests of our diverse, global community. We welcome people of different backgrounds, experiences, abilities and perspectives and are an equal opportunity employer.
+ 
+ 
+ 
+By applying, I confirm that I have read and accept the Staff Privacy Notice

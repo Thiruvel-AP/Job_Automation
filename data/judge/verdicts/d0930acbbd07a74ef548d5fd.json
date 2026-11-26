@@ -1,0 +1,1 @@
+{"would_send": false, "score": 2, "issues": ["CV does not lead with what the JD asks for", "Lack of a cover letter", "Some claims are not supported by SOURCE FACTS"], "model": "ollama/qwen2.5-7b-8k", "error": "", "key": "d0930acbbd07a74ef548d5fd", "tokens": 3994, "note": "dropped 1 section(s) about the employer or process: Privacy & AI Notice"}

@@ -1,0 +1,177 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{needspace}
+
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+\definecolor{muted}{RGB}{96, 102, 110}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+\titleformat{\section}
+  {\color{headernavy}\normalsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\linespread{1.02}
+
+% ---- building blocks: bold = organisation/project, italic = role/stack, grey = dates/places ----
+% v3.5.3 (10 Nov 2026): employer (and place) on line 1, the title then the dates on line 2, so that `pdftotext -raw` reads every role as
+% employer -> title -> dates -> bullets (ats_structure.role_order_problems). The dates were on line 1 before, read before the title.
+\newcommand{\role}[4]{% org, location, dates, title
+  \textbf{#1}{\color{muted}\,\textperiodcentered\,\textit{#2}}\\
+  \textit{#4}\hfill{\color{muted}#3}\par}
+\newcommand{\roleNoLoc}[3]{\textbf{#1}\\ \textit{#3}\hfill{\color{muted}#2}\par}
+\newcommand{\project}[3]{% name, stack, right-hand tag
+  \textbf{#1}\hfill#3\\ {\color{muted}\small\textit{#2}}\par}
+\newcommand{\gh}[1]{\href{#1}{\small GitHub}}
+\newcommand{\badge}[1]{{\color{headernavy}\small\textbf{#1}}}
+\newcommand{\skillgroup}[2]{{\color{headernavy}\textbf{#1}}\\ #2\par\vspace{3pt}}
+\newcommand{\gap}{\vspace{5pt}}
+\newcommand{\num}[1]{\textbf{#1}}   % result numbers only
+
+
+\begin{document}
+
+% ================= HEADER =================
+\begin{center}
+  {\LARGE\bfseries Thiruvel Andagurunathan Pandian} \\[3pt]
+  {\color{headernavy}\small\textbf{Forward Deployed Engineer | Audited \num{859,494} training rows for quality and duplicates}} \\[3pt]
+  {\small
+  Bristol, UK\nobreak\ \,\textbar\, \href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\nobreak\ \,\textbar\, \href{tel:+447741016954}{+44 7741 016954}\nobreak\ \,\textbar\, \href{https://www.linkedin.com/in/thiruvel-a-p/}{https://www.linkedin.com/in/thiruvel-a-p/}\nobreak\ \,\textbar\, \href{https://github.com/Thiruvel-AP}{https://github.com/Thiruvel-AP}\nobreak\ \,\textbar\, \href{https://thiruvel-ap.github.io/PersonalPortfolio/}{https://thiruvel-ap.github.io/PersonalPortfolio/}}\par\vspace{4pt}
+  \noindent{} Right to Work in UK \,\textbar\, Available to join Immediately
+\end{center}
+
+% ================= PROFILE =================
+\needspace{5\baselineskip}\section{Profile}
+Data scientist who checks the data before the model: audited 859,494 training examples for gaps and duplicates, and combined 14 research datasets for my AstraZeneca-affiliated MSc dissertation. At 180 Degrees Consulting, led the design in a five-person team that turned a startup\textquotesingle{}s vague idea into a working AI prototype in three months (rated 5 stars); it is now in live use. Builds the model a problem needs and says plainly where it falls short: customer-churn prediction, price forecasting, text grouping, and models for 11,459 genes that scored 0.807 on training data but 0.545 on unseen data. Handles the whole data workflow in Python and SQL, from combining raw data to testing and deploying the model (Docker, AWS).
+
+% ================= SKILLS =================
+\needspace{5\baselineskip}\section{Skills}
+\skillgroup{Agentic AI \& LLM-based Applications}{Tool use and tool calling with failure recovery (LangChain, LangGraph, Google ADK, ReAct agent loops; circuit breakers, fallbacks, deterministic guardrails), multi-provider LLMs (OpenAI, Anthropic Claude on AWS Bedrock, Google Gemini via LiteLLM, open-weight models via Ollama), LLM evaluation and testing (three-tier tests, hallucination-rate analysis), agent memory (persistent storage and retrieval across sessions), RAG pipelines (retrieval, generation, embeddings and the ChromaDB vector database), MCP servers (FastMCP, TypeScript SDK), prompt engineering, AI-assisted development (Claude Code as primary tool, Cursor, OpenAI Codex)}
+\skillgroup{Software Engineering \& Integrations}{TypeScript/Node.js, React, Python, JavaScript, FastAPI, Pydantic, RESTful APIs and third-party API integrations, GraphQL, PostgreSQL, SQL, MongoDB and DynamoDB (NoSQL), graph data (networkx), pytest, version control with Git (pull requests, code review), debugging and root-cause analysis, stakeholder communication, live client demos}
+\skillgroup{Cloud \& Deployment}{AWS (Bedrock, Lambda, ECR, S3, SQS, EC2, IAM, Cognito), Google OAuth sign-in, Docker, Kubernetes (AWS EKS), GitHub Actions CI/CD, serverless deployment}
+
+% ================= EXPERIENCE =================
+\needspace{5\baselineskip}\section{Work Experience}
+\needspace{4\baselineskip}
+\role{AstraZeneca}{Bristol, UK (Remote)}{May 2026 – Sep 2026}{Data Scientist, MSc Dissertation Project}
+\begin{itemize}
+  \item Built the Python data pipeline: reconciled \num{14 heterogeneous source datasets} through identifier crosswalks so the agent used trusted data, then deployed it as a Docker image on AWS Lambda (ECR, least-privilege IAM) and documented the architecture and evaluation.
+  \item Built a generative AI assistant researchers could trust: it checks gene names against official databases and falls back to a local list of 19,213 genes if they go down (LangChain, AWS).
+  \item Found where the assistant went wrong with about 65 automated checks at three levels, fixed failures layer by layer, and reused the checks after changing AI provider (pytest).
+  \item Studied graph neural network research and designed how genes and cell lines are linked in one graph, with clustering to find similar ones (Leiden, KNN).
+  \item Integrated the agent into a React front end with real-time gene alias enrichment.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{180 Degrees Consulting Bristol}{Bristol, UK (Remote)}{Sep 2025 – Dec 2025}{AI Engineer}
+\begin{itemize}
+  \item Led the design in a five-person team that turned a startup client\textquotesingle{}s vague idea into a working AI prototype in three months; senior leadership rated it 5 stars (Python, MCP).
+  \item Collaborated with the client\textquotesingle{}s engineers to put the tool into everyday use and reviewed their code changes with the CTO; it is \num{now in live use} (TypeScript, OpenAI).
+  \item The client\textquotesingle{}s founder later recommended me in writing, calling the server \textquotesingle{}stable, production-ready\textquotesingle{} and saying it arrived ahead of schedule.
+  \item Designed how a user\textquotesingle{}s question reaches the AI server: one AI model writes the database query and a second runs the statistics before the answer returns (MCP, GraphQL).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Freelance}{Chennai, India}{Jan 2025 – Aug 2025}{AI/ML Engineer}
+\begin{itemize}
+  \item Built a private client an AI finance assistant that reads his income, spending, loans and investments and suggests next steps, self-hosted to keep costs low (Llama, Ollama).
+  \item For a private client, built AI chat and document-search (RAG) tools, served machine-learning models as web APIs, and contributed to a team fine-tune of a Llama model (LangChain, FastAPI).
+  \item Built repeatable machine-learning pipelines that create features, compare models and tune the best one, for both classification and regression tasks (scikit-learn).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\role{Avasoft}{Chennai, India}{Jan 2023 – Sep 2024}{Software Development Engineer Trainee, then Software Development Engineer}
+\begin{itemize}
+  \item Helped build a money-management app for a company\textquotesingle{}s 10,000+ employees, linking live stock prices and bank accounts to a backend of 200+ endpoints; shipped the first release (Flutter, AWS).
+  \item Shipped features in a live finance app as part of a team, connecting live market data and bank accounts through APIs with secure sign-in (Twelve Data, Plaid).
+  \item As a trainee, replaced a manual data-collection job with an automatic web scraper, giving the team market trends they used for pricing decisions (JavaScript).
+  \item Built 10 reusable app building blocks the team shared across releases, so new features shipped faster from tested parts (SwiftUI).
+\end{itemize}
+
+% ================= PROJECTS =================
+\needspace{5\baselineskip}\section{Projects}
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{llama3-8b-qlora-math-t4: QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget}\hspace{1em}\url{https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4}}%
+\setbox2=\hbox{{\small\textit{Python, Unsloth, PEFT, TRL, Hugging Face, PyTorch, sentence-transformers, scikit-learn}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{llama3-8b-qlora-math-t4: QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget}\\ {\color{muted}\small\textit{Python, Unsloth, PEFT, TRL, Hugging Face, PyTorch, sentence-transformers, scikit-learn}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4}}\par
+\else
+\textbf{llama3-8b-qlora-math-t4: QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget}\\ {\color{muted}\small\textit{Python, Unsloth, PEFT, TRL, Hugging Face, PyTorch, sentence-transformers, scikit-learn}}\hfill{\small\url{https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4}}\par
+\fi
+\else
+\project{llama3-8b-qlora-math-t4: QLoRA fine-tuning of Llama 3.1 8B for maths under a token budget}{Python, Unsloth, PEFT, TRL, Hugging Face, PyTorch, sentence-transformers, scikit-learn}{\url{https://github.com/Thiruvel-AP/llama3-8b-qlora-math-t4}}
+\fi
+\begin{itemize}
+  \item Ran a data quality check on all 859,494 training examples, found 44,369 extra duplicates and hand-reviewed 181 suspect records before training (Python).
+  \item Fine-tuned an 8-billion-parameter AI model on a free GPU, training only 0.52\% of it, and raised correct maths answers from 16.2\% to 27.3\% on unseen problems (QLoRA, Llama).
+  \item Reported the limits honestly: the gain came mostly from the model finishing its answers in time, not from better reasoning (50\% vs 52\% on finished answers).
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{GTAI Cell Line Finder: multi-omics graph for cancer cell-line selection (PoC)}\hspace{1em}\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}%
+\setbox2=\hbox{{\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{GTAI Cell Line Finder: multi-omics graph for cancer cell-line selection (PoC)}\\ {\color{muted}\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}\par
+\else
+\textbf{GTAI Cell Line Finder: multi-omics graph for cancer cell-line selection (PoC)}\\ {\color{muted}\small\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}}\hfill{\small\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}\par
+\fi
+\else
+\project{GTAI Cell Line Finder: multi-omics graph for cancer cell-line selection (PoC)}{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}{\url{https://github.com/Thiruvel-AP/GTAI-GraphPOC}}
+\fi
+\begin{itemize}
+  \item Linked 14 public cancer-research files into one network of 1,399 cell lines and 16,385 genes; models scored 0.807 on training data but 0.545 on unseen data, reported openly (Python).
+  \item Combined mRNA and protein evidence per gene with Stouffer\textquotesingle{}s method.
+\end{itemize}
+\gap
+\needspace{4\baselineskip}
+\setbox0=\hbox{\textbf{mcp\_searchagent}\hspace{1em}\url{https://github.com/Thiruvel-AP/mcp_searchagent}}%
+\setbox2=\hbox{{\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\hspace{1em}{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}}%
+\ifdim\wd0>\linewidth
+\ifdim\wd2>\linewidth
+\textbf{mcp\_searchagent}\\ {\color{muted}\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\\ \hspace*{\fill}{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}\par
+\else
+\textbf{mcp\_searchagent}\\ {\color{muted}\small\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}}\hfill{\small\url{https://github.com/Thiruvel-AP/mcp_searchagent}}\par
+\fi
+\else
+\project{mcp\_searchagent}{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}{\url{https://github.com/Thiruvel-AP/mcp_searchagent}}
+\fi
+\begin{itemize}
+  \item Built a search assistant that combines web search with a database and runs on a free local AI model, tested automatically on Python 3.9 to 3.11 (MCP, PostgreSQL).
+\end{itemize}
+
+% ================= EDUCATION =================
+\needspace{5\baselineskip}\section{Education}
+\noindent\textit{MSc Data Science}, \textbf{University of Bristol, UK}\unskip\nobreak\hfill\penalty50\hskip1em\null\nobreak\hfill\mbox{Sep 2025 – Sep 2026}\par
+\noindent{\small Dissertation with AstraZeneca affiliation (GeneTraceAI)}\par
+\noindent\textit{B.E. Electrical \& Electronics Engineering}, \textbf{St. Joseph\textquotesingle{}s College of Engineering}, First Class with Distinction\unskip\nobreak\hfill\penalty50\hskip1em\null\nobreak\hfill\mbox{Sep 2019 – Apr 2023}\par
+
+% ================= CERTIFICATIONS & ACHIEVEMENTS =================
+\needspace{5\baselineskip}\section{Certifications \& Achievements}
+\begin{itemize}
+  \item Model Context Protocol: Advanced Topics, Anthropic, \textit{Jun 2026}
+  \item Introduction to Model Context Protocol, Anthropic, \textit{Jun 2026}
+  \item AWS Academy Cloud Foundations, \textit{Nov 2025}
+  \item 180 Degrees Consulting Data Science Consultant Certificate, \textit{Dec 2025}
+  \item Bristol PLUS Award, \textit{Mar 2026}
+\end{itemize}
+
+\end{document}

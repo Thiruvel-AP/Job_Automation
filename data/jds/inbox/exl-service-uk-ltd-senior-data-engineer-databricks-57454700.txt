@@ -1,0 +1,55 @@
+Company: EXL Service (UK) Ltd
+Title: Senior Data Engineer (Databricks)
+URL: https://www.reed.co.uk/jobs/senior-data-engineer-databricks/57454700
+Source: reed
+Apply kind: aggregator_only
+Location: London, GB
+Posted: 2026-10-13
+Posted via: reed.date
+First seen: 2026-11-05
+
+EXL (NASDAQ: EXLS) is a global data and AI company that offers services and solutions to reinvent client business models, drive better outcomes and unlock growth with speed. Bringing together domain expertise with robust data, powerful analytics, cloud and AI to create agile, scalable solutions and execute complex operations for the world’s leading corporations. 
+EXL was founded on the core values of innovation, collaboration, excellence, integrity and respect, creating value from data to ensure faster decision-making and transforming operating models. Key industries include Insurance, Healthcare, Banking and Financial Services, Media, and Retail, among others. 
+Headquartered in New York, our team is over 60,000 strong, with more than 50 offices spanning six continents. 
+Role Title: Databricks Data Engineer 
+BU/Segment: Analytics / Data Management / Insurance Domain 
+Location: London, United Kingdom (Hybrid, 3-4 days in the office) 
+Employment Type: Permanent to start ASAP 
+Summary of the role: 
+We’re looking for a highly skilled Azure Databricks Data Engineer to design, develop and deliver cloud-based data integration and analytics solutions within our Insurance portfolio. 
+You’ll work across data engineering, modelling, and transformation initiatives — building scalable pipelines, optimising performance, and ensuring best practices in data quality and governance. This is a hands-on technical role requiring strong Azure and Databricks experience, coupled with solid Insurance domain knowledge. 
+As part of this role, you’ll have the opportunity to work on high-impact Insurance data transformation programmes, collaborating with experienced data professionals in a forward-thinking, innovative environment. You’ll gain exposure to cutting-edge Azure and Databricks technologies. 
+As part of your duties, you will be responsible for: 
+
+- Design, build, and deploy scalable data pipelines using Azure Databricks, Azure Data Factory, and Azure SQL Database.
+- Optimise Databricks environments for performance, cost, and security.
+- Develop and maintain data integration, ETL/ELT processes, and data quality frameworks.
+- Translate business requirements into data models, ensuring consistency and accuracy across data layers.
+- Work with stakeholders to deliver effective data solutions, analytics.
+- Create technical documentation including data flow diagrams, architecture design, and test plans.
+- Stay current with emerging data engineering and Azure ecosystem technologies to drive continuous improvement. 
+Qualifications and experience we consider to be essential for the role: 
+
+- Insurance industry experience is essential, with a strong understanding of policy, claims, and regulatory data.
+- Minimum of 5 years’ management experience required – leading technical delivery or overseeing project teams within data engineering or integration environments.
+- 8–10 years’ experience in data engineering and integration, ideally in enterprise-scale environments.
+- Deep expertise in Azure Databricks, Azure Data Factory, Azure Synapse, and Azure Data Lake.
+- Hands-on experience with Spark (PySpark/SparkSQL), ETL/ELT design, and data pipeline orchestration.
+- Strong data modelling skills (Dimensional, ODS, Data Vault) and experience with data warehousing concepts.
+- Experience working with large, complex datasets and distributed computing environments.
+- Proficiency in SQL, version control (e.g. Git), and CI/CD pipelines.
+- Familiarity with Agile delivery and DevOps practices (Azure DevOps, JIRA, etc.). 
+Preferred Skills & Experience: 
+
+- Knowledge of EDM (Enterprise Data Management) practices, data governance, metadata management, and lineage tools.
+- Exposure to multi-cloud environments (AWS or GCP).
+- Understanding of modern data architecture philosophies (Dimensional, ODS, Data Vault) and real-time cloud data capabilities. 
+As part of a leading global analytics and AI solutions company, you can look forward to: 
+
+- A competitive salary with a generous bonus, private healthcare, critical illness life assurance at 4 x your annual salary, income protection insurance, and a rewarding pension.
+- EXL provides everyday financial well-being solutions, such as cash back cards, in which you can earn cashback while enjoying discounts, promotions, and offers from top retailers. We also offer a Cycle Scheme where you can save money on bikes and cycling accessories.
+- At EXL, we are committed to providing our employees with the tools and resources they need to succeed and excel in their careers. We offer a wide range of professional and personal development opportunities. We also support a range of learning initiatives that allow our employees to build on their existing skills and knowledge. From online courses to seminars and workshops, our employees have the opportunity to enhance their skills and stay up to date with the latest trends and technologies.
+- As an Equal Opportunity Employer, EXL is committed to diversity. Our company does not discriminate based on race, religion, colour, national origin, sex (including pregnancy, childbirth, or related medical conditions), sexual orientation, age, or disability status.
+- EXL employees are eligible to purchase stock as part of our Employee Stock Purchase Plan (ESPP).
+- At EXL, we offer a flexible hybrid working model that allows employees to live a balanced, healthy lifestyle while strengthening our culture of collaboration. 
+To be considered for this role, you must already be eligible to work in the United Kingdom.

@@ -1,0 +1,69 @@
+Company: Wheely
+Title: Associate Data Scientist - Operations Research
+URL: https://boards.greenhouse.io/wheely/jobs/7655292003?gh_jid=7655292003
+Source: greenhouse
+Apply kind: greenhouse
+Location: London, England, United Kingdom
+Posted: 2026-03-06T03:24:55-05:00
+Posted via: greenhouse.first_published
+First seen: 2026-10-22
+Listed: yes
+
+About Wheely
+
+Wheely is redefining premium transportation across major cities in Europe, the US, and the Middle East. We blend cutting-edge technology with the craft of five-star chauffeuring to deliver an experience trusted by more than 100,000 active riders and 1,200 corporate accounts.
+
+We’re a profitable, fast-growing scale-up with $43M raised and over $100M in annual revenue. Having recently launched in New York City, we’re expanding rapidly across the US and EMEA. If you take pride in your craft and want to help shape the next chapter of our growth, we'd love to hear from you.
+
+About The Role
+We're hiring Associate Data Scientists with a background in Operations Research. You will own the entire process: from ideation and research through to production deployment.
+
+You'll join either our Pricing or Matching team, working alongside other Data Scientists and engineers on challenging, high-impact problems such as dynamic pricing and bipartite matching.
+
+Responsibilities
+
+- Collaborate with engineers, Data Scientists, designers, and product managers to solve ambiguous problems
+
+- Research, prototype, and ship ML and optimisation models into production
+
+- Continuously improve existing algorithms and identify opportunities for new ones
+
+Requirements
+
+- Master's or PhD in Operations Research, Mathematics, Management Science or a closely related field with a focus on optimisation
+
+- Strong foundation in mathematical optimisation or mathematical programming
+
+- Solid knowledge of probability & statistics
+
+- Solid knowledge of Reinforcement Learning and Casual Inference
+
+- Excellent programming skills in Python and core ML tooling (e.g. SQL, PyTorch, etc.)
+
+Nice To Have
+
+- Exposure to dynamic pricing, auction design, or marketplace matching problems
+
+- Publication in Q1/A* journals, participation in NeurIPS and other conferences
+
+What We Offer
+
+- Office-based role in West London, four days a week with flexible start and finish times, plus one remote day of your choice
+
+- Salary: £50,000 – £70,000
+
+- Employee stock options plan
+
+- Private medical and dental insurance
+
+- Life and critical illness cover
+
+- Latest-generation MacBook Pro and 4k display
+
+- Monthly credit towards Wheely journeys
+
+- Cycle to Work scheme
+
+- Professional development stipend
+
+All of your personal information will be collected stored and processed in accordance with Wheely’s Candidate Privacy Notice

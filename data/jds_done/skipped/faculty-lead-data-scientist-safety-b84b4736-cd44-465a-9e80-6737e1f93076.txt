@@ -1,0 +1,116 @@
+Company: Faculty
+Title: Lead Data Scientist (Safety)
+URL: https://jobs.ashbyhq.com/faculty/b84b4736-cd44-465a-9e80-6737e1f93076
+Source: ashby
+Apply kind: ashby
+Location: London, United Kingdom
+Posted: 2026-10-21T09:15:02.481+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-11-03
+Listed: yes
+Possible repost: possible repost of a job you skipped on 2026-11-03 (manual:d4b889536952)
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+
+ABOUT THE ROLE
+
+
+
+As a Lead Data Scientist at Faculty, you will drive the scientific direction and architectural rigour of upstream AI safety and evaluation standards. Partnering directly with Frontier Labs, you will lead the design of novel experiment frameworks, mentor technical teams, and ensure delivery excellence across high-stakes engagements.
+
+
+
+Bridging deep scientific research with client strategy, you will champion robust methodologies, guide cross-functional teams, and advance Faculty’s thought leadership in practical AI safety.
+
+
+
+
+WHAT YOU'LL BE DOING:
+
+
+
+ - Directing project teams to deliver cutting-edge upstream AI safety solutions and evaluation standards to Frontier Labs
+
+ - Architecting core scientific experiment designs and robust software infrastructure for high-impact safety engagements
+
+ - Guiding and mentoring data scientists, nurturing technical capabilities, and fostering an inclusive, high-performing team culture
+
+ - Partnering with commercial leads and executive stakeholders to scope technical work, assess feasibility, and translate complex challenges into rigorous scientific frameworks
+
+ - Advancing Faculty’s industry leadership by innovating novel evaluation methodologies, speaking at key forums, or publishing open-source research
+
+ - Establishing and upholding scientific methodology, rigour, and engineering best practices across the full project lifecycle
+   
+   
+
+
+WHO WE'RE LOOKING FOR:
+
+
+
+ - You bring extensive leadership experience in quantitative data science, upstream AI safety research, or academic research with exemplary experiment design methodology.
+
+ - You possess advanced Python expertise alongside deep familiarity with scientific stacks (NumPy, Pandas), AI evaluation frameworks (e.g., Inspect AI), and agentic harnesses and sandboxing environments.
+
+ - You demonstrate a passion for advancing evaluation standards across complex, specialised domains, including the application of novel research avenues, with exceptional technical rigour.
+
+ - You excel at empowering others, sharing technical knowledge, and cultivating a collaborative environment where team members thrive.
+
+ - You combine strong commercial acumen with the ability to articulate complex scientific strategies clearly to senior clients and external partners.
+
+ - You drive strategic execution, scoping high-impact projects effectively to meet structured timelines without compromising quality.
+
+
+
+
+THE INTERVIEW PROCESS
+
+
+
+ 1. Talent Team Screen (30 minutes)
+
+ 2. Introduction to the team (30 minutes)
+
+ 3. Take Home Technical Assessment
+
+ 4. Technical Interview (90 minutes)
+
+ 5. Commercial Interview (60 minutes)
+
+
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

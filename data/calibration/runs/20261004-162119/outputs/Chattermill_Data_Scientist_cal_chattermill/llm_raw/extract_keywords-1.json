@@ -1,0 +1,40 @@
+{
+  "required": [
+    "transformer architectures",
+    "PyTorch",
+    "training loops",
+    "model fine-tuning",
+    "embedding-based approaches",
+    "semantic search",
+    "ML models",
+    "customer feedback tasks",
+    "evaluation frameworks",
+    "test sets",
+    "metrics",
+    "clean code",
+    "data pipelines",
+    "monitoring",
+    "business requirements",
+    "ML experiments",
+    "instruction fine-tuning",
+    "model serving",
+    "classical ML and statistics",
+    "GenAI and agentic patterns"
+  ],
+  "preferred": [
+    "LoRA",
+    "LLM",
+    "retrieval pipelines",
+    "reranking systems",
+    "insight generation",
+    "flexibility",
+    "work setup",
+    "time off",
+    "growth",
+    "ownership",
+    "health and wellbeing",
+    "values alignment"
+  ],
+  "company_hook": "Chattermill helps large brands center customer feedback in their decision-making processes using advanced AI and NLP technologies.",
+  "team": "Customer Experience Intelligence"
+}

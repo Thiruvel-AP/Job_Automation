@@ -1,0 +1,131 @@
+Company: Faculty
+Title: Lead Computer Vision Engineer
+URL: https://jobs.ashbyhq.com/faculty/0c1b9fd6-83bd-43cc-8e3e-9acc0d5fb60d
+Source: ashby
+Apply kind: ashby
+Location: Remote (UK)
+Posted: 2026-04-23T20:00:08.336+00:00
+Posted via: ashby.publishedAt
+First seen: 2026-10-22
+Listed: yes
+
+WHY FACULTY? 
+
+
+We established Faculty in 2014 because we thought that AI would be the most important technology of our time. Since then, we’ve worked with over 350 global customers to transform their performance through human-centric AI. You can read about our real-world impact here https://faculty.ai/impact.
+
+
+
+We don’t chase hype cycles. We innovate, build and deploy responsible AI which moves the needle - and we know a thing or two about doing it well. We bring an unparalleled depth of technical, product and delivery expertise to our clients who span government, finance, retail, energy, life sciences and defence.
+
+
+
+Our business, and reputation, is growing fast and we’re always on the lookout for individuals who share our intellectual curiosity and desire to build a positive legacy through technology.
+
+
+
+AI is an epoch-defining technology, join a company where you’ll be empowered to envision its most powerful applications, and to make them happen.
+
+
+
+
+ABOUT THE TEAM 
+
+
+
+Our Defence team is focused on building and embedding human-centered AI solutions which give our nation a competitive edge in the defence sector. We collaborate with our clients to bring ethical, reliable and cutting-edge AI to high-stakes situations and maintain the balance of global powers essential to our liberty.
+
+Because of the nature of the work we do with our Defence clients, you will need to be eligible for UK Security Clearance (SC) and willing to work between 2 to 4 days per week on-site with  these customers which may require travel to locations throughout the UK.
+
+When not required on client sites, you’ll have the flexibility to work from our London office or remotely from elsewhere within the UK.
+
+
+
+
+
+
+ABOUT THE ROLE
+
+
+
+We are seeking a visionary Computer Vision (CV) Specialist to lead our most ambitious AI initiatives within the defence sector. Bridging the gap between cutting-edge research and real-world deployment, you will act as a primary technical authority, architecting sophisticated CV systems that solve critical customer challenges. 
+
+
+
+This is an entrepreneurial opportunity to shape our technical strategy, drive capability development, and represent the business unit as a thought leader. If you thrive on autonomy and want to push the boundaries of applying State-of-the-Art (SOTA) technology, this role offers the platform to make a definitive impact.
+
+
+
+
+WHAT YOU'LL BE DOING:
+
+
+
+ - Delivering high impact, hands-on computer vision work and architecting technical solutions for complex project requirements.
+
+ - Leading the technical delivery of CV projects and providing expert guidance to multidisciplinary teams throughout the development lifecycle.
+
+ - Winning new business by contributing expert CV insight to bids and identifying opportunities to integrate advanced visual intelligence into customer solutions.
+
+ - Staying at the forefront of the field by mastering SOTA developments and sharing best practices across the business unit to maintain a competitive edge.
+
+ - Representing the organisation both internally and externally as an authoritative voice and subject matter expert in computer vision.
+
+ -  Partnering with leadership to define the technical strategy for CV work and taking ownership of capability development within the Defence domain.
+
+ - Mentoring and developing talented team members who share an interest in CV, fostering an environment of continuous learning and technical excellence.
+
+
+
+
+WHO WE'RE LOOKING FOR:
+
+
+
+ - You possess a deep understanding of State-of-the-Art Computer VisionAI approaches and feel confident applying both machine learning and classical computer vision techniques to real-world problems.
+
+ - You are an experienced technical leader who enjoys the challenge of guiding teams and turning real world problems into architecting system architectures with minimal oversight.
+
+ - You have a proven track record of deploying CV models into production environments and navigating the practicalities of real-world deployment, performance and latency.
+
+ -  You bring a collaborative and entrepreneurial mindset, with the ability to communicate technical concepts effectively to both specialist colleagues and non-technical clients.
+
+ -  Your background includes meaningful experience in Python, including object-oriented programming, and you are comfortable exploring low-level components when necessary.
+
+ - You are passionate about capability building, whether through developing R&D accelerators or helping others sharpen their technical skills through mentorship.
+
+
+
+
+THE INTERVIEW PROCESS
+
+
+
+ 1. Talent Team Screen (30 minutes)
+
+ 2. Introduction to the team (30 minutes)
+
+ 3. Technical Interview (90 minutes) 
+
+ 4. Commercial Interview (60 minutes)
+
+
+
+
+
+
+
+OUR RECRUITMENT ETHOS
+
+
+
+
+We aim to grow the best team - not the most similar one. We know that diversity of individuals fosters diversity of thought, and that strengthens our principle of seeking truth. And we know from experience that diverse teams deliver better work, relevant to the world in which we live. We’re united by a deep intellectual curiosity and desire to use our abilities for measurable positive impact. We strongly encourage applications from people of all backgrounds, ethnicities, genders, religions and sexual orientations.
+
+
+
+If you don’t feel you meet all the requirements, but are excited by the role and know you bring some key strengths, please don't hesitate in applying as you might be right for this role, or other roles. We are open to conversations about part-time hours. 
+
+
+
+A note on AI: we're happy for you to use it for research and interview prep, but please don't use it to generate answers during live interviews. We also use an AI note-taker (Metaview) in interviews so interviewers can stay present (which you can opt out of just let us know,) and every application is reviewed by a human, never decided by AI.

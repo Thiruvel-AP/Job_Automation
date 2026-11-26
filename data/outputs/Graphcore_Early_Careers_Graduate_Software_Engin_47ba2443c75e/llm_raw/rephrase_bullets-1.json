@@ -1,0 +1,7 @@
+```json
+{
+  "p_gg2": "Trained per-gene regression models for 11,459 genes using OLS and GPU random forest, with resumable chunked training, reducing RAM from 8.2 to 5.5 GB and validating on held‑out data, revealing overfitting (train Pearson 0.807 vs test 0.545).",
+  "p_gg1": "Merged 14 public omics source files into a graph of 1,399 cell lines and 16,385 genes (~2.8M edges), then applied Leiden community detection to identify 19 clusters with modularity 0.822, exploring its structure.",
+  "p_ia1": "Designed preprocessing and clustering pipelines (K‑Means, HAC, DBSCAN) across BoW, TF‑IDF, Skip‑gram, and SBERT representations, and traced silhouette scores below 0.30 to repeated template vocabulary in support tickets."
+}
+```

@@ -1,0 +1,72 @@
+Company: FSP Consulting
+Title: Senior Data Engineer
+URL: https://www.reed.co.uk/jobs/senior-data-engineer/57168860
+Source: reed
+Apply kind: aggregator_only
+Location: Reading, GB
+Posted: 2026-07-28
+Posted via: reed.date
+First seen: 2026-11-05
+
+Role Overview 
+We have an exciting opportunity for a Senior/Lead Data Engineer to join our growing Data & AI function within FSP. 
+The successful applicant will work alongside our architects and consultants to deliver high-quality data solutions across a variety of cloud platforms and tech stacks to help our customers become more successful in delivering the insight to maximise and scale automated decision making. 
+
+Responsibilities 
+
+- You will work as key member of our Data Engineering team, using your proven experience as required, mentoring others within the team
+- we'd be keen to see any leadership qualities you may have in possibly acting as a leader to our wider Data Engineers; leading technical design and architecture discussions
+- Mentoring and coaching team members
+- Operating as a technical lead across multiple projects and teams.
+- Understand customer requirements and work collaboratively to design data solutions that deliver high-quality outcomes. 
+- Enable higher quality data to be created & managed in our customers organisations 
+- Develop high-quality data products utilising (primarily) cloud native patterns 
+- Engineer cloud-based data lake patterns to connect and leverage organisational & external data 
+- Provide technical support and guidance through prototyping, testing, build, and launch of data products 
+- Contribute towards the creation of technical support and design documentation for data platforms and solutions. 
+- Contribute to continually refining our development standards and best practices. 
+About you 
+
+- Extensive experience designing and delivering enterprise-scale data engineering solutions
+- Practical Microsoft Fabric experience, including Lakehouse, Data Factory, Warehouse and Spark
+- In addition to the above, strong hands-on experience with Azure Databricks, including PySpark, Delta Live Tables and Databricks Workflows and orchestration
+- Knowledge of Azure Data Platform services, including ADF, ADLS Gen2, Azure Synapse Analytics
+- A strong background in Python and SQL development
+- Proven experience building batch and streaming data pipelines
+- Experience implementing Medallion Architecture and Lakehouse patterns
+- Strong understanding of data modelling techniques (dimensional, star schema, data vault)
+- Experience with CI/CD, Infrastructure as Code and DevOps practices, Git-based source control and deployment pipelines
+- Strong understanding of data governance, security, and access control 
+Knowledge and experience of the following would be advantageous: 
+
+- Experience with GCP and AWS
+- On-prem data platform and integration solutions, including Microsoft SQL Server, SQL Server Integration Services (SSIS)
+- Experience in working with Power BI, including Power Query, DAX, and Power BI Service
+- Experience with enterprise data governance frameworks
+- Certifications for desired cloud technologies 
+What we look for in our people 
+
+- Strong alignment with FSP values and ethos
+- Commitment to teamwork, quality and mutual success
+- Proactivity with an ability to operate with pace and energy
+- Strong communication and interpersonal skills
+- Dedication to excellence and quality 
+Who are FSP? 
+FSP is a leading consultancy specialising in Digital, Security and AI solutions. Our success is enabled by our unwavering commitment to excellence, our people centric culture alongside best-in-class operations, ensuring impactful and sustainable outcomes for our clients. 
+As a long standing and highly accredited Microsoft Partner, with extensive solution designations, we partner with clients across a range of commercial sectors, enabling digital transformation, innovation and robust cyber security. 
+We navigate the complexities of data sensitivity, confidentiality, governance and compliance. We blend strategic insight, depth of technical expertise, delivery and operational excellence to meet the specific requirements outlined. 
+We take a collaborative, one team approach with our clients to drive sustainable change, providing outstanding client experience and delivering exceptional results that are aligned with business priorities. 
+Our commitment to security and quality is reinforced by our ISO27001 and ISO9001 certifications (UKAS), as well as our CREST approved penetration testing and SOC capabilities. Additionally, we are an IASME Cyber Essentials Certification Body and Cyber Essentials Plus certified. 
+Why work for FSP? 
+At FSP, we are committed to providing: 
+
+- A collaborative and supportive environment in which you can grow and develop your career
+- The tools and opportunity to do work of which you can be proud
+- A chance to work alongside some of the best people in the industry, who always seek to share their knowledge and experience
+- Hybrid working – we empower you to make smart choices about when and where to work to achieve great results
+- Industry leading coaching and mentoring
+- Competitive salary and an excellent benefits package 
+Equal and Fair Opportunity 
+FSP is an equal opportunity employer and we welcome applications from all suitable candidates. We consider all applicants for employment regardless of age, disability, sexual orientation, gender identity, family or parental status, race, colour, nationality, ethnic or national origin, religion or belief. 
+Research suggests that applicants from underrepresented groups are less likely to apply for roles if they do not precisely meet requirements, or if they felt there were clear barriers as to who should apply. If you are excited about a potential role with us but are concerned that you may not be a perfect fit, please do apply, as you may be the ideal candidate for this role or for a different vacancy within FSP. 
+We endeavour to always provide fair opportunity for applicants to showcase themselves in the best way possible during any interviews or meetings. If you require any adjustments for a call or in-person meeting, please let us know.

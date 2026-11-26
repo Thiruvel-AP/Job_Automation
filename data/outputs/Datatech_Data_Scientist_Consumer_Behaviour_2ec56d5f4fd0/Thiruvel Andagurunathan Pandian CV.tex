@@ -1,0 +1,200 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fontspec}
+\setmainfont{Carlito}
+\usepackage[margin=0.6in, top=0.5in, bottom=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{needspace}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+% no hyphenation: pdftotext turns 'scal-able' into two tokens and naive ATS matching misses them
+\hyphenpenalty=10000 \exhyphenpenalty=10000 \emergencystretch=3em
+
+\definecolor{headernavy}{RGB}{12, 83, 166}
+\definecolor{linkblue}{RGB}{0, 102, 204}
+
+\hypersetup{colorlinks=true, linkcolor=linkblue, urlcolor=linkblue}
+
+% the type scale (ratio 1.2, body 11pt): name, section heading, contact and stack lines
+\newcommand{\namesize}{\fontsize{19pt}{23pt}\selectfont}
+\newcommand{\headsize}{\fontsize{13.2pt}{16pt}\selectfont}
+\newcommand{\smallsize}{\fontsize{10pt}{12.2pt}\selectfont}
+
+\titleformat{\section}
+  {\color{headernavy}\headsize\bfseries}
+  {}{0em}{\MakeUppercase}[\color{headernavy}\titlerule]
+
+\titlespacing{\section}{0pt}{8pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, leftmargin=1.3em, partopsep=0pt, parsep=1pt}
+
+\pagestyle{empty}
+\linespread{1.02}
+
+% a separator may end a line but never starts one: no break before it. \textbar, not $|$: the bar stays in Carlito (math
+% mode would pull in a second font, Computer Modern's CMSY10)
+\newcommand{\sep}{\nobreak\ \textbar\ }
+\newcommand{\dotsep}{\nobreak\ ·\ }
+\newcommand{\sectionhead}[1]{\needspace{5\baselineskip}\section{#1}}
+% employer (left, bold) dates (right) / title (italic): never alone at the foot of a page
+\newcommand{\entry}[3]{\needspace{4\baselineskip}\noindent #1\hfill #2\\ #3\par}
+
+\begin{document}
+
+% ---------------- HEADER ----------------
+\begin{center}
+    {\namesize\bfseries\color{headernavy} Thiruvel Andagurunathan Pandian} \\[4pt]
+    {\smallsize Bristol, UK\sep\href{mailto:apthiruvel@gmail.com}{apthiruvel@gmail.com}\sep\href{tel:+447741016954}{+44 7741 016954}\sep\href{https://www.linkedin.com/in/thiruvel-a-p/}{linkedin.com/in/thiruvel-a-p}\sep\href{https://github.com/Thiruvel-AP}{github.com/Thiruvel-AP}\sep\href{https://thiruvel-ap.github.io/PersonalPortfolio/}{thiruvel-ap.github.io/PersonalPortfolio}\par}
+    \vspace{4pt}
+    \noindent{\smallsize Right to work in UK under Graduate visa\sep Available to join immediately\par}
+\end{center}
+
+% ---------------- PROFILE ----------------
+\sectionhead{Profile}
+\vspace{3pt}
+\noindent Data Scientist: Builds deployable ML models for forecasting, churn prediction, and segmentation, while owning end to end data workflows in Python and SQL from data merging to feature creation, tuning, validation and deployment.
+
+% ---------------- SKILLS ----------------
+\sectionhead{Skills}
+\vspace{2pt}
+
+\noindent {\color{headernavy}\textbf{Core}}
+    \\
+    Python, SQL, R, Machine Learning, Deep Learning, NLP, Statistics, scikit-learn, PyTorch, TensorFlow, pandas, NumPy, SciPy, LLMs, RAG, LangChain, Matplotlib, Seaborn, Plotly, Tableau, Docker, Kubernetes, AWS, Git
+
+\vspace{3pt}
+
+\noindent {\color{headernavy}\textbf{Languages}}
+    \\
+    TypeScript, JavaScript, Swift, Dart
+
+\vspace{3pt}
+
+\noindent {\color{headernavy}\textbf{ML \& Statistics}}
+    \\
+    Hypothesis testing, XGBoost, Keras, LSTM, Isolation Forest, Random Forest, RAPIDS cuML, time series forecasting, customer segmentation (k-means, HAC, DBSCAN), class-imbalance handling (SMOTE), model validation (cross-validation, MCC), ANOVA, bootstrap, PCA, maximum likelihood estimation, experimental design \textit{(MSc coursework)}
+
+\vspace{3pt}
+
+\noindent {\color{headernavy}\textbf{LLMs \& Agents}}
+    \\
+    LangGraph, Google ADK, MCP (FastMCP, MCP SDK), AWS Bedrock, Claude API, OpenAI API, Gemini via LiteLLM, Hugging Face Transformers, Ollama, ChromaDB, tool calling, LoRA fine tuning, LLM evaluation, prompt design
+
+\vspace{3pt}
+
+\noindent {\color{headernavy}\textbf{Databases}}
+    \\
+    PostgreSQL, MongoDB, DynamoDB
+
+\vspace{3pt}
+
+\noindent {\color{headernavy}\textbf{Cloud \& MLOps}}
+    \\
+    GitHub Actions, AWS Lambda, ECR, IAM, EC2, S3, SQS, GCP Cloud Run, pytest, MLflow, FastAPI, REST APIs, WebSockets, TensorFlow Serving, AWS ECS, Kubernetes (AWS EKS)
+
+% ---------------- EXPERIENCE ----------------
+\sectionhead{Work Experience}
+\vspace{2pt}
+
+\entry{\textbf{AstraZeneca}, \textit{Bristol, UK (Remote)}}{May 2026 – Sep 2026}{\textit{Data Scientist}}
+\begin{itemize}
+    \item Built a tool calling LLM agent (LangChain, AWS Bedrock, Claude Haiku 4.5) for a multiomics cancer research platform, with three tools for gene alias resolution, scoring-methodology explanation and dataset provenance.
+    \item Designed a deterministic hallucination guard architecture and fail safe data resolution via live Ensembl/HGNC APIs with a local \textbf{19,213-gene parquet fallback} and circuit breakers.
+    \item Wrote a three tier test framework (tool level, API/integration, live agent) of \textbf{\textasciitilde{}65 tests across 8 files}, validated across the LLM provider migration from Groq to AWS Bedrock after a rate limit evaluation.
+    \item Wrote the dissertation\textquotesingle{}s AI agent sections covering architecture, implementation and evaluation, including a documented hallucination-rate analysis and test case outcomes.
+\end{itemize}
+
+\vspace{6pt}
+
+\entry{\textbf{180 Degrees Consulting Bristol}, \textit{Bristol, UK (Remote)}}{Sep 2025 – Dec 2025}{\textit{Data Consultant (AI Engineering \& AI System)}}
+\begin{itemize}
+    \item Proposed and prototyped an MCP-based agentic tool in Python (FastMCP, Ollama gpt-oss:20b, PostgreSQL, GitHub Actions CI) for a Madrid based product startup client, presented in a live stakeholder demo.
+    \item Contributed the MCP implementation to the client\textquotesingle{}s production repository (TypeScript/Node.js MCP server, OpenAI query generation, Convex database), now in live daily use; engagement received a \textbf{5-star commendation from senior leadership}.
+    \item Translated ambiguous business requirements into a production-ready technical blueprint and owned the solution within a cross functional consulting team, from architecture design through stakeholder presentation.
+\end{itemize}
+
+\vspace{6pt}
+
+\entry{\textbf{Freelance}, \textit{Chennai, India}}{Jan 2025 – Aug 2025}{\textit{AI/ML Engineer}}
+\begin{itemize}
+    \item Built scikit-learn pipelines and LSTM/BiRNN/CNN models in TensorFlow/Keras, deployed as FastAPI services in Docker.
+    \item Built NLP and agentic RAG workflows with Hugging Face Transformers, Ollama, LangChain and LangGraph.
+    \item Designed reproducible scikit-learn pipelines with feature engineering (temporal features, interaction terms, target encoding), model selection, cross-validation and hyperparameter tuning across classification and regression tasks.
+\end{itemize}
+
+\vspace{6pt}
+
+\entry{\textbf{Avasoft}, \textit{Chennai, India}}{Jan 2023 – Sep 2024}{\textit{Software Development Engineer (Jun 2023 – Sep 2024); Trainee (Jan 2023 – May 2023)}}
+\begin{itemize}
+    \item Integrated Twelve Data (real time market feeds) and Plaid (bank-account linkage, transaction imports) APIs into a Flutter FinTech mobile app.
+    \item Secured backend communication with SSL pinning and integrated AWS Cognito for user authentication with single sign-on in the FinTech app.
+    \item Built e-commerce and ticketing UIs in Swift/SwiftUI with product search, cart logic, order tracking and booking management.
+\end{itemize}
+
+% ---------------- PROJECTS ----------------
+\sectionhead{Projects}
+\vspace{2pt}
+
+\needspace{4\baselineskip}\noindent\textbf{Banking Customer Churn: propensity model}
+\hfill \href{https://github.com/Thiruvel-AP/Banking-Customer-Churn-Prediction}{GitHub}\par
+\nopagebreak{\smallsize\noindent\textit{R, tidymodels, XGBoost}\par}
+\begin{itemize}
+    \item Predicted bank-customer churn with a supervised XGBoost propensity classifier in R (tidymodels): two stage Bayesian hyperparameter tuning, SMOTE inside the preprocessing recipe and MCC evaluation.
+\end{itemize}
+
+\vspace{6pt}
+
+\needspace{4\baselineskip}\noindent\textbf{CoverFit: insurance benchmarking API (Bristol × UWE AI Hackathon)}
+\hfill \href{https://github.com/Thiruvel-AP/AIHackathon-Phoenix}{GitHub}\par
+\nopagebreak{\smallsize\noindent\textit{FastAPI, pandas, LiteLLM, Pydantic, pytest}\par}
+\begin{itemize}
+    \item Built deterministic comparable-company matching over 221 profiles and 1,116 cover lines with a single LLM call, costing \textasciitilde{}£0.003 per query and completing in under 3 s.
+\end{itemize}
+
+\vspace{6pt}
+
+\needspace{4\baselineskip}\noindent\textbf{Mining Insights from Customer Feedback: NLP \& unsupervised analytics (MSc team project)}
+\hfill \href{https://github.com/Thiruvel-AP/TextAnalytics}{GitHub}\par
+\nopagebreak{\smallsize\noindent\textit{Python, scikit-learn, SBERT, K-Means, HAC, DBSCAN}\par}
+\begin{itemize}
+    \item Designed preprocessing and clustering pipelines (K-Means, HAC, DBSCAN) across BoW, TF-IDF, Skip-gram and SBERT, tracing silhouette <0.30 to repeated template vocabulary in tickets.
+\end{itemize}
+
+\vspace{6pt}
+
+\needspace{4\baselineskip}\noindent\textbf{GTAI Cell Line Finder: multiomics graph for cancer cell-line selection (PoC)}
+\hfill \href{https://github.com/Thiruvel-AP/GTAI-GraphPOC}{GitHub}\par
+\nopagebreak{\smallsize\noindent\textit{Python, networkx, Leiden, scikit-learn, RAPIDS cuML}\par}
+\begin{itemize}
+    \item Merged 14 public omics source files into a graph of 1,399 cell lines and 16,385 genes (\textasciitilde{}2.8 M edges), then applied Leiden community detection to identify 19 clusters with modularity 0.822.
+    \item Trained per-gene regression models for 11,459 genes using OLS and GPU random forest, reducing RAM from 8.2 to 5.5 GB and revealing overfitting (train Pearson 0.807 vs test 0.545).
+\end{itemize}
+
+\vspace{6pt}
+
+\needspace{4\baselineskip}\noindent\textbf{mcp\_searchagent}
+\hfill \href{https://github.com/Thiruvel-AP/mcp_searchagent}{GitHub}\par
+\nopagebreak{\smallsize\noindent\textit{FastMCP, Ollama, Tavily, Exograph GraphQL, PostgreSQL, GitHub Actions}\par}
+\begin{itemize}
+    \item MCP server and stdio client combining web search with a GraphQL/PostgreSQL data layer, run against a local open-weight model (gpt-oss:20b) with CI across Python 3.9–3.11.
+\end{itemize}
+
+% ---------------- EDUCATION ----------------
+\sectionhead{Education}
+\vspace{2pt}
+\needspace{3\baselineskip}\noindent\textbf{University of Bristol} \hfill Sep 2025 – Sep 2026 \\ \textit{MSc Data Science} (Large scale Data Engineering, Statistical Computing \& Empirical Methods, AI \& Text Analytics, Visual Analytics, Data Science Methods \& Practices, Technology, Innovation, Business \& Society); Distinction \textit{(Expected)}\par
+\vspace{6pt}
+
+\needspace{3\baselineskip}\noindent\textbf{St. Joseph\textquotesingle{}s College of Engineering} \hfill Aug 2019 – May 2023 \\ \textit{B.E. Electrical and Electronics Engineering}, 91\%; First Class with Distinction\par
+
+% ---------------- CERTIFICATIONS ----------------
+\sectionhead{Certifications \& Achievements}
+\vspace{2pt}
+
+\begin{itemize}
+    \item Model Context Protocol: Advanced Topics, \textit{Anthropic}, Jun 2026\dotsep Introduction to Model Context Protocol, \textit{Anthropic}, Jun 2026\dotsep AWS Academy Cloud Foundations, Nov 2025\dotsep 180 Degrees Consulting Data Science Consultant Certificate, Dec 2025\dotsep Bristol PLUS Award, Mar 2026
+\end{itemize}
+
+\end{document}
