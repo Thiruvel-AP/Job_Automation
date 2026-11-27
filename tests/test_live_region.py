@@ -47,7 +47,7 @@ def test_the_gate_leaves_a_file_alone_and_says_why(world, db):
     lines = []
     live = Live(db, mock, None, out=lines.append, job_filter=lambda f: "outside United Kingdom: x" if "ny" in f.name else None)
     a, b = Path("a.txt"), Path("ny.txt")
-    assert live._gated([a, b]) == [a] and lines == ["  left alone: ny.txt: outside United Kingdom: x"]
+    assert live._gated([a, b]) == [a] and lines == ["  left alone: 1 approved ad(s), outside United Kingdom (`--region` / `--size` brings them back): ny.txt"]
     assert Live(db, mock, None).job_filter is None and Live(db, mock, None)._gated([a, b]) == [a, b]
 
 
@@ -56,8 +56,8 @@ def test_an_approved_ad_outside_the_region_is_left_alone(world, capsys):
     ny = approved(mock, "ny.txt", "Newyork", "New York, NY")
     cli.main(["--config", cfg, "live", "--mock", "--region", "uk"])
     out = capsys.readouterr().out
-    assert "region: uk (from --region flag)" in out and "left alone: ny.txt: outside United Kingdom" in out
-    assert ny.exists() and "Nothing approved" in out                       # untouched, still approved; nothing was tailored
+    assert "region: uk (from --region flag)" in out and "left alone: 1 approved ad(s), outside United Kingdom" in out and "ny.txt" in out
+    assert ny.exists() and "Nothing to work on: 1 approved ad(s)" in out                       # untouched, still approved; nothing was tailored
 
 
 def test_the_same_ad_is_worked_on_when_the_region_covers_it(world, capsys, monkeypatch):
@@ -82,7 +82,7 @@ def test_an_ad_in_the_other_size_bucket_is_left_alone_and_an_unknown_one_passes(
     cli.main(["--config", cfg, "live", "--mock", "--region", "uk", "--size", "sme"])
     out = capsys.readouterr().out
     assert sorted(p.name for p in seen) == ["acme.txt", "mystery.txt"]
-    assert "left alone: bigco.txt: company size Large is not in the chosen bucket (sme)" in out
+    assert "left alone: 1 approved ad(s), company size Large is not in the chosen bucket (sme)" in out and "bigco.txt" in out
     seen.clear()
     cli.main(["--config", cfg, "live", "--mock", "--region", "uk", "--size", "large"])
     assert sorted(p.name for p in seen) == ["bigco.txt", "mystery.txt"]
@@ -100,7 +100,8 @@ def test_live_never_asks_the_size_and_uses_the_last_choice(world, capsys, monkey
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(builtins, "input", lambda prompt="": pytest.fail(f"a prompt appeared: {prompt!r}"))
     cli.main(["--config", cfg, "live", "--mock", "--region", "uk"])
-    assert "left alone: acme.txt: company size SME·small is not in the chosen bucket (large)" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "left alone: 1 approved ad(s), company size SME·small is not in the chosen bucket (large)" in out and "acme.txt" in out
 
 
 def test_live_parks_the_database_queue_outside_the_region(world, capsys):

@@ -1660,41 +1660,58 @@ def parked_keys(settings) -> set[str]:
     return {parked_key(r.get("company") or "", r.get("title") or "", r.get("location") or "", r.get("link") or "") for r in read_rows(parked_path(settings))}
 
 
-def park_inbox_listed(settings, regions: Sequence[str] | None = None, *, dry_run: bool = False, now: datetime | None = None) -> list[Path]:
-    """Move the inbox files that `discover` wrote before listed ads were parked (`Status: listed_only`) and that are outside `regions` (every one when
-    `regions` is None: the UK-only reading) to paths.discover/parked/, one row each in paths.discover/parked.csv (its `file` column names where the ad
-    went). An ad of a region you have chosen since stays in the inbox. Nothing is deleted or overwritten; a dry run moves and writes nothing. Returns the
-    files it moved (or would move)."""
+def park_listed_file(settings, p: Path, hdr: dict[str, str], regions: Sequence[str] | None, *, now: datetime | None = None,
+                     origin: str = "the inbox") -> Path | None:
+    """Move one `listed_only` ad to paths.discover/parked/ and add its row to parked.csv (once per ad). Never deleted or overwritten; None when it could not
+    be moved. Shared by park_inbox_listed and `live` (an approved ad that turns out to be listed only)."""
     now = now or datetime.now(timezone.utc)
-    have = parked_keys(settings)
+    try:
+        dst = decided_mod.move_file(settings, p, parked_dir(settings))
+    except (OSError, decided_mod.DecidedError):
+        return None
+    key = parked_key(hdr.get("company") or "", hdr.get("title") or "", hdr.get("location") or "", hdr.get("url") or "")
+    if key not in parked_keys(settings):
+        where = f"outside region {','.join(regions)}" if regions is not None else "outside the UK"
+        append_rows(parked_path(settings), PARKED_COLUMNS,
+                    [{"ts": now.isoformat(timespec="seconds"), "source": hdr.get("source") or "", "country": hdr.get("country") or "",
+                      "company": hdr.get("company") or "", "title": hdr.get("title") or "", "location": hdr.get("location") or "",
+                      "posted": hdr.get("posted") or "", "link": hdr.get("url") or "", "reason": f"{where}: moved out of {origin}",
+                      "file": f"parked/{dst.name}"}])
+    return dst
+
+
+def _approved_dirs(settings) -> list[Path]:
+    root = settings.path("jds") / "approved"
+    try:
+        return sorted(d for d in root.iterdir() if d.is_dir())
+    except OSError:
+        return []
+
+
+def park_inbox_listed(settings, regions: Sequence[str] | None = None, *, dry_run: bool = False, now: datetime | None = None) -> list[Path]:
+    """Move the inbox files (and the approved ones in jds/approved/<date>/) that `discover` wrote before listed ads were parked (`Status: listed_only`) and that
+    are outside `regions` (every one when `regions` is None: the UK-only reading) to paths.discover/parked/, one row each in paths.discover/parked.csv (its
+    `file` column names where the ad went). An ad of a region you have chosen since stays where it is. Nothing is deleted or overwritten; a dry run moves and
+    writes nothing. Returns the files it moved (or would move)."""
     moved: list[Path] = []
-    for p in decided_mod.txt_files(decided_mod.inbox_dir(settings)):
-        try:
-            text = p.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        hdr = manual.header_fields(text)
-        if (hdr.get("status") or "").strip().lower() != "listed_only":
-            continue
-        if regions is not None and region_mod.match(hdr.get("location"), text, regions, country=hdr.get("country")).verdict != region_mod.OUT:
-            continue
-        moved.append(p)
-        if dry_run:
-            continue
-        try:
-            dst = decided_mod.move_file(settings, p, parked_dir(settings))
-        except (OSError, decided_mod.DecidedError):
-            moved.pop()
-            continue
-        moved[-1] = dst
-        key = parked_key(hdr.get("company") or "", hdr.get("title") or "", hdr.get("location") or "", hdr.get("url") or "")
-        if key not in have:
-            have.add(key)
-            where = f"outside region {','.join(regions)}" if regions is not None else "outside the UK"
-            append_rows(parked_path(settings), PARKED_COLUMNS,
-                        [{"ts": now.isoformat(timespec="seconds"), "source": hdr.get("source") or "", "country": hdr.get("country") or "",
-                          "company": hdr.get("company") or "", "title": hdr.get("title") or "", "location": hdr.get("location") or "",
-                          "posted": hdr.get("posted") or "", "link": hdr.get("url") or "", "reason": f"{where}: moved out of the inbox", "file": f"parked/{dst.name}"}])
+    folders = [(decided_mod.inbox_dir(settings), "the inbox")] + [(d, "approved/") for d in _approved_dirs(settings)]
+    for folder, origin in folders:
+        for p in decided_mod.txt_files(folder):
+            try:
+                text = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            hdr = manual.header_fields(text)
+            if (hdr.get("status") or "").strip().lower() != "listed_only":
+                continue
+            if regions is not None and region_mod.match(hdr.get("location"), text, regions, country=hdr.get("country")).verdict != region_mod.OUT:
+                continue
+            if dry_run:
+                moved.append(p)
+                continue
+            dst = park_listed_file(settings, p, hdr, regions, now=now, origin=origin)
+            if dst is not None:
+                moved.append(dst)
     return moved
 
 

@@ -1309,6 +1309,11 @@ def cmd_live(args):
 
     rc = _region_choice(args, s, auto=args.auto)
     _park_region(db, rc)
+    if not args.dry_run:                                           # `listed_only` ads outside the region that were approved before listed ads were parked: they can never be worked on
+        from .discovery import discover as disc_park
+        if (gone := disc_park.park_inbox_listed(s, rc.value)):
+            print(f"parked {len(gone)} listed-only ad(s) outside {region_mod.label_of(rc.value)} out of the inbox / approved folder: "
+                  f"{disc_park.parked_path(s)} (the ads are in {disc_park.parked_dir(s)})")
     try:
         size_mode = choices.resolve_size(s, flag=getattr(args, "size", None), env=_prefs_env(args, s),
                                          save=_save_prefs(args)).value          # live never asks the size: --size, .env, the last choice, settings

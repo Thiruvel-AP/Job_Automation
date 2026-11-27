@@ -373,20 +373,29 @@ class Live:
         if self.require_approval:
             from ..discovery import shortlist
 
-            return shortlist.approved_files(self.s, self.db)                    # a job you skipped since is left out (v2.5)
+            filed: list[str] = []
+            files = shortlist.approved_files(self.s, self.db, filed=None if self.dry_run else filed)       # a job you decided since is filed away (v2.5)
+            for line in filed:
+                self.out("  " + line)
+            return files
         return [p for p in self.dirs.inbox.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]
 
     def _gated(self, files: list[Path]) -> list[Path]:
-        """Leave alone (untouched, still approved) the files the region / size gate turns away; say which and why."""
+        """Leave alone (untouched, still approved) the files the region / size gate turns away; say so in ONE line (the count, the reason, a few names)."""
+        self.gated: list[tuple[Path, str]] = []
         if self.job_filter is None:
             return files
         keep = []
         for f in files:
             why = self.job_filter(f)
             if why:
-                self.out(f"  left alone: {f.name}: {why}")
+                self.gated.append((f, why))
             else:
                 keep.append(f)
+        if self.gated:
+            reasons = sorted({w.split(": ", 1)[0] for _, w in self.gated})
+            names = ", ".join(f.name for f, _ in self.gated[:5]) + (f" and {len(self.gated) - 5} more" if len(self.gated) > 5 else "")
+            self.out(f"  left alone: {len(self.gated)} approved ad(s), {'; '.join(reasons)} (`--region` / `--size` brings them back): {names}")
         return keep
 
     def _hard_stops(self, files: list[Path]) -> list[Path]:
@@ -590,7 +599,10 @@ class Live:
                  else self._by_priority(self._knockouts(self._hard_stops(self._gated(self._source_files())))))
         if self.fresh and not files and self.only is None:
             self.out("Nothing posted in the last 24 hours is waiting in the inbox: run `careerops discover` first, or drop --fresh.")
-        if not files and self.require_approval:
+        if not files and self.require_approval and getattr(self, "gated", None):
+            self.out(f"Nothing to work on: {len(self.gated)} approved ad(s) are outside this run's region / size (see the line above); "
+                     "run `careerops shortlist` to approve more ads from the inbox.")
+        elif not files and self.require_approval:
             self.out("Nothing approved: run `careerops shortlist` to approve ads from the inbox (live works only on ads in "
                      f"{self.dirs.inbox.parent / 'approved'}), or, outside auto mode, `careerops live --include-unapproved`.")
         elif not files:
@@ -663,6 +675,11 @@ class Live:
         if refusal:                                                                # listed only: no tailoring, no apply, no archive
             hdr = manual.header_fields(text)
             self.out(f"LISTED ONLY {f.name}: {refusal}")
+            if not self.dry_run:                                                   # never worked on, so never left in the folder to be read again next run
+                from ..discovery import discover as disc
+
+                dst = disc.park_listed_file(self.s, f, hdr, None, origin="the approved/inbox folder")
+                self.out(f"  parked: {dst}" if dst is not None else "  (could not be parked: it stays where it is)")
             self.results.append(JobResult(f.name, company=hdr.get("company", "-"), role=hdr.get("title", "-"), status="listed_only",
                                           note=refusal))
             return None

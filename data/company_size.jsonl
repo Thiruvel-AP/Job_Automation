@@ -920,3 +920,6 @@
 {"norm": "techtronic industries europe hq", "company": "Techtronic Industries - Europe HQ", "size": "large", "size_label": "large", "size_evidence": "ad: \"50,000 employees\"", "checked": "2026-11-25"}
 {"norm": "valarian", "company": "Valarian", "size": "sme", "size_label": "small", "size_evidence": "ad: \"Series A\"", "checked": "2026-11-25"}
 {"norm": "writer", "company": "WRITER", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-25"}
+{"norm": "databricks", "company": "Databricks", "size": "large", "size_label": "large", "size_evidence": "ad: \"Fortune 500\"", "checked": "2026-11-26"}
+{"norm": "artefact", "company": "Artefact", "size": "large", "size_label": "large", "size_evidence": "ad: \"1,700 employees\"", "checked": "2026-11-26"}
+{"norm": "eclipse", "company": "Eclipse", "size": "sme", "size_label": "small", "size_evidence": "ad: \"founding team\"", "checked": "2026-11-26"}

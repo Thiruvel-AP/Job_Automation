@@ -488,3 +488,11 @@ def test_unskip_shortlist_lists_then_brings_back_through_the_command(settings, d
     assert "back in the inbox: Beta | Data Scientist" in capsys.readouterr().out and len(list(inbox.iterdir())) == 1
     with pytest.raises(SystemExit):
         cli.main(["--config", str(cfg), "unskip"])
+
+
+def test_a_listed_only_ad_is_never_offered_so_it_cannot_sit_in_approved_for_ever(settings, db, fb, inbox):
+    p = write_ad(inbox, "ny.txt", company="Newyork")
+    p.write_text(p.read_text(encoding="utf-8").replace("Title:", "Status: listed_only\nCountry: United States\nTitle:", 1), encoding="utf-8")
+    write_ad(inbox, "uk.txt", company="Ukco")
+    plan = build(settings, db, fb)
+    assert names(plan) == ["Ukco"] and plan.region_parked == ["Newyork | Data Scientist"]

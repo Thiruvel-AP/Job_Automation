@@ -103,9 +103,10 @@ def approved_root(settings) -> Path:
     return settings.path("jds") / APPROVED
 
 
-def approved_files(settings, db=None) -> list[Path]:
+def approved_files(settings, db=None, *, filed: list[str] | None = None) -> list[Path]:
     """The JD files you approved: every .txt in data/jds/approved/<date>/. The only files `careerops live` works on. With `db`, a file whose job you
-    skipped or applied to since (the decision log, by id / ATS key / URL key: v2.5) is left out: a skip overrides an earlier approval."""
+    skipped or applied to since (the decision log, by id / ATS key / URL key: v2.5) is left out: a skip overrides an earlier approval. With `filed` (a list),
+    such a file is also moved to jds_done/<skipped|applied>/ with a `.reason.txt`, once, and one line each is appended to `filed`; empty dated folders go."""
     root = approved_root(settings)
     try:
         files = sorted(p for d in root.iterdir() if d.is_dir() for p in d.iterdir() if p.is_file() and p.suffix.lower() == ".txt")
@@ -117,9 +118,19 @@ def approved_files(settings, db=None) -> list[Path]:
     keep = []
     for p in files:
         hdr = decided.header_of(p)
-        if hdr.get("company") and hdr.get("title") and known.hit(hdr["company"], hdr["title"], hdr.get("url"), hdr.get("location")):
+        which = known.hit(hdr["company"], hdr["title"], hdr.get("url"), hdr.get("location")) if hdr.get("company") and hdr.get("title") else None
+        if not which:
+            keep.append(p)
             continue
-        keep.append(p)
+        if filed is not None:
+            dst = file_away(settings, p, which, f"already {which}: approved earlier, decided since ({hdr['company']} | {hdr['title']})")
+            filed.append(f"{p.name}: already {which}; " + (f"filed in jds_done/{which}/" if dst is not None else "could not be filed, left in approved/"))
+    if filed is not None:
+        for d in sorted(root.iterdir()) if root.is_dir() else []:
+            try:
+                d.rmdir() if d.is_dir() else None                         # only an empty folder goes; rmdir refuses any other
+            except OSError:
+                pass
     return keep
 
 
@@ -398,6 +409,9 @@ def build(settings, db: DB, fb: dict, *, fetcher: Fetcher | None = None, cache=N
             plan.held_agent += 1
             continue
         rm = None
+        if regions is None and (decided.header_of(p).get("status") or "").strip().lower() == "listed_only":
+            plan.region_parked.append(f"{job['company']} | {job['title']}")      # a listed-only ad is never offered: live could not work on it (it would sit in approved/ for ever)
+            continue
         if regions is not None:
             rm = region_mod.job_match(job, regions)
             if rm.verdict == region_mod.OUT:

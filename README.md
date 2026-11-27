@@ -495,8 +495,8 @@ A job whose place is another country (the ad's own country, else read from its p
 inbox either: it is **parked**, one row in `data/discover/parked.csv` (company, title, place, country, link, reason), at most `discover.listed_only.max_per_run` a run, so the shortlist
 never offers it and `live` never meets it; choose that region (`--region ca`) and the next run writes it like any other ad (`discover.listed_only.enabled: false` drops them as
 before). `careerops shortlist` moves the `Status: listed_only` files already in the inbox out of it (to `data/discover/parked/`, one row each in `parked.csv`) when they are outside the
-chosen region. A file that is in the inbox with those headers is still ranked with S = `priority.sponsor_weights.non_home` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, leaves
-it in `inbox/` and does not count it towards `--max`, unless `applicant.yaml` has a block for exactly that country, which you add yourself
+chosen region. A file that is in the inbox with those headers is still ranked with S = `priority.sponsor_weights.non_home` (0.5). **`careerops live` will not tailor or apply to such a file**: it prints `LISTED ONLY`, parks
+it in `data/discover/parked/` (one row in `parked.csv`, nothing deleted; `live` also parks such files found in `approved/` at the start of a run) and does not count it towards `--max`, unless `applicant.yaml` has a block for exactly that country, which you add yourself
 (`visa.by_country.CA`, a code or a name; `default` does not count, so a job abroad is never worked on just because a default exists).
 A country with such a block also passes the triage location rule; the same location rule still skips a foreign job without one
 (`live` asks "Tailor it anyway?"). An alert from a one-country source (SEEK AU) gives the job that

@@ -709,6 +709,10 @@ def put_abroad(inbox: Path, name: str, jd: str, *, country: str | None = "Canada
     return p
 
 
+def parked_dir(settings) -> Path:
+    return settings.path("discover") / "parked"
+
+
 def one_file(live, f):
     """live._one(f) the way run() calls it (with the state file loaded)."""
     from careerops.apply.live import State
@@ -735,7 +739,8 @@ def test_a_job_outside_the_uk_without_a_visa_block_is_listed_only_not_worked_on_
     fake = Fake(db, settings, yes())
     live, lines = session(db, settings, fake)
     assert one_file(live, f) is None                                                   # None = does not count towards --max
-    assert fake.calls == [] and db.jobs() == [] and f.exists()                    # no tailor, no review, no apply, no job, the file stays
+    assert fake.calls == [] and db.jobs() == [] and not f.exists()                # no tailor, no review, no apply, no job; the file is parked, not read again
+    assert [p.name for p in parked_dir(settings).iterdir()] == ["a_maple.txt"]
     (r,) = live.results
     assert (r.status, r.company, r.role) == ("listed_only", "Maple", "Data Scientist") and "visa.by_country" in r.note
     assert any(l.startswith("LISTED ONLY a_maple.txt") and "Canada" in l for l in lines)
@@ -748,7 +753,7 @@ def test_the_session_goes_on_to_the_uk_job_and_the_summary_lists_the_listed_one(
     fake = Fake(db, settings, yes())
     live, lines = session(db, settings, fake)
     assert live.run() == 0
-    assert [j["company"] for j in db.jobs()] == ["Acme"] and f.exists()
+    assert [j["company"] for j in db.jobs()] == ["Acme"] and not f.exists() and (parked_dir(settings) / f.name).is_file()
     assert "status: listed_only" in live.summary(None) and "Maple" in live.summary(None)
 
 
@@ -811,12 +816,12 @@ def test_a_missing_applicant_file_means_no_block_and_the_job_is_refused(db, sett
     assert one_file(live, f) is None and fake.calls == []
 
 
-def test_the_listed_only_file_is_not_moved_or_changed_by_live(db, settings, inbox, archive, jd):
+def test_the_listed_only_file_is_parked_unchanged_by_live(db, settings, inbox, archive, jd):
     f = put_abroad(inbox, "a.txt", jd)
     before = f.read_bytes()
     session(db, settings, Fake(db, settings, yes()))[0].run()
-    assert f.read_bytes() == before and not (settings.path("jds") / "done").glob("*") or True
-    assert f.exists() and not list((settings.path("jds") / "done").glob("*"))
+    assert not f.exists() and (parked_dir(settings) / "a.txt").read_bytes() == before        # moved whole to parked/, not rejected or done
+    assert not list((settings.path("jds") / "done").glob("*"))
 
 
 # ------------------------------------------------------------------ W unknown: needs_country, until you give the country
@@ -939,3 +944,76 @@ def test_a_file_discovery_marked_as_a_duplicate_is_rejected_not_worked_on(db, se
     rejected = settings.path("jds") / "rejected"
     assert "duplicate of graphcore-early-careers-2.txt" in (rejected / "graphcore-1.reason.txt").read_text()
     assert live.results[0].status == "rejected (duplicate)" and any(l.startswith("DUPLICATE") for l in lines)
+
+
+# ------------------------------------------------------------------ 27 Nov 2026: a file `live` will not work on must not be read again next run
+def run_twice(db, settings, fake):
+    """Two sessions over the same folders; returns (first output, second output)."""
+    outs = []
+    for _ in range(2):
+        live, lines = session(db, settings, fake, require_approval=True)
+        assert live.run() == 0
+        outs.append("\n".join(lines))
+    return outs
+
+
+def approved_ad(settings, name, day="2026-10-27", **kw) -> Path:
+    d = settings.path("jds") / "approved" / day
+    d.mkdir(parents=True, exist_ok=True)
+    return put_abroad(d, name, "A job description. " * 20, **kw)
+
+
+def test_a_listed_only_ad_in_approved_is_parked_once_and_the_second_run_is_quiet(db, settings, archive, jd):
+    settings.path("jds").joinpath("inbox").mkdir(parents=True)
+    f = approved_ad(settings, "openai-codex-sydney.txt", company="OpenAI", title="Applied AI Engineer, Codex", location="Sydney, Australia", country="Australia")
+    first, second = run_twice(db, settings, Fake(db, settings, yes()))
+    assert "LISTED ONLY openai-codex-sydney.txt" in first and not f.exists() and (parked_dir(settings) / f.name).is_file()
+    assert "LISTED ONLY" not in second and "openai-codex-sydney" not in second              # nothing repeats
+    assert db.jobs() == []
+
+
+def test_a_closed_job_is_filed_once_and_the_second_run_is_quiet(db, settings, inbox, archive, jd):
+    class Closing(Fake):
+        def tailor(self, jid):                                                  # what the pre-tailor liveness check does to a posting that is gone
+            self._enter("tailor", jid)
+            self.db.update_job(jid, status="closed", reason="posting no longer listed")
+
+    f = put(inbox, "a_closed.txt", jd, company="Gone", n=1)
+    live, lines = session(db, settings, Closing(db, settings, yes()))
+    assert live.run() == 0
+    closed = settings.path("jds_done") / "closed"
+    assert not f.exists() and [p.name for p in closed.iterdir() if not p.name.endswith(".reason.txt")] == ["a_closed.txt"]
+    assert "closed: posting no longer listed" in (closed / "a_closed.reason.txt").read_text(encoding="utf-8")
+    live, lines = session(db, settings, Closing(db, settings, yes()))
+    assert live.run() == 0
+    assert not any("a_closed.txt" in l for l in lines), lines          # nothing is read, announced or filed again
+
+
+def test_an_approved_file_decided_since_is_filed_not_silently_dropped(db, settings, archive, jd):
+    settings.path("jds").joinpath("inbox").mkdir(parents=True)
+    d = settings.path("jds") / "approved" / "2026-10-31"
+    d.mkdir(parents=True)
+    f = put(d, "flo.txt", jd, company="Flo", title="Machine Learning Engineer")
+    from careerops.discovery import shortlist
+    from careerops.apply import decided
+    hdr = decided.header_of(f)
+    jid = manual.add_jd(db, f.read_text(encoding="utf-8"), company=hdr["company"], title=hdr["title"], url=hdr.get("url"), location=hdr.get("location"))
+    db.update_job(jid, status="applied")
+    notes: list[str] = []
+    assert shortlist.approved_files(settings, db, filed=notes) == []
+    assert not f.exists() and len(notes) == 1 and "already applied" in notes[0]
+    assert any(p.name == "flo.txt" for p in filed(settings, "applied")) and not d.exists()          # the empty dated folder goes too
+    assert shortlist.approved_files(settings, db, filed=notes) == [] and len(notes) == 1               # idempotent
+
+
+def test_region_gated_approved_ads_are_summarised_in_one_line(db, settings, archive, jd):
+    settings.path("jds").joinpath("inbox").mkdir(parents=True)
+    names = [f"ny{i}.txt" for i in range(7)]
+    for i, n in enumerate(names):
+        approved_ad(settings, n, company=f"Co{i}", title=f"Role {i}", status=None, country=None, location="New York, NY")
+    live, lines = session(db, settings, Fake(db, settings, yes()), job_filter=lambda f: "outside United Kingdom: New York", require_approval=True)
+    assert live.run() == 0
+    gate_lines = [l for l in lines if "left alone" in l]
+    assert len(gate_lines) == 1 and "7 approved ad(s)" in gate_lines[0] and "and 2 more" in gate_lines[0]
+    assert all((settings.path("jds") / "approved" / "2026-10-27" / n).exists() for n in names)           # kept for a later --region
+    assert any("outside this run's region" in l for l in lines) and not any(l.startswith("Nothing approved") for l in lines)

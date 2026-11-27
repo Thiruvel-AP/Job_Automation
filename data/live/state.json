@@ -746,6 +746,143 @@
       "url": "https://job-boards.greenhouse.io/anthropic/jobs/5432583008",
       "location": "London, UK",
       "status": "skipped (rules)"
+    },
+    "f34c31083a76d17569697e3a167d0af9b8f790cfa1debbf2084388a526834d6c": {
+      "file": "anaplan-avp-data-analytics-ai-engineering-8951779002.txt",
+      "job_id": "manual:a9e53bc0fbd5",
+      "done": true,
+      "company": "Anaplan",
+      "title": "AVP, Data, Analytics & AI Engineering",
+      "url": "https://job-boards.greenhouse.io/anaplan/jobs/8951779002",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "7c8b05dd7e8d105c7f851d3ae041fa5a6b7aaceebf68567b729d93f67497f7ae": {
+      "file": "trainline-machine-learning-engineer-7c9c4568-4b40-4f55-b4f4-d186d9053203.txt",
+      "job_id": "manual:fedd047f5688",
+      "done": true,
+      "company": "Trainline",
+      "title": "Machine Learning Engineer",
+      "url": "https://jobs.ashbyhq.com/trainline/7c9c4568-4b40-4f55-b4f4-d186d9053203",
+      "location": "London",
+      "status": "skipped (ats)"
+    },
+    "2a0953100ef0526529cf8186cad61302dd5c8fc5cc65ecb8484ee711ec5ca0b2": {
+      "file": "databricks-ai-forward-deployed-engineer-london-8593713002.txt",
+      "job_id": "manual:6b32e020f62f",
+      "done": true,
+      "company": "Databricks",
+      "title": "AI Forward Deployed Engineer - London",
+      "url": "https://databricks.com/company/careers/open-positions/job?gh_jid=8593713002",
+      "location": "London, United Kingdom",
+      "status": "ready_not_submitted"
+    },
+    "0fcf2a85c2f40cffb40ade5b2bac8ffeb37ef24f582cab3a5c0d25bfd465dfff": {
+      "file": "pay-uk-ai-engineer-4953301101.txt",
+      "job_id": "manual:811e49adc962",
+      "done": true,
+      "company": "Pay.UK",
+      "title": "AI Engineer",
+      "url": "https://job-boards.eu.greenhouse.io/payuk/jobs/4953301101",
+      "location": "London",
+      "status": "closed"
+    },
+    "affa933fd8fa621bbbbfb2e0ddacf23081856a58ae59214812a139466705aa9e": {
+      "file": "sagacity-data-scientist-57246865.txt",
+      "job_id": "manual:44ed8ee2cdf1",
+      "done": false,
+      "company": "Sagacity",
+      "title": "Data Scientist",
+      "url": "https://www.reed.co.uk/jobs/data-scientist/57246865",
+      "location": "London, GB"
+    },
+    "82078e7d10e00777248aaa8e1eed301266c1ce08ed0e1d00c6f9be0749459476": {
+      "file": "sopra-steria-data-scientist-57466116.txt",
+      "job_id": "manual:c33f747fb8ef",
+      "done": true,
+      "company": "Sopra Steria",
+      "title": "Data Scientist",
+      "url": "https://www.reed.co.uk/jobs/data-scientist/57466116",
+      "location": "Newport, GB",
+      "status": "skipped (ats)"
+    },
+    "e8dd98fddff0a8120c206017ade9d70822349f0788f5c85cc22694738ccb5034": {
+      "file": "fdm-group-full-stack-amp-ai-engineer-edinburgh-57601869.txt",
+      "job_id": "manual:4e1e998d8354",
+      "done": true,
+      "company": "FDM Group",
+      "title": "Full Stack &amp; AI Engineer- Edinburgh",
+      "url": "https://www.reed.co.uk/jobs/full-stack-amp-ai-engineer-edinburgh/57601869",
+      "location": "Edinburgh, GB",
+      "status": "skipped (ats)"
+    },
+    "b1827ca53567a9553f72dbb22b3d514113ce95bbba3b55a1ac71f0b1ee2b6a11": {
+      "file": "cambridge-consultants-graduate-ai-engineer-2027-start-4995814101.txt",
+      "job_id": "manual:0d8d18372544",
+      "done": true,
+      "company": "Cambridge Consultants",
+      "title": "Graduate AI Engineer (2027 start)",
+      "url": "https://job-boards.eu.greenhouse.io/cambridgeconsultantslimited/jobs/4995814101",
+      "location": "United Kingdom",
+      "status": "applied"
+    },
+    "514357d4ba872ee4fc0a74d3c628e5432db7423364486004b760e508203c047d": {
+      "file": "artefact-junior-ai-engineer-8421835002.txt",
+      "job_id": "manual:9aabf7a9dc62",
+      "done": false,
+      "company": "Artefact",
+      "title": "Junior AI Engineer",
+      "url": "https://job-boards.greenhouse.io/artefact/jobs/8421835002",
+      "location": "17th Floor, 5 Aldermanbury Square, London, EC2V 7HR"
+    },
+    "3db25e6bd8d69c6a7f4de9d46536d99c990d070fa5262d8cd5c2c74ddbad061c": {
+      "file": "capgemini-fabric-power-bi-analytics-consultant-57572912.txt",
+      "job_id": "manual:b89331cd6c23",
+      "done": true,
+      "company": "Capgemini",
+      "title": "Fabric / Power BI Analytics Consultant",
+      "url": "https://www.reed.co.uk/jobs/fabric-power-bi-analytics-consultant/57572912",
+      "location": "Birmingham, GB",
+      "status": "skipped (ats)"
+    },
+    "e4a2991da299b8aa0f74025fb23af9d21dbbec49cd4e97f8263702c0eb2c215a": {
+      "file": "eclipse-data-scientist-ai-data-llm-specialist-4981191008.txt",
+      "job_id": "manual:f89f681accab",
+      "done": false,
+      "company": "Eclipse",
+      "title": "Data Scientist (AI Data & LLM Specialist)",
+      "url": "https://job-boards.greenhouse.io/eclipse/jobs/4981191008",
+      "location": "Remote"
+    },
+    "c6099d7e6689a306c8cd6b5c5caa62c8761a0c62c67585326af21e42a29bd05b": {
+      "file": "creditspring-applied-data-scientist-fraud-prevention-7800301.txt",
+      "job_id": "manual:4d983f4950fc",
+      "done": true,
+      "company": "CreditSpring",
+      "title": "Applied Data Scientist \u2013 Fraud Prevention",
+      "url": "https://creditspring.teamtailor.com/jobs/7800301-applied-data-scientist-fraud-prevention",
+      "location": "London, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "0e94d410bf4f5bbf6c9fbfc5822c9fb17704cff9af2bea247be11722e1ba917c": {
+      "file": "openai-forward-deployed-engineer-fde-life-scien-d2ab1c9b-5c0c-4b43-a7c3-c9301854c023.txt",
+      "job_id": "manual:f54bb3cf4acb",
+      "done": true,
+      "company": "OpenAI",
+      "title": "Forward Deployed Engineer (FDE), Life Sciences - London",
+      "url": "https://jobs.ashbyhq.com/openai/d2ab1c9b-5c0c-4b43-a7c3-c9301854c023",
+      "location": "London, UK, United Kingdom",
+      "status": "skipped (ats)"
+    },
+    "8e894462c4998c45c0079083dc070a9dcab6baea907e262f474fef8fd74127af": {
+      "file": "graphcore-infrastructure-and-mlops-engineer-8556044002.txt",
+      "job_id": "manual:51660cf4c258",
+      "done": true,
+      "company": "Graphcore",
+      "title": "Infrastructure and MLOps Engineer",
+      "url": "https://job-boards.greenhouse.io/graphcore/jobs/8556044002",
+      "location": "Bristol, UK",
+      "status": "skipped (ats)"
     }
   }
 }

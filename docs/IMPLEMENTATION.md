@@ -2594,3 +2594,13 @@ Status: done. Tests: `tests/test_prefs.py`, `tests/tailoring/test_v393_casing_la
 - `live._account_required` already ends the job `manual_apply_account_required` with the listing printed (no new code needed).
 
 Status: done. Tests: 5 new in `tests/apply/test_workday_account.py`.
+
+## v3.9.8 — `live` no longer re-reads files it will never work on (27 Nov 2026) — **done offline** (fakes, no network)
+
+Root cause: a file `live` decided not to work on stayed in `data/jds/approved/` and was announced again on every run (4 OpenAI `listed_only` ads, approved before listed ads were parked; a Flo ad whose job was already applied to was dropped silently). The 26 Nov `closed` fix covered one status only and had no test.
+- `discover.park_listed_file` (new) + `park_inbox_listed` also scans `jds/approved/<date>/`; `careerops live` calls it at the start of a real run (after `_park_region`). `Live._one` parks an ad its `_outside_uk` refuses (one row in `parked.csv`, restorable; never deleted).
+- `Live._gated` prints ONE line (count, reason, up to 5 names) for the region / size gate; those files stay in `approved/` so a later `--region` / `--size` run can use them. "Nothing to work on: N approved ad(s) are outside this run's region / size" replaces the misleading "Nothing approved" when files were gated.
+- `shortlist.approved_files(settings, db, filed=[...])` files a decided duplicate to `jds_done/<applied|skipped>/` with a `.reason.txt` and removes empty dated folders (`rmdir` only).
+- `shortlist.build` never offers a `Status: listed_only` ad when no region is set.
+- Not done: pruning stale `data/live/state.json` entries (risk to resume / duplicate detection, not a cause of the loop); a "seen N times" park for `needs_review` jobs (the user's call).
+Status: done. Tests: new in `tests/apply/test_live.py` (listed-only in approved parked once and quiet on run 2; closed filed once and quiet; decided duplicate filed; gate summarised in one line), `tests/discovery/test_shortlist.py`; updated `tests/test_live_region.py`, two listed-only tests in `tests/apply/test_live.py`.

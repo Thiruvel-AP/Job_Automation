@@ -36,3 +36,16 @@
 {"ts": "2026-11-24T18:29:13+00:00", "job_id": "manual:d2f6aa967336", "company": "Moneybox", "title": "Forward Deployed Engineer", "estimate": 0.4844, "final": 0.9, "strict": 0.8, "terms": 24}
 {"ts": "2026-11-24T20:43:02+00:00", "job_id": "manual:a0b4baae7191", "company": "Codat", "title": "Senior AI Engineer", "estimate": 0.486, "final": 0.5814, "strict": 0.4186, "terms": 15}
 {"ts": "2026-11-24T20:43:45+00:00", "job_id": "manual:4914b93272d8", "company": "Trainline", "title": "Senior Data Scientist", "estimate": 0.5046, "final": 0.4595, "strict": 0.3514, "terms": 16}
+{"ts": "2026-11-26T13:18:57+00:00", "job_id": "manual:a9e53bc0fbd5", "company": "Anaplan", "title": "AVP, Data, Analytics & AI Engineering", "estimate": 0.6378, "final": 0.28, "strict": 0.12, "terms": 25}
+{"ts": "2026-11-26T13:20:53+00:00", "job_id": "manual:fedd047f5688", "company": "Trainline", "title": "Machine Learning Engineer", "estimate": 0.7065, "final": 0.5745, "strict": 0.3723, "terms": 26}
+{"ts": "2026-11-26T13:21:55+00:00", "job_id": "manual:6b32e020f62f", "company": "Databricks", "title": "AI Forward Deployed Engineer - London", "estimate": 0.569, "final": 0.7303, "strict": 0.382, "terms": 19}
+{"ts": "2026-11-26T13:23:42+00:00", "job_id": "manual:44ed8ee2cdf1", "company": "Sagacity", "title": "Data Scientist", "estimate": 0.5402, "final": 0.6304, "strict": 0.5543, "terms": 18}
+{"ts": "2026-11-26T14:19:11+00:00", "job_id": "manual:c33f747fb8ef", "company": "Sopra Steria", "title": "Data Scientist", "estimate": 0.4554, "final": 0.4227, "strict": 0.2268, "terms": 13}
+{"ts": "2026-11-26T14:20:46+00:00", "job_id": "manual:4e1e998d8354", "company": "FDM Group", "title": "Full Stack &amp; AI Engineer- Edinburgh", "estimate": 0.419, "final": 0.4149, "strict": 0.3404, "terms": 10}
+{"ts": "2026-11-26T14:22:36+00:00", "job_id": "manual:0d8d18372544", "company": "Cambridge Consultants", "title": "Graduate AI Engineer (2027 start)", "estimate": 0.4667, "final": 0.8421, "strict": 0.7105, "terms": 10}
+{"ts": "2026-11-26T14:24:52+00:00", "job_id": "manual:9aabf7a9dc62", "company": "Artefact", "title": "Junior AI Engineer", "estimate": 0.4351, "final": 0.625, "strict": 0.5625, "terms": 26}
+{"ts": "2026-11-26T15:42:12+00:00", "job_id": "manual:b89331cd6c23", "company": "Capgemini", "title": "Fabric / Power BI Analytics Consultant", "estimate": 0.4902, "final": 0.36, "strict": 0.32, "terms": 15}
+{"ts": "2026-11-26T15:42:52+00:00", "job_id": "manual:f89f681accab", "company": "Eclipse", "title": "Data Scientist (AI Data & LLM Specialist)", "estimate": 0.5528, "final": 0.52, "strict": 0.52, "terms": 24}
+{"ts": "2026-11-26T15:44:17+00:00", "job_id": "manual:4d983f4950fc", "company": "Creditspring", "title": "Applied Data Scientist – Fraud Prevention", "estimate": 0.5504, "final": 0.5102, "strict": 0.398, "terms": 15}
+{"ts": "2026-11-26T16:38:16+00:00", "job_id": "manual:f54bb3cf4acb", "company": "OpenAI", "title": "Forward Deployed Engineer (FDE), Life Sciences - London", "estimate": 0.3969, "final": 0.2, "strict": 0.1368, "terms": 6}
+{"ts": "2026-11-26T16:39:11+00:00", "job_id": "manual:51660cf4c258", "company": "Graphcore", "title": "Infrastructure and MLOps Engineer", "estimate": 0.4465, "final": 0.4783, "strict": 0.4058, "terms": 11}
