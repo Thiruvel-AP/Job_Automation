@@ -524,8 +524,9 @@ password; `careerops` does that for you.
    **APIs & Services → OAuth consent screen**: user type *External*, fill the app name and your e-mail, add yourself under *Test
    users*, and add the scopes `.../auth/gmail.readonly`, `.../auth/gmail.compose` and `.../auth/spreadsheets`. Leave the app in
    *Testing* (a refresh token then lasts 7 days; run `--gmail-auth` again when it stops working) or publish it for your own use.
-3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Desktop app.** Download the JSON and
-   save it as `data/secrets/gmail_client.json` (the folder is git-ignored; never commit it).
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Application type: Desktop app.** Put its id and secret
+   in `.env` as `GMAIL_CLIENT_ID=` and `GMAIL_CLIENT_SECRET=` (git-ignored; never commit it). Older setups that saved the downloaded
+   JSON as `data/secrets/gmail_client.json` still work; when both variables are set they win over the file, and setting only one is an error.
 4. Run `careerops discover --gmail-auth`. Your browser opens at Google's consent page; you sign in and agree there (career-ops never
    types a password). The refresh token is saved in `data/secrets/gmail_token.json`. A token that was granted anything other than
    those three scopes is refused, and so is a sign-in where a box was unticked. `gmail.compose` is the narrowest scope Google has for

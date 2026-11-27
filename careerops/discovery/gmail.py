@@ -53,6 +53,7 @@ TOKEN_URI = "https://oauth2.googleapis.com/token"
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
 ALLOWED_TOKEN_HOSTS = ("accounts.google.com", "oauth2.googleapis.com", "gmail.googleapis.com", "sheets.googleapis.com")
 CLIENT_FILE, TOKEN_FILE = "gmail_client.json", "gmail_token.json"
+ENV_CLIENT_ID, ENV_CLIENT_SECRET = "GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET"   # the OAuth client, from .env (preferred over CLIENT_FILE)
 SENDERS = {"linkedin": ("linkedin.com",), "cvlibrary": ("cv-library.co.uk",), "indeed": ("indeed.com", "indeed.co.uk"),
            "reed": ("reed.co.uk",)}
 
@@ -67,12 +68,20 @@ def _secrets_dir(settings) -> Path:
 
 
 def client_config(settings) -> dict:
+    """The OAuth client: GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET from the environment (`.env`, loaded by the CLI) when both are set;
+    otherwise the client JSON in paths.secrets (older setups). Only one of the two variables set is an error, never a silent fallback."""
+    cid, secret = os.environ.get(ENV_CLIENT_ID, "").strip(), os.environ.get(ENV_CLIENT_SECRET, "").strip()
+    if cid or secret:
+        if not (cid and secret):
+            raise GmailAuthError(f"only one of {ENV_CLIENT_ID} / {ENV_CLIENT_SECRET} is set in .env: set both (or neither, to use "
+                                 f"{_secrets_dir(settings) / CLIENT_FILE})")
+        return {"client_id": cid, "client_secret": secret, "token_uri": TOKEN_URI, "auth_uri": AUTH_URI}
     p = _secrets_dir(settings) / CLIENT_FILE
     try:
         raw = json.loads(p.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        raise GmailAuthError(f"{p} not found: create a Desktop-app OAuth client in Google Cloud and save its JSON there "
-                             "(README, 'Getting Gmail access')") from None
+        raise GmailAuthError(f"{p} not found and {ENV_CLIENT_ID} / {ENV_CLIENT_SECRET} are not set: create a Desktop-app OAuth "
+                             "client in Google Cloud and put its id and secret in .env (README, 'Getting Gmail access')") from None
     except (OSError, ValueError):
         raise GmailAuthError(f"{p} is not a readable OAuth client file") from None
     c = raw.get("installed") or raw.get("web") or {}

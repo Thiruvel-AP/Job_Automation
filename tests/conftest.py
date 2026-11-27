@@ -121,6 +121,20 @@ def no_provider_keys(monkeypatch):
     """No test may reach a real provider by accident (doctor / llm-check send a tiny request when a key is set): a test that
     needs a key sets its own fake one."""
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("GMAIL_CLIENT_ID", raising=False)       # the real Gmail OAuth client in .env never reaches a test
+    monkeypatch.delenv("GMAIL_CLIENT_SECRET", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def real_dotenv_is_never_loaded(monkeypatch):
+    """The CLI loads `<root>/.env`, and in tests root is the real repo: that file holds the user's real keys (the Gmail OAuth client
+    among them). A CLI test sees an empty environment instead; a test of the loader calls `setup.load_dotenv` on its own tmp file."""
+    from careerops import cli
+    from careerops.config import ROOT
+    from careerops.setup import load_dotenv as real
+
+    real_env = (ROOT / ".env").resolve()
+    monkeypatch.setattr(cli, "load_dotenv", lambda p, *a, **k: 0 if Path(p).resolve() == real_env else real(p, *a, **k))
 
 
 @pytest.fixture(autouse=True)

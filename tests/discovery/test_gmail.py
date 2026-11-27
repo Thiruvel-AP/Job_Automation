@@ -74,6 +74,46 @@ def test_the_client_file_must_have_an_id_and_a_secret_and_a_google_token_address
         gmail.client_config(settings)
 
 
+def test_the_client_comes_from_env_when_both_variables_are_set_and_wins_over_the_file(settings, secrets, monkeypatch):
+    monkeypatch.setenv(gmail.ENV_CLIENT_ID, "env-id.apps.googleusercontent.com")
+    monkeypatch.setenv(gmail.ENV_CLIENT_SECRET, "env-secret")
+    c = gmail.client_config(settings)
+    assert (c["client_id"], c["client_secret"]) == ("env-id.apps.googleusercontent.com", "env-secret")
+    assert (c["token_uri"], c["auth_uri"]) == (gmail.TOKEN_URI, gmail.AUTH_URI)
+
+
+def test_the_env_client_works_with_no_client_file_at_all(settings, monkeypatch):
+    monkeypatch.setenv(gmail.ENV_CLIENT_ID, "env-id")
+    monkeypatch.setenv(gmail.ENV_CLIENT_SECRET, "env-secret")
+    assert gmail.client_config(settings)["client_id"] == "env-id"
+    assert not (settings.path("secrets") / gmail.CLIENT_FILE).exists()
+
+
+@pytest.mark.parametrize("only", ["GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET"])
+def test_only_one_env_variable_set_is_an_error_not_a_silent_fallback_to_the_file(settings, secrets, monkeypatch, only):
+    monkeypatch.setenv(only, "x")
+    with pytest.raises(gmail.GmailAuthError, match="only one of GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET"):
+        gmail.client_config(settings)
+
+
+def test_the_env_client_is_what_the_refresh_sends_to_google(settings, secrets, monkeypatch):
+    monkeypatch.setenv(gmail.ENV_CLIENT_ID, "env-id")
+    monkeypatch.setenv(gmail.ENV_CLIENT_SECRET, "env-secret")
+    gmail._write_token(settings, {"refresh_token": "rt-1", "scope": " ".join(gmail.SCOPES)})
+    tok = Token()
+    assert gmail.access_token(settings, post=tok, clock=lambda: 1000.0) == "at-1"
+    url, data = tok.sent[0]
+    assert url == gmail.TOKEN_URI and (data["client_id"], data["client_secret"]) == ("env-id", "env-secret")
+
+
+def test_tests_never_see_the_real_gmail_client_from_dotenv():
+    import os
+    from careerops import cli
+    from careerops.config import ROOT
+    assert gmail.ENV_CLIENT_ID not in os.environ and gmail.ENV_CLIENT_SECRET not in os.environ
+    assert cli.load_dotenv(ROOT / ".env") == 0 and gmail.ENV_CLIENT_ID not in os.environ
+
+
 def test_the_secrets_folder_is_inside_the_git_ignored_data_folder():
     from careerops.config import load_settings, ROOT
     s = load_settings()
