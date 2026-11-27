@@ -3,7 +3,8 @@
 .env.bak-*
 .venv/
 data/
-data/dryruns/          # the record of a filled form (careerops live --record): personal data
+# the record of a filled form (careerops live --record): personal data (inline comments are not allowed in .gitignore)
+data/dryruns/
 __pycache__/
 *.pyc
 *.egg-info/
@@ -35,3 +36,14 @@ scripts/debug/
 
 config/profile/fact_bank.yaml
 docs/legacy/
+
+# v3.9.8: secrets and SQLite side files, wherever they end up
+secrets/
+*.db-shm
+*.db-wal
+
+# one-off cover letters written by hand in the repo root, and LaTeX build leftovers
+/cover_letter_*.tex
+*.aux
+*.out
+*.synctex.gz
